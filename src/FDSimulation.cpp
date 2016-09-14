@@ -1,0 +1,127 @@
+#include <scai/lama.hpp>
+
+#include <scai/lama/DenseVector.hpp>
+#include <scai/lama/expression/all.hpp>
+#include <scai/lama/matrix/all.hpp>
+#include <scai/lama/matutils/MatrixCreator.hpp>
+#include <scai/lama/norm/L2Norm.hpp>
+
+#include <scai/dmemo/BlockDistribution.hpp>
+
+#include <scai/hmemo/ReadAccess.hpp>
+#include <scai/hmemo/WriteAccess.hpp>
+#include <scai/hmemo/HArray.hpp>
+
+#include <scai/tracing.hpp>
+
+#include <scai/common/Walltime.hpp>
+#include <scai/common/unique_ptr.hpp>
+
+#include <iostream>
+
+#define _USE_MATH_DEFINES
+#include <cmath> 
+
+#include "Configuration.hpp"
+#include "Derivatives.hpp"
+#include "InitializeMatrices.hpp"
+#include "SourceFunction.hpp"
+#include "Timesteps.hpp"
+
+using namespace scai;
+
+#define MASTER 0
+
+#define HOST_PRINT( comm, msg )     \
+{                                   \
+int myRank = comm->getRank();   \
+if ( myRank == MASTER )         \
+{                               \
+std::cout << msg;           \
+}                               \
+}
+
+/*
+ *  main for 3-D FD-Algorithm
+ *
+ *  sets configuration parameters, prints configuration
+ *  calculates source
+ *  initialize matrices and vectors
+ *  do timesteps
+ *  writes seismogram data to file
+ */
+int main( int /*argc*/, char** /*argv[]*/ )
+{
+    // we do all calculation in double precision
+    typedef double ValueType;
+
+    // read configuration parameter from file
+    Configuration<ValueType> config( "Configuration.txt" );
+
+    // LAMA specific configuration variables
+
+    // execution context
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
+    // inter node communicator
+    dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    // inter node distribution
+    // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
+    dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
+
+    HOST_PRINT( comm, "Acoustic 3-D FD-Algorithm\n\n" );
+    if( comm->getRank() == MASTER )
+    {
+        config.print();
+    }
+
+    // for timing
+    double start_t, end_t;
+   
+    start_t = common::Walltime::get();
+    // get source signal
+    // init vector with a sequence of values (MATLAB t=0:DT:(NT*DT-DT);)
+    lama::DenseVector<ValueType> source( config.getNT(), ValueType(0), config.getDT(), ctx );
+    sourceFunction( source, config.getFC(), config.getAMP(), comm );
+    end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
+
+    // printin L2 norm for checking source vector
+    //std::cout << "source norm " << source.l2Norm().getValue<ValueType>() << std::endl;
+
+    start_t = common::Walltime::get();
+    // calculate sparse matrices
+    lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
+    initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), comm );
+    end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
+
+    // initialize all needed vectors with zero
+
+    // components of particle velocity
+    lama::DenseVector<ValueType> vX( dist, 0.0, ctx );
+    lama::DenseVector<ValueType> vY( dist, 0.0, ctx );
+    lama::DenseVector<ValueType> vZ( dist, 0.0, ctx );
+    // pressure
+    lama::DenseVector<ValueType> p ( dist, 0.0, ctx );
+    // seismogram data: to store at each time step
+    lama::DenseVector<ValueType> seismogram( config.getNT(), 0.0 ); // no ctx, use default: Host
+
+    // TODO: load colormap for snapshots ???
+
+    HOST_PRINT( comm, "Start time stepping\n" );
+
+    start_t = common::Walltime::get();
+    timesteps( seismogram, source, p, vX, vY, vZ, A, B, C, D, E, F,
+               config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
+               config.getSourceIndex(), config.getSeismogramIndex(), comm, dist );
+    end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
+
+    // print vector data for seismogram plot
+    seismogram.writeToFile( "seismogram.mtx" );
+
+    // printing L2 norm for checking seismogram vector
+    // std::cout << "L2 Norm Seismogram " << seismogram.l2Norm().getValue<ValueType>() << std::endl;
+
+    return 0;
+}
