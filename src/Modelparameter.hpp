@@ -1,3 +1,10 @@
+//! Class for Modelparameters (Subsurface properties)
+/*!
+ This class handels the modelparameters for the finite-difference simulation.
+ */
+
+
+
 #pragma once
 
 #include <scai/lama.hpp>
@@ -29,38 +36,63 @@ class Modelparameter
 {
 public:
     
-    Modelparameter(){};
+    Modelparameter(){}; //< Default constructor
     Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+    Modelparameter(const Modelparameter& rhs); //< Copy Constructor
     
-    ~Modelparameter(){}
-    
+    ~Modelparameter(){}; //< Destructor, releases all allocated resources.
+
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
     
-    lama::DenseVector<ValueType> pi;
-    lama::DenseVector<ValueType> density;
+    void write(std::string filename);
+    
+    lama::DenseVector<ValueType> pi; ///< Vector storing first Lame-Parameter
+    lama::DenseVector<ValueType> density; ///< Vector storing Density
     
 private:
     
     void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-    void write(std::string filename);
     void read(std::string filename);
     
 };
 
-
+/*! \brief Constructor that is generating a homogeneous model
+ *
+ *  Generates a homogeneous model, which will be initialized by the two given scalar values.
+ \param M First Lame-Parameter given as Scalar
+ \param rho Density given as Scalar
+ */
 template<typename ValueType>
 Modelparameter<ValueType>::Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho) {
     init(ctx,dist,M,rho);
 }
 
-
+/*! \brief Constructor that is reading a model from an external file
+ *
+ *  Reads a model from an external mtx file. The extension _pi.mtx will be added to read in the
+ * first Lame Parameter and the extension _density.mtx will be added to read in the density.
+ \param filename Name of file that will be read.
+ */
 template<typename ValueType>
 Modelparameter<ValueType>::Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) {
     init(ctx,dist,filename);
 }
 
+//! \brief Copy constructor
+template<typename ValueType>
+Modelparameter<ValueType>::Modelparameter(const Modelparameter& rhs){
+    pi=rhs.pi;
+    density=rhs.density;
+}
+
+/*! \brief Init model by a homogeneous model
+ *
+ *  Generates a homogeneous model, which will be initialized by the two given scalar values.
+ \param M First Lame-Parameter given as Scalar
+ \param rho Density given as Scalar
+ */
 template<typename ValueType>
 void Modelparameter<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho) {
     
@@ -69,9 +101,16 @@ void Modelparameter<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionP
     pi.assign(M);
     density.assign(rho);
     
-    write("model/test");
+    std::string filename="model/out";
+    write(filename);
 }
 
+/*! \brief Init model by reading a model from an external file
+ *
+ *  Reads a model from an external mtx file. The extension _pi.mtx will be added to read in the
+ * first Lame Parameter and the extension _density.mtx will be added to read in the density.
+ \param filename Name of file that will be read.
+ */
 template<typename ValueType>
 void Modelparameter<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) {
     
@@ -86,14 +125,12 @@ void Modelparameter<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionP
     write(filename);
 }
 
-template<typename ValueType>
-void Modelparameter<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) {
-    pi.setContextPtr(ctx);
-    density.setContextPtr(ctx);
-    pi.allocate(dist);
-    density.allocate(dist);
-};
-
+/*! \brief Write model to an external file
+ *
+ *  Write a model to an external mtx file. The extension _pi.mtx will be added to write the
+ * first Lame Parameter and the extension _density.mtx will be added to write the density.
+ \param filename Name of output file.
+ */
 template<typename ValueType>
 void Modelparameter<ValueType>::write(std::string filename){
     std::string filename_pi=filename+"_pi.mtx";
@@ -101,6 +138,14 @@ void Modelparameter<ValueType>::write(std::string filename){
     
     pi.writeToFile(filename_pi);
     density.writeToFile(filename_density);
+};
+
+template<typename ValueType>
+void Modelparameter<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) {
+    pi.setContextPtr(ctx);
+    density.setContextPtr(ctx);
+    pi.allocate(dist);
+    density.allocate(dist);
 };
 
 template<typename ValueType>

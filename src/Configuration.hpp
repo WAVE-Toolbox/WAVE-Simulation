@@ -1,3 +1,9 @@
+//! Class for Configuration
+/*!
+ This class handels the I/O of the configuration.
+ */
+
+
 #pragma once
 
 #include <scai/lama/Scalar.hpp>
@@ -13,6 +19,10 @@ template<typename ValueType>
 class Configuration
 {
 public:
+    
+    /*! \brief Default constructor
+     \param filename Path to configuration file
+     */
 	Configuration( std::string filename )
 	{
 		// read all lines in file
@@ -102,11 +112,12 @@ public:
 
 	}
 
+    /*! \brief Default deconstructor
+     */
 	~Configuration(){}
 
-	/*
-	 *  routine for printing out the configuration
-	 */
+    /*! \brief Print configuration
+     */
 	void print()
 	{
 	    IndexType velocity_max = velocity; // TODO: is velocity a vector?
@@ -141,7 +152,8 @@ public:
 	    std::cout << std::endl;
 	}
 
-	// for debug
+    /*! \brief Print all parameter (for debugging)
+     */
 	void printAllRaw()
 	{
 		std::cout << "NZ=" << getNZ() << std::endl;
@@ -169,42 +181,42 @@ public:
 		std::cout << "seismogram_index=" << getSeismogramIndex() << std::endl;
 	}
 
-	IndexType getNZ() { return NZ; }
-	IndexType getNX() { return NX; }
-	IndexType getNY() { return NY; }
+	IndexType getNZ() { return NZ; } ///< Return NZ (Depth)
+	IndexType getNX() { return NX; } ///< Return NX
+	IndexType getNY() { return NY; } ///< Return NY
 
-	IndexType getDH() { return DH; }
+	IndexType getDH() { return DH; } ///< Return Grid spacing
 
-	ValueType getDT() { return DT; }
-	ValueType getT() { return T; }
+	ValueType getDT() { return DT; } ///< Return Time Step
+	ValueType getT() { return T; } ///< Return Total propagation time
 
-    IndexType getReadModel() {return ReadModel;}
-    std::string getFilenameModel() {return FilenameModel;}
-	ValueType getVelocity() { return velocity; }
-	ValueType getRho() { return rho; }
+    IndexType getReadModel() {return ReadModel;} ///< Return Read in Model?
+    std::string getFilenameModel() {return FilenameModel;} ///< Return Filename of Model
+	ValueType getVelocity() { return velocity; } ///< Return Velocity for homogeneous model
+	ValueType getRho() { return rho; } ///< Return Density for homogeneous model
 
-	IndexType getFC() { return fc; }
-	IndexType getAMP() { return amp; }
+	IndexType getFC() { return fc; } ///< Return center frequency of source file
+	IndexType getAMP() { return amp; }  ///< Return Amplitude of source
 
-	IndexType getSourceZ() { return source_z; }
-	IndexType getSourceX() { return source_x; }
-	IndexType getSourceY() { return source_y; }
+	IndexType getSourceZ() { return source_z; }  ///< Return source_z
+	IndexType getSourceX() { return source_x; } ///< Return source_x
+	IndexType getSourceY() { return source_y; } ///< Return source_y
 
-	IndexType getSeismogramZ() { return seismogram_z; }
-	IndexType getSeismogramX() { return seismogram_x; }
-	IndexType getSeismogramY() { return seismogram_y; }
+	IndexType getSeismogramZ() { return seismogram_z; } ///< Return seismogram_z
+	IndexType getSeismogramX() { return seismogram_x; } ///< Return seismogram_x
+	IndexType getSeismogramY() { return seismogram_y; } ///< Return seismogram_y
 
-    IndexType getN() { return N; }
+    IndexType getN() { return N; } ///< Return N
 
-	ValueType getM() { return M; }
+	ValueType getM() { return M; } ///< Return M
 
-	IndexType getNT() { return NT; }
+	IndexType getNT() { return NT; } ///< Return NT
+ 
+	lama::Scalar& getVfactor() { return v_factor; } ///< Return v_factor
+	lama::Scalar& getPfactor() { return p_factor; } ///< Return p_factor
 
-	lama::Scalar& getVfactor() { return v_factor; }
-	lama::Scalar& getPfactor() { return p_factor; }
-
-	IndexType getSourceIndex() { return source_index; }
-	IndexType getSeismogramIndex() { return seismogram_index; }
+	IndexType getSourceIndex() { return source_index; } ///< Return Source Index
+	IndexType getSeismogramIndex() { return seismogram_index; } ///< Return Seismogram Index
 
 private:
 	/*  
@@ -229,49 +241,45 @@ private:
 	/* read parameters */
 
     // define spatial sampling: number of grid points in direction
-    IndexType NZ; // depth
-    IndexType NX; // horizontal 1
-    IndexType NY; // horizontal 2
+    IndexType NZ; ///< Grid points depth
+    IndexType NX; ///< Grid points horizontal 1
+    IndexType NY; ///< Grid points horizontal 2
 
-    // define distance between two grid points in meter
+    /// define distance between two grid points in meter
     IndexType DH;
     
     // define temporal sampling
-    ValueType DT;  // temporal sampling in seconds
-    ValueType T;   // total simulation time
+    ValueType DT;  ///< temporal sampling in seconds
+    ValueType T;   ///< total simulation time
 
-    // define material parameter
-    // define distance between two grid points in meter
-    IndexType ReadModel;
-    std::string FilenameModel;
-    ValueType velocity; // Density in kilo gramms per cubic meter
-    ValueType rho;      // P-wave velocity in meter per seconds
+    IndexType ReadModel; ///< Read model from File (1=YES, else=NO)
+    std::string FilenameModel; ///< Filename to read model
+    ValueType velocity; ///< Density in kilo gramms per cubic meter
+    ValueType rho;      ///< P-wave velocity in meter per seconds
 
     // define source wavelet
-    IndexType fc; // Center frequency of ricker wavelet
-    IndexType amp; // Amplitude of source signal
+    IndexType fc; ///< Center frequency of ricker wavelet
+    IndexType amp; ///< Amplitude of source signal
 
-    // source position in grid points
-    IndexType source_z;
-    IndexType source_x;
-    IndexType source_y;
+    IndexType source_z; ///< source position in grid points (depth)
+    IndexType source_x; ///< source position in grid points
+    IndexType source_y; ///< source position in grid points
 
-    // seismogram position in grid points
-    IndexType seismogram_z;
-    IndexType seismogram_x;
-    IndexType seismogram_y;
+    IndexType seismogram_z; ///< seismogram position in grid points (depth)
+    IndexType seismogram_x; ///< seismogram position in grid points
+    IndexType seismogram_y; ///< seismogram position in grid points
 
     /* calculated parameters */
 
     IndexType N;
 
-	ValueType M; // P-wave modulus
+	ValueType M; ///< P-wave modulus (in case of homogeneous model)
 
-	IndexType NT;
+	IndexType NT; ///< Number of time steps
 
-	lama::Scalar v_factor;
-	lama::Scalar p_factor;
+	lama::Scalar v_factor;  ///< factor for update
+	lama::Scalar p_factor;  ///< factor for update
 
-	IndexType source_index;
-	IndexType seismogram_index;
+	IndexType source_index;  ///< Position of source in 1D coordinates
+	IndexType seismogram_index;  ///< Position of receiver in 1D coordinates
 };

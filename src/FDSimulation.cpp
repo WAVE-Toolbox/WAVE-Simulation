@@ -108,7 +108,6 @@ int main( int /*argc*/, char** /*argv[]*/ )
         model.init(ctx,dist,config.getM(),config.getRho());
     }
     
-
     HOST_PRINT( comm, "Start time stepping\n" );
 
     /* --------------------------------------- */
