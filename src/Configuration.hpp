@@ -52,12 +52,12 @@ public:
 	    input.close();
 
 		// check map and assign all values with right "cast" to members
-		size_t nArgs = 16;
+		size_t nArgs = 18;
 		if ( map.size() != nArgs )
 		{
 			std::cout << filename << " does not include a valid configutation with " << nArgs << " arguments." << std::endl;
 		}
-
+        
 		std::istringstream( map[ "NZ" ] ) >> NZ; // IndexType
 		std::istringstream( map[ "NX" ] ) >> NX; // IndexType
 		std::istringstream( map[ "NY" ] ) >> NY; // IndexType
@@ -67,6 +67,9 @@ public:
 		std::istringstream( map[ "DT" ] ) >> DT; // ValueType
 		std::istringstream( map[ "T" ] ) >> T;  // ValueType
 
+        std::istringstream( map[ "ReadModel" ] ) >> ReadModel; // IndexType
+        std::istringstream( map[ "FilenameModel" ] ) >> FilenameModel; // std::string
+    
 		std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
 		std::istringstream( map[ "rho" ] ) >> rho; // ValueType
 
@@ -89,11 +92,13 @@ public:
 
 	    NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
 
-	    v_factor = lama::Scalar(DT / DH / rho );
-	    p_factor = lama::Scalar(DT * M);
+	    v_factor = lama::Scalar(DT / DH);
+	    p_factor = lama::Scalar(DT);
 
 	    source_index     = index( source_x,     source_y,     source_z,     NX, NY, NZ );
 	    seismogram_index = index( seismogram_x, seismogram_y, seismogram_z, NX, NY, NZ );
+        
+        FilenameModel="model/"+FilenameModel;
 
 	}
 
@@ -122,9 +127,17 @@ public:
 	    std::cout << "Modelling-domain:" << std::endl;
 	    std::cout << "    Z: " << DH * NZ << " m (Depth)" << std::endl;
 	    std::cout << "    X: " << DH * NX << " m (Horizontal)" << std::endl;
-	    std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
-	    std::cout << "Material:" << std::endl;
-	    std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
+        std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
+        std::cout << "Material:" << std::endl;
+        if(ReadModel==1) {
+            std::cout << "    Model will be read in from disk" << std::endl;
+            std::cout << "    First Lame-Parameter: " << FilenameModel << "_pi.mtx" << std::endl;
+            std::cout << "    Density: " << FilenameModel << "_density.mtx" << std::endl;
+        } else {
+            std::cout << "    A homogeneous model will be generated" << std::endl;
+            std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
+            std::cout << "    Density:" << rho << " g/cm3" << std::endl;
+        }
 	    std::cout << std::endl;
 	}
 
@@ -165,6 +178,8 @@ public:
 	ValueType getDT() { return DT; }
 	ValueType getT() { return T; }
 
+    IndexType getReadModel() {return ReadModel;}
+    std::string getFilenameModel() {return FilenameModel;}
 	ValueType getVelocity() { return velocity; }
 	ValueType getRho() { return rho; }
 
@@ -220,12 +235,15 @@ private:
 
     // define distance between two grid points in meter
     IndexType DH;
-
+    
     // define temporal sampling
     ValueType DT;  // temporal sampling in seconds
     ValueType T;   // total simulation time
 
     // define material parameter
+    // define distance between two grid points in meter
+    IndexType ReadModel;
+    std::string FilenameModel;
     ValueType velocity; // Density in kilo gramms per cubic meter
     ValueType rho;      // P-wave velocity in meter per seconds
 
