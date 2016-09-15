@@ -4,7 +4,6 @@
  */
 
 
-
 #pragma once
 
 #include <scai/lama.hpp>
@@ -28,7 +27,6 @@
 #include <scai/logging.hpp>
 
 #include <iostream>
-
 
 
 template<typename ValueType>
@@ -58,6 +56,7 @@ private:
     
 };
 
+
 /*! \brief Constructor that is generating a homogeneous model
  *
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
@@ -83,8 +82,8 @@ Modelparameter<ValueType>::Modelparameter(hmemo::ContextPtr ctx, dmemo::Distribu
 //! \brief Copy constructor
 template<typename ValueType>
 Modelparameter<ValueType>::Modelparameter(const Modelparameter& rhs){
-    pi=rhs.pi;
-    density=rhs.density;
+    pi=rhs.pi.copy();
+    density=rhs.density.copy();
 }
 
 /*! \brief Init model by a homogeneous model

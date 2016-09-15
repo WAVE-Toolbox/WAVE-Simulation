@@ -14,7 +14,7 @@ DT=2.0e-03 // temporal sampling in seconds
 T=2      // total simulation time
 
 // define material parameter
-ReadModel=1
+ReadModel=0
 FilenameModel=test2 // Seaches in folder model, this means model/FilenameModel
 
 velocity=3500 // Density in kilo gramms per cubic meter

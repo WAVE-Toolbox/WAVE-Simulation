@@ -1,9 +1,3 @@
-//! Class for Configuration
-/*!
- This class handels the I/O of the configuration.
- */
-
-
 #pragma once
 
 #include <scai/lama/Scalar.hpp>
@@ -15,6 +9,10 @@
 
 using namespace scai;
 
+//! Class for Configuration of the FD simulation
+/*!
+ This class handels the configuration for the finite-difference simulation.
+ */
 template<typename ValueType>
 class Configuration
 {
@@ -283,3 +281,4 @@ private:
 	IndexType source_index;  ///< Position of source in 1D coordinates
 	IndexType seismogram_index;  ///< Position of receiver in 1D coordinates
 };
+
