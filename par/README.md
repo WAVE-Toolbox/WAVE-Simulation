@@ -1,7 +1,7 @@
 ## Preparatory steps
 - `export SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
-- `export DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib`
-- `export LD_LIBRARY_PATH=${SCAI_ROOT}/lib`
+- `export DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib:${DYLD_LIBRARY_PATH}`
+- `export LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}`
 
 ## Using OpenMP
 - Set `export OMP_NUM_THREADS=1`
