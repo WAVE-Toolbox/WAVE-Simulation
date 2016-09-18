@@ -10,5 +10,6 @@ Documentation:
 
 Requierment:
 - Library [LAMA](https://www.libama.org)
+- Compiler with C++11 support
 
 Tested with g++ (4.9.3).

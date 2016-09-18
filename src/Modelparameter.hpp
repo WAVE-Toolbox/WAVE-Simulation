@@ -34,20 +34,25 @@ class Modelparameter
 {
 public:
     
-    Modelparameter(){}; //< Default constructor
+    //! Default constructor.
+    Modelparameter(){};
     Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     Modelparameter(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-    Modelparameter(const Modelparameter& rhs); //< Copy Constructor
+    //! Copy Constructor.
+    Modelparameter(const Modelparameter& rhs);
     
-    ~Modelparameter(){}; //< Destructor, releases all allocated resources.
+    //! Destructor, releases all allocated resources.
+    ~Modelparameter(){};
 
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
     
     void write(std::string filename);
     
-    lama::DenseVector<ValueType> pi; ///< Vector storing first Lame-Parameter
-    lama::DenseVector<ValueType> density; ///< Vector storing Density
+    /// Vector storing first Lame-Parameter.
+    lama::DenseVector<ValueType> pi;
+    /// Vector storing Density.
+    lama::DenseVector<ValueType> density;
     
 private:
     
@@ -155,3 +160,7 @@ void Modelparameter<ValueType>::read(std::string filename){
     pi.readFromFile(filename_pi);
     density.readFromFile(filename_density);
 };
+
+
+
+

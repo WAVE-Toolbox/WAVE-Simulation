@@ -39,6 +39,12 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
     // Invert Density Values before the time stepping
     model.density.invert();
     
+    
+    // create new Vector(Pointer) with same configuration as vZ
+    common::unique_ptr<lama::Vector> helpPtr( vZ.newVector() );
+    // get Reference of VectorPointer
+    lama::Vector& help = *helpPtr;
+    
     for ( IndexType t = 0; t < NT; t++ )
     {
         if( t % 100 == 0 && t != 0)
@@ -46,21 +52,19 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
             HOST_PRINT( comm, "Calculating time step " << t << " from " << NT << "\n" );
         }
         
-        // create new Vector(Pointer) with same configuration as vZ
-        common::unique_ptr<lama::Vector> helpPtr( vZ.newVector() );
-        // get Reference of VectorPointer
-        lama::Vector& help = *helpPtr;
-        
         // update velocity, v_factor is 'DT / DH'
         // velocity z: vZ = vZ + DT / ( DH * rho ) * A * p;
         help=v_factor * A * p; // Update=DT / ( DH) * A * p
         vZ += help.scale(model.density); // Update+1/RHO
+        
         // velocity x: vX = vX + DT / ( DH * rho ) * B * p;
         help=v_factor * B * p; // Update=DT / ( DH) * B * p
         vX += help.scale(model.density); // Update+1/RHO
+        
         // velocity y: vY = vY + DT / ( DH * rho ) * C * p;
         help=v_factor * C * p; // Update=DT / ( DH) * C * p
         vY += help.scale(model.density); // Update+1/RHO
+        
         
         // pressure update
         help =  DH_INV * D * vZ;
@@ -73,6 +77,7 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
         //          should be used rarely
         // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
         p.setValue( source_index, p.getValue( source_index ) + source.getValue( t ) );
+        
         seismogram.setValue( t, p.getValue( seismogram_index ) );
         
     }
