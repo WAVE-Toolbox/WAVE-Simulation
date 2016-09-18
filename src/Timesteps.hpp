@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-#include "Modelparameter.hpp"
+#include "Modelparameter/Modelparameter3Dacoustic.hpp"
 
 /*
  *  routine doing NT time steps updating vX, vY, vZ, p
@@ -27,7 +27,7 @@
  *  storing seismogram data
  */
 template <typename ValueType>
-void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter<ValueType>& model, lama::DenseVector<ValueType>& p,
+void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter3Dacoustic<ValueType>& model, lama::DenseVector<ValueType>& p,
                lama::Vector& vX, lama::Vector& vY, lama::Vector& vZ,
                lama::Matrix& A, lama::Matrix& B, lama::Matrix& C, lama::Matrix& D, lama::Matrix& E, lama::Matrix& F,
                lama::Scalar v_factor, lama::Scalar p_factor,

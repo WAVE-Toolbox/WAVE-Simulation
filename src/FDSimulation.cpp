@@ -27,7 +27,8 @@
 #include "InitializeMatrices.hpp"
 #include "SourceFunction.hpp"
 #include "Timesteps.hpp"
-#include "Modelparameter.hpp"
+
+#include "Modelparameter/Modelparameter3Dacoustic.hpp"
 
 using namespace scai;
 
@@ -101,9 +102,8 @@ int main( int /*argc*/, char** /*argv[]*/ )
     // seismogram data: to store at each time step
     lama::DenseVector<ValueType> seismogram( config.getNT(), 0.0 ); // no ctx, use default: Host
     // Model
-    Modelparameter<ValueType> model;
+    Modelparameter3Dacoustic<ValueType> model;
     if(config.getReadModel()==1){
-        model.init(ctx,dist,config.getFilenameModel());
     } else {
         model.init(ctx,dist,config.getM(),config.getRho());
     }
