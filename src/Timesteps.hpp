@@ -21,14 +21,15 @@
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
 
+#include "Wavefields/Wavefields3Dacoustic.hpp"
+
 /*
  *  routine doing NT time steps updating vX, vY, vZ, p
  *  with incoming source
  *  storing seismogram data
  */
 template <typename ValueType>
-void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter3Dacoustic<ValueType>& model, lama::DenseVector<ValueType>& p,
-               lama::Vector& vX, lama::Vector& vY, lama::Vector& vZ,
+void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
                lama::Matrix& A, lama::Matrix& B, lama::Matrix& C, lama::Matrix& D, lama::Matrix& E, lama::Matrix& F,
                lama::Scalar v_factor, lama::Scalar p_factor,
                IndexType NT, lama::Scalar DH_INV, IndexType source_index, IndexType seismogram_index,
@@ -41,9 +42,9 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
     
     
     // create new Vector(Pointer) with same configuration as vZ
-    common::unique_ptr<lama::Vector> helpPtr( vZ.newVector() );
+    common::unique_ptr<lama::Vector> updatePtr( wavefield.vX.newVector() );
     // get Reference of VectorPointer
-    lama::Vector& help = *helpPtr;
+    lama::Vector& update = *updatePtr;
     
     for ( IndexType t = 0; t < NT; t++ )
     {
@@ -54,31 +55,31 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
         
         // update velocity, v_factor is 'DT / DH'
         // velocity z: vZ = vZ + DT / ( DH * rho ) * A * p;
-        help=v_factor * A * p; // Update=DT / ( DH) * A * p
-        vZ += help.scale(model.density); // Update+1/RHO
+        update=v_factor * A * wavefield.p; // Update=DT / ( DH) * A * p
+        wavefield.vZ += update.scale(model.density); // Update+1/RHO
         
         // velocity x: vX = vX + DT / ( DH * rho ) * B * p;
-        help=v_factor * B * p; // Update=DT / ( DH) * B * p
-        vX += help.scale(model.density); // Update+1/RHO
+        update=v_factor * B * wavefield.p; // Update=DT / ( DH) * B * p
+        wavefield.vX += update.scale(model.density); // Update+1/RHO
         
         // velocity y: vY = vY + DT / ( DH * rho ) * C * p;
-        help=v_factor * C * p; // Update=DT / ( DH) * C * p
-        vY += help.scale(model.density); // Update+1/RHO
+        update=v_factor * C * wavefield.p; // Update=DT / ( DH) * C * p
+        wavefield.vY += update.scale(model.density); // Update+1/RHO
         
         
         // pressure update
-        help =  DH_INV * D * vZ;
-        help += DH_INV * E * vX;
-        help += DH_INV * F * vY;
-        p += p_factor * help.scale(model.pi); // p= DT (p_factor) * Update * Model (M)
+        update =  DH_INV * D * wavefield.vZ;
+        update += DH_INV * E * wavefield.vX;
+        update += DH_INV * F * wavefield.vY;
+        wavefield.p += p_factor * update.scale(model.pi); // p= DT (p_factor) * Update * Model (M)
         
         // update seismogram and pressure with source terms
         // CAUTION: elementwise access by setVal and getVal cause performace issues executed on CUDA
         //          should be used rarely
         // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
-        p.setValue( source_index, p.getValue( source_index ) + source.getValue( t ) );
+        wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
         
-        seismogram.setValue( t, p.getValue( seismogram_index ) );
+        seismogram.setValue( t, wavefield.p.getValue( seismogram_index ) );
         
     }
     

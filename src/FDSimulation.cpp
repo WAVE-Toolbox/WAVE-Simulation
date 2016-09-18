@@ -30,6 +30,8 @@
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
 
+#include "Wavefields/Wavefields3Dacoustic.hpp"
+
 using namespace scai;
 
 #define MASTER 0
@@ -90,15 +92,9 @@ int main( int /*argc*/, char** /*argv[]*/ )
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
-    /* --------------------------------------- */
-    /* Initialize all needed vectors with zero */
-    /* --------------------------------------- */
-    // components of particle velocity
-    lama::DenseVector<ValueType> vX( dist, 0.0, ctx );
-    lama::DenseVector<ValueType> vY( dist, 0.0, ctx );
-    lama::DenseVector<ValueType> vZ( dist, 0.0, ctx );
-    // pressure
-    lama::DenseVector<ValueType> p ( dist, 0.0, ctx );
+    
+    Wavefields3Dacoustic<ValueType> wavefields(ctx,dist);
+    
     // seismogram data: to store at each time step
     lama::DenseVector<ValueType> seismogram( config.getNT(), 0.0 ); // no ctx, use default: Host
     // Model
@@ -114,7 +110,7 @@ int main( int /*argc*/, char** /*argv[]*/ )
     /* Time stepping                           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    timesteps( seismogram, source, model, p, vX, vY, vZ, A, B, C, D, E, F,
+    timesteps( seismogram, source, model, wavefields, A, B, C, D, E, F,
                config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
                config.getSourceIndex(), config.getSeismogramIndex(), comm, dist );
     end_t = common::Walltime::get();
