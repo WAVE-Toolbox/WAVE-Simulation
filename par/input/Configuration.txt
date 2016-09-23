@@ -1,5 +1,5 @@
 // format has to be exactly name=value (without any whitespaces)
-// expects exactly these number of arguments (16) and these names
+// expects exactly these number of arguments (18) and these names
 
 // define spatial sampling: number of grid points in direction
 NZ=100 // depth
@@ -11,9 +11,12 @@ DH=50
 
 // define temporal sampling
 DT=2.0e-03 // temporal sampling in seconds
-T=2.0      // total simulation time
+T=2      // total simulation time
 
 // define material parameter
+ReadModel=0
+FilenameModel=test2 // Seaches in folder model, this means model/FilenameModel
+
 velocity=3500 // Density in kilo gramms per cubic meter
 rho=2000      // P-wave velocity in meter per seconds
 

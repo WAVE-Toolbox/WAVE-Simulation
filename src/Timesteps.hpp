@@ -19,6 +19,9 @@
 
 #include <iostream>
 
+#include "Modelparameter/Modelparameter3Dacoustic.hpp"
+
+#include "Wavefields/Wavefields3Dacoustic.hpp"
 
 /*
  *  routine doing NT time steps updating vX, vY, vZ, p
@@ -26,14 +29,22 @@
  *  storing seismogram data
  */
 template <typename ValueType>
-void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, lama::DenseVector<ValueType>& p,
-               lama::Vector& vX, lama::Vector& vY, lama::Vector& vZ,
+void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
                lama::Matrix& A, lama::Matrix& B, lama::Matrix& C, lama::Matrix& D, lama::Matrix& E, lama::Matrix& F,
                lama::Scalar v_factor, lama::Scalar p_factor,
                IndexType NT, lama::Scalar DH_INV, IndexType source_index, IndexType seismogram_index,
                dmemo::CommunicatorPtr comm, dmemo::DistributionPtr /*dist*/ )
 {
     SCAI_REGION( "timestep" )
+    
+    // Invert Density Values before the time stepping
+    model.density.invert();
+    
+    
+    // create new Vector(Pointer) with same configuration as vZ
+    common::unique_ptr<lama::Vector> updatePtr( wavefield.vX.newVector() );
+    // get Reference of VectorPointer
+    lama::Vector& update = *updatePtr;
     
     for ( IndexType t = 0; t < NT; t++ )
     {
@@ -42,41 +53,36 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
             HOST_PRINT( comm, "Calculating time step " << t << " from " << NT << "\n" );
         }
         
-        // update velocity, v_factor is 'DT / DH / rho'
+        // update velocity, v_factor is 'DT / DH'
         // velocity z: vZ = vZ + DT / ( DH * rho ) * A * p;
-        vZ += v_factor * A * p;
+        update=v_factor * A * wavefield.p; // Update=DT / ( DH) * A * p
+        wavefield.vZ += update.scale(model.density); // Update+1/RHO
+        
         // velocity x: vX = vX + DT / ( DH * rho ) * B * p;
-        vX += v_factor * B * p;
+        update=v_factor * B * wavefield.p; // Update=DT / ( DH) * B * p
+        wavefield.vX += update.scale(model.density); // Update+1/RHO
+        
         // velocity y: vY = vY + DT / ( DH * rho ) * C * p;
-        vY += v_factor * C * p;
+        update=v_factor * C * wavefield.p; // Update=DT / ( DH) * C * p
+        wavefield.vY += update.scale(model.density); // Update+1/RHO
         
-        lama::Scalar znorm = vZ.l2Norm();
-        lama::Scalar xnorm = vX.l2Norm();
-        lama::Scalar ynorm = vY.l2Norm();
-        
-        // create new Vector(Pointer) with same configuration as vZ
-        common::unique_ptr<lama::Vector> helpPtr( vZ.newVector() );
-        // get Reference of VectorPointer
-        lama::Vector& help = *helpPtr;
         
         // pressure update
-        help =  DH_INV * D * vZ;
-        help += DH_INV * E * vX;
-        help += DH_INV * F * vY;
-        p += p_factor * help; // p_factor is 'DT * M'
-        
-        lama::Scalar hnorm = help.l2Norm();
-        lama::Scalar pnorm = p.l2Norm();
+        update =  DH_INV * D * wavefield.vZ;
+        update += DH_INV * E * wavefield.vX;
+        update += DH_INV * F * wavefield.vY;
+        wavefield.p += p_factor * update.scale(model.pi); // p= DT (p_factor) * Update * Model (M)
         
         // update seismogram and pressure with source terms
         // CAUTION: elementwise access by setVal and getVal cause performace issues executed on CUDA
         //          should be used rarely
         // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
-        p.setValue( source_index, p.getValue( source_index ) + source.getValue( t ) );
-        seismogram.setValue( t, p.getValue( seismogram_index ) );
+        wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
         
-        // TODO: plot snapshots of wave propagation ???
+        seismogram.setValue( t, wavefield.p.getValue( seismogram_index ) );
+        
     }
+    
 }
 
 

@@ -1,13 +1,13 @@
 ## Preparatory steps
 - `export SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
-- `export DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib`
-- `export LD_LIBRARY_PATH=${SCAI_ROOT}/lib`
+- `export DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib:${DYLD_LIBRARY_PATH}`
+- `export LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}`
 
 ## Using OpenMP
 - Set `export OMP_NUM_THREADS=1`
 
 ## Using OpenMPI/IntelMPI
-- `mpirun -np 4 ./../FDSimulation`
+- Modify `start_FDSimulation.sh` to e.g. `mpirun -np 4 ./../FDSimulation`
 
-## Run LAMA
+## Start the simulation
 - `source start_FDSimulation.sh`

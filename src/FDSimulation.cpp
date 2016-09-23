@@ -28,6 +28,10 @@
 #include "SourceFunction.hpp"
 #include "Timesteps.hpp"
 
+#include "Modelparameter/Modelparameter3Dacoustic.hpp"
+
+#include "Wavefields/Wavefields3Dacoustic.hpp"
+
 using namespace scai;
 
 #define MASTER 0
@@ -41,22 +45,14 @@ std::cout << msg;           \
 }                               \
 }
 
-/*
- *  main for 3-D FD-Algorithm
- *
- *  sets configuration parameters, prints configuration
- *  calculates source
- *  initialize matrices and vectors
- *  do timesteps
- *  writes seismogram data to file
- */
+
 int main( int /*argc*/, char** /*argv[]*/ )
 {
     // we do all calculation in double precision
     typedef double ValueType;
 
     // read configuration parameter from file
-    Configuration<ValueType> config( "Configuration.txt" );
+    Configuration<ValueType> config( "input/Configuration.txt" );
 
     // LAMA specific configuration variables
 
@@ -74,54 +70,57 @@ int main( int /*argc*/, char** /*argv[]*/ )
         config.print();
     }
 
+    
     // for timing
     double start_t, end_t;
    
+    /* --------------------------------------- */
+    /* Calculate source signal                 */
+    /* --------------------------------------- */
     start_t = common::Walltime::get();
-    // get source signal
-    // init vector with a sequence of values (MATLAB t=0:DT:(NT*DT-DT);)
     lama::DenseVector<ValueType> source( config.getNT(), ValueType(0), config.getDT(), ctx );
     sourceFunction( source, config.getFC(), config.getAMP(), comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
 
-    // printin L2 norm for checking source vector
-    //std::cout << "source norm " << source.l2Norm().getValue<ValueType>() << std::endl;
-
+    /* --------------------------------------- */
+    /* Calculate derivative matrizes           */
+    /* --------------------------------------- */
     start_t = common::Walltime::get();
-    // calculate sparse matrices
     lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
     initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
-
-    // initialize all needed vectors with zero
-
-    // components of particle velocity
-    lama::DenseVector<ValueType> vX( dist, 0.0, ctx );
-    lama::DenseVector<ValueType> vY( dist, 0.0, ctx );
-    lama::DenseVector<ValueType> vZ( dist, 0.0, ctx );
-    // pressure
-    lama::DenseVector<ValueType> p ( dist, 0.0, ctx );
+    
+    
+    Wavefields3Dacoustic<ValueType> wavefields(ctx,dist);
+    
     // seismogram data: to store at each time step
     lama::DenseVector<ValueType> seismogram( config.getNT(), 0.0 ); // no ctx, use default: Host
-
-    // TODO: load colormap for snapshots ???
-
+    // Model
+    Modelparameter3Dacoustic<ValueType> model;
+    if(config.getReadModel()==1){
+    } else {
+        model.init(ctx,dist,config.getM(),config.getRho());
+    }
+    
     HOST_PRINT( comm, "Start time stepping\n" );
 
+    /* --------------------------------------- */
+    /* Time stepping                           */
+    /* --------------------------------------- */
     start_t = common::Walltime::get();
-    timesteps( seismogram, source, p, vX, vY, vZ, A, B, C, D, E, F,
+    timesteps( seismogram, source, model, wavefields, A, B, C, D, E, F,
                config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
                config.getSourceIndex(), config.getSeismogramIndex(), comm, dist );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
     // print vector data for seismogram plot
-    seismogram.writeToFile( "seismogram.mtx" );
+    seismogram.writeToFile( "seismograms/seismogram.mtx" );
 
-    // printing L2 norm for checking seismogram vector
-    // std::cout << "L2 Norm Seismogram " << seismogram.l2Norm().getValue<ValueType>() << std::endl;
 
     return 0;
 }
+
+
