@@ -1,5 +1,7 @@
 ## Finite-Difference simulation with the HPC library LAMA
 
+Master: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)  Develop: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
+
 *3D Acoustic Finite-Difference Code developed within the [WAVE-Project](http://wave-toolbox.org).*
 
 Get started:
