@@ -46,11 +46,15 @@ std::cout << msg;           \
 }
 
 
-int main( int /*argc*/, char* argv[] )
+int main( int argc, char* argv[] )
 {
-    // we do all calculation in double precision
     typedef double ValueType;
 
+    if(argc!=2){
+        std::cout<< "\n\nNo configuration file given!\n\n" << std::endl;
+        return(2);
+    }
+    
     // read configuration parameter from file
     Configuration<ValueType> config(argv[1]);
 
@@ -64,7 +68,7 @@ int main( int /*argc*/, char* argv[] )
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
 
-    HOST_PRINT( comm, "Acoustic 3-D FD-Algorithm\n\n" );
+    HOST_PRINT( comm, "\nAcoustic 3-D FD-Algorithm\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
