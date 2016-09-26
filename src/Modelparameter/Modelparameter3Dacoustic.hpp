@@ -54,11 +54,12 @@ public:
     
     void write(std::string filenamepi, std::string filenamedensity);
     void write(std::string filename);
-    
+        
     lama::DenseVector<ValueType> pi; //!< Vector storing first Lame-Parameter.
     lama::DenseVector<ValueType> density; //!< Vector storing Density.
     
 };
+
 
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -128,7 +129,7 @@ void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::Dis
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter "_pi.mtx" is added and for density "_density.mtx" is added.
+ \param filename For the first Lame-parameter ".pi.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
@@ -142,14 +143,14 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr 
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter "_pi.mtx" is added and for density "_density.mtx" is added.
+ \param filename For the first Lame-parameter "model/"+filename+".pi.mtx" is added and for density "model/"+filename+".density.mtx" is added.
  */
 template<typename ValueType>
 void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenamepi=filename+"_pi.mtx";
-    std::string filenamedensity=filename+"_density.mtx";
-    
+    std::string filenamepi=filename+".pi.mtx";
+    std::string filenamedensity=filename+".density.mtx";
+
     this->initModelparameter(pi,ctx,dist,filenamepi);
     this->initModelparameter(density,ctx,dist,filenamedensity);
 }
@@ -172,23 +173,24 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(const Modelparamet
 template<typename ValueType>
 void Modelparameter3Dacoustic<ValueType>::write( std::string filenamepi, std::string filenamedensity)
 {
-    writeModelparameter(pi,filenamepi);
-    writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pi,filenamepi);
+    this->writeModelparameter(density,filenamedensity);
 };
 
 
 /*! \brief Write model to an external file
  *
- \param filename Filename to write files. For the first Lame-parameter "_pi.mtx" is added and for density "_density.mtx" is added.
+ \param filename Filename to write files. For the first Lame-parameter ".pi.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void Modelparameter3Dacoustic<ValueType>::write(std::string filename)
 {
-    std::string filenamepi=filename+"_pi.mtx";
-    std::string filenamedensity=filename+"_density.mtx";
-    writeModelparameter(pi,filenamepi);
-    writeModelparameter(density,filenamedensity);
+    std::string filenamepi=filename+".pi.mtx";
+    std::string filenamedensity=filename+".density.mtx";
+    this->writeModelparameter(pi,filenamepi);
+    this->writeModelparameter(density,filenamedensity);
 };
+
 
 
 

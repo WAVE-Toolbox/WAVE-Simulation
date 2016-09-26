@@ -140,8 +140,8 @@ public:
         std::cout << "Material:" << std::endl;
         if(ReadModel==1) {
             std::cout << "    Model will be read in from disk" << std::endl;
-            std::cout << "    First Lame-Parameter: " << FilenameModel << "_pi.mtx" << std::endl;
-            std::cout << "    Density: " << FilenameModel << "_density.mtx" << std::endl;
+            std::cout << "    First Lame-Parameter: " << FilenameModel << ".pi.mtx" << std::endl;
+            std::cout << "    Density: " << FilenameModel << ".density.mtx" << std::endl;
         } else {
             std::cout << "    A homogeneous model will be generated" << std::endl;
             std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
