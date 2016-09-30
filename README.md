@@ -11,7 +11,9 @@ Documentation:
 - Type `doxygen` in `doc/`
 
 Requierment:
-- Library [LAMA](https://www.libama.org)
+- Library [LAMA](https://www.libama.org) (Development-Version)
 - Compiler with C++11 support
 
-Tested with g++ (4.9.3).
+Tested with:
+- Compiler: g++ (4.9.3), clang++ (3.9)
+- MPI: OpenMPI (1.7.2, 1.10.0)
