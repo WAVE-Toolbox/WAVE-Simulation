@@ -46,13 +46,17 @@ std::cout << msg;           \
 }
 
 
-int main( int /*argc*/, char** /*argv[]*/ )
+int main( int argc, char* argv[] )
 {
-    // we do all calculation in double precision
     typedef double ValueType;
 
+    if(argc!=2){
+        std::cout<< "\n\nNo configuration file given!\n\n" << std::endl;
+        return(2);
+    }
+    
     // read configuration parameter from file
-    Configuration<ValueType> config( "input/Configuration.txt" );
+    Configuration<ValueType> config(argv[1]);
 
     // LAMA specific configuration variables
 
@@ -64,7 +68,7 @@ int main( int /*argc*/, char** /*argv[]*/ )
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
 
-    HOST_PRINT( comm, "Acoustic 3-D FD-Algorithm\n\n" );
+    HOST_PRINT( comm, "\nAcoustic 3-D FD-Algorithm\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -92,23 +96,32 @@ int main( int /*argc*/, char** /*argv[]*/ )
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
-    
+    /* --------------------------------------- */
+    /* Wavefields                              */
+    /* --------------------------------------- */
     Wavefields3Dacoustic<ValueType> wavefields(ctx,dist);
     
-    // seismogram data: to store at each time step
-    lama::DenseVector<ValueType> seismogram( config.getNT(), 0.0 ); // no ctx, use default: Host
-    // Model
+    /* --------------------------------------- */
+    /* Acquisition geometry                    */
+    /* --------------------------------------- */
+    lama::DenseVector<ValueType> seismogram(config.getNT(), 0.0 ); // no ctx, use default: Host
+    
+    /* --------------------------------------- */
+    /* Modelparameter                          */
+    /* --------------------------------------- */
     Modelparameter3Dacoustic<ValueType> model;
-    if(config.getReadModel()==1){
+    if(config.getReadModel()){
+        model.init(ctx,dist,config.getFilenameModel());
     } else {
         model.init(ctx,dist,config.getM(),config.getRho());
+        model.write("model/out");
     }
-    
-    HOST_PRINT( comm, "Start time stepping\n" );
 
     /* --------------------------------------- */
     /* Time stepping                           */
     /* --------------------------------------- */
+    HOST_PRINT( comm, "Start time stepping\n" );
+
     start_t = common::Walltime::get();
     timesteps( seismogram, source, model, wavefields, A, B, C, D, E, F,
                config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),

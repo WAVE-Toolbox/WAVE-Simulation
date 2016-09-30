@@ -2,7 +2,6 @@ stages:
     - build
     - test
     
-
 gcc:
   stage: build
   before_script:
@@ -11,6 +10,7 @@ gcc:
     - echo "g++ Version:" && g++ --version
     - cd src/ && make install CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
   artifacts:
+    when: on_success
     expire_in: 10 min
     paths:
       - bin/
@@ -24,9 +24,10 @@ openmp-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=4
     - cd par/
-    - ./../bin/FDSimulation
+    - ./../bin/FDSimulation "input/Config_CI.txt"
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
+    when: on_success
     expire_in: 30 min
     name: "openmp-gcc"
     paths:
@@ -41,10 +42,11 @@ openmpi-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=1
     - cd par/
-    - mpirun -np 4 ./../bin/FDSimulation
+    - mpirun -np 4 ./../bin/FDSimulation "input/Config_CI.txt"
     - md5sum seismograms/seismogram.mtx
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
+    when: on_success
     expire_in: 30 min
     name: "openmpi-gcc"
     paths:
