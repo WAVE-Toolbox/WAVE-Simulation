@@ -350,7 +350,7 @@ void Sources<ValueType>::generateSignals(IndexType NT, ValueType DT){
 template <typename ValueType>
 void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, IndexType NT, ValueType DT){
     
-    if(nparameter<=9) {
+    if(nparameter<9) {
         COMMON_THROWEXCEPTION ( "Number of source parameters <= 9. Cannot generate synthetic signals. " )
     }
     

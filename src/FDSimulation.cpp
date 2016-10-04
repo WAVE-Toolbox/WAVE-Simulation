@@ -109,15 +109,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter3Dacoustic<ValueType> model;
-    
-    if(config.getReadModel()){
-        model.init(ctx,dist,config.getFilenameModel());
-        model.write(config.getFilenameModel()+".out");
-    } else {
-        model.init(ctx,dist,config.getM(),config.getRho());
-        model.write(config.getFilenameModel()+".out");
-    }
+    Modelparameter3Dacoustic<ValueType> model(config,ctx,dist);
 
     /* --------------------------------------- */
     /* Time stepping                           */

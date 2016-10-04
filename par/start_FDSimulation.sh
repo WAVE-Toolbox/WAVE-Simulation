@@ -1,3 +1,3 @@
 #!/bin/bash
-rm seismograms/*.mtx
+rm seismograms/seismogram.mtx
 ./../bin/FDSimulation "input/Configuration.txt"

@@ -29,6 +29,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "../Configuration.hpp"
 
 template<typename ValueType>
 class Modelparameter3Dacoustic : private Modelparameter<ValueType>
@@ -38,6 +39,7 @@ public:
     //! Default constructor.
     Modelparameter3Dacoustic(){};
 
+    Modelparameter3Dacoustic(Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
     Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamepi, std::string filenamerho);
     Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
@@ -60,7 +62,24 @@ public:
     
 };
 
+/*! \brief Constructor that is using the Configuration class
+ *
+ \param config Configuration class
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ */
+template<typename ValueType>
+Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    if(config.getReadModel()){
+        init(ctx,dist,config.getFilenameModel());
+    } else {
+        init(ctx,dist,config.getM(),config.getRho());
+    }
+    
+    write(config.getFilenameModel()+".out");
 
+}
 
 /*! \brief Constructor that is generating a homogeneous model
  *
