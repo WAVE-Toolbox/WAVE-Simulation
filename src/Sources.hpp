@@ -40,10 +40,10 @@ private:
     void getLocalSources(dmemo::DistributionPtr dist_wavefield);
     void getSourceDistribution(dmemo::CommunicatorPtr comm);
     void allocateSignals(IndexType NT);
-    void generateSyntheticSignal(IndexType nsourcelocal_this, IndexType NT, ValueType DT);
+    void generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT);
     
-    IndexType nsourcesglobal=0; //!< Number of sources global
-    IndexType nsourceslocal=0; //!< Number of sources local
+    IndexType numSourcesGlobal=0; //!< Number of sources global
+    IndexType numSourcesLocal=0; //!< Number of sources local
     
     lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
 
@@ -55,7 +55,7 @@ private:
     
     /* Acquisition Settings */
     lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
-    IndexType nparameter=0; //!< Number of source parameters given in acquisition matrix
+    IndexType numParameter=0; //!< Number of source parameters given in acquisition matrix
     lama::DenseVector<ValueType> source_type; //!< Type of source: 1==Pressure
     lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
     
@@ -87,7 +87,7 @@ Sources<ValueType>::Sources(Configuration<ValueType> config, dmemo::Distribution
  */
 template<typename ValueType>
 IndexType Sources<ValueType>::getNumSourcesGlobal(){
-    return(nsourcesglobal);
+    return(numSourcesGlobal);
 }
 
 
@@ -97,7 +97,7 @@ IndexType Sources<ValueType>::getNumSourcesGlobal(){
  */
 template<typename ValueType>
 IndexType Sources<ValueType>::getNumSourcesLocal(){
-    return(nsourceslocal);
+    return(numSourcesLocal);
 }
 
 
@@ -137,36 +137,36 @@ void Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX
     IndexType ncolumn_temp=acquisition_temp.getNumColumns();
     
     /* Derive number of sources and number of read-in parameters */
-    nsourcesglobal=nrow_temp;
-    nparameter=ncolumn_temp;
+    numSourcesGlobal=nrow_temp;
+    numParameter=ncolumn_temp;
     
     /* Check if number of parameters is supported */
-    if( nparameter<5 || nparameter>9 ) {
+    if( numParameter<5 || numParameter>9 ) {
         COMMON_THROWEXCEPTION ( "Source acquisition file has an unkown format " )
     }
     
     /* Distribution: Master process only (comm->myRank()==0) */
-    dmemo::DistributionPtr dist_master_nparameter( new dmemo::CyclicDistribution( nparameter, nparameter, dist_wavefield->getCommunicatorPtr() ) );
-    dmemo::DistributionPtr dist_master_nsourcesglobal( new dmemo::CyclicDistribution( nsourcesglobal, nsourcesglobal, dist_wavefield->getCommunicatorPtr() )  );
+    dmemo::DistributionPtr dist_master_numParameter( new dmemo::CyclicDistribution( numParameter, numParameter, dist_wavefield->getCommunicatorPtr() ) );
+    dmemo::DistributionPtr dist_master_numSourcesGlobal( new dmemo::CyclicDistribution( numSourcesGlobal, numSourcesGlobal, dist_wavefield->getCommunicatorPtr() )  );
 
     /* Distribution: Replicated on all processes */
-    dmemo::DistributionPtr no_dist_nsourcesglobal( new scai::dmemo::NoDistribution ( nsourcesglobal ) );
-    dmemo::DistributionPtr no_dist_nparameter( new scai::dmemo::NoDistribution ( nparameter ) );
+    dmemo::DistributionPtr no_dist_numSourcesGlobal( new scai::dmemo::NoDistribution ( numSourcesGlobal ) );
+    dmemo::DistributionPtr no_dist_numParameter( new scai::dmemo::NoDistribution ( numParameter ) );
 
     /* Allocate acquisition matrix on master */
-    acquisition.allocate(dist_master_nparameter,no_dist_nsourcesglobal);
+    acquisition.allocate(dist_master_numParameter,no_dist_numSourcesGlobal);
     
     /* Allocate coordinates on master */
-    coordinates.allocate(dist_master_nsourcesglobal);
+    coordinates.allocate(dist_master_numSourcesGlobal);
     
     /* Allocate source parameter vectors on master */
-    source_type.allocate(dist_master_nsourcesglobal);
-    wavelet_type.allocate(dist_master_nsourcesglobal);
-    if(nparameter>5){
-        wavelet_shape.allocate(dist_master_nsourcesglobal);
-        wavelet_fc.allocate(dist_master_nsourcesglobal);
-        wavelet_amp.allocate(dist_master_nsourcesglobal);
-        wavelet_tshift.allocate(dist_master_nsourcesglobal);
+    source_type.allocate(dist_master_numSourcesGlobal);
+    wavelet_type.allocate(dist_master_numSourcesGlobal);
+    if(numParameter>5){
+        wavelet_shape.allocate(dist_master_numSourcesGlobal);
+        wavelet_fc.allocate(dist_master_numSourcesGlobal);
+        wavelet_amp.allocate(dist_master_numSourcesGlobal);
+        wavelet_tshift.allocate(dist_master_numSourcesGlobal);
     }
     
     /* Local operations on master: 1. Transpose acquisition, 2. calculate 1-D coordinates  */
@@ -204,11 +204,11 @@ void Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX
         
         /* 2. Calculate 1-D coordinates form 3-D coordinates */
         IndexType X,Y,Z;
-        for(IndexType i=0; i<nsourcesglobal; i++){
+        for(IndexType i=0; i<numSourcesGlobal; i++){
             
-            X=read_acquisition_HA[ i + nsourcesglobal*0 ];
-            Y=read_acquisition_HA[ i + nsourcesglobal*1 ];
-            Z=read_acquisition_HA[ i + nsourcesglobal*2 ];
+            X=read_acquisition_HA[ i + numSourcesGlobal*0 ];
+            Y=read_acquisition_HA[ i + numSourcesGlobal*1 ];
+            Z=read_acquisition_HA[ i + numSourcesGlobal*2 ];
     
             write_coordinates_LA[i]=this->coordinate2index(X,Y,Z,NX,NY,NZ);
         }
@@ -220,7 +220,7 @@ void Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX
     }
     
     /* Replicate coordinates on all processes */
-    coordinates.redistribute(no_dist_nsourcesglobal);
+    coordinates.redistribute(no_dist_numSourcesGlobal);
     
     /* Get local sources from global sources */
     getLocalSources(dist_wavefield);
@@ -229,22 +229,22 @@ void Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX
     getSourceDistribution(dist_wavefield->getCommunicatorPtr());
 
     /* Replicate acquisition on all processes */
-    acquisition.redistribute(no_dist_nparameter,no_dist_nsourcesglobal);
+    acquisition.redistribute(no_dist_numParameter,no_dist_numSourcesGlobal);
     
     /* Allocate source parameter vectors on all processes */
-    source_type.allocate(nsourcesglobal);
-    wavelet_type.allocate(nsourcesglobal);
-    if(nparameter>5){
-        wavelet_shape.allocate(nsourcesglobal);
-        wavelet_fc.allocate(nsourcesglobal);
-        wavelet_amp.allocate(nsourcesglobal);
-        wavelet_tshift.allocate(nsourcesglobal);
+    source_type.allocate(numSourcesGlobal);
+    wavelet_type.allocate(numSourcesGlobal);
+    if(numParameter>5){
+        wavelet_shape.allocate(numSourcesGlobal);
+        wavelet_fc.allocate(numSourcesGlobal);
+        wavelet_amp.allocate(numSourcesGlobal);
+        wavelet_tshift.allocate(numSourcesGlobal);
     }
     
     /* Save source configurations from acquisition matrix in vectors */
     acquisition.getLocalRow(source_type,3);
     acquisition.getLocalRow(wavelet_type,4);
-    if(nparameter>5){
+    if(numParameter>5){
         acquisition.getLocalRow(wavelet_shape,5);
         acquisition.getLocalRow(wavelet_fc,6);
         acquisition.getLocalRow(wavelet_amp,7);
@@ -255,7 +255,7 @@ void Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX
     coordinates.redistribute(dist_wavefield_sources);
     source_type.redistribute(dist_wavefield_sources);
     wavelet_type.redistribute(dist_wavefield_sources);
-    if(nparameter>5){
+    if(numParameter>5){
         wavelet_shape.redistribute(dist_wavefield_sources);
         wavelet_fc.redistribute(dist_wavefield_sources);
         wavelet_amp.redistribute(dist_wavefield_sources);
@@ -308,7 +308,7 @@ void Sources<ValueType>::allocateSignals(IndexType NT)
 template <typename ValueType>
 void Sources<ValueType>::generateSignals(IndexType NT, ValueType DT){
     
-    if(nparameter<5) {
+    if(numParameter<5) {
         COMMON_THROWEXCEPTION ( "Number of source parameters < 5. Cannot generate signals. " )
     }
     
@@ -318,7 +318,7 @@ void Sources<ValueType>::generateSignals(IndexType NT, ValueType DT){
     hmemo::ReadAccess<ValueType> read_wavelet_type_LA(*wavelet_type_LA);
     IndexType wavelet_type_i;
     
-    for(IndexType i=0; i<nsourceslocal; i++){
+    for(IndexType i=0; i<numSourcesLocal; i++){
         
         /* Cast to IndexType */
         wavelet_type_i=read_wavelet_type_LA[i];
@@ -344,14 +344,14 @@ void Sources<ValueType>::generateSignals(IndexType NT, ValueType DT){
  * Calculation of a synthetic source signal accordingly to the source parameter vectors for the given local source number.
  * Uses the entries of the wavelet_shape vector to determine the shape of the wavelet.
  *
- \param nsourcelocal_this Number of the local source
+ \param SourceLocal Number of the local source
  \param NT Number of time steps
  \param DT Time step interval
  */
 template <typename ValueType>
-void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, IndexType NT, ValueType DT){
+void Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT){
     
-    if(nparameter<9) {
+    if(numParameter<9) {
         COMMON_THROWEXCEPTION ( "Number of source parameters <= 9. Cannot generate synthetic signals. " )
     }
     
@@ -359,12 +359,12 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, In
     signal.allocate(NT);
     
     /* Cast to IndexType */
-    IndexType wavelet_shape_i=wavelet_shape.getLocalValues()[nsourcelocal_this];
+    IndexType wavelet_shape_i=wavelet_shape.getLocalValues()[SourceLocal];
     
     switch (wavelet_shape_i) {
         case 1:
             /* Ricker */
-            this->Ricker(signal,  NT,  DT,  wavelet_fc.getLocalValues()[nsourcelocal_this],  wavelet_amp.getLocalValues()[nsourcelocal_this],  wavelet_tshift.getLocalValues()[nsourcelocal_this]);
+            this->Ricker(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
             break;
             
         default:
@@ -380,7 +380,7 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, In
     hmemo::WriteAccess<ValueType> write_signals_HA(*signals_HA);
     
     for(IndexType i=0; i<NT; i++){
-        write_signals_HA[i+NT*nsourcelocal_this]=read_signal[i];
+        write_signals_HA[i+NT*SourceLocal]=read_signal[i];
     }
     read_signal.release();
     write_signals_HA.release();
@@ -390,7 +390,7 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, In
 
 /*! \brief Calculation of the source distribution
  *
- * Calculation of the source distribution based on the global number of sources nsourcesglobal and the local number of sources nsourceslocal on each node.
+ * Calculation of the source distribution based on the global number of sources numSourcesGlobal and the local number of sources numSourcesLocal on each node.
  * Generates a GenBlockDistribution.
  *
  \param comm Communicator for the generated distribution
@@ -398,11 +398,11 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType nsourcelocal_this, In
 template<typename ValueType>
 void Sources<ValueType>::getSourceDistribution(dmemo::CommunicatorPtr comm)
 {
-    if(nsourcesglobal==0){
-        COMMON_THROWEXCEPTION ( " There is no global source (nsourcesglobal==0)! ")
+    if(numSourcesGlobal==0){
+        COMMON_THROWEXCEPTION ( " There is no global source (numSourcesGlobal==0)! ")
     }
     
-    dmemo::DistributionPtr dist_temp( new dmemo::GenBlockDistribution(nsourcesglobal,nsourceslocal,comm));
+    dmemo::DistributionPtr dist_temp( new dmemo::GenBlockDistribution(numSourcesGlobal,numSourcesLocal,comm));
     dist_wavefield_sources=dist_temp;
 }
 
@@ -423,8 +423,8 @@ void Sources<ValueType>::getLocalSources(dmemo::DistributionPtr dist_wavefield)
     
     this->Global2Local(coordinates,coordinateslocal,dist_wavefield);
     
-    nsourceslocal=coordinateslocal.size();
-    nsourcesglobal=coordinates.size();
+    numSourcesLocal=coordinateslocal.size();
+    numSourcesGlobal=coordinates.size();
     
 }
 
@@ -442,7 +442,7 @@ void Sources<ValueType>::applySource(lama::DenseVector<ValueType>& wavefield, In
     scai::lama::Scalar source_index_temp;
     IndexType source_index;
     
-    for(IndexType i=0; i<nsourcesglobal; i++){
+    for(IndexType i=0; i<numSourcesGlobal; i++){
         
         source_index_temp=coordinates.getValue(i);
         source_index=source_index_temp.getValue<IndexType>();
@@ -464,7 +464,7 @@ void Sources<ValueType>::applySource(lama::DenseVector<ValueType>& wavefield, In
 template<typename ValueType>
 void Sources<ValueType>::applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt)
 {
-    if(nsourceslocal>0){
+    if(numSourcesLocal>0){
     //utilskernel::LArray<ValueType>* wavefield_LA=&wavefield.getLocalValues();
     
     utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
@@ -481,7 +481,7 @@ void Sources<ValueType>::applySourceLocal(lama::DenseVector<ValueType>& wavefiel
     IndexType coordinate_global;
     IndexType coordinate_local;
     
-    for(IndexType i=0; i<nsourceslocal; i++){
+    for(IndexType i=0; i<numSourcesLocal; i++){
         
         coordinate_global=read_coordinates_LA[i];
         coordinate_local=dist_wavefield->global2local(coordinate_global);
