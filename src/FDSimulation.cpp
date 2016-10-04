@@ -7,6 +7,7 @@
 #include <scai/lama/norm/L2Norm.hpp>
 
 #include <scai/dmemo/BlockDistribution.hpp>
+#include <scai/dmemo/GenBlockDistribution.hpp>
 
 #include <scai/hmemo/ReadAccess.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
@@ -29,8 +30,11 @@
 #include "Timesteps.hpp"
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
-
 #include "Wavefields/Wavefields3Dacoustic.hpp"
+
+#include "Receiver.hpp"
+
+#include "Sources.hpp"
 
 using namespace scai;
 
@@ -49,7 +53,7 @@ std::cout << msg;           \
 int main( int argc, char* argv[] )
 {
     typedef double ValueType;
-
+    
     if(argc!=2){
         std::cout<< "\n\nNo configuration file given!\n\n" << std::endl;
         return(2);
@@ -67,7 +71,7 @@ int main( int argc, char* argv[] )
     // inter node distribution
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
-
+    
     HOST_PRINT( comm, "\nAcoustic 3-D FD-Algorithm\n\n" );
     if( comm->getRank() == MASTER )
     {
@@ -77,15 +81,6 @@ int main( int argc, char* argv[] )
     
     // for timing
     double start_t, end_t;
-   
-    /* --------------------------------------- */
-    /* Calculate source signal                 */
-    /* --------------------------------------- */
-    start_t = common::Walltime::get();
-    lama::DenseVector<ValueType> source( config.getNT(), ValueType(0), config.getDT(), ctx );
-    sourceFunction( source, config.getFC(), config.getAMP(), comm );
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
 
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
@@ -104,16 +99,29 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    
+    /* Receiver */
     lama::DenseVector<ValueType> seismogram(config.getNT(), 0.0 ); // no ctx, use default: Host
+    
+    /* Sources */
+    start_t = common::Walltime::get();
+    Sources<ValueType> sources;
+    sources.readSourceAcquisition("acquisition/sources_ci.mtx",config.getNX(), config.getNY(), config.getNZ(),dist);
+    sources.generateSignals(config.getNT(),config.getDT());
+    end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter3Dacoustic<ValueType> model;
+    
     if(config.getReadModel()){
         model.init(ctx,dist,config.getFilenameModel());
+        model.write("model/outout");        
     } else {
         model.init(ctx,dist,config.getM(),config.getRho());
+        
         model.write("model/out");
     }
 
@@ -123,9 +131,9 @@ int main( int argc, char* argv[] )
     HOST_PRINT( comm, "Start time stepping\n" );
 
     start_t = common::Walltime::get();
-    timesteps( seismogram, source, model, wavefields, A, B, C, D, E, F,
+    timesteps( seismogram, sources, model, wavefields, A, B, C, D, E, F,
                config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
-               config.getSourceIndex(), config.getSeismogramIndex(), comm, dist );
+               config.getSeismogramIndex(), comm, dist );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 

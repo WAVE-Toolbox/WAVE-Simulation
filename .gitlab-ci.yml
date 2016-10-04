@@ -25,9 +25,10 @@ openmp-gcc:
     - OMP_NUM_THREADS=4
     - cd par/
     - ./../bin/FDSimulation "input/Config_CI.txt"
+    - ./../bin/Tests/Test_FD3DAcoustic "input/Config_CI.txt"
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
-    when: on_success
+    when: on_failure
     expire_in: 30 min
     name: "openmp-gcc"
     paths:
@@ -43,10 +44,10 @@ openmpi-gcc:
     - OMP_NUM_THREADS=1
     - cd par/
     - mpirun -np 4 ./../bin/FDSimulation "input/Config_CI.txt"
-    - md5sum seismograms/seismogram.mtx
+    - ./../bin/Tests/Test_FD3DAcoustic "input/Config_CI.txt"
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
-    when: on_success
+    when: on_failure
     expire_in: 30 min
     name: "openmpi-gcc"
     paths:

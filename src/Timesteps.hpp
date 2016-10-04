@@ -23,16 +23,17 @@
 
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
+#include "Sources.hpp"
 /*
  *  routine doing NT time steps updating vX, vY, vZ, p
  *  with incoming source
  *  storing seismogram data
  */
 template <typename ValueType>
-void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<ValueType>& source, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
+void timesteps( lama::DenseVector<ValueType>& seismogram, Sources<ValueType>& sources, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
                lama::Matrix& A, lama::Matrix& B, lama::Matrix& C, lama::Matrix& D, lama::Matrix& E, lama::Matrix& F,
                lama::Scalar v_factor, lama::Scalar p_factor,
-               IndexType NT, lama::Scalar DH_INV, IndexType source_index, IndexType seismogram_index,
+               IndexType NT, lama::Scalar DH_INV, IndexType seismogram_index,
                dmemo::CommunicatorPtr comm, dmemo::DistributionPtr /*dist*/ )
 {
     SCAI_REGION( "timestep" )
@@ -77,7 +78,9 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, lama::DenseVector<Valu
         // CAUTION: elementwise access by setVal and getVal cause performace issues executed on CUDA
         //          should be used rarely
         // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
-        wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
+        //wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
+        
+        sources.applySource(wavefield.p,t);
         
         seismogram.setValue( t, wavefield.p.getValue( seismogram_index ) );
         
