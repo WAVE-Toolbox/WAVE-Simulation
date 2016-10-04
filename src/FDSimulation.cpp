@@ -104,12 +104,7 @@ int main( int argc, char* argv[] )
     lama::DenseVector<ValueType> seismogram(config.getNT(), 0.0 ); // no ctx, use default: Host
     
     /* Sources */
-    start_t = common::Walltime::get();
-    Sources<ValueType> sources;
-    sources.readSourceAcquisition("acquisition/sources_ci.mtx",config.getNX(), config.getNY(), config.getNZ(),dist);
-    sources.generateSignals(config.getNT(),config.getDT());
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
+    Sources<ValueType> sources(config,dist);
     
     /* --------------------------------------- */
     /* Modelparameter                          */
@@ -118,11 +113,10 @@ int main( int argc, char* argv[] )
     
     if(config.getReadModel()){
         model.init(ctx,dist,config.getFilenameModel());
-        model.write("model/outout");        
+        model.write(config.getFilenameModel()+".out");
     } else {
         model.init(ctx,dist,config.getM(),config.getRho());
-        
-        model.write("model/out");
+        model.write(config.getFilenameModel()+".out");
     }
 
     /* --------------------------------------- */

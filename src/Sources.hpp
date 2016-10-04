@@ -4,6 +4,7 @@
 #include <scai/lama/DenseVector.hpp>
 #include "Sourcesignal.hpp"
 #include "Coordinates.hpp"
+#include "Configuration.hpp"
 
 #pragma once
 
@@ -14,6 +15,7 @@ class Sources : private Sourcesignal<ValueType>, private Coordinates<ValueType>
 public:
     
     Sources(){};
+    Sources(Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
     ~Sources(){};
     
     void readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
@@ -59,6 +61,12 @@ private:
     
 };
 
+
+template<typename ValueType>
+Sources<ValueType>::Sources(Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
+    readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
+    generateSignals(config.getNT(),config.getDT());
+}
 
 template<typename ValueType>
 IndexType Sources<ValueType>::getNumSourcesGlobal(){

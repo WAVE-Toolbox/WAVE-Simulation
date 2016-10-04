@@ -20,14 +20,8 @@ FilenameModel=test2 # Seaches in folder model, this means model/FilenameModel
 velocity=3500 # Density in kilo gramms per cubic meter
 rho=2000      # P-wave velocity in meter per seconds
 
-# define source wavelet
-fc=5  # Center frequency of ricker wavelet
-amp=5 # Amplitude of source signal
-
-# source position in grid points
-source_z=50
-source_x=50
-source_y=50
+# Acquisition
+SourceFilename=acquisition/sources_ci.mtx
 
 # seismogram position in grid points
 seismogram_z=70

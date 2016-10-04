@@ -41,13 +41,8 @@ public:
 	ValueType getVelocity() { return velocity; } ///< Return Velocity for homogeneous model
 	ValueType getRho() { return rho; } ///< Return Density for homogeneous model
 
-	IndexType getFC() { return fc; } ///< Return center frequency of source file
-	IndexType getAMP() { return amp; }  ///< Return Amplitude of source
-
-	IndexType getSourceZ() { return source_z; }  ///< Return source_z
-	IndexType getSourceX() { return source_x; } ///< Return source_x
-	IndexType getSourceY() { return source_y; } ///< Return source_y
-
+    std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Model
+    
 	IndexType getSeismogramZ() { return seismogram_z; } ///< Return seismogram_z
 	IndexType getSeismogramX() { return seismogram_x; } ///< Return seismogram_x
 	IndexType getSeismogramY() { return seismogram_y; } ///< Return seismogram_y
@@ -103,14 +98,8 @@ private:
     ValueType velocity; ///< Density in kilo gramms per cubic meter
     ValueType rho;      ///< P-wave velocity in meter per seconds
 
-    // define source wavelet
-    IndexType fc; ///< Center frequency of ricker wavelet
-    IndexType amp; ///< Amplitude of source signal
-
-    IndexType source_z; ///< source position in grid points (depth)
-    IndexType source_x; ///< source position in grid points
-    IndexType source_y; ///< source position in grid points
-
+    std::string SourceFilename; ///< Filename to read source configuration
+    
     IndexType seismogram_z; ///< seismogram position in grid points (depth)
     IndexType seismogram_x; ///< seismogram position in grid points
     IndexType seismogram_y; ///< seismogram position in grid points
@@ -172,7 +161,7 @@ Configuration<ValueType>::Configuration( std::string filename )
     input.close();
     
     // check map and assign all values with right "cast" to members
-    size_t nArgs = 18;
+    size_t nArgs = 14;
     if ( map.size() != nArgs )
     {
         std::cout << filename << " does not include a valid configutation with " << nArgs << " arguments." << std::endl;
@@ -189,17 +178,12 @@ Configuration<ValueType>::Configuration( std::string filename )
         
         std::istringstream( map[ "ReadModel" ] ) >> ReadModel; // IndexType
         std::istringstream( map[ "FilenameModel" ] ) >> FilenameModel; // std::string
-        
+    
         std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
         std::istringstream( map[ "rho" ] ) >> rho; // ValueType
-        
-        std::istringstream( map[ "fc" ] ) >> fc; // IndexType
-        std::istringstream( map[ "amp" ] ) >> amp; // IndexType
-        
-        std::istringstream( map[ "source_z" ] ) >> source_z; // IndexType
-        std::istringstream( map[ "source_x" ] ) >> source_x; // IndexType
-        std::istringstream( map[ "source_y" ] ) >> source_y; // IndexType
-        
+
+        std::istringstream( map[ "SourceFilename" ] ) >> SourceFilename; // std::string
+    
         std::istringstream( map[ "seismogram_z" ] ) >> seismogram_z; // IndexType
         std::istringstream( map[ "seismogram_x" ] ) >> seismogram_x; // IndexType
         std::istringstream( map[ "seismogram_y" ] ) >> seismogram_y; // IndexType
@@ -215,7 +199,6 @@ Configuration<ValueType>::Configuration( std::string filename )
         v_factor = lama::Scalar(DT / DH);
         p_factor = lama::Scalar(DT);
         
-        source_index     = index( source_x,     source_y,     source_z,     NX, NY, NZ );
         seismogram_index = index( seismogram_x, seismogram_y, seismogram_z, NX, NY, NZ );
         
 }
@@ -234,11 +217,6 @@ void Configuration<ValueType>::printAllRaw()
     std::cout << "T=" << getT() << std::endl;
     std::cout << "velocity=" << getVelocity() << std::endl;
     std::cout << "rho=" << getRho() << std::endl;
-    std::cout << "fc=" << getFC() << std::endl;
-    std::cout << "amp=" << getAMP() << std::endl;
-    std::cout << "source_z=" << getSourceZ() << std::endl;
-    std::cout << "source_x=" << getSourceX() << std::endl;
-    std::cout << "source_y=" << getSourceY() << std::endl;
     std::cout << "seismogram_z=" << getSeismogramZ() << std::endl;
     std::cout << "seismogram_x=" << getSeismogramX() << std::endl;
     std::cout << "seismogram_y=" << getSeismogramX() << std::endl;
@@ -258,12 +236,9 @@ void Configuration<ValueType>::print()
 {
     IndexType velocity_max = velocity; // TODO: is velocity a vector?
     double courant = velocity_max * DT / DH;
-    IndexType wavelength = velocity_max / fc;
     
     std::cout << "Configuration:" << std::endl;
     std::cout << "Criteriums:" << std::endl;
-    std::cout << "    Wavelength: " << wavelength << " m" << std::endl;
-    std::cout << "    Gridpoints per Wavelength: " << wavelength / DH << std::endl;
     std::cout << "    Courant-number: " << courant << std::endl;
     if ( courant >= 0.8 )
     {
@@ -275,6 +250,8 @@ void Configuration<ValueType>::print()
     std::cout << "    Z: " << DH * NZ << " m (Depth)" << std::endl;
     std::cout << "    X: " << DH * NX << " m (Horizontal)" << std::endl;
     std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
+    std::cout << "Acquisition:" << std::endl;
+    std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
     std::cout << "Material:" << std::endl;
     if(ReadModel==1) {
         std::cout << "    Model will be read in from disk" << std::endl;
