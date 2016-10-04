@@ -32,8 +32,7 @@
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
-#include "Receiver.hpp"
-
+#include "Receivers.hpp"
 #include "Sources.hpp"
 
 using namespace scai;
@@ -100,8 +99,8 @@ int main( int argc, char* argv[] )
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     
-    /* Receiver */
-    lama::DenseVector<ValueType> seismogram(config.getNT(), 0.0 ); // no ctx, use default: Host
+    /* Receivers */
+    Receivers<ValueType> receivers(config,dist);
     
     /* Sources */
     Sources<ValueType> sources(config,dist);
@@ -117,15 +116,15 @@ int main( int argc, char* argv[] )
     HOST_PRINT( comm, "Start time stepping\n" );
 
     start_t = common::Walltime::get();
-    timesteps( seismogram, sources, model, wavefields, A, B, C, D, E, F,
-               config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
-               config.getSeismogramIndex(), comm, dist );
+    
+    timesteps( receivers, sources, model, wavefields, A, B, C, D, E, F, config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ), comm, dist );
+    
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
-    // print vector data for seismogram plot
-    seismogram.writeToFile( config.getSeismogramFilename() );
-
+    
+    receivers.writeSeismograms(config.getSeismogramFilename());
+    
 
     return 0;
 }

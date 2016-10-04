@@ -26,13 +26,6 @@ openmp-gcc:
     - cd par/
     - ./../bin/FDSimulation "configuration/Config_CI.txt"
     - ./../bin/Tests/Test_FD3DAcoustic "configuration/Config_CI.txt"
-    - cd seismograms && gnuplot seismogram.gnuplot
-  artifacts:
-    when: on_failure
-    expire_in: 30 min
-    name: "openmp-gcc"
-    paths:
-      - par/seismograms/seismogram.png
 
 openmpi-gcc:
   stage: test
@@ -45,10 +38,3 @@ openmpi-gcc:
     - cd par/
     - mpirun -np 4 ./../bin/FDSimulation "configuration/Config_CI.txt"
     - ./../bin/Tests/Test_FD3DAcoustic "configuration/Config_CI.txt"
-    - cd seismograms && gnuplot seismogram.gnuplot
-  artifacts:
-    when: on_failure
-    expire_in: 30 min
-    name: "openmpi-gcc"
-    paths:
-      - par/seismograms/seismogram.png
