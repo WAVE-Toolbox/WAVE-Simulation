@@ -60,9 +60,10 @@ public:
 	IndexType getSeismogramIndex() { return seismogram_index; } ///< Return Seismogram Index
 
 private:
-	/*  
-	 *  routine for calculating the 3D index position
-	 *  order of directions in 3d space: z, x, y
+    
+    
+    /*! \brief Routine for calculating the 1D index position from 3-D coordinates
+     *
 	 */
 	IndexType index( IndexType x, IndexType y, IndexType z, IndexType NX, IndexType NY, IndexType NZ )
 	{
@@ -106,7 +107,7 @@ private:
 
     /* calculated parameters */
 
-    IndexType N;
+    IndexType N; ///< Number of total grid points NX*NY*NZ
 
 	ValueType M; ///< P-wave modulus (in case of homogeneous model)
 
@@ -120,7 +121,10 @@ private:
 };
 
 
-
+/*! \brief Constructor
+ *
+ \param filename of configuration file
+ */
 template<typename ValueType>
 Configuration<ValueType>::Configuration( std::string filename )
 {
