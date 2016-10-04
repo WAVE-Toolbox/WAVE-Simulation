@@ -27,6 +27,7 @@ public:
     void readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
     void generateSignals(IndexType NT, ValueType DT);
     void applySource(lama::DenseVector<ValueType>& wavefield, IndexType nt);
+    void applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt);
 
     void writeSignals(std::string filename);
     void writeSourceAcquisition(std::string filename);
@@ -451,5 +452,48 @@ void Sources<ValueType>::applySource(lama::DenseVector<ValueType>& wavefield, In
     }
     
 }
+
+
+/*! \brief Applies the source signals to the wavefields during forward modelling (locally)
+ *
+ * Applies the sources to the wavefields according to the source_type vector
+ *
+ \param wavefield Wavefield
+ \param nt Current time step
+ */
+template<typename ValueType>
+void Sources<ValueType>::applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt)
+{
+    if(nsourceslocal>0){
+    //utilskernel::LArray<ValueType>* wavefield_LA=&wavefield.getLocalValues();
+    
+    utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
+    hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+    
+    lama::DenseStorage<ValueType>* signals_DS=&signals.getLocalStorage();
+    hmemo::HArray<ValueType>* signals_HA=&signals_DS->getData();
+    hmemo::ReadAccess<ValueType> read_signals_HA(*signals_HA);
+    
+    dmemo::DistributionPtr dist_wavefield=wavefield.getDistributionPtr();
+    //    dist_wavefield->global2local(
+    
+    scai::lama::Scalar source_index_temp;
+    IndexType coordinate_global;
+    IndexType coordinate_local;
+    
+    for(IndexType i=0; i<nsourceslocal; i++){
+        
+        coordinate_global=read_coordinates_LA[i];
+        coordinate_local=dist_wavefield->global2local(coordinate_global);
+        
+        wavefield.getLocalValues()[coordinate_local] = wavefield.getLocalValues()[coordinate_local] + read_signals_HA[nt+1000*i];
+        
+    }
+
+    read_coordinates_LA.release();
+    read_signals_HA.release();
+    }
+}
+
 
 

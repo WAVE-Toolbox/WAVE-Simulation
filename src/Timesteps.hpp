@@ -41,6 +41,8 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, Sources<ValueType>& so
     // Invert Density Values before the time stepping
     model.density.invert();
     
+   // ValueType start_t, end_t;
+   // ValueType time_sum=0;
     
     // create new Vector(Pointer) with same configuration as vZ
     common::unique_ptr<lama::Vector> updatePtr( wavefield.vX.newVector() );
@@ -80,11 +82,17 @@ void timesteps( lama::DenseVector<ValueType>& seismogram, Sources<ValueType>& so
         // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
         //wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
         
-        sources.applySource(wavefield.p,t);
+        //sources.applySource(wavefield.p,t);
+        //start_t = common::Walltime::get();
+        sources.applySourceLocal(wavefield.p,t);
+        //end_t = common::Walltime::get();
+        //time_sum+=(end_t-start_t);
         
         seismogram.setValue( t, wavefield.p.getValue( seismogram_index ) );
         
     }
+    
+    //HOST_PRINT( comm, "Source: " << time_sum << " sec.\n\n" );
     
 }
 
