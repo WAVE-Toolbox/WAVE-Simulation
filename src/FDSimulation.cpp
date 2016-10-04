@@ -124,7 +124,7 @@ int main( int argc, char* argv[] )
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
     // print vector data for seismogram plot
-    seismogram.writeToFile( "seismograms/seismogram.mtx" );
+    seismogram.writeToFile( config.getSeismogramFilename() );
 
 
     return 0;

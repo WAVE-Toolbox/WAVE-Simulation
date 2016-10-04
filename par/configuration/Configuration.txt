@@ -1,5 +1,5 @@
 # format has to be exactly name=value (without any whitespaces)
-# expects exactly these number of arguments (18) and these names
+# expects exactly these number of arguments (17) and these names
 
 # define spatial sampling: number of grid points in direction
 NZ=100 # depth
@@ -14,8 +14,9 @@ DT=2.0e-03 # temporal sampling in seconds
 T=2      # total simulation time
 
 # define material parameter
-ReadModel=0
-FilenameModel=model/test2
+ModelRead=0
+ModelWrite=0
+ModelFilename=model/test
 
 # generate homogeneous model
 velocity=3500 # Density in kilo gramms per cubic meter
@@ -23,6 +24,8 @@ rho=2000      # P-wave velocity in meter per seconds
 
 # Acquisition
 SourceFilename=acquisition/sources_ci.mtx
+ReceiverFilename=acquisition/receiver_ci.mtx
+SeismogramFilename=seismograms/seismogram.mtx
 
 # seismogram position in grid points
 seismogram_z=70

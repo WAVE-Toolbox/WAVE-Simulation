@@ -25,7 +25,6 @@ public:
     Configuration( std::string filename );
     
     void print();
-    void printAllRaw();
     
 	IndexType getNZ() { return NZ; } ///< Return NZ (Depth)
 	IndexType getNX() { return NX; } ///< Return NX
@@ -36,12 +35,15 @@ public:
 	ValueType getDT() { return DT; } ///< Return Time Step
 	ValueType getT() { return T; } ///< Return Total propagation time
 
-    IndexType getReadModel() {return ReadModel;} ///< Return Read in Model?
-    std::string getFilenameModel() {return FilenameModel;} ///< Return Filename of Model
+    IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
+    IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
+    std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
 	ValueType getVelocity() { return velocity; } ///< Return Velocity for homogeneous model
 	ValueType getRho() { return rho; } ///< Return Density for homogeneous model
 
-    std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Model
+    std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
+    std::string getReceiverFilename() {return ReceiverFilename;} ///< Return Filename of Receiver file
+    std::string getSeismogramFilename() {return SeismogramFilename;} ///< Return Filename of Seismogram file
     
 	IndexType getSeismogramZ() { return seismogram_z; } ///< Return seismogram_z
 	IndexType getSeismogramX() { return seismogram_x; } ///< Return seismogram_x
@@ -61,6 +63,7 @@ public:
 
 private:
     
+    IndexType NumParameters=17; ///< Number of parameters in input file
     
     /*! \brief Routine for calculating the 1D index position from 3-D coordinates
      *
@@ -94,12 +97,16 @@ private:
     ValueType DT;  ///< temporal sampling in seconds
     ValueType T;   ///< total simulation time
 
-    IndexType ReadModel; ///< Read model from File (1=YES, else=NO)
-    std::string FilenameModel; ///< Filename to read model
+    IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
+    IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
+    std::string ModelFilename; ///< Filename to read model
     ValueType velocity; ///< Density in kilo gramms per cubic meter
     ValueType rho;      ///< P-wave velocity in meter per seconds
 
     std::string SourceFilename; ///< Filename to read source configuration
+    std::string ReceiverFilename; ///< Filename to read receiver configuration
+    std::string SeismogramFilename; ///< Filename to write seismograms
+    
     
     IndexType seismogram_z; ///< seismogram position in grid points (depth)
     IndexType seismogram_x; ///< seismogram position in grid points
@@ -165,7 +172,7 @@ Configuration<ValueType>::Configuration( std::string filename )
     input.close();
     
     // check map and assign all values with right "cast" to members
-    size_t nArgs = 14;
+    size_t nArgs = NumParameters;
     if ( map.size() != nArgs )
     {
         std::cout << filename << " does not include a valid configutation with " << nArgs << " arguments." << std::endl;
@@ -180,13 +187,16 @@ Configuration<ValueType>::Configuration( std::string filename )
         std::istringstream( map[ "DT" ] ) >> DT; // ValueType
         std::istringstream( map[ "T" ] ) >> T;  // ValueType
         
-        std::istringstream( map[ "ReadModel" ] ) >> ReadModel; // IndexType
-        std::istringstream( map[ "FilenameModel" ] ) >> FilenameModel; // std::string
+        std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
+        std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
+        std::istringstream( map[ "ModelFilename" ] ) >> ModelFilename; // std::string
     
         std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
         std::istringstream( map[ "rho" ] ) >> rho; // ValueType
 
         std::istringstream( map[ "SourceFilename" ] ) >> SourceFilename; // std::string
+        std::istringstream( map[ "ReceiverFilename" ] ) >> ReceiverFilename; // std::string
+        std::istringstream( map[ "SeismogramFilename" ] ) >> SeismogramFilename; // std::string
     
         std::istringstream( map[ "seismogram_z" ] ) >> seismogram_z; // IndexType
         std::istringstream( map[ "seismogram_x" ] ) >> seismogram_x; // IndexType
@@ -207,31 +217,6 @@ Configuration<ValueType>::Configuration( std::string filename )
         
 }
 
-
-/*! \brief Print all parameter (for debugging)
- */
-template<typename ValueType>
-void Configuration<ValueType>::printAllRaw()
-{
-    std::cout << "NZ=" << getNZ() << std::endl;
-    std::cout << "NX=" << getNX() << std::endl;
-    std::cout << "NY=" << getNY() << std::endl;
-    std::cout << "DH=" << getDH() << std::endl;
-    std::cout << "DT=" << getDT() << std::endl;
-    std::cout << "T=" << getT() << std::endl;
-    std::cout << "velocity=" << getVelocity() << std::endl;
-    std::cout << "rho=" << getRho() << std::endl;
-    std::cout << "seismogram_z=" << getSeismogramZ() << std::endl;
-    std::cout << "seismogram_x=" << getSeismogramX() << std::endl;
-    std::cout << "seismogram_y=" << getSeismogramX() << std::endl;
-    std::cout << "N=" << getN() << std::endl;
-    std::cout << "M=" << getM() << std::endl;
-    std::cout << "NT=" << getNT() << std::endl;
-    std::cout << "v_factor=" << getVfactor() << std::endl;
-    std::cout << "p_factor=" << getPfactor() << std::endl;
-    std::cout << "source_index=" << getSourceIndex() << std::endl;
-    std::cout << "seismogram_index=" << getSeismogramIndex() << std::endl;
-}
 
 /*! \brief Print configuration
  */
@@ -256,16 +241,20 @@ void Configuration<ValueType>::print()
     std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
+    std::cout << "    Receiver acquisition will be read in from " << ReceiverFilename << std::endl;
+    std::cout << "    Seismograms will be written to " << SeismogramFilename << std::endl;
     std::cout << "Material:" << std::endl;
-    if(ReadModel==1) {
+    if(ModelRead==1) {
         std::cout << "    Model will be read in from disk" << std::endl;
-        std::cout << "    First Lame-Parameter: " << FilenameModel << ".pi.mtx" << std::endl;
-        std::cout << "    Density: " << FilenameModel << ".density.mtx" << std::endl;
+        std::cout << "    First Lame-Parameter: " << ModelFilename << ".pi.mtx" << std::endl;
+        std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;
         std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
+    if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;
+
     std::cout << std::endl;
 }
 

@@ -71,13 +71,13 @@ public:
 template<typename ValueType>
 Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    if(config.getReadModel()){
-        init(ctx,dist,config.getFilenameModel());
+    if(config.getModelRead()){
+        init(ctx,dist,config.getModelFilename());
     } else {
         init(ctx,dist,config.getM(),config.getRho());
     }
     
-    write(config.getFilenameModel()+".out");
+    write(config.getModelFilename()+".out");
 
 }
 
