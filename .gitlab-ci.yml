@@ -24,8 +24,8 @@ openmp-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=4
     - cd par/
-    - ./../bin/FDSimulation "input/Config_CI.txt"
-    - ./../bin/Tests/Test_FD3DAcoustic "input/Config_CI.txt"
+    - ./../bin/FDSimulation "configuration/Config_CI.txt"
+    - ./../bin/Tests/Test_FD3DAcoustic "configuration/Config_CI.txt"
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
     when: on_failure
@@ -43,8 +43,8 @@ openmpi-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=1
     - cd par/
-    - mpirun -np 4 ./../bin/FDSimulation "input/Config_CI.txt"
-    - ./../bin/Tests/Test_FD3DAcoustic "input/Config_CI.txt"
+    - mpirun -np 4 ./../bin/FDSimulation "configuration/Config_CI.txt"
+    - ./../bin/Tests/Test_FD3DAcoustic "configuration/Config_CI.txt"
     - cd seismograms && gnuplot seismogram.gnuplot
   artifacts:
     when: on_failure

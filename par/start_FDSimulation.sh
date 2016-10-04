@@ -1,3 +1,4 @@
 #!/bin/bash
 rm seismograms/seismogram.mtx
-./../bin/FDSimulation "input/Configuration.txt"
+export OMP_NUM_THREADS=2
+mpirun -np 2 ./../bin/FDSimulation "configuration/Configuration.txt"
