@@ -22,6 +22,9 @@ protected:
     //! Default deconstructor
     ~Wavefields(){};
     
+    //! Reset wavefields
+    virtual void reset()=0;
+    
     void resetWavefield(lama::DenseVector<ValueType>& vector);
     void initWavefield(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
     
