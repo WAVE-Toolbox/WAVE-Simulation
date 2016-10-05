@@ -42,13 +42,28 @@ protected:
     //! Default destructor.
     ~Modelparameter(){};
 
+    /*! \brief Abstract initialisation function 
+     *
+     * Standard initialisation function
+     *
+     \param ctx Context
+     \param dist Distribution
+     \param filename filename to read modelparameters (endings will be added by derived classes)
+     */
+    virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)=0;
+    
+    /*! \brief Abstract write function
+     *
+     * Standard write function
+     *
+     \param filename filename to write modelparameters (endings will be added by derived classes)
+     */
+    virtual void write(std::string filename)=0;
+    
     void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
     void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
     
     void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
-
-    //! Smoothing (Not yet Implemented)
-    void smoothModelparameter();
     
 private:
     void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
