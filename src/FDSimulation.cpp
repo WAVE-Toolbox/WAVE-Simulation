@@ -26,7 +26,7 @@
 #include "Configuration.hpp"
 #include "Derivatives.hpp"
 #include "InitializeMatrices.hpp"
-#include "SourceFunction.hpp"
+
 #include "Timesteps.hpp"
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
