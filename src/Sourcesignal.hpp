@@ -15,6 +15,7 @@ class Sourcesignal
 protected:
     
     void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+    void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);	
 };
 
 
@@ -47,6 +48,38 @@ void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, Index
     tau = -1.0 * help;
     tau.exp();
     help = one - 2.0 * help;
+    signal = lama::Scalar(AMP) * help * tau;
+    
+}
+
+/*! \brief Generating a First derivative of a Gaussian (FGaussian)
+ *
+ \param signal Allocated vector to to store FGaussian signal
+ \param NT Number of time steps
+ \param DT Temporal time step interval
+ \param FC Central frequency
+ \param AMP Amplitude
+ \param Tshift Time to shift wavelet
+ */
+template<typename ValueType>
+void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+{
+    
+    /*
+     *  t=0:DT:(NT*DT-DT);
+     *  tau=pi*FC*(t-1.2/FC);
+     *  signal=AMP*2*tau.*exp(-tau*tau);
+     */
+    lama::DenseVector<ValueType> t(NT, ValueType(0), DT);
+    lama::DenseVector<ValueType> help( t.size(), 1.2 / FC +Tshift);
+    lama::DenseVector<ValueType> tau( t - help );
+    tau *= M_PI * FC ;
+    
+    /* this is for source[i] = AMP*2*tau.*exp(-tau*tau); */
+    lama::DenseVector<ValueType> one( signal.size(), 1.0 );
+    help = 2.0 * tau;
+    tau = -1.0* tau * tau;
+    tau.exp();
     signal = lama::Scalar(AMP) * help * tau;
     
 }
