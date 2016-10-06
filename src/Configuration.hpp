@@ -30,7 +30,7 @@ public:
 	IndexType getNX() { return NX; } ///< Return NX
 	IndexType getNY() { return NY; } ///< Return NY
 
-	IndexType getDH() { return DH; } ///< Return Grid spacing
+	ValueType getDH() { return DH; } ///< Return Grid spacing
 
 	ValueType getDT() { return DT; } ///< Return Time Step
 	ValueType getT() { return T; } ///< Return Total propagation time
@@ -91,7 +91,7 @@ private:
     IndexType NY; ///< Grid points horizontal 2
 
     /// define distance between two grid points in meter
-    IndexType DH;
+    ValueType DH;
     
     // define temporal sampling
     ValueType DT;  ///< temporal sampling in seconds
@@ -182,7 +182,7 @@ Configuration<ValueType>::Configuration( std::string filename )
         std::istringstream( map[ "NX" ] ) >> NX; // IndexType
         std::istringstream( map[ "NY" ] ) >> NY; // IndexType
         
-        std::istringstream( map[ "DH" ] ) >> DH; // IndexType
+        std::istringstream( map[ "DH" ] ) >> DH; // ValueType
         
         std::istringstream( map[ "DT" ] ) >> DT; // ValueType
         std::istringstream( map[ "T" ] ) >> T;  // ValueType

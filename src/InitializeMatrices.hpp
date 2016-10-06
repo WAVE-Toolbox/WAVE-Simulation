@@ -40,7 +40,7 @@ std::cout << msg;           \
 template<typename ValueType>
 void initializeMatrices( lama::SparseMatrix<ValueType>& A, lama::SparseMatrix<ValueType>& B, lama::SparseMatrix<ValueType>& C,
                         lama::Matrix& D, lama::Matrix& E, lama::Matrix& F, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,
-                        IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm )
+                        IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
 {
     SCAI_REGION( "initializeMatrices" )
     
@@ -63,6 +63,13 @@ void initializeMatrices( lama::SparseMatrix<ValueType>& A, lama::SparseMatrix<Va
     F.assignTranspose( C );
     F.scale( -1.0 );
     HOST_PRINT( comm, "Matrix F finished\n" );
+    
+    A.scale(lama::Scalar(DT/DH));
+    B.scale(lama::Scalar(DT/DH));
+    C.scale(lama::Scalar(DT/DH));
+    D.scale(lama::Scalar(DT/DH));
+    E.scale(lama::Scalar(DT/DH));
+    F.scale(lama::Scalar(DT/DH));
     
     HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
 }

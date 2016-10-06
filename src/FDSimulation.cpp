@@ -52,17 +52,21 @@ std::cout << msg;           \
 int main( int argc, char* argv[] )
 {
     typedef double ValueType;
+    double start_t, end_t; /* For timing */
     
     if(argc!=2){
         std::cout<< "\n\nNo configuration file given!\n\n" << std::endl;
         return(2);
     }
     
-    // read configuration parameter from file
+    /* --------------------------------------- */
+    /* Read configuration from file            */
+    /* --------------------------------------- */
     Configuration<ValueType> config(argv[1]);
 
-    // LAMA specific configuration variables
-
+    /* --------------------------------------- */
+    /* Context and Distribution                */
+    /* --------------------------------------- */
     // execution context
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     // inter node communicator
@@ -77,16 +81,14 @@ int main( int argc, char* argv[] )
         config.print();
     }
 
-    
-    // for timing
-    double start_t, end_t;
-
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
+    
     lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
-    initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), comm );
+    initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm );
+    
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
@@ -98,11 +100,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    
-    /* Receivers */
     Receivers<ValueType> receivers(config,dist);
-    
-    /* Sources */
     Sources<ValueType> sources(config,dist);
     
     /* --------------------------------------- */
@@ -113,11 +111,11 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Time stepping                           */
     /* --------------------------------------- */
-    HOST_PRINT( comm, "Start time stepping\n" );
 
+    HOST_PRINT( comm, "Start time stepping\n" );
     start_t = common::Walltime::get();
     
-    timesteps( receivers, sources, model, wavefields, A, B, C, D, E, F, config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ), comm, dist );
+    timesteps( receivers, sources, model, wavefields, A, B, C, D, E, F, config.getNT(), comm, dist );
     
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
