@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <scai/lama.hpp>
 
 #include <scai/lama/DenseVector.hpp>
@@ -17,10 +19,11 @@
 
 #include <scai/common/Walltime.hpp>
 #include <scai/common/unique_ptr.hpp>
+#include <scai/logging.hpp>
 
 #include <iostream>
 
-using namespace scai;
+#include "Derivatives.hpp"
 
 #define MASTER 0
 
@@ -33,20 +36,47 @@ std::cout << msg;           \
 }                               \
 }
 
-/*
- *  routine for initializing derivative matrices (needed for velocity Updates vz, vx, vy)
- *  create csr data structure (sub)matrices (and replicate along matrix diagonal)
- */
+namespace KITGPI {
+    
+    //! \brief Derivatives namespace
+    namespace Derivatives {
+        
+        template<typename ValueType>
+        class FD3Dacoustic : public Derivatives<ValueType>
+        {
+        public:
+            
+            FD3Dacoustic(){};
+            ~FD3Dacoustic(){};
+            
+            FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+            lama::CSRSparseMatrix<ValueType>* getA();
+            lama::CSRSparseMatrix<ValueType>* getB();
+            lama::CSRSparseMatrix<ValueType>* getC();
+            lama::CSRSparseMatrix<ValueType>* getD();
+            lama::CSRSparseMatrix<ValueType>* getE();
+            lama::CSRSparseMatrix<ValueType>* getF();
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+        private:
+            
+            lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
+            
+            void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
+            
+        };
+    }
+}
+
 template<typename ValueType>
-void derivatives( lama::SparseMatrix<ValueType>& A,
-                 lama::SparseMatrix<ValueType>& B,
-                 lama::SparseMatrix<ValueType>& C,
-                 IndexType NX,
-                 IndexType NY,
-                 IndexType NZ,
-                 dmemo::DistributionPtr dist,
-                 hmemo::ContextPtr ctx,
-                 dmemo::CommunicatorPtr comm )
+KITGPI::Derivatives::FD3Dacoustic<ValueType>::FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
+    initializeMatrices(dist, ctx, NX, NY,NZ,DH, DT, comm );
+}
+
+template<typename ValueType>
+void KITGPI::Derivatives::FD3Dacoustic<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
 {
     SCAI_REGION( "derivatives" )
     
@@ -179,3 +209,71 @@ void derivatives( lama::SparseMatrix<ValueType>& A,
     HOST_PRINT( comm, "Matrix C finished\n" );
 }
 
+template<typename ValueType>
+void KITGPI::Derivatives::FD3Dacoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
+{
+    
+    SCAI_REGION( "initializeMatrices" )
+    
+    HOST_PRINT( comm, "Initialization of the matrices A,B,C,D,E,F...\n" );
+    
+    derivatives(NX, NY, NZ, dist, ctx, comm );
+    
+    D.setContextPtr( ctx );
+    E.setContextPtr( ctx );
+    F.setContextPtr( ctx );
+    
+    D.assignTranspose( A );
+    D.scale( -1.0 );
+    HOST_PRINT( comm, "Matrix D finished\n" );
+    
+    E.assignTranspose( B );
+    E.scale( -1.0 );
+    HOST_PRINT( comm, "Matrix E finished\n" );
+    
+    F.assignTranspose( C );
+    F.scale( -1.0 );
+    HOST_PRINT( comm, "Matrix F finished\n" );
+    
+    A.scale(lama::Scalar(DT/DH));
+    B.scale(lama::Scalar(DT/DH));
+    C.scale(lama::Scalar(DT/DH));
+    D.scale(lama::Scalar(DT/DH));
+    E.scale(lama::Scalar(DT/DH));
+    F.scale(lama::Scalar(DT/DH));
+    
+    HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
+    
+    
+}
+
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getA(){
+    return(&A);
+}
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getB(){
+    return(&B);
+}
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getC(){
+    return(&C);
+}
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getD(){
+    return(&D);
+}
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getE(){
+    return(&E);
+}
+
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getF(){
+    return(&F);
+}
