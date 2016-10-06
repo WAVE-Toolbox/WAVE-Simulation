@@ -34,7 +34,7 @@ template<typename ValueType>
 class Modelparameter
 {
     
-protected:
+public:
     
     //! Default constructor.
     Modelparameter(){};
@@ -60,10 +60,23 @@ protected:
      */
     virtual void write(std::string filename)=0;
     
+    //! \brief Get referenec to density model parameter
+    virtual lama::DenseVector<ValueType>* getDensity()=0;
+    //! \brief Get referenec to density model parameter
+    virtual lama::DenseVector<ValueType>* getInverseDensity()=0;
+    //! \brief Get referenec to first Lame model parameter
+    virtual lama::DenseVector<ValueType>* getM()=0;
+    //! \brief Get referenec to P-wave velocity
+    virtual lama::DenseVector<ValueType>* getVelocityP()=0;
+    //! \brief Get referenec to S-wave velocity
+    virtual lama::DenseVector<ValueType>* getVelocityS()=0;
+    
+protected:
     void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
     void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
     
     void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+    
     
 private:
     void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);

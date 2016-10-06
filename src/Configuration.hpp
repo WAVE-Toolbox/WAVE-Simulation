@@ -202,7 +202,7 @@ void Configuration<ValueType>::print()
     std::cout << "Material:" << std::endl;
     if(ModelRead==1) {
         std::cout << "    Model will be read in from disk" << std::endl;
-        std::cout << "    First Lame-Parameter: " << ModelFilename << ".pi.mtx" << std::endl;
+        std::cout << "    First Lame-Parameter: " << ModelFilename << ".M.mtx" << std::endl;
         std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;

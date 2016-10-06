@@ -35,6 +35,11 @@
 #include "Receivers.hpp"
 #include "Sources.hpp"
 
+#include "Derivatives/Derivatives3Dacoustic.hpp"
+
+#include "ForwardSolver/ForwardSolver.hpp"
+
+#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 using namespace scai;
 
 #define MASTER 0
@@ -85,10 +90,7 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    
-    lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
-    initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm );
-    
+    Derivatives3Dacoustic<ValueType> derivatives( dist, ctx, config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
@@ -107,15 +109,17 @@ int main( int argc, char* argv[] )
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter3Dacoustic<ValueType> model(config,ctx,dist);
-
+        
     /* --------------------------------------- */
-    /* Time stepping                           */
+    /* Forward solver                          */
     /* --------------------------------------- */
 
+    ForwardSolver3Dacoustic<ValueType> solver;
+    
     HOST_PRINT( comm, "Start time stepping\n" );
     start_t = common::Walltime::get();
     
-    timesteps( receivers, sources, model, wavefields, A, B, C, D, E, F, config.getNT(), comm, dist );
+    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );

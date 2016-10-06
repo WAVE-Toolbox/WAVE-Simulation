@@ -1,8 +1,3 @@
-//! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
-/*!
- This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
- */
-
 
 #pragma once
 
@@ -31,36 +26,52 @@
 #include "Modelparameter.hpp"
 #include "../Configuration.hpp"
 
+//! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
+/*!
+ This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
+ */
 template<typename ValueType>
-class Modelparameter3Dacoustic : private Modelparameter<ValueType>
+class Modelparameter3Dacoustic : public Modelparameter<ValueType>
 {
 public:
     
     //! Default constructor.
     Modelparameter3Dacoustic(){};
+    
+    //! Destructor, releases all allocated resources.
+    ~Modelparameter3Dacoustic(){};
 
     Modelparameter3Dacoustic(Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-    Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
-    Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamepi, std::string filenamerho);
+    Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho);
+    Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
     Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
     
     //! Copy Constructor.
     Modelparameter3Dacoustic(const Modelparameter3Dacoustic& rhs);
     
-    //! Destructor, releases all allocated resources.
-    ~Modelparameter3Dacoustic(){};
-
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
     void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-    void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamepi, std::string filenamerho);
+    void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
     
-    void write(std::string filenamepi, std::string filenamedensity);
+    void write(std::string filenameM, std::string filenamedensity);
     void write(std::string filename);
-        
-    lama::DenseVector<ValueType> pi; //!< Vector storing first Lame-Parameter.
+    
+    /* Getter routines for modelparameters */
+    lama::DenseVector<ValueType>* getDensity();
+    lama::DenseVector<ValueType>* getInverseDensity();
+    lama::DenseVector<ValueType>* getM();
+    lama::DenseVector<ValueType>* getVelocityP();
+    lama::DenseVector<ValueType>* getVelocityS();
+    
+private:
+    
+    lama::DenseVector<ValueType> M; //!< Vector storing first Lame-Parameter.
     lama::DenseVector<ValueType> density; //!< Vector storing Density.
+    lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
+
     
 };
+
 
 /*! \brief Constructor that is using the Configuration class
  *
@@ -86,13 +97,13 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(Configuration<Valu
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M First Lame-Parameter given as Scalar
+ \param M_const First Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho)
+Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
 {
-    init(ctx,dist,M,rho);
+    init(ctx,dist,M_const,rho);
 }
 
 
@@ -101,13 +112,13 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr 
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M First Lame-Parameter given as Scalar
+ \param M_const First Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho)
+void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
 {
-    this->initModelparameter(pi,ctx,dist,M);
+    this->initModelparameter(M,ctx,dist,M_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
@@ -117,13 +128,13 @@ void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::Dis
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filenamepi Name of file that will be read for the first Lame-parameter.
+ \param filenameM Name of file that will be read for the first Lame-parameter.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamepi, std::string filenamerho)
+Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho)
 {
-    init(ctx,dist,filenamepi,filenamerho);
+    init(ctx,dist,filenameM,filenamerho);
 }
 
 
@@ -132,13 +143,13 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr 
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filenamepi Name of file that will be read for the first Lame-parameter.
+ \param filenameM Name of file that will be read for the first Lame-parameter.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamepi, std::string filenamerho)
+void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho)
 {
-    this->initModelparameter(pi,ctx,dist,filenamepi);
+    this->initModelparameter(M,ctx,dist,filenameM);
     this->initModelparameter(density,ctx,dist,filenamerho);
 }
 
@@ -148,7 +159,7 @@ void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::Dis
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter ".pi.mtx" is added and for density ".density.mtx" is added.
+ \param filename For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
@@ -162,15 +173,15 @@ Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(hmemo::ContextPtr 
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter "model/"+filename+".pi.mtx" is added and for density "model/"+filename+".density.mtx" is added.
+ \param filename For the first Lame-parameter ".M.mtx" is added and for density "filename+".density.mtx" is added.
  */
 template<typename ValueType>
 void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenamepi=filename+".pi.mtx";
+    std::string filenameM=filename+".M.mtx";
     std::string filenamedensity=filename+".density.mtx";
 
-    this->initModelparameter(pi,ctx,dist,filenamepi);
+    this->initModelparameter(M,ctx,dist,filenameM);
     this->initModelparameter(density,ctx,dist,filenamedensity);
 }
 
@@ -179,38 +190,77 @@ void Modelparameter3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::Dis
 template<typename ValueType>
 Modelparameter3Dacoustic<ValueType>::Modelparameter3Dacoustic(const Modelparameter3Dacoustic& rhs)
 {
-    pi=rhs.pi.copy();
+    M=rhs.M.copy();
     density=rhs.density.copy();
 }
 
 
 /*! \brief Write model to an external file
  *
- \param filenamepi Filename for first Lame-Parameter model
+ \param filenameM Filename for first Lame-Parameter model
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void Modelparameter3Dacoustic<ValueType>::write( std::string filenamepi, std::string filenamedensity)
+void Modelparameter3Dacoustic<ValueType>::write( std::string filenameM, std::string filenamedensity)
 {
-    this->writeModelparameter(pi,filenamepi);
+    this->writeModelparameter(M,filenameM);
     this->writeModelparameter(density,filenamedensity);
 };
 
 
 /*! \brief Write model to an external file
  *
- \param filename Filename to write files. For the first Lame-parameter ".pi.mtx" is added and for density ".density.mtx" is added.
+ \param filename Filename to write files. For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void Modelparameter3Dacoustic<ValueType>::write(std::string filename)
 {
-    std::string filenamepi=filename+".pi.mtx";
+    std::string filenameM=filename+".M.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(pi,filenamepi);
+    this->writeModelparameter(M,filenameM);
     this->writeModelparameter(density,filenamedensity);
 };
 
 
 
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* Modelparameter3Dacoustic<ValueType>::getInverseDensity(){
+    inverseDensity=density;
+    inverseDensity.invert();
+    return(&inverseDensity);
+}
 
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* Modelparameter3Dacoustic<ValueType>::getDensity(){
+    return(&density);
+}
+
+/*! \brief Get reference to first Lame model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* Modelparameter3Dacoustic<ValueType>::getM(){
+    return(&M);
+}
+
+/*! \brief Get reference to P-wave velocity
+ *
+ * Not yet implemented
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* Modelparameter3Dacoustic<ValueType>::getVelocityP(){
+    COMMON_THROWEXCEPTION("Conversation to P-wave velocity is not yet implemented")
+    return(NULL);
+}
+
+/*! \brief Get reference to S-wave velocity
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* Modelparameter3Dacoustic<ValueType>::getVelocityS(){
+    COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
+    return(NULL);
+}
 

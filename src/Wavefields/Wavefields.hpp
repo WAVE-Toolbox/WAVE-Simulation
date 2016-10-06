@@ -15,15 +15,39 @@ template<typename ValueType>
 class Wavefields
 {
     
-protected:
+public:
     
-    //! Default constructor
-    Wavefields(){};
     //! Default deconstructor
     ~Wavefields(){};
     
     //! Reset wavefields
     virtual void reset()=0;
+    
+    //! \brief Getter routine for vX wavefield
+    virtual lama::DenseVector<ValueType>* getVX()=0;
+    //! \brief Getter routine for vY wavefield
+    virtual lama::DenseVector<ValueType>* getVY()=0;
+    //! \brief Getter routine for vZ wavefield
+    virtual lama::DenseVector<ValueType>* getVZ()=0;
+    
+    //! \brief Getter routine for p wavefield
+    virtual lama::DenseVector<ValueType>* getP()=0;
+    
+    //! \brief Getter routine for sxx wavefield
+    virtual lama::DenseVector<ValueType>* getSxx()=0;
+    //! \brief Getter routine for syy wavefield
+    virtual lama::DenseVector<ValueType>* getSyy()=0;
+    //! \brief Getter routine for szz wavefield
+    virtual lama::DenseVector<ValueType>* getSzz()=0;
+    
+    //! \brief Getter routine for syx wavefield
+    virtual lama::DenseVector<ValueType>* getSyz()=0;
+    //! \brief Getter routine for sxz wavefield
+    virtual lama::DenseVector<ValueType>* getSxz()=0;
+    //! \brief Getter routine for sxy wavefield
+    virtual lama::DenseVector<ValueType>* getSxy()=0;
+    
+protected:
     
     void resetWavefield(lama::DenseVector<ValueType>& vector);
     void initWavefield(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
