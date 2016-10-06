@@ -22,6 +22,6 @@ velocity=3500 # Density in kilogramms per cubic meter
 rho=2000      # P-wave velocity in meter per seconds
 
 # Acquisition
-SourceFilename=CI/sources_ci.mtx
-ReceiverFilename=CI/receiver_ci.mtx
-SeismogramFilename=CI/seismogram_ci.mtx
+SourceFilename=ci/sources_ci.mtx
+ReceiverFilename=ci/receiver_ci.mtx
+SeismogramFilename=ci/seismogram_ci.mtx
