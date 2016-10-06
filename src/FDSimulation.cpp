@@ -23,17 +23,13 @@
 #define _USE_MATH_DEFINES
 #include <cmath> 
 
-#include "Configuration.hpp"
-#include "Derivatives.hpp"
-#include "InitializeMatrices.hpp"
-
-#include "Timesteps.hpp"
+#include "Configuration/Configuration.hpp"
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
-#include "Receivers.hpp"
-#include "Sources.hpp"
+#include "Acquisition/Receivers.hpp"
+#include "Acquisition/Sources.hpp"
 
 #include "Derivatives/Derivatives3Dacoustic.hpp"
 

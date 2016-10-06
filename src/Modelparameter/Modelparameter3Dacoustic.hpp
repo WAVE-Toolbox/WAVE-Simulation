@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
-#include "../Configuration.hpp"
+
 
 //! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
 /*!

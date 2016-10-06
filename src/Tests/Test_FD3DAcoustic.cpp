@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-#include "../Configuration.hpp"
+#include "../Configuration/Configuration.hpp"
 
 #define MASTER 0
 

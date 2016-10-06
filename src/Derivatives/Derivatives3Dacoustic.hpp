@@ -25,6 +25,18 @@
 
 #include "Derivatives.hpp"
 
+#define MASTER 0
+
+#define HOST_PRINT( comm, msg )     \
+{                                   \
+int myRank = comm->getRank();   \
+if ( myRank == MASTER )         \
+{                               \
+std::cout << msg;           \
+}                               \
+}
+
+
 //! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
 /*!
  This class handels the modelparameter for the 3-D acoustic finite-difference simulation.

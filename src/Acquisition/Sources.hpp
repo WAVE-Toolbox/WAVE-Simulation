@@ -4,7 +4,7 @@
 #include <scai/lama/DenseVector.hpp>
 #include "Sourcesignal.hpp"
 #include "Coordinates.hpp"
-#include "Configuration.hpp"
+
 
 #pragma once
 

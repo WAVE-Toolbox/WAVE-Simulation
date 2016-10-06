@@ -156,6 +156,3 @@ void Modelparameter<ValueType>::allocateModelparameter(lama::DenseVector<ValueTy
     vector.allocate(dist);
 };
 
-
-
-

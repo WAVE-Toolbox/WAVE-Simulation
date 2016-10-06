@@ -23,8 +23,8 @@
 
 #include <iostream>
 
-#include "../Receivers.hpp"
-#include "../Sources.hpp"
+#include "../Acquisition/Receivers.hpp"
+#include "../Acquisition/Sources.hpp"
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
