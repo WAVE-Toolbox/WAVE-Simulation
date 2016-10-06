@@ -5,6 +5,7 @@
 #pragma once
 
 /*! \brief Abstract class to create sourcesignals
+ *
  * This is class holds several methods to generate different sourcesignals.
  * As this class is an abstract class, all methods are protected.
  */
