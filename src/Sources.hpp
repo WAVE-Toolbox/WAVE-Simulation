@@ -367,7 +367,7 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexTyp
             this->Ricker(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
             break;
 	    
-	    case 2;
+	case 2:
 	    /* First derivative of a Gaussian (FGaussian) */
 	    this->FGaussian(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
 	    break;
