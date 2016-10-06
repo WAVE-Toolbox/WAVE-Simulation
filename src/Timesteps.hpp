@@ -24,75 +24,58 @@
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
 #include "Sources.hpp"
+#include "Receivers.hpp"
+
 /*
  *  routine doing NT time steps updating vX, vY, vZ, p
  *  with incoming source
  *  storing seismogram data
  */
 template <typename ValueType>
-void timesteps( lama::DenseVector<ValueType>& seismogram, Sources<ValueType>& sources, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
+void timesteps( Receivers<ValueType>& receiver, Sources<ValueType>& sources, Modelparameter3Dacoustic<ValueType>& model, Wavefields3Dacoustic<ValueType>& wavefield,
                lama::Matrix& A, lama::Matrix& B, lama::Matrix& C, lama::Matrix& D, lama::Matrix& E, lama::Matrix& F,
-               lama::Scalar v_factor, lama::Scalar p_factor,
-               IndexType NT, lama::Scalar DH_INV, IndexType seismogram_index,
-               dmemo::CommunicatorPtr comm, dmemo::DistributionPtr /*dist*/ )
+               IndexType NT, dmemo::CommunicatorPtr comm, dmemo::DistributionPtr /*dist*/ )
 {
+    
     SCAI_REGION( "timestep" )
     
-    // Invert Density Values before the time stepping
-    model.density.invert();
+    model.density.invert(); // Invert Density Values before the time stepping
     
-   // ValueType start_t, end_t;
-   // ValueType time_sum=0;
+    common::unique_ptr<lama::Vector> updatePtr( wavefield.vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector& update = *updatePtr; // get Reference of VectorPointer
     
-    // create new Vector(Pointer) with same configuration as vZ
-    common::unique_ptr<lama::Vector> updatePtr( wavefield.vX.newVector() );
-    // get Reference of VectorPointer
-    lama::Vector& update = *updatePtr;
-    
-    for ( IndexType t = 0; t < NT; t++ )
-    {
-        if( t % 100 == 0 && t != 0)
-        {
+    for ( IndexType t = 0; t < NT; t++ ){
+        
+        
+        if( t % 100 == 0 && t != 0){
             HOST_PRINT( comm, "Calculating time step " << t << " from " << NT << "\n" );
         }
         
-        // update velocity, v_factor is 'DT / DH'
-        // velocity z: vZ = vZ + DT / ( DH * rho ) * A * p;
-        update=v_factor * A * wavefield.p; // Update=DT / ( DH) * A * p
-        wavefield.vZ += update.scale(model.density); // Update+1/RHO
         
-        // velocity x: vX = vX + DT / ( DH * rho ) * B * p;
-        update=v_factor * B * wavefield.p; // Update=DT / ( DH) * B * p
-        wavefield.vX += update.scale(model.density); // Update+1/RHO
+        /* update velocity */
+        update=  A * wavefield.p;
+        wavefield.vZ += update.scale(model.density);
         
-        // velocity y: vY = vY + DT / ( DH * rho ) * C * p;
-        update=v_factor * C * wavefield.p; // Update=DT / ( DH) * C * p
-        wavefield.vY += update.scale(model.density); // Update+1/RHO
+        update= B * wavefield.p;
+        wavefield.vX += update.scale(model.density);
+        
+        update= C * wavefield.p;
+        wavefield.vY += update.scale(model.density);
         
         
-        // pressure update
-        update =  DH_INV * D * wavefield.vZ;
-        update += DH_INV * E * wavefield.vX;
-        update += DH_INV * F * wavefield.vY;
-        wavefield.p += p_factor * update.scale(model.pi); // p= DT (p_factor) * Update * Model (M)
+        /* pressure update */
+        update  =  D * wavefield.vZ;
+        update +=  E * wavefield.vX;
+        update +=  F * wavefield.vY;
+        wavefield.p += update.scale(model.pi);
         
-        // update seismogram and pressure with source terms
-        // CAUTION: elementwise access by setVal and getVal cause performace issues executed on CUDA
-        //          should be used rarely
-        // TODO: can do this by index operator[] --> no need for DenseVector<>, can use Vector instead
-        //wavefield.p.setValue( source_index, wavefield.p.getValue( source_index ) + source.getValue( t ) );
         
-        //sources.applySource(wavefield.p,t);
-        //start_t = common::Walltime::get();
-        sources.applySourceLocal(wavefield.p,t);
-        //end_t = common::Walltime::get();
-        //time_sum+=(end_t-start_t);
-        
-        seismogram.setValue( t, wavefield.p.getValue( seismogram_index ) );
+        /* Apply source and save seismogram */
+        sources.applySourceLocal(wavefield.p,t,NT);
+        receiver.saveSeismogramsLocal(wavefield.p,t,NT);
+
         
     }
-    
-    //HOST_PRINT( comm, "Source: " << time_sum << " sec.\n\n" );
     
 }
 

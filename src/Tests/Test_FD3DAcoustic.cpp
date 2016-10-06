@@ -28,9 +28,9 @@ int main( int argc, char* argv[] )
     // read configuration parameter from file
     Configuration<ValueType> config(argv[1]);
     
-    lama::DenseVector<ValueType> seismo_ref(config.getNT(),0);
-    lama::DenseVector<ValueType> seismo_syn(config.getNT(),0);
-    lama::DenseVector<ValueType> seismo_residual(config.getNT(),0);
+    lama::DenseMatrix<ValueType> seismo_ref;
+    lama::DenseMatrix<ValueType> seismo_syn;
+    lama::DenseMatrix<ValueType> seismo_residual;
     scai::lama::Scalar L2_scalar=0.0;
     ValueType L2=0.0;
     
@@ -38,7 +38,7 @@ int main( int argc, char* argv[] )
     seismo_syn.readFromFile("seismograms/seismogram.mtx");
     
     seismo_residual=(seismo_ref-seismo_syn);
-    L2_scalar=seismo_residual.l2Norm()/seismo_ref.sum();
+    L2_scalar=seismo_residual.l2Norm();
     L2=L2_scalar.getValue<ValueType>();
     
     std::cout << "\n\nL2: " << L2 << std::endl;
