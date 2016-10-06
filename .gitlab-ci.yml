@@ -24,8 +24,8 @@ openmp-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=4
     - cd par/
-    - ./../bin/FDSimulation "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_FD3DAcoustic "ci/configuration_ci.txt"
+    - ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
+    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
 
 openmpi-gcc:
   stage: test
@@ -36,5 +36,5 @@ openmpi-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=1
     - cd par/
-    - mpirun -np 4 ./../bin/FDSimulation "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_FD3DAcoustic "ci/configuration_ci.txt"
+    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
+    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
