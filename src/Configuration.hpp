@@ -45,44 +45,16 @@ public:
     std::string getReceiverFilename() {return ReceiverFilename;} ///< Return Filename of Receiver file
     std::string getSeismogramFilename() {return SeismogramFilename;} ///< Return Filename of Seismogram file
     
-	IndexType getSeismogramZ() { return seismogram_z; } ///< Return seismogram_z
-	IndexType getSeismogramX() { return seismogram_x; } ///< Return seismogram_x
-	IndexType getSeismogramY() { return seismogram_y; } ///< Return seismogram_y
-
     IndexType getN() { return N; } ///< Return N
 
 	ValueType getM() { return M; } ///< Return M
 
 	IndexType getNT() { return NT; } ///< Return NT
  
-	lama::Scalar& getVfactor() { return v_factor; } ///< Return v_factor
-	lama::Scalar& getPfactor() { return p_factor; } ///< Return p_factor
-
-	IndexType getSourceIndex() { return source_index; } ///< Return Source Index
-	IndexType getSeismogramIndex() { return seismogram_index; } ///< Return Seismogram Index
-
 private:
     
-    IndexType NumParameters=17; ///< Number of parameters in input file
+    IndexType NumParameters=14; ///< Number of parameters in input file
     
-    /*! \brief Routine for calculating the 1D index position from 3-D coordinates
-     *
-	 */
-	IndexType index( IndexType x, IndexType y, IndexType z, IndexType NX, IndexType NY, IndexType NZ )
-	{
-	    SCAI_REGION( "Index_calculation" )
-
-	    if ( z > NZ || x > NX || y > NY || z < 1 || x < 1 || y < 1 )
-	    {
-	        COMMON_THROWEXCEPTION ( "Could not map from coordinate to indize!" )
-	        return -100;
-	    }
-	    else
-	    {
-	        return ( ( z - 1 ) + ( x - 1 ) * NZ + ( y - 1 ) * NZ * NX );
-	    }
-	}
-
 	/* read parameters */
 
     // define spatial sampling: number of grid points in direction
@@ -107,10 +79,6 @@ private:
     std::string ReceiverFilename; ///< Filename to read receiver configuration
     std::string SeismogramFilename; ///< Filename to write seismograms
     
-    
-    IndexType seismogram_z; ///< seismogram position in grid points (depth)
-    IndexType seismogram_x; ///< seismogram position in grid points
-    IndexType seismogram_y; ///< seismogram position in grid points
 
     /* calculated parameters */
 
@@ -119,12 +87,7 @@ private:
 	ValueType M; ///< P-wave modulus (in case of homogeneous model)
 
 	IndexType NT; ///< Number of time steps
-
-	lama::Scalar v_factor;  ///< factor for update
-	lama::Scalar p_factor;  ///< factor for update
-
-	IndexType source_index;  ///< Position of source in 1D coordinates
-	IndexType seismogram_index;  ///< Position of receiver in 1D coordinates
+    
 };
 
 
@@ -198,9 +161,6 @@ Configuration<ValueType>::Configuration( std::string filename )
         std::istringstream( map[ "ReceiverFilename" ] ) >> ReceiverFilename; // std::string
         std::istringstream( map[ "SeismogramFilename" ] ) >> SeismogramFilename; // std::string
     
-        std::istringstream( map[ "seismogram_z" ] ) >> seismogram_z; // IndexType
-        std::istringstream( map[ "seismogram_x" ] ) >> seismogram_x; // IndexType
-        std::istringstream( map[ "seismogram_y" ] ) >> seismogram_y; // IndexType
         
         // calculate other parameters
         
@@ -209,11 +169,7 @@ Configuration<ValueType>::Configuration( std::string filename )
         M = velocity * velocity * rho; // P-wave modulus
         
         NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
-        
-        v_factor = lama::Scalar(DT / DH);
-        p_factor = lama::Scalar(DT);
-        
-        seismogram_index = index( seismogram_x, seismogram_y, seismogram_z, NX, NY, NZ );
+
         
 }
 

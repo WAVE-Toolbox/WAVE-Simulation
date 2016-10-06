@@ -10,7 +10,7 @@ SOURCE_TYPE=[1]; % Source Type (1=P-Source)
 WAVELET_TYPE=[1]; % Wavelet Type (1=Synthetic)
 
 %% Optional Parameters
-WAVELET_SHAPE=[1]; % Wavelet Shape (1=Ricker)
+WAVELET_SHAPE=[1]; % Wavelet Shape (1=Ricker, 2=FGaussian)
 FC=[5]; % Center Frequency in Hz
 AMP=[5]; % Amplitude
 TShift=[0]; % Time shift in s

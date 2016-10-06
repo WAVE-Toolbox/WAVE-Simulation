@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='receiver_ci.mtx';
+OUTPUT_FILENAME='receiver.mtx';
 
 %% Requiered Parameters
 X=[70]; % Coordinates in X (Grid points)

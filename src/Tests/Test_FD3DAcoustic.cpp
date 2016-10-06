@@ -34,8 +34,8 @@ int main( int argc, char* argv[] )
     scai::lama::Scalar L2_scalar=0.0;
     ValueType L2=0.0;
     
-    seismo_ref.readFromFile("seismograms/seismogram_ci.mtx");
-    seismo_syn.readFromFile("seismograms/seismogram.mtx");
+    seismo_ref.readFromFile(config.getSeismogramFilename());
+    seismo_syn.readFromFile("ci/seismogram_ref.mtx");
     
     seismo_residual=(seismo_ref-seismo_syn);
     L2_scalar=seismo_residual.l2Norm();
