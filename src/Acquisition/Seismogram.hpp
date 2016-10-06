@@ -10,60 +10,65 @@
 #include "Coordinates.hpp"
 #include "Configuration.hpp"
 
-//! Seismogram class
-/*!
- * This class handels a seismogram which consists of several traces.
- */
-template <typename ValueType>
-class Seismogram
-{
+namespace KITGPI {
     
-public:
-    
-    //! Default constructor
-    Seismogram(){};
-    
-    //! Default destructor
-    ~Seismogram(){};
-    
-    void writeToFileRaw(std::string filename);
-    void ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
-    
-    void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
-    void redistribute(dmemo::DistributionPtr distRow,dmemo::DistributionPtr distColumn=NULL);
-    void replicate();
-
-    void reset();
-    
-    //! Not yet implemented
-    void normalize();
-    
-    IndexType getNumTraces();
-    IndexType getNumTracesLocal();
-    IndexType getNumSamples();
-    ValueType getDT();
-    
-private:
-    
-    IndexType numSamples=0; //!< Number of samples of one trace
-    IndexType numTracesGlobal=0; //!< Number of global traces
-    IndexType numTracesLocal=0; //!< Number of local traces
-    
-    /* header information */
-    ValueType DT=0; //!< Temporal sampling in seconds
-    ValueType receiver_type; //!< Type of receiver
-    
-    /* raw data */
-    lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
-    
-};
-
+    namespace Acquisition {
+        
+        //! Seismogram class
+        /*!
+         * This class handels a seismogram which consists of several traces.
+         */
+        template <typename ValueType>
+        class Seismogram
+        {
+            
+        public:
+            
+            //! Default constructor
+            Seismogram(){};
+            
+            //! Default destructor
+            ~Seismogram(){};
+            
+            void writeToFileRaw(std::string filename);
+            void ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
+            
+            void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
+            void redistribute(dmemo::DistributionPtr distRow,dmemo::DistributionPtr distColumn=NULL);
+            void replicate();
+            
+            void reset();
+            
+            //! Not yet implemented
+            void normalize();
+            
+            IndexType getNumTraces();
+            IndexType getNumTracesLocal();
+            IndexType getNumSamples();
+            ValueType getDT();
+            
+        private:
+            
+            IndexType numSamples=0; //!< Number of samples of one trace
+            IndexType numTracesGlobal=0; //!< Number of global traces
+            IndexType numTracesLocal=0; //!< Number of local traces
+            
+            /* header information */
+            ValueType DT=0; //!< Temporal sampling in seconds
+            ValueType receiver_type; //!< Type of receiver
+            
+            /* raw data */
+            lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
+            
+        };
+    }
+}
 //! \brief Replicate seismogram on all processes
 /*!
  * Creates a copy of the seismogram on all processe
  */
 template <typename ValueType>
-void Seismogram<ValueType>::replicate()
+void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 {
     dmemo::DistributionPtr no_dist_numSamples( new scai::dmemo::NoDistribution ( numSamples ) );
     
@@ -82,7 +87,7 @@ void Seismogram<ValueType>::replicate()
  \param NT Total number of samples per trace
  */
 template <typename ValueType>
-void Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT)
+void KITGPI::Acquisition::Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT)
 {
     dmemo::DistributionPtr no_dist_NT( new scai::dmemo::NoDistribution ( NT ) );
     
@@ -96,7 +101,7 @@ void Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionP
 /*!
  */
 template <typename ValueType>
-void Seismogram<ValueType>::reset()
+void KITGPI::Acquisition::Seismogram<ValueType>::reset()
 {
     data.scale(0.0);
 }
@@ -109,7 +114,7 @@ void Seismogram<ValueType>::reset()
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void Seismogram<ValueType>::redistribute(dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
 {
     if(distColumn==NULL){
         dmemo::DistributionPtr distSamples( new scai::dmemo::NoDistribution ( numSamples ) );
@@ -127,7 +132,7 @@ void Seismogram<ValueType>::redistribute(dmemo::DistributionPtr distTraces,dmemo
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void Seismogram<ValueType>::ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
 {
     data.ReadFromFile(filename);
     
@@ -152,7 +157,7 @@ void Seismogram<ValueType>::ReadFromFileRaw(std::string filename,dmemo::Distribu
  \param filename Filename to write seismogram
  */
 template <typename ValueType>
-void Seismogram<ValueType>::writeToFileRaw(std::string filename)
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string filename)
 {
     data.writeToFile(filename);
 }
@@ -160,7 +165,7 @@ void Seismogram<ValueType>::writeToFileRaw(std::string filename)
 
 //! \brief Get temporal sampling
 template <typename ValueType>
-ValueType Seismogram<ValueType>::getDT()
+ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT()
 {
     return(DT);
 }
@@ -168,7 +173,7 @@ ValueType Seismogram<ValueType>::getDT()
 
 //! \brief Get number of samples per trace
 template <typename ValueType>
-IndexType Seismogram<ValueType>::getNumSamples()
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples()
 {
     return(numSamples);
 }
@@ -176,14 +181,14 @@ IndexType Seismogram<ValueType>::getNumSamples()
 
 //! \brief Get number of local traces
 template <typename ValueType>
-IndexType Seismogram<ValueType>::getNumTracesLocal()
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal()
 {
     return(numTracesLocal);
 }
 
 //! \brief Get number of global traces
 template <typename ValueType>
-IndexType Seismogram<ValueType>::getNumTraces()
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTraces()
 {
     return(numTracesGlobal);
 }

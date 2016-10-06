@@ -30,14 +30,23 @@
 #include "../Wavefields/Wavefields.hpp"
 #include "../Derivatives/Derivatives.hpp"
 
-template<typename ValueType>
-class ForwardSolver
-{
-public:
+namespace KITGPI {
     
-    ForwardSolver(){};
-    ~ForwardSolver(){};
-    
-    virtual void run(Receivers<ValueType>& receiver, Sources<ValueType>& sources, Modelparameter<ValueType>& model, Wavefields<ValueType>& wavefield, Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
+    //! \brief ForwardSolver namespace
+    namespace ForwardSolver {
+        
+        //! \brief Abstract class for forward solver
+        template<typename ValueType>
+        class ForwardSolver
+        {
+        public:
             
-};
+            ForwardSolver(){};
+            ~ForwardSolver(){};
+            
+            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
+            
+        };
+        
+    }
+}

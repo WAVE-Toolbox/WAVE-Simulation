@@ -37,6 +37,7 @@
 
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 using namespace scai;
+using namespace KITGPI;
 
 #define MASTER 0
 
@@ -63,7 +64,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Read configuration from file            */
     /* --------------------------------------- */
-    Configuration<ValueType> config(argv[1]);
+    Configuration::Configuration<ValueType> config(argv[1]);
 
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -76,7 +77,7 @@ int main( int argc, char* argv[] )
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
-    HOST_PRINT( comm, "\nAcoustic 3-D FD-Algorithm\n\n" );
+    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -86,31 +87,31 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    Derivatives3Dacoustic<ValueType> derivatives( dist, ctx, config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm );
+    Derivatives::FD3Dacoustic<ValueType> derivatives( dist, ctx, config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Receivers<ValueType> receivers(config,dist);
-    Sources<ValueType> sources(config,dist);
+    Acquisition::Receivers<ValueType> receivers(config,dist);
+    Acquisition::Sources<ValueType> sources(config,dist);
     
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter3Dacoustic<ValueType> model(config,ctx,dist);
+    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
         
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
 
-    ForwardSolver3Dacoustic<ValueType> solver;
+    ForwardSolver::FD3Dacoustic<ValueType> solver;
     
     HOST_PRINT( comm, "Start time stepping\n" );
     start_t = common::Walltime::get();

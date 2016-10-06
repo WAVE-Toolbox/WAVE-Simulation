@@ -36,45 +36,47 @@ std::cout << msg;           \
 }                               \
 }
 
+namespace KITGPI {
+    
+    //! \brief Derivatives namespace
+    namespace Derivatives {
+        
+        template<typename ValueType>
+        class FD3Dacoustic : public Derivatives<ValueType>
+        {
+        public:
+            
+            FD3Dacoustic(){};
+            ~FD3Dacoustic(){};
+            
+            FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+            lama::CSRSparseMatrix<ValueType>* getA();
+            lama::CSRSparseMatrix<ValueType>* getB();
+            lama::CSRSparseMatrix<ValueType>* getC();
+            lama::CSRSparseMatrix<ValueType>* getD();
+            lama::CSRSparseMatrix<ValueType>* getE();
+            lama::CSRSparseMatrix<ValueType>* getF();
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+        private:
+            
+            lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
+            
+            void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
+            
+        };
+    }
+}
 
-//! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
-/*!
- This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
- */
 template<typename ValueType>
-class Derivatives3Dacoustic : public Derivatives<ValueType>
-{
-public:
-    
-    Derivatives3Dacoustic(){};
-    ~Derivatives3Dacoustic(){};
-    
-    Derivatives3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-    
-    lama::CSRSparseMatrix<ValueType>* getA();
-    lama::CSRSparseMatrix<ValueType>* getB();
-    lama::CSRSparseMatrix<ValueType>* getC();
-    lama::CSRSparseMatrix<ValueType>* getD();
-    lama::CSRSparseMatrix<ValueType>* getE();
-    lama::CSRSparseMatrix<ValueType>* getF();
-    
-    void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-    
-private:
-    
-    lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
-    
-    void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
-    
-};
-
-template<typename ValueType>
-Derivatives3Dacoustic<ValueType>::Derivatives3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
+KITGPI::Derivatives::FD3Dacoustic<ValueType>::FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
     initializeMatrices(dist, ctx, NX, NY,NZ,DH, DT, comm );
 }
 
 template<typename ValueType>
-void Derivatives3Dacoustic<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
+void KITGPI::Derivatives::FD3Dacoustic<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
 {
     SCAI_REGION( "derivatives" )
     
@@ -208,7 +210,7 @@ void Derivatives3Dacoustic<ValueType>::derivatives(IndexType NX, IndexType NY, I
 }
 
 template<typename ValueType>
-void Derivatives3Dacoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
+void KITGPI::Derivatives::FD3Dacoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
 {
     
     SCAI_REGION( "initializeMatrices" )
@@ -247,31 +249,31 @@ void Derivatives3Dacoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr
 
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getA(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getA(){
     return(&A);
 }
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getB(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getB(){
     return(&B);
 }
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getC(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getC(){
     return(&C);
 }
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getD(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getD(){
     return(&D);
 }
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getE(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getE(){
     return(&E);
 }
 
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* Derivatives3Dacoustic<ValueType>::getF(){
+lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getF(){
     return(&F);
 }

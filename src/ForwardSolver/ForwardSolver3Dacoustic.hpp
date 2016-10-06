@@ -30,20 +30,27 @@
 #include "../Wavefields/Wavefields.hpp"
 #include "../Derivatives/Derivatives.hpp"
 
-template<typename ValueType>
-class ForwardSolver3Dacoustic : public ForwardSolver<ValueType>
-{
-public:
+namespace KITGPI {
     
-    ForwardSolver3Dacoustic(){};
-    ~ForwardSolver3Dacoustic(){};
-    
-    void run(Receivers<ValueType>& receiver, Sources<ValueType>& sources, Modelparameter<ValueType>& model, Wavefields<ValueType>& wavefield, Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
-    
-};
+    namespace ForwardSolver {
+        
+        //! \brief 3-D Acoustic forward solver
+        template<typename ValueType>
+        class FD3Dacoustic : public ForwardSolver<ValueType>
+        {
+        public:
+            
+            FD3Dacoustic(){};
+            ~FD3Dacoustic(){};
+            
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
+            
+        };
+    }
+}
 
 template<typename ValueType>
-void ForwardSolver3Dacoustic<ValueType>::run(Receivers<ValueType>& receiver, Sources<ValueType>& sources, Modelparameter<ValueType>& model, Wavefields<ValueType>& wavefield, Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
     
     SCAI_REGION( "timestep" )
     

@@ -1,24 +1,29 @@
+#pragma once
 
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#pragma once
-
-/*! \brief Abstract class to create sourcesignals
- *
- * This is class holds several methods to generate different sourcesignals.
- * As this class is an abstract class, all methods are protected.
- */
-template <typename ValueType>
-class Sourcesignal
-{
-
-protected:
+namespace KITGPI {
     
-    void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
-    void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);	
-};
-
+    namespace Acquisition {
+        
+        
+        /*! \brief Abstract class to create sourcesignals
+         *
+         * This is class holds several methods to generate different sourcesignals.
+         * As this class is an abstract class, all methods are protected.
+         */
+        template <typename ValueType>
+        class Sourcesignal
+        {
+            
+        protected:
+            
+            void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+            void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+        };
+    }
+}
 
 /*! \brief Generating a Ricker signal
  *
@@ -30,7 +35,7 @@ protected:
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
     /*
@@ -63,7 +68,7 @@ void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, Index
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
     /*

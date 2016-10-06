@@ -23,26 +23,29 @@
 
 #include <iostream>
 
-//! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
-/*!
- This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
- */
-template<typename ValueType>
-class Derivatives
-{
-public:
- 
-    Derivatives(){};
-    ~Derivatives(){};
+namespace KITGPI {
     
-    virtual lama::CSRSparseMatrix<ValueType>* getA()=0;
-    virtual lama::CSRSparseMatrix<ValueType>* getB()=0;
-    virtual lama::CSRSparseMatrix<ValueType>* getC()=0;
-    virtual lama::CSRSparseMatrix<ValueType>* getD()=0;
-    virtual lama::CSRSparseMatrix<ValueType>* getE()=0;
-    virtual lama::CSRSparseMatrix<ValueType>* getF()=0;
-    
-    virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
-    
-    
-};
+    //! \brief Derivatives namespace
+    namespace Derivatives {
+        
+        template<typename ValueType>
+        class Derivatives
+        {
+        public:
+            
+            Derivatives(){};
+            ~Derivatives(){};
+            
+            virtual lama::CSRSparseMatrix<ValueType>* getA()=0;
+            virtual lama::CSRSparseMatrix<ValueType>* getB()=0;
+            virtual lama::CSRSparseMatrix<ValueType>* getC()=0;
+            virtual lama::CSRSparseMatrix<ValueType>* getD()=0;
+            virtual lama::CSRSparseMatrix<ValueType>* getE()=0;
+            virtual lama::CSRSparseMatrix<ValueType>* getF()=0;
+            
+            virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
+            
+            
+        };
+    }
+}

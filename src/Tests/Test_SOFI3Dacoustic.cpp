@@ -14,7 +14,7 @@ if ( myRank == MASTER )         \
 std::cout << msg;           \
 }                               \
 }
-
+using namespace KITGPI;
 
 int main( int argc, char* argv[] )
 {
@@ -26,7 +26,7 @@ int main( int argc, char* argv[] )
     }
     
     // read configuration parameter from file
-    Configuration<ValueType> config(argv[1]);
+    Configuration::Configuration<ValueType> config(argv[1]);
     
     lama::DenseMatrix<ValueType> seismo_ref;
     lama::DenseMatrix<ValueType> seismo_syn;

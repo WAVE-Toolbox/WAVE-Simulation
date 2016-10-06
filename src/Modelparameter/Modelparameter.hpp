@@ -1,8 +1,3 @@
-//! Abstract class for a single Modelparameter (Subsurface properties)
-/*!
- * This class handels a single modelparameter.
- * As this class is an abstract class, all constructors are protected.
- */
 
 
 #pragma once
@@ -29,61 +24,71 @@
 
 #include <iostream>
 
-
-template<typename ValueType>
-class Modelparameter
-{
+namespace KITGPI {
     
-public:
-    
-    //! Default constructor.
-    Modelparameter(){};
-    
-    //! Default destructor.
-    ~Modelparameter(){};
-
-    /*! \brief Abstract initialisation function 
-     *
-     * Standard initialisation function
-     *
-     \param ctx Context
-     \param dist Distribution
-     \param filename filename to read modelparameters (endings will be added by derived classes)
-     */
-    virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)=0;
-    
-    /*! \brief Abstract write function
-     *
-     * Standard write function
-     *
-     \param filename filename to write modelparameters (endings will be added by derived classes)
-     */
-    virtual void write(std::string filename)=0;
-    
-    //! \brief Get referenec to density model parameter
-    virtual lama::DenseVector<ValueType>* getDensity()=0;
-    //! \brief Get referenec to density model parameter
-    virtual lama::DenseVector<ValueType>* getInverseDensity()=0;
-    //! \brief Get referenec to first Lame model parameter
-    virtual lama::DenseVector<ValueType>* getM()=0;
-    //! \brief Get referenec to P-wave velocity
-    virtual lama::DenseVector<ValueType>* getVelocityP()=0;
-    //! \brief Get referenec to S-wave velocity
-    virtual lama::DenseVector<ValueType>* getVelocityS()=0;
-    
-protected:
-    void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
-    void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-    
-    void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
-    
-    
-private:
-    void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-
-    void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
-};
-
+    //! \brief Modelparameter namespace
+    namespace Modelparameter {
+        
+        //! Abstract class for a single Modelparameter (Subsurface properties)
+        /*!
+         * This class handels a single modelparameter.
+         * As this class is an abstract class, all constructors are protected.
+         */
+        template<typename ValueType>
+        class Modelparameter
+        {
+            
+        public:
+            
+            //! Default constructor.
+            Modelparameter(){};
+            
+            //! Default destructor.
+            ~Modelparameter(){};
+            
+            /*! \brief Abstract initialisation function
+             *
+             * Standard initialisation function
+             *
+             \param ctx Context
+             \param dist Distribution
+             \param filename filename to read modelparameters (endings will be added by derived classes)
+             */
+            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)=0;
+            
+            /*! \brief Abstract write function
+             *
+             * Standard write function
+             *
+             \param filename filename to write modelparameters (endings will be added by derived classes)
+             */
+            virtual void write(std::string filename)=0;
+            
+            //! \brief Get referenec to density model parameter
+            virtual lama::DenseVector<ValueType>* getDensity()=0;
+            //! \brief Get referenec to density model parameter
+            virtual lama::DenseVector<ValueType>* getInverseDensity()=0;
+            //! \brief Get referenec to first Lame model parameter
+            virtual lama::DenseVector<ValueType>* getM()=0;
+            //! \brief Get referenec to P-wave velocity
+            virtual lama::DenseVector<ValueType>* getVelocityP()=0;
+            //! \brief Get referenec to S-wave velocity
+            virtual lama::DenseVector<ValueType>* getVelocityS()=0;
+            
+        protected:
+            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
+            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            
+            void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            
+            
+        private:
+            void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            
+            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+        };
+    }
+}
 
 /*! \brief Init a single modelparameter by a constant value
  *
@@ -93,7 +98,7 @@ private:
  \param value Value which will be used to initialize the single modelparameter to a homogenoeus model
  */
 template<typename ValueType>
-void Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value)
 {
     
     allocateModelparameter(vector,ctx,dist);
@@ -109,10 +114,10 @@ void Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>&
  \param vector Singel modelparameter which will be initialized
  \param ctx Context
  \param dist Distribution
- \param filename Location of external file which will be read in 
+ \param filename Location of external file which will be read in
  */
 template<typename ValueType>
-void Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     
     allocateModelparameter(vector,ctx,dist);
@@ -132,7 +137,7 @@ void Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>&
  \param filename Name of file in which modelparameter will be written
  */
 template<typename ValueType>
-void Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
 {
     vector.writeToFile(filename);
 };
@@ -141,7 +146,7 @@ void Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>
 /*! \brief Read a modelparameter from file
  */
 template<typename ValueType>
-void Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
 {
     vector.readFromFile(filename);
 };
@@ -150,7 +155,7 @@ void Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>&
 /*! \brief Allocate a single modelparameter
  */
 template<typename ValueType>
-void Modelparameter<ValueType>::allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
     vector.allocate(dist);
