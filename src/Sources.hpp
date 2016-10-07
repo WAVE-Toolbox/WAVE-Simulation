@@ -60,7 +60,7 @@ private:
     lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
     
     /* Optional acquisition Settings */
-    lama::DenseVector<ValueType> wavelet_shape; //!< Shape of wavelet: 1==Ricker
+    lama::DenseVector<ValueType> wavelet_shape; //!< Shape of wavelet: 1==Ricker,2==FGaussian
     lama::DenseVector<ValueType> wavelet_fc; //!< Center frequency of synthetic wavelet
     lama::DenseVector<ValueType> wavelet_amp; //!< Amplitude of synthetic wavelet
     lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
@@ -366,12 +366,17 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexTyp
             /* Ricker */
             this->Ricker(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
             break;
-	    
+	      
 	case 2:
 	    /* First derivative of a Gaussian (FGaussian) */
 	    this->FGaussian(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
 	    break;
-            
+	    
+	case 3:
+	    /* Spike signal */
+	    this->Spike(signal,  NT,  DT,  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+	    break;
+
         default:
              COMMON_THROWEXCEPTION ( "Unkown wavelet shape ")
             break;
