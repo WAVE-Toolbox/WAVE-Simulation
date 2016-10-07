@@ -51,6 +51,18 @@ namespace KITGPI {
              */
             virtual void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
             
+            /*! \brief Appling the sources to the wavefield
+             *
+             * THIS METHOD IS CALLED DURING TIME STEPPING
+             * DO NOT WASTE RUNTIME HERE
+             *
+             \param sources Sources to apply
+             \param wavefield Wavefields
+             \param NT Total number of time steps
+             \param t Current time step
+             */
+            virtual void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
+            
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

@@ -31,10 +31,7 @@ namespace KITGPI {
             
             void generateSignals(IndexType NT, ValueType DT);
             void writeSignalsToFileRaw(std::string filename);
-            
-            void applySource(lama::DenseVector<ValueType>& wavefield, IndexType nt);
-            void applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt, IndexType NT);
-            
+                        
             lama::DenseVector<ValueType>* getCoordinates();
             lama::DenseVector<ValueType>* getSourceType();
             lama::DenseMatrix<ValueType>* getSignals();
@@ -62,7 +59,7 @@ namespace KITGPI {
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
             IndexType numParameter=0; //!< Number of source parameters given in acquisition matrix
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
-            lama::DenseVector<ValueType> source_type; //!< Type of source: 1==Pressure
+            lama::DenseVector<ValueType> source_type; //!< Type of source: 1==P, 2==vX, 3==vY, 4==vZ
             lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
             
             /* Optional acquisition Settings */
@@ -479,73 +476,6 @@ void KITGPI::Acquisition::Sources<ValueType>::getLocalSources(dmemo::Distributio
     numSourcesLocal=coordinateslocal.size();
     numSourcesGlobal=coordinates.size();
     
-}
-
-
-/*! \brief Applies the source signals to the wavefields during forward modelling
- *
- * Applies the sources to the wavefields according to the source_type vector
- *
- \param wavefield Wavefield
- \param nt Current time step
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::applySource(lama::DenseVector<ValueType>& wavefield, IndexType nt)
-{
-    scai::lama::Scalar source_index_temp;
-    IndexType source_index;
-    
-    for(IndexType i=0; i<numSourcesGlobal; i++){
-        
-        source_index_temp=coordinates.getValue(i);
-        source_index=source_index_temp.getValue<IndexType>();
-        
-        wavefield.setValue(source_index, wavefield.getValue(source_index) + signals.getValue(i,nt) );
-        
-    }
-    
-}
-
-
-/*! \brief Applies the source signals to the wavefields during forward modelling (locally)
- *
- * Applies the sources to the wavefields according to the source_type vector
- *
- \param wavefield Wavefield
- \param nt Current time step
- \param NT Total number of time steps
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt, IndexType NT)
-{
-    if(numSourcesLocal>0){
-        
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
-        
-        lama::DenseMatrix<ValueType>& signalsMatrix=*signals.getData();
-        lama::DenseStorage<ValueType>* signals_DS=&signalsMatrix.getLocalStorage();
-        hmemo::HArray<ValueType>* signals_HA=&signals_DS->getData();
-        hmemo::ReadAccess<ValueType> read_signals_HA(*signals_HA);
-        
-        dmemo::DistributionPtr dist_wavefield=wavefield.getDistributionPtr();
-        
-        scai::lama::Scalar source_index_temp;
-        IndexType coordinate_global;
-        IndexType coordinate_local;
-        
-        for(IndexType i=0; i<numSourcesLocal; i++){
-            
-            coordinate_global=read_coordinates_LA[i];
-            coordinate_local=dist_wavefield->global2local(coordinate_global);
-            
-            wavefield.getLocalValues()[coordinate_local] = wavefield.getLocalValues()[coordinate_local] + read_signals_HA[nt+NT*i];
-            
-        }
-        
-        read_coordinates_LA.release();
-        read_signals_HA.release();
-    }
 }
 
 
