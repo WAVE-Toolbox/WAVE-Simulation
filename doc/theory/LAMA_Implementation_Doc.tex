@@ -14,6 +14,7 @@
 \usepackage[automark]{scrpage2}
 \usepackage{setspace}
 \usepackage{color}
+\usepackage{natbib}
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{mathtools}			%Zur Benutzung von \mathrlap und \mathllap
@@ -31,7 +32,7 @@
 	\setlist[enumerate]{itemsep=-12pt}
 \usepackage{subcaption}
 \usepackage{lscape}		%Zur Benutzung von \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
-\usepackage{authda14}	%authda14.sty wird eingebunden. Zusammen mit der Datei authda3.bst wird der Zitierstil festgelegt.
+
 
 \KOMAoptions{twoside}
 
@@ -374,7 +375,7 @@ Ableiten der Materialgesetze nach der Zeit führt zusammen mit Gl. \ref{eqn:ElBe
 Zur Lösung der Wellengleichung mit finiten Differenzen müssen die physikalisch kontinuierliche Raum und Zeit in mathematisch diskretisierte Gitter aufgelöst werden. Für die Koordinaten gilt $x=k~\mathrm{d}x$, $y=l~\mathrm{d}y$, $z=m~\mathrm{d}z$, $t=n~\mathrm{d}t$. $\mathrm{d}x, \mathrm{d}y, \mathrm{d}z$ bezeichnen die räumlichen Abstände der Gitterpunkte in der jeweiligen Richtung, $\mathrm{d}t$ der zeitliche Abstand. Das Gitter hat eine Gesamtgröße von $NX \times NY \times NZ$. Die Simulationsdauer beträgt $NT~\mathrm{d}t$.
 
 \section{Definition des \textit{Standard Staggered Grid} (SSG)}
-Das SSG (\cite{virieux:86} und \cite{levander:88}) ist eine Methode die physikalischen Größen so auf und zwischen Gitterpunkten zu verteilen, damit sich die partiellen Differentialgleichungen der Wellengleichung jeweils auf einen gemeinsamen Punkt im Gitter beziehen. Die Gestalt des SSG in drei Dimensionen ist in Abbildung \ref{fig:StagGrid} dargestellt. Die zeitliche Dimension ist nicht explizit gezeigt. Die Spannungen $\sigma$ liegen zeitlich auf halben Gitterpunkten, die Partikelgeschwindigkeiten $v$ auf ganzen.
+Das SSG \citep{virieux:86,levander:88} ist eine Methode die physikalischen Größen so auf und zwischen Gitterpunkten zu verteilen, damit sich die partiellen Differentialgleichungen der Wellengleichung jeweils auf einen gemeinsamen Punkt im Gitter beziehen. Die Gestalt des SSG in drei Dimensionen ist in Abbildung \ref{fig:StagGrid} dargestellt. Die zeitliche Dimension ist nicht explizit gezeigt. Die Spannungen $\sigma$ liegen zeitlich auf halben Gitterpunkten, die Partikelgeschwindigkeiten $v$ auf ganzen.
 \begin{figure}[h!]
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
@@ -760,5 +761,5 @@ Alle diskretisierte Komponenten der elastischen Wellengleichung in Matrix-Vektor
 
 
 \bibliography{LAMA_Implementation_Doc}
-\bibliographystyle{authda3}
+\bibliographystyle{apalike}
 \end{document}
