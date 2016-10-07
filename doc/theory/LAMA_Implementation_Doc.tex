@@ -446,7 +446,7 @@ Damit lässt sich die elastische Wellengleichung unter Verwendung des SSG wie fo
 	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}} + \mathrm{d}t~ \mu_{k+\frac{1}{2},l,m+\frac{1}{2}} \left( \left.\frac{\partial v_x}{\partial z}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\\
 	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} + \mathrm{d}t~ \mu_{k,l+\frac{1}{2},m+\frac{1}{2}} \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)\\
 	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\mathrm{d}t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
-	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\mathrm{d}t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
+	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\mathrm{d}t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
 	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\mathrm{d}t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
 
@@ -484,18 +484,19 @@ Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten
 \end{algorithm}
 
 \chapter{Matrix-Vektor Formalismus des FD-Schemas}
-In diesem Kapitel werden zunächst die Vorteile des neuen Formalismus erläutert. Anschließend wird er an einem Beispiel eingeführt und verallgemeinert.
+In diesem Kapitel werden zunächst die Vorteile des neuen Formalismus angesprochen. Anschließend wird die Vektorisierung der Arrays vorgenommen. Ein zentraler Schritt stellt die Auffindung von speziellen Matrizen dar, welche die FD-Operatoren auf $v_i$ und $\sigma_{ij}$ anwenden. Diese werden für ein übersichtliches Beispiel aufgeführt.
 \section{Motivation}
-Der Matrix-Vektor Formalismus bedeutet zunächst lediglich eine kompakte Schreibweise der identischen Mathematik. Neben einer besseren Übersichtlichkeit ergeben sich die großen Vorteile erst auf Seiten der programmtechnischen Verarbeitung. Es handelt sich um eine universelle Schreibweise in die eine Vielzahl von unterschiedlichen physikalischen Problemen gebracht werden kann. So bietet das Framework \textit{LAMA} (https://www.libama.org/index.html) eine Softwarestruktur für \textit{C++}, die das Schreiben von hardwareunabhängigen Programmen ermöglicht, welche zudem auf heterogenen Rechnerarchitekturen ausführbar sind. Ein Zugang zu dieser Funktionalität ist das Formulieren von Problemen im Matrix-Vektor Formalismus.
+Der Matrix-Vektor Formalismus bedeutet zunächst lediglich eine kompakte Schreibweise der identischen Mathematik. Neben einer besseren Übersichtlichkeit ergeben sich die großen Vorteile erst auf Seiten der programmtechnischen Verarbeitung. Es handelt sich um eine universelle Schreibweise in die eine Vielzahl von unterschiedlichen physikalischen Problemen gebracht werden kann. So bietet das Framework \textit{LAMA} \cite{lama:16} eine Softwarestruktur für \textit{C++}, die das Schreiben von hardwareunabhängigen Programmen ermöglicht, welche zudem auf heterogenen Rechnerarchitekturen ausführbar sind. Ein Zugang zu dieser Funktionalität ist das Formulieren von Problemen im Matrix-Vektor Formalismus.
 \begin{equation}
 	\vec{y} = A~\vec{x}
 \end{equation}
 
 \section{Vektorisierung der Arrays}
-Wie bereits erwähnt ist die Reihenfolge der räumlichen Abarbeitung irrelevant. Dies ist Voraussetzung damit sich die drei räumlichen Schleifen sowohl für die Berechnung von $v_i$ also auch von $\sigma_{ij}$ durch Matrixoperationen ersetzen lassen. Für das Verständnis diesen Schrittes werden die diskretisierten Gleichungen mit FD-Operatoren 2. Ordnung (vgl. Gleichung \ref{eqn:FDO2O}) ersetzt, hier für eine äquidistante Gittergröße ($\mathrm{d}x = \mathrm{d}y = \mathrm{d}z = \mathrm{d} h$). Da in Programmiersprachen keine halben Indizes angesprochen werden können, sind intern all diese auf vorangegangene ganze Indizes verschoben. Für das Update von $v_x$ gilt damit:
+Wie bereits erwähnt ist die Reihenfolge der räumlichen Abarbeitung irrelevant. Dies ist Voraussetzung damit sich die drei räumlichen Schleifen sowohl für die Berechnung von $v_i$ also auch von $\sigma_{ij}$ durch Matrixoperationen ersetzen lassen. Für das Verständnis diesen Schrittes werden die diskretisierten Gleichungen mit FD-Operatoren 2. Ordnung (vgl. Gleichung \ref{eqn:FDO2O}) ersetzt, hier für eine äquidistante Gittergröße ($\mathrm{d}x = \mathrm{d}y = \mathrm{d}z = \mathrm{d} h$). Da in Programmiersprachen keine halben Indizes angesprochen werden können, sind intern all diese auf vorangegangene ganze Indizes verschoben. Für das Update von $v_x$ und $\sigma_{xy}$ gilt damit:
 \begin{multline}
 	v_{x,k,l,m}^{n+1} = v_{x,k,l,m}^n + \frac{\mathrm{d}t}{\rho_{k,l,m} \mathrm{d}h} \cdot\\  \left( \sigma_{xx,k+1,l,m}^{n} - \sigma_{xx,k,l,m}^{n} + \sigma_{xy,k,l,m}^{n} - \sigma_{xy,k,l-1,m}^{n} + \sigma_{xz,k,l,m}^{n} - \sigma_{xz,k,l,m-1}^{n} \right)\label{eqn:exMV1}
 \end{multline}
+
 Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensionalen Arrays vorliegen (hier $v_x$, $\sigma_{ij}$ und $\rho$) in Vektoren umgewandelt werden müssen. Das Vorgehen ist Konvention, muss aber konsequent eingehalten werden. Abbildung \ref{fig:ArrayToVec} illustriert die Umwandlung eines $4 \times 3 \times 2$-Arrays in einen Vektor. Zuerst wird die x-Richtung, danach die y-Richtung und zuletzt die z-Richtung projiziert.
 
 \begin{figure}[h!]
@@ -541,16 +542,26 @@ Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensiona
 \end{figure}
 
 \section{Einführung der FD-Koeffizienten Matrizen}
+Der größter Schritt des neuen Formalismus ist das Auffinden der FD-Koeffizienten Matrizen $D$.
 
-Gleichung \ref{eqn:exMV1} in Matrix-Vektor Schreibweise lautet:
+\subsection{Auswirkung der Indexverschiebung}
+Aufgrund der Verschiebung aller halben Indizes um $-\frac{1}{2}$ muss bei der Anwendung unterschieden werden. Liegt das ursprüngliche Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem ganzen Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xx,k,l,m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ in der Ableitungsrichtung $x$ auf $k$ liegt, so greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}$ zurück. Nach der Reduzierung der halben Indizes um $-\frac{1}{2}$ verschiebt sich die Mitte des Operators ebenfalls nach links und das Ergebnis von $\sigma_{xx,k,l,m}$ an der Stelle $k$ wird aus $v_x$-Werten an den Stellen $k-1$ und $k$ berechnet. Diese Geometrie ist bei allen $\frac{\partial v_i}{\partial x_i}$ sowie $\frac{\partial \sigma_{ij}}{\partial x_j}$ mit $i\neq j$ gegeben. Die hierzu passende FD-Koeffizienten Matrix wird mit $D_{i,\mathrm{b}}$ mit b für \textit{backward} bezeichnet. Das $i$ steht für die Ableitungsrichtung.
+
+Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem halben Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$ in der Ableitungsrichtung $y$ auf $l+\frac{1}{2}$ liegt. Dann greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}$ zurück. Diese $v_x$ Werte müssen in $y$-Richtung nicht verschoben werden. Jedoch wird der hiermit berechnete Wert $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ auf $\sigma_{xy,k,l,m}$, also in $y$-Richtung, verschoben, womit das Zentrum des FD-Operators nun aus Sicht von $\sigma_{xy,k,l,m}$ rechts befindet. Diese Verschiebung findet sich bei allen $\frac{\partial v_i}{\partial x_j}$ mit $i\neq j$ und $\frac{\partial \sigma_{ii}}{\partial x_i}$. Hierfür lautet die Bezeichnung $D_{i,\mathrm{f}}$ mit f für \textit{forward}.
+
+Die Auswirkung dieser Unterscheidung äußert sich in einer Verschiebung der FD-Koeffizienten in der Matrix. Für Details hierüber siehe nächsten Abschnitt.
+
+\subsection{Vervollständigung des Formalismus}
+
+Ein Beispiel für eine Updategleichung im neuen Matrix-Vektor Formalismus basiert auf Gleichung \ref{eqn:exMV1}, wo die Indexverschiebung bereits durchgeführt wurde:
 \begin{equation}
-	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( A_x^2 \vec{\sigma}_{xx}^{\,n} + A_y^2 \vec{\sigma}_{xy}^{\,n} + A_z^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
+	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( D_{x,f}^2 \vec{\sigma}_{xx}^{\,n} + D_{y,b}^2 \vec{\sigma}_{xy}^{\,n} + D_{z,b}^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
 \end{equation}
-Die Diagonalmatrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ enthält die Werte des Dichtemodells. $A_x^2$ ist eine Matrix und beinhaltet die FD-Koeffizienten 2. Ordnung für die x-Richtung. Die Aufgabe besteht nun darin, die Matrizen $A_i^2$ zu finden, sodass sie die Modellvektoren $\vec{\sigma}_{ij}$ auf die FD-Operatoren abbilden. 
+Die Diagonalmatrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ enthält die Werte des Dichtemodells. $D_{i,b}^2$ bzw. $D_{i,f}^2$  beinhaltet die FD-Koeffizienten 2. Ordnung für die Ableitungsrichtung $i$. Die Aufgabe besteht nun darin, die Matrizen $D_{i}^2$ zu finden, sodass sie die Modellvektoren $\vec{\sigma}_{ij}$ auf die FD-Operatoren abbilden. 
 
-Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} für obiges Beispiel aus und überzeuge sich vom Ergebnis.
+Nachfolgend werden die Matrizen $D_{i,f}^2$ und $D_{i,f}^4$ dargestellt um sich die Auswirkungen der FD-Ordnung machen zu können. Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} für obiges Beispiel aus und überzeuge sich vom Ergebnis. Anschließend folgt die Entwicklung der $D_{i,b}$.
 \begin{align*}
-	A_x^2 &= \begin{psmallmatrix}
+	D_{x,f}^2 &= \begin{psmallmatrix}
 \text{-}1 & 1 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
 0 & \text{-}1 & 1 & 0 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
 0 & 0 & \text{-}1 & 1 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
@@ -579,7 +590,7 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 \end{align*}
 
 \begin{align*}
-	A_x^4 &= \begin{psmallmatrix}
+	D_{x,f}^4 &= \begin{psmallmatrix}
 \text{-}\frac{9}{8} & \frac{9}{8} & \text{-}\frac{1}{24} & 0 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
 \frac{1}{24} & \text{-}\frac{9}{8} & \frac{9}{8} & \text{-}\frac{1}{24} &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
 0 & \frac{1}{24} & \text{-}\frac{9}{8} & \frac{9}{8} &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
@@ -608,7 +619,7 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 \end{align*}
 
 \begin{align*}
-	A_y^2 &= \begin{psmallmatrix}
+	D_{y,f}^2 &= \begin{psmallmatrix}
 \text{-}1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & \text{-}1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & 0 & \text{-}1 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -637,7 +648,7 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 \end{align*}
 
 \begin{align*}
-	A_y^4 &= \begin{psmallmatrix}
+	D_{y,f}^4 &= \begin{psmallmatrix}
 \text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & \text{-}\frac{1}{24} & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & \text{-}\frac{1}{24} & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & \text{-}\frac{1}{24} & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -666,7 +677,7 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 \end{align*}
 
 \begin{align*}
-	A_z^2 &= \begin{psmallmatrix}
+	D_{z,f}^2 &= \begin{psmallmatrix}
 \text{-}1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & \text{-}1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & 0 & \text{-}1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -695,7 +706,7 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 \end{align*}
 
 \begin{align*}
-	A_z^4 &= \begin{psmallmatrix}
+	D_{z,f}^4 &= \begin{psmallmatrix}
 \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -708,36 +719,68 @@ Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} f�
 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 \\
 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} & 0 \\
 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{9}{8} \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} \\
+\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & \text{-}\frac{9}{8} \\
 \end{psmallmatrix}
 \end{align*}
 
-Außerhalb der senkrechten gestrichelten Linien sind alle Einträge Null, unabhängig von der Ordnung der FD-Operatoren. Der Grund hierfür ist der Tatsache geschuldet, dass an diesen Stellen ein Sprung $y\rightarrow y+1$ nach $NX$ Einträgen bei $A_x$ oder $z\rightarrow z+1$ nach $NX \cdot NY$ Einträgen bei $A_y$ stattfindet.
+Außerhalb der senkrechten gestrichelten Linien sind alle Einträge Null, unabhängig von der Ordnung der FD-Operatoren. Der Grund hierfür ist der Tatsache geschuldet, dass an diesen Stellen ein Sprung $y\rightarrow y+1$ nach $NX$ Einträgen bei $D_{x}$ oder $z\rightarrow z+1$ nach $NX \cdot NY$ Einträgen bei $D_{y}$ stattfindet.
+
+Alle $D_{i,b}$ lassen sich aus $D_{i,f}$ ableiten, indem alle Einträge ungleich Null einer Zeile durch ihren rechten Nachfolger ungleich Null ersetzt werden. Dies wird besonders bei $D_{y,f}^4 \rightarrow D_{y,b}^4$ deutlich:
+\begin{align*}
+	D_{y,b}^4 &= \begin{psmallmatrix}
+\frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline&\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} \\
+\end{psmallmatrix}
+\end{align*}
+
+
 
 Eine wichtige Eigenschaft der FD-Koeffizienten-Matrizen liegt in ihrer Behandlung des Modellrandes über welchen sie niemals hinaus greifen. Dies führt zwangsläufig dazu, dass das Update von $v_i$ und $\sigma_{ij}$ in der Nähe des Randes aus einem unvollständigen FD-Operator berechnet wird. So wird für $v_x^{n+1}$ in der letzten $y-z-$Ebene mit $k=NX$ nicht vorgegriffen und bei einem FD-Operator 2. Ordnung lediglich je ein Wert von $\sigma_{xx}^n$, $\sigma_{xy}^n$ und $\sigma_{xz}^n$ verwendet. Das nicht Beachten aller Größen außerhalb des Randes entspricht einem Festhalten des Wellenfeldes und damit der festen Einspannung des Mediums. Die Folge ist eine vollständige Reflexion.
 
 Alle diskretisierte Komponenten der elastischen Wellengleichung in Matrix-Vektor Schreibweise lauten:
 \begin{align*}
-	\sigma_{xx}^{n} &= \sigma_{xx}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( A_x^q v_x +A_y^q v_y + A_z^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) A_x^q v_x\\
-	\sigma_{yy}^{n} &= \sigma_{yy}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( A_x^q v_x +A_y^q v_y + A_z^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) A_y^q v_y\\
-	\sigma_{zz}^{n} &= \sigma_{zz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( A_x^q v_x +A_y^q v_y + A_z^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) A_z^q v_z\\
-	\sigma_{xy}^{n} &= \sigma_{xy}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( A_y^q v_x + A_x^q v_y \right)\\
-	\sigma_{xz}^{n} &= \sigma_{xz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( A_z^q v_x + A_x^q v_z \right)\\
-	\sigma_{yz}^{n} &= \sigma_{yz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( A_z^q v_y + A_y^q v_z \right)\\
-	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( A_x^q \vec{\sigma}_{xx}^{\,n} + A_y^q \vec{\sigma}_{xy}^{\,n} + A_z^q \vec{\sigma}_{xz}^{\,n} \right)\\
-	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( A_x^q \vec{\sigma}_{yx}^{\,n} + A_y^q \vec{\sigma}_{yy}^{\,n} + A_z^q \vec{\sigma}_{yz}^{\,n} \right)\\
-	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( A_x^q \vec{\sigma}_{zx}^{\,n} + A_y^q \vec{\sigma}_{zy}^{\,n} + A_z^q \vec{\sigma}_{zz}^{\,n} \right)\\
+	\sigma_{xx}^{n} &= \sigma_{xx}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( D_{x,b}^q v_x +D_{y,b}^q v_y + D_{z,b}^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) D_{x,b}^q v_x\\
+	\sigma_{yy}^{n} &= \sigma_{yy}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( D_{x,b}^q v_x +D_{y,b}^q v_y + D_{z,b}^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) D_{y,b}^q v_y\\
+	\sigma_{zz}^{n} &= \sigma_{zz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \left( D_{x,b}^q v_x +D_{y,b}^q v_y + D_{z,b}^q v_z \right) + 2~ \frac{\mathrm{d}t}{\mathrm{d}h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) D_{z,b}^q v_z\\
+	\sigma_{xy}^{n} &= \sigma_{xy}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( D_{y,f}^q v_x + D_{x,f}^q v_y \right)\\
+	\sigma_{xz}^{n} &= \sigma_{xz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( D_{z,f}^q v_x + D_{x,f}^q v_z \right)\\
+	\sigma_{yz}^{n} &= \sigma_{yz}^{n-1} + \frac{\mathrm{d}t}{\mathrm{d}h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \left( D_{z,f}^q v_y + D_{y,f}^q v_z \right)\\
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( D_{x,f}^q \vec{\sigma}_{xx}^{\,n} + D_{y,b}^q \vec{\sigma}_{xy}^{\,n} + D_{z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( D_{x,b}^q \vec{\sigma}_{yx}^{\,n} + D_{y,f}^q \vec{\sigma}_{yy}^{\,n} + D_{z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\mathrm{d}t}{\mathrm{d}h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \left( D_{x,b}^q \vec{\sigma}_{zx}^{\,n} + D_{y,b}^q \vec{\sigma}_{zy}^{\,n} + D_{z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
 
 
