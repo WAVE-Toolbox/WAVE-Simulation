@@ -192,7 +192,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         gatherSeismograms(wavefield,NT,t);
         /* Apply source and save seismogram */
         sources.applySourceLocal(p,t,NT);
-        //receiver.saveSeismogramsLocal(p,t,NT);
         
     }
     
