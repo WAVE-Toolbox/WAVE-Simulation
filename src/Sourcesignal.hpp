@@ -19,6 +19,7 @@ protected:
     void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
     void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
     void Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift);
+    void sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
 };
 
 
@@ -93,7 +94,6 @@ void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, In
  \param signal Allocated vector to to store Spike signal
  \param NT Number of time steps
  \param DT Temporal time step interval
- \param FC Central frequency
  \param AMP Amplitude
  \param Tshift Time to shift wavelet
  */
@@ -108,11 +108,55 @@ void Sourcesignal<ValueType>::Spike(lama::DenseVector<ValueType>& signal, IndexT
     IndexType time_index;
     lama::DenseVector<ValueType> help( NT, 0.0);
     
-    /* this is for source[i] = 1.0 when nsp=tshift/dt; */
+    /* this is for source[i] = 1.0 when t=tshift/dt; */
     temp_spike=1.0;
-    time_index=Tshift/DT;
+    time_index=floor(Tshift/DT);
     help.setValue(time_index,temp_spike);
 
     signal = lama::Scalar(AMP) * help;
+    
+}
+
+/*! \brief Generating a First derivative of a sinus raised to the power of three (sinthree)
+ *
+ \param signal Allocated vector to to store sinthree signal
+ \param NT Number of time steps
+ \param DT Temporal time step interval
+ \param FC Central frequency
+ \param AMP Amplitude
+ \param Tshift Time to shift wavelet
+ */
+template<typename ValueType>
+void Sourcesignal<ValueType>::sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+{
+    
+     /*
+     *  t=0:DT:(NT*DT-DT);
+     *  when t>=tshift && t<=tshift+1.0/FC;
+     *  tau=pi*FC*(t-Tshift);
+     *  signal=(sin(tau))^3;
+     */
+
+    lama::DenseVector<ValueType> zero( NT, 0.0 );
+    
+    double temp;
+    IndexType time_index1,time_index2,i,count;
+    
+    time_index1 = floor(Tshift/DT);
+    time_index2 = time_index1 + floor(1.0/FC/DT);
+    
+    
+    /* this is for source[i] = (sin(PI*(t-Tshift)*FC))^3 when t>=tshift && t<=tshift+1.0/FC; */
+    count=0;
+    for (i=time_index1; i<=time_index2; i++) {
+	  temp=count * DT * M_PI * FC ;
+	  temp=sin(temp);
+	  temp=pow(temp,3);
+          zero.setValue(i,temp);
+	  count++;
+    }
+
+ 
+    signal = lama::Scalar(AMP) * zero;
     
 }
