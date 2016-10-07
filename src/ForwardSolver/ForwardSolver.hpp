@@ -39,6 +39,8 @@ namespace KITGPI {
              */
             virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
             
+            //virtual void saveSeismograms(Acquisition::Receivers<ValueType>& receiver,Wavefields::Wavefields<ValueType>& wavefield,IndexType NT)=0;
+            
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

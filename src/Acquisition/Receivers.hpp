@@ -35,6 +35,10 @@ namespace KITGPI {
             IndexType getNumReceiversGlobal();
             IndexType getNumReceiversLocal();
             
+            dmemo::DistributionPtr getReceiversDistribution();
+            lama::DenseVector<ValueType>* getCoordinates();
+            lama::DenseVector<ValueType>* getReceiversType();
+            
         private:
             
             void getLocalReceivers(dmemo::DistributionPtr dist_wavefield);
@@ -43,8 +47,6 @@ namespace KITGPI {
             
             IndexType numReceiversGlobal=0; //!< Number of receivers global
             IndexType numReceiversLocal=0; //!< Number of receivers local
-            
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
             
             dmemo::DistributionPtr dist_wavefield_receivers=NULL; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT=NULL; //!< No distribution of the columns of the seismogram matrix
@@ -55,10 +57,44 @@ namespace KITGPI {
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the receiver acquisition
             IndexType numParameter=0; //!< Number of receiver parameters given in acquisition matrix
-            lama::DenseVector<ValueType> receiver_type; //!< Type of Receivers: 1==Pressure
+            lama::DenseVector<ValueType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
+            lama::DenseVector<ValueType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
             
         };
     }
+}
+
+/*! \brief Getter method for reference to receiver type
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
+{
+    if(receiver_type.size()==0) {
+        COMMON_THROWEXCEPTION ( "No receivers type set" )
+    }
+    return(&receiver_type);
+}
+
+/*! \brief Getter method for reference to coordinates
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
+{
+    if(coordinates.size()==0) {
+        COMMON_THROWEXCEPTION ( "No receivers coordinates set" )
+    }
+    return(&coordinates);
+}
+
+/*! \brief Getter method for distribution of the receivers based on the wavefield distribution
+ */
+template<typename ValueType>
+dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDistribution()
+{
+    if(dist_wavefield_receivers==NULL) {
+        COMMON_THROWEXCEPTION ( "Receivers distribution not set " )
+    }
+    return(dist_wavefield_receivers);
 }
 
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields

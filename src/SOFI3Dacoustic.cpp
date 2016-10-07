@@ -121,9 +121,8 @@ int main( int argc, char* argv[] )
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
-    
-    receivers.writeSeismograms(config.getSeismogramFilename());
-    
+    solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
+        
 
     return 0;
 }
