@@ -325,7 +325,7 @@ Somit lässt sich das generalisierte Hookesche Gesetz für linear elastische, is
 Hier bezeichnet $\lambda$ die erste Lamé-Konstante und $\mu$ die zweite Lamé-Konstante (auch Schubmodul genannt). $\delta_{ij}$ ist das Kronecker-Delta. $\epsilon_{ij}$ bezeichnet nun den linearisierten Verzerrungstensor. $u_i$ ist die Verschiebung eines Partikels in Richtung $i$.
 
 \section{Impulserhaltung}
-Neben der Spannungs-Dehnungs-Beziehung ist die Impulserhaltung (Kraftdichtebilanz) der Kern der elastischen Wellenausbreitung. Sie entspricht prinzipiell der differentiellen Formulierung des dynamischen Gleichgewichts pro Volumeneinheit. Man betrachte dazu ein infinitesimales Volumen mit der Kantenlänge $\partial x_i$. Auf ihn wirken zwei Arten von Kräften, Volumenkraft und Oberflächenkraft. \cite{landau:97}
+Neben der Spannungs-Dehnungs-Beziehung ist die Impulserhaltung (Kraftdichtebilanz) der Kern der elastischen Wellenausbreitung. Sie entspricht prinzipiell der differentiellen Formulierung des dynamischen Gleichgewichts pro Volumeneinheit. Man betrachte dazu ein infinitesimales Volumen mit der Kantenlänge $\partial x_i$. Auf ihn wirken zwei Arten von Kräften, Volumenkraft und Oberflächenkraft. \citep{landau:97}
 
 Die Volumenkraft, Trägheitskraft und Gravitationskraft, wirkt auf den Körper aufgrund seines massebehafteten Volumens.
 
@@ -416,7 +416,7 @@ Das SSG \citep{virieux:86,levander:88} ist eine Methode die physikalischen Grö�
 		\draw [->] (5.center) to (10.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Darstellung des \textit{Standard Staggered Grid} (SSG) mit der Verteilung von Material- und Wellenfeldparametern in 3-D.  nach \protect\cite{virieux:86,levander:88}???}
+\caption{Darstellung des \textit{Standard Staggered Grid} (SSG) mit der Verteilung von Material- und Wellenfeldparametern in 3-D.}
 \label{fig:StagGrid}
 \end{figure}
 
@@ -486,7 +486,7 @@ Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten
 \chapter{Matrix-Vektor Formalismus des FD-Schemas}
 In diesem Kapitel werden zunächst die Vorteile des neuen Formalismus angesprochen. Anschließend wird die Vektorisierung der Arrays vorgenommen. Ein zentraler Schritt stellt die Auffindung von speziellen Matrizen dar, welche die FD-Operatoren auf $v_i$ und $\sigma_{ij}$ anwenden. Diese werden für ein übersichtliches Beispiel aufgeführt.
 \section{Motivation}
-Der Matrix-Vektor Formalismus bedeutet zunächst lediglich eine kompakte Schreibweise der identischen Mathematik. Neben einer besseren Übersichtlichkeit ergeben sich die großen Vorteile erst auf Seiten der programmtechnischen Verarbeitung. Es handelt sich um eine universelle Schreibweise in die eine Vielzahl von unterschiedlichen physikalischen Problemen gebracht werden kann. So bietet das Framework \textit{LAMA} \cite{lama:16} eine Softwarestruktur für \textit{C++}, die das Schreiben von hardwareunabhängigen Programmen ermöglicht, welche zudem auf heterogenen Rechnerarchitekturen ausführbar sind. Ein Zugang zu dieser Funktionalität ist das Formulieren von Problemen im Matrix-Vektor Formalismus.
+Der Matrix-Vektor Formalismus bedeutet zunächst lediglich eine kompakte Schreibweise der identischen Mathematik. Neben einer besseren Übersichtlichkeit ergeben sich die großen Vorteile erst auf Seiten der programmtechnischen Verarbeitung. Es handelt sich um eine universelle Schreibweise in die eine Vielzahl von unterschiedlichen physikalischen Problemen gebracht werden kann. So bietet das Framework \textit{LAMA} \citep{lama:16} eine Softwarestruktur für \textit{C++}, die das Schreiben von hardwareunabhängigen Programmen ermöglicht, welche zudem auf heterogenen Rechnerarchitekturen ausführbar sind. Ein Zugang zu dieser Funktionalität ist das Formulieren von Problemen im Matrix-Vektor Formalismus.
 \begin{equation}
 	\vec{y} = A~\vec{x}
 \end{equation}
@@ -545,11 +545,43 @@ Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensiona
 Der größter Schritt des neuen Formalismus ist das Auffinden der FD-Koeffizienten Matrizen $D$.
 
 \subsection{Auswirkung der Indexverschiebung}
-Aufgrund der Verschiebung aller halben Indizes um $-\frac{1}{2}$ muss bei der Anwendung unterschieden werden. Liegt das ursprüngliche Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem ganzen Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xx,k,l,m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ in der Ableitungsrichtung $x$ auf $k$ liegt, so greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}$ zurück. Nach der Reduzierung der halben Indizes um $-\frac{1}{2}$ verschiebt sich die Mitte des Operators ebenfalls nach links und das Ergebnis von $\sigma_{xx,k,l,m}$ an der Stelle $k$ wird aus $v_x$-Werten an den Stellen $k-1$ und $k$ berechnet. Diese Geometrie ist bei allen $\frac{\partial v_i}{\partial x_i}$ sowie $\frac{\partial \sigma_{ij}}{\partial x_j}$ mit $i\neq j$ gegeben. Die hierzu passende FD-Koeffizienten Matrix wird mit $D_{i,\mathrm{b}}$ mit b für \textit{backward} bezeichnet. Das $i$ steht für die Ableitungsrichtung.
+Aufgrund der Verschiebung aller halben Indizes um $-\frac{1}{2}$ muss bei der Anwendung unterschieden werden. Liegt das ursprüngliche Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem ganzen Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xx,k,l,m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ in der Ableitungsrichtung $x$ auf $k$ liegt, so greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}$ zurück. Nach der Reduzierung der halben Indizes um $-\frac{1}{2}$ verschiebt sich die Mitte des Operators ebenfalls nach links und das Ergebnis von $\sigma_{xx,k,l,m}$ an der Stelle $k$ wird aus $v_x$-Werten an den Stellen $k-1$ und $k$ berechnet (s. Abbildung \ref{fig:IndShift} links). Diese Geometrie ist bei allen $\frac{\partial v_i}{\partial x_i}$ sowie $\frac{\partial \sigma_{ij}}{\partial x_j}$ mit $i\neq j$ gegeben. Die hierzu passende FD-Koeffizienten Matrix wird mit $D_{i,\mathrm{b}}$ mit b für \textit{backward} bezeichnet. Das $i$ steht für die Ableitungsrichtung.
 
-Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem halben Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$ in der Ableitungsrichtung $y$ auf $l+\frac{1}{2}$ liegt. Dann greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}$ zurück. Diese $v_x$ Werte müssen in $y$-Richtung nicht verschoben werden. Jedoch wird der hiermit berechnete Wert $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ auf $\sigma_{xy,k,l,m}$, also in $y$-Richtung, verschoben, womit das Zentrum des FD-Operators nun aus Sicht von $\sigma_{xy,k,l,m}$ rechts befindet. Diese Verschiebung findet sich bei allen $\frac{\partial v_i}{\partial x_j}$ mit $i\neq j$ und $\frac{\partial \sigma_{ii}}{\partial x_i}$. Hierfür lautet die Bezeichnung $D_{i,\mathrm{f}}$ mit f für \textit{forward}.
+Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem halben Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$ in der Ableitungsrichtung $y$ auf $l+\frac{1}{2}$ liegt. Dann greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}$ zurück. Diese $v_x$ Werte müssen in $y$-Richtung nicht verschoben werden. Jedoch wird der hiermit berechnete Wert $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ auf $\sigma_{xy,k,l,m}$, also in $y$-Richtung, verschoben, womit das Zentrum des FD-Operators nun aus Sicht von $\sigma_{xy,k,l,m}$ rechts befindet (s. Abbildung \ref{fig:IndShift} rechts). Diese Verschiebung findet sich bei allen $\frac{\partial v_i}{\partial x_j}$ mit $i\neq j$ und $\frac{\partial \sigma_{ii}}{\partial x_i}$. Hierfür lautet die Bezeichnung $D_{i,\mathrm{f}}$ mit f für \textit{forward}.
 
-Die Auswirkung dieser Unterscheidung äußert sich in einer Verschiebung der FD-Koeffizienten in der Matrix. Für Details hierüber siehe nächsten Abschnitt.
+\begin{figure}[h!]
+\begin{tikzpicture}
+	\begin{pgfonlayer}{nodelayer}
+		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (0) at (0, 0) {};
+		\node [style=none] (1) at (2, 0) {};
+		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (2) at (4, 0) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k-\frac{1}{2}$}] (3) at (2, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k$}] (4) at (4, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k+\frac{1}{2}$}] (5) at (6, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k$}] (6) at (10, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k+\frac{1}{2}$}] (7) at (12, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k+1$}] (8) at (14, 2) {};
+		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (9) at (10, 0) {};
+		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (10) at (14, 0) {};
+		\node [style=none] (11) at (1.5, 1.5) {};
+		\node [style=none] (12) at (0.5, 0.5) {};
+		\node [style=none] (13) at (5.5, 1.5) {};
+		\node [style=none] (14) at (4.5, 0.5) {};
+		\node [style=none] (15) at (11.5, 1.5) {};
+		\node [style=none] (16) at (10.5, 0.5) {};
+	\end{pgfonlayer}
+	\begin{pgfonlayer}{edgelayer}
+		\draw [->](11.center) to (12.center);
+		\draw [->](13.center) to (14.center);
+		\draw [->](15.center) to (16.center);
+	\end{pgfonlayer}
+\end{tikzpicture}
+\caption{Wirkung der Indexverschiebung auf die Lage der FD-Operatoren. Links: Ursprünglicher Mittelpunkt liegt auf $k$ und verschiebt sich relativ nach rechts, wodurch er zurückgreift ($D_{i,b}$). Rechts: Ursprünglicher Mittelpunkt liegt auf $k+\frac{1}{2}$ und verschiebt sich relativ nach links, wodurch er vorgreift ($D_{i,f}$).}
+\label{fig:IndShift}
+\end{figure}
+
+
+Die Auswirkung dieser Unterscheidung äußert sich in einer Verschiebung der FD-Koeffizienten in der Matrix, was sich allgemein durch $D_{i,f} = -D_{i,b}^T$ ausdrücken lässt.
 
 \subsection{Vervollständigung des Formalismus}
 
@@ -736,36 +768,7 @@ Nachfolgend werden die Matrizen $D_{i,f}^2$ und $D_{i,f}^4$ dargestellt um sich 
 
 Außerhalb der senkrechten gestrichelten Linien sind alle Einträge Null, unabhängig von der Ordnung der FD-Operatoren. Der Grund hierfür ist der Tatsache geschuldet, dass an diesen Stellen ein Sprung $y\rightarrow y+1$ nach $NX$ Einträgen bei $D_{x}$ oder $z\rightarrow z+1$ nach $NX \cdot NY$ Einträgen bei $D_{y}$ stattfindet.
 
-Alle $D_{i,b}$ lassen sich aus $D_{i,f}$ ableiten, indem alle Einträge ungleich Null einer Zeile durch ihren rechten Nachfolger ungleich Null ersetzt werden. Dies wird besonders bei $D_{y,f}^4 \rightarrow D_{y,b}^4$ deutlich:
-\begin{align*}
-	D_{y,b}^4 &= \begin{psmallmatrix}
-\frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-\frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} &\dashline& 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\\hline
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline&\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 &\text{-}\frac{1}{24} \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} & 0 \\
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &\dashline& 0 & 0 & 0 & \frac{1}{24} & 0 & 0 & 0 &\text{-}\frac{9}{8} & 0 & 0 & 0 & \frac{9}{8} \\
-\end{psmallmatrix}
-\end{align*}
-
+Alle $D_{i,b}$ lassen sich aus $D_{i,f}$ ableiten, indem alle Einträge ungleich Null einer Zeile durch ihren rechten Nachfolger ungleich Null ersetzt werden. Dass dies einer Multiplikation mit $-1$ und einem Transponieren entspricht wird besonders bei $D_{y}^4$ deutlich.
 
 
 Eine wichtige Eigenschaft der FD-Koeffizienten-Matrizen liegt in ihrer Behandlung des Modellrandes über welchen sie niemals hinaus greifen. Dies führt zwangsläufig dazu, dass das Update von $v_i$ und $\sigma_{ij}$ in der Nähe des Randes aus einem unvollständigen FD-Operator berechnet wird. So wird für $v_x^{n+1}$ in der letzten $y-z-$Ebene mit $k=NX$ nicht vorgegriffen und bei einem FD-Operator 2. Ordnung lediglich je ein Wert von $\sigma_{xx}^n$, $\sigma_{xy}^n$ und $\sigma_{xz}^n$ verwendet. Das nicht Beachten aller Größen außerhalb des Randes entspricht einem Festhalten des Wellenfeldes und damit der festen Einspannung des Mediums. Die Folge ist eine vollständige Reflexion.
