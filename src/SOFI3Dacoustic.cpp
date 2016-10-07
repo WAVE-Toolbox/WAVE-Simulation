@@ -87,7 +87,7 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    Derivatives::FD3Dacoustic<ValueType> derivatives( dist, ctx, config, comm );
+    Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
@@ -121,9 +121,8 @@ int main( int argc, char* argv[] )
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
-    
-    receivers.writeSeismograms(config.getSeismogramFilename());
-    
+    solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
+        
 
     return 0;
 }
