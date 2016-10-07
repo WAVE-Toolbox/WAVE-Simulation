@@ -51,7 +51,7 @@ namespace KITGPI {
             ValueType getDT();
             
             lama::DenseMatrix<ValueType>* getData();
-            lama::DenseVector<ValueType>* getReceiverType();
+            lama::DenseVector<ValueType>* getTraceType();
             lama::DenseVector<ValueType>* getCoordinates();
             
         private:
@@ -62,7 +62,7 @@ namespace KITGPI {
             
             /* header information */
             ValueType DT=0.0; //!< Temporal sampling in seconds
-            lama::DenseVector<ValueType> receiver_type; //!< Type of receiver
+            lama::DenseVector<ValueType> traceType; //!< Type of trace (receiver or source type)
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of the traces
             
             /* raw data */
@@ -89,9 +89,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType>& rece
     
     /* set header information */
     lama::DenseVector<ValueType>& coordinates_temp=*receiver.getCoordinates();
-    lama::DenseVector<ValueType>& receiver_type_temp=*receiver.getReceiversType();
+    lama::DenseVector<ValueType>& traceType_temp=*receiver.getReceiversType();
     coordinates=coordinates_temp;
-    receiver_type=receiver_type_temp;
+    traceType=traceType_temp;
     
     numTracesLocal=receiver.getNumReceiversLocal();
     numTracesGlobal=receiver.getNumReceiversGlobal();
@@ -107,8 +107,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType>& rece
  *
  */
 template <typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getReceiverType(){
-    return(&receiver_type);
+lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getTraceType(){
+    return(&traceType);
 }
 
 
@@ -172,11 +172,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx,
     dmemo::DistributionPtr no_dist_NT( new scai::dmemo::NoDistribution ( NT ) );
     
     data.setContextPtr(ctx);
-    receiver_type.setContextPtr(ctx);
+    traceType.setContextPtr(ctx);
     coordinates.setContextPtr(ctx);
     
     data.allocate(distTraces,no_dist_NT);
-    receiver_type.allocate(distTraces);
+    traceType.allocate(distTraces);
     coordinates.allocate(distTraces);
 }
 
@@ -205,7 +205,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::Distributio
     }
     
     data.redistribute(distTraces,distSamples);
-    receiver_type.redistribute(distTraces);
+    traceType.redistribute(distTraces);
     coordinates.redistribute(distTraces);
 }
 

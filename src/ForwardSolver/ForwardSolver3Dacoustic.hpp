@@ -145,7 +145,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
         lama::DenseVector<ValueType>& p=*wavefield.getP();
         
         /* Get reference to receiver type of seismogram traces */
-        lama::DenseVector<ValueType>& ReceiverType=*seismogram.getReceiverType();
+        lama::DenseVector<ValueType>& ReceiverType=*seismogram.getTraceType();
         utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
         hmemo::WriteAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
         
