@@ -2,24 +2,7 @@
 #pragma once
 
 #include <scai/lama.hpp>
-
 #include <scai/lama/DenseVector.hpp>
-#include <scai/lama/expression/all.hpp>
-#include <scai/lama/matrix/all.hpp>
-#include <scai/lama/matutils/MatrixCreator.hpp>
-#include <scai/lama/norm/L2Norm.hpp>
-
-#include <scai/dmemo/BlockDistribution.hpp>
-
-#include <scai/hmemo/ReadAccess.hpp>
-#include <scai/hmemo/WriteAccess.hpp>
-#include <scai/hmemo/HArray.hpp>
-
-#include <scai/tracing.hpp>
-
-#include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
-#include <scai/logging.hpp>
 
 #include <iostream>
 
@@ -40,15 +23,31 @@ namespace KITGPI {
         {
         public:
             
+            /* Default constructor */
             FD3Dacoustic(){};
+            
+            /* Default destructor */
             ~FD3Dacoustic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
             
         };
-    }
-}
+    } /* end namespace ForwardSolver */
+} /* end namespace KITGPI */
 
+
+/*! \brief Running the 3-D acoustic foward solver
+ *
+ * Start the 3-D forward solver as defined by the given parameters
+ *
+ \param receiver Configuration of the receivers
+ \param sources Configuration of the sources
+ \param model Configuration of the modelparameter
+ \param wavefield Wavefields for the modelling
+ \param derivatives Derivations matrices to calculate the spatial derivatives
+ \param NT Total number of time steps
+ \param comm Communicator
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
     

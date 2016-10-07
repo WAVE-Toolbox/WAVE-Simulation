@@ -9,7 +9,7 @@
 
 using namespace scai;
 
-//! Namespace of the Geophysical Institute of KIT
+//! Namespace of the Geophysical Institute of the Karlsruhe Institute of Technology
 namespace KITGPI {
     
     //! Configuration namespace

@@ -13,7 +13,7 @@ namespace KITGPI {
     //! \brief Wavefields namespace
     namespace Wavefields {
         
-        /*! \brief The class Wavefields is a abstract type that represents the wavefield for the forward modelling.
+        /*! \brief Abstract class to handle the wavefields for the forward modelling.
          *
          * Wavefields implements some methods, which are requiered by all derived classes.
          * As this class is an abstract class, all methods are protected.

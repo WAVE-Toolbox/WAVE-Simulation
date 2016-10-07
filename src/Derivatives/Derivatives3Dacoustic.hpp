@@ -1,27 +1,4 @@
-
 #pragma once
-
-#include <scai/lama.hpp>
-
-#include <scai/lama/DenseVector.hpp>
-#include <scai/lama/expression/all.hpp>
-#include <scai/lama/matrix/all.hpp>
-#include <scai/lama/matutils/MatrixCreator.hpp>
-#include <scai/lama/norm/L2Norm.hpp>
-
-#include <scai/dmemo/BlockDistribution.hpp>
-
-#include <scai/hmemo/ReadAccess.hpp>
-#include <scai/hmemo/WriteAccess.hpp>
-#include <scai/hmemo/HArray.hpp>
-
-#include <scai/tracing.hpp>
-
-#include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
-#include <scai/logging.hpp>
-
-#include <iostream>
 
 #include "Derivatives.hpp"
 
@@ -41,40 +18,92 @@ namespace KITGPI {
     //! \brief Derivatives namespace
     namespace Derivatives {
         
+        //! \brief Class for the calculation of the Derivatives matrices for 3-D FD Simulations
+        /*!
+         * Calculation of derivative matrices for an equidistand grid
+         *
+         */
         template<typename ValueType>
         class FD3Dacoustic : public Derivatives<ValueType>
         {
         public:
             
+            //! Default constructor
             FD3Dacoustic(){};
+            
+            //! Default destructor
             ~FD3Dacoustic(){};
             
             FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
             
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+
             lama::CSRSparseMatrix<ValueType>* getA();
-            lama::CSRSparseMatrix<ValueType>* getB();
-            lama::CSRSparseMatrix<ValueType>* getC();
+            lama::CSRSparseMatrix<ValueType>* getB(); 
+            lama::CSRSparseMatrix<ValueType>* getC(); 
             lama::CSRSparseMatrix<ValueType>* getD();
             lama::CSRSparseMatrix<ValueType>* getE();
             lama::CSRSparseMatrix<ValueType>* getF();
             
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-            
         private:
             
-            lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
+            lama::CSRSparseMatrix<ValueType> A; //!< Derivative matrix A
+            lama::CSRSparseMatrix<ValueType> B; //!< Derivative matrix B
+            lama::CSRSparseMatrix<ValueType> C; //!< Derivative matrix C
+            lama::CSRSparseMatrix<ValueType> D; //!< Derivative matrix D
+            lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
+            lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
             
             void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
             
         };
-    }
+    } /* end namespace Derivatives */
+} /* end namespace KITGPI */
+
+
+//! \brief Constructor to support Configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+KITGPI::Derivatives::FD3Dacoustic<ValueType>::FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
 }
 
+//! \brief Constructor of the derivative matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param DH Grid spacing (equidistant)
+ \param DT Temporal sampling interval
+ \param comm Communicator
+ */
 template<typename ValueType>
 KITGPI::Derivatives::FD3Dacoustic<ValueType>::FD3Dacoustic(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
     initializeMatrices(dist, ctx, NX, NY,NZ,DH, DT, comm );
 }
 
+
+//! \brief Calculation of second order accurate derivatives
+/*!
+ *
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param comm Communicator
+ */
 template<typename ValueType>
 void KITGPI::Derivatives::FD3Dacoustic<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
 {
@@ -209,6 +238,18 @@ void KITGPI::Derivatives::FD3Dacoustic<ValueType>::derivatives(IndexType NX, Ind
     HOST_PRINT( comm, "Matrix C finished\n" );
 }
 
+//! \brief Initializsation of the derivative matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param DH Grid spacing (equidistant)
+ \param DT Temporal sampling interval
+ \param comm Communicator
+ */
 template<typename ValueType>
 void KITGPI::Derivatives::FD3Dacoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
 {
@@ -247,32 +288,37 @@ void KITGPI::Derivatives::FD3Dacoustic<ValueType>::initializeMatrices(dmemo::Dis
     
 }
 
-
+//! \brief Getter method for derivative matrix A
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getA(){
     return(&A);
 }
 
+//! \brief Getter method for derivative matrix B
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getB(){
     return(&B);
 }
 
+//! \brief Getter method for derivative matrix C
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getC(){
     return(&C);
 }
 
+//! \brief Getter method for derivative matrix D
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getD(){
     return(&D);
 }
 
+//! \brief Getter method for derivative matrix E
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getE(){
     return(&E);
 }
 
+//! \brief Getter method for derivative matrix F
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3Dacoustic<ValueType>::getF(){
     return(&F);
