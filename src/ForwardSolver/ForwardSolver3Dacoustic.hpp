@@ -22,6 +22,7 @@ namespace KITGPI {
         template<typename ValueType>
         class FD3Dacoustic : public ForwardSolver<ValueType>
         {
+            
         public:
             
             /* Default constructor */
@@ -48,13 +49,9 @@ namespace KITGPI {
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
  *
- \param receiver Configuration of the receivers
- \param wavefields Wavefields
- \param model Configuration of the modelparameter
- \param wavefield Wavefields for the modelling
- \param derivatives Derivations matrices to calculate the spatial derivatives
+ \param wavefield Wavefields
  \param NT Total number of time steps
- \param comm Communicator
+ \param t Current time step
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
@@ -64,6 +61,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
     
     if(numTracesLocal>0){
     
+        /* Get reference to wavefields */
         lama::DenseVector<ValueType>& vX=*wavefield.getVX();
         lama::DenseVector<ValueType>& vY=*wavefield.getVY();
         lama::DenseVector<ValueType>& vZ=*wavefield.getVZ();

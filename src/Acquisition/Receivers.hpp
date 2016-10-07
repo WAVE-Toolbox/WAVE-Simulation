@@ -27,9 +27,6 @@ namespace KITGPI {
             ~Receivers(){};
             
             void readReceiverAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
-            void saveSeismogramsLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt, IndexType NT);
-            
-            void writeSeismograms(std::string filename);
             void writeReceiverAcquisition(std::string filename);
             
             IndexType getNumReceiversGlobal();
@@ -43,16 +40,12 @@ namespace KITGPI {
             
             void getLocalReceivers(dmemo::DistributionPtr dist_wavefield);
             void getReceiverDistribution(dmemo::CommunicatorPtr comm);
-            void allocateSeismograms(IndexType NT);
             
             IndexType numReceiversGlobal=0; //!< Number of receivers global
             IndexType numReceiversLocal=0; //!< Number of receivers local
             
             dmemo::DistributionPtr dist_wavefield_receivers=NULL; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT=NULL; //!< No distribution of the columns of the seismogram matrix
-            
-            //! Seismograms
-            lama::DenseMatrix<ValueType> seismograms;
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the receiver acquisition
@@ -63,6 +56,7 @@ namespace KITGPI {
         };
     }
 }
+
 
 /*! \brief Getter method for reference to receiver type
  */
@@ -75,6 +69,7 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getRece
     return(&receiver_type);
 }
 
+
 /*! \brief Getter method for reference to coordinates
  */
 template<typename ValueType>
@@ -85,6 +80,7 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getCoor
     }
     return(&coordinates);
 }
+
 
 /*! \brief Getter method for distribution of the receivers based on the wavefield distribution
  */
@@ -97,6 +93,7 @@ dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDi
     return(dist_wavefield_receivers);
 }
 
+
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
@@ -105,7 +102,6 @@ dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDi
 template<typename ValueType>
 KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
     readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
-    allocateSeismograms(config.getNT());
 }
 
 
@@ -266,38 +262,6 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 }
 
 
-/*! \brief Write seismograms signals to file
- *
- \param filename Filename to write seismograms
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::writeSeismograms(std::string filename){
-    seismograms.writeToFile(filename);
-}
-
-
-/*! \brief Allocation of the seismogram matrix
- *
- * Allocation of the seismogram matrix based on an already defined receiver distribution and the number of time steps.
- * The seismogram matrix is allocated based on the distributions.
- *
- \param NT Number of time steps
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::allocateSeismograms(IndexType NT)
-{
-    if(dist_wavefield_receivers==NULL) {
-        COMMON_THROWEXCEPTION ( "Row distribution of seismograms (dist_wavefield_receivers) is not set!" )
-    }
-    
-    dmemo::DistributionPtr no_dist_NT_temp( new scai::dmemo::NoDistribution ( NT ) );
-    no_dist_NT=no_dist_NT_temp;
-    
-    /* seismogram matrix is row distributed according to dist_wavefield_receivers, No column distribution */
-    seismograms.allocate(dist_wavefield_receivers,no_dist_NT);
-}
-
-
 /*! \brief Calculation of the receiver distribution
  *
  * Calculation of the receiver distribution based on the global number of receivers numReceiversGlobal and the local number of receivers numReceiversLocal on each node.
@@ -337,45 +301,5 @@ void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::Distrib
     numReceiversGlobal=coordinates.size();
     
 }
-
-
-/*! \brief Records the seismograms during forward modelling (locally)
- *
- * Saves the samples at the specific time.
- *
- \param wavefield Wavefield
- \param nt Current time step
- \param NT Total number of time steps
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::saveSeismogramsLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt, IndexType NT)
-{
-    if(numReceiversLocal>0){
-        
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
-        
-        lama::DenseStorage<ValueType>* seismograms_DS=&seismograms.getLocalStorage();
-        hmemo::HArray<ValueType>* seismograms_HA=&seismograms_DS->getData();
-        hmemo::WriteAccess<ValueType> write_seismograms_HA(*seismograms_HA);
-        
-        dmemo::DistributionPtr dist_wavefield=wavefield.getDistributionPtr();
-        
-        scai::lama::Scalar receiver_index_temp;
-        IndexType coordinate_global;
-        IndexType coordinate_local;
-        
-        for(IndexType i=0; i<numReceiversLocal; i++){
-            coordinate_global=read_coordinates_LA[i];
-            coordinate_local=dist_wavefield->global2local(coordinate_global);
-            
-            write_seismograms_HA[nt+NT*i]=wavefield.getLocalValues()[coordinate_local];
-        }
-        
-        read_coordinates_LA.release();
-        write_seismograms_HA.release();
-    }
-}
-
 
 

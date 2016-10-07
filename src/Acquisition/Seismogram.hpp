@@ -72,6 +72,7 @@ namespace KITGPI {
     }
 }
 
+
 //! \brief Initiate the seismogram by receivers
 /*!
  *
@@ -110,6 +111,7 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getRec
     return(&receiver_type);
 }
 
+
 //! \brief Get reference to coordinates
 /*!
  *
@@ -122,6 +124,7 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getCoo
     return(&coordinates);
 }
 
+
 //! \brief Get reference to seismogram data
 /*!
  * 
@@ -133,6 +136,7 @@ template <typename ValueType>
 lama::DenseMatrix<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getData(){
     return(&data);
 }
+
 
 //! \brief Replicate seismogram on all processes
 /*!
@@ -154,7 +158,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
  * Allocates seismogram based on a given distribution of the traces and the number of samples per trace
  *
  \param ctx Context
- \param distSeismogram Distribution for traces
+ \param distTraces Distribution for traces
  \param NT Total number of samples per trace
  */
 template <typename ValueType>
@@ -279,6 +283,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal()
 {
     return(numTracesLocal);
 }
+
 
 //! \brief Get number of global traces
 template <typename ValueType>
