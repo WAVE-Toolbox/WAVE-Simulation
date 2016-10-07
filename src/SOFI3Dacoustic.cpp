@@ -7,6 +7,7 @@
 #include <scai/lama/norm/L2Norm.hpp>
 
 #include <scai/dmemo/BlockDistribution.hpp>
+#include <scai/dmemo/GenBlockDistribution.hpp>
 
 #include <scai/hmemo/ReadAccess.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
@@ -22,17 +23,21 @@
 #define _USE_MATH_DEFINES
 #include <cmath> 
 
-#include "Configuration.hpp"
-#include "Derivatives.hpp"
-#include "InitializeMatrices.hpp"
-#include "SourceFunction.hpp"
-#include "Timesteps.hpp"
+#include "Configuration/Configuration.hpp"
 
 #include "Modelparameter/Modelparameter3Dacoustic.hpp"
-
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
+#include "Acquisition/Receivers.hpp"
+#include "Acquisition/Sources.hpp"
+
+#include "Derivatives/Derivatives3Dacoustic.hpp"
+
+#include "ForwardSolver/ForwardSolver.hpp"
+
+#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 using namespace scai;
+using namespace KITGPI;
 
 #define MASTER 0
 
@@ -49,89 +54,75 @@ std::cout << msg;           \
 int main( int argc, char* argv[] )
 {
     typedef double ValueType;
-
+    double start_t, end_t; /* For timing */
+    
     if(argc!=2){
         std::cout<< "\n\nNo configuration file given!\n\n" << std::endl;
         return(2);
     }
     
-    // read configuration parameter from file
-    Configuration<ValueType> config(argv[1]);
+    /* --------------------------------------- */
+    /* Read configuration from file            */
+    /* --------------------------------------- */
+    Configuration::Configuration<ValueType> config(argv[1]);
 
-    // LAMA specific configuration variables
-
-    // execution context
+    /* --------------------------------------- */
+    /* Context and Distribution                */
+    /* --------------------------------------- */
+    /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    // inter node communicator
+    /* inter node communicator */
     dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
-    // inter node distribution
+    /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
-
-    HOST_PRINT( comm, "\nAcoustic 3-D FD-Algorithm\n\n" );
+    
+    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
     }
 
-    
-    // for timing
-    double start_t, end_t;
-   
-    /* --------------------------------------- */
-    /* Calculate source signal                 */
-    /* --------------------------------------- */
-    start_t = common::Walltime::get();
-    lama::DenseVector<ValueType> source( config.getNT(), ValueType(0), config.getDT(), ctx );
-    sourceFunction( source, config.getFC(), config.getAMP(), comm );
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished calculating source in " << end_t - start_t << " sec.\n\n" );
-
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    lama::CSRSparseMatrix<ValueType> A, B, C, D, E, F;
-    initializeMatrices( A, B, C, D, E, F, dist, ctx, config.getNX(), config.getNY(), config.getNZ(), comm );
+    Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    lama::DenseVector<ValueType> seismogram(config.getNT(), 0.0 ); // no ctx, use default: Host
+    Acquisition::Receivers<ValueType> receivers(config,dist);
+    Acquisition::Sources<ValueType> sources(config,dist);
     
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter3Dacoustic<ValueType> model;
-    if(config.getReadModel()){
-        model.init(ctx,dist,config.getFilenameModel());
-    } else {
-        model.init(ctx,dist,config.getM(),config.getRho());
-        model.write("model/out");
-    }
+    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
+        
+    /* --------------------------------------- */
+    /* Forward solver                          */
+    /* --------------------------------------- */
 
-    /* --------------------------------------- */
-    /* Time stepping                           */
-    /* --------------------------------------- */
+    ForwardSolver::FD3Dacoustic<ValueType> solver;
+    
     HOST_PRINT( comm, "Start time stepping\n" );
-
     start_t = common::Walltime::get();
-    timesteps( seismogram, source, model, wavefields, A, B, C, D, E, F,
-               config.getVfactor(), config.getPfactor(), config.getNT(), lama::Scalar( 1.0/config.getDH() ),
-               config.getSourceIndex(), config.getSeismogramIndex(), comm, dist );
+    
+    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
 
-    // print vector data for seismogram plot
-    seismogram.writeToFile( "seismograms/seismogram.mtx" );
-
+    solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
+        
 
     return 0;
 }

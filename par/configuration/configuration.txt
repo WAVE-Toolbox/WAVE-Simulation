@@ -1,0 +1,29 @@
+# format has to be exactly name=value (without any whitespaces)
+# expects exactly these number of arguments (14) and these names
+
+# define spatial sampling: number of grid points in direction
+NZ=100 # depth
+NX=100 # horizontal 1
+NY=100 # horizontal 2
+
+# define distance between two grid points in meter
+DH=50
+
+# define temporal sampling
+DT=2.0e-03 # temporal sampling in seconds
+T=2      # total simulation time
+
+# define material parameter
+ModelRead=0
+ModelWrite=0
+ModelFilename=model/test
+
+# generate homogeneous model
+velocity=3500 # Density in kilo gramms per cubic meter
+rho=2000      # P-wave velocity in meter per seconds
+
+# Acquisition
+SourceFilename=acquisition/sources.mtx
+ReceiverFilename=acquisition/receiver.mtx
+SeismogramFilename=seismograms/seismogram.mtx
+

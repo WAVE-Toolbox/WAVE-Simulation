@@ -24,14 +24,8 @@ openmp-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=4
     - cd par/
-    - ./../bin/FDSimulation "input/Config_CI.txt"
-    - cd seismograms && gnuplot seismogram.gnuplot
-  artifacts:
-    when: on_success
-    expire_in: 30 min
-    name: "openmp-gcc"
-    paths:
-      - par/seismograms/seismogram.png
+    - ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
+    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
 
 openmpi-gcc:
   stage: test
@@ -42,12 +36,5 @@ openmpi-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=1
     - cd par/
-    - mpirun -np 4 ./../bin/FDSimulation "input/Config_CI.txt"
-    - md5sum seismograms/seismogram.mtx
-    - cd seismograms && gnuplot seismogram.gnuplot
-  artifacts:
-    when: on_success
-    expire_in: 30 min
-    name: "openmpi-gcc"
-    paths:
-      - par/seismograms/seismogram.png
+    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
+    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
