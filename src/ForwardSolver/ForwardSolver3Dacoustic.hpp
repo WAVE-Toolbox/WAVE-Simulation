@@ -69,18 +69,21 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::So
         lama::DenseVector<ValueType>& vZ=*wavefield.getVZ();
         lama::DenseVector<ValueType>& p=*wavefield.getP();
         
+        /* Get reference to sourcesignal storing seismogram */
+        Acquisition::Seismogram<ValueType>& signals=*sources.getSignals();
+
         /* Get reference to source type of sources */
-        lama::DenseVector<ValueType>& SourceType=*sources.getSourceType();
+        lama::DenseVector<ValueType>& SourceType=*signals.getTraceType();
         utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
         hmemo::WriteAccess<ValueType> read_SourceType_LA(*SourceType_LA);
         
         /* Get reference to coordinates of sources */
-        lama::DenseVector<ValueType>& coordinates=*sources.getCoordinates();
+        lama::DenseVector<ValueType>& coordinates=*signals.getCoordinates();
         utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
         hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of source signals */
-        lama::DenseMatrix<ValueType>& sourcesSignals=*sources.getSignals();
+        lama::DenseMatrix<ValueType>& sourcesSignals=*signals.getData();
         lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
         hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
         hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);

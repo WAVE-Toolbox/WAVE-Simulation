@@ -33,8 +33,8 @@ namespace KITGPI {
             void writeSignalsToFileRaw(std::string filename);
                         
             lama::DenseVector<ValueType>* getCoordinates();
-            lama::DenseVector<ValueType>* getSourceType();
-            lama::DenseMatrix<ValueType>* getSignals();
+            lama::DenseVector<ValueType>* getSourceType();            
+            Seismogram<ValueType>* getSignals();
             
             IndexType getNumSourcesGlobal();
             IndexType getNumSourcesLocal();
@@ -105,9 +105,10 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getCoordi
  *
  */
 template<typename ValueType>
-lama::DenseMatrix<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSignals(){
-    return(signals.getData());
+KITGPI::Acquisition::Seismogram<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSignals(){
+    return(&signals);
 }
+
 
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *
@@ -338,6 +339,9 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSignals(IndexType NT)
     /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
     signals.allocate(ctx,dist_wavefield_sources,NT);
+    
+    *signals.getCoordinates()=coordinates;
+    *signals.getTraceType()=source_type;
 }
 
 

@@ -31,7 +31,7 @@ namespace KITGPI {
             ~Seismogram(){};
             
             void writeToFileRaw(std::string filename);
-            void ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
+            void readFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
             
             void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
             
@@ -218,7 +218,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::Distributio
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::ReadFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
 {
     data.ReadFromFile(filename);
     
