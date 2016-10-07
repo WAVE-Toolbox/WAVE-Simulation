@@ -5,7 +5,7 @@
 #include <scai/lama/DenseVector.hpp>
 #include "Sourcesignal.hpp"
 #include "Coordinates.hpp"
-
+#include "Seismogram.hpp"
 
 namespace KITGPI {
     
@@ -27,12 +27,17 @@ namespace KITGPI {
             ~Sources(){};
             
             void readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
+            void writeSourceAcquisition(std::string filename);
+            
             void generateSignals(IndexType NT, ValueType DT);
+            void writeSignalsToFileRaw(std::string filename);
+            
             void applySource(lama::DenseVector<ValueType>& wavefield, IndexType nt);
             void applySourceLocal(lama::DenseVector<ValueType>& wavefield, IndexType nt, IndexType NT);
             
-            void writeSignals(std::string filename);
-            void writeSourceAcquisition(std::string filename);
+            lama::DenseVector<ValueType>* getCoordinates();
+            lama::DenseVector<ValueType>* getSourceType();
+            lama::DenseMatrix<ValueType>* getSignals();
             
             IndexType getNumSourcesGlobal();
             IndexType getNumSourcesLocal();
@@ -47,17 +52,16 @@ namespace KITGPI {
             IndexType numSourcesGlobal=0; //!< Number of sources global
             IndexType numSourcesLocal=0; //!< Number of sources local
             
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
-            
             dmemo::DistributionPtr dist_wavefield_sources=NULL; //!< Calculated Distribution of the sources based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT=NULL; //!< No distribution of the columns of the signals matrix
             
             //! Source signals
-            lama::DenseMatrix<ValueType> signals;
+            Seismogram<ValueType> signals;
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
             IndexType numParameter=0; //!< Number of source parameters given in acquisition matrix
+            lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
             lama::DenseVector<ValueType> source_type; //!< Type of source: 1==Pressure
             lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
             
@@ -70,6 +74,42 @@ namespace KITGPI {
             
         };
     }
+}
+
+
+/*! \brief Get reference to source type
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSourceType(){
+    return(&source_type);
+}
+
+
+/*! \brief Get reference to source coordinates
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getCoordinates(){
+    return(&coordinates);
+}
+
+
+/*! \brief Get reference to signals matrix
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template<typename ValueType>
+lama::DenseMatrix<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSignals(){
+    return(signals.getData());
 }
 
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
@@ -90,6 +130,12 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<Va
  */
 template<typename ValueType>
 IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesGlobal(){
+    if(numSourcesGlobal==0){
+        numSourcesGlobal=signals.getNumTracesGlobal();
+        if(numSourcesGlobal==0){
+            COMMON_THROWEXCEPTION("The signals are not allocated")
+        }
+    }
     return(numSourcesGlobal);
 }
 
@@ -273,8 +319,8 @@ void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string 
  \param filename Filename to write source signals
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSignals(std::string filename){
-    signals.writeToFile(filename);
+void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string filename){
+    signals.writeToFileRaw(filename);
 }
 
 
@@ -292,11 +338,9 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSignals(IndexType NT)
         COMMON_THROWEXCEPTION ( "Row distribution of sources (dist_wavefield_sources) is not set!" )
     }
     
-    dmemo::DistributionPtr no_dist_NT_temp( new scai::dmemo::NoDistribution ( NT ) );
-    no_dist_NT=no_dist_NT_temp;
-    
     /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
-    signals.allocate(dist_wavefield_sources,no_dist_NT);
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
+    signals.allocate(ctx,dist_wavefield_sources,NT);
 }
 
 
@@ -358,8 +402,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         COMMON_THROWEXCEPTION ( "Number of source parameters <= 9. Cannot generate synthetic signals. " )
     }
     
-    lama::DenseVector<ValueType> signal;
-    signal.allocate(NT);
+    lama::DenseVector<ValueType> signalVector;
+    signalVector.allocate(NT);
     
     /* Cast to IndexType */
     IndexType wavelet_shape_i=wavelet_shape.getLocalValues()[SourceLocal];
@@ -367,12 +411,12 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     switch (wavelet_shape_i) {
         case 1:
             /* Ricker */
-            this->Ricker(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            this->Ricker(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
             break;
             
         case 2:
             /* First derivative of a Gaussian (FGaussian) */
-            this->FGaussian(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            this->FGaussian(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
             break;
             
         default:
@@ -380,18 +424,19 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
             break;
     }
     
-    utilskernel::LArray<ValueType>* signal_LA=&signal.getLocalValues();
-    hmemo::ReadAccess<ValueType> read_signal(*signal_LA);
+    utilskernel::LArray<ValueType>* signalVector_LA=&signalVector.getLocalValues();
+    hmemo::ReadAccess<ValueType> read_signalVector(*signalVector_LA);
     
-    lama::DenseStorage<ValueType>* signals_DS=&signals.getLocalStorage();
-    hmemo::HArray<ValueType>* signals_HA=&signals_DS->getData();
-    hmemo::WriteAccess<ValueType> write_signals_HA(*signals_HA);
+    lama::DenseMatrix<ValueType>& signalsMatrix=*signals.getData();
+    lama::DenseStorage<ValueType>* signalsMatrix_DS=&signalsMatrix.getLocalStorage();
+    hmemo::HArray<ValueType>* signalsMatrix_HA=&signalsMatrix_DS->getData();
+    hmemo::WriteAccess<ValueType> write_signalsMatrix_HA(*signalsMatrix_HA);
     
     for(IndexType i=0; i<NT; i++){
-        write_signals_HA[i+NT*SourceLocal]=read_signal[i];
+        write_signalsMatrix_HA[i+NT*SourceLocal]=read_signalVector[i];
     }
-    read_signal.release();
-    write_signals_HA.release();
+    read_signalVector.release();
+    write_signalsMatrix_HA.release();
     
 }
 
@@ -478,7 +523,8 @@ void KITGPI::Acquisition::Sources<ValueType>::applySourceLocal(lama::DenseVector
         utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
         hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
-        lama::DenseStorage<ValueType>* signals_DS=&signals.getLocalStorage();
+        lama::DenseMatrix<ValueType>& signalsMatrix=*signals.getData();
+        lama::DenseStorage<ValueType>* signals_DS=&signalsMatrix.getLocalStorage();
         hmemo::HArray<ValueType>* signals_HA=&signals_DS->getData();
         hmemo::ReadAccess<ValueType> read_signals_HA(*signals_HA);
         

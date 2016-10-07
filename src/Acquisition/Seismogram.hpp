@@ -45,7 +45,7 @@ namespace KITGPI {
             //! Not yet implemented
             void normalize();
             
-            IndexType getNumTraces();
+            IndexType getNumTracesGlobal();
             IndexType getNumTracesLocal();
             IndexType getNumSamples();
             ValueType getDT();
@@ -287,7 +287,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal()
 
 //! \brief Get number of global traces
 template <typename ValueType>
-IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTraces()
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal()
 {
     if(numTracesGlobal==0){
         numTracesGlobal=data.getNumRows();
