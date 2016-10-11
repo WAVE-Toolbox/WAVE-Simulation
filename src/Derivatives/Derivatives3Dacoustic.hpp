@@ -121,30 +121,34 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     std::vector<ValueType> csrValues;
     
     // create matrix A
-    numValues = NZ + (NZ - 1); // diagonal element (NZ) + secondary diagonal elements (NZ - 1)
-    csrIA.reserve( NZ + 1 );
+    numValues = 2*NZ*NX*NY-NX*NY; // diagonal element (NZ) + secondary diagonal elements (NZ - 1)
+    csrIA.reserve( NZ*NX*NY + 1 );
     csrJA.reserve( numValues );
     csrValues.reserve( numValues );
     
     IndexType count = 0;
-    IndexType size = NZ;
-    csrIA.push_back( 0 );
-    for( IndexType i = 0; i < NZ; ++i ){
-        if(i<NZ){
-            csrJA.push_back(i);
-            csrValues.push_back( -1.0 );
-            count++;
-        }
-        if((i+1)<NZ){
-            csrJA.push_back(i+1);
-            csrValues.push_back( +1.0 );
-            count++;
-        }
-        csrIA.push_back( count );
-    }
+    IndexType size = NZ*NY*NX;
     
+    csrIA.push_back( 0 );
+    for(IndexType shift=0; shift<=(NY*NX*NZ-NZ); shift+=NZ){
+        for( IndexType i = 0; i < NZ; ++i ){
+            if(i<NZ){
+                csrJA.push_back(i+shift);
+                csrValues.push_back( -1.0 );
+                count++;
+            }
+            if((i+1)<NZ){
+                csrJA.push_back(i+1+shift);
+                csrValues.push_back( +1.0 );
+                count++;
+            }
+            csrIA.push_back( count );
+        }
+    }
+
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
-    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NX * NY ); // not distributed, need to redistribute afterwards
+    
+    A.assign(*storageHelp);
     A.redistribute( dist, dist );
     A.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix A finished\n" );
