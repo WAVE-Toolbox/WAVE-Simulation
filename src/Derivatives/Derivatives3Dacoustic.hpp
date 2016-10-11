@@ -123,13 +123,13 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     /* --------------- */
     /* create matrix A */
     /* --------------- */
-    numValues = NZ + (NZ - 1); // diagonal element (NZ) + secondary diagonal elements (NZ - 1)
-    csrIA.reserve( NZ + 1 );
+    numValues = NX + (NX - 1); // diagonal element (NX) + secondary diagonal elements (NX - 1)
+    csrIA.reserve( NX + 1 );
     csrJA.reserve( numValues );
     csrValues.reserve( numValues );
     
     IndexType count = 0;
-    IndexType size = NZ;
+    IndexType size = NX;
     csrIA.push_back( 0 );
     for( IndexType i = 0; i < size; ++i ){
         if(i<size){
@@ -157,7 +157,7 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     csrValues.shrink_to_fit();
     
     /* create matrix A */
-    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NX * NY ); // not distributed, need to redistribute afterwards
+    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
     A.redistribute( dist, dist );
     A.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix A finished\n" );
@@ -168,13 +168,13 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     /* --------------- */
     /* create matrix B */
     /* --------------- */
-    numValues = NZ*NX + (NZ*NX - (NZ+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
-    csrIA.reserve( NZ + 1 );
+    numValues = NX*NY + (NX*NY - (NX+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
+    csrIA.reserve( NX + 1 );
     csrJA.reserve( numValues );
     csrValues.reserve( numValues );
     
     count = 0;
-    size = NZ * NX;
+    size = NX * NY;
     csrIA.push_back( 0 );
     for( IndexType i = 0; i < size; ++i ){
         if(i<size){
@@ -182,8 +182,8 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
             csrValues.push_back( -1.0 );
             count++;
         }
-        if(i+NZ<size){
-            csrJA.push_back(i+NZ);
+        if(i+NX<size){
+            csrJA.push_back(i+NX);
             csrValues.push_back( +1.0 );
             count++;
         }
@@ -200,7 +200,7 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     csrJA.shrink_to_fit();
     csrValues.shrink_to_fit();
     
-    lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NY ); // not distributed, need to redistribute afterwards
+    lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NZ ); // not distributed, need to redistribute afterwards
     B.redistribute( dist, dist );
     B.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix B finished\n" );
@@ -217,7 +217,7 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     
     IndexType globalSize = dist->getGlobalSize();
     IndexType numDiagonals = 2;
-    IndexType secondaryIndex = NZ * NX; // = remaining part of secondary diagonal
+    IndexType secondaryIndex = NX * NY; // = remaining part of secondary diagonal
     IndexType numSecondary = globalSize - secondaryIndex;
     
     int lb, ub;
