@@ -368,20 +368,31 @@ void Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexTyp
 	    break;
 	      
 	case 2:
+	    /* combination of sin signals */
+	    this->sinw(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+	    break;   
+
+	    
+	case 3:
+	    /* sin3 signal */
+	    this->sinthree(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+	    break;
+
+	case 4:
 	    /* First derivative of a Gaussian (FGaussian) */
 	    this->FGaussian(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
 	    break;
 	    
-	case 3:
+	case 5:
 	    /* Spike signal */
 	    this->Spike(signal,  NT,  DT,  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
 	    break;
-	    
-	case 4:
-	    /* sin3 signal */
-	    this->sinthree(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;
-	    
+	    	    
+	case 6:
+	    /* integral sin3 signal */
+	    this->intgsinthree(signal,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+	    break;  
+	    	    
         default:
              COMMON_THROWEXCEPTION ( "Unkown wavelet shape ")
             break;

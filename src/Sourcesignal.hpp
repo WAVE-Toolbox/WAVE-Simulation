@@ -20,12 +20,15 @@ protected:
     void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
     void Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift);
     void sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+    void intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+    void sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+ 
 };
 
 
 /*! \brief Generating a Ricker signal
  *
- \param signal Allocated vector to to store Ricker signal
+ \param signal Allocated vector to store Ricker signal
  \param NT Number of time steps
  \param DT Temporal time step interval
  \param FC Central frequency
@@ -58,7 +61,7 @@ void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, Index
 
 /*! \brief Generating a First derivative of a Gaussian (FGaussian)
  *
- \param signal Allocated vector to to store FGaussian signal
+ \param signal Allocated vector to store FGaussian signal
  \param NT Number of time steps
  \param DT Temporal time step interval
  \param FC Central frequency
@@ -89,9 +92,9 @@ void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, In
 }
 
 
-/*! \brief Generating a First derivative of a Spike
+/*! \brief Generating a Spike/Delta wavelet
  *
- \param signal Allocated vector to to store Spike signal
+ \param signal Allocated vector to store a Spike signal
  \param NT Number of time steps
  \param DT Temporal time step interval
  \param AMP Amplitude
@@ -117,9 +120,9 @@ void Sourcesignal<ValueType>::Spike(lama::DenseVector<ValueType>& signal, IndexT
     
 }
 
-/*! \brief Generating a First derivative of a sinus raised to the power of three (sinthree)
+/*! \brief Generating a sinus raised to the power of three (sinthree)
  *
- \param signal Allocated vector to to store sinthree signal
+ \param signal Allocated vector to store sinthree signal
  \param NT Number of time steps
  \param DT Temporal time step interval
  \param FC Central frequency
@@ -156,7 +159,108 @@ void Sourcesignal<ValueType>::sinthree(lama::DenseVector<ValueType>& signal, Ind
 	  count++;
     }
 
- 
     signal = lama::Scalar(AMP) * zero;
+    
+}
+
+/*! \brief Generating a wavelet composed by integral of sinus raised to the power of three (sinthree)
+ *
+ \param signal Allocated vector to store integral sinthree signal (intgsinthree)
+ \param NT Number of time steps
+ \param DT Temporal time step interval
+ \param FC Central frequency
+ \param AMP Amplitude
+ \param Tshift Time to shift wavelet
+ */
+template<typename ValueType>
+void Sourcesignal<ValueType>::intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+{
+    
+     /*
+     *  t=0:DT:(NT*DT-DT);
+     *  when t>=tshift && t<=tshift+1.0/FC;
+     *  tau=pi*FC*(t-Tshift);
+     *  signal=(0.5-0.75*cos(tau)+0.25*(sin(tau))^3)/FC/0.75/pi;
+     */
+
+    lama::DenseVector<ValueType> zero( NT, 0.0 );
+    lama::DenseVector<ValueType> help( NT, 0.0 );
+    lama::DenseVector<ValueType> half( NT, 0.5 );
+    
+    double temp;
+    IndexType time_index1,time_index2,i,count;
+    
+    time_index1 = floor(Tshift/DT);
+    time_index2 = time_index1 + floor(1.0/FC/DT);
+    
+    
+    /* this is for source[i] = (0.5-0.75*cos(tau[i])+0.25*(cos(tau[i]))^3)/FC/0.75/pi when t>=tshift && t<=tshift+1.0/FC; */
+    count=0;
+    for (i=time_index1; i<=time_index2; i++) {
+	  temp=count * DT * M_PI * FC ;
+	  temp=cos(temp);
+	  help.setValue(i,temp);
+	  temp=pow(temp,3);
+          zero.setValue(i,temp);
+	  count++;	  
+    }
+    help = 0.75 *help;
+    zero = 0.25 * zero;
+    zero = zero - help;
+    zero = half + zero;
+    zero = zero/FC;
+    zero = zero/M_PI;
+    zero = zero/0.75;
+
+    signal = lama::Scalar(AMP) * zero;
+    
+}
+
+/*! \brief Generating a wavelet composed by a combination of two sin functions (sinw)
+ *
+ \param signal Allocated vector to to store wavelet signal (sinw)
+ \param NT Number of time steps
+ \param DT Temporal time step interval
+ \param FC Central frequency
+ \param AMP Amplitude
+ \param Tshift Time to shift wavelet
+ */
+template<typename ValueType>
+void Sourcesignal<ValueType>::sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+{
+    
+     /*
+     *  t=0:DT:(NT*DT-DT);
+     *  when t>=tshift && t<=tshift+1.0/FC;
+     *  tau=2*pi*FC*(t-Tshift);
+     *  signal=sin(tau)-0.5*sin(2*tau);
+     */
+
+    lama::DenseVector<ValueType> zero( NT, 0.0 );
+    lama::DenseVector<ValueType> help( NT, 0.0 );
+    lama::DenseVector<ValueType> half( NT, 0.5 );
+    
+    double temp,temp2;
+    IndexType time_index1,time_index2,i,count;
+    
+    time_index1 = floor(Tshift/DT);
+    time_index2 = time_index1 + floor(1.0/FC/DT);
+    
+    
+    /* this is for source[i] = sin(tau[i])-0.5*sin(2*tau[i]) when t>=tshift && t<=tshift+1.0/FC; */
+    count=0;
+    for (i=time_index1; i<=time_index2; i++) {
+	  temp= 2.0 * count * DT * M_PI * FC ;
+	  temp2=sin(temp);
+	  help.setValue(i,temp2);
+	  temp = 2.0 * temp;
+	  temp2 = sin(temp);
+          zero.setValue(i,temp2);
+	  count++;	  
+    }
+    zero = zero/2.0;
+    help = help - zero;
+
+    signal = lama::Scalar(AMP) * help;
     
 }
