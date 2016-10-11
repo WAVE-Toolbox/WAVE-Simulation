@@ -1,64 +1,71 @@
 #pragma once
 
-/*! \brief Struct to save 3-D coordinates
- */
-struct coordinate3D
-{
-    IndexType x; //!< x Position in X-direction in grid points
-    IndexType y; //!< y Position in Y-direction in grid points
-    IndexType z; //!< z Position in Z-direction in grid points
-};
 
-/*! \brief Struct to save 2-D coordinates
- */
-struct coordinate2D
-{
-    IndexType x; //!< x Position in X-direction in grid points
-    IndexType z; //!< z Position in Z-direction in grid points
-};
-
-/*! \brief This class manages the transformation of Coordinates
- */
-template <typename ValueType>
-class Coordinates
-{
+namespace KITGPI {
     
-protected:
-    
-    // Coordinate --> Index:
-    // Interfaces 3-D
-    IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
-    IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
-    // Interfaces 2-D
-    IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ);
-    IndexType coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
-    
-    // Index --> Coordinate:
-    coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-    coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
-    
-    void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist);
-    
-private:
-    
-    // Coordinate --> Index:
-    IndexType map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
-    IndexType map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
-    
-    // Index --> Coordinate:
-    coordinate3D map3Dindex2coordinate(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-    coordinate2D map2Dindex2coordinate(coordinate2D coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
-    
-};
-
-
+    //! \brief Acquisition namespace
+    namespace Acquisition {
+        
+        /*! \brief Struct to save 3-D coordinates
+         */
+        struct coordinate3D
+        {
+            IndexType x; //!< x Position in X-direction in grid points
+            IndexType y; //!< y Position in Y-direction in grid points
+            IndexType z; //!< z Position in Z-direction in grid points
+        };
+        
+        /*! \brief Struct to save 2-D coordinates
+         */
+        struct coordinate2D
+        {
+            IndexType x; //!< x Position in X-direction in grid points
+            IndexType z; //!< z Position in Z-direction in grid points
+        };
+        
+        /*! \brief This class manages the transformation of Coordinates
+         */
+        template <typename ValueType>
+        class Coordinates
+        {
+            
+        protected:
+            
+            // Coordinate --> Index:
+            // Interfaces 3-D
+            IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
+            // Interfaces 2-D
+            IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ);
+            IndexType coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
+            
+            // Index --> Coordinate:
+            coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
+            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
+            
+            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist);
+            
+        private:
+            
+            // Coordinate --> Index:
+            IndexType map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
+            
+            // Index --> Coordinate:
+            coordinate3D map3Dindex2coordinate(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
+            coordinate2D map2Dindex2coordinate(coordinate2D coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
+            
+        };
+        
+    }
+}
 /* ------- */
 /* Mapping */
 /* ------- */
 
 //! General mapping from 3-D coordinates to 1-D coordinate
 template <typename ValueType>
-IndexType Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
     if ( Z > NZ || X > NX || Y > NY || Z < 1 || X < 1 || Y < 1 )
     {
@@ -73,7 +80,7 @@ IndexType Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y
 
 //! General mapping from 2-D coordinates to 1-D coordinate
 template <typename ValueType>
-IndexType Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
 {
     if ( Z > NZ || X > NX || Z < 1 || X < 1 )
     {
@@ -101,7 +108,7 @@ IndexType Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Z
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
     return(map3Dcoordinate2index(X,Y,Z,NX,NY,NZ));
 }
@@ -114,7 +121,7 @@ IndexType Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, Ind
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType Coordinates<ValueType>::coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
 {
     return(map3Dcoordinate2index(coordinate.x,coordinate.y,coordinate.z,NX,NY,NZ));
 }
@@ -127,7 +134,7 @@ IndexType Coordinates<ValueType>::coordinate2index(coordinate3D coordinate, Inde
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
 {
     return(map2Dcoordinate2index(X,Z,NX,NZ));
 }
@@ -139,7 +146,7 @@ IndexType Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Z, Ind
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ)
 {
     return(map2Dcoordinate2index(coordinate.x,coordinate.z,NX,NZ));
 }
@@ -153,7 +160,7 @@ IndexType Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, Inde
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist)
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist)
 {
     
     // Determine size of local domain

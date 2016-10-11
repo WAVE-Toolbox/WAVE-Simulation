@@ -6,7 +6,7 @@ OUTPUT_FILENAME='sources_ci.mtx';
 X=[50]; % Coordinates in X (Grid points)
 Y=[50]; % Coordinates in Y (Grid points)
 Z=[50]; % Coordinates in Z (Grid points)
-SOURCE_TYPE=[1]; % Source Type (1=P-Source)
+SOURCE_TYPE=[1]; % Source Type (1=P,2=vX,3=vY,4=vZ)
 WAVELET_TYPE=[1]; % Wavelet Type (1=Synthetic)
 
 %% Optional Parameters

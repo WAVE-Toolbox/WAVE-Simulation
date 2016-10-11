@@ -1,29 +1,33 @@
+#pragma once
 
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 #include <cmath>
 #include <valarray>
 
-#pragma once
-
-/*! \brief Abstract class to create sourcesignals
- * This is class holds several methods to generate different sourcesignals.
- * As this class is an abstract class, all methods are protected.
- */
-template <typename ValueType>
-class Sourcesignal
-{
-
-protected:
+namespace KITGPI {
     
-    void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
-    void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
-    void Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift);
-    void sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
-    void intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
-    void sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
- 
-};
+    namespace Acquisition {
+         
+        /*! \brief Abstract class to create sourcesignals
+         *
+         * This is class holds several methods to generate different sourcesignals.
+         * As this class is an abstract class, all methods are protected.
+         */
+        template <typename ValueType>
+        class Sourcesignal
+        {
+            
+        protected:
+            void Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+	    void FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+	    void Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift);
+	    void sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+	    void intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+	    void sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+        };
+    }
+}
 
 
 /*! \brief Generating a Ricker signal
@@ -36,7 +40,7 @@ protected:
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
     /*
@@ -69,7 +73,7 @@ void Sourcesignal<ValueType>::Ricker(lama::DenseVector<ValueType>& signal, Index
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
     /*
@@ -101,7 +105,7 @@ void Sourcesignal<ValueType>::FGaussian(lama::DenseVector<ValueType>& signal, In
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::Spike(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType AMP, ValueType Tshift )
 {
     
     /*
@@ -130,7 +134,7 @@ void Sourcesignal<ValueType>::Spike(lama::DenseVector<ValueType>& signal, IndexT
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::sinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
      /*
@@ -173,7 +177,7 @@ void Sourcesignal<ValueType>::sinthree(lama::DenseVector<ValueType>& signal, Ind
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::intgsinthree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
      /*
@@ -226,7 +230,7 @@ void Sourcesignal<ValueType>::intgsinthree(lama::DenseVector<ValueType>& signal,
  \param Tshift Time to shift wavelet
  */
 template<typename ValueType>
-void Sourcesignal<ValueType>::sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
+void KITGPI::Acquisition::Sourcesignal<ValueType>::sinw(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift )
 {
     
      /*
@@ -264,3 +268,4 @@ void Sourcesignal<ValueType>::sinw(lama::DenseVector<ValueType>& signal, IndexTy
     signal = lama::Scalar(AMP) * help;
     
 }
+
