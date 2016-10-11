@@ -120,7 +120,9 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     std::vector<IndexType> csrJA;
     std::vector<ValueType> csrValues;
     
-    // create matrix A
+    /* --------------- */
+    /* create matrix A */
+    /* --------------- */
     numValues = NZ + (NZ - 1); // diagonal element (NZ) + secondary diagonal elements (NZ - 1)
     csrIA.reserve( NZ + 1 );
     csrJA.reserve( numValues );
@@ -129,38 +131,43 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     IndexType count = 0;
     IndexType size = NZ;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - 1 == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < size; ++i ){
+        if(i<size){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if((i+1)<size){
+            csrJA.push_back(i+1);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
     
+    /* create CSR storage help */
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
+    
+    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
+    csrIA.clear();
+    csrJA.clear();
+    csrValues.clear();
+    csrIA.shrink_to_fit();
+    csrJA.shrink_to_fit();
+    csrValues.shrink_to_fit();
+    
+    /* create matrix A */
     lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NX * NY ); // not distributed, need to redistribute afterwards
     A.redistribute( dist, dist );
     A.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix A finished\n" );
     
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
-    
-    // create matrix B
+    /* deallocate storageHelp, in order to free memory for the next operation */
+    storageHelp->purge();
+
+    /* --------------- */
+    /* create matrix B */
+    /* --------------- */
     numValues = NZ*NX + (NZ*NX - (NZ+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
     csrIA.reserve( NZ + 1 );
     csrJA.reserve( numValues );
@@ -169,40 +176,42 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     count = 0;
     size = NZ * NX;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - NZ == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < size; ++i ){
+        if(i<size){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if(i+NZ<size){
+            csrJA.push_back(i+NZ);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
     
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
+    
+    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
+    csrIA.clear();
+    csrJA.clear();
+    csrValues.clear();
+    csrIA.shrink_to_fit();
+    csrJA.shrink_to_fit();
+    csrValues.shrink_to_fit();
+    
     lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NY ); // not distributed, need to redistribute afterwards
     B.redistribute( dist, dist );
     B.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix B finished\n" );
     
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
+    /* deallocate storageHelp, in order to free memory for the next operation */
+    storageHelp->purge();
     
-    // create matrix C
+    /* --------------- */
+    /* create matrix C */
+    /* --------------- */
     // initialize by diagonals
-    
     int myRank   = comm->getRank();
     int numRanks = comm->getSize();
     
