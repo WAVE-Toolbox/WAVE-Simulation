@@ -129,23 +129,16 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     IndexType count = 0;
     IndexType size = NZ;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - 1 == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < NZ; ++i ){
+        if(i<NZ){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if((i+1)<NZ){
+            csrJA.push_back(i+1);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
@@ -169,23 +162,16 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     count = 0;
     size = NZ * NX;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - NZ == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < size; ++i ){
+        if(i<size){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if(i+NZ<size){
+            csrJA.push_back(i+NZ);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
