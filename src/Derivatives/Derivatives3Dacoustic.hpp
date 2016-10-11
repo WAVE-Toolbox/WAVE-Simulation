@@ -149,12 +149,9 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
     
     /* deallocate memory of std::vectors, in order to free memory for the next operation  */
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
-    csrIA.shrink_to_fit();
-    csrJA.shrink_to_fit();
-    csrValues.shrink_to_fit();
+    csrIA = std::vector<IndexType>();
+    csrJA = std::vector<IndexType>();
+    csrValues = std::vector<ValueType>();
     
     /* create matrix A */
     lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
@@ -193,12 +190,9 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
     
     /* deallocate memory of std::vectors, in order to free memory for the next operation  */
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
-    csrIA.shrink_to_fit();
-    csrJA.shrink_to_fit();
-    csrValues.shrink_to_fit();
+    csrIA = std::vector<IndexType>();
+    csrJA = std::vector<IndexType>();
+    csrValues = std::vector<ValueType>();
     
     lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NZ ); // not distributed, need to redistribute afterwards
     B.redistribute( dist, dist );
