@@ -13,4 +13,4 @@ end
 title('Normalized traces')
 xlabel('Samples')
 ylabel('Traces')
-axis([0 size(seismogram,2) 0 size(seismogram,1)])
+axis([0 size(seismogram,2) 0 size(seismogram,1)+1])

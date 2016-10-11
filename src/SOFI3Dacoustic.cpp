@@ -36,20 +36,11 @@
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
+
+#include "Common/HostPrint.hpp"
+
 using namespace scai;
 using namespace KITGPI;
-
-#define MASTER 0
-
-#define HOST_PRINT( comm, msg )     \
-{                                   \
-int myRank = comm->getRank();   \
-if ( myRank == MASTER )         \
-{                               \
-std::cout << msg;           \
-}                               \
-}
-
 
 int main( int argc, char* argv[] )
 {

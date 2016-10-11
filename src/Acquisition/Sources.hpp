@@ -3,7 +3,7 @@
 #include <scai/lama.hpp>
 #include <scai/dmemo/CyclicDistribution.hpp>
 #include <scai/lama/DenseVector.hpp>
-#include "Sourcesignal.hpp"
+#include "SourceSignal/all.hpp"
 #include "Coordinates.hpp"
 #include "Seismogram.hpp"
 
@@ -17,7 +17,7 @@ namespace KITGPI {
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
          */
         template <typename ValueType>
-        class Sources : private Sourcesignal<ValueType>, private Coordinates<ValueType>
+        class Sources : private Coordinates<ValueType>
         {
             
         public:
@@ -31,9 +31,9 @@ namespace KITGPI {
             
             void generateSignals(IndexType NT, ValueType DT);
             void writeSignalsToFileRaw(std::string filename);
-                        
+            
             lama::DenseVector<ValueType>* getCoordinates();
-            lama::DenseVector<ValueType>* getSourceType();            
+            lama::DenseVector<ValueType>* getSourceType();
             Seismogram<ValueType>* getSignals();
             
             IndexType getNumSourcesGlobal();
@@ -67,7 +67,7 @@ namespace KITGPI {
             lama::DenseVector<ValueType> wavelet_fc; //!< Center frequency of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_amp; //!< Amplitude of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
-                        
+            
         };
     }
 }
@@ -176,7 +176,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
 {
-
+    
     /* Read acquisition matrix */
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(filename);
@@ -413,34 +413,34 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     switch (wavelet_shape_i) {
         case 1:
             /* Ricker */
-            this->Ricker(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;
-	      
-	case 2:
-	    /* combination of sin signals */
-	    this->sinw(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;   
-	    
-	case 3:
-	    /* sin3 signal */
-	    this->sinthree(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;
-
-	case 4:
-	    /* First derivative of a Gaussian (FGaussian) */
-	    this->FGaussian(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;
-	    
-	case 5:
-	    /* Spike signal */
-	    this->Spike(signalVector,  NT,  DT,  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;
-	    	    
-	case 6:
-	    /* integral sin3 signal */
-	    this->intgsinthree(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
-	    break;  
-	    	    
+            SourceSignal::Ricker<ValueType>(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
+        case 2:
+            /* combination of sin signals */
+            SourceSignal::SinW<ValueType>(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
+        case 3:
+            /* sin3 signal */
+            SourceSignal::SinThree<ValueType>(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
+        case 4:
+            /* First derivative of a Gaussian (FGaussian) */
+            SourceSignal::FGaussian<ValueType>(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
+        case 5:
+            /* Spike signal */
+            SourceSignal::Spike<ValueType>(signalVector,  NT,  DT, 0,  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
+        case 6:
+            /* integral sin3 signal */
+            SourceSignal::IntgSinThree<ValueType>(signalVector,  NT,  DT,  wavelet_fc.getLocalValues()[SourceLocal],  wavelet_amp.getLocalValues()[SourceLocal],  wavelet_tshift.getLocalValues()[SourceLocal]);
+            break;
+            
         default:
             COMMON_THROWEXCEPTION ( "Unkown wavelet shape ")
             break;
