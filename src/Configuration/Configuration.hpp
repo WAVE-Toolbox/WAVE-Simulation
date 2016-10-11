@@ -32,10 +32,10 @@ namespace KITGPI {
             
             void print();
             
-            IndexType getNZ() { return NZ; } ///< Return NZ (Depth)
             IndexType getNX() { return NX; } ///< Return NX
-            IndexType getNY() { return NY; } ///< Return NY
-            
+            IndexType getNY() { return NY; } ///< Return NY (Depth)
+            IndexType getNZ() { return NZ; } ///< Return NZ
+
             ValueType getDH() { return DH; } ///< Return Grid spacing
             
             ValueType getDT() { return DT; } ///< Return Time Step
@@ -64,9 +64,9 @@ namespace KITGPI {
             /* read parameters */
             
             // define spatial sampling: number of grid points in direction
-            IndexType NZ; ///< Grid points depth
             IndexType NX; ///< Grid points horizontal 1
-            IndexType NY; ///< Grid points horizontal 2
+            IndexType NY;///< Grid points depth
+            IndexType NZ; ///< Grid points horizontal 2
             
             /// define distance between two grid points in meter
             ValueType DH;
@@ -200,9 +200,10 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         exit(0);
     }
     std::cout << "Modelling-domain:" << std::endl;
-    std::cout << "    Z: " << DH * NZ << " m (Depth)" << std::endl;
     std::cout << "    X: " << DH * NX << " m (Horizontal)" << std::endl;
-    std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
+    std::cout << "    Y: " << DH * NY << " m (Depth)" << std::endl;
+    std::cout << "    Z: " << DH * NZ << " m (Horizontal)" << std::endl;
+
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
     std::cout << "    Receiver acquisition will be read in from " << ReceiverFilename << std::endl;

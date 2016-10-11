@@ -6,7 +6,7 @@ OUTPUT_FILENAME='receiver_array.mtx';
 
 % Grid information
 NX=100; % Total number of grid points in X
-NY=100; % Total number of grid points in Y
+NY=100; % Total number of grid points in Y (depth)
 NZ=100; % Total number of grid points in Z
 
 % Define receiver array
@@ -16,16 +16,16 @@ Z1=20; Z2=80; % Z1: First receiver pos in Z, Z2: Last receiber pos in Z
 NGEOPH=1; % Place a geophone on each GP (NGEOPH=1) or every other (NGEOPH=2)
 
 % Define receiver type
-RECEIVER_TYPE=[1 2]; % (1=P, 2=vX, 3=vY, 4=vZ), if you want all write [1 2 3 4]
+RECEIVER_TYPE=[1]; % (1=P, 2=vX, 3=vY, 4=vZ), if you want all write [1 2 3 4]
 
 %% Create receiver array
 X=X1:NGEOPH:X2;
 Y=Y1:NGEOPH:Y2;
 Z=Z1:NGEOPH:Z2;
 
+
 numel_X=numel(X);
 RECEIVER_TYPE_vec=RECEIVER_TYPE(1)*ones(1,numel_X);
-
 for(i=2:size(RECEIVER_TYPE,2))
     if(size(RECEIVER_TYPE,2)>1)
         X=[X X]; Y=[Y Y]; Z=[Z Z];

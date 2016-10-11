@@ -253,27 +253,27 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         
         /* update velocity */
-        update=  A * p;
-        vZ += update.scale(inverseDensity);
-        
-        update= B * p;
+        update= A * p;
         vX += update.scale(inverseDensity);
-        
-        update= C * p;
+
+        update= B * p;
         vY += update.scale(inverseDensity);
-        
-        
-        /* pressure update */
-        update  =  D * vZ;
-        update +=  E * vX;
-        update +=  F * vY;
-        p += update.scale(M);
+
+        update=  C * p;
+        vZ += update.scale(inverseDensity);
 
         
+        /* pressure update */
+        update  =  D * vX;
+        update +=  E * vY;
+        update +=  F * vZ;
+        p += update.scale(M);
+
+
         /* Apply source and save seismogram */
-        gatherSeismograms(wavefield,NT,t);
         applySource(sources,wavefield,NT,t);
-        
+        gatherSeismograms(wavefield,NT,t);
+
     }
     
     /* --------------------------------------- */

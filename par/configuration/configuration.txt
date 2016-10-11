@@ -2,9 +2,9 @@
 # expects exactly these number of arguments (14) and these names
 
 # define spatial sampling: number of grid points in direction
-NZ=100 # depth
 NX=100 # horizontal 1
-NY=100 # horizontal 2
+NY=100 # depth
+NZ=100 # horizontal 2
 
 # define distance between two grid points in meter
 DH=50
