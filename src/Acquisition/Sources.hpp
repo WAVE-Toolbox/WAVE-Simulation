@@ -22,7 +22,7 @@ namespace KITGPI {
             
         public:
             
-            Sources(){};
+            Sources():numSourcesGlobal(0),numSourcesLocal(0),numParameter(0){};
             Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
             ~Sources(){};
             
@@ -46,18 +46,18 @@ namespace KITGPI {
             void allocateSignals(IndexType NT);
             void generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT);
             
-            IndexType numSourcesGlobal=0; //!< Number of sources global
-            IndexType numSourcesLocal=0; //!< Number of sources local
+            IndexType numSourcesGlobal; //!< Number of sources global
+            IndexType numSourcesLocal; //!< Number of sources local
             
-            dmemo::DistributionPtr dist_wavefield_sources=NULL; //!< Calculated Distribution of the sources based on the distribution of the wavefields
-            dmemo::DistributionPtr no_dist_NT=NULL; //!< No distribution of the columns of the signals matrix
+            dmemo::DistributionPtr dist_wavefield_sources; //!< Calculated Distribution of the sources based on the distribution of the wavefields
+            dmemo::DistributionPtr no_dist_NT; //!< No distribution of the columns of the signals matrix
             
             //! Source signals
             Seismogram<ValueType> signals;
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
-            IndexType numParameter=0; //!< Number of source parameters given in acquisition matrix
+            IndexType numParameter; //!< Number of source parameters given in acquisition matrix
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
             lama::DenseVector<ValueType> source_type; //!< Type of source: 1==P, 2==vX, 3==vY, 4==vZ
             lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
@@ -115,7 +115,9 @@ KITGPI::Acquisition::Seismogram<ValueType>* KITGPI::Acquisition::Sources<ValueTy
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
+:numSourcesGlobal(0),numSourcesLocal(0),numParameter(0)
+{
     readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
     generateSignals(config.getNT(),config.getDT());
 }
@@ -174,7 +176,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
 {
-    
+
     /* Read acquisition matrix */
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(filename);

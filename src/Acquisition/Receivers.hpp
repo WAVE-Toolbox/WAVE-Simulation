@@ -22,7 +22,7 @@ namespace KITGPI {
             
         public:
             
-            Receivers(){};
+            Receivers():numReceiversGlobal(0),numReceiversLocal(0),numParameter(0){};
             Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
             ~Receivers(){};
             
@@ -41,15 +41,15 @@ namespace KITGPI {
             void getLocalReceivers(dmemo::DistributionPtr dist_wavefield);
             void getReceiverDistribution(dmemo::CommunicatorPtr comm);
             
-            IndexType numReceiversGlobal=0; //!< Number of receivers global
-            IndexType numReceiversLocal=0; //!< Number of receivers local
+            IndexType numReceiversGlobal; //!< Number of receivers global
+            IndexType numReceiversLocal; //!< Number of receivers local
             
-            dmemo::DistributionPtr dist_wavefield_receivers=NULL; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
-            dmemo::DistributionPtr no_dist_NT=NULL; //!< No distribution of the columns of the seismogram matrix
+            dmemo::DistributionPtr dist_wavefield_receivers; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
+            dmemo::DistributionPtr no_dist_NT; //!< No distribution of the columns of the seismogram matrix
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the receiver acquisition
-            IndexType numParameter=0; //!< Number of receiver parameters given in acquisition matrix
+            IndexType numParameter; //!< Number of receiver parameters given in acquisition matrix
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
             lama::DenseVector<ValueType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
             
@@ -100,7 +100,9 @@ dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDi
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
+KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
+:numReceiversGlobal(0),numReceiversLocal(0),numParameter(0)
+{
     readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
 }
 
@@ -152,7 +154,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::st
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
 {
-    
+
     /* Read acquisition matrix */
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(filename);

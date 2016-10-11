@@ -25,7 +25,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor
-            Seismogram(){};
+            Seismogram():numSamples(0),numTracesGlobal(0),numTracesLocal(0),DT(0.0){};
             
             //! Default destructor
             ~Seismogram(){};
@@ -56,12 +56,12 @@ namespace KITGPI {
             
         private:
             
-            IndexType numSamples=0; //!< Number of samples of one trace
-            IndexType numTracesGlobal=0; //!< Number of global traces
-            IndexType numTracesLocal=0; //!< Number of local traces
+            IndexType numSamples; //!< Number of samples of one trace
+            IndexType numTracesGlobal; //!< Number of global traces
+            IndexType numTracesLocal; //!< Number of local traces
             
             /* header information */
-            ValueType DT=0.0; //!< Temporal sampling in seconds
+            ValueType DT; //!< Temporal sampling in seconds
             lama::DenseVector<ValueType> traceType; //!< Type of trace (receiver or source type)
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of the traces
             
