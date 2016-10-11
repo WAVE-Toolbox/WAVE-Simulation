@@ -59,7 +59,7 @@ namespace KITGPI {
             
         private:
             
-            IndexType NumParameters=14; ///< Number of parameters in input file
+            IndexType NumParameters; ///< Number of parameters in input file
             
             /* read parameters */
             
@@ -103,7 +103,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename )
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(14)
 {
     // read all lines in file
     
@@ -159,14 +159,15 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
-    std::istringstream( map[ "ModelFilename" ] ) >> ModelFilename; // std::string
+    ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
+
     
     std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
     std::istringstream( map[ "rho" ] ) >> rho; // ValueType
     
-    std::istringstream( map[ "SourceFilename" ] ) >> SourceFilename; // std::string
-    std::istringstream( map[ "ReceiverFilename" ] ) >> ReceiverFilename; // std::string
-    std::istringstream( map[ "SeismogramFilename" ] ) >> SeismogramFilename; // std::string
+    SourceFilename = std::istringstream( map[ "SourceFilename" ] ).str(); // std::string
+    ReceiverFilename = std::istringstream( map[ "ReceiverFilename" ] ).str(); // std::string
+    SeismogramFilename = std::istringstream( map[ "SeismogramFilename" ] ).str(); // std::string
     
     
     // calculate other parameters
