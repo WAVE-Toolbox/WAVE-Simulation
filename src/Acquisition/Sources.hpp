@@ -52,6 +52,8 @@ namespace KITGPI {
             dmemo::DistributionPtr dist_wavefield_sources; //!< Calculated Distribution of the sources based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT; //!< No distribution of the columns of the signals matrix
             
+            hmemo::HArray<IndexType> localIndices; //!< Global indices of the local sources
+            
             //! Source signals
             Seismogram<ValueType> signals;
             
@@ -466,7 +468,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
 /*! \brief Calculation of the source distribution
  *
  * Calculation of the source distribution based on the global number of sources numSourcesGlobal and the local number of sources numSourcesLocal on each node.
- * Generates a GenBlockDistribution.
+ * Generates a GeneralDistribution.
  *
  \param comm Communicator for the generated distribution
  */
@@ -477,7 +479,9 @@ void KITGPI::Acquisition::Sources<ValueType>::getSourceDistribution(dmemo::Commu
         COMMON_THROWEXCEPTION ( " There is no global source (numSourcesGlobal==0)! ")
     }
     
-    dmemo::DistributionPtr dist_temp( new dmemo::GenBlockDistribution(numSourcesGlobal,numSourcesLocal,comm));
+    //dmemo::DistributionPtr dist_temp( new dmemo::GenBlockDistribution(numSourcesGlobal,numSourcesLocal,comm));
+    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numSourcesGlobal,localIndices,comm));
+
     dist_wavefield_sources=dist_temp;
 }
 
@@ -494,11 +498,10 @@ void KITGPI::Acquisition::Sources<ValueType>::getLocalSources(dmemo::Distributio
         COMMON_THROWEXCEPTION ( " The vector coordinates does not contain any elements ! ")
     }
     
-    lama::DenseVector<ValueType> coordinateslocal; //!< Coordinates of sources local (1-D coordinates)
     
-    this->Global2Local(coordinates,coordinateslocal,dist_wavefield);
+    this->Global2Local(coordinates,localIndices,dist_wavefield);
     
-    numSourcesLocal=coordinateslocal.size();
+    numSourcesLocal=localIndices.size();
     numSourcesGlobal=coordinates.size();
     
 }
