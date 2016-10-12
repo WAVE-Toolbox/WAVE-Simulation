@@ -43,7 +43,7 @@ namespace KITGPI {
             coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
             coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY); //!< Not yet implemented
             
-            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist);
+            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
         private:
             
@@ -160,7 +160,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist)
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
 {
     
     // Determine size of local domain
@@ -185,10 +185,9 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         }
     }
     
-    // Allocate memory for local coordinates
-    IndexType n_local=i; // Number of local entries
-    coordinateslocal.allocate(n_local);
-    
+    /* Determine coordinates of local receivers in the global coordinate vector */
+    localIndices.resize(i);
+    hmemo::WriteAccess<IndexType> write_localIndices(localIndices);
     i=0;
     for(IndexType n=0; n<n_global; n++){
         
@@ -196,8 +195,9 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         coordinatetemp_int=coordinatetemp_scalar.getValue<IndexType>();
         
         if( (coordinatetemp_int>=lower) && (coordinatetemp_int<=upper) ){
-            coordinateslocal.setValue(i,coordinatetemp_int);
+            write_localIndices[i]=n;
             i++;
         }
     }
+    
 }
