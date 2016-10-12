@@ -39,7 +39,7 @@
 \usepackage[left=25mm,right=25mm,bottom=35mm, footskip=20mm]{geometry}
 
 \usepackage{siunitx}		%Darstellung von Einheiten
-	\sisetup{per-mode=fraction}	%Darstellung von Brüchen
+\sisetup{per-mode=fraction}	%Darstellung von Brüchen
 
 
 \usepackage{listings}
@@ -155,7 +155,7 @@ urlcolor=LinkColor}
 \hyphenation{CATIA} %definiert die Stellen zum Trennen von Wörter mit "`-"' Beispiel: \hyphenation{er-go-no-mic}
 
 \title{LAMA_Implementation_Doc}
-\author{Peter Michael Habelitz, Florian Wittkamp}
+\author{}
 
 \begin{document}
 
@@ -166,7 +166,7 @@ urlcolor=LinkColor}
 \newgeometry{left=25mm,right=25mm,bottom=40mm,top=20mm}
 \begin{figure}[h] % Gleiten ist durch Verwendung des H verhindert
 \begin{flushright}
-\includegraphics[scale=0.06]{./images/kit_logo.png}
+\includegraphics[scale=0.15]{./images/wave_logo.png}
 \end{flushright}
 \end{figure}
 
@@ -177,16 +177,22 @@ urlcolor=LinkColor}
 \end{center}
 
 \vfill
-
 \begin{center}
-Florian Wittkamp\\
-Peter Habelitz
+{\Large{\url{wave-toolbox.org}}}
+
+
+{\small Dokumentation erstellt am \today}
 \end{center}
 
 \newpage 
 \thispagestyle{empty}
-\quad 
-\newpage
+\begin{center}
+{\large
+Supported by the German Ministry of Education and Research (BMBF) through the project \textbf{WAVE}, grant 01IH15004A.
+}
+\end{center}
+
+\cleardoublepage
 
 \pagenumbering{Roman}
 \setcounter{page}{1}
@@ -198,24 +204,12 @@ Peter Habelitz
 \tableofcontents %Inhaltsverzeichnis wird eingefügt \tableofcontens einfügen vor \addcontentsline, damit der Verweis beim Klicken im Dokument richtig funktioniert
 \addcontentsline{toc}{section}{Inhaltsverzeichnis} %Inhaltsverzeichnis wird im Inhaltsverzeichnis angezeigt
 
-\pagebreak
-\thispagestyle{plain}
-%\listoffigures
-%\thispagestyle{plain}
-%\listoftables
-%\thispagestyle{plain}
-%\lstlistoflistings 
-%\thispagestyle{plain}
 
-
-\newpage 
-\thispagestyle{empty}
-\quad 
-\newpage
 
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
+\cleardoublepage
 \chapter{Physikalische Herleitung der Wellenausbreitung}
 
 In diesem Kapitel werden die theoretischen Grundlagen für die physikalische Beschreibung der Wellenausbreitung in elastischen Medien gelegt. Dazu zählt die allgemeine Spannungs-Dehnungs-Beziehung von Festkörpern bzw. viskosen Fluiden. Des Weiteren wird die Impulserhaltung am infinitesimalen Volumenelement angewendet.
@@ -226,7 +220,8 @@ Anders als nicht viskose Fluide können viskose Fluide und Festkörper unter Sch
 
 Der Spannungszustand wird anhand eines infinitesimalen Volumenelements $\partial V = \partial x~ \partial y~ \partial z$ in Abbildung \ref{fig:AllgSpZu} dargestellt.
 
-\begin{figure}[h!]
+\begin{figure}
+\centering
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
 		\node [style=none] (0) at (0, 0) {};
@@ -371,12 +366,13 @@ Ableiten der Materialgesetze nach der Zeit führt zusammen mit Gl. \ref{eqn:ElBe
 	\frac{\partial\epsilon_{ij}}{\partial t} &= \frac{1}{2} \left( \frac{\partial v_i}{\partial x_j} + \frac{\partial v_j}{\partial x_i} \right)\label{eqn:Dehnijdt}
 \end{align}
 
+\cleardoublepage
 \chapter{Diskretisierung der Wellengleichung}
 Zur Lösung der Wellengleichung mit finiten Differenzen müssen die physikalisch kontinuierliche Raum und Zeit in mathematisch diskretisierte Gitter aufgelöst werden. Für die Koordinaten gilt $x=k~\mathrm{d}x$, $y=l~\mathrm{d}y$, $z=m~\mathrm{d}z$, $t=n~\mathrm{d}t$. $\mathrm{d}x, \mathrm{d}y, \mathrm{d}z$ bezeichnen die räumlichen Abstände der Gitterpunkte in der jeweiligen Richtung, $\mathrm{d}t$ der zeitliche Abstand. Das Gitter hat eine Gesamtgröße von $NX \times NY \times NZ$. Die Simulationsdauer beträgt $NT~\mathrm{d}t$.
 
 \section{Definition des \textit{Standard Staggered Grid} (SSG)}
 Das SSG \citep{virieux:86,levander:88} ist eine Methode die physikalischen Größen so auf und zwischen Gitterpunkten zu verteilen, damit sich die partiellen Differentialgleichungen der Wellengleichung jeweils auf einen gemeinsamen Punkt im Gitter beziehen. Die Gestalt des SSG in drei Dimensionen ist in Abbildung \ref{fig:StagGrid} dargestellt. Die zeitliche Dimension ist nicht explizit gezeigt. Die Spannungen $\sigma$ liegen zeitlich auf halben Gitterpunkten, die Partikelgeschwindigkeiten $v$ auf ganzen.
-\begin{figure}[h!]
+\begin{figure}
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
 		\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw,label=90:{$k,l,m$}] (0) at (0, 0) {};
@@ -462,7 +458,7 @@ Die Verwendung des SSG erfordert hinsichtlich numerischer Stabilität, dass die 
 \section{Ablauf der Wellenfeldberechnung}
 Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten Gleichungen an jedem Ort und zu jeder Zeit ausgewertet werden. Da jeweils der zeitlich vorangegangene Wert benötigt wird muss $n$ stetig erhöht werden. Dagegen spielt die Reihenfolge der räumlichen Abarbeitung keine Rolle. Dagegen werden die Spannungen $\sigma_{ij}^{n+\frac{1}{2}}$ für die Berechnung der Partikelgeschwindigkeiten $v_i^{n+\frac{1}{2}}$ benötigt und müssen daher zuerst berechnet werden.
 
-\begin{algorithm}[H]
+\begin{algorithm}
 \caption{Finite Differenzen Simulationsablauf}
 \label{alg:FD}
 \For{n=1 \KwTo NT}{
@@ -483,6 +479,7 @@ Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten
 }
 \end{algorithm}
 
+\cleardoublepage
 \chapter{Matrix-Vektor Formalismus des FD-Schemas}
 In diesem Kapitel werden zunächst die Vorteile des neuen Formalismus angesprochen. Anschließend wird die Vektorisierung der Arrays vorgenommen. Ein zentraler Schritt stellt die Auffindung von speziellen Matrizen dar, welche die FD-Operatoren auf $v_i$ und $\sigma_{ij}$ anwenden. Diese werden für ein übersichtliches Beispiel aufgeführt.
 \section{Motivation}
@@ -499,7 +496,8 @@ Wie bereits erwähnt ist die Reihenfolge der räumlichen Abarbeitung irrelevant.
 
 Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensionalen Arrays vorliegen (hier $v_x$, $\sigma_{ij}$ und $\rho$) in Vektoren umgewandelt werden müssen. Das Vorgehen ist Konvention, muss aber konsequent eingehalten werden. Abbildung \ref{fig:ArrayToVec} illustriert die Umwandlung eines $4 \times 3 \times 2$-Arrays in einen Vektor. Zuerst wird die x-Richtung, danach die y-Richtung und zuletzt die z-Richtung projiziert.
 
-\begin{figure}[h!]
+\begin{figure}
+\centering
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
 		\node [style=none] (0) at (0, 0) {};
@@ -549,7 +547,7 @@ Aufgrund der Verschiebung aller halben Indizes um $-\frac{1}{2}$ muss bei der An
 
 Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem halben Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$ in der Ableitungsrichtung $y$ auf $l+\frac{1}{2}$ liegt. Dann greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}$ zurück. Diese $v_x$ Werte müssen in $y$-Richtung nicht verschoben werden. Jedoch wird der hiermit berechnete Wert $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ auf $\sigma_{xy,k,l,m}$, also in $y$-Richtung, verschoben, womit das Zentrum des FD-Operators nun aus Sicht von $\sigma_{xy,k,l,m}$ rechts befindet (s. Abbildung \ref{fig:IndShift} rechts). Diese Verschiebung findet sich bei allen $\frac{\partial v_i}{\partial x_j}$ mit $i\neq j$ und $\frac{\partial \sigma_{ii}}{\partial x_i}$. Hierfür lautet die Bezeichnung $D_{i,\mathrm{f}}$ mit f für \textit{forward}.
 
-\begin{figure}[h!]
+\begin{figure}
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
 		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (0) at (0, 0) {};
@@ -787,25 +785,7 @@ Alle diskretisierte Komponenten der elastischen Wellengleichung in Matrix-Vektor
 \end{align*}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\cleardoublepage
 \bibliography{WAVE_theory}
 \bibliographystyle{apalike}
 \end{document}
