@@ -64,26 +64,26 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::So
     if(numSourcesLocal>0){
         
         /* Get reference to wavefields */
-        lama::DenseVector<ValueType>& vX=*wavefield.getVX();
-        lama::DenseVector<ValueType>& vY=*wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=*wavefield.getVZ();
-        lama::DenseVector<ValueType>& p=*wavefield.getP();
+        lama::DenseVector<ValueType>& vX=wavefield.getVX();
+        lama::DenseVector<ValueType>& vY=wavefield.getVY();
+        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
+        lama::DenseVector<ValueType>& p=wavefield.getP();
         
         /* Get reference to sourcesignal storing seismogram */
-        Acquisition::Seismogram<ValueType>& signals=*sources.getSignals();
+        Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
 
         /* Get reference to source type of sources */
-        lama::DenseVector<ValueType>& SourceType=*signals.getTraceType();
+        lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
         utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
         hmemo::WriteAccess<ValueType> read_SourceType_LA(*SourceType_LA);
         
         /* Get reference to coordinates of sources */
-        lama::DenseVector<ValueType>& coordinates=*signals.getCoordinates();
+        lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
         utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
         hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of source signals */
-        lama::DenseMatrix<ValueType>& sourcesSignals=*signals.getData();
+        lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
         lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
         hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
         hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
@@ -142,23 +142,23 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
     if(numTracesLocal>0){
     
         /* Get reference to wavefields */
-        lama::DenseVector<ValueType>& vX=*wavefield.getVX();
-        lama::DenseVector<ValueType>& vY=*wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=*wavefield.getVZ();
-        lama::DenseVector<ValueType>& p=*wavefield.getP();
+        lama::DenseVector<ValueType>& vX=wavefield.getVX();
+        lama::DenseVector<ValueType>& vY=wavefield.getVY();
+        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
+        lama::DenseVector<ValueType>& p=wavefield.getP();
         
         /* Get reference to receiver type of seismogram traces */
-        lama::DenseVector<ValueType>& ReceiverType=*seismogram.getTraceType();
+        lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
         utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
         hmemo::WriteAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
         
         /* Get reference to coordinates of seismogram traces */
-        lama::DenseVector<ValueType>& coordinates=*seismogram.getCoordinates();
+        lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
         utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
         hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of seismogram traces */
-        lama::DenseMatrix<ValueType>& seismogramData=*seismogram.getData();
+        lama::DenseMatrix<ValueType>& seismogramData=seismogram.getData();
         lama::DenseStorage<ValueType>* seismogram_DS=&seismogramData.getLocalStorage();
         hmemo::HArray<ValueType>* seismogram_HA=&seismogram_DS->getData();
         hmemo::WriteAccess<ValueType> write_seismogram_HA(*seismogram_HA);
@@ -216,22 +216,22 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     SCAI_REGION( "timestep" )
     
     /* Get references to required modelparameter */
-    lama::DenseVector<ValueType>& inverseDensity=*model.getInverseDensity();
-    lama::DenseVector<ValueType>& M=*model.getM();
+    lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
+    lama::DenseVector<ValueType>& M=model.getM();
     
     /* Get references to required wavefields */
-    lama::DenseVector<ValueType>& vX=*wavefield.getVX();
-    lama::DenseVector<ValueType>& vY=*wavefield.getVY();
-    lama::DenseVector<ValueType>& vZ=*wavefield.getVZ();
-    lama::DenseVector<ValueType>& p=*wavefield.getP();
+    lama::DenseVector<ValueType>& vX=wavefield.getVX();
+    lama::DenseVector<ValueType>& vY=wavefield.getVY();
+    lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
+    lama::DenseVector<ValueType>& p=wavefield.getP();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>& A=*derivatives.getA();
-    lama::CSRSparseMatrix<ValueType>& B=*derivatives.getB();
-    lama::CSRSparseMatrix<ValueType>& C=*derivatives.getC();
-    lama::CSRSparseMatrix<ValueType>& D=*derivatives.getD();
-    lama::CSRSparseMatrix<ValueType>& E=*derivatives.getE();
-    lama::CSRSparseMatrix<ValueType>& F=*derivatives.getF();
+    lama::CSRSparseMatrix<ValueType>& A=derivatives.getA();
+    lama::CSRSparseMatrix<ValueType>& B=derivatives.getB();
+    lama::CSRSparseMatrix<ValueType>& C=derivatives.getC();
+    lama::CSRSparseMatrix<ValueType>& D=derivatives.getD();
+    lama::CSRSparseMatrix<ValueType>& E=derivatives.getE();
+    lama::CSRSparseMatrix<ValueType>& F=derivatives.getF();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, M.getContextPtr());

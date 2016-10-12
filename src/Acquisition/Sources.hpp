@@ -32,9 +32,9 @@ namespace KITGPI {
             void generateSignals(IndexType NT, ValueType DT);
             void writeSignalsToFileRaw(std::string filename);
             
-            lama::DenseVector<ValueType>* getCoordinates();
-            lama::DenseVector<ValueType>* getSourceType();
-            Seismogram<ValueType>* getSignals();
+            lama::DenseVector<ValueType>& getCoordinates();
+            lama::DenseVector<ValueType>& getSourceType();
+            Seismogram<ValueType>& getSignals();
             
             IndexType getNumSourcesGlobal();
             IndexType getNumSourcesLocal();
@@ -82,8 +82,8 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSourceType(){
-    return(&source_type);
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getSourceType(){
+    return(source_type);
 }
 
 
@@ -94,8 +94,8 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSource
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getCoordinates(){
-    return(&coordinates);
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getCoordinates(){
+    return(coordinates);
 }
 
 
@@ -106,8 +106,8 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getCoordi
  *
  */
 template<typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType>* KITGPI::Acquisition::Sources<ValueType>::getSignals(){
-    return(&signals);
+KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getSignals(){
+    return(signals);
 }
 
 
@@ -343,8 +343,8 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSignals(IndexType NT)
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
     signals.allocate(ctx,dist_wavefield_sources,NT);
     
-    *signals.getCoordinates()=coordinates;
-    *signals.getTraceType()=source_type;
+    signals.getCoordinates()=coordinates;
+    signals.getTraceType()=source_type;
 }
 
 
@@ -451,7 +451,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     utilskernel::LArray<ValueType>* signalVector_LA=&signalVector.getLocalValues();
     hmemo::ReadAccess<ValueType> read_signalVector(*signalVector_LA);
     
-    lama::DenseMatrix<ValueType>& signalsMatrix=*signals.getData();
+    lama::DenseMatrix<ValueType>& signalsMatrix=signals.getData();
     lama::DenseStorage<ValueType>* signalsMatrix_DS=&signalsMatrix.getLocalStorage();
     hmemo::HArray<ValueType>* signalsMatrix_HA=&signalsMatrix_DS->getData();
     hmemo::WriteAccess<ValueType> write_signalsMatrix_HA(*signalsMatrix_HA);

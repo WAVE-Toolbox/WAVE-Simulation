@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='receiver_array.mtx';
+OUTPUT_FILENAME='receiver.mtx';
 
 %% Requiered Parameters
 

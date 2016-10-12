@@ -29,12 +29,12 @@ namespace KITGPI {
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
 
-            lama::CSRSparseMatrix<ValueType>* getA();
-            lama::CSRSparseMatrix<ValueType>* getB(); 
-            lama::CSRSparseMatrix<ValueType>* getC(); 
-            lama::CSRSparseMatrix<ValueType>* getD();
-            lama::CSRSparseMatrix<ValueType>* getE();
-            lama::CSRSparseMatrix<ValueType>* getF();
+            lama::CSRSparseMatrix<ValueType>& getA();
+            lama::CSRSparseMatrix<ValueType>& getB();
+            lama::CSRSparseMatrix<ValueType>& getC();
+            lama::CSRSparseMatrix<ValueType>& getD();
+            lama::CSRSparseMatrix<ValueType>& getE();
+            lama::CSRSparseMatrix<ValueType>& getF();
             
         private:
             
@@ -283,36 +283,36 @@ void KITGPI::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::Distributio
 
 //! \brief Getter method for derivative matrix A
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getA(){
-    return(&A);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getA(){
+    return(A);
 }
 
 //! \brief Getter method for derivative matrix B
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getB(){
-    return(&B);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getB(){
+    return(B);
 }
 
 //! \brief Getter method for derivative matrix C
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getC(){
-    return(&C);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getC(){
+    return(C);
 }
 
 //! \brief Getter method for derivative matrix D
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getD(){
-    return(&D);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getD(){
+    return(D);
 }
 
 //! \brief Getter method for derivative matrix E
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getE(){
-    return(&E);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getE(){
+    return(E);
 }
 
 //! \brief Getter method for derivative matrix F
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getF(){
-    return(&F);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getF(){
+    return(F);
 }
