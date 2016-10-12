@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='sources_ci.mtx';
+OUTPUT_FILENAME='sources.mtx';
 
 %% Requiered Parameters
 X=[50]; % Coordinates in X (Grid points)

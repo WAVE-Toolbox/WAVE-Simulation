@@ -45,7 +45,7 @@ KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::FGaussian(lama::DenseVe
 
 /*! \brief Generating a FGaussian signal
  *
- \param signal Allocated vector to store IntgSinThree signal
+ \param signal Allocated vector to store FGaussian signal
  \param NT Number of time steps
  \param DT Temporal time step interval
  \param FC Central frequency

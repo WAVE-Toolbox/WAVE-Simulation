@@ -33,8 +33,8 @@ namespace KITGPI {
             IndexType getNumReceiversLocal();
             
             dmemo::DistributionPtr getReceiversDistribution();
-            lama::DenseVector<ValueType>* getCoordinates();
-            lama::DenseVector<ValueType>* getReceiversType();
+            lama::DenseVector<ValueType>& getCoordinates();
+            lama::DenseVector<ValueType>& getReceiversType();
             
         private:
             
@@ -63,24 +63,24 @@ namespace KITGPI {
 /*! \brief Getter method for reference to receiver type
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
 {
     if(receiver_type.size()==0) {
         COMMON_THROWEXCEPTION ( "No receivers type set" )
     }
-    return(&receiver_type);
+    return(receiver_type);
 }
 
 
 /*! \brief Getter method for reference to coordinates
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
 {
     if(coordinates.size()==0) {
         COMMON_THROWEXCEPTION ( "No receivers coordinates set" )
     }
-    return(&coordinates);
+    return(coordinates);
 }
 
 

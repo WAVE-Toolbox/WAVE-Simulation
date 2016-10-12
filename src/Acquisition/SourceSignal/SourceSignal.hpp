@@ -18,10 +18,10 @@ namespace KITGPI {
             class SourceSignal {
             public:
                 
-                ///! Constructor
+                //! Constructor
                 SourceSignal(){};
                 
-                ///! Destructor
+                //! Destructor
                 ~SourceSignal(){};
                 
                 /*! \brief Generating a source signal

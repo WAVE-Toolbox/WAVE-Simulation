@@ -62,7 +62,6 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVec
      *  tau=pi*FC*(t-Tshift);
      *  signal=(0.5-0.75*cos(tau)+0.25*(sin(tau))^3)/FC/0.75/pi;
      */
-    
     lama::DenseVector<ValueType> zero( NT, 0.0 );
     lama::DenseVector<ValueType> help( NT, 0.0 );
     lama::DenseVector<ValueType> half( NT, 0.5 );
@@ -72,7 +71,6 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVec
     
     time_index1 = floor(Tshift/DT);
     time_index2 = time_index1 + floor(1.0/FC/DT);
-    
     
     /* this is for source[i] = (0.5-0.75*cos(tau[i])+0.25*(cos(tau[i]))^3)/FC/0.75/pi when t>=tshift && t<=tshift+1.0/FC; */
     count=0;

@@ -35,25 +35,34 @@ namespace KITGPI {
             void reset();
             
             /* Getter routines for required wavefields */
-            lama::DenseVector<ValueType>* getVX();
-            lama::DenseVector<ValueType>* getVY();
-            lama::DenseVector<ValueType>* getVZ();
-            lama::DenseVector<ValueType>* getP();
+            lama::DenseVector<ValueType>& getVX();
+            lama::DenseVector<ValueType>& getVY();
+            lama::DenseVector<ValueType>& getVZ();
+            lama::DenseVector<ValueType>& getP();
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>* getSxx();
-            lama::DenseVector<ValueType>* getSyy();
-            lama::DenseVector<ValueType>* getSzz();
-            lama::DenseVector<ValueType>* getSyz();
-            lama::DenseVector<ValueType>* getSxz();
-            lama::DenseVector<ValueType>* getSxy();
+            lama::DenseVector<ValueType>& getSxx();
+            lama::DenseVector<ValueType>& getSyy();
+            lama::DenseVector<ValueType>& getSzz();
+            lama::DenseVector<ValueType>& getSyz();
+            lama::DenseVector<ValueType>& getSxz();
+            lama::DenseVector<ValueType>& getSxy();
             
         private:
             
+            /* required wavefields */
             lama::DenseVector<ValueType> VX; //!< Wavefield for velocity in x
             lama::DenseVector<ValueType> VY; //!< Wavefield for velocity in y
             lama::DenseVector<ValueType> VZ; //!< Wavefield for velocity in z
             lama::DenseVector<ValueType> P; //!< Wavefield for pressure
+            
+            /* non-required wavefields */
+            lama::DenseVector<ValueType> Sxx;
+            lama::DenseVector<ValueType> Syy;
+            lama::DenseVector<ValueType> Szz;
+            lama::DenseVector<ValueType> Syz;
+            lama::DenseVector<ValueType> Sxz;
+            lama::DenseVector<ValueType> Sxy;
             
         };
     }
@@ -91,66 +100,66 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::reset()
 
 //! \brief Getter routine for vX wavefield
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVX(){
-    return(&VX);
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVX(){
+    return(VX);
 }
 
 //! \brief Getter routine for vY wavefield
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVY(){
-    return(&VY);
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVY(){
+    return(VY);
 }
 
 //! \brief Getter routine for vZ wavefield
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVZ(){
-    return(&VZ);
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVZ(){
+    return(VZ);
 }
 
 //! \brief Getter routine for p wavefield
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getP(){
-    return(&P);
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getP(){
+    return(P);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxx(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxx(){
     COMMON_THROWEXCEPTION("There is no Sxx wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Sxx);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyy(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyy(){
     COMMON_THROWEXCEPTION("There is no Syy wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Syy);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSzz(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSzz(){
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Szz);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyz(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyz(){
     COMMON_THROWEXCEPTION("There is no Syz wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Syz);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxz(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxz(){
     COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Sxz);
 }
 
 //! \brief Not valid in the 3D acoustic case
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxy(){
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxy(){
     COMMON_THROWEXCEPTION("There is no Syx wavefield in the 3D acoustic case.")
-    return(NULL);
+    return(Sxy);
 }

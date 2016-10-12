@@ -34,7 +34,7 @@ namespace KITGPI {
  \param signal Allocated vector to store Spike signal
  \param NT Number of time steps
  \param DT Temporal time step interval
- \param FC Central frequency
+ \param FC Will not be used
  \param AMP Amplitude
  \param Tshift Time to shift wavelet
  */
@@ -48,7 +48,7 @@ KITGPI::Acquisition::SourceSignal::Spike<ValueType>::Spike(lama::DenseVector<Val
  \param signal Allocated vector to store Spike signal
  \param NT Number of time steps
  \param DT Temporal time step interval
- \param FC Central frequency
+ \param FC Will not be used
  \param AMP Amplitude
  \param Tshift Time to shift wavelet
  */

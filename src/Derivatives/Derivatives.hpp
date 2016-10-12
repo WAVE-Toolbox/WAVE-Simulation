@@ -18,17 +18,17 @@ namespace KITGPI {
             ~Derivatives(){};
             
             //! \brief Getter method for derivative matrix A
-            virtual lama::CSRSparseMatrix<ValueType>* getA()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getA()=0;
             //! \brief Getter method for derivative matrix B
-            virtual lama::CSRSparseMatrix<ValueType>* getB()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getB()=0;
             //! \brief Getter method for derivative matrix C
-            virtual lama::CSRSparseMatrix<ValueType>* getC()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getC()=0;
             //! \brief Getter method for derivative matrix D
-            virtual lama::CSRSparseMatrix<ValueType>* getD()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getD()=0;
             //! \brief Getter method for derivative matrix E
-            virtual lama::CSRSparseMatrix<ValueType>* getE()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getE()=0;
             //! \brief Getter method for derivative matrix F
-            virtual lama::CSRSparseMatrix<ValueType>* getF()=0;
+            virtual lama::CSRSparseMatrix<ValueType>& getF()=0;
             
             //! \brief Initializsation of the derivative matrices
             /*!
