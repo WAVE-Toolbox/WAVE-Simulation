@@ -57,12 +57,12 @@ namespace KITGPI {
             lama::DenseVector<ValueType> P; //!< Wavefield for pressure
             
             /* non-required wavefields */
-            lama::DenseVector<ValueType> Sxx;
-            lama::DenseVector<ValueType> Syy;
-            lama::DenseVector<ValueType> Szz;
-            lama::DenseVector<ValueType> Syz;
-            lama::DenseVector<ValueType> Sxz;
-            lama::DenseVector<ValueType> Sxy;
+            lama::DenseVector<ValueType> Sxx; //!< Wavefield (not-used here)
+            lama::DenseVector<ValueType> Syy; //!< Wavefield (not-used here)
+            lama::DenseVector<ValueType> Szz; //!< Wavefield (not-used here)
+            lama::DenseVector<ValueType> Syz; //!< Wavefield (not-used here)
+            lama::DenseVector<ValueType> Sxz; //!< Wavefield (not-used here)
+            lama::DenseVector<ValueType> Sxy; //!< Wavefield (not-used here)
             
         };
     }

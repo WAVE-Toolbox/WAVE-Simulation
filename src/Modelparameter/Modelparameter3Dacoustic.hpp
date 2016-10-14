@@ -69,7 +69,7 @@ namespace KITGPI {
             
         private:
             
-            IndexType dirtyFlagInverseDensity; // ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
+            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
             
             lama::DenseVector<ValueType> M; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
@@ -77,7 +77,7 @@ namespace KITGPI {
             
             lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
             lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
-
+            
             
             
         };
@@ -100,8 +100,9 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
         init(ctx,dist,config.getM(),config.getRho());
     }
     
-    write(config.getModelFilename()+".out");
-    
+    if(config.getModelWrite()){
+        write(config.getModelFilename()+".out");
+    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model

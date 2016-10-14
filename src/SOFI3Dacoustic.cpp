@@ -21,7 +21,7 @@
 #include <iostream>
 
 #define _USE_MATH_DEFINES
-#include <cmath> 
+#include <cmath>
 
 #include "Configuration/Configuration.hpp"
 
@@ -31,13 +31,15 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
-#include "Derivatives/Derivatives3Dacoustic.hpp"
+#include "ForwardSolver/Derivatives/Derivatives3Dacoustic.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 
 #include "Common/HostPrint.hpp"
+
+#include "Partitioning/Partitioning3DCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -56,7 +58,7 @@ int main( int argc, char* argv[] )
     /* Read configuration from file            */
     /* --------------------------------------- */
     Configuration::Configuration<ValueType> config(argv[1]);
-
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -68,17 +70,22 @@ int main( int argc, char* argv[] )
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
+    if( config.getUseCubePartitioning()){
+        Partitioning::Partitioning3DCubes<ValueType> partitioning(config,comm);
+        dmemo::DistributionPtr dist=partitioning.getDist();
+    }
+    
     HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
     }
-
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
@@ -97,11 +104,11 @@ int main( int argc, char* argv[] )
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
-        
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-
+    
     ForwardSolver::FD3Dacoustic<ValueType> solver;
     
     HOST_PRINT( comm, "Start time stepping\n" );
@@ -111,10 +118,10 @@ int main( int argc, char* argv[] )
     
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
-
+    
     solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
-        
-
+    
+    
     return 0;
 }
 

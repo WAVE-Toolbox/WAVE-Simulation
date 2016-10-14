@@ -12,7 +12,7 @@
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
-#include "../Derivatives/Derivatives.hpp"
+#include "Derivatives/Derivatives.hpp"
 
 namespace KITGPI {
     
