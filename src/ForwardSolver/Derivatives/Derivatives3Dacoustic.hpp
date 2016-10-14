@@ -1,54 +1,57 @@
 #pragma once
 
 #include "Derivatives.hpp"
-#include "../Common/HostPrint.hpp"
+#include "../../Common/HostPrint.hpp"
 
 namespace KITGPI {
     
-    //! \brief Derivatives namespace
-    namespace Derivatives {
+    namespace ForwardSolver {
         
-        //! \brief Class for the calculation of the Derivatives matrices for 3-D FD Simulations
-        /*!
-         * Calculation of derivative matrices for an equidistand grid
-         *
-         */
-        template<typename ValueType>
-        class FD3D : public Derivatives<ValueType>
-        {
-        public:
+        //! \brief Derivatives namespace
+        namespace Derivatives {
             
-            //! Default constructor
-            FD3D(){};
-            
-            //! Default destructor
-            ~FD3D(){};
-            
-            FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-            FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
-            
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-
-            lama::CSRSparseMatrix<ValueType>& getA();
-            lama::CSRSparseMatrix<ValueType>& getB();
-            lama::CSRSparseMatrix<ValueType>& getC();
-            lama::CSRSparseMatrix<ValueType>& getD();
-            lama::CSRSparseMatrix<ValueType>& getE();
-            lama::CSRSparseMatrix<ValueType>& getF();
-            
-        private:
-            
-            lama::CSRSparseMatrix<ValueType> A; //!< Derivative matrix A
-            lama::CSRSparseMatrix<ValueType> B; //!< Derivative matrix B
-            lama::CSRSparseMatrix<ValueType> C; //!< Derivative matrix C
-            lama::CSRSparseMatrix<ValueType> D; //!< Derivative matrix D
-            lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
-            lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
-            
-            void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
-            
-        };
-    } /* end namespace Derivatives */
+            //! \brief Class for the calculation of the Derivatives matrices for 3-D FD Simulations
+            /*!
+             * Calculation of derivative matrices for an equidistand grid
+             *
+             */
+            template<typename ValueType>
+            class FD3D : public Derivatives<ValueType>
+            {
+            public:
+                
+                //! Default constructor
+                FD3D(){};
+                
+                //! Default destructor
+                ~FD3D(){};
+                
+                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
+                
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+                
+                lama::CSRSparseMatrix<ValueType>& getA();
+                lama::CSRSparseMatrix<ValueType>& getB();
+                lama::CSRSparseMatrix<ValueType>& getC();
+                lama::CSRSparseMatrix<ValueType>& getD();
+                lama::CSRSparseMatrix<ValueType>& getE();
+                lama::CSRSparseMatrix<ValueType>& getF();
+                
+            private:
+                
+                lama::CSRSparseMatrix<ValueType> A; //!< Derivative matrix A
+                lama::CSRSparseMatrix<ValueType> B; //!< Derivative matrix B
+                lama::CSRSparseMatrix<ValueType> C; //!< Derivative matrix C
+                lama::CSRSparseMatrix<ValueType> D; //!< Derivative matrix D
+                lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
+                lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
+                
+                void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
+                
+            };
+        } /* end namespace Derivatives */
+    } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
 
@@ -61,7 +64,7 @@ namespace KITGPI {
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
 {
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
 }
@@ -79,7 +82,7 @@ KITGPI::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::C
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
+KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ){
     initializeMatrices(dist, ctx, NX, NY,NZ,DH, DT, comm );
 }
 
@@ -95,7 +98,7 @@ KITGPI::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::C
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
 {
     SCAI_REGION( "derivatives" )
     
@@ -151,7 +154,7 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     
     /* deallocate storageHelp, in order to free memory for the next operation */
     storageHelp->purge();
-
+    
     /* --------------- */
     /* create matrix B */
     /* --------------- */
@@ -244,7 +247,7 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )
 {
     
     SCAI_REGION( "initializeMatrices" )
@@ -283,36 +286,36 @@ void KITGPI::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::Distributio
 
 //! \brief Getter method for derivative matrix A
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getA(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getA(){
     return(A);
 }
 
 //! \brief Getter method for derivative matrix B
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getB(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getB(){
     return(B);
 }
 
 //! \brief Getter method for derivative matrix C
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getC(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getC(){
     return(C);
 }
 
 //! \brief Getter method for derivative matrix D
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getD(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getD(){
     return(D);
 }
 
 //! \brief Getter method for derivative matrix E
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getE(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getE(){
     return(E);
 }
 
 //! \brief Getter method for derivative matrix F
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getF(){
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getF(){
     return(F);
 }

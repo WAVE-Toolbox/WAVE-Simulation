@@ -69,7 +69,7 @@ namespace KITGPI {
             
         private:
             
-            IndexType dirtyFlagInverseDensity; // ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
+            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
             
             lama::DenseVector<ValueType> M; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
