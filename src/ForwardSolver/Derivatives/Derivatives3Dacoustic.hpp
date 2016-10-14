@@ -110,7 +110,6 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     /* Do some calculations to avoid it within the for loops */
     IndexType NXNY=NX*NY;
     IndexType N=NX*NY*NZ;
-
     
     IndexType numLocalIndices=localIndices.size(); //< Number of local indices
     IndexType A_numLocalValues=numLocalIndices; //< Number of local values of Matrix A (here the diagonal elements are added directly)
@@ -190,7 +189,8 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         
         read_localIndices_temp=read_localIndices[i];
         read_localIndices_temp_plusOne=read_localIndices_temp+1;
-
+        
+        
         /*----------*/
         /* Matrix A */
         /*----------*/
@@ -227,6 +227,7 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         B_write_csrIALocal[B_countIA]=B_countJA;
         B_countIA++;
         
+        
         /*----------*/
         /* Matrix C */
         /*----------*/
@@ -244,7 +245,6 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         }
         C_write_csrIALocal[C_countIA]=C_countJA;
         C_countIA++;
-        
         
     }
     
@@ -298,7 +298,7 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     
     derivatives(NX, NY, NZ, dist);
     HOST_PRINT( comm, "Matrix A, B and C finished.\n" );
-
+    
     A.setContextPtr( ctx );
     B.setContextPtr( ctx );
     C.setContextPtr( ctx );

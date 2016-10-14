@@ -86,7 +86,7 @@ namespace KITGPI {
             ValueType velocity; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
             
-            IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields
+            IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields (1=ON, else=OFF)
             IndexType ProcNX; ///< Number of cores in X-direction
             IndexType ProcNY; ///< Number of cores in Y-direction
             IndexType ProcNZ; ///< Number of cores in Z-direction

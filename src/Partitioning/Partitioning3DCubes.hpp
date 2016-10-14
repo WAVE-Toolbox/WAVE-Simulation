@@ -14,6 +14,8 @@ namespace KITGPI {
         /*!
          * This class can create a partition of the 3-D wavefield that consists of 3-D cubes.
          *
+         * procNX*procNY*procNZ have to be equal to comm->getSize();
+         *
          */
         template <typename ValueType>
         class Partitioning3DCubes : public Partitioning<ValueType>, public Acquisition::Coordinates<ValueType>
@@ -29,11 +31,11 @@ namespace KITGPI {
             //! Default destructor
             ~Partitioning3DCubes(){};
             
-            dmemo::DistributionPtr calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm);
-            
             dmemo::DistributionPtr getDist();
             
         private:
+            
+            dmemo::DistributionPtr calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm);
             
             dmemo::DistributionPtr dist_cubes; //!< Distribution
             
@@ -68,6 +70,8 @@ KITGPI::Partitioning::Partitioning3DCubes<ValueType>::Partitioning3DCubes(Config
 //! \brief Calculation of 3-D cube partition
 /*!
  * This class can create a partition of the 3-D wavefield that consists of 3-D cubes.
+ *
+ * procNX*procNY*procNZ have to be equal to comm->getSize();
  *
  \param procNX Number of cores in X-direction
  \param procNY Number of cores in Y-direction
