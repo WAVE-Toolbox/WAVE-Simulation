@@ -123,18 +123,24 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     /* Calculate number of local Values */
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices);
     IndexType numLocalIndices_temp=numLocalIndices-1;
-    for(IndexType i=1; i<=numLocalIndices_temp; i++){
-        if( (i) % NX != 0 ){
+    IndexType read_localIndices_temp;
+    for(IndexType i=0; i<numLocalIndices_temp; i++){
+        read_localIndices_temp=read_localIndices[i];
+        
+        if( (read_localIndices_temp+1) % NX != 0 ){
             numLocalValues++;
         }
+        
     }
-    read_localIndices.release();
+    //read_localIndices.release();
+    //std::cout << comm->getRank() << ": " << numLocalValues << std::endl;
     
     /* Allocate local part */
     hmemo::HArray<ValueType> valuesLocal(numLocalValues);
     hmemo::HArray<IndexType> csrJALocal(numLocalValues);
     hmemo::HArray<IndexType> csrIALocal(numLocalIndices+1);
     
+    /* Get WriteAccess to local part */
     hmemo::WriteAccess<IndexType> write_csrJALocal(csrJALocal);
     hmemo::WriteAccess<IndexType> write_csrIALocal(csrIALocal);
     hmemo::WriteAccess<ValueType> write_valuesLocal(valuesLocal);
@@ -145,45 +151,43 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     countIA++;
     for(IndexType i=0; i<numLocalIndices; i++){
         
+        read_localIndices_temp=read_localIndices[i];
+
         /* Add diagonal element */
-        write_csrJALocal[countJA]=i;
+        write_csrJALocal[countJA]=read_localIndices_temp;
         write_valuesLocal[countJA]=1;
         countJA++;
         
         /* Add non-diagonal element */
-        if( (i+1) % NX != 0 ){
-            write_csrJALocal[countJA]=i+1;
+        if( (read_localIndices_temp+1) % NX != 0 ){
+            write_csrJALocal[countJA]=read_localIndices_temp+1;
             write_valuesLocal[countJA]=-1;
             countJA++;
         }
         write_csrIALocal[countIA]=countJA;
         countIA++;
     }
+    read_localIndices.release();
     
     write_csrJALocal.release();
     write_csrIALocal.release();
     write_valuesLocal.release();
     
-    
     lama::CSRStorage<ValueType> ALocalCSR(numLocalIndices,NX*NY*NZ,numLocalValues,csrIALocal,csrJALocal,valuesLocal);
-    
     A.assign(ALocalCSR,dist,dist);
+    
+    
 
-    
-        IndexType count = 0;
-        IndexType size = NX;
-    
-//
-//    /* --------------- */
-//    /* create matrix A */
-//    /* --------------- */
+    /* --------------- */
+    /* create matrix A */
+    /* --------------- */
 //    numValues = NX + (NX - 1); // diagonal element (NX) + secondary diagonal elements (NX - 1)
 //    csrIA.reserve( NX + 1 );
 //    csrJA.reserve( numValues );
 //    csrValues.reserve( numValues );
 //    
-//    IndexType count = 0;
-//    IndexType size = NX;
+    IndexType count = 0;
+    IndexType size = NX;
 //    csrIA.push_back( 0 );
 //    for( IndexType i = 0; i < size; ++i ){
 //        if(i<size){
@@ -208,10 +212,10 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
 //    csrValues = std::vector<ValueType>();
 //    
 //    /* create matrix A */
-//    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
-//    A.redistribute( dist, dist );
-//    A.setContextPtr( ctx );
-//    HOST_PRINT( comm, "Matrix A finished\n" );
+////    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
+////    A.redistribute( dist, dist );
+////    A.setContextPtr( ctx );
+////    HOST_PRINT( comm, "Matrix A finished\n" );
 //    
 //    /* deallocate storageHelp, in order to free memory for the next operation */
 //    storageHelp->purge();
