@@ -6,7 +6,7 @@
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
-#include "../Derivatives/Derivatives.hpp"
+#include "Derivatives/Derivatives.hpp"
 #include "../Common/HostPrint.hpp"
 
 namespace KITGPI {

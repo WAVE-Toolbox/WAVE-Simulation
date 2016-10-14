@@ -156,7 +156,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  * Calculate the number of coordinates within the local processing unit as well as
  * the coordinates of the local coordinates.
  \param coordinatesglobal DenseVector with global coordinates
- \param coordinateslocal DenseVector with local coordinates
+ \param localIndices DenseVector with local coordinates
  \param dist Distribution of global grid
  */
 template <typename ValueType>
