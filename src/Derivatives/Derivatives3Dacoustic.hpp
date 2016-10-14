@@ -1,17 +1,7 @@
 #pragma once
 
 #include "Derivatives.hpp"
-
-#define MASTER 0
-
-#define HOST_PRINT( comm, msg )     \
-{                                   \
-int myRank = comm->getRank();   \
-if ( myRank == MASTER )         \
-{                               \
-std::cout << msg;           \
-}                               \
-}
+#include "../Common/HostPrint.hpp"
 
 namespace KITGPI {
     
@@ -39,12 +29,12 @@ namespace KITGPI {
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
 
-            lama::CSRSparseMatrix<ValueType>* getA();
-            lama::CSRSparseMatrix<ValueType>* getB(); 
-            lama::CSRSparseMatrix<ValueType>* getC(); 
-            lama::CSRSparseMatrix<ValueType>* getD();
-            lama::CSRSparseMatrix<ValueType>* getE();
-            lama::CSRSparseMatrix<ValueType>* getF();
+            lama::CSRSparseMatrix<ValueType>& getA();
+            lama::CSRSparseMatrix<ValueType>& getB();
+            lama::CSRSparseMatrix<ValueType>& getC();
+            lama::CSRSparseMatrix<ValueType>& getD();
+            lama::CSRSparseMatrix<ValueType>& getE();
+            lama::CSRSparseMatrix<ValueType>& getF();
             
         private:
             
@@ -120,95 +110,98 @@ void KITGPI::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType N
     std::vector<IndexType> csrJA;
     std::vector<ValueType> csrValues;
     
-    // create matrix A
-    numValues = NZ + (NZ - 1); // diagonal element (NZ) + secondary diagonal elements (NZ - 1)
-    csrIA.reserve( NZ + 1 );
+    /* --------------- */
+    /* create matrix A */
+    /* --------------- */
+    numValues = NX + (NX - 1); // diagonal element (NX) + secondary diagonal elements (NX - 1)
+    csrIA.reserve( NX + 1 );
     csrJA.reserve( numValues );
     csrValues.reserve( numValues );
     
     IndexType count = 0;
-    IndexType size = NZ;
+    IndexType size = NX;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - 1 == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < size; ++i ){
+        if(i<size){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if((i+1)<size){
+            csrJA.push_back(i+1);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
     
+    /* create CSR storage help */
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
-    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NX * NY ); // not distributed, need to redistribute afterwards
+    
+    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
+    csrIA = std::vector<IndexType>();
+    csrJA = std::vector<IndexType>();
+    csrValues = std::vector<ValueType>();
+    
+    /* create matrix A */
+    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
     A.redistribute( dist, dist );
     A.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix A finished\n" );
     
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
-    
-    // create matrix B
-    numValues = NZ*NX + (NZ*NX - (NZ+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
-    csrIA.reserve( NZ + 1 );
+    /* deallocate storageHelp, in order to free memory for the next operation */
+    storageHelp->purge();
+
+    /* --------------- */
+    /* create matrix B */
+    /* --------------- */
+    numValues = NX*NY + (NX*NY - (NX+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
+    csrIA.reserve( NX + 1 );
     csrJA.reserve( numValues );
     csrValues.reserve( numValues );
     
     count = 0;
-    size = NZ * NX;
+    size = NX * NY;
     csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i )
-    {
-        for( IndexType j = 0; j < size; ++j )
-        {
-            if ( i == j )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( -1.0 );
-            }
-            
-            if ( j - NZ == i )
-            {
-                ++count;
-                csrJA.push_back(j);
-                csrValues.push_back( 1.0 );
-            }
+    for( IndexType i = 0; i < size; ++i ){
+        if(i<size){
+            csrJA.push_back(i);
+            csrValues.push_back( -1.0 );
+            count++;
+        }
+        if(i+NX<size){
+            csrJA.push_back(i+NX);
+            csrValues.push_back( +1.0 );
+            count++;
         }
         csrIA.push_back( count );
     }
     
     storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
-    lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NY ); // not distributed, need to redistribute afterwards
+    
+    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
+    csrIA = std::vector<IndexType>();
+    csrJA = std::vector<IndexType>();
+    csrValues = std::vector<ValueType>();
+    
+    lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NZ ); // not distributed, need to redistribute afterwards
     B.redistribute( dist, dist );
     B.setContextPtr( ctx );
     HOST_PRINT( comm, "Matrix B finished\n" );
     
-    csrIA.clear();
-    csrJA.clear();
-    csrValues.clear();
+    /* deallocate storageHelp, in order to free memory for the next operation */
+    storageHelp->purge();
     
-    // create matrix C
+    /* --------------- */
+    /* create matrix C */
+    /* --------------- */
     // initialize by diagonals
-    
     int myRank   = comm->getRank();
     int numRanks = comm->getSize();
     
     IndexType globalSize = dist->getGlobalSize();
     IndexType numDiagonals = 2;
-    IndexType secondaryIndex = NZ * NX; // = remaining part of secondary diagonal
+    IndexType secondaryIndex = NX * NY; // = remaining part of secondary diagonal
     IndexType numSecondary = globalSize - secondaryIndex;
     
     int lb, ub;
@@ -290,36 +283,36 @@ void KITGPI::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::Distributio
 
 //! \brief Getter method for derivative matrix A
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getA(){
-    return(&A);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getA(){
+    return(A);
 }
 
 //! \brief Getter method for derivative matrix B
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getB(){
-    return(&B);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getB(){
+    return(B);
 }
 
 //! \brief Getter method for derivative matrix C
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getC(){
-    return(&C);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getC(){
+    return(C);
 }
 
 //! \brief Getter method for derivative matrix D
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getD(){
-    return(&D);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getD(){
+    return(D);
 }
 
 //! \brief Getter method for derivative matrix E
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getE(){
-    return(&E);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getE(){
+    return(E);
 }
 
 //! \brief Getter method for derivative matrix F
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>* KITGPI::Derivatives::FD3D<ValueType>::getF(){
-    return(&F);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Derivatives::FD3D<ValueType>::getF(){
+    return(F);
 }

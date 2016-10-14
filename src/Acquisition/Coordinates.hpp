@@ -10,17 +10,17 @@ namespace KITGPI {
          */
         struct coordinate3D
         {
-            IndexType x; //!< x Position in X-direction in grid points
-            IndexType y; //!< y Position in Y-direction in grid points
-            IndexType z; //!< z Position in Z-direction in grid points
+            IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
+            IndexType y; //!< y Position in Y-direction in grid points (Depth)
+            IndexType z; //!< z Position in Z-direction in grid points (Horizontal 2)
         };
         
         /*! \brief Struct to save 2-D coordinates
          */
         struct coordinate2D
         {
-            IndexType x; //!< x Position in X-direction in grid points
-            IndexType z; //!< z Position in Z-direction in grid points
+            IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
+            IndexType y; //!< y Position in Z-direction in grid points (Depth)
         };
         
         /*! \brief This class manages the transformation of Coordinates
@@ -36,24 +36,24 @@ namespace KITGPI {
             IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
             IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
             // Interfaces 2-D
-            IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ);
-            IndexType coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
+            IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY);
+            IndexType coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
             coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
+            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY); //!< Not yet implemented
             
-            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist);
+            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
         private:
             
             // Coordinate --> Index:
             IndexType map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
-            IndexType map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ);
+            IndexType map2Dcoordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
             coordinate3D map3Dindex2coordinate(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-            coordinate2D map2Dindex2coordinate(coordinate2D coordinate, IndexType NX, IndexType NZ); //!< Not yet implemented
+            coordinate2D map2Dindex2coordinate(coordinate2D coordinate, IndexType NX, IndexType NY); //!< Not yet implemented
             
         };
         
@@ -74,22 +74,22 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
     }
     else
     {
-        return ( ( Z - 1 ) + ( X - 1 ) * NZ + ( Y - 1 ) * NZ * NX );
+        return ( ( X - 1 ) + ( Y - 1 ) * NX + ( Z - 1 ) * NX * NY );
     }
 }
 
 //! General mapping from 2-D coordinates to 1-D coordinate
 template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY)
 {
-    if ( Z > NZ || X > NX || Z < 1 || X < 1 )
+    if ( X > NX || Y > NY || Y < 1 || X < 1 )
     {
         COMMON_THROWEXCEPTION ( "Could not map from coordinate to indize!" )
         return -100;
     }
     else
     {
-        return ( ( Z - 1 ) + ( X - 1 ) * NZ );
+        return ( ( X - 1 ) + ( Y - 1 ) * NX );
     }
 }
 
@@ -99,9 +99,9 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map2Dcoordinate2index(Ind
 /* ---------- */
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
- \param X 3-D coordinate in X
- \param Y 3-D coordinate in Y
- \param Z 3-D coordinate in Z
+ \param X 3-D coordinate in X (Horizontal 1)
+ \param Y 3-D coordinate in Y (Depth)
+ \param Z 3-D coordinate in Z (Horizontal 2)
  \param NX Total number of grid points in X
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
@@ -115,9 +115,9 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexTyp
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
  \param coordinate as a coordinate3D struct
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
+ \param NX Total number of grid points in X (Horizontal 1)
+ \param NY Total number of grid points in Y (Depth)
+ \param NZ Total number of grid points in Z (Horizontal 2)
  \return 1-D coordinate
  */
 template <typename ValueType>
@@ -127,28 +127,28 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
 }
 
 /*! \brief Convert 2-D coordinates to 1-D coordinates
- \param X 2-D coordinate in X
- \param Z 2-D coordinate in Z
- \param NX Total number of grid points in X
- \param NZ Total number of grid points in Z
+ \param X 2-D coordinate in X (Horizontal 1)
+ \param Y 2-D coordinate in Y (Depth)
+ \param NX Total number of grid points in X (Horizontal 1)
+ \param NY Total number of grid points in Y (Depth)
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Z, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY)
 {
-    return(map2Dcoordinate2index(X,Z,NX,NZ));
+    return(map2Dcoordinate2index(X,Y,NX,NY));
 }
 
 /*! \brief Convert 2-D coordinates to 1-D coordinates
  \param coordinate as a coordinate2D struct
- \param NX Total number of grid points in X
- \param NZ Total number of grid points in Z
+ \param NX Total number of grid points in X (Horizontal 1)
+ \param NY Total number of grid points in Y (Depth)
  \return 1-D coordinate
  */
 template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY)
 {
-    return(map2Dcoordinate2index(coordinate.x,coordinate.z,NX,NZ));
+    return(map2Dcoordinate2index(coordinate.x,coordinate.y,NX,NY));
 }
 
 /*! \brief Determination of local coordinates based on given global coordinates
@@ -160,7 +160,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,lama::DenseVector<ValueType>& coordinateslocal, dmemo::DistributionPtr dist)
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
 {
     
     // Determine size of local domain
@@ -185,10 +185,9 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         }
     }
     
-    // Allocate memory for local coordinates
-    IndexType n_local=i; // Number of local entries
-    coordinateslocal.allocate(n_local);
-    
+    /* Determine coordinates of local receivers in the global coordinate vector */
+    localIndices.resize(i);
+    hmemo::WriteAccess<IndexType> write_localIndices(localIndices);
     i=0;
     for(IndexType n=0; n<n_global; n++){
         
@@ -196,8 +195,9 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         coordinatetemp_int=coordinatetemp_scalar.getValue<IndexType>();
         
         if( (coordinatetemp_int>=lower) && (coordinatetemp_int<=upper) ){
-            coordinateslocal.setValue(i,coordinatetemp_int);
+            write_localIndices[i]=n;
             i++;
         }
     }
+    
 }

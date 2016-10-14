@@ -65,15 +65,15 @@ namespace KITGPI {
             virtual void write(std::string filename)=0;
             
             //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>* getDensity()=0;
+            virtual lama::DenseVector<ValueType>& getDensity()=0;
             //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>* getInverseDensity()=0;
+            virtual lama::DenseVector<ValueType>& getInverseDensity()=0;
             //! \brief Get referenec to first Lame model parameter
-            virtual lama::DenseVector<ValueType>* getM()=0;
+            virtual lama::DenseVector<ValueType>& getM()=0;
             //! \brief Get referenec to P-wave velocity
-            virtual lama::DenseVector<ValueType>* getVelocityP()=0;
+            virtual lama::DenseVector<ValueType>& getVelocityP()=0;
             //! \brief Get referenec to S-wave velocity
-            virtual lama::DenseVector<ValueType>* getVelocityS()=0;
+            virtual lama::DenseVector<ValueType>& getVelocityS()=0;
             
         protected:
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);

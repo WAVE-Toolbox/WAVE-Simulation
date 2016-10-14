@@ -50,9 +50,9 @@ namespace KITGPI {
             IndexType getNumSamples();
             ValueType getDT();
             
-            lama::DenseMatrix<ValueType>* getData();
-            lama::DenseVector<ValueType>* getTraceType();
-            lama::DenseVector<ValueType>* getCoordinates();
+            lama::DenseMatrix<ValueType>& getData();
+            lama::DenseVector<ValueType>& getTraceType();
+            lama::DenseVector<ValueType>& getCoordinates();
             
         private:
             
@@ -88,8 +88,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType>& rece
     allocate(ctx,dist_traces,NT);
     
     /* set header information */
-    lama::DenseVector<ValueType>& coordinates_temp=*receiver.getCoordinates();
-    lama::DenseVector<ValueType>& traceType_temp=*receiver.getReceiversType();
+    lama::DenseVector<ValueType>& coordinates_temp=receiver.getCoordinates();
+    lama::DenseVector<ValueType>& traceType_temp=receiver.getReceiversType();
     coordinates=coordinates_temp;
     traceType=traceType_temp;
     
@@ -107,8 +107,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType>& rece
  *
  */
 template <typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getTraceType(){
-    return(&traceType);
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getTraceType(){
+    return(traceType);
 }
 
 
@@ -120,8 +120,8 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getTra
  *
  */
 template <typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates(){
-    return(&coordinates);
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates(){
+    return(coordinates);
 }
 
 
@@ -133,8 +133,8 @@ lama::DenseVector<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getCoo
  *
  */
 template <typename ValueType>
-lama::DenseMatrix<ValueType>* KITGPI::Acquisition::Seismogram<ValueType>::getData(){
-    return(&data);
+lama::DenseMatrix<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getData(){
+    return(data);
 }
 
 

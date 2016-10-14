@@ -33,13 +33,15 @@ namespace KITGPI {
             IndexType getNumReceiversLocal();
             
             dmemo::DistributionPtr getReceiversDistribution();
-            lama::DenseVector<ValueType>* getCoordinates();
-            lama::DenseVector<ValueType>* getReceiversType();
+            lama::DenseVector<ValueType>& getCoordinates();
+            lama::DenseVector<ValueType>& getReceiversType();
             
         private:
             
             void getLocalReceivers(dmemo::DistributionPtr dist_wavefield);
             void getReceiverDistribution(dmemo::CommunicatorPtr comm);
+            
+            hmemo::HArray<IndexType> localIndices; //!< Global indices of the local receivers
             
             IndexType numReceiversGlobal; //!< Number of receivers global
             IndexType numReceiversLocal; //!< Number of receivers local
@@ -61,24 +63,24 @@ namespace KITGPI {
 /*! \brief Getter method for reference to receiver type
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
 {
     if(receiver_type.size()==0) {
         COMMON_THROWEXCEPTION ( "No receivers type set" )
     }
-    return(&receiver_type);
+    return(receiver_type);
 }
 
 
 /*! \brief Getter method for reference to coordinates
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>* KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
+lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
 {
     if(coordinates.size()==0) {
         COMMON_THROWEXCEPTION ( "No receivers coordinates set" )
     }
-    return(&coordinates);
+    return(coordinates);
 }
 
 
@@ -254,7 +256,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     receiver_type.allocate(numReceiversGlobal);
     
     /* Save receiver configurations from acquisition matrix in vectors */
-    acquisition.getLocalRow(receiver_type,3);
+    acquisition.getRow(receiver_type,3);
     
     /* Redistribute receiver parameter vectors to corresponding processes */
     coordinates.redistribute(dist_wavefield_receivers);
@@ -267,7 +269,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 /*! \brief Calculation of the receiver distribution
  *
  * Calculation of the receiver distribution based on the global number of receivers numReceiversGlobal and the local number of receivers numReceiversLocal on each node.
- * Generates a GenBlockDistribution.
+ * Generates a GeneralDistribution.
  *
  \param comm Communicator for the generated distribution
  */
@@ -278,7 +280,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::C
         COMMON_THROWEXCEPTION ( " There is no global receiver (numReceiversGlobal==0)! ")
     }
     
-    dmemo::DistributionPtr dist_temp( new dmemo::GenBlockDistribution(numReceiversGlobal,numReceiversLocal,comm));
+    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numReceiversGlobal,localIndices,comm));
+
     dist_wavefield_receivers=dist_temp;
 }
 
@@ -295,11 +298,10 @@ void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::Distrib
         COMMON_THROWEXCEPTION ( " The vector coordinates does not contain any elements ! ")
     }
     
-    lama::DenseVector<ValueType> coordinateslocal; //!< Coordinates of receivers local (1-D coordinates)
     
-    this->Global2Local(coordinates,coordinateslocal,dist_wavefield);
+    this->Global2Local(coordinates,localIndices,dist_wavefield);
     
-    numReceiversLocal=coordinateslocal.size();
+    numReceiversLocal=localIndices.size();
     numReceiversGlobal=coordinates.size();
     
 }
