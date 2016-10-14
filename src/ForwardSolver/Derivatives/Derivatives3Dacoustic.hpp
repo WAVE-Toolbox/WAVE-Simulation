@@ -107,6 +107,11 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     hmemo::HArray<IndexType> localIndices;
     dist->getOwnedIndexes(localIndices);
     
+    /* Do some calculations to avoid it within the for loops */
+    IndexType NXNY=NX*NY;
+    IndexType N=NX*NY*NZ;
+
+    
     IndexType numLocalIndices=localIndices.size(); //< Number of local indices
     IndexType A_numLocalValues=numLocalIndices; //< Number of local values of Matrix A (here the diagonal elements are added directly)
     IndexType B_numLocalValues=numLocalIndices; //< Number of local values of Matrix B (here the diagonal elements are added directly)
@@ -115,22 +120,24 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     /* Add the number of non-diagonal values */
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices); //< Get read access to localIndices
     IndexType read_localIndices_temp; //< Temporary storage, so we do not have to access the array
+    IndexType read_localIndices_temp_plusOne; //< Temporary storage, to save floating point operations
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
+        read_localIndices_temp_plusOne=read_localIndices_temp+1;
         
         /* Check for non-diagonal elements of A */
-        if( (read_localIndices_temp+1) % NX != 0 ){
+        if( (read_localIndices_temp_plusOne) % NX != 0 ){
             A_numLocalValues++;
         }
         
         /* Check for non-diagonal elements of B */
-        if( (( (read_localIndices_temp+1) %  (NX*NY) ) + NX - 1 < NX*NY) &&  ((read_localIndices_temp+1) % (NX*NY) != 0) ){
+        if( (( (read_localIndices_temp_plusOne) %  (NXNY) ) + NX - 1 < NXNY) &&  ((read_localIndices_temp_plusOne) % (NXNY) != 0) ){
             B_numLocalValues++;
         }
         
         /* Check for non-diagonal elements of C */
-        if( ( read_localIndices_temp+1)  + NX*NY - 1 < NX*NY*NZ &&  (read_localIndices_temp+1) % (NX*NY*NZ) != 0 ){
+        if( ( read_localIndices_temp_plusOne)  + NXNY - 1 < N &&  (read_localIndices_temp_plusOne) % (N) != 0 ){
             C_numLocalValues++;
         }
         
@@ -182,7 +189,8 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
-        
+        read_localIndices_temp_plusOne=read_localIndices_temp+1;
+
         /*----------*/
         /* Matrix A */
         /*----------*/
@@ -193,8 +201,8 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         A_countJA++;
         
         /* Add non-diagonal element */
-        if( (read_localIndices_temp+1) % NX != 0 ){
-            A_write_csrJALocal[A_countJA]=read_localIndices_temp+1;
+        if( (read_localIndices_temp_plusOne) % NX != 0 ){
+            A_write_csrJALocal[A_countJA]=read_localIndices_temp_plusOne;
             A_write_valuesLocal[A_countJA]=1;
             A_countJA++;
         }
@@ -212,7 +220,7 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         B_countJA++;
         
         /* Add non-diagonal element */
-        if( ( (read_localIndices_temp+1) %  (NX*NY) ) + NX - 1 < NX*NY &&  (read_localIndices_temp+1) % (NX*NY) != 0 ){            B_write_csrJALocal[B_countJA]=read_localIndices_temp+NX;
+        if( ( (read_localIndices_temp_plusOne) %  (NXNY) ) + NX - 1 < NXNY &&  (read_localIndices_temp_plusOne) % (NXNY) != 0 ){            B_write_csrJALocal[B_countJA]=read_localIndices_temp+NX;
             B_write_valuesLocal[B_countJA]=1;
             B_countJA++;
         }
@@ -229,8 +237,8 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         C_countJA++;
         
         /* Add non-diagonal element */
-        if( ( read_localIndices_temp+1)  + NX*NY - 1 < NX*NY*NZ &&  (read_localIndices_temp+1) % (NX*NY*NZ) != 0 ){
-            C_write_csrJALocal[C_countJA]=read_localIndices_temp+NX*NY;
+        if( ( read_localIndices_temp_plusOne)  + NXNY - 1 < N &&  (read_localIndices_temp_plusOne) % (N) != 0 ){
+            C_write_csrJALocal[C_countJA]=read_localIndices_temp+NXNY;
             C_write_valuesLocal[C_countJA]=1;
             C_countJA++;
         }
@@ -256,15 +264,15 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     C_write_valuesLocal.release();
     
     /* Create local CSR storage of Matrix A, than create distributed CSR matrix A */
-    lama::CSRStorage<ValueType> A_LocalCSR(numLocalIndices,NX*NY*NZ,A_numLocalValues,A_csrIALocal,A_csrJALocal,A_valuesLocal);
+    lama::CSRStorage<ValueType> A_LocalCSR(numLocalIndices,N,A_numLocalValues,A_csrIALocal,A_csrJALocal,A_valuesLocal);
     A.assign(A_LocalCSR,dist,dist);
     
     /* Create local CSR storage of Matrix B, than create distributed CSR matrix B */
-    lama::CSRStorage<ValueType> B_LocalCSR(numLocalIndices,NX*NY*NZ,B_numLocalValues,B_csrIALocal,B_csrJALocal,B_valuesLocal);
+    lama::CSRStorage<ValueType> B_LocalCSR(numLocalIndices,N,B_numLocalValues,B_csrIALocal,B_csrJALocal,B_valuesLocal);
     B.assign(B_LocalCSR,dist,dist);
     
     /* Create local CSR storage of Matrix C, than create distributed CSR matrix C */
-    lama::CSRStorage<ValueType> C_LocalCSR(numLocalIndices,NX*NY*NZ,C_numLocalValues,C_csrIALocal,C_csrJALocal,C_valuesLocal);
+    lama::CSRStorage<ValueType> C_LocalCSR(numLocalIndices,N,C_numLocalValues,C_csrIALocal,C_csrJALocal,C_valuesLocal);
     C.assign(C_LocalCSR,dist,dist);
 }
 
