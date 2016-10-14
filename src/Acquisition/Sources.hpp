@@ -292,13 +292,13 @@ void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string 
     }
     
     /* Save source configurations from acquisition matrix in vectors */
-    acquisition.getLocalRow(source_type,3);
-    acquisition.getLocalRow(wavelet_type,4);
+    acquisition.getRow(source_type,3);
+    acquisition.getRow(wavelet_type,4);
     if(numParameter>5){
-        acquisition.getLocalRow(wavelet_shape,5);
-        acquisition.getLocalRow(wavelet_fc,6);
-        acquisition.getLocalRow(wavelet_amp,7);
-        acquisition.getLocalRow(wavelet_tshift,8);
+        acquisition.getRow(wavelet_shape,5);
+        acquisition.getRow(wavelet_fc,6);
+        acquisition.getRow(wavelet_amp,7);
+        acquisition.getRow(wavelet_tshift,8);
     }
     
     /* Redistribute source parameter vectors to corresponding processes */

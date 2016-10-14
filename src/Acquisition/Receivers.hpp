@@ -256,7 +256,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     receiver_type.allocate(numReceiversGlobal);
     
     /* Save receiver configurations from acquisition matrix in vectors */
-    acquisition.getLocalRow(receiver_type,3);
+    acquisition.getRow(receiver_type,3);
     
     /* Redistribute receiver parameter vectors to corresponding processes */
     coordinates.redistribute(dist_wavefield_receivers);
