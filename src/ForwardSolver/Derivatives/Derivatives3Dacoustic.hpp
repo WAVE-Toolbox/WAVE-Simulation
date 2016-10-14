@@ -118,7 +118,7 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     dist->getOwnedIndexes(localIndices);
     
     IndexType numLocalIndices=localIndices.size();
-    IndexType numLocalValues=numLocalIndices;
+    IndexType A_numLocalValues=numLocalIndices;
 
     /* Calculate number of local Values */
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices);
@@ -127,54 +127,55 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     for(IndexType i=0; i<numLocalIndices_temp; i++){
         read_localIndices_temp=read_localIndices[i];
         
+        /* Check for elements of A */
         if( (read_localIndices_temp+1) % NX != 0 ){
-            numLocalValues++;
+            A_numLocalValues++;
         }
         
     }
     //read_localIndices.release();
-    //std::cout << comm->getRank() << ": " << numLocalValues << std::endl;
+    std::cout << comm->getRank() << ": " << 101 % 100  << std::endl;
     
     /* Allocate local part */
-    hmemo::HArray<ValueType> valuesLocal(numLocalValues);
-    hmemo::HArray<IndexType> csrJALocal(numLocalValues);
-    hmemo::HArray<IndexType> csrIALocal(numLocalIndices+1);
+    hmemo::HArray<ValueType> A_valuesLocal(A_numLocalValues);
+    hmemo::HArray<IndexType> A_csrJALocal(A_numLocalValues);
+    hmemo::HArray<IndexType> A_csrIALocal(numLocalIndices+1);
     
     /* Get WriteAccess to local part */
-    hmemo::WriteAccess<IndexType> write_csrJALocal(csrJALocal);
-    hmemo::WriteAccess<IndexType> write_csrIALocal(csrIALocal);
-    hmemo::WriteAccess<ValueType> write_valuesLocal(valuesLocal);
+    hmemo::WriteAccess<IndexType> A_write_csrJALocal(A_csrJALocal);
+    hmemo::WriteAccess<IndexType> A_write_csrIALocal(A_csrIALocal);
+    hmemo::WriteAccess<ValueType> A_write_valuesLocal(A_valuesLocal);
     
-    IndexType countJA=0;
-    IndexType countIA=0;
-    write_csrIALocal[0]=0;
-    countIA++;
+    IndexType A_countJA=0;
+    IndexType A_countIA=0;
+    A_write_csrIALocal[0]=0;
+    A_countIA++;
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
 
         /* Add diagonal element */
-        write_csrJALocal[countJA]=read_localIndices_temp;
-        write_valuesLocal[countJA]=1;
-        countJA++;
+        A_write_csrJALocal[A_countJA]=read_localIndices_temp;
+        A_write_valuesLocal[A_countJA]=1;
+        A_countJA++;
         
         /* Add non-diagonal element */
         if( (read_localIndices_temp+1) % NX != 0 ){
-            write_csrJALocal[countJA]=read_localIndices_temp+1;
-            write_valuesLocal[countJA]=-1;
-            countJA++;
+            A_write_csrJALocal[A_countJA]=read_localIndices_temp+1;
+            A_write_valuesLocal[A_countJA]=-1;
+            A_countJA++;
         }
-        write_csrIALocal[countIA]=countJA;
-        countIA++;
+        A_write_csrIALocal[A_countIA]=A_countJA;
+        A_countIA++;
     }
     read_localIndices.release();
     
-    write_csrJALocal.release();
-    write_csrIALocal.release();
-    write_valuesLocal.release();
+    A_write_csrJALocal.release();
+    A_write_csrIALocal.release();
+    A_write_valuesLocal.release();
     
-    lama::CSRStorage<ValueType> ALocalCSR(numLocalIndices,NX*NY*NZ,numLocalValues,csrIALocal,csrJALocal,valuesLocal);
-    A.assign(ALocalCSR,dist,dist);
+    lama::CSRStorage<ValueType> A_LocalCSR(numLocalIndices,NX*NY*NZ,A_numLocalValues,A_csrIALocal,A_csrJALocal,A_valuesLocal);
+    A.assign(A_LocalCSR,dist,dist);
     
     
 
