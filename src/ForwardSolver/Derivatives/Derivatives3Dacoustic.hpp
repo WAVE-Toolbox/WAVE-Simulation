@@ -47,7 +47,7 @@ namespace KITGPI {
                 lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
                 lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
                 
-                void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm );
+                void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist );
                 
             };
         } /* end namespace Derivatives */
@@ -98,206 +98,176 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist )
 {
     SCAI_REGION( "derivatives" )
     
-    // Matrix A,B are created in 2 steps:
-    //   1: create MatrixStorage in CSR format
-    //   2: duplicate MatrixStorage along Diagonal till full Matrix size is reached
     
-    // for creating CSR MatrixStorage
-    common::unique_ptr<lama::MatrixStorage<ValueType> > storageHelp( new lama::CSRStorage<ValueType>() );
-    IndexType numValues;
-    std::vector<IndexType> csrIA;
-    std::vector<IndexType> csrJA;
-    std::vector<ValueType> csrValues;
+    dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
     dist->getOwnedIndexes(localIndices);
     
-    IndexType numLocalIndices=localIndices.size();
-    IndexType A_numLocalValues=numLocalIndices;
-
-    /* Calculate number of local Values */
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices);
-    IndexType numLocalIndices_temp=numLocalIndices-1;
-    IndexType read_localIndices_temp;
-    for(IndexType i=0; i<numLocalIndices_temp; i++){
+    IndexType numLocalIndices=localIndices.size(); //< Number of local indices
+    IndexType A_numLocalValues=numLocalIndices; //< Number of local values of Matrix A (here the diagonal elements are added directly)
+    IndexType B_numLocalValues=numLocalIndices; //< Number of local values of Matrix B (here the diagonal elements are added directly)
+    IndexType C_numLocalValues=numLocalIndices; //< Number of local values of Matrix C (here the diagonal elements are added directly)
+    
+    /* Add the number of non-diagonal values */
+    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); //< Get read access to localIndices
+    IndexType read_localIndices_temp; //< Temporary storage, so we do not have to access the array
+    for(IndexType i=0; i<numLocalIndices; i++){
+        
         read_localIndices_temp=read_localIndices[i];
         
-        /* Check for elements of A */
+        /* Check for non-diagonal elements of A */
         if( (read_localIndices_temp+1) % NX != 0 ){
             A_numLocalValues++;
         }
         
+        /* Check for non-diagonal elements of B */
+        if( (( (read_localIndices_temp+1) %  (NX*NY) ) + NX - 1 < NX*NY) &&  ((read_localIndices_temp+1) % (NX*NY) != 0) ){
+            B_numLocalValues++;
+        }
+        
+        /* Check for non-diagonal elements of C */
+        if( ( read_localIndices_temp+1)  + NX*NY - 1 < NX*NY*NZ &&  (read_localIndices_temp+1) % (NX*NY*NZ) != 0 ){
+            C_numLocalValues++;
+        }
+        
     }
-    //read_localIndices.release();
-    std::cout << comm->getRank() << ": " << 101 % 100  << std::endl;
     
-    /* Allocate local part */
+    /* Allocate local part to create local CSR storage*/
     hmemo::HArray<ValueType> A_valuesLocal(A_numLocalValues);
     hmemo::HArray<IndexType> A_csrJALocal(A_numLocalValues);
     hmemo::HArray<IndexType> A_csrIALocal(numLocalIndices+1);
+    
+    hmemo::HArray<ValueType> B_valuesLocal(B_numLocalValues);
+    hmemo::HArray<IndexType> B_csrJALocal(B_numLocalValues);
+    hmemo::HArray<IndexType> B_csrIALocal(numLocalIndices+1);
+    
+    hmemo::HArray<ValueType> C_valuesLocal(C_numLocalValues);
+    hmemo::HArray<IndexType> C_csrJALocal(C_numLocalValues);
+    hmemo::HArray<IndexType> C_csrIALocal(numLocalIndices+1);
     
     /* Get WriteAccess to local part */
     hmemo::WriteAccess<IndexType> A_write_csrJALocal(A_csrJALocal);
     hmemo::WriteAccess<IndexType> A_write_csrIALocal(A_csrIALocal);
     hmemo::WriteAccess<ValueType> A_write_valuesLocal(A_valuesLocal);
     
+    hmemo::WriteAccess<IndexType> B_write_csrJALocal(B_csrJALocal);
+    hmemo::WriteAccess<IndexType> B_write_csrIALocal(B_csrIALocal);
+    hmemo::WriteAccess<ValueType> B_write_valuesLocal(B_valuesLocal);
+    
+    hmemo::WriteAccess<IndexType> C_write_csrJALocal(C_csrJALocal);
+    hmemo::WriteAccess<IndexType> C_write_csrIALocal(C_csrIALocal);
+    hmemo::WriteAccess<ValueType> C_write_valuesLocal(C_valuesLocal);
+    
+    /* Set some counters to create the CSR Storage */
     IndexType A_countJA=0;
     IndexType A_countIA=0;
     A_write_csrIALocal[0]=0;
     A_countIA++;
+    
+    IndexType B_countJA=0;
+    IndexType B_countIA=0;
+    B_write_csrIALocal[0]=0;
+    B_countIA++;
+    
+    IndexType C_countJA=0;
+    IndexType C_countIA=0;
+    C_write_csrIALocal[0]=0;
+    C_countIA++;
+    
+    /* Set the values into the indice arrays and the value array */
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
-
+        
+        /*----------*/
+        /* Matrix A */
+        /*----------*/
+        
         /* Add diagonal element */
         A_write_csrJALocal[A_countJA]=read_localIndices_temp;
-        A_write_valuesLocal[A_countJA]=1;
+        A_write_valuesLocal[A_countJA]=-1;
         A_countJA++;
         
         /* Add non-diagonal element */
         if( (read_localIndices_temp+1) % NX != 0 ){
             A_write_csrJALocal[A_countJA]=read_localIndices_temp+1;
-            A_write_valuesLocal[A_countJA]=-1;
+            A_write_valuesLocal[A_countJA]=1;
             A_countJA++;
         }
         A_write_csrIALocal[A_countIA]=A_countJA;
         A_countIA++;
+        
+        
+        /*----------*/
+        /* Matrix B */
+        /*----------*/
+        
+        /* Add diagonal element */
+        B_write_csrJALocal[B_countJA]=read_localIndices_temp;
+        B_write_valuesLocal[B_countJA]=-1;
+        B_countJA++;
+        
+        /* Add non-diagonal element */
+        if( ( (read_localIndices_temp+1) %  (NX*NY) ) + NX - 1 < NX*NY &&  (read_localIndices_temp+1) % (NX*NY) != 0 ){            B_write_csrJALocal[B_countJA]=read_localIndices_temp+NX;
+            B_write_valuesLocal[B_countJA]=1;
+            B_countJA++;
+        }
+        B_write_csrIALocal[B_countIA]=B_countJA;
+        B_countIA++;
+        
+        /*----------*/
+        /* Matrix C */
+        /*----------*/
+        
+        /* Add diagonal element */
+        C_write_csrJALocal[C_countJA]=read_localIndices_temp;
+        C_write_valuesLocal[C_countJA]=-1;
+        C_countJA++;
+        
+        /* Add non-diagonal element */
+        if( ( read_localIndices_temp+1)  + NX*NY - 1 < NX*NY*NZ &&  (read_localIndices_temp+1) % (NX*NY*NZ) != 0 ){
+            C_write_csrJALocal[C_countJA]=read_localIndices_temp+NX*NY;
+            C_write_valuesLocal[C_countJA]=1;
+            C_countJA++;
+        }
+        C_write_csrIALocal[C_countIA]=C_countJA;
+        C_countIA++;
+        
+        
     }
+    
+    /* Release all read and write access */
     read_localIndices.release();
     
     A_write_csrJALocal.release();
     A_write_csrIALocal.release();
     A_write_valuesLocal.release();
     
+    B_write_csrJALocal.release();
+    B_write_csrIALocal.release();
+    B_write_valuesLocal.release();
+    
+    C_write_csrJALocal.release();
+    C_write_csrIALocal.release();
+    C_write_valuesLocal.release();
+    
+    /* Create local CSR storage of Matrix A, than create distributed CSR matrix A */
     lama::CSRStorage<ValueType> A_LocalCSR(numLocalIndices,NX*NY*NZ,A_numLocalValues,A_csrIALocal,A_csrJALocal,A_valuesLocal);
     A.assign(A_LocalCSR,dist,dist);
     
+    /* Create local CSR storage of Matrix B, than create distributed CSR matrix B */
+    lama::CSRStorage<ValueType> B_LocalCSR(numLocalIndices,NX*NY*NZ,B_numLocalValues,B_csrIALocal,B_csrJALocal,B_valuesLocal);
+    B.assign(B_LocalCSR,dist,dist);
     
-
-    /* --------------- */
-    /* create matrix A */
-    /* --------------- */
-//    numValues = NX + (NX - 1); // diagonal element (NX) + secondary diagonal elements (NX - 1)
-//    csrIA.reserve( NX + 1 );
-//    csrJA.reserve( numValues );
-//    csrValues.reserve( numValues );
-//    
-    IndexType count = 0;
-    IndexType size = NX;
-//    csrIA.push_back( 0 );
-//    for( IndexType i = 0; i < size; ++i ){
-//        if(i<size){
-//            csrJA.push_back(i);
-//            csrValues.push_back( -1.0 );
-//            count++;
-//        }
-//        if((i+1)<size){
-//            csrJA.push_back(i+1);
-//            csrValues.push_back( +1.0 );
-//            count++;
-//        }
-//        csrIA.push_back( count );
-//    }
-//    
-//    /* create CSR storage help */
-//    storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
-//    
-//    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
-//    csrIA = std::vector<IndexType>();
-//    csrJA = std::vector<IndexType>();
-//    csrValues = std::vector<ValueType>();
-//    
-//    /* create matrix A */
-////    lama::MatrixCreator::buildReplicatedDiag( A, *storageHelp, NZ * NY ); // not distributed, need to redistribute afterwards
-////    A.redistribute( dist, dist );
-////    A.setContextPtr( ctx );
-////    HOST_PRINT( comm, "Matrix A finished\n" );
-//    
-//    /* deallocate storageHelp, in order to free memory for the next operation */
-//    storageHelp->purge();
-    
-    /* --------------- */
-    /* create matrix B */
-    /* --------------- */
-    numValues = NX*NY + (NX*NY - (NX+1) + 1); // diagonal element (NZ*NX) + secondary diagonal elements (NZ*NX - (NZ+1) + 1)
-    csrIA.reserve( NX + 1 );
-    csrJA.reserve( numValues );
-    csrValues.reserve( numValues );
-    
-    count = 0;
-    size = NX * NY;
-    csrIA.push_back( 0 );
-    for( IndexType i = 0; i < size; ++i ){
-        if(i<size){
-            csrJA.push_back(i);
-            csrValues.push_back( -1.0 );
-            count++;
-        }
-        if(i+NX<size){
-            csrJA.push_back(i+NX);
-            csrValues.push_back( +1.0 );
-            count++;
-        }
-        csrIA.push_back( count );
-    }
-    
-    storageHelp->setRawCSRData( size, size, numValues, &csrIA[0], &csrJA[0], &csrValues[0] );
-    
-    /* deallocate memory of std::vectors, in order to free memory for the next operation  */
-    csrIA = std::vector<IndexType>();
-    csrJA = std::vector<IndexType>();
-    csrValues = std::vector<ValueType>();
-    
-    lama::MatrixCreator::buildReplicatedDiag( B, *storageHelp, NZ ); // not distributed, need to redistribute afterwards
-    B.redistribute( dist, dist );
-    B.setContextPtr( ctx );
-    HOST_PRINT( comm, "Matrix B finished\n" );
-    
-    /* deallocate storageHelp, in order to free memory for the next operation */
-    storageHelp->purge();
-    
-    /* --------------- */
-    /* create matrix C */
-    /* --------------- */
-    // initialize by diagonals
-    int myRank   = comm->getRank();
-    int numRanks = comm->getSize();
-    
-    IndexType globalSize = dist->getGlobalSize();
-    IndexType numDiagonals = 2;
-    IndexType secondaryIndex = NX * NY; // = remaining part of secondary diagonal
-    IndexType numSecondary = globalSize - secondaryIndex;
-    
-    int lb, ub;
-    dmemo::BlockDistribution::getLocalRange( lb, ub, dist->getGlobalSize(), myRank, numRanks );
-    
-    size = dist->getLocalSize(); //getGlobalSize();
-    
-    IndexType myStart = lb;
-    IndexType myEnd   = std::min( ub, numSecondary );
-    IndexType mySize  = std::max( myEnd - myStart, 0 );
-    IndexType myRemaining = size - mySize;
-    
-    std::vector<IndexType> offsets;
-    // distributed offset start with their lb
-    offsets.push_back( lb + 0 );              // index main diagonal (starting with '0')
-    offsets.push_back( lb + secondaryIndex ); // index secondary diagonal
-    
-    std::vector<ValueType> diagonals;
-    diagonals.reserve( numDiagonals * size );
-    // insert backwards so we can insert from the beginning of the vector
-    diagonals.insert( diagonals.begin(), myRemaining, 0.0 ); // add ghost secondary diagonal (out of column bound)
-    diagonals.insert( diagonals.begin(), mySize,      1.0 ); // add secondary diagonal
-    diagonals.insert( diagonals.begin(), size,       -1.0 ); // insert main diagonal before secondary diagonal
-    
-    C.setRawDIAData( dist, dist, numDiagonals, &offsets[0], &diagonals[0] );
-    C.setContextPtr( ctx );
-    HOST_PRINT( comm, "Matrix C finished\n" );
+    /* Create local CSR storage of Matrix C, than create distributed CSR matrix C */
+    lama::CSRStorage<ValueType> C_LocalCSR(numLocalIndices,NX*NY*NZ,C_numLocalValues,C_csrIALocal,C_csrJALocal,C_valuesLocal);
+    C.assign(C_LocalCSR,dist,dist);
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -320,23 +290,26 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     
     HOST_PRINT( comm, "Initialization of the matrices A,B,C,D,E,F...\n" );
     
-    derivatives(NX, NY, NZ, dist, ctx, comm );
-    
+    derivatives(NX, NY, NZ, dist);
+    HOST_PRINT( comm, "Matrix A, B and C finished.\n" );
+
+    A.setContextPtr( ctx );
+    B.setContextPtr( ctx );
+    C.setContextPtr( ctx );
     D.setContextPtr( ctx );
     E.setContextPtr( ctx );
     F.setContextPtr( ctx );
     
     D.assignTranspose( A );
     D.scale( -1.0 );
-    HOST_PRINT( comm, "Matrix D finished\n" );
     
     E.assignTranspose( B );
     E.scale( -1.0 );
-    HOST_PRINT( comm, "Matrix E finished\n" );
     
     F.assignTranspose( C );
     F.scale( -1.0 );
-    HOST_PRINT( comm, "Matrix F finished\n" );
+    
+    HOST_PRINT( comm, "Matrix D, E and F finished.\n" );
     
     A.scale(lama::Scalar(DT/DH));
     B.scale(lama::Scalar(DT/DH));
