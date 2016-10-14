@@ -94,8 +94,6 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  \param dist Distribution of the wavefield
- \param ctx Context
- \param comm Communicator
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist )

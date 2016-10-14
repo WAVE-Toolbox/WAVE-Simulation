@@ -29,12 +29,15 @@ namespace KITGPI {
         class Coordinates
         {
             
+        public:
+            IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
+            
+            
         protected:
             
             // Coordinate --> Index:
             // Interfaces 3-D
             IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
-            IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
             // Interfaces 2-D
             IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY);
             IndexType coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
@@ -163,12 +166,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
 {
     
-    // Determine size of local domain
-    IndexType lower, upper;
-    
-    dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
-    dmemo::BlockDistribution::getLocalRange( lower, upper, dist->getGlobalSize(), comm->getRank(), comm->getSize() );
-    
     IndexType n_global=coordinatesglobal.size(); // Number of global entries
     
     IndexType coordinatetemp_int;
@@ -180,7 +177,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         coordinatetemp_scalar = coordinatesglobal.getValue(n);
         coordinatetemp_int=coordinatetemp_scalar.getValue<IndexType>();
         
-        if( (coordinatetemp_int>=lower) && (coordinatetemp_int<=upper) ){
+        if( dist->isLocal(coordinatetemp_int) ) {
             i++;
         }
     }
@@ -193,8 +190,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
         
         coordinatetemp_scalar = coordinatesglobal.getValue(n);
         coordinatetemp_int=coordinatetemp_scalar.getValue<IndexType>();
-        
-        if( (coordinatetemp_int>=lower) && (coordinatetemp_int<=upper) ){
+        if( dist->isLocal(coordinatetemp_int) ) {
             write_localIndices[i]=n;
             i++;
         }

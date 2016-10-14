@@ -57,6 +57,11 @@ namespace KITGPI {
             
             IndexType getNT() { return NT; } ///< Return NT
             
+            IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
+            IndexType getProcNX() { return ProcNX;} ///< Return number of cores in X-direction
+            IndexType getProcNY() { return ProcNY;} ///< Return number of cores in Y-direction
+            IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
+
         private:
             
             IndexType NumParameters; ///< Number of parameters in input file
@@ -81,6 +86,11 @@ namespace KITGPI {
             ValueType velocity; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
             
+            IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields
+            IndexType ProcNX; ///< Number of cores in X-direction
+            IndexType ProcNY; ///< Number of cores in Y-direction
+            IndexType ProcNZ; ///< Number of cores in Z-direction
+            
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
             std::string SeismogramFilename; ///< Filename to write seismograms
@@ -103,7 +113,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(14)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(18)
 {
     // read all lines in file
     
@@ -169,6 +179,10 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     ReceiverFilename = std::istringstream( map[ "ReceiverFilename" ] ).str(); // std::string
     SeismogramFilename = std::istringstream( map[ "SeismogramFilename" ] ).str(); // std::string
     
+    std::istringstream( map[ "UseCubePartitioning" ] ) >> UseCubePartitioning; // IndexType
+    std::istringstream( map[ "ProcNX" ] ) >> ProcNX; // IndexType
+    std::istringstream( map[ "ProcNY" ] ) >> ProcNY; // IndexType
+    std::istringstream( map[ "ProcNZ" ] ) >> ProcNZ; // IndexType
     
     // calculate other parameters
     
