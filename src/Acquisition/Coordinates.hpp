@@ -30,7 +30,6 @@ namespace KITGPI {
         {
             
         public:
-            IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
             
             
         protected:
@@ -38,13 +37,14 @@ namespace KITGPI {
             // Coordinate --> Index:
             // Interfaces 3-D
             IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
             // Interfaces 2-D
             IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY);
             IndexType coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
-            coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY); //!< Not yet implemented
+            coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
+            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
             
             void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
@@ -55,8 +55,8 @@ namespace KITGPI {
             IndexType map2Dcoordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
-            coordinate3D map3Dindex2coordinate(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ); //!< Not yet implemented
-            coordinate2D map2Dindex2coordinate(coordinate2D coordinate, IndexType NX, IndexType NY); //!< Not yet implemented
+            coordinate3D map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
+            coordinate2D map2Dindex2coordinate(IndexType coordinate, IndexType NX);
             
         };
         
@@ -65,6 +65,60 @@ namespace KITGPI {
 /* ------- */
 /* Mapping */
 /* ------- */
+
+
+//! General mapping from 1-D coordinate to 3-D coordinate
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY)
+{
+    coordinate3D result;
+    
+    result.z=IndexType(coordinate) / (NX*NY);
+    coordinate -= result.z * (NX*NY);
+    result.z+=1;
+    
+    result.y= IndexType(coordinate) / (NX);
+    coordinate -= result.y * (NX);
+    result.y+=1;
+    
+    result.x=coordinate;
+    result.x+=1;
+    
+    return(result);
+    
+}
+
+//! General mapping from 1-D coordinate to 2-D coordinate
+template <typename ValueType>
+KITGPI::Acquisition::coordinate2D KITGPI::Acquisition::Coordinates<ValueType>::map2Dindex2coordinate(IndexType coordinate, IndexType NX)
+{
+    
+    coordinate2D result;
+    
+    result.y= IndexType(coordinate) / (NX);
+    coordinate -= result.y * (NX);
+    result.y+=1;
+    
+    result.x=coordinate;
+    result.x+=1;
+    
+    return(result);
+    
+}
+
+//! General mapping from 1-D coordinate to 3-D coordinate
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
+{
+    return(map3Dindex2coordinate(coordinate,NX,NY));
+}
+
+//! General mapping from 1-D coordinate to 2-D coordinate
+template <typename ValueType>
+KITGPI::Acquisition::coordinate2D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate, IndexType NX, IndexType /*NY*/)
+{
+    return(map2Dindex2coordinate(coordinate,NX));
+}
 
 //! General mapping from 3-D coordinates to 1-D coordinate
 template <typename ValueType>
