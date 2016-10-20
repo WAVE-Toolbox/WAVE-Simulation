@@ -44,7 +44,8 @@ namespace KITGPI {
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
-            ValueType getVelocity() { return velocity; } ///< Return Velocity for homogeneous model
+            ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
+            ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
             ValueType getRho() { return rho; } ///< Return Density for homogeneous model
             
             std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
@@ -54,7 +55,8 @@ namespace KITGPI {
             IndexType getN() { return N; } ///< Return N
             
             ValueType getLambda() { return lambda; } ///< Return lambda
-            
+            ValueType getMu() { return mu; } ///< Return lambda
+
             IndexType getNT() { return NT; } ///< Return NT
             
             IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
@@ -83,7 +85,8 @@ namespace KITGPI {
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
-            ValueType velocity; ///< Density in kilo gramms per cubic meter
+            ValueType velocityP; ///< Density in kilo gramms per cubic meter
+            ValueType velocityS; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
             
             IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields (1=ON, else=OFF)
@@ -100,8 +103,8 @@ namespace KITGPI {
             
             IndexType N; ///< Number of total grid points NX*NY*NZ
             
-            ValueType lambda; ///< P-wave modulus (in case of homogeneous model)
-            
+            ValueType lambda; ///< First Lame parameter
+            ValueType mu; ///<< Second Lame parameter
             IndexType NT; ///< Number of time steps
             
         };
@@ -113,7 +116,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(18)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(19)
 {
     // read all lines in file
     
@@ -172,7 +175,9 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
 
     
-    std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
+    std::istringstream( map[ "velocityP" ] ) >> velocityP; // ValueType
+    std::istringstream( map[ "velocityS" ] ) >> velocityS; // ValueType
+
     std::istringstream( map[ "rho" ] ) >> rho; // ValueType
     
     SourceFilename = std::istringstream( map[ "SourceFilename" ] ).str(); // std::string
@@ -188,8 +193,8 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     N = NZ * NX * NY;
     
-    lambda = velocity * velocity * rho; // P-wave modulus
-    
+    lambda =(-2*velocityS*velocityS + velocityP * velocityP ) * rho; // P-wave modulus
+    mu=rho*velocityS*velocityS;
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
     
@@ -201,7 +206,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
 template<typename ValueType>
 void KITGPI::Configuration::Configuration<ValueType>::print()
 {
-    IndexType velocity_max = velocity; // TODO: is velocity a vector?
+    IndexType velocity_max = velocityP; // TODO: is velocity a vector?
     double courant = velocity_max * DT / DH;
     
     std::cout << "Configuration:" << std::endl;
@@ -229,7 +234,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;
-        std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
+        std::cout << "    VelocityP:" << velocityP << " m/s" << std::endl;
+        std::cout << "    VelocityS:" << velocityS << " m/s" << std::endl;
+
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
     if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;

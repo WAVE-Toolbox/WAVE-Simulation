@@ -46,7 +46,7 @@ namespace KITGPI {
             ~FD3Delastic(){};
             
             FD3Delastic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho);
             FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM,std::string filenameMu, std::string filenamerho);
             FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
@@ -93,18 +93,18 @@ namespace KITGPI {
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Configuration<ValueType> /*config*/, hmemo::ContextPtr /*ctx*/, dmemo::DistributionPtr /*dist*/)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 :dirtyFlagInverseDensity(1)
 {
-//    if(config.getModelRead()){
-//        init(ctx,dist,config.getModelFilename());
-//    } else {
-//        init(ctx,dist,config.getLambda(),config.getRho());
-//    }
-//    
-//    if(config.getModelWrite()){
-//        write(config.getModelFilename()+".out");
-//    }
+    if(config.getModelRead()){
+        init(ctx,dist,config.getModelFilename());
+    } else {
+        init(ctx,dist,config.getLambda(),config.getMu(),config.getRho());
+    }
+    
+    if(config.getModelWrite()){
+        write(config.getModelFilename()+".out");
+    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -112,14 +112,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M_const First Lame-Parameter given as Scalar
+ \param lambda_const First Lame-Parameter given as Scalar
+ \param mu_const Second Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho)
 :dirtyFlagInverseDensity(1)
 {
-    init(ctx,dist,M_const,Mu_const,rho);
+    init(ctx,dist,lambda_const,mu_const,rho);
 }
 
 
@@ -128,14 +129,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M_const First Lame-Parameter given as Scalar
+ \param lambda_const First Lame-Parameter given as Scalar
+ \param mu_const Second Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho)
 {
-    this->initModelparameter(lambda,ctx,dist,M_const);
-    this->initModelparameter(mu,ctx,dist,Mu_const);
+    this->initModelparameter(lambda,ctx,dist,lambda_const);
+    this->initModelparameter(mu,ctx,dist,mu_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
@@ -146,6 +148,7 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  \param ctx Context
  \param dist Distribution
  \param filenameM Name of file that will be read for the first Lame-parameter.
+ \param filenameMu Name of file that will be read for the second Lame-parameter.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
@@ -162,6 +165,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  \param ctx Context
  \param dist Distribution
  \param filenameM Name of file that will be read for the first Lame-parameter.
+ \param filenameMu Name of file that will be read for the second Lame-parameter.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
@@ -178,7 +182,7 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
+ \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
@@ -193,12 +197,12 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter ".M.mtx" is added and for density "filename+".density.mtx" is added.
+ \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenameM=filename+".Lambda.mtx";
+    std::string filenameM=filename+".lambda.mtx";
     std::string filenameMu=filename+".mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
@@ -222,6 +226,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& r
 /*! \brief Write model to an external file
  *
  \param filenameM Filename for first Lame-Parameter model
+ \param filenameMu Name of file that will be read for the second Lame-parameter.
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
@@ -235,7 +240,7 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::write( std::string filename
 
 /*! \brief Write model to an external file
  *
- \param filename Filename to write files. For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
+ \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)

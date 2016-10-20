@@ -46,7 +46,7 @@ namespace KITGPI {
             ~FD3Dacoustic(){};
             
             FD3Dacoustic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho);
+            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const, lama::Scalar  rho);
             FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
             FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
@@ -112,14 +112,14 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M_const First Lame-Parameter given as Scalar
+ \param lambda_const First Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
+KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const, lama::Scalar  rho)
 :dirtyFlagInverseDensity(1)
 {
-    init(ctx,dist,M_const,rho);
+    init(ctx,dist,lambda_const,rho);
 }
 
 
@@ -128,13 +128,13 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param M_const First Lame-Parameter given as Scalar
+ \param lambda_const First Lame-Parameter given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const, lama::Scalar  rho)
 {
-    this->initModelparameter(lambda,ctx,dist,M_const);
+    this->initModelparameter(lambda,ctx,dist,lambda_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
