@@ -278,36 +278,30 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update = A * Sxx;
         update += E * Sxy;
         update += F * Sxz;
-        update.scale(inverseDensity);
-        vX += update;
+        vX += update.scale(inverseDensity);
         
         update = D * Sxy;
         update += B * Syy;
         update += F * Syz;
-        update.scale(inverseDensity);
-        vY += update;
+        vY += update.scale(inverseDensity);
         
         update = D * Sxz;
         update += E * Syz;
         update += C * Szz;
-        update.scale(inverseDensity);
-        vZ += update;
+        vZ += update.scale(inverseDensity);
         
         /* pressure update */
         update = B * vX;
         update += A * vY;
-        update.scale(mu);
-        Sxy += update;
+        Sxy += update.scale(mu);
         
         update = C * vX;
         update += A * vZ;
-        update.scale(mu);
-        Sxz += update;
+        Sxz += update.scale(mu);
         
         update = C * vY;
         update += B * vZ;
-        update.scale(mu);
-        Syz += update;
+        Syz += update.scale(mu);
         
         vxx = D * vX;
         vyy = E * vY;
@@ -318,16 +312,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update += vzz;
         update.scale(lambda);
         
-        vxx.scale(mu);
-        vyy.scale(mu);
-        vzz.scale(mu);
-        
         Sxx += update;
-        Sxx += 2 * vxx;
+        Sxx += 2 * vxx.scale(mu);
         Syy += update;
-        Syy += 2 * vyy;
+        Syy += 2 * vyy.scale(mu);
         Szz += update;
-        Szz += 2 * vzz;
+        Szz += 2 * vzz.scale(mu);
 
         /* Apply source and save seismogram */
         applySource(sources,wavefield,NT,t);
