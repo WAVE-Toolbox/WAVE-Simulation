@@ -103,12 +103,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    ValueType density=2000;
-    ValueType VS=2000;
-    ValueType VP=3500;
-    ValueType lambda=density*(VP*VP-2*VS*VS);
-    ValueType mu=density*VS*VS;
-    Modelparameter::FD3Delastic<ValueType> model(ctx,dist,lambda,mu,density);
+    Modelparameter::FD3Delastic<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
