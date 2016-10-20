@@ -1,4 +1,4 @@
-function write_mtx_vector(filename,vector)
+function writeVector2mtx(filename,vector)
 
 n=size(vector,1);
 

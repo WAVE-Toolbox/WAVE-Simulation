@@ -16,6 +16,6 @@ VS=velocityS*ones(1,N);
 RHO=density*ones(1,N);
 
 % write to file
-write_mtx_vector([filename '.vp.mtx'],VP);
-write_mtx_vector([filename '.vs.mtx'],VS);
-write_mtx_vector([filename '.density.mtx'],RHO);
+writeVector2mtx([filename '.vp.mtx'],VP);
+writeVector2mtx([filename '.vs.mtx'],VS);
+writeVector2mtx([filename '.density.mtx'],RHO);

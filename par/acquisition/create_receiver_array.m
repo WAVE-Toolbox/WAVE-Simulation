@@ -40,4 +40,4 @@ end
 RECEIVER_FILE=[X' Y' Z' RECEIVER_TYPE_vec'];
 
 % Write mtx file
-write_mtx(OUTPUT_FILENAME,RECEIVER_FILE);
+writeMatrix2mtx(OUTPUT_FILENAME,RECEIVER_FILE);
