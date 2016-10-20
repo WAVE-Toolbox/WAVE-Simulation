@@ -225,8 +225,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& M=model.getM();
-    lama::DenseVector<ValueType>& Mu=model.getMu();
+    lama::DenseVector<ValueType>& lambda=model.getLambda();
+    lama::DenseVector<ValueType>& mu=model.getMu();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -296,17 +296,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* pressure update */
         update = B * vX;
         update += A * vY;
-        update.scale(Mu);
+        update.scale(mu);
         Sxy += update;
         
         update = C * vX;
         update += A * vZ;
-        update.scale(Mu);
+        update.scale(mu);
         Sxz += update;
         
         update = C * vY;
         update += B * vZ;
-        update.scale(Mu);
+        update.scale(mu);
         Syz += update;
         
         vxx = D * vX;
@@ -316,11 +316,11 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update = vxx;
         update += vyy;
         update += vzz;
-        update.scale(M);
+        update.scale(lambda);
         
-        vxx.scale(Mu);
-        vyy.scale(Mu);
-        vzz.scale(Mu);
+        vxx.scale(mu);
+        vyy.scale(mu);
+        vzz.scale(mu);
         
         Sxx += update;
         Sxx += 2 * vxx;

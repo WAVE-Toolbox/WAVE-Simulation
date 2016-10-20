@@ -53,7 +53,7 @@ namespace KITGPI {
             //! Copy Constructor.
             FD3Delastic(const FD3Delastic& rhs);
             
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M,lama::Scalar  Mu, lama::Scalar  rho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda,lama::Scalar  mu, lama::Scalar  rho);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM,std::string filenameMu, std::string filenamerho);
             
@@ -63,7 +63,7 @@ namespace KITGPI {
             /* Getter routines for modelparameters */
             lama::DenseVector<ValueType>& getDensity();
             lama::DenseVector<ValueType>& getInverseDensity();
-            lama::DenseVector<ValueType>& getM();
+            lama::DenseVector<ValueType>& getLambda();
             lama::DenseVector<ValueType>& getMu();
             lama::DenseVector<ValueType>& getVelocityP();
             lama::DenseVector<ValueType>& getVelocityS();
@@ -72,8 +72,8 @@ namespace KITGPI {
             
             IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
             
-            lama::DenseVector<ValueType> M; //!< Vector storing first Lame-Parameter.
-            lama::DenseVector<ValueType> Mu; //!< Vector storing first Lame-Parameter.
+            lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
+            lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
             lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
             
@@ -99,7 +99,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
 //    if(config.getModelRead()){
 //        init(ctx,dist,config.getModelFilename());
 //    } else {
-//        init(ctx,dist,config.getM(),config.getRho());
+//        init(ctx,dist,config.getLambda(),config.getRho());
 //    }
 //    
 //    if(config.getModelWrite()){
@@ -134,8 +134,8 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho)
 {
-    this->initModelparameter(M,ctx,dist,M_const);
-    this->initModelparameter(Mu,ctx,dist,Mu_const);
+    this->initModelparameter(lambda,ctx,dist,M_const);
+    this->initModelparameter(mu,ctx,dist,Mu_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
@@ -167,9 +167,9 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenameMu, std::string filenamerho)
 {
-    this->initModelparameter(M,ctx,dist,filenameM);
+    this->initModelparameter(lambda,ctx,dist,filenameM);
     this->initModelparameter(density,ctx,dist,filenamerho);
-    this->initModelparameter(Mu,ctx,dist,filenameMu);
+    this->initModelparameter(mu,ctx,dist,filenameMu);
 }
 
 
@@ -199,11 +199,11 @@ template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     std::string filenameM=filename+".Lambda.mtx";
-    std::string filenameMu=filename+".Mu.mtx";
+    std::string filenameMu=filename+".mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(M,ctx,dist,filenameM);
-    this->initModelparameter(Mu,ctx,dist,filenameMu);
+    this->initModelparameter(lambda,ctx,dist,filenameM);
+    this->initModelparameter(mu,ctx,dist,filenameMu);
     this->initModelparameter(density,ctx,dist,filenamedensity);
 }
 
@@ -213,8 +213,8 @@ template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
 :dirtyFlagInverseDensity(1)
 {
-    M=rhs.M.copy();
-    Mu=rhs.Mu.copy();
+    lambda=rhs.M.copy();
+    mu=rhs.mu.copy();
     density=rhs.density.copy();
 }
 
@@ -227,9 +227,9 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& r
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::write( std::string filenameM, std::string filenameMu, std::string filenamedensity)
 {
-    this->writeModelparameter(M,filenameM);
+    this->writeModelparameter(lambda,filenameM);
     this->writeModelparameter(density,filenamedensity);
-    this->writeModelparameter(Mu,filenameMu);
+    this->writeModelparameter(mu,filenameMu);
 };
 
 
@@ -241,10 +241,10 @@ template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
 {
     std::string filenameM=filename+".Lambda.mtx";
-    std::string filenameMu=filename+".Mu.mtx";
+    std::string filenameMu=filename+".mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(M,filenameM);
-    this->writeModelparameter(Mu,filenameM);
+    this->writeModelparameter(lambda,filenameM);
+    this->writeModelparameter(mu,filenameM);
     this->writeModelparameter(density,filenamedensity);
 };
 
@@ -272,8 +272,8 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::ge
 /*! \brief Get reference to first Lame model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getM(){
-    return(M);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getLambda(){
+    return(lambda);
 }
 
 /*! \brief Get reference to second Lame Parameter mu
@@ -281,7 +281,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::ge
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getMu(){
-    return(Mu);
+    return(mu);
 }
 
 /*! \brief Get reference to P-wave velocity

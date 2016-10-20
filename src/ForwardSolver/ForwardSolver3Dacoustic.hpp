@@ -217,7 +217,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& M=model.getM();
+    lama::DenseVector<ValueType>& lambda=model.getLambda();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -234,7 +234,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     lama::CSRSparseMatrix<ValueType>& F=derivatives.getF();
     
     /* Init seismograms */
-    seismogram.init(receiver, NT, M.getContextPtr());
+    seismogram.init(receiver, NT, lambda.getContextPtr());
     
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
@@ -267,7 +267,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         update  =  D * vX;
         update +=  E * vY;
         update +=  F * vZ;
-        p += update.scale(M);
+        p += update.scale(lambda);
 
 
         /* Apply source and save seismogram */

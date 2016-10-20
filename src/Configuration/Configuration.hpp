@@ -53,7 +53,7 @@ namespace KITGPI {
             
             IndexType getN() { return N; } ///< Return N
             
-            ValueType getM() { return M; } ///< Return M
+            ValueType getLambda() { return lambda; } ///< Return lambda
             
             IndexType getNT() { return NT; } ///< Return NT
             
@@ -100,7 +100,7 @@ namespace KITGPI {
             
             IndexType N; ///< Number of total grid points NX*NY*NZ
             
-            ValueType M; ///< P-wave modulus (in case of homogeneous model)
+            ValueType lambda; ///< P-wave modulus (in case of homogeneous model)
             
             IndexType NT; ///< Number of time steps
             
@@ -188,7 +188,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     N = NZ * NX * NY;
     
-    M = velocity * velocity * rho; // P-wave modulus
+    lambda = velocity * velocity * rho; // P-wave modulus
     
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
