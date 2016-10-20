@@ -448,19 +448,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
             break;
     }
     
-    utilskernel::LArray<ValueType>* signalVector_LA=&signalVector.getLocalValues();
-    hmemo::ReadAccess<ValueType> read_signalVector(*signalVector_LA);
-    
     lama::DenseMatrix<ValueType>& signalsMatrix=signals.getData();
-    lama::DenseStorage<ValueType>* signalsMatrix_DS=&signalsMatrix.getLocalStorage();
-    hmemo::HArray<ValueType>* signalsMatrix_HA=&signalsMatrix_DS->getData();
-    hmemo::WriteAccess<ValueType> write_signalsMatrix_HA(*signalsMatrix_HA);
-    
-    for(IndexType i=0; i<NT; i++){
-        write_signalsMatrix_HA[i+NT*SourceLocal]=read_signalVector[i];
-    }
-    read_signalVector.release();
-    write_signalsMatrix_HA.release();
+    signalsMatrix.setRow(signalVector,SourceLocal,utilskernel::reduction::ReductionOp::COPY);
     
 }
 
