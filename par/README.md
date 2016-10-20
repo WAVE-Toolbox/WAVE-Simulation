@@ -7,7 +7,7 @@
 - Set `export OMP_NUM_THREADS=1`
 
 ## Using OpenMPI/IntelMPI
-- Modify `start_FDSimulation.sh` to e.g. `mpirun -np 4 ./../FDSimulation`
+- Modify `start_FDSimulation.sh` to e.g. `mpirun -np 4 ./../SOFI3Dacoustic`
 
 ## Start the simulation
 - `source start_FDSimulation.sh`
