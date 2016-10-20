@@ -8,6 +8,9 @@ install: clean SOFI3Dacoustic tests
 SOFI3Dacoustic: SOFI3Dacoustic.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI3Dacoustic SOFI3Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
 
+SOFI3Delastic: SOFI3Delastic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI3Delastic SOFI3Delastic.cpp $(IFLAGS) $(LDFLAGS)
+
 tests: Test_SOFI3Dacoustic
 
 Test_SOFI3Dacoustic: Tests/Test_SOFI3Dacoustic.cpp

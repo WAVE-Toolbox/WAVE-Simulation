@@ -25,8 +25,8 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Modelparameter3Dacoustic.hpp"
-#include "Wavefields/Wavefields3Dacoustic.hpp"
+#include "Modelparameter/Modelparameter3Delastic.hpp"
+#include "Wavefields/Wavefields3Delastic.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
@@ -35,7 +35,7 @@
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
-#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
+#include "ForwardSolver/ForwardSolver3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
 
@@ -75,7 +75,7 @@ int main( int argc, char* argv[] )
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI3D elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -92,7 +92,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Delastic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -103,13 +103,18 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
+    ValueType density=2000;
+    ValueType VS=1500;
+    ValueType VP=3500;
+    ValueType M=density*(VP*VP-2*VS*VS);
+    ValueType Mu=density*VS*VS;
+    Modelparameter::FD3Delastic<ValueType> model(ctx,dist,M,Mu,density);
     
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Dacoustic<ValueType> solver;
+    ForwardSolver::FD3Delastic<ValueType> solver;
     
     HOST_PRINT( comm, "Start time stepping\n" );
     start_t = common::Walltime::get();

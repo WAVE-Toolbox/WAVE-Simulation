@@ -30,34 +30,34 @@ namespace KITGPI {
     //! \brief Modelparameter namespace
     namespace Modelparameter {
         
-        //! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
+        //! Class for Modelparameter for 3-D elastic simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
+         This class handels the modelparameter for the 3-D elastic finite-difference simulation.
          */
         template<typename ValueType>
-        class FD3Dacoustic : public Modelparameter<ValueType>
+        class FD3Delastic : public Modelparameter<ValueType>
         {
         public:
             
             //! Default constructor.
-            FD3Dacoustic():dirtyFlagInverseDensity(1){};
+            FD3Delastic():dirtyFlagInverseDensity(1){};
             
             //! Destructor, releases all allocated resources.
-            ~FD3Dacoustic(){};
+            ~FD3Delastic(){};
             
-            FD3Dacoustic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            FD3Delastic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM,std::string filenameMu, std::string filenamerho);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
-            FD3Dacoustic(const FD3Dacoustic& rhs);
+            FD3Delastic(const FD3Delastic& rhs);
             
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M, lama::Scalar  rho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M,lama::Scalar  Mu, lama::Scalar  rho);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM,std::string filenameMu, std::string filenamerho);
             
-            void write(std::string filenameM, std::string filenamedensity);
+            void write(std::string filenameM,std::string filenameMu, std::string filenamedensity);
             void write(std::string filename);
             
             /* Getter routines for modelparameters */
@@ -93,18 +93,18 @@ namespace KITGPI {
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Configuration<ValueType> /*config*/, hmemo::ContextPtr /*ctx*/, dmemo::DistributionPtr /*dist*/)
 :dirtyFlagInverseDensity(1)
 {
-    if(config.getModelRead()){
-        init(ctx,dist,config.getModelFilename());
-    } else {
-        init(ctx,dist,config.getM(),config.getRho());
-    }
-    
-    if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
-    }
+//    if(config.getModelRead()){
+//        init(ctx,dist,config.getModelFilename());
+//    } else {
+//        init(ctx,dist,config.getM(),config.getRho());
+//    }
+//    
+//    if(config.getModelWrite()){
+//        write(config.getModelFilename()+".out");
+//    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -116,10 +116,10 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho)
 :dirtyFlagInverseDensity(1)
 {
-    init(ctx,dist,M_const,rho);
+    init(ctx,dist,M_const,Mu_const,rho);
 }
 
 
@@ -132,9 +132,10 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const, lama::Scalar  rho)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  M_const,lama::Scalar  Mu_const, lama::Scalar  rho)
 {
     this->initModelparameter(M,ctx,dist,M_const);
+    this->initModelparameter(Mu,ctx,dist,Mu_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
@@ -148,10 +149,10 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM,std::string filenameMu, std::string filenamerho)
 :dirtyFlagInverseDensity(1)
 {
-    init(ctx,dist,filenameM,filenamerho);
+    init(ctx,dist,filenameM,filenameMu,filenamerho);
 }
 
 
@@ -164,10 +165,11 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenameMu, std::string filenamerho)
 {
     this->initModelparameter(M,ctx,dist,filenameM);
     this->initModelparameter(density,ctx,dist,filenamerho);
+    this->initModelparameter(Mu,ctx,dist,filenameMu);
 }
 
 
@@ -179,7 +181,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  \param filename For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 :dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,filename);
@@ -194,22 +196,25 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param filename For the first Lame-parameter ".M.mtx" is added and for density "filename+".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenameM=filename+".M.mtx";
+    std::string filenameM=filename+".Lambda.mtx";
+    std::string filenameMu=filename+".Mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
     this->initModelparameter(M,ctx,dist,filenameM);
+    this->initModelparameter(Mu,ctx,dist,filenameMu);
     this->initModelparameter(density,ctx,dist,filenamedensity);
 }
 
 
 //! \brief Copy constructor
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic& rhs)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
 :dirtyFlagInverseDensity(1)
 {
     M=rhs.M.copy();
+    Mu=rhs.Mu.copy();
     density=rhs.density.copy();
 }
 
@@ -220,10 +225,11 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write( std::string filenameM, std::string filenamedensity)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::write( std::string filenameM, std::string filenameMu, std::string filenamedensity)
 {
     this->writeModelparameter(M,filenameM);
     this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(Mu,filenameMu);
 };
 
 
@@ -232,11 +238,13 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write( std::string filenam
  \param filename Filename to write files. For the first Lame-parameter ".M.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
 {
-    std::string filenameM=filename+".M.mtx";
+    std::string filenameM=filename+".Lambda.mtx";
+    std::string filenameMu=filename+".Mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
     this->writeModelparameter(M,filenameM);
+    this->writeModelparameter(Mu,filenameM);
     this->writeModelparameter(density,filenamedensity);
 };
 
@@ -245,7 +253,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getInverseDensity(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getInverseDensity(){
     if(dirtyFlagInverseDensity==1){
         inverseDensity.assign(density);
         inverseDensity.invert();
@@ -256,7 +264,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getDensity(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getDensity(){
     dirtyFlagInverseDensity=1; // If density will be changed, the inverse has to be refreshed if it is accessed
     return(density);
 }
@@ -264,7 +272,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 /*! \brief Get reference to first Lame model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getM(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getM(){
     return(M);
 }
 
@@ -272,8 +280,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getMu(){
-    COMMON_THROWEXCEPTION("Second Lame Parameter is not set for acoustic modelling")
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getMu(){
     return(Mu);
 }
 
@@ -282,7 +289,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
  * Not yet implemented
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityP(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getVelocityP(){
     COMMON_THROWEXCEPTION("Conversation to P-wave velocity is not yet implemented")
     return(velocityP);
 }
@@ -290,8 +297,8 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityS(){
-    COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getVelocityS(){
+    COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an elastic simulation.")
     return(velocityS);
 }
 
