@@ -25,8 +25,9 @@ ModelWrite=0
 ModelFilename=model/test
 
 # generate homogeneous model
-velocity=3500 # Density in kilo gramms per cubic meter
-rho=2000      # P-wave velocity in meter per seconds
+velocityP=3500 # P-wave velocity in meter per seconds
+velocityS=0 # S-wave velocity in meter per seconds
+rho=2000       # Density in kilo gramms per cubic meter
 
 # Acquisition
 SourceFilename=acquisition/sources.mtx

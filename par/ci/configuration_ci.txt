@@ -24,7 +24,8 @@ ModelRead=0
 ModelWrite=0
 ModelFilename=model/test
 
-velocity=3500 # Density in kilogramms per cubic meter
+velocityP=3500 # P-wave velocity in meter per seconds
+velocityS=0 # S-wave velocity in meter per seconds
 rho=2000      # P-wave velocity in meter per seconds
 
 # Acquisition
