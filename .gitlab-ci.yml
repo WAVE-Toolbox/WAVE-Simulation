@@ -15,26 +15,26 @@ gcc:
     paths:
       - bin/
 
-openmp-gcc:
+acoustic3D-gcc:
   stage: test
   dependencies:
     - gcc
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
-    - OMP_NUM_THREADS=4
+    - OMP_NUM_THREADS=2
     - cd par/
-    - ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
+    - mpirun -np 2 ./../bin/SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
+    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
 
-openmpi-gcc:
+elastic3D-gcc:
   stage: test
   dependencies:
     - gcc
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
-    - OMP_NUM_THREADS=1
+    - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
+    - mpirun -np 2 ./../bin/SOFI3Delastic "ci/configuration_ci.elastic.txt"
+    - ./../bin/Tests/Test_SOFI3Delastic "ci/configuration_ci.elastic.txt"
