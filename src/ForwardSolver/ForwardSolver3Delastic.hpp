@@ -73,7 +73,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sou
         
         /* Get reference to sourcesignal storing seismogram */
         Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
-
+        
         /* Get reference to source type of sources */
         lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
         utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
@@ -144,7 +144,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields
     IndexType numTracesLocal=seismogram.getNumTracesLocal();
     
     if(numTracesLocal>0){
-    
+        
         /* Get reference to wavefields */
         lama::DenseVector<ValueType>& vX=wavefield.getVX();
         lama::DenseVector<ValueType>& vY=wavefield.getVY();
@@ -263,6 +263,70 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
+    lama::CSRSparseMatrix<ValueType> A_P(A);
+    lama::CSRSparseMatrix<ValueType> B_P(B);
+    lama::CSRSparseMatrix<ValueType> C_P(C);
+    lama::CSRSparseMatrix<ValueType> D_P(D);
+    lama::CSRSparseMatrix<ValueType> E_P(E);
+    lama::CSRSparseMatrix<ValueType> F_P(F);
+    
+    IndexType size_vec=vX.size();
+    lama::DenseVector<ValueType> test(size_vec,0.0);
+    
+    lama::DenseVector<ValueType> select(vX.getDistributionPtr(),0.0);
+    lama::DenseVector<ValueType> select_surface_zero(vX.getDistributionPtr(),1.0);
+    
+    lama::DenseVector<ValueType> temp(vX.getDistributionPtr(),0.0);
+    
+    lama::DenseVector<ValueType> temp2(size_vec,0.0);
+    
+    
+    A_P.setRow(test,1, scai::utilskernel::reduction::ReductionOp::MULT);
+    
+    KITGPI::Acquisition::Coordinates<ValueType> coord;
+    
+    IndexType count=0;
+    // Nullen von DyB
+    for(IndexType i=0; i<size_vec; i++){
+        
+        if(coord.locatedOnSurface(i,100,100,100)){
+            E_P.setRow(test,i,scai::utilskernel::reduction::ReductionOp::COPY);
+            select.setValue(i,-1.0);
+            select_surface_zero.setValue(i,0.0);
+            count++;
+            
+          std::cout << count << std::endl;
+            
+//            D.getRow(temp2,i);
+//            temp2.setValue(i,2);
+//            D.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::COPY);
+//            
+            E.getRow(temp2,i);
+            temp2.setValue(i,2.0);
+            E.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::MULT);
+//
+//            F.getRow(temp2,i);
+//            temp2.setValue(i,2);
+//            F.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::COPY);
+//            
+        }
+        
+    }
+    std::cout << count << std::endl;
+    
+    temp=lambda+2*mu;
+    temp.invert();
+    temp.scale(lambda);
+    select.scale(temp);
+    
+    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
+    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
+    //
+    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
+    //
+    //    lama::Matrix& A_P = *A_P_Ptr;
+    //    A_P=A;
+    
     /* --------------------------------------- */
     /* Start runtime critical part             */
     /* --------------------------------------- */
@@ -274,7 +338,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
             HOST_PRINT( comm, "Calculating time step " << t << " from " << NT << "\n" );
         }
         
+        /* ----------------*/
         /* update velocity */
+        /* ----------------*/
         update = A * Sxx;
         update += E * Sxy;
         update += F * Sxz;
@@ -290,22 +356,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update += C * Szz;
         vZ += update.scale(inverseDensity);
         
+        /* ----------------*/
         /* pressure update */
-        update = B * vX;
-        update += A * vY;
-        Sxy += update.scale(mu);
-        
-        update = C * vX;
-        update += A * vZ;
-        Sxz += update.scale(mu);
-        
-        update = C * vY;
-        update += B * vZ;
-        Syz += update.scale(mu);
-        
-        vxx = D * vX;
-        vyy = E * vY;
-        vzz = F * vZ;
+        /* ----------------*/
+        vxx = D_P * vX;
+        vyy = E_P * vY;
+        vzz = F_P * vZ;
         
         update = vxx;
         update += vyy;
@@ -318,11 +374,34 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Syy += 2 * vyy.scale(mu);
         Szz += update;
         Szz += 2 * vzz.scale(mu);
-
+        
+        // Apply horizontal update instead of vertical one
+        update=vxx+vzz;
+        update.scale(select);
+        
+        Sxx +=update;
+        Szz +=update;
+        
+        // Zero elements on the Free Surface
+        Syy.scale(select_surface_zero);
+        
+        update = B_P * vX;
+        update += A_P * vY;
+        Sxy += update.scale(mu);
+        
+        update = C_P * vX;
+        update += A_P * vZ;
+        Sxz += update.scale(mu);
+        
+        update = C_P * vY;
+        update += B_P * vZ;
+        Syz += update.scale(mu);
+        
+        
         /* Apply source and save seismogram */
         applySource(sources,wavefield,NT,t);
         gatherSeismograms(wavefield,NT,t);
-
+        
     }
     
     /* --------------------------------------- */
