@@ -1,4 +1,4 @@
-function write_mtx(filename,matrix)
+function writeMatrix2mtx(filename,matrix)
 
 n=size(matrix,1);
 

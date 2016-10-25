@@ -3,10 +3,10 @@ clearvars; close all;
 OUTPUT_FILENAME='receiver.mtx';
 
 %% Requiered Parameters
-X=[70 75]; % Coordinates in X (Grid points)
-Y=[70 75]; % Coordinates in Y (Grid points)
-Z=[70 75]; % Coordinates in Z (Grid points)
-RECEIVER_TYPE=[1 1]; % RECEIVER Type (1=P-RECEIVER)
+X=[70]; % Coordinates in X (Grid points)
+Y=[70]; % Coordinates in Y (Grid points) (depth)
+Z=[70]; % Coordinates in Z (Grid points)
+RECEIVER_TYPE=[1]; % RECEIVER Type (1=P, 2=vX, 3=vY, 4=vZ)
 
 %% Write to file
 
@@ -14,4 +14,4 @@ RECEIVER_TYPE=[1 1]; % RECEIVER Type (1=P-RECEIVER)
 RECEIVER_FILE=[X' Y' Z' RECEIVER_TYPE'];
 
 % Write mtx file
-write_mtx(OUTPUT_FILENAME,RECEIVER_FILE);
+writeMatrix2mtx(OUTPUT_FILENAME,RECEIVER_FILE);

@@ -2,9 +2,15 @@
 # expects exactly these number of arguments (14) and these names
 
 # define spatial sampling: number of grid points in direction
-NZ=100 # depth
 NX=100 # horizontal 1
-NY=100 # horizontal 2
+NY=100 # depth
+NZ=100 # horizontal 2
+
+# define Partitioning
+UseCubePartitioning=0
+ProcNX=2
+ProcNY=1
+ProcNZ=1
 
 # define distance between two grid points in meter
 DH=50
@@ -18,10 +24,11 @@ ModelRead=0
 ModelWrite=0
 ModelFilename=model/test
 
-velocity=3500 # Density in kilogramms per cubic meter
+velocityP=3500 # P-wave velocity in meter per seconds
+velocityS=2000 # S-wave velocity in meter per seconds
 rho=2000      # P-wave velocity in meter per seconds
 
 # Acquisition
 SourceFilename=ci/sources_ci.mtx
 ReceiverFilename=ci/receiver_ci.mtx
-SeismogramFilename=ci/seismogram_ci.mtx
+SeismogramFilename=ci/seismogram_ci.elastic.mtx

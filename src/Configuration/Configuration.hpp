@@ -32,10 +32,10 @@ namespace KITGPI {
             
             void print();
             
-            IndexType getNZ() { return NZ; } ///< Return NZ (Depth)
             IndexType getNX() { return NX; } ///< Return NX
-            IndexType getNY() { return NY; } ///< Return NY
-            
+            IndexType getNY() { return NY; } ///< Return NY (Depth)
+            IndexType getNZ() { return NZ; } ///< Return NZ
+
             ValueType getDH() { return DH; } ///< Return Grid spacing
             
             ValueType getDT() { return DT; } ///< Return Time Step
@@ -44,7 +44,8 @@ namespace KITGPI {
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
-            ValueType getVelocity() { return velocity; } ///< Return Velocity for homogeneous model
+            ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
+            ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
             ValueType getRho() { return rho; } ///< Return Density for homogeneous model
             
             std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
@@ -53,20 +54,26 @@ namespace KITGPI {
             
             IndexType getN() { return N; } ///< Return N
             
-            ValueType getM() { return M; } ///< Return M
-            
+            ValueType getLambda() { return lambda; } ///< Return lambda
+            ValueType getMu() { return mu; } ///< Return lambda
+
             IndexType getNT() { return NT; } ///< Return NT
             
+            IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
+            IndexType getProcNX() { return ProcNX;} ///< Return number of cores in X-direction
+            IndexType getProcNY() { return ProcNY;} ///< Return number of cores in Y-direction
+            IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
+
         private:
             
-            IndexType NumParameters=14; ///< Number of parameters in input file
+            IndexType NumParameters; ///< Number of parameters in input file
             
             /* read parameters */
             
             // define spatial sampling: number of grid points in direction
-            IndexType NZ; ///< Grid points depth
             IndexType NX; ///< Grid points horizontal 1
-            IndexType NY; ///< Grid points horizontal 2
+            IndexType NY;///< Grid points depth
+            IndexType NZ; ///< Grid points horizontal 2
             
             /// define distance between two grid points in meter
             ValueType DH;
@@ -78,8 +85,14 @@ namespace KITGPI {
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
-            ValueType velocity; ///< Density in kilo gramms per cubic meter
+            ValueType velocityP; ///< Density in kilo gramms per cubic meter
+            ValueType velocityS; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
+            
+            IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields (1=ON, else=OFF)
+            IndexType ProcNX; ///< Number of cores in X-direction
+            IndexType ProcNY; ///< Number of cores in Y-direction
+            IndexType ProcNZ; ///< Number of cores in Z-direction
             
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
@@ -90,8 +103,8 @@ namespace KITGPI {
             
             IndexType N; ///< Number of total grid points NX*NY*NZ
             
-            ValueType M; ///< P-wave modulus (in case of homogeneous model)
-            
+            ValueType lambda; ///< First Lame parameter
+            ValueType mu; ///<< Second Lame parameter
             IndexType NT; ///< Number of time steps
             
         };
@@ -103,7 +116,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename )
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(19)
 {
     // read all lines in file
     
@@ -159,22 +172,29 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
-    std::istringstream( map[ "ModelFilename" ] ) >> ModelFilename; // std::string
+    ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
+
     
-    std::istringstream( map[ "velocity" ] ) >> velocity; // ValueType
+    std::istringstream( map[ "velocityP" ] ) >> velocityP; // ValueType
+    std::istringstream( map[ "velocityS" ] ) >> velocityS; // ValueType
+
     std::istringstream( map[ "rho" ] ) >> rho; // ValueType
     
-    std::istringstream( map[ "SourceFilename" ] ) >> SourceFilename; // std::string
-    std::istringstream( map[ "ReceiverFilename" ] ) >> ReceiverFilename; // std::string
-    std::istringstream( map[ "SeismogramFilename" ] ) >> SeismogramFilename; // std::string
+    SourceFilename = std::istringstream( map[ "SourceFilename" ] ).str(); // std::string
+    ReceiverFilename = std::istringstream( map[ "ReceiverFilename" ] ).str(); // std::string
+    SeismogramFilename = std::istringstream( map[ "SeismogramFilename" ] ).str(); // std::string
     
+    std::istringstream( map[ "UseCubePartitioning" ] ) >> UseCubePartitioning; // IndexType
+    std::istringstream( map[ "ProcNX" ] ) >> ProcNX; // IndexType
+    std::istringstream( map[ "ProcNY" ] ) >> ProcNY; // IndexType
+    std::istringstream( map[ "ProcNZ" ] ) >> ProcNZ; // IndexType
     
     // calculate other parameters
     
     N = NZ * NX * NY;
     
-    M = velocity * velocity * rho; // P-wave modulus
-    
+    lambda =(-2*velocityS*velocityS + velocityP * velocityP ) * rho; // P-wave modulus
+    mu=rho*velocityS*velocityS;
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
     
@@ -186,7 +206,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
 template<typename ValueType>
 void KITGPI::Configuration::Configuration<ValueType>::print()
 {
-    IndexType velocity_max = velocity; // TODO: is velocity a vector?
+    IndexType velocity_max = velocityP; // TODO: is velocity a vector?
     double courant = velocity_max * DT / DH;
     
     std::cout << "Configuration:" << std::endl;
@@ -199,9 +219,10 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         exit(0);
     }
     std::cout << "Modelling-domain:" << std::endl;
-    std::cout << "    Z: " << DH * NZ << " m (Depth)" << std::endl;
     std::cout << "    X: " << DH * NX << " m (Horizontal)" << std::endl;
-    std::cout << "    Y: " << DH * NY << " m (Horizontal)" << std::endl;
+    std::cout << "    Y: " << DH * NY << " m (Depth)" << std::endl;
+    std::cout << "    Z: " << DH * NZ << " m (Horizontal)" << std::endl;
+
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
     std::cout << "    Receiver acquisition will be read in from " << ReceiverFilename << std::endl;
@@ -213,7 +234,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;
-        std::cout << "    Velocity:" << velocity << " m/s" << std::endl;
+        std::cout << "    VelocityP:" << velocityP << " m/s" << std::endl;
+        std::cout << "    VelocityS:" << velocityS << " m/s" << std::endl;
+
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
     if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;
