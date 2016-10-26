@@ -449,7 +449,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     }
     
     lama::DenseMatrix<ValueType>& signalsMatrix=signals.getData();
-    signalsMatrix.setRow(signalVector,SourceLocal,utilskernel::reduction::ReductionOp::COPY);
+    signalsMatrix.setRow(signalVector,SourceLocal,utilskernel::binary::BinaryOp::COPY);
     
 }
 

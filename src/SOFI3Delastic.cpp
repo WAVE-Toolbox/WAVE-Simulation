@@ -41,6 +41,8 @@
 
 #include "Partitioning/Partitioning3DCubes.hpp"
 
+#include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -111,13 +113,9 @@ int main( int argc, char* argv[] )
     
     ForwardSolver::FD3Delastic<ValueType> solver;
     
-    HOST_PRINT( comm, "Start time stepping\n" );
-    start_t = common::Walltime::get();
+    solver.prepareBoundaryConditions(config,derivatives,dist);
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
-    
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
+    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
     solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
     

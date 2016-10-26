@@ -13,6 +13,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "BoundaryCondition/FreeSurface3Delastic.hpp"
 
 namespace KITGPI {
     
@@ -26,16 +27,22 @@ namespace KITGPI {
         public:
             
             /* Default constructor */
-            FD3Delastic(){};
+            FD3Delastic():useFreeSurface(false){};
             
             /* Default destructor */
             ~FD3Delastic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
             
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist);
+            
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
         private:
+            
+            /* Boundary Conditions */
+            BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface;
+            bool useFreeSurface;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -44,6 +51,17 @@ namespace KITGPI {
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist){
+    
+    /* Prepare Free Surface */
+    if(config.getFreeSurface()){
+        useFreeSurface=true;
+        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+    }
+    
+}
 
 /*! \brief Appling the sources to the wavefield
  *
@@ -263,74 +281,21 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
-    lama::CSRSparseMatrix<ValueType> E_P(E);
-    
-    //lama::CSRSparseMatrix<ValueType>& E_P=E;
-    
-    IndexType FreeSurface=1;
-    
-    dmemo::DistributionPtr dist=vX.getDistributionPtr();
-    IndexType size_vec=vX.size();
-    
-    /* Local vectors */
-    lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
-    lama::DenseVector<ValueType> modfiyRowLocal(size_vec,0.0); // Vector to manipulate row content of derivative matrix
-    
-    /* Distributed vectors */
-    lama::DenseVector<ValueType> setSurfaceZero(dist,1.0); // Vector to set elements on surface to zero
-    lama::DenseVector<ValueType> scaleHorizontalUpdate(dist,0.0); // Vector as scaling for horizontal update instead of vertical
-    lama::DenseVector<ValueType> tempScale(dist); // Temp vector
-    
-    hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
-    
-    IndexType NX=100;
-    IndexType NY=100;
-    IndexType NZ=100;
-    
-    KITGPI::Acquisition::Coordinates<ValueType> coord;
-    
-    if(FreeSurface){
-        
-        /* Get local "global" indices */
-        hmemo::HArray<IndexType> localIndices;
-        dist->getOwnedIndexes(localIndices);
-        
-        //global2local
-        
-        for(IndexType rowGlobal=0; rowGlobal<size_vec; rowGlobal++){
-            
-            /* Determine if the current grid point is located on the surface */
-            if(coord.locatedOnSurface(rowGlobal,NX,NY,NZ)){
-                
-                /* Set vertical updates of the strain to zero at the surface */
-                E_P.setRow(zeroRowLocal,rowGlobal,scai::utilskernel::reduction::ReductionOp::COPY);
-                
-                /* Set horizontal update to -1 at the surface and leave it zero else */
-                scaleHorizontalUpdate.setValue(rowGlobal,-1.0);
-                
-                /* Set elements at the surface to zero */
-                setSurfaceZero.setValue(rowGlobal,0.0);
-                
-                /* Apply imaging conditon to vertical derivative matrix of velocity update */
-                E.getRow(modfiyRowLocal,rowGlobal); // Get the row
-                modfiyRowLocal.setValue(rowGlobal,2.0); // Modify the row
-                E.setRow(modfiyRowLocal,rowGlobal,scai::utilskernel::reduction::ReductionOp::MULT); // Set the row
-                
-            }
-            
-        }
-        
-        /* Calculate horizontal update scaling factors */
-        tempScale=lambda+2*mu;
-        tempScale.invert();
-        tempScale.scale(lambda);
-        scaleHorizontalUpdate.scale(tempScale);
+    /* In dependency of the free surface, set the derivative martix E for the pressure update */
+    lama::CSRSparseMatrix<ValueType>* DyBPressurePtr;
+    DyBPressurePtr=&E; // Default: Identical to velocity update
+    if(useFreeSurface){
+        FreeSurface.setModelparameter(model);
+        DyBPressurePtr=&(FreeSurface.getDybPressure());
     }
+    lama::CSRSparseMatrix<ValueType>& E_P=*DyBPressurePtr;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
     /* --------------------------------------- */
     
+    HOST_PRINT( comm, "Start time stepping\n" );
+    ValueType start_t = common::Walltime::get();
     for ( IndexType t = 0; t < NT; t++ ){
         
         
@@ -375,18 +340,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Szz += update;
         Szz += 2 * vzz.scale(mu);
         
-        if(FreeSurface){
-            // Apply horizontal update which replaces the vertical one
-            update=vxx+vzz;
-            update.scale(scaleHorizontalUpdate);
-            
-            Sxx +=update;
-            Szz +=update;
-            
-            // Set the elements on the surface to zero
-            Syy.scale(setSurfaceZero);
-        }
-        
         update = B * vX;
         update += A * vY;
         Sxy += update.scale(mu);
@@ -399,12 +352,19 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update += B * vZ;
         Syz += update.scale(mu);
         
+        /* Apply free surface to stress update */
+        if(useFreeSurface){
+            update=vxx+vzz;
+            FreeSurface.apply(update,Sxx,Syy,Szz);
+        }
         
         /* Apply source and save seismogram */
         applySource(sources,wavefield,NT,t);
         gatherSeismograms(wavefield,NT,t);
         
     }
+    ValueType end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Stop runtime critical part             */

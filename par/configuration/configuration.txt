@@ -17,16 +17,19 @@ DH=50
 
 # define temporal sampling
 DT=2.0e-03 # temporal sampling in seconds
-T=2      # total simulation time
+T=2     # total simulation time
 
 # define material parameter
 ModelRead=0
 ModelWrite=0
 ModelFilename=model/test
 
+# Apply the free surface condition
+FreeSurface=0
+
 # generate homogeneous model
 velocityP=3500 # P-wave velocity in meter per seconds
-velocityS=0 # S-wave velocity in meter per seconds
+velocityS=1500 # S-wave velocity in meter per seconds
 rho=2000       # Density in kilo gramms per cubic meter
 
 # Acquisition
