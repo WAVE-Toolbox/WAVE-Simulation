@@ -263,69 +263,69 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
-    lama::CSRSparseMatrix<ValueType> A_P(A);
-    lama::CSRSparseMatrix<ValueType> B_P(B);
-    lama::CSRSparseMatrix<ValueType> C_P(C);
-    lama::CSRSparseMatrix<ValueType> D_P(D);
     lama::CSRSparseMatrix<ValueType> E_P(E);
-    lama::CSRSparseMatrix<ValueType> F_P(F);
     
+    //lama::CSRSparseMatrix<ValueType>& E_P=E;
+    
+    IndexType FreeSurface=1;
+    
+    dmemo::DistributionPtr dist=vX.getDistributionPtr();
     IndexType size_vec=vX.size();
-    lama::DenseVector<ValueType> test(size_vec,0.0);
     
-    lama::DenseVector<ValueType> select(vX.getDistributionPtr(),0.0);
-    lama::DenseVector<ValueType> select_surface_zero(vX.getDistributionPtr(),1.0);
+    /* Local vectors */
+    lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
+    lama::DenseVector<ValueType> modfiyRowLocal(size_vec,0.0); // Vector to manipulate row content of derivative matrix
     
-    lama::DenseVector<ValueType> temp(vX.getDistributionPtr(),0.0);
+    /* Distributed vectors */
+    lama::DenseVector<ValueType> setSurfaceZero(dist,1.0); // Vector to set elements on surface to zero
+    lama::DenseVector<ValueType> scaleHorizontalUpdate(dist,0.0); // Vector as scaling for horizontal update instead of vertical
+    lama::DenseVector<ValueType> tempScale(dist); // Temp vector
     
-    lama::DenseVector<ValueType> temp2(size_vec,0.0);
+    hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
     
-    
-    A_P.setRow(test,1, scai::utilskernel::reduction::ReductionOp::MULT);
+    IndexType NX=100;
+    IndexType NY=100;
+    IndexType NZ=100;
     
     KITGPI::Acquisition::Coordinates<ValueType> coord;
     
-    IndexType count=0;
-    // Nullen von DyB
-    for(IndexType i=0; i<size_vec; i++){
+    if(FreeSurface){
         
-        if(coord.locatedOnSurface(i,100,100,100)){
-            E_P.setRow(test,i,scai::utilskernel::reduction::ReductionOp::COPY);
-            select.setValue(i,-1.0);
-            select_surface_zero.setValue(i,0.0);
-            count++;
+        /* Get local "global" indices */
+        hmemo::HArray<IndexType> localIndices;
+        dist->getOwnedIndexes(localIndices);
+        
+        //global2local
+        
+        for(IndexType rowGlobal=0; rowGlobal<size_vec; rowGlobal++){
             
-          std::cout << count << std::endl;
+            /* Determine if the current grid point is located on the surface */
+            if(coord.locatedOnSurface(rowGlobal,NX,NY,NZ)){
+                
+                /* Set vertical updates of the strain to zero at the surface */
+                E_P.setRow(zeroRowLocal,rowGlobal,scai::utilskernel::reduction::ReductionOp::COPY);
+                
+                /* Set horizontal update to -1 at the surface and leave it zero else */
+                scaleHorizontalUpdate.setValue(rowGlobal,-1.0);
+                
+                /* Set elements at the surface to zero */
+                setSurfaceZero.setValue(rowGlobal,0.0);
+                
+                /* Apply imaging conditon to vertical derivative matrix of velocity update */
+                E.getRow(modfiyRowLocal,rowGlobal); // Get the row
+                modfiyRowLocal.setValue(rowGlobal,2.0); // Modify the row
+                E.setRow(modfiyRowLocal,rowGlobal,scai::utilskernel::reduction::ReductionOp::MULT); // Set the row
+                
+            }
             
-//            D.getRow(temp2,i);
-//            temp2.setValue(i,2);
-//            D.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::COPY);
-//            
-            E.getRow(temp2,i);
-            temp2.setValue(i,2.0);
-            E.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::MULT);
-//
-//            F.getRow(temp2,i);
-//            temp2.setValue(i,2);
-//            F.setRow(temp2,i,scai::utilskernel::reduction::ReductionOp::COPY);
-//            
         }
         
+        /* Calculate horizontal update scaling factors */
+        tempScale=lambda+2*mu;
+        tempScale.invert();
+        tempScale.scale(lambda);
+        scaleHorizontalUpdate.scale(tempScale);
     }
-    std::cout << count << std::endl;
-    
-    temp=lambda+2*mu;
-    temp.invert();
-    temp.scale(lambda);
-    select.scale(temp);
-    
-    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
-    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
-    //
-    //    common::unique_ptr<lama::Matrix> A_P_Ptr( A.newMatrix() );
-    //
-    //    lama::Matrix& A_P = *A_P_Ptr;
-    //    A_P=A;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
@@ -359,9 +359,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* ----------------*/
         /* pressure update */
         /* ----------------*/
-        vxx = D_P * vX;
+        vxx = D * vX;
         vyy = E_P * vY;
-        vzz = F_P * vZ;
+        vzz = F * vZ;
         
         update = vxx;
         update += vyy;
@@ -375,26 +375,28 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Szz += update;
         Szz += 2 * vzz.scale(mu);
         
-        // Apply horizontal update instead of vertical one
-        update=vxx+vzz;
-        update.scale(select);
+        if(FreeSurface){
+            // Apply horizontal update which replaces the vertical one
+            update=vxx+vzz;
+            update.scale(scaleHorizontalUpdate);
+            
+            Sxx +=update;
+            Szz +=update;
+            
+            // Set the elements on the surface to zero
+            Syy.scale(setSurfaceZero);
+        }
         
-        Sxx +=update;
-        Szz +=update;
-        
-        // Zero elements on the Free Surface
-        Syy.scale(select_surface_zero);
-        
-        update = B_P * vX;
-        update += A_P * vY;
+        update = B * vX;
+        update += A * vY;
         Sxy += update.scale(mu);
         
-        update = C_P * vX;
-        update += A_P * vZ;
+        update = C * vX;
+        update += A * vZ;
         Sxz += update.scale(mu);
         
-        update = C_P * vY;
-        update += B_P * vZ;
+        update = C * vY;
+        update += B * vZ;
         Syz += update.scale(mu);
         
         

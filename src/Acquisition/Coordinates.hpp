@@ -70,10 +70,9 @@ namespace KITGPI {
 /* ------- */
 
 template <typename ValueType>
-bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ){
+bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/){
     coordinate3D result;
     result=map3Dindex2coordinate(coordinate,NX,NY);
-    //std::cout << "X:" << result.x << "Y:" << result.y << "Z:" << result.z << std::endl;
     if(result.y==1){
         return(true);
     } else {
