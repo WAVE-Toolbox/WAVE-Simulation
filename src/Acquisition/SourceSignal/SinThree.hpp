@@ -60,11 +60,10 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVec
      *  t=0:DT:(NT*DT-DT);
      *  when t>=tshift && t<=tshift+1.0/FC;
      *  tau=pi*FC*(t-Tshift);
-     *  signal=(0.5-0.75*cos(tau)+0.25*(sin(tau))^3)/FC/0.75/pi;
+     *  signal=(sin(tau))^3;
      */
+    
     lama::DenseVector<ValueType> zero( NT, 0.0 );
-    lama::DenseVector<ValueType> help( NT, 0.0 );
-    lama::DenseVector<ValueType> half( NT, 0.5 );
     
     double temp;
     IndexType time_index1,time_index2,i,count;
@@ -72,23 +71,16 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVec
     time_index1 = floor(Tshift/DT);
     time_index2 = time_index1 + floor(1.0/FC/DT);
     
-    /* this is for source[i] = (0.5-0.75*cos(tau[i])+0.25*(cos(tau[i]))^3)/FC/0.75/pi when t>=tshift && t<=tshift+1.0/FC; */
+    
+    /* this is for source[i] = (sin(PI*(t-Tshift)*FC))^3 when t>=tshift && t<=tshift+1.0/FC; */
     count=0;
     for (i=time_index1; i<=time_index2; i++) {
-        temp=count * DT * M_PI * FC ;
-        temp=cos(temp);
-        help.setValue(i,temp);
+        temp=count * DT * M_PI *  FC ;
+        temp=sin(temp);
         temp=pow(temp,3);
         zero.setValue(i,temp);
         count++;
     }
-    help = 0.75 *help;
-    zero = 0.25 * zero;
-    zero = zero - help;
-    zero = half + zero;
-    zero = zero/FC;
-    zero = zero/M_PI;
-    zero = zero/0.75;
     
     signal = lama::Scalar(AMP) * zero;
     
