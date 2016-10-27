@@ -22,6 +22,25 @@ namespace KITGPI {
             IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
             IndexType y; //!< y Position in Z-direction in grid points (Depth)
         };
+	
+	/*! \brief Struct to save 3-D distances to the edges
+	*/
+	 struct distance3D
+        {
+		IndexType min; //!< x Minimum distance to all edges  in grid points
+		IndexType x; //!< x Distance to edge in X-direction in grid points (Horizontal 1)
+		IndexType y; //!< y Distance to edge in Y-direction in grid points (Depth)
+		IndexType z; //!< z Distance to edge in Z-direction in grid points (Horizontal 2)
+        };
+        
+        /*! \brief Struct to save 2-D distances to the edges
+	*/
+        struct distance2D
+        {
+		IndexType min; //!< x Minimum distance to all edges  in grid points
+		IndexType x; //!< x Distance to edge in X-direction in grid points (Horizontal 1)
+		IndexType y; //!< y Distance to edge in Y-direction in grid points (Depth)
+        };
         
         /*! \brief This class manages the transformation of Coordinates
          */
@@ -31,10 +50,7 @@ namespace KITGPI {
             
         public:
             
-            
-        protected:
-            
-            // Coordinate --> Index:
+	// Coordinate --> Index:
             // Interfaces 3-D
             IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
             IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
@@ -45,7 +61,13 @@ namespace KITGPI {
             // Index --> Coordinate:
             coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
             coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
+	    
+	    // Distance coordinate <-> model edges
+	    distance3D edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);	    
+	    distance2D edgeDistance(coordinate2D coordinate, IndexType NX, IndexType NY);
             
+	protected:
+	    
             void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
         private:
@@ -57,6 +79,10 @@ namespace KITGPI {
             // Index --> Coordinate:
             coordinate3D map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
             coordinate2D map2Dindex2coordinate(IndexType coordinate, IndexType NX);
+	    
+	    // distance coordinate <-> edges
+	    
+	    distance3D estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
             
         };
         
@@ -216,6 +242,37 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param localIndices DenseVector with local coordinates
  \param dist Distribution of global grid
  */
+
+
+template <typename ValueType>
+KITGPI::Acquisition::distance3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+{
+	distance3D distance;
+	IndexType temp;
+
+    	distance.x=!((NX-X)<(X-1))?(X-1):(NX-X);
+	distance.y=!((NY-Y)<(Y-1))?(Y-1):(NY-Y);  
+	distance.z=!((NX-Z)<(Z-1))?(Z-1):(NZ-Z);
+	temp=!(distance.x<distance.y)?distance.y:distance.x;
+	distance.min=!(distance.z<temp)?temp:distance.z;
+	
+        return(distance) ;
+    
+}
+
+
+
+template <typename ValueType>
+KITGPI::Acquisition::distance3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
+{
+    return(estimateDistanceToEdges3D(coordinate.x,coordinate.y,coordinate.z,NX,NY,NZ));
+}
+
+
+
+
+
+
 template <typename ValueType>
 void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
 {
