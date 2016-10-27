@@ -64,6 +64,15 @@ namespace KITGPI {
              */
             virtual void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
             
+            /*! \brief Initialitation of the boundary conditions
+             *
+             *
+             \param config Configuration
+             \param derivatives Derivatives matrices
+             \param dist Distribution of the wave fields
+             */
+            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist)=0;
+            
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

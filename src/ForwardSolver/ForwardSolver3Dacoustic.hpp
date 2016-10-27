@@ -13,6 +13,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "BoundaryCondition/FreeSurface3Dacoustic.hpp"
 
 namespace KITGPI {
     
@@ -26,16 +27,22 @@ namespace KITGPI {
         public:
             
             /* Default constructor */
-            FD3Dacoustic(){};
+            FD3Dacoustic():useFreeSurface(false){};
             
             /* Default destructor */
             ~FD3Dacoustic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
             
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist);
+            
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
         private:
+            
+            /* Boundary Conditions */
+            BoundaryCondition::FreeSurface3Dacoustic<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            bool useFreeSurface; //!< Bool if free surface is in use
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -44,6 +51,24 @@ namespace KITGPI {
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
+
+/*! \brief Initialitation of the boundary conditions
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param dist Distribution of the wave fields
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist){
+    
+    /* Prepare Free Surface */
+    if(config.getFreeSurface()){
+        useFreeSurface=true;
+        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+    }
+    
+}
 
 /*! \brief Appling the sources to the wavefield
  *
@@ -271,6 +296,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         update +=  F * vZ;
         p += update.scale(lambda);
 
+        /* Apply free surface to pressure update */
+        if(useFreeSurface){
+            FreeSurface.apply(p);
+        }
 
         /* Apply source and save seismogram */
         applySource(sources,wavefield,NT,t);

@@ -2,6 +2,7 @@
 
 #include "../Derivatives/Derivatives.hpp"
 #include "../../Common/HostPrint.hpp"
+#include "FreeSurface.hpp"
 
 namespace KITGPI {
     
@@ -12,7 +13,7 @@ namespace KITGPI {
             
             //! \brief 3-D elastic free surface
             template<typename ValueType>
-            class FreeSurface3Delastic
+            class FreeSurface3Delastic : public FreeSurface<ValueType>
             {
             public:
                 
@@ -112,10 +113,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     
 }
 
-/*! \brief Apply free surface condition during time stepping
+/*! \brief Initialitation of the free surface
  *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
