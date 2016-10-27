@@ -16,6 +16,7 @@
 #include "Acquisition/Sources.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
+
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 
 #include "ForwardSolver/Derivatives/FD3D.hpp"
@@ -97,8 +98,7 @@ int main( int argc, char* argv[] )
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
     solver.seismogram.setDT(config.getDT());
-    solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
-    
+    solver.seismogram.writeToFileRaw(config.getSeismogramFilename(), config.getNX(), config.getNY(), config.getNZ(), config.getDH());
     
     return 0;
 }
