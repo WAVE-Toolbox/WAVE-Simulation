@@ -54,6 +54,8 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getTraceType();
             lama::DenseVector<ValueType>& getCoordinates();
             
+            void setDT(ValueType newDT);
+            
         private:
             
             IndexType numSamples; //!< Number of samples of one trace
@@ -72,6 +74,18 @@ namespace KITGPI {
     }
 }
 
+//! \brief Set the temporal sampling DT
+/*!
+ *
+ \param newDT Temporal sampling which will be set to the seismogram
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT){
+    if(newDT<0){
+        COMMON_THROWEXCEPTION(" DT is smaller zero. ")
+    }
+    DT=newDT;
+}
 
 //! \brief Initiate the seismogram by receivers
 /*!

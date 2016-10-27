@@ -365,6 +365,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, Valu
     
     allocateSignals(NT);
     
+    signals.setDT(DT);
+    
     utilskernel::LArray<ValueType>* wavelet_type_LA=&wavelet_type.getLocalValues();
     hmemo::ReadAccess<ValueType> read_wavelet_type_LA(*wavelet_type_LA);
     IndexType wavelet_type_i;

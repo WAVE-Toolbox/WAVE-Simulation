@@ -13,6 +13,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "BoundaryCondition/FreeSurface3Delastic.hpp"
 
 namespace KITGPI {
     
@@ -26,16 +27,22 @@ namespace KITGPI {
         public:
             
             /* Default constructor */
-            FD3Delastic(){};
+            FD3Delastic():useFreeSurface(false){};
             
             /* Default destructor */
             ~FD3Delastic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
             
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist);
+            
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
         private:
+            
+            /* Boundary Conditions */
+            BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            bool useFreeSurface; //!< Bool if free surface is in use
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -44,6 +51,24 @@ namespace KITGPI {
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
+
+/*! \brief Initialitation of the boundary conditions
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param dist Distribution of the wave fields
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist){
+    
+    /* Prepare Free Surface */
+    if(config.getFreeSurface()){
+        useFreeSurface=true;
+        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+    }
+    
+}
 
 /*! \brief Appling the sources to the wavefield
  *
@@ -73,7 +98,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sou
         
         /* Get reference to sourcesignal storing seismogram */
         Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
-
+        
         /* Get reference to source type of sources */
         lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
         utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
@@ -144,7 +169,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields
     IndexType numTracesLocal=seismogram.getNumTracesLocal();
     
     if(numTracesLocal>0){
-    
+        
         /* Get reference to wavefields */
         lama::DenseVector<ValueType>& vX=wavefield.getVX();
         lama::DenseVector<ValueType>& vY=wavefield.getVY();
@@ -263,10 +288,21 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
+    /* In dependency of the free surface, set the derivative martix E for the pressure update */
+    lama::CSRSparseMatrix<ValueType>* DyBPressurePtr;
+    DyBPressurePtr=&E; // Default: Identical to velocity update
+    if(useFreeSurface){
+        FreeSurface.setModelparameter(model);
+        DyBPressurePtr=&(FreeSurface.getDybPressure());
+    }
+    lama::CSRSparseMatrix<ValueType>& E_P=*DyBPressurePtr;
+    
     /* --------------------------------------- */
     /* Start runtime critical part             */
     /* --------------------------------------- */
     
+    HOST_PRINT( comm, "Start time stepping\n" );
+    ValueType start_t = common::Walltime::get();
     for ( IndexType t = 0; t < NT; t++ ){
         
         
@@ -274,7 +310,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
             HOST_PRINT( comm, "Calculating time step " << t << " from " << NT << "\n" );
         }
         
+        /* ----------------*/
         /* update velocity */
+        /* ----------------*/
         update = A * Sxx;
         update += E * Sxy;
         update += F * Sxz;
@@ -290,21 +328,11 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update += C * Szz;
         vZ += update.scale(inverseDensity);
         
+        /* ----------------*/
         /* pressure update */
-        update = B * vX;
-        update += A * vY;
-        Sxy += update.scale(mu);
-        
-        update = C * vX;
-        update += A * vZ;
-        Sxz += update.scale(mu);
-        
-        update = C * vY;
-        update += B * vZ;
-        Syz += update.scale(mu);
-        
+        /* ----------------*/
         vxx = D * vX;
-        vyy = E * vY;
+        vyy = E_P * vY;
         vzz = F * vZ;
         
         update = vxx;
@@ -318,12 +346,32 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Syy += 2 * vyy.scale(mu);
         Szz += update;
         Szz += 2 * vzz.scale(mu);
-
+        
+        update = B * vX;
+        update += A * vY;
+        Sxy += update.scale(mu);
+        
+        update = C * vX;
+        update += A * vZ;
+        Sxz += update.scale(mu);
+        
+        update = C * vY;
+        update += B * vZ;
+        Syz += update.scale(mu);
+        
+        /* Apply free surface to stress update */
+        if(useFreeSurface){
+            update=vxx+vzz;
+            FreeSurface.apply(update,Sxx,Syy,Szz);
+        }
+        
         /* Apply source and save seismogram */
         applySource(sources,wavefield,NT,t);
         gatherSeismograms(wavefield,NT,t);
-
+        
     }
+    ValueType end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Stop runtime critical part             */

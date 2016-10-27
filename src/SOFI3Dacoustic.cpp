@@ -1,22 +1,6 @@
 #include <scai/lama.hpp>
 
-#include <scai/lama/DenseVector.hpp>
-#include <scai/lama/expression/all.hpp>
-#include <scai/lama/matrix/all.hpp>
-#include <scai/lama/matutils/MatrixCreator.hpp>
-#include <scai/lama/norm/L2Norm.hpp>
-
-#include <scai/dmemo/BlockDistribution.hpp>
-#include <scai/dmemo/GenBlockDistribution.hpp>
-
-#include <scai/hmemo/ReadAccess.hpp>
-#include <scai/hmemo/WriteAccess.hpp>
-#include <scai/hmemo/HArray.hpp>
-
-#include <scai/tracing.hpp>
-
 #include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
 
 #include <iostream>
 
@@ -31,11 +15,10 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
-#include "ForwardSolver/Derivatives/Derivatives3D.hpp"
-
 #include "ForwardSolver/ForwardSolver.hpp"
-
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
+
+#include "ForwardSolver/Derivatives/FD3D.hpp"
 
 #include "Common/HostPrint.hpp"
 
@@ -111,14 +94,9 @@ int main( int argc, char* argv[] )
     
     ForwardSolver::FD3Dacoustic<ValueType> solver;
     
-    HOST_PRINT( comm, "Start time stepping\n" );
-    start_t = common::Walltime::get();
-    
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
-    
+    solver.seismogram.setDT(config.getDT());
     solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
     
     
