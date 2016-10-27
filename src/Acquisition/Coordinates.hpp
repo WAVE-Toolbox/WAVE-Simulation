@@ -69,6 +69,7 @@ namespace KITGPI {
 /* Mapping */
 /* ------- */
 
+//! Returns bool if given coordinate is located on the surface
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/){
     coordinate3D result;

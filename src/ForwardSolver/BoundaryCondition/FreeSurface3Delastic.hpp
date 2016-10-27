@@ -10,6 +10,7 @@ namespace KITGPI {
         //! \brief BoundaryCondition namespace
         namespace BoundaryCondition {
             
+            //! \brief 3-D elastic free surface
             template<typename ValueType>
             class FreeSurface3Delastic
             {
@@ -33,14 +34,14 @@ namespace KITGPI {
                 
             private:
                 
-                bool active;
+                bool active; //!< Bool if this free surface is active and initialized (==ready-to use)
                 
-                lama::DenseVector<ValueType> setSurfaceZero;
-                lama::DenseVector<ValueType> selectHorizontalUpdate;
+                lama::DenseVector<ValueType> setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
+                lama::DenseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
 
-                lama::DenseVector<ValueType> scaleHorizontalUpdate;
+                lama::DenseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter
                 
-                lama::CSRSparseMatrix<ValueType> DybPressure;
+                lama::CSRSparseMatrix<ValueType> DybPressure; //!< Derivative matrix for the pressure update
                 
             };
         } /* end namespace BoundaryCondition */
@@ -48,6 +49,12 @@ namespace KITGPI {
 } /* end namespace KITGPI */
 
 
+
+/*! \brief Scale horizontal update with model parameter
+ *
+ *
+ \param model which is used during forward modelling
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model){
     
@@ -61,6 +68,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
 
 }
 
+/*! \brief Getter method for DybPressure matrix
+ *
+ *
+ */
 template<typename ValueType>
 lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::getDybPressure(){
     if(!active){
@@ -69,12 +80,25 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::BoundaryCondition::Free
     return(DybPressure);
 }
 
-
+/*! \brief Getter method for active bool
+ *
+ *
+ */
 template<typename ValueType>
 bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::getActive(){
     return(active);
 }
 
+/*! \brief Apply free surface condition during time stepping
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param sumHorizonalDerivative Sum of horizontal velocity updates
+ \param Sxx Sxx wavefield
+ \param Syy Syy wavefield
+ \param Szz Szz wavefield
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
     
@@ -88,6 +112,17 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     
 }
 
+/*! \brief Apply free surface condition during time stepping
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param dist Distribution of wavefields
+ \param derivatives Derivative class
+ \param NX Number of grid points in X-Direction
+ \param NY Number of grid points in Y-Direction (Depth)
+ \param NZ Number of grid points in Z-Direction
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ){
     

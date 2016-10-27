@@ -41,8 +41,8 @@ namespace KITGPI {
         private:
             
             /* Boundary Conditions */
-            BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface;
-            bool useFreeSurface;
+            BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            bool useFreeSurface; //!< Bool if free surface is in use
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -52,6 +52,13 @@ namespace KITGPI {
 } /* end namespace KITGPI */
 
 
+/*! \brief Initialitation of the boundary conditions
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param dist Distribution of the wave fields
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist){
     
