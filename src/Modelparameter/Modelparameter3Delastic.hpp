@@ -99,11 +99,16 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
 :dirtyFlagInverseDensity(1)
 {
     if(config.getModelRead()){
-        switch (config.getModelRead()) {
+        switch (config.getModelParametrisation()) {
             case 1:
                 init(ctx,dist,config.getModelFilename());
+                break;
             case 2:
                 calculateLameParameters(ctx,dist,config.getModelFilename());
+                break;
+            default:
+                COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
+                break;
         }
     } else {
         init(ctx,dist,config.getLambda(),config.getMu(),config.getRho());
@@ -224,7 +229,7 @@ template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
 :dirtyFlagInverseDensity(1)
 {
-    lambda=rhs.M.copy();
+    lambda=rhs.lambda.copy();
     mu=rhs.mu.copy();
     density=rhs.density.copy();
 }
@@ -238,22 +243,18 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& r
  *
  *  Calculates Lambda with
  */
-
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::calculateLameParameters(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
-    std::string filenameLambda=filename+".lambda.mtx";
-    std::string filenamemu=filename+".mu.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->calculateLambda(velocityP,velocityS,density,lambda,ctx,dist,filenameVelocityP,filenameVelocityS,filenamedensity,filenameLambda);
-    this->calculateMu(velocityS,density,mu,ctx,dist,filenameVelocityP,filenamedensity,filenamemu);
+    this->calculateLambda(velocityP,velocityS,density,lambda,ctx,dist,filenameVelocityP,filenameVelocityS,filenamedensity);
+    this->calculateMu(velocityS,density,mu,ctx,dist,filenameVelocityS,filenamedensity);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     
 }
-
 
 
 /*! \brief Write model to an external file
@@ -285,7 +286,6 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
     this->writeModelparameter(mu,filenamemu);
     this->writeModelparameter(density,filenamedensity);
 };
-
 
 
 /*! \brief Get reference to density model parameter
@@ -324,7 +324,6 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::ge
 
 /*! \brief Get reference to P-wave velocity
  *
- * Not yet implemented
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getVelocityP(){

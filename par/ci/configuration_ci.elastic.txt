@@ -22,7 +22,8 @@ T=2      # total simulation time
 # define material parameter
 ModelRead=0
 ModelWrite=0
-ModelFilename=model/test
+ModelFilename=model/model
+ModelParametrisation=2    # 1=Lame, 2=Velocity
 
 # Apply the free surface condition
 FreeSurface=0

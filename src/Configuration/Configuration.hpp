@@ -123,7 +123,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(20)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(21)
 {
     // read all lines in file
     
@@ -209,7 +209,6 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
-    
 }
 
 
@@ -250,11 +249,16 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
                 std::cout << "    Model will be read in from disk" << std::endl;
                 std::cout << "    First Lame-Parameter: " << ModelFilename << ".lambda.mtx" << std::endl;
                 std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+                break;
             case 2:
                 std::cout << "    Model will be read in from disk" << std::endl;
                 std::cout << "    VelocityP-Data: " << ModelFilename << ".vp.mtx" << std::endl;
                 std::cout << "    VelocityS-Data " << ModelFilename << ".vs.mtx" << std::endl;
                 std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+                break;
+            default:
+                COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
+                break;
         }
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;

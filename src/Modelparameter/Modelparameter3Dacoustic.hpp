@@ -81,7 +81,7 @@ namespace KITGPI {
             
             lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
             lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
-           
+            
         };
     }
 }
@@ -97,11 +97,16 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
 :dirtyFlagInverseDensity(1)
 {
     if(config.getModelRead()){
-        switch (config.getModelRead()) {
+        switch (config.getModelParametrisation()) {
             case 1:
                 init(ctx,dist,config.getModelFilename());
+                break;
             case 2:
                 calculateLame(ctx,dist,config.getModelFilename());
+                break;
+            default:
+                COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
+                break;
         }
     } else {
         init(ctx,dist,config.getLambda(),config.getRho());
@@ -228,17 +233,15 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
  *
  *  Calculates Lambda with
  */
-
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::calculateLame(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     std::string filenameVelocityP=filename+".vp.mtx";
-    std::string filenameLambda=filename+".lambda.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->calculateLambda(velocityP,density,lambda,ctx,dist,filenameVelocityP,filenamedensity,filenameLambda);
+    this->calculateLambda(velocityP,density,lambda,ctx,dist,filenameVelocityP,filenamedensity);
     this->initModelparameter(density,ctx,dist,filenamedensity);
-
+    
 }
 
 
