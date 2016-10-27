@@ -1,5 +1,4 @@
 #include <scai/lama.hpp>
-
 #include <scai/common/Walltime.hpp>
 
 #include <iostream>
@@ -9,20 +8,21 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Modelparameter3Dacoustic.hpp"
-#include "Wavefields/Wavefields3Dacoustic.hpp"
+#include "Modelparameter/Modelparameter3Delastic.hpp"
+#include "Wavefields/Wavefields3Delastic.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
-#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
+#include "ForwardSolver/ForwardSolver3Delastic.hpp"
 
 #include "ForwardSolver/Derivatives/FD3D.hpp"
+#include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
-
 #include "Partitioning/Partitioning3DCubes.hpp"
+
 
 using namespace scai;
 using namespace KITGPI;
@@ -58,7 +58,7 @@ int main( int argc, char* argv[] )
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI3D elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -75,7 +75,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Delastic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -86,15 +86,17 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
+    Modelparameter::FD3Delastic<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Dacoustic<ValueType> solver;
+    ForwardSolver::FD3Delastic<ValueType> solver;
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    solver.prepareBoundaryConditions(config,derivatives,dist);
+    
+    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
     solver.seismogram.setDT(config.getDT());
     solver.seismogram.writeToFileRaw(config.getSeismogramFilename());

@@ -365,6 +365,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, Valu
     
     allocateSignals(NT);
     
+    signals.setDT(DT);
+    
     utilskernel::LArray<ValueType>* wavelet_type_LA=&wavelet_type.getLocalValues();
     hmemo::ReadAccess<ValueType> read_wavelet_type_LA(*wavelet_type_LA);
     IndexType wavelet_type_i;
@@ -448,19 +450,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
             break;
     }
     
-    utilskernel::LArray<ValueType>* signalVector_LA=&signalVector.getLocalValues();
-    hmemo::ReadAccess<ValueType> read_signalVector(*signalVector_LA);
-    
     lama::DenseMatrix<ValueType>& signalsMatrix=signals.getData();
-    lama::DenseStorage<ValueType>* signalsMatrix_DS=&signalsMatrix.getLocalStorage();
-    hmemo::HArray<ValueType>* signalsMatrix_HA=&signalsMatrix_DS->getData();
-    hmemo::WriteAccess<ValueType> write_signalsMatrix_HA(*signalsMatrix_HA);
-    
-    for(IndexType i=0; i<NT; i++){
-        write_signalsMatrix_HA[i+NT*SourceLocal]=read_signalVector[i];
-    }
-    read_signalVector.release();
-    write_signalsMatrix_HA.release();
+    signalsMatrix.setRow(signalVector,SourceLocal,utilskernel::binary::BinaryOp::COPY);
     
 }
 

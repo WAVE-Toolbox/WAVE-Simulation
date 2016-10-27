@@ -69,7 +69,9 @@ namespace KITGPI {
             //! \brief Get referenec to density model parameter
             virtual lama::DenseVector<ValueType>& getInverseDensity()=0;
             //! \brief Get referenec to first Lame model parameter
-            virtual lama::DenseVector<ValueType>& getM()=0;
+            virtual lama::DenseVector<ValueType>& getLambda()=0;
+            //! \brief Get referenec to second Lame model parameter
+            virtual lama::DenseVector<ValueType>& getMu()=0;
             //! \brief Get referenec to P-wave velocity
             virtual lama::DenseVector<ValueType>& getVelocityP()=0;
             //! \brief Get referenec to S-wave velocity
