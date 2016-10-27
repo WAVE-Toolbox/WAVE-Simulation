@@ -244,6 +244,8 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     /* Start runtime critical part             */
     /* --------------------------------------- */
     
+    HOST_PRINT( comm, "Start time stepping\n" );
+    ValueType start_t = common::Walltime::get();
     for ( IndexType t = 0; t < NT; t++ ){
         
         
@@ -275,6 +277,8 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         gatherSeismograms(wavefield,NT,t);
 
     }
+    ValueType end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Stop runtime critical part             */

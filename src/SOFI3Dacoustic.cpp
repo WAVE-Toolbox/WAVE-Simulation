@@ -111,14 +111,9 @@ int main( int argc, char* argv[] )
     
     ForwardSolver::FD3Dacoustic<ValueType> solver;
     
-    HOST_PRINT( comm, "Start time stepping\n" );
-    start_t = common::Walltime::get();
-    
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
-    end_t = common::Walltime::get();
-    HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );
-    
+    solver.seismogram.setDT(config.getDT());
     solver.seismogram.writeToFileRaw(config.getSeismogramFilename());
     
     
