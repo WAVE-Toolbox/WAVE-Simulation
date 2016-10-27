@@ -94,6 +94,8 @@ int main( int argc, char* argv[] )
     
     ForwardSolver::FD3Dacoustic<ValueType> solver;
     
+    solver.prepareBoundaryConditions(config,derivatives,dist);
+    
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
     solver.seismogram.setDT(config.getDT());
