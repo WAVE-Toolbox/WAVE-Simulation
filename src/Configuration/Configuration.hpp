@@ -124,7 +124,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(20)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(21)
 {
     // read all lines in file
     
