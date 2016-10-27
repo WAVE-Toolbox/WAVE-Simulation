@@ -65,6 +65,8 @@ namespace KITGPI {
             IndexType getProcNX() { return ProcNX;} ///< Return number of cores in X-direction
             IndexType getProcNY() { return ProcNY;} ///< Return number of cores in Y-direction
             IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
+            
+            IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
 
         private:
             
@@ -96,6 +98,8 @@ namespace KITGPI {
             IndexType ProcNX; ///< Number of cores in X-direction
             IndexType ProcNY; ///< Number of cores in Y-direction
             IndexType ProcNZ; ///< Number of cores in Z-direction
+            
+            IndexType FreeSurface; ///< Use the free surface==1 or not==0
             
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
@@ -193,6 +197,8 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "ProcNY" ] ) >> ProcNY; // IndexType
     std::istringstream( map[ "ProcNZ" ] ) >> ProcNZ; // IndexType
     
+    std::istringstream( map[ "FreeSurface" ] ) >> FreeSurface; // IndexType
+    
     // calculate other parameters
     
     N = NZ * NX * NY;
@@ -212,7 +218,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
 template<typename ValueType>
 void KITGPI::Configuration::Configuration<ValueType>::print()
 {
-    IndexType velocity_max = velocityP; // TODO: is velocity a vector?
+    IndexType velocity_max = velocityP;
     double courant = velocity_max * DT / DH;
     
     std::cout << "Configuration:" << std::endl;
@@ -228,7 +234,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     std::cout << "    X: " << DH * NX << " m (Horizontal)" << std::endl;
     std::cout << "    Y: " << DH * NY << " m (Depth)" << std::endl;
     std::cout << "    Z: " << DH * NZ << " m (Horizontal)" << std::endl;
-
+    if(FreeSurface==1){
+        std::cout << "    A free surface will be set atop the model" << std::endl;
+    }
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
     std::cout << "    Receiver acquisition will be read in from " << ReceiverFilename << std::endl;
