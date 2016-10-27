@@ -22,10 +22,13 @@ T=2     # total simulation time
 # define material parameter
 ModelRead=0
 ModelWrite=0
-ModelFilename=model/test
+ModelFilename=model/model
 
 # Apply the free surface condition
 FreeSurface=0
+
+# model parametrisation
+ModelParametrisation=1
 
 # generate homogeneous model
 velocityP=3500 # P-wave velocity in meter per seconds

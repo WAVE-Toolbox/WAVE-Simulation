@@ -18,6 +18,7 @@ def write_mtx(filename, matrix):
          for j in range(m):
              if matrix[j][0] != 0:
                  fileID.write(str(i+1) + ' ' + str(j+1) + ' ' + str(matrix[j][0]) + '\n')
+    FileID.write('\n')
     fileID.close()
 
 
