@@ -44,6 +44,8 @@ namespace KITGPI {
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
+            IndexType getModelParametrisation() {return ModelParametrisation;} ///< Return Read Lame-Model or Velocity-Model
+            
             ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
             ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
             ValueType getRho() { return rho; } ///< Return Density for homogeneous model
@@ -85,6 +87,7 @@ namespace KITGPI {
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
+            IndexType ModelParametrisation; ///< Read model from File (1=Lame-Vector, 2=Velocity-Vectors)
             ValueType velocityP; ///< Density in kilo gramms per cubic meter
             ValueType velocityS; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
@@ -116,7 +119,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(19)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(20)
 {
     // read all lines in file
     
@@ -173,6 +176,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
     ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
+    std::istringstream( map[ "ModelParametrisation" ] ) >> ModelParametrisation; // IndexType
 
     
     std::istringstream( map[ "velocityP" ] ) >> velocityP; // ValueType
@@ -194,7 +198,9 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     N = NZ * NX * NY;
     
     lambda =(-2*velocityS*velocityS + velocityP * velocityP ) * rho; // P-wave modulus
+    
     mu=rho*velocityS*velocityS;
+    
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
     
@@ -228,15 +234,24 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     std::cout << "    Receiver acquisition will be read in from " << ReceiverFilename << std::endl;
     std::cout << "    Seismograms will be written to " << SeismogramFilename << std::endl;
     std::cout << "Material:" << std::endl;
-    if(ModelRead==1) {
-        std::cout << "    Model will be read in from disk" << std::endl;
-        std::cout << "    First Lame-Parameter: " << ModelFilename << ".M.mtx" << std::endl;
-        std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+    
+    if ( ModelRead==1 )
+    {
+        switch (ModelParametrisation) {
+            case 1:
+                std::cout << "    Model will be read in from disk" << std::endl;
+                std::cout << "    First Lame-Parameter: " << ModelFilename << ".lambda.mtx" << std::endl;
+                std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+            case 2:
+                std::cout << "    Model will be read in from disk" << std::endl;
+                std::cout << "    VelocityP-Data: " << ModelFilename << ".vp.mtx" << std::endl;
+                std::cout << "    VelocityS-Data " << ModelFilename << ".vs.mtx" << std::endl;
+                std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+        }
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;
         std::cout << "    VelocityP:" << velocityP << " m/s" << std::endl;
         std::cout << "    VelocityS:" << velocityS << " m/s" << std::endl;
-
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
     if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;

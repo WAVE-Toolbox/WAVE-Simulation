@@ -63,6 +63,7 @@ namespace KITGPI {
              \param filename filename to write modelparameters (endings will be added by derived classes)
              */
             virtual void write(std::string filename)=0;
+            //virtual void write(std::string filenameOut)=0;
             
             //! \brief Get referenec to density model parameter
             virtual lama::DenseVector<ValueType>& getDensity()=0;
@@ -83,6 +84,12 @@ namespace KITGPI {
             
             void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
             
+            void calculateLame(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut);
+            void calculateLame(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorS, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameS, std::string filenameDensity, std::string filenameOut);
+            
+            void calculateLambda(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut);
+            void calculateLambda(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorS, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameS, std::string filenameDensity, std::string filenameOut);
+            void calculateMu(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut);
             
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
@@ -162,4 +169,108 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
     vector.setContextPtr(ctx);
     vector.allocate(dist);
 };
+
+/*! \brief Calculate Acoustic Lame-Vector from p-Velocity-Vector
+ *  Acoustic:   lambda = rho * vP^2
+ *  Elastic:    mu = rho * vS^2
+ */
+ template<typename ValueType>
+ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut)
+{
+    allocateModelparameter(vector,ctx,dist);
+    allocateModelparameter(vectorDensity,ctx,dist);
+    allocateModelparameter(vectorOut,ctx,dist);
+    
+    readModelparameter(vector,filename);
+    readModelparameter(vectorDensity,filenameDensity);
+    readModelparameter(vectorOut,filenameOut);
+    
+    vector.redistribute(dist);
+    vectorDensity.redistribute(dist);
+    vectorOut.redistribute(dist);
+    
+    vectorOut=vector;
+    vectorOut.scale(vector);
+    vectorOut.scale(vectorDensity);
+    
+    writeModelparameter(vector,filename);
+    writeModelparameter(vectorDensity,filenameDensity);
+    writeModelparameter(vectorOut,filenameOut);
+    
+};
+
+
+
+/*! \brief Calculate Elastic Lame-Vector (Lambda) from VelocityP and VelocityS
+ *  Elastic:    lambda = rho * (vP^2 - 2 * vS^2)
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorS, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameS, std::string filenameDensity, std::string filenameOut)
+{
+    allocateModelparameter(vector,ctx,dist);
+    allocateModelparameter(vectorS,ctx,dist);
+    allocateModelparameter(vectorDensity,ctx,dist);
+    allocateModelparameter(vectorOut,ctx,dist);
+    
+    readModelparameter(vector,filename);
+    readModelparameter(vectorS,filenameS);
+    readModelparameter(vectorDensity,filenameDensity);
+    readModelparameter(vectorOut,filenameOut);
+    
+    vector.redistribute(dist);
+    vectorS.redistribute(dist);
+    vectorDensity.redistribute(dist);
+    vectorOut.redistribute(dist);
+    
+    vectorOut=vectorS;
+    vectorOut=(-2.)*vectorOut.scale(vectorS);
+    vectorOut.invert();
+    vectorOut.scale(vector);
+    vectorOut.invert();
+    vectorOut+=vector; /* here vector.scale(vector) missing*/
+    vectorOut.scale(vector);
+    vectorOut=vectorOut.scale(vectorDensity);
+    
+    writeModelparameter(vector,filename);
+    writeModelparameter(vectorS,filenameS);
+    writeModelparameter(vectorDensity,filenameDensity);
+    writeModelparameter(vectorOut,filenameOut);
+    
+};
+
+
+/*! \brief Calculate Lambda (Acoustic)
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut)
+{
+    calculateLame(vector,vectorDensity,vectorOut,ctx,dist,filename,filenameDensity,filenameOut);
+    
+};
+
+
+/*! \brief Calculate Lambda (Elastic)
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorS, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameS, std::string filenameDensity, std::string filenameOut)
+{
+    calculateLame(vector,vectorS,vectorDensity,vectorOut,ctx,dist,filename,filenameS,filenameDensity,filenameOut);
+    
+};
+
+
+/*! \brief Calculate Mu (Elastic)
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateMu(lama::DenseVector<ValueType>& vector, lama::DenseVector<ValueType>& vectorDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity, std::string filenameOut)
+{
+    calculateLame(vector,vectorDensity,vectorOut,ctx,dist,filename,filenameDensity,filenameOut);
+    
+};
+
+
+
+
+
+
 

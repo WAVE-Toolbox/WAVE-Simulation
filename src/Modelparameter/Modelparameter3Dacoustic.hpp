@@ -57,6 +57,8 @@ namespace KITGPI {
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameM, std::string filenamerho);
             
+            void calculateLame(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            
             void write(std::string filenameM, std::string filenamedensity);
             void write(std::string filename);
             
@@ -72,6 +74,7 @@ namespace KITGPI {
             
             IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
             
+            
             lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
@@ -79,9 +82,7 @@ namespace KITGPI {
             
             lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
             lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
-            
-            
-            
+           
         };
     }
 }
@@ -97,11 +98,15 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
 :dirtyFlagInverseDensity(1)
 {
     if(config.getModelRead()){
-        init(ctx,dist,config.getModelFilename());
+        switch (config.getModelRead()) {
+            case 1:
+                init(ctx,dist,config.getModelFilename());
+            case 2:
+                calculateLame(ctx,dist,config.getModelFilename());
+        }
     } else {
         init(ctx,dist,config.getLambda(),config.getRho());
     }
-    
     if(config.getModelWrite()){
         write(config.getModelFilename()+".out");
     }
@@ -186,7 +191,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
 }
 
 
-/*! \brief Initialisator that is reading models from external files
+/*! \brief Initialisator that is reading Lame-models from external files
  *
  *  Reads a model from an external file.
  \param ctx Context
@@ -196,7 +201,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenameM=filename+".M.mtx";
+    std::string filenameM=filename+".lambda.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
     this->initModelparameter(lambda,ctx,dist,filenameM);
@@ -211,6 +216,29 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
 {
     lambda=rhs.M.copy();
     density=rhs.density.copy();
+}
+
+
+/*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates Lambda
+ *
+ *  Reads a model from an external file.
+ \param ctx Context
+ \param dist Distribution
+ \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
+ *
+ *  Calculates Lambda with
+ */
+
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::calculateLame(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+{
+    std::string filenameVelocityP=filename+".vp.mtx";
+    std::string filenameM=filename+".lambda.mtx";
+    std::string filenamedensity=filename+".density.mtx";
+    
+    this->calculateLambda(velocityP,density,lambda,ctx,dist,filenameVelocityP,filenamedensity,filenameM);
+    this->initModelparameter(density,ctx,dist,filenamedensity);
+
 }
 
 
@@ -234,7 +262,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write( std::string filenam
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename)
 {
-    std::string filenameM=filename+".M.mtx";
+    std::string filenameM=filename+".lambda.mtx";
     std::string filenamedensity=filename+".density.mtx";
     this->writeModelparameter(lambda,filenameM);
     this->writeModelparameter(density,filenamedensity);
@@ -283,7 +311,6 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityP(){
-    COMMON_THROWEXCEPTION("Conversation to P-wave velocity is not yet implemented")
     return(velocityP);
 }
 
