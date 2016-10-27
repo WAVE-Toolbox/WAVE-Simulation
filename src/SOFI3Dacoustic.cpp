@@ -31,7 +31,7 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
-#include "ForwardSolver/Derivatives/Derivatives3D.hpp"
+#include "ForwardSolver/Derivatives/FD3D.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
