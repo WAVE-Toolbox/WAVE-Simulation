@@ -37,6 +37,8 @@
 
 #include "ForwardSolver/ForwardSolver3Delastic.hpp"
 
+#include "ForwardSolver/BoundaryConditions/Abs3D.hpp"
+
 #include "Common/HostPrint.hpp"
 
 #include "Partitioning/Partitioning3DCubes.hpp"
@@ -90,6 +92,14 @@ int main( int argc, char* argv[] )
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
+    /* Calculate derivative matrizes           */
+    /* --------------------------------------- */
+    start_t = common::Walltime::get();
+    ForwardSolver::Abs::Abs3D<ValueType> absorbing_coefficients( dist, ctx, config, comm );
+    end_t = common::Walltime::get();
+    HOST_PRINT( comm, "Finished initializing matrix in " << end_t - start_t << " sec.\n\n" );
+    
+    /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
     Wavefields::FD3Delastic<ValueType> wavefields(ctx,dist);
@@ -114,7 +124,7 @@ int main( int argc, char* argv[] )
     HOST_PRINT( comm, "Start time stepping\n" );
     start_t = common::Walltime::get();
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    solver.run( receivers, sources, model, wavefields, derivatives,absorbing_coefficients, config.getNT(), comm);
     
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n" );

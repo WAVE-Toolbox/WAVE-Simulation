@@ -31,7 +31,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Delastic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives,Abs::Abs<ValueType>& absorbing_coefficients, IndexType NT, dmemo::CommunicatorPtr comm);
             
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
@@ -219,7 +219,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, Abs::Abs<ValueType>& absorbing_coefficients,IndexType NT, dmemo::CommunicatorPtr comm){
     
     SCAI_REGION( "timestep" )
     
@@ -248,6 +248,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::CSRSparseMatrix<ValueType>& D=derivatives.getD();
     lama::CSRSparseMatrix<ValueType>& E=derivatives.getE();
     lama::CSRSparseMatrix<ValueType>& F=derivatives.getF();
+    
+    /* Get references to required absorbing coefficient matrix */
+    lama::CSRSparseMatrix<ValueType>& AbsCoeff=absorbing_coefficients.getAbsCoeff();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, vX.getContextPtr());
@@ -290,6 +293,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update += C * Szz;
         vZ += update.scale(inverseDensity);
         
+		/* absorbing boundary */
+	vX= AbsCoeff * vX; 
+	vY= AbsCoeff * vY; 
+	vZ= AbsCoeff * vZ; 
+	Sxy= AbsCoeff * Sxy; 
+	Syz= AbsCoeff * Syz; 
+	Sxz= AbsCoeff * Sxz;
+	Sxx= AbsCoeff * Sxx; 
+	Syy= AbsCoeff * Syy; 
+	Szz= AbsCoeff * Szz; 
+	
         /* pressure update */
         update = B * vX;
         update += A * vY;

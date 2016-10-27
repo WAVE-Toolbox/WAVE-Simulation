@@ -13,6 +13,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "BoundaryConditions/Abs.hpp"
 
 namespace KITGPI {
     
@@ -31,7 +32,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Dacoustic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, Abs::Abs<ValueType>& absorbing_coefficients,IndexType NT, dmemo::CommunicatorPtr comm);
             
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
@@ -211,7 +212,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, Abs::Abs<ValueType>& absorbing_coefficients, IndexType NT, dmemo::CommunicatorPtr comm){
     
     SCAI_REGION( "timestep" )
     
@@ -232,6 +233,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     lama::CSRSparseMatrix<ValueType>& D=derivatives.getD();
     lama::CSRSparseMatrix<ValueType>& E=derivatives.getE();
     lama::CSRSparseMatrix<ValueType>& F=derivatives.getF();
+    
+    /* Get references to required absorbing coefficient matrix */
+    lama::CSRSparseMatrix<ValueType>& AbsCoeff=absorbing_coefficients.getAbsCoeff();
+    
     
     /* Init seismograms */
     seismogram.init(receiver, NT, lambda.getContextPtr());
@@ -261,8 +266,16 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
 
         update=  C * p;
         vZ += update.scale(inverseDensity);
-
-        
+	
+	IndexType ABS=1;
+	
+	if (ABS==1){
+	/* absorbing boundary */
+	vX= AbsCoeff * vX; 
+	vY= AbsCoeff * vY; 
+	vZ= AbsCoeff * vZ; 
+	p= AbsCoeff * p; 
+	}
         /* pressure update */
         update  =  D * vX;
         update +=  E * vY;

@@ -7,6 +7,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "BoundaryConditions/Abs.hpp"
 #include "../Common/HostPrint.hpp"
 
 namespace KITGPI {
@@ -38,7 +39,7 @@ namespace KITGPI {
              \param NT Total number of time steps
              \param comm Communicator
              */
-            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
+            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, Abs::Abs<ValueType>& absorbing_coefficients, IndexType NT, dmemo::CommunicatorPtr comm)=0;
             
             
             /*! \brief Saving seismograms during time stepping
