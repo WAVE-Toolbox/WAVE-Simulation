@@ -80,14 +80,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
     
     /* Local vectors */
     lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
-    //lama::DenseVector<ValueType> modfiyRowLocal(size_vec,0.0); // Vector to manipulate row content of derivative matrix
     
     /* Distributed vectors */
     setSurfaceZero.allocate(dist); // Vector to set elements on surface to zero
     setSurfaceZero=1.0;
     
     hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
-    //hmemo::HArray<ValueType> modfiyRowHArray(size_vec,0.0);
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
