@@ -55,6 +55,7 @@ namespace KITGPI {
             std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
             std::string getReceiverFilename() {return ReceiverFilename;} ///< Return Filename of Receiver file
             std::string getSeismogramFilename() {return SeismogramFilename;} ///< Return Filename of Seismogram file
+            IndexType getSeismogramFormat() {return SeismogramFormat;} ///< Return Seismogram Format
             
             IndexType getN() { return N; } ///< Return N
             
@@ -108,7 +109,7 @@ namespace KITGPI {
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
             std::string SeismogramFilename; ///< Filename to write seismograms
-            
+            IndexType SeismogramFormat; ///< Seismogram Format 1=MTX 2=SU
             
             /* calculated parameters */
             
@@ -127,7 +128,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(22)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(23)
 {
     // read all lines in file
     
@@ -198,6 +199,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     ReceiverFilename = std::istringstream( map[ "ReceiverFilename" ] ).str(); // std::string
     SeismogramFilename = std::istringstream( map[ "SeismogramFilename" ] ).str(); // std::string
     
+    std::istringstream( map[ "SeismogramFormat" ] ) >> SeismogramFormat; // IndexType
     std::istringstream( map[ "UseCubePartitioning" ] ) >> UseCubePartitioning; // IndexType
     std::istringstream( map[ "ProcNX" ] ) >> ProcNX; // IndexType
     std::istringstream( map[ "ProcNY" ] ) >> ProcNY; // IndexType

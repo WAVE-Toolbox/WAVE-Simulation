@@ -39,3 +39,5 @@ rho=2000      # P-wave velocity in meter per seconds
 SourceFilename=ci/sources_ci.mtx
 ReceiverFilename=ci/receiver_ci.mtx
 SeismogramFilename=ci/seismogram_ci.elastic.mtx
+SeismogramFormat=1 # 1=MTX, 2=SU
+

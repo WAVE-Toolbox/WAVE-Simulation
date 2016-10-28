@@ -40,4 +40,4 @@ rho=2000         # Density in kilo gramms per cubic meter
 SourceFilename=acquisition/sources.mtx
 ReceiverFilename=acquisition/receiver.mtx
 SeismogramFilename=seismograms/seismogram.mtx
-
+SeismogramFormat=1 # 1=MTX, 2=SU

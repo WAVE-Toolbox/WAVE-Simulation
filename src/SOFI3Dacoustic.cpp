@@ -99,9 +99,8 @@ int main( int argc, char* argv[] )
     
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     
-    solver.seismogram.setDT(config.getDT());
-    solver.seismogram.writeToFileRaw(config.getSeismogramFilename(), config.getNX(), config.getNY(), config.getNZ(), config.getDH());
-    
+    solver.seismogram.write(config);
+
     return 0;
 }
 
