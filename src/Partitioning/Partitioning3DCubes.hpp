@@ -18,7 +18,7 @@ namespace KITGPI {
          *
          */
         template <typename ValueType>
-        class Partitioning3DCubes : public Partitioning<ValueType>, public Acquisition::Coordinates<ValueType>
+        class Partitioning3DCubes : public Partitioning<ValueType>, protected Acquisition::Coordinates<ValueType>
         {
             
         public:

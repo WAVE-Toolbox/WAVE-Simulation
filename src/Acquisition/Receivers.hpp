@@ -17,7 +17,7 @@ namespace KITGPI {
          * It provides the reading of the receivers acquisition from file, the distribution of the receivers and the collection of the seismograms.
          */
         template <typename ValueType>
-        class Receivers : private Coordinates<ValueType>
+        class Receivers : protected Coordinates<ValueType>
         {
             
         public:
