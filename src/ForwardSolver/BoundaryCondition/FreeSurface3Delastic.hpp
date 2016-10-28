@@ -119,7 +119,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     
     active=true;
     
-    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getE();
+    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDyb();
     DybPressure=DybVelocity;
     
     IndexType size_vec=dist->getGlobalSize();

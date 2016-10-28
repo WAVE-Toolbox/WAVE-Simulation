@@ -19,18 +19,18 @@ namespace KITGPI {
                 //! \brief Default destructor
                 ~Derivatives(){};
                 
-                //! \brief Getter method for derivative matrix A
-                virtual lama::CSRSparseMatrix<ValueType>& getA();
-                //! \brief Getter method for derivative matrix B
-                virtual lama::CSRSparseMatrix<ValueType>& getB();
-                //! \brief Getter method for derivative matrix C
-                virtual lama::CSRSparseMatrix<ValueType>& getC();
-                //! \brief Getter method for derivative matrix D
-                virtual lama::CSRSparseMatrix<ValueType>& getD();
-                //! \brief Getter method for derivative matrix E
-                virtual lama::CSRSparseMatrix<ValueType>& getE();
-                //! \brief Getter method for derivative matrix F
-                virtual lama::CSRSparseMatrix<ValueType>& getF();
+                //! \brief Getter method for derivative matrix Dxf
+                virtual lama::CSRSparseMatrix<ValueType>& getDxf();
+                //! \brief Getter method for derivative matrix Dyf
+                virtual lama::CSRSparseMatrix<ValueType>& getDyf();
+                //! \brief Getter method for derivative matrix Dzf
+                virtual lama::CSRSparseMatrix<ValueType>& getDzf();
+                //! \brief Getter method for derivative matrix Dxb
+                virtual lama::CSRSparseMatrix<ValueType>& getDxb();
+                //! \brief Getter method for derivative matrix Dyb
+                virtual lama::CSRSparseMatrix<ValueType>& getDyb();
+                //! \brief Getter method for derivative matrix Dzb
+                virtual lama::CSRSparseMatrix<ValueType>& getDzb();
                 
                 //! \brief Initializsation of the derivative matrices
                 /*!
@@ -53,12 +53,12 @@ namespace KITGPI {
                 
             protected:
                 
-                lama::CSRSparseMatrix<ValueType> A; //!< Derivative matrix A
-                lama::CSRSparseMatrix<ValueType> B; //!< Derivative matrix B
-                lama::CSRSparseMatrix<ValueType> C; //!< Derivative matrix C
-                lama::CSRSparseMatrix<ValueType> D; //!< Derivative matrix D
-                lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
-                lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
+                lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
+                lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
+                lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
+                lama::CSRSparseMatrix<ValueType> Dxb; //!< Derivative matrix Dxb
+                lama::CSRSparseMatrix<ValueType> Dyb; //!< Derivative matrix Dyb
+                lama::CSRSparseMatrix<ValueType> Dzb; //!< Derivative matrix Dzb
                 
                 IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
                 
@@ -87,38 +87,38 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatri
     initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), config.getSpatialFDorder(), comm);
 }
 
-//! \brief Getter method for derivative matrix A
+//! \brief Getter method for derivative matrix Dxf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getA(){
-    return(A);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf(){
+    return(Dxf);
 }
 
-//! \brief Getter method for derivative matrix B
+//! \brief Getter method for derivative matrix Dyf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getB(){
-    return(B);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf(){
+    return(Dyf);
 }
 
-//! \brief Getter method for derivative matrix C
+//! \brief Getter method for derivative matrix Dzf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getC(){
-    return(C);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf(){
+    return(Dzf);
 }
 
-//! \brief Getter method for derivative matrix D
+//! \brief Getter method for derivative matrix Dxb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getD(){
-    return(D);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb(){
+    return(Dxb);
 }
 
-//! \brief Getter method for derivative matrix E
+//! \brief Getter method for derivative matrix Dyb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getE(){
-    return(E);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb(){
+    return(Dyb);
 }
 
-//! \brief Getter method for derivative matrix F
+//! \brief Getter method for derivative matrix Dzb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getF(){
-    return(F);
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb(){
+    return(Dzb);
 }
