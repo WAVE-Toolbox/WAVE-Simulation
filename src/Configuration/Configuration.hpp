@@ -41,6 +41,8 @@ namespace KITGPI {
             ValueType getDT() { return DT; } ///< Return Time Step
             ValueType getT() { return T; } ///< Return Total propagation time
             
+            IndexType getSpatialFDorder() { return spatialFDorder; } ///< Return order of spatial FD operator
+
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
@@ -86,6 +88,8 @@ namespace KITGPI {
             ValueType DT;  ///< temporal sampling in seconds
             ValueType T;   ///< total simulation time
             
+            IndexType spatialFDorder;	///< order of spatial FD operator
+
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
@@ -177,6 +181,8 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "DT" ] ) >> DT; // ValueType
     std::istringstream( map[ "T" ] ) >> T;  // ValueType
     
+    std::istringstream( map[ "spatialFDorder" ] ) >> spatialFDorder;  // Indextype
+
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
     ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
@@ -220,7 +226,11 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     IndexType velocity_max = velocityP;
     double courant = velocity_max * DT / DH;
     
-    std::cout << "Configuration:" << std::endl;
+    std::cout << "Configuration:" << std::endl << std::endl;
+    std::cout << "Time Step:\t\t\tDT =\t" << DT << " s" << std::endl;
+    std::cout << "Grid spacing:\t\t\tDH =\t" << DH << " m" << std::endl;
+    std::cout << "Total simulation time:\t\tT  =\t" << T << " s" << std::endl;
+    std::cout << "Order of spatial FD operator:\t\t" << spatialFDorder << std::endl;
     std::cout << "Criteriums:" << std::endl;
     std::cout << "    Courant-number: " << courant << std::endl;
     if ( courant >= 0.8 )
