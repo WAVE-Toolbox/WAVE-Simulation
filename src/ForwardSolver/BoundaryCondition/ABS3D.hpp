@@ -28,7 +28,7 @@ namespace KITGPI
 				//! Default destructor
 				~ABS3D(){};
 
-				void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm );
+				void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface);
 
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4);
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9);
@@ -36,8 +36,6 @@ namespace KITGPI
 			private:
                 
                 lama::DenseVector<ValueType> damping; //!< Absorbing Coefficient vector
-
-				void absorbing_coefficients( IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist );
 
 			};
 		} /* end namespace BoundaryCondition */
@@ -95,78 +93,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
 
 }
 
-//! \brief Calculation of absorbing coefficients
-/*!
- *
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param dist Distribution of the wavefield
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::absorbing_coefficients( IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist )
-{
-	IndexType FW=20;
-
-	dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
-
-	/* Get local "global" indices */
-	hmemo::HArray<IndexType> localIndices;
-	dist->getOwnedIndexes(localIndices);
-
-	IndexType numLocalIndices=localIndices.size(); // Number of local indices
-
-	hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
-	IndexType read_localIndices_temp; // Temporary storage, so we do not have to access the array
-
-    /* Distributed vectors */
-    damping.allocate(dist); // Vector to set elements on surface to zero
-    damping=1.0;
-    
-    /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType>* damping_LA=&damping.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
-
-	// calculate damping function
-	ValueType DAMPING=8.0;
-	ValueType amp=0;
-	ValueType coeff[FW];
-	coeff[0]++;  //need a better solution "todo"
-	ValueType a=0;
-
-	amp=1.0-DAMPING/100.0;
-	a=sqrt ( -log ( amp ) / ( ( FW ) * ( FW ) ) );
-
-	for( IndexType j=0; j<FW; j++ ) {
-		coeff[j]=exp ( - ( a*a* ( FW-j ) * ( FW-j ) ) );
-	}
-    
-    Acquisition::Coordinates<ValueType> coordTransform;
-    Acquisition::coordinate3D coordinate;
-
-    IndexType coordinateMin;
-    
-	/* Set the values into the indice arrays and the value array */
-	for( IndexType i=0; i<numLocalIndices; i++ ) {
-
-		read_localIndices_temp=read_localIndices[i];
-
-		coordinate=coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ );
-		coordinate=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
-
-        coordinateMin=coordinate.min();
-		if( coordinateMin < FW ) {
-            write_damping[i]=coeff[coordinateMin];
-		}
-
-	}
-    
-    /* Release all read and write access */
-	read_localIndices.release();
-    write_damping.release();
-
-}
-
 //! \brief Initializsation of the absorbing coefficient matrix
 /*!
  *
@@ -175,19 +101,79 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::absorbing_coeff
  \param NX Total number of grid points in X
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
- \param comm Communicator
+ \param BoundaryWidth Width of damping boundary
+ \param DampingCoeff Damping coefficient
+ \param useFreeSurface Bool if free surface is in use
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
 {
 
-	HOST_PRINT ( comm, "Initialization of the Damping Boundary...\n" );
-
-	absorbing_coefficients ( NX, NY, NZ, dist );
+	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
+    
+    if(useFreeSurface){
+        COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
+    }
+    
+    dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
+    
+    /* Get local "global" indices */
+    hmemo::HArray<IndexType> localIndices;
+    dist->getOwnedIndexes(localIndices);
+    
+    IndexType numLocalIndices=localIndices.size(); // Number of local indices
+    
+    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    IndexType read_localIndices_temp; // Temporary storage, so we do not have to access the array
+    
+    /* Distributed vectors */
+    damping.allocate(dist); // Vector to set elements on surface to zero
+    damping=1.0;
+    
+    /* Get write access to local part of setSurfaceZero */
+    utilskernel::LArray<ValueType>* damping_LA=&damping.getLocalValues();
+    hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
+    
+    // calculate damping function
+    ValueType amp=0;
+    ValueType coeff[BoundaryWidth];
+    coeff[0]++;  //need a better solution "todo"
+    ValueType a=0;
+    
+    amp=1.0-DampingCoeff/100.0;
+    a=sqrt ( -log ( amp ) / ( ( BoundaryWidth ) * ( BoundaryWidth ) ) );
+    
+    for( IndexType j=0; j<BoundaryWidth; j++ ) {
+        coeff[j]=exp ( - ( a*a* ( BoundaryWidth-j ) * ( BoundaryWidth-j ) ) );
+    }
+    
+    Acquisition::Coordinates<ValueType> coordTransform;
+    Acquisition::coordinate3D coordinate;
+    
+    IndexType coordinateMin;
+    
+    /* Set the values into the indice arrays and the value array */
+    for( IndexType i=0; i<numLocalIndices; i++ ) {
+        
+        read_localIndices_temp=read_localIndices[i];
+        
+        coordinate=coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ );
+        coordinate=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
+        
+        coordinateMin=coordinate.min();
+        if( coordinateMin < BoundaryWidth ) {
+            write_damping[i]=coeff[coordinateMin];
+        }
+        
+    }
+    
+    /* Release all read and write access */
+    read_localIndices.release();
+    write_damping.release();
     
 	damping.setContextPtr ( ctx );
 
-	HOST_PRINT ( comm, "Finished with initialization of the Damping Boundary!\n\n" );
+	HOST_PRINT ( dist->getCommunicatorPtr(), "Finished with initialization of the Damping Boundary!\n\n" );
 
 }
 

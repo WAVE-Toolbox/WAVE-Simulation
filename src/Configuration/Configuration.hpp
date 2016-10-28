@@ -72,6 +72,8 @@ namespace KITGPI {
             IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
 
             IndexType getDampingBoundary() {return DampingBoundary;} ///< Return DampingBoundary
+            IndexType getBoundaryWidth() {return BoundaryWidth;} ///< Return BoundaryWidth
+            ValueType getDampingCoeff() {return DampingCoeff;} ///< Return DampingCoeff
             
         private:
             
@@ -109,6 +111,8 @@ namespace KITGPI {
             IndexType FreeSurface; ///< Use the free surface==1 or not==0
             
             IndexType DampingBoundary; ///< Use the Damping Boundary ==1 or not==0
+            ValueType DampingCoeff; ///< Damping coefficient
+            IndexType BoundaryWidth; ///< Width of damping boundary
             
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
@@ -132,7 +136,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(24)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(26)
 {
     // read all lines in file
     
@@ -212,7 +216,8 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "FreeSurface" ] ) >> FreeSurface; // IndexType
     
     std::istringstream( map[ "DampingBoundary" ] ) >> DampingBoundary; // IndexType
-
+    std::istringstream( map[ "DampingCoeff" ] ) >> DampingCoeff; // ValueType
+    std::istringstream( map[ "BoundaryWidth" ] ) >> BoundaryWidth; // IndexType
     
     // calculate other parameters
     
