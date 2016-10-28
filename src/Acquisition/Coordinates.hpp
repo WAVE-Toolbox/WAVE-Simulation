@@ -15,14 +15,6 @@ namespace KITGPI {
             IndexType z; //!< z Position in Z-direction in grid points (Horizontal 2)
         };
         
-        /*! \brief Struct to save 2-D coordinates
-         */
-        struct coordinate2D
-        {
-            IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
-            IndexType y; //!< y Position in Z-direction in grid points (Depth)
-        };
-        
         /*! \brief This class manages the transformation of Coordinates
          */
         template <typename ValueType>
@@ -31,19 +23,13 @@ namespace KITGPI {
             
         public:
             
-            
-
             // Coordinate --> Index:
             // Interfaces 3-D
             IndexType coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
             IndexType coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
-            // Interfaces 2-D
-            IndexType coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY);
-            IndexType coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
             coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
-            coordinate2D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
             
             bool locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
             
@@ -55,11 +41,9 @@ namespace KITGPI {
             
             // Coordinate --> Index:
             IndexType map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
-            IndexType map2Dcoordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY);
             
             // Index --> Coordinate:
             coordinate3D map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
-            coordinate2D map2Dindex2coordinate(IndexType coordinate, IndexType NX);
             
         };
         
@@ -69,12 +53,19 @@ namespace KITGPI {
 /* Mapping */
 /* ------- */
 
-//! Returns bool if given coordinate is located on the surface
+/*! Returns bool if given coordinate is located on the surface
+ *
+ \param coordinate 1-D coordinate
+ \param NX Number of grid points in X
+ \param NY Number of grid points in Y
+ \param NZ Number of grid points in Z
+ *
+ */
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/){
     coordinate3D result;
     result=map3Dindex2coordinate(coordinate,NX,NY);
-    if(result.y==1){
+    if(result.y==0){
         return(true);
     } else {
         return(false);
@@ -89,49 +80,32 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     
     result.z=IndexType(coordinate) / (NX*NY);
     coordinate -= result.z * (NX*NY);
-    result.z+=1;
     
     result.y= IndexType(coordinate) / (NX);
     coordinate -= result.y * (NX);
-    result.y+=1;
     
     result.x=coordinate;
-    result.x+=1;
     
     return(result);
     
 }
 
-//! General mapping from 1-D coordinate to 2-D coordinate
-template <typename ValueType>
-KITGPI::Acquisition::coordinate2D KITGPI::Acquisition::Coordinates<ValueType>::map2Dindex2coordinate(IndexType coordinate, IndexType NX)
-{
-    
-    coordinate2D result;
-    
-    result.y= IndexType(coordinate) / (NX);
-    coordinate -= result.y * (NX);
-    result.y+=1;
-    
-    result.x=coordinate;
-    result.x+=1;
-    
-    return(result);
-    
-}
 
-//! General mapping from 1-D coordinate to 3-D coordinate
+/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+ *
+ * Maps a 1-D coordinate back into 3-D coordinates.
+ * The 3-D grid starts at 0 and runs to (NX-1), (NY-1) or (NZ-1).
+ *
+ \param coordinate 1-D coordinate
+ \param NX Number of grid points in X
+ \param NY Number of grid points in Y
+ \param NZ Number of grid points in Z
+ *
+ */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
     return(map3Dindex2coordinate(coordinate,NX,NY));
-}
-
-//! General mapping from 1-D coordinate to 2-D coordinate
-template <typename ValueType>
-KITGPI::Acquisition::coordinate2D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate, IndexType NX, IndexType /*NY*/)
-{
-    return(map2Dindex2coordinate(coordinate,NX));
 }
 
 //! General mapping from 3-D coordinates to 1-D coordinate
@@ -146,21 +120,6 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
     else
     {
         return ( ( X - 1 ) + ( Y - 1 ) * NX + ( Z - 1 ) * NX * NY );
-    }
-}
-
-//! General mapping from 2-D coordinates to 1-D coordinate
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::map2Dcoordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY)
-{
-    if ( X > NX || Y > NY || Y < 1 || X < 1 )
-    {
-        COMMON_THROWEXCEPTION ( "Could not map from coordinate to indize!" )
-        return -100;
-    }
-    else
-    {
-        return ( ( X - 1 ) + ( Y - 1 ) * NX );
     }
 }
 
@@ -197,30 +156,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
     return(map3Dcoordinate2index(coordinate.x,coordinate.y,coordinate.z,NX,NY,NZ));
 }
 
-/*! \brief Convert 2-D coordinates to 1-D coordinates
- \param X 2-D coordinate in X (Horizontal 1)
- \param Y 2-D coordinate in Y (Depth)
- \param NX Total number of grid points in X (Horizontal 1)
- \param NY Total number of grid points in Y (Depth)
- \return 1-D coordinate
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType NX, IndexType NY)
-{
-    return(map2Dcoordinate2index(X,Y,NX,NY));
-}
 
-/*! \brief Convert 2-D coordinates to 1-D coordinates
- \param coordinate as a coordinate2D struct
- \param NX Total number of grid points in X (Horizontal 1)
- \param NY Total number of grid points in Y (Depth)
- \return 1-D coordinate
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate2D coordinate, IndexType NX, IndexType NY)
-{
-    return(map2Dcoordinate2index(coordinate.x,coordinate.y,NX,NY));
-}
 
 /*! \brief Determination of local coordinates based on given global coordinates
  *
