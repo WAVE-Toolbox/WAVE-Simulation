@@ -9,6 +9,7 @@
 #include "Receivers.hpp"
 #include "Coordinates.hpp"
 #include "../Configuration/Configuration.hpp"
+#include "math.h"
 
 namespace KITGPI {
     
@@ -30,7 +31,8 @@ namespace KITGPI {
             //! Default destructor
             ~Seismogram(){};
             
-            void writeToFileRaw(std::string filename);
+            void writeToFileRaw(std::string filename); // write only the raw data in text format
+	    void writeToFileRaw(std::string filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH); // write to Seismic Unix format
             void readFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
             
             void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
@@ -55,6 +57,8 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getCoordinates();
             
             void setDT(ValueType newDT);
+	    IndexType getSourceCoordinate();
+	    void setSourceCoordinate(IndexType sourceCoord);
             
         private:
             
@@ -66,6 +70,8 @@ namespace KITGPI {
             ValueType DT; //!< Temporal sampling in seconds
             lama::DenseVector<ValueType> traceType; //!< Type of trace (receiver or source type)
             lama::DenseVector<ValueType> coordinates; //!< Coordinates of the traces
+            
+            IndexType sourceCoordinate;
             
             /* raw data */
             lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
@@ -86,6 +92,13 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT){
     }
     DT=newDT;
 }
+
+
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceCoord){
+ sourceCoordinate=sourceCoord; 
+}
+
 
 //! \brief Initiate the seismogram by receivers
 /*!
@@ -312,5 +325,514 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal()
     return(numTracesGlobal);
 }
 
+//! \brief Define the structure for Seismic Unix (SEG-Y) header
+#define SU_NFLTS	USHRT_MAX	/* Arbitrary limit on data array size	*/
+typedef struct {	/* segy - trace identification header */
+
+	signed tracl   :32;	/* trace sequence number within line */
+
+	signed tracr   :32;	/* trace sequence number within reel */
+
+	signed fldr    :32;	/* field record number */
+
+	signed tracf   :32;	/* trace number within field record */
+
+	signed ep      :32;	/* energy source point number */
+
+	signed cdp     :32;	/* CDP ensemble number */
+
+	signed cdpt    :32;	/* trace number within CDP ensemble */
+
+	signed trid    :16;	/* trace identification code:
+			1 = seismic data
+			2 = dead
+			3 = dummy
+			4 = time break
+			5 = uphole
+			6 = sweep
+			7 = timing
+			8 = water break
+			9---, N = optional use (N = 32,767)
+
+			Following are CWP id flags:
+
+			 9 = autocorrelation
+
+			10 = Fourier transformed - no packing
+			     xr[0],xi[0], ..., xr[N-1],xi[N-1]
+
+			11 = Fourier transformed - unpacked Nyquist
+			     xr[0],xi[0],...,xr[N/2],xi[N/2]
+
+			12 = Fourier transformed - packed Nyquist
+	 		     even N:
+			     xr[0],xr[N/2],xr[1],xi[1], ...,
+				xr[N/2 -1],xi[N/2 -1]
+				(note the exceptional second entry)
+			     odd N:
+			     xr[0],xr[(N-1)/2],xr[1],xi[1], ...,
+				xr[(N-1)/2 -1],xi[(N-1)/2 -1],xi[(N-1)/2]
+				(note the exceptional second & last entries)
+
+			13 = Complex signal in the time domain
+			     xr[0],xi[0], ..., xr[N-1],xi[N-1]
+
+			14 = Fourier transformed - amplitude/phase
+			     a[0],p[0], ..., a[N-1],p[N-1]
+
+			15 = Complex time signal - amplitude/phase
+			     a[0],p[0], ..., a[N-1],p[N-1]
+
+			16 = Real part of complex trace from 0 to Nyquist
+
+			17 = Imag part of complex trace from 0 to Nyquist
+
+			18 = Amplitude of complex trace from 0 to Nyquist
+
+			19 = Phase of complex trace from 0 to Nyquist
+
+			21 = Wavenumber time domain (k-t)
+
+			22 = Wavenumber frequency (k-omega)
+
+			23 = Envelope of the complex time trace
+
+			24 = Phase of the complex time trace
+
+			25 = Frequency of the complex time trace
+
+			30 = Depth-Range (z-x) traces
+
+			101 = Seismic data packed to bytes (by supack1)
+			
+			102 = Seismic data packed to 2 bytes (by supack2)
+			*/
+
+	signed nvs    :16;   /* number of vertically summed traces (see vscode
+			   in bhed structure) */
+
+	signed nhs    :16;   /* number of horizontally summed traces (see vscode
+			   in bhed structure) */
+
+	signed duse   :16;   /* data use:
+				1 = production
+				2 = test */
+
+	signed offset :32; /* distance from source point to receiver
+			   group (negative if opposite to direction
+			   in which the line was shot) */
+
+	signed gelev  :32; /* receiver group elevation from sea level
+			   (above sea level is positive) */
+
+	signed selev  :32; /* source elevation from sea level
+			   (above sea level is positive) */
+
+	signed sdepth :32; /* source depth (positive) */
+
+	signed gdel   :32; /* datum elevation at receiver group */
+
+	signed sdel   :32; /* datum elevation at source */
+
+	signed swdep  :32; /* water depth at source */
+
+	signed gwdep  :32; /* water depth at receiver group */
+
+	signed scalel :16; /* scale factor for previous 7 entries
+			   with value plus or minus 10 to the
+			   power 0, 1, 2, 3, or 4 (if positive,
+			   multiply, if negative divide) */
+
+	signed scalco :16; /* scale factor for next 4 entries
+			   with value plus or minus 10 to the
+			   power 0, 1, 2, 3, or 4 (if positive,
+			   multiply, if negative divide) */
+
+	signed  sx    :32;   /* X source coordinate */
+
+	signed  sy    :32;   /* Y source coordinate */
+
+	signed  gx    :32;   /* X group coordinate */
+
+	signed  gy    :32;   /* Y group coordinate */
+
+	signed counit :16;   /* coordinate units code:
+				for previous four entries
+				1 = length (meters or feet)
+				2 = seconds of arc (in this case, the
+				X values are longitude and the Y values
+				are latitude, a positive value designates
+				the number of seconds east of Greenwich
+				or north of the equator */
+
+	signed wevel  :16;	/* weathering velocity */
+
+	signed swevel :16;	/* subweathering velocity */
+
+	signed sut    :16;	/* uphole time at source */
+
+	signed gut    :16;	/* uphole time at receiver group */
+
+	signed sstat  :16;	/* source static correction */
+
+	signed gstat  :16;	/* group static correction */
+
+	signed tstat  :16;	/* total static applied */
+
+	signed laga   :16; /* lag time A, time in ms between end of 240-
+			   byte trace identification header and time
+			   break, positive if time break occurs after
+			   end of header, time break is defined as
+			   the initiation pulse which maybe recorded
+			   on an auxiliary trace or as otherwise
+			   specified by the recording system */
+
+	signed lagb   :16; /* lag time B, time in ms between the time break
+			   and the initiation time of the energy source,
+			   may be positive or negative */
+
+	signed delrt  :16; /* delay recording time, time in ms between
+			   initiation time of energy source and time
+			   when recording of data samples begins
+			   (for deep water work if recording does not
+			   start at zero time) */
+
+	signed muts   :16; /* mute time--start */
+
+	signed mute   :16; /* mute time--end */
+
+	unsigned ns   :16; /* number of samples in this trace */
+
+	unsigned dt   :16; /* sample interval; in micro-seconds */
+
+	signed gain   :16; /* gain type of field instruments code:
+				1 = fixed
+				2 = binary
+				3 = floating point
+				4 ---- N = optional use */
+
+	signed igc    :16; /* instrument gain constant */
+
+	signed igi    :16; /* instrument early or initial gain */
+
+	signed corr   :16; /* correlated:
+				1 = no
+				2 = yes */
+
+	signed sfs    :16; /* sweep frequency at start */
+
+	signed sfe    :16; /* sweep frequency at end */
+
+	signed slen   :16; /* sweep length in ms */
+
+	signed styp   :16; /* sweep type code:
+				1 = linear
+				2 = cos-squared
+				3 = other */
+
+	signed stas   :16; /* sweep trace length at start in ms */
+
+	signed stae   :16; /* sweep trace length at end in ms */
+
+	signed tatyp  :16; /* taper type: 1=linear, 2=cos^2, 3=other */
+
+	signed afilf  :16; /* alias filter frequency if used */
+
+	signed afils  :16; /* alias filter slope */
+
+	signed nofilf :16; /* notch filter frequency if used */
+
+	signed nofils :16; /* notch filter slope */
+
+	signed lcf    :16; /* low cut frequency if used */
+
+	signed hcf    :16; /* high cut frequncy if used */
+
+	signed lcs    :16; /* low cut slope */
+
+	signed hcs    :16; /* high cut slope */
+
+	signed year   :16; /* year data recorded */
+
+	signed day    :16; /* day of year */
+
+	signed hour   :16; /* hour of day (24 hour clock) */
+
+	signed minute :16; /* minute of hour */
+
+	signed sec    :16; /* second of minute */
+
+	signed timbas :16; /* time basis code:
+				1 = local
+				2 = GMT
+				3 = other */
+
+	signed trwf   :16; /* trace weighting factor, defined as 1/2^N
+			   volts for the least sigificant bit */
+
+	signed grnors :16; /* geophone group number of roll switch
+			   position one */
+
+	signed grnofr :16; /* geophone group number of trace one within
+			   original field record */
+
+	signed grnlof :16; /* geophone group number of last trace within
+			   original field record */
+
+	signed gaps   :16;  /* gap size (total number of groups dropped) */
+
+	signed otrav  :16;  /* overtravel taper code:
+				1 = down (or behind)
+				2 = up (or ahead) */
+
+	/* local assignments */
+
+/*        signed pad :32; */ /* double word alignment for Cray 64-bit floats */
+
+	float d1;	/* sample spacing for non-seismic data */
+
+	float f1;	/* first sample location for non-seismic data */
+
+	float d2;	/* sample spacing between traces */
+
+	float f2;	/* first trace location */
+
+	float ungpow;	/* negative of power used for dynamic
+			   range compression */
+
+	float unscale;	/* reciprocal of scaling factor to normalize
+			   range */
+	signed ntr   :32;   /* number of traces */
+
+	signed mark  :16;   /* mark selected traces */
+
+        signed unass :16;   /* unassigned values */
+        
+        float  data[SU_NFLTS]; 
+
+} segy;
+
+//! \brief Write a seismogram to disk in Seismic Unix (SEG-Y) format
+/*!
+ *
+ \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
+ \param NX Number of grid points in X direction
+ \param NY Number of grid points in Y direction
+ \param NZ Number of grid points in Z direction
+ \param DH Length of space step in meter
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string filename,IndexType NX, IndexType NY, IndexType NZ, ValueType DH)
+{
+    segy tr;
+     /* Define parameters in tr header */
+	tr.tracr=0      ;       /* trace sequence number within reel */
+	tr.fldr=0       ;       /* field record number */
+	tr.tracf=0      ;       /* trace number within field record */
+	tr.ep=0         ;       /* energy source point number */
+	tr.cdpt=0       ;    
+
+   /* trace number within CDP ensemble */
+	tr.nvs=0        ;   /* number of vertically summed traces (see vscode
+                               in bhed structure) */
+	tr.nhs=0        ;   /* number of horizontally summed traces (see vscode
+                               in bhed structure) */
+	tr.duse=0       ;   /* data use:
+                              1 = production
+                              2 = test */
+	tr.selev=0      ; /* source elevation from sea level
+                                                (above sea level is positive) */
+	tr.gdel=0       ; /* datum elevation at receiver group */
+	tr.sdel=0       ; /* datum elevation at source */
+	tr.gwdep=0      ; /* water depth at receiver group */
+	tr.sy=0         ;   /* Y source coordinate */
+	tr.gy=0         ;   /* Y group coordinate */
+	tr.counit=0     ;   /* coordinate units code:
+                               for previous four entries
+                               1 = length (meters or feet)
+                               2 = seconds of arc (in this case, the
+                               X values are longitude and the Y values
+                               are latitude, a positive value designates
+                               the number of seconds east of Greenwich
+                               or north of the equator */
+	tr.wevel=0     ;        /* weathering velocity */
+	tr.swevel=0    ;        /* subweathering velocity */
+	tr.sut=0       ;        /* uphole time at source */
+	tr.gut=0       ;        /* uphole time at receiver group */; 
+	  
+	tr.sstat=0     ;        /* source static correction */
+	tr.gstat=0     ;        /* group static correction */
+	tr.tstat=0     ;        /* total static applied */
+	tr.laga=0      ; /* lag time A, time in ms between end of 240-
+                            byte trace identification header and time
+                            break, positive if time break occurs after
+                            end of header, time break is defined as
+                            the initiation pulse which maybe recorded
+                            on an auxiliary trace or as otherwise
+                            specified by the recording system */
+	tr.lagb=0       ; /* lag time B, time in ms between the time break
+                             and the initiation time of the energy source,
+                             may be positive or negative */
+	tr.delrt=0      ; /* delay recording time, time in ms between
+                             initiation time of energy source and time
+                             when recording of data samples begins
+                             (for deep water work if recording does not
+                             start at zero time) */
+	tr.muts=0      ; /* mute time--start */
+	tr.mute=0      ; /* mute time--end */
+	tr.gain=0      ; /* gain type of field instruments code:
+                            1 = fixed
+                            2 = binary
+                            3 = floating point
+                            4 ---- N = optional use */
+	tr.igc=0       ; /* instrument gain constant */
+	tr.igi=0       ; /* instrument early or initial gain */
+	tr.corr=0      ; /* correlated:
+                            1 = no
+                            2 = yes */
+	tr.sfs=0       ; /* sweep frequency at start */
+	tr.sfe=0       ; /* sweep frequency at end */
+	tr.slen=0      ; /* sweep length in ms */
+	tr.styp=0      ; /* sweep type code:
+                            1 = linear
+                            2 = cos-squared
+                            3 = other */
+	tr.stas=0       ; /* sweep trace length at start in ms */
+	tr.stae=0       ; /* sweep trace length at end in ms */
+	tr.tatyp=0      ; /* taper type: 1=linear, 2=cos^2, 3=other */
+	tr.afilf=0      ; /* alias filter frequency if used */
+	tr.afils=0      ; /* alias filter slope */
+	tr.nofilf=0     ; /* notch filter frequency if used */
+	tr.nofils=0     ; /* notch filter slope */
+	tr.lcf=0        ; /* low cut frequency if used */
+	tr.hcf=0        ; /* high cut frequncy if used */
+	tr.lcs=0        ; /* low cut slope */
+	tr.hcs=0        ; /* high cut slope */
+	tr.year=0       ; /* year data recorded */
+	tr.day=0        ; /* day of year */
+	tr.hour=0       ; /* hour of day (24 hour clock) */
+	tr.minute=0     ; /* minute of hour */
+	tr.sec=0        ; /* second of minute */
+	tr.timbas=0     ; /* time basis code:
+                                                1 = local
+                                                2 = GMT
+                                                3 = other */
+	tr.trwf=0       ; /* trace weighting factor, defined as 1/2^N
+                                                volts for the least sigificant bit */
+	tr.grnors=0     ; /* geophone group number of roll switch
+                                                position one */
+	tr.grnofr=0     ; /* geophone group number of trace one within
+                                                original field record */
+	tr.grnlof=0     ; /* geophone group number of last trace within
+                             original field record */
+	tr.gaps=0       ;  /* gap size (total number of groups dropped) */
+	tr.otrav=0      ;  /* overtravel taper code:
+                              1 = down (or behind)
+                              2 = up (or ahead) */
+
+	/* local assignments */
+
+	tr.f1=0.0;      /* first sample location for non-seismic data */
+
+	tr.d2=0.0;      /* sample spacing between traces */
+
+	tr.f2=0.0;      /* first trace location */
+
+	tr.ungpow=0.0;  /* negative of power used for dynamic
+                                                range compression */
+        tr.unscale=0.0; /* reciprocal of scaling factor to normalize
+                                                range */
+	tr.mark=0     ;
+	
+	
+	
+    IndexType getSourceCoordinate();
+    void setSourceCoordinate(IndexType sourceCoord);
+    
+    int tracl1;
+    lama::Scalar temp;
+    double temp3;
+    IndexType temp2;
+    float xr, yr, zr, x, y, z;
+    float XS=0.0, YS=0.0, ZS=0.0;
+    const float xshift=800.0, yshift=800.0;
+    float dtms=float(DT*1000000);
+
+    int ns=int(numSamples);
+    int ntr=int(numTracesGlobal);
+    tr.ntr=ntr;    /* number of traces */
+    std::string tempstr=filename;
+    tempstr[tempstr.length()-3]='s';
+    tempstr[tempstr.length()-2]='u';
+    tempstr.erase(tempstr.length()-1);
+    const char*filetemp=tempstr.c_str();
+    FILE * pFile;
+    pFile=fopen(filetemp,"wb");
+    lama::DenseVector<ValueType> tempdata;     
+	
+    Coordinates<ValueType> coordTransform;
+    coordinate3D coord3Dsrc;
+    coordinate3D coord3Drec;
+    coord3Dsrc=coordTransform.index2coordinate(sourceCoordinate,NX,NY,NZ);  
+    YS=coord3Dsrc.y;
+    XS=coord3Dsrc.x;
+    ZS=coord3Dsrc.z;
+    YS=YS*DH;
+    XS=XS*DH;        
+    ZS=ZS*DH;
+    
+    for(tracl1=0;tracl1<ntr;tracl1++){
+	temp=coordinates.getValue(tracl1);
+	temp3=float(temp.getValue<ValueType>());
+	temp2=floor(temp3);
+	coord3Drec=coordTransform.index2coordinate(temp2,NX,NY,NZ);
+	xr=coord3Drec.x;
+	yr=coord3Drec.y;
+	zr=coord3Drec.z;
+	yr=yr*DH;
+	xr=xr*DH;
+	zr=zr*DH;
+	x=xr-XS; // Taking source position as reference point
+	y=yr-YS;
+	z=zr-ZS;
+	
+	tr.tracl=tracl1+1;   // trace sequence number within line
+	tr.tracr=1;          // trace sequence number within reel
+	tr.ep=1;
+	tr.cdp=ntr;
+	tr.trid=(short)1;  
+	tr.offset=(signed int)round(sqrt((XS-xr)*(XS-xr)
+			+(YS-yr)*(YS-yr)+(ZS-zr)*(ZS-zr))*1000.0);
+	tr.gelev=(signed int)round(yr*1000.0);
+	tr.sdepth=(signed int)round(YS*1000.0);   /* source depth (positive) */
+			/* angle between receiver position and reference point
+                           (sperical coordinate system: swdep=theta, gwdep=phi) */
+	tr.gdel=(signed int)round(atan2(-y,z)*180*1000.0/3.1415926);
+	tr.gwdep=(signed int)round(sqrt(z*z+y*y)*1000.0);	
+	tr.swdep=round(((360.0/(2.0*3.1415926))*atan2(x-xshift,y-yshift))*1000.0);
+	tr.scalel=(signed short)-3;
+	tr.scalco=(signed short)-3;
+	tr.sx=(signed int)round(XS*1000.0);  /* X source coordinate */
+	tr.sy=(signed int)round(ZS*1000.0);  /* z source coordinate */
+
+	/* group coordinates */
+	tr.gx=(signed int)round(xr*1000.0);
+	tr.gy=(signed int)round(zr*1000.0);
+	tr.ns=(unsigned short)ns; /* number of samples in this trace */
+	tr.dt=(unsigned short)round(dtms);/* sample interval in micro-seconds */
+	tr.d1=(float)tr.dt*1.0e-6;        /* sample spacing for non-seismic data */
+
+	data.getRow(tempdata,tracl1);
+	scai::lama::Scalar tempScalar;	
+	for(IndexType sample=0; sample<tempdata.size(); sample++){
+	  tempScalar=tempdata.getValue(sample);
+	  tr.data[sample]=float(tempScalar.getValue<ValueType>());   
+	}
+	
+	fwrite(&tr,240,1,pFile);
+	fwrite(&tr.data[1],4,ns,pFile);
+  }
+    fclose(pFile);
+}
 
 
