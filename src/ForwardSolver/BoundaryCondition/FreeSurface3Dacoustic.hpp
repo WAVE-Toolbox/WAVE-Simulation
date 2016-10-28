@@ -18,20 +18,18 @@ namespace KITGPI {
             public:
                 
                 //! Default constructor
-                FreeSurface3Dacoustic():active(false){};
+                FreeSurface3Dacoustic(){};
                 
                 //! Default destructor
                 ~FreeSurface3Dacoustic(){};
                 
                 void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ);
                 
-                bool getActive();
-                
                 void apply(lama::DenseVector<ValueType>& p);
                 
             private:
                 
-                bool active; //!< Bool if this free surface is active and initialized (==ready-to use)
+                using FreeSurface<ValueType>::active;
                 
                 lama::DenseVector<ValueType> setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
                 
@@ -42,15 +40,6 @@ namespace KITGPI {
 } /* end namespace KITGPI */
 
 
-
-/*! \brief Getter method for active bool
- *
- *
- */
-template<typename ValueType>
-bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>::getActive(){
-    return(active);
-}
 
 /*! \brief Apply free surface condition during time stepping
  *

@@ -18,7 +18,7 @@ namespace KITGPI {
             public:
                 
                 //! Default constructor
-                FreeSurface(){};
+                FreeSurface():active(false){};
                 
                 //! Default destructor
                 ~FreeSurface(){};
@@ -38,10 +38,23 @@ namespace KITGPI {
                  *
                  *
                  */
-                virtual bool getActive()=0;
+                virtual bool getActive();
                 
+            protected:
+                
+                bool active; //!< Bool if this free surface is active and initialized (==ready-to use)
                 
             };
         } /* end namespace BoundaryCondition */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+
+
+/*! \brief Getter method for active bool
+ *
+ *
+ */
+template<typename ValueType>
+bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType>::getActive(){
+    return(active);
+}

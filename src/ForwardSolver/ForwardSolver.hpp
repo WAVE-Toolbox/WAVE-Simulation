@@ -21,7 +21,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor
-            ForwardSolver(){};
+            ForwardSolver():useFreeSurface(false){};
             
             //! Default destructor
             ~ForwardSolver(){};
@@ -72,6 +72,13 @@ namespace KITGPI {
              \param dist Distribution of the wave fields
              */
             virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist)=0;
+            
+            Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
+            
+        protected:
+            
+            bool useFreeSurface; //!< Bool if free surface is in use
+
             
         };
     } /* end namespace ForwardSolver */

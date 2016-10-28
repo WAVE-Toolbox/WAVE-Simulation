@@ -18,7 +18,7 @@ namespace KITGPI {
             public:
                 
                 //! Default constructor
-                FreeSurface3Delastic():active(false){};
+                FreeSurface3Delastic(){};
                 
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
@@ -29,13 +29,11 @@ namespace KITGPI {
                 
                 lama::CSRSparseMatrix<ValueType>& getDybPressure();
                 
-                bool getActive();
-                
                 void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz);
                 
             private:
                 
-                bool active; //!< Bool if this free surface is active and initialized (==ready-to use)
+                using FreeSurface<ValueType>::active;
                 
                 lama::DenseVector<ValueType> setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
                 lama::DenseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
@@ -81,14 +79,6 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::BoundaryCondition::Free
     return(DybPressure);
 }
 
-/*! \brief Getter method for active bool
- *
- *
- */
-template<typename ValueType>
-bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::getActive(){
-    return(active);
-}
 
 /*! \brief Apply free surface condition during time stepping
  *

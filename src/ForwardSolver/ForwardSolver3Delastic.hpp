@@ -27,7 +27,7 @@ namespace KITGPI {
         public:
             
             /* Default constructor */
-            FD3Delastic():useFreeSurface(false){};
+            FD3Delastic(){};
             
             /* Default destructor */
             ~FD3Delastic(){};
@@ -36,13 +36,13 @@ namespace KITGPI {
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist);
             
-            Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
+            using ForwardSolver<ValueType>::seismogram;
             
         private:
             
             /* Boundary Conditions */
             BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
-            bool useFreeSurface; //!< Bool if free surface is in use
+            using ForwardSolver<ValueType>::useFreeSurface;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
