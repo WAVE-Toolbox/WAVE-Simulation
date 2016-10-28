@@ -95,7 +95,7 @@ int main( int argc, char* argv[] )
     
     ForwardSolver::FD3Dacoustic<ValueType> solver;
     
-    solver.prepareBoundaryConditions(config,derivatives,dist);
+    solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
     

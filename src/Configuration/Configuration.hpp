@@ -71,6 +71,8 @@ namespace KITGPI {
             
             IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
 
+            IndexType getDampingBoundary() {return DampingBoundary;} ///< Return DampingBoundary
+            
         private:
             
             IndexType NumParameters; ///< Number of parameters in input file
@@ -106,6 +108,8 @@ namespace KITGPI {
             
             IndexType FreeSurface; ///< Use the free surface==1 or not==0
             
+            IndexType DampingBoundary; ///< Use the Damping Boundary ==1 or not==0
+            
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
             std::string SeismogramFilename; ///< Filename to write seismograms
@@ -128,7 +132,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(23)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(24)
 {
     // read all lines in file
     
@@ -207,6 +211,9 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     std::istringstream( map[ "FreeSurface" ] ) >> FreeSurface; // IndexType
     
+    std::istringstream( map[ "DampingBoundary" ] ) >> DampingBoundary; // IndexType
+
+    
     // calculate other parameters
     
     N = NZ * NX * NY;
@@ -247,6 +254,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     std::cout << "    Z: " << DH * NZ << " m (Horizontal)" << std::endl;
     if(FreeSurface==1){
         std::cout << "    A free surface will be set atop the model" << std::endl;
+    }
+    if(DampingBoundary==1){
+        std::cout << "    A damping boundary will be placed at the model boundary." << std::endl;
     }
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;

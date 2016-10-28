@@ -30,6 +30,7 @@ ModelParametrisation=2    # 1=Lame, 2=Velocity
 
 # Apply the free surface condition
 FreeSurface=0
+DampingBoundary=0
 
 # generate homogeneous model
 velocityP=3500   # P-wave velocity in meter per seconds

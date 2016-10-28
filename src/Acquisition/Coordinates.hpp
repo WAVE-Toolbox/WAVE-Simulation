@@ -13,6 +13,19 @@ namespace KITGPI {
             IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
             IndexType y; //!< y Position in Y-direction in grid points (Depth)
             IndexType z; //!< z Position in Z-direction in grid points (Horizontal 2)
+            
+            IndexType min(){
+                IndexType temp=0;
+                if(x<y){
+                    temp=x;
+                } else {
+                    temp=y;
+                }
+                if(z<temp){
+                    temp=z;
+                }
+                return(temp);
+            }
         };
         
         /*! \brief This class manages the transformation of Coordinates
@@ -30,6 +43,8 @@ namespace KITGPI {
             
             // Index --> Coordinate:
             coordinate3D index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
+
+            coordinate3D edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ);
             
             bool locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
             
@@ -44,6 +59,9 @@ namespace KITGPI {
             
             // Index --> Coordinate:
             coordinate3D map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY);
+            
+            coordinate3D estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
+
             
         };
         
@@ -201,3 +219,26 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
     }
     
 }
+
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+{
+    coordinate3D distance;
+    
+    distance.x=!((NX-X)<(X-1))?(X-1):(NX-X);
+    distance.y=!((NY-Y)<(Y-1))?(Y-1):(NY-Y);
+    distance.z=!((NX-Z)<(Z-1))?(Z-1):(NZ-Z);
+    
+    return(distance);
+    
+}
+
+
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
+{
+    return(estimateDistanceToEdges3D(coordinate.x,coordinate.y,coordinate.z,NX,NY,NZ));
+}
+
+
+
