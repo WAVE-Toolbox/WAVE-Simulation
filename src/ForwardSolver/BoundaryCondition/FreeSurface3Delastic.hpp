@@ -117,6 +117,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
+    if(derivatives.getSpatialFDorder() != 2){
+        COMMON_THROWEXCEPTION(" Free Surface is only implemented for SpatialFDorder==2 ! ")
+    }
+    
     active=true;
     
     lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDyb();

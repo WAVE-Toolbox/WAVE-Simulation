@@ -300,13 +300,13 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vzz = *vzzPtr;
     
     /* In dependency of the free surface, set the derivative martix E for the pressure update */
-    lama::CSRSparseMatrix<ValueType>* DyBPressurePtr;
-    DyBPressurePtr=&Dyb; // Default: Identical to velocity update
+    lama::CSRSparseMatrix<ValueType>* DybPressurePtr;
+    DybPressurePtr=&Dyb; // Default: Identical to velocity update
     if(useFreeSurface){
         FreeSurface.setModelparameter(model);
-        DyBPressurePtr=&(FreeSurface.getDybPressure());
+        DybPressurePtr=&(FreeSurface.getDybPressure());
     }
-    lama::CSRSparseMatrix<ValueType>& E_P=*DyBPressurePtr;
+    lama::CSRSparseMatrix<ValueType>& DybPressure=*DybPressurePtr;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
@@ -343,7 +343,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-        vyy = E_P * vY;
+        vyy = DybPressure * vY;
         vzz = Dzb * vZ;
         
         update = vxx;

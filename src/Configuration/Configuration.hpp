@@ -241,10 +241,10 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     double courant = velocity_max * DT / DH;
     
     std::cout << "Configuration:" << std::endl << std::endl;
-    std::cout << "Time Step:\t\t\tDT =\t" << DT << " s" << std::endl;
-    std::cout << "Grid spacing:\t\t\tDH =\t" << DH << " m" << std::endl;
-    std::cout << "Total simulation time:\t\tT  =\t" << T << " s" << std::endl;
-    std::cout << "Order of spatial FD operator:\t\t" << spatialFDorder << std::endl;
+    std::cout << "Time Step: DT = " << DT << " s" << std::endl;
+    std::cout << "Grid spacing: DH = " << DH << " m" << std::endl;
+    std::cout << "Total simulation time: T = " << T << " s" << std::endl;
+    std::cout << "Order of spatial FD operator: " << spatialFDorder << std::endl;
     std::cout << "Criteriums:" << std::endl;
     std::cout << "    Courant-number: " << courant << std::endl;
     if ( courant >= 0.8 )
