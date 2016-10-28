@@ -34,12 +34,6 @@ namespace KITGPI {
             
             void reset();
             
-            /* Getter routines for required wavefields */
-            lama::DenseVector<ValueType>& getVX();
-            lama::DenseVector<ValueType>& getVY();
-            lama::DenseVector<ValueType>& getVZ();
-            lama::DenseVector<ValueType>& getP();
-            
             /* Getter routines for non-required wavefields: Will throw an error */
             lama::DenseVector<ValueType>& getSxx();
             lama::DenseVector<ValueType>& getSyy();
@@ -51,19 +45,18 @@ namespace KITGPI {
         private:
             
             /* required wavefields */
-            lama::DenseVector<ValueType> VX; //!< Wavefield for velocity in x
-            lama::DenseVector<ValueType> VY; //!< Wavefield for velocity in y
-            lama::DenseVector<ValueType> VZ; //!< Wavefield for velocity in z
-            lama::DenseVector<ValueType> P; //!< Wavefield for pressure
+            using Wavefields<ValueType>::VX;
+            using Wavefields<ValueType>::VY;
+            using Wavefields<ValueType>::VZ;
+            using Wavefields<ValueType>::P;
             
             /* non-required wavefields */
-            lama::DenseVector<ValueType> Sxx; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Syy; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Szz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Syz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Sxz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Sxy; //!< Wavefield (not-used here)
-            
+            using Wavefields<ValueType>::Sxx;
+            using Wavefields<ValueType>::Syy;
+            using Wavefields<ValueType>::Szz;
+            using Wavefields<ValueType>::Syz;
+            using Wavefields<ValueType>::Sxz;
+            using Wavefields<ValueType>::Sxy;
         };
     }
 }
@@ -95,31 +88,6 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::reset()
     this->resetWavefield(VY);
     this->resetWavefield(VZ);
     this->resetWavefield(P);
-}
-
-
-//! \brief Getter routine for vX wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVX(){
-    return(VX);
-}
-
-//! \brief Getter routine for vY wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVY(){
-    return(VY);
-}
-
-//! \brief Getter routine for vZ wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getVZ(){
-    return(VZ);
-}
-
-//! \brief Getter routine for p wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getP(){
-    return(P);
 }
 
 //! \brief Not valid in the 3D acoustic case

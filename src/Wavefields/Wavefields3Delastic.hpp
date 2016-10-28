@@ -32,36 +32,24 @@ namespace KITGPI {
             
             void reset();
             
-            /* Getter routines for required wavefields */
-            lama::DenseVector<ValueType>& getVX();
-            lama::DenseVector<ValueType>& getVY();
-            lama::DenseVector<ValueType>& getVZ();
-            lama::DenseVector<ValueType>& getSxx();
-            lama::DenseVector<ValueType>& getSyy();
-            lama::DenseVector<ValueType>& getSzz();
-            lama::DenseVector<ValueType>& getSyz();
-            lama::DenseVector<ValueType>& getSxz();
-            lama::DenseVector<ValueType>& getSxy();
-            
             /* Getter routines for non-required wavefields: Will throw an error */
             lama::DenseVector<ValueType>& getP();
-            
             
         private:
             
             /* required wavefields */
-            lama::DenseVector<ValueType> VX; //!< Wavefield for velocity in x
-            lama::DenseVector<ValueType> VY; //!< Wavefield for velocity in y
-            lama::DenseVector<ValueType> VZ; //!< Wavefield for velocity in z
-            lama::DenseVector<ValueType> Sxx; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Syy; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Szz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Syz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Sxz; //!< Wavefield (not-used here)
-            lama::DenseVector<ValueType> Sxy; //!< Wavefield (not-used here)
+            using Wavefields<ValueType>::VX;
+            using Wavefields<ValueType>::VY;
+            using Wavefields<ValueType>::VZ;
+            using Wavefields<ValueType>::Sxx;
+            using Wavefields<ValueType>::Syy;
+            using Wavefields<ValueType>::Szz;
+            using Wavefields<ValueType>::Syz;
+            using Wavefields<ValueType>::Sxz;
+            using Wavefields<ValueType>::Sxy;
             
             /* non-required wavefields */
-            lama::DenseVector<ValueType> P; //!< Wavefield (not-used here)
+            using Wavefields<ValueType>::P; //!< Wavefield
 
         };
     }
@@ -90,7 +78,6 @@ KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, d
 
 }
 
-
 /*! \brief Set all wavefields to zero.
  */
 template<typename ValueType>
@@ -108,24 +95,6 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
 }
 
 
-//! \brief Getter routine for vX wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getVX(){
-    return(VX);
-}
-
-//! \brief Getter routine for vY wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getVY(){
-    return(VY);
-}
-
-//! \brief Getter routine for vZ wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getVZ(){
-    return(VZ);
-}
-
 //! \brief Not valid in the 3D elastic case
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getP(){
@@ -133,38 +102,3 @@ lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
     return(P);
 }
 
-//! \brief Getter routine for Sxx wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSxx(){
-    return(Sxx);
-}
-
-//! \brief Getter routine for Syy wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSyy(){
-    return(Syy);
-}
-
-//! \brief Getter routine for Szz wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSzz(){
-    return(Szz);
-}
-
-//! \brief Getter routine for Syz wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSyz(){
-    return(Syz);
-}
-
-//! \brief Getter routine for Sxz wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSxz(){
-    return(Sxz);
-}
-
-//! \brief Getter routine for Sxy wavefield
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getSxy(){
-    return(Sxy);
-}
