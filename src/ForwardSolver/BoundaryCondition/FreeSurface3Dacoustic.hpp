@@ -74,7 +74,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
     
     active=true;
     
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getE();
+    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
     
     IndexType size_vec=dist->getGlobalSize();
     

@@ -251,12 +251,12 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     lama::DenseVector<ValueType>& p=wavefield.getP();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>& A=derivatives.getA();
-    lama::CSRSparseMatrix<ValueType>& B=derivatives.getB();
-    lama::CSRSparseMatrix<ValueType>& C=derivatives.getC();
-    lama::CSRSparseMatrix<ValueType>& D=derivatives.getD();
-    lama::CSRSparseMatrix<ValueType>& E=derivatives.getE();
-    lama::CSRSparseMatrix<ValueType>& F=derivatives.getF();
+    lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
+    lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyf();
+    lama::CSRSparseMatrix<ValueType>& Dzf=derivatives.getDzf();
+    lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
+    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
+    lama::CSRSparseMatrix<ValueType>& Dzb=derivatives.getDzb();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, lambda.getContextPtr());
@@ -280,20 +280,20 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         
         /* update velocity */
-        update= A * p;
+        update= Dxf * p;
         vX += update.scale(inverseDensity);
 
-        update= B * p;
+        update= Dyf * p;
         vY += update.scale(inverseDensity);
 
-        update=  C * p;
+        update=  Dzf * p;
         vZ += update.scale(inverseDensity);
 
         
         /* pressure update */
-        update  =  D * vX;
-        update +=  E * vY;
-        update +=  F * vZ;
+        update  =  Dxb * vX;
+        update +=  Dyb * vY;
+        update +=  Dzb * vZ;
         p += update.scale(lambda);
 
         /* Apply free surface to pressure update */
