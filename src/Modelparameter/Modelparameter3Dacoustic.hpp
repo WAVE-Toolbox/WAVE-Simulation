@@ -40,7 +40,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            FD3Dacoustic():dirtyFlagInverseDensity(1){};
+            FD3Dacoustic(){};
             
             //! Destructor, releases all allocated resources.
             ~FD3Dacoustic(){};
@@ -63,24 +63,18 @@ namespace KITGPI {
             void write(std::string filename);
             
             /* Getter routines for modelparameters */
-            lama::DenseVector<ValueType>& getDensity();
-            lama::DenseVector<ValueType>& getInverseDensity();
-            lama::DenseVector<ValueType>& getLambda();
             lama::DenseVector<ValueType>& getMu();
-            lama::DenseVector<ValueType>& getVelocityP();
             lama::DenseVector<ValueType>& getVelocityS();
             
         private:
             
-            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
-            
-            lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
-            lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.
-            lama::DenseVector<ValueType> density; //!< Vector storing Density.
-            lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
-            
-            lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
-            lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
+            using Modelparameter<ValueType>::dirtyFlagInverseDensity;
+            using Modelparameter<ValueType>::lambda;
+            using Modelparameter<ValueType>::mu;
+            using Modelparameter<ValueType>::density;
+            using Modelparameter<ValueType>::inverseDensity;
+            using Modelparameter<ValueType>::velocityP;
+            using Modelparameter<ValueType>::velocityS;
             
         };
     }
@@ -94,7 +88,6 @@ namespace KITGPI {
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
-:dirtyFlagInverseDensity(1)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -127,7 +120,6 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const, lama::Scalar  rho_const)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,lambda_const,rho_const);
 }
@@ -159,7 +151,6 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda, std::string filenamerho)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,filenameLambda,filenamerho);
 }
@@ -190,7 +181,6 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,filename);
 }
@@ -217,7 +207,6 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
 //! \brief Copy constructor
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic& rhs)
-:dirtyFlagInverseDensity(1)
 {
     lambda=rhs.M.copy();
     density=rhs.density.copy();
@@ -272,33 +261,6 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename
 };
 
 
-
-/*! \brief Get reference to density model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getInverseDensity(){
-    if(dirtyFlagInverseDensity==1){
-        inverseDensity.assign(density);
-        inverseDensity.invert();
-    }
-    return(inverseDensity);
-}
-
-/*! \brief Get reference to density model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getDensity(){
-    dirtyFlagInverseDensity=1; // If density will be changed, the inverse has to be refreshed if it is accessed
-    return(density);
-}
-
-/*! \brief Get reference to first Lame model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getLambda(){
-    return(lambda);
-}
-
 /*! \brief Get reference to second Lame Parameter mu
  *
  */
@@ -308,14 +270,6 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
     return(mu);
 }
 
-/*! \brief Get reference to P-wave velocity
- *
- * Not yet implemented
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityP(){
-    return(velocityP);
-}
 
 /*! \brief Get reference to S-wave velocity
  */

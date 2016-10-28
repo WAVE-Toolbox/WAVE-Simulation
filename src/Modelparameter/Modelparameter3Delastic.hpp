@@ -40,7 +40,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            FD3Delastic():dirtyFlagInverseDensity(1){};
+            FD3Delastic(){};
             
             //! Destructor, releases all allocated resources.
             ~FD3Delastic(){};
@@ -61,28 +61,16 @@ namespace KITGPI {
             
             void write(std::string filenameLambda,std::string filenamemu, std::string filenamedensity);
             void write(std::string filename);
-            
-            /* Getter routines for modelparameters */
-            lama::DenseVector<ValueType>& getDensity();
-            lama::DenseVector<ValueType>& getInverseDensity();
-            lama::DenseVector<ValueType>& getLambda();
-            lama::DenseVector<ValueType>& getMu();
-            lama::DenseVector<ValueType>& getVelocityP();
-            lama::DenseVector<ValueType>& getVelocityS();
-            
+                        
         private:
             
-            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
-            
-            lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
-            lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.
-            lama::DenseVector<ValueType> density; //!< Vector storing Density.
-            lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
-            
-            lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
-            lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
-            
-            
+            using Modelparameter<ValueType>::dirtyFlagInverseDensity;
+            using Modelparameter<ValueType>::lambda;
+            using Modelparameter<ValueType>::mu;
+            using Modelparameter<ValueType>::density;
+            using Modelparameter<ValueType>::inverseDensity;
+            using Modelparameter<ValueType>::velocityP;
+            using Modelparameter<ValueType>::velocityS;
             
         };
     }
@@ -96,7 +84,6 @@ namespace KITGPI {
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Configuration<ValueType> config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
-:dirtyFlagInverseDensity(1)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -130,7 +117,6 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,lambda_const,mu_const,rho);
 }
@@ -165,7 +151,6 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda,std::string filenamemu, std::string filenamerho)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,filenameLambda,filenamemu,filenamerho);
 }
@@ -198,7 +183,6 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
-:dirtyFlagInverseDensity(1)
 {
     init(ctx,dist,filename);
 }
@@ -227,7 +211,6 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
 //! \brief Copy constructor
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
-:dirtyFlagInverseDensity(1)
 {
     lambda=rhs.lambda.copy();
     mu=rhs.mu.copy();
@@ -287,53 +270,4 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
     this->writeModelparameter(density,filenamedensity);
 };
 
-
-/*! \brief Get reference to density model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getInverseDensity(){
-    if(dirtyFlagInverseDensity==1){
-        inverseDensity.assign(density);
-        inverseDensity.invert();
-    }
-    return(inverseDensity);
-}
-
-/*! \brief Get reference to density model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getDensity(){
-    dirtyFlagInverseDensity=1; // If density will be changed, the inverse has to be refreshed if it is accessed
-    return(density);
-}
-
-/*! \brief Get reference to first Lame model parameter
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getLambda(){
-    return(lambda);
-}
-
-/*! \brief Get reference to second Lame Parameter mu
- *
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getMu(){
-    return(mu);
-}
-
-/*! \brief Get reference to P-wave velocity
- *
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getVelocityP(){
-    return(velocityP);
-}
-
-/*! \brief Get reference to S-wave velocity
- */
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getVelocityS(){
-    return(velocityS);
-}
 

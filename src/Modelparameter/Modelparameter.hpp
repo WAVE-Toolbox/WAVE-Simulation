@@ -41,7 +41,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            Modelparameter(){};
+            Modelparameter():dirtyFlagInverseDensity(1){};
             
             //! Default destructor.
             ~Modelparameter(){};
@@ -63,22 +63,26 @@ namespace KITGPI {
              \param filename filename to write modelparameters (endings will be added by derived classes)
              */
             virtual void write(std::string filename)=0;
-            //virtual void write(std::string filenameOut)=0;
             
-            //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>& getDensity()=0;
-            //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>& getInverseDensity()=0;
-            //! \brief Get referenec to first Lame model parameter
-            virtual lama::DenseVector<ValueType>& getLambda()=0;
-            //! \brief Get referenec to second Lame model parameter
-            virtual lama::DenseVector<ValueType>& getMu()=0;
-            //! \brief Get referenec to P-wave velocity
-            virtual lama::DenseVector<ValueType>& getVelocityP()=0;
-            //! \brief Get referenec to S-wave velocity
-            virtual lama::DenseVector<ValueType>& getVelocityS()=0;
+            virtual lama::DenseVector<ValueType>& getDensity();
+            virtual lama::DenseVector<ValueType>& getInverseDensity();
+            virtual lama::DenseVector<ValueType>& getLambda();
+            virtual lama::DenseVector<ValueType>& getMu();
+            virtual lama::DenseVector<ValueType>& getVelocityP();
+            virtual lama::DenseVector<ValueType>& getVelocityS();
             
         protected:
+            
+            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
+            
+            lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
+            lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.
+            lama::DenseVector<ValueType> density; //!< Vector storing Density.
+            lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
+            
+            lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
+            lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
+            
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
@@ -173,8 +177,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
  *  Acoustic:   lambda = rho * vP^2
  *  Elastic:    mu = rho * vS^2
  */
- template<typename ValueType>
- void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorLame, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorLame, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
 {
     allocateModelparameter(vecV,ctx,dist);
     allocateModelparameter(vecDensity,ctx,dist);
@@ -254,8 +258,54 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateMu(lama::DenseV
 };
 
 
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
+    if(dirtyFlagInverseDensity==1){
+        inverseDensity.assign(density);
+        inverseDensity.invert();
+    }
+    return(inverseDensity);
+}
 
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
+    dirtyFlagInverseDensity=1; // If density will be changed, the inverse has to be refreshed if it is accessed
+    return(density);
+}
 
+/*! \brief Get reference to first Lame model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getLambda(){
+    return(lambda);
+}
+
+/*! \brief Get reference to second Lame Parameter mu
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getMu(){
+    return(mu);
+}
+
+/*! \brief Get reference to P-wave velocity
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
+    return(velocityP);
+}
+
+/*! \brief Get reference to S-wave velocity
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
+    return(velocityS);
+}
 
 
 
