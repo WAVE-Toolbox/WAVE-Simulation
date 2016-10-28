@@ -26,28 +26,21 @@ namespace KITGPI {
                 //! Default destructor
                 ~FD3D(){};
                 
-                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm );
+                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
                 FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
                 
-                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm );
-                
-                lama::CSRSparseMatrix<ValueType>& getA();
-                lama::CSRSparseMatrix<ValueType>& getB();
-                lama::CSRSparseMatrix<ValueType>& getC();
-                lama::CSRSparseMatrix<ValueType>& getD();
-                lama::CSRSparseMatrix<ValueType>& getE();
-                lama::CSRSparseMatrix<ValueType>& getF();
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
                 
             private:
                 
-                lama::CSRSparseMatrix<ValueType> A; //!< Derivative matrix A
-                lama::CSRSparseMatrix<ValueType> B; //!< Derivative matrix B
-                lama::CSRSparseMatrix<ValueType> C; //!< Derivative matrix C
-                lama::CSRSparseMatrix<ValueType> D; //!< Derivative matrix D
-                lama::CSRSparseMatrix<ValueType> E; //!< Derivative matrix E
-                lama::CSRSparseMatrix<ValueType> F; //!< Derivative matrix F
+                using Derivatives<ValueType>::A;
+                using Derivatives<ValueType>::B;
+                using Derivatives<ValueType>::C;
+                using Derivatives<ValueType>::D;
+                using Derivatives<ValueType>::E;
+                using Derivatives<ValueType>::F;
                 
-                void derivatives(IndexType NX, IndexType NY, IndexType NZ, IndexType spatialFDorder, dmemo::DistributionPtr dist );
+                void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist );
                 
             };
         } /* end namespace Derivatives */
@@ -78,12 +71,13 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  \param DH Grid spacing (equidistant)
- \param DT Temporal sampling interval
+ \param DT Temporal sampling interval#
+ \param spatialFDorderInput FD-order of spatial derivative stencils
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm ){
-    initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorder, comm );
+KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm ){
+    initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorderInput, comm );
 }
 
 
@@ -96,7 +90,7 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param dist Distribution of the wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, IndexType spatialFDorder, dmemo::DistributionPtr dist )
+void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist )
 {
     SCAI_REGION( "derivatives" )
     
@@ -106,156 +100,156 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     hmemo::HArray<IndexType> localIndices;
     dist->getOwnedIndexes(localIndices);
     
-
+    
     /* Do some calculations to avoid it within the for loops */
     IndexType NXNY=NX*NY;
     IndexType N=NX*NY*NZ;
     
-    IndexType numLocalIndices=localIndices.size(); //< Number of local indices
-    IndexType A_numLocalValues=numLocalIndices; //< Number of local values of Matrix A (here the diagonal elements are added directly)
-    IndexType B_numLocalValues=numLocalIndices; //< Number of local values of Matrix B (here the diagonal elements are added directly)
-    IndexType C_numLocalValues=numLocalIndices; //< Number of local values of Matrix C (here the diagonal elements are added directly)
+    IndexType numLocalIndices=localIndices.size(); // Number of local indices
+    IndexType A_numLocalValues=numLocalIndices; // Number of local values of Matrix A (here the diagonal elements are added directly)
+    IndexType B_numLocalValues=numLocalIndices; // Number of local values of Matrix B (here the diagonal elements are added directly)
+    IndexType C_numLocalValues=numLocalIndices; // Number of local values of Matrix C (here the diagonal elements are added directly)
     
     /* Add the number of non-diagonal values */
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); //< Get read access to localIndices
-    IndexType read_localIndices_temp; //< Temporary storage, so we do not have to access the array
-    IndexType read_localIndices_temp_plusOne; //< Temporary storage, to save floating point operations
+    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    IndexType read_localIndices_temp; // Temporary storage, so we do not have to access the array
+    IndexType read_localIndices_temp_plusOne; // Temporary storage, to save floating point operations
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
         read_localIndices_temp_plusOne=read_localIndices_temp+1;
         
         /* Check for non-diagonal elements of A */
-        switch (spatialFDorder)
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( read_localIndices_temp_plusOne % NX >= 6){	//Check if grid point 5 steps backward is available
-        		A_numLocalValues++;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-6) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 6 steps forward is available
-        		A_numLocalValues++;
-        	}
-        case 10:
-        	if( read_localIndices_temp_plusOne % NX >= 5){	//Check if grid point 4 steps backward is available
-        		A_numLocalValues++;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-5) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 5 steps forward is available
-        		A_numLocalValues++;
-        	}
-        case 8:
-        	if( read_localIndices_temp_plusOne % NX >= 4){	//Check if grid point 3 steps backward is available
-        		A_numLocalValues++;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-4) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 4 steps forward is available
-        		A_numLocalValues++;
-        	}
-        case 6:
-        	if( read_localIndices_temp_plusOne % NX >= 3){	//Check if grid point 2 steps backward is available
-        		A_numLocalValues++;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-3) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 3 steps forward is available
-        		A_numLocalValues++;
-        	}
-        case 4:
-            if( read_localIndices_temp_plusOne % NX != 1 ){	//Check if grid point 1 step backward is available
-                A_numLocalValues++;
-            }
-            if( (read_localIndices_temp_plusOne % NX <= NX-2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 2 steps forward is available
-            	A_numLocalValues++;
-            }
-        case 2:
-            if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
-                A_numLocalValues++;
-            }
+            case 12:
+                if( read_localIndices_temp_plusOne % NX >= 6){	//Check if grid point 5 steps backward is available
+                    A_numLocalValues++;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-6) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 6 steps forward is available
+                    A_numLocalValues++;
+                }
+            case 10:
+                if( read_localIndices_temp_plusOne % NX >= 5){	//Check if grid point 4 steps backward is available
+                    A_numLocalValues++;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-5) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 5 steps forward is available
+                    A_numLocalValues++;
+                }
+            case 8:
+                if( read_localIndices_temp_plusOne % NX >= 4){	//Check if grid point 3 steps backward is available
+                    A_numLocalValues++;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-4) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 4 steps forward is available
+                    A_numLocalValues++;
+                }
+            case 6:
+                if( read_localIndices_temp_plusOne % NX >= 3){	//Check if grid point 2 steps backward is available
+                    A_numLocalValues++;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-3) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 3 steps forward is available
+                    A_numLocalValues++;
+                }
+            case 4:
+                if( read_localIndices_temp_plusOne % NX != 1 ){	//Check if grid point 1 step backward is available
+                    A_numLocalValues++;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 2 steps forward is available
+                    A_numLocalValues++;
+                }
+            case 2:
+                if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
+                    A_numLocalValues++;
+                }
         }
-
+        
         
         /* Check for non-diagonal elements of B */
-        switch (spatialFDorder)
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 5*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 5 steps backward is available
-        		B_numLocalValues++;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 6) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 6 steps forward is available
-        		B_numLocalValues++;
-        	}
-        case 10:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 4*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 4 steps backward is available
-        		B_numLocalValues++;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 5) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 5 steps forward is available
-        		B_numLocalValues++;
-        	}
-        case 8:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 3*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 3 steps backward is available
-        		B_numLocalValues++;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 4) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 4 steps forward is available
-        		B_numLocalValues++;
-        	}
-        case 6:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 2*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 2 steps backward is available
-        		B_numLocalValues++;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 3) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 3 steps forward is available
-        		B_numLocalValues++;
-        	}
-        case 4:
-        	if( ( read_localIndices_temp_plusOne % NXNY > NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 1 step backward is available
-        		B_numLocalValues++;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 2 steps forward is available
-        		B_numLocalValues++;
-        	}
-        case 2:
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 1 step forward is available
-        		B_numLocalValues++;
-        	}
+            case 12:
+                if( ( read_localIndices_temp_plusOne % NXNY > 5*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 5 steps backward is available
+                    B_numLocalValues++;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 6) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 6 steps forward is available
+                    B_numLocalValues++;
+                }
+            case 10:
+                if( ( read_localIndices_temp_plusOne % NXNY > 4*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 4 steps backward is available
+                    B_numLocalValues++;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 5) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 5 steps forward is available
+                    B_numLocalValues++;
+                }
+            case 8:
+                if( ( read_localIndices_temp_plusOne % NXNY > 3*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 3 steps backward is available
+                    B_numLocalValues++;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 4) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 4 steps forward is available
+                    B_numLocalValues++;
+                }
+            case 6:
+                if( ( read_localIndices_temp_plusOne % NXNY > 2*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 2 steps backward is available
+                    B_numLocalValues++;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 3) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 3 steps forward is available
+                    B_numLocalValues++;
+                }
+            case 4:
+                if( ( read_localIndices_temp_plusOne % NXNY > NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 1 step backward is available
+                    B_numLocalValues++;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 2 steps forward is available
+                    B_numLocalValues++;
+                }
+            case 2:
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 1 step forward is available
+                    B_numLocalValues++;
+                }
         }
         
         /* Check for non-diagonal elements of C */
-        switch (spatialFDorder)
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( read_localIndices_temp_plusOne > 5*NXNY ){	//Check if grid point 5 steps backward is available
-        		C_numLocalValues++;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 6) ){	//Check if grid point 6 steps forward is available
-        		C_numLocalValues++;
-        	}
-        case 10:
-        	if( read_localIndices_temp_plusOne > 4*NXNY ){	//Check if grid point 4 steps backward is available
-        		C_numLocalValues++;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 5) ){	//Check if grid point 5 steps forward is available
-        		C_numLocalValues++;
-        	}
-        case 8:
-        	if( read_localIndices_temp_plusOne > 3*NXNY ){	//Check if grid point 3 steps backward is available
-        		C_numLocalValues++;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 4) ){	//Check if grid point 4 steps forward is available
-        		C_numLocalValues++;
-        	}
-        case 6:
-        	if( read_localIndices_temp_plusOne > 2*NXNY ){	//Check if grid point 2 steps backward is available
-        		C_numLocalValues++;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 3) ){	//Check if grid point 3 steps forward is available
-        		C_numLocalValues++;
-        	}
-        case 4:
-        	if( read_localIndices_temp_plusOne > NXNY ){	//Check if grid point 1 step backward is available
-        		C_numLocalValues++;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 2) ){	//Check if grid point 2 steps forward is available
-        		C_numLocalValues++;
-        	}
-        case 2:
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ-1)){	//Check if grid point 1 step forward is available
-        		C_numLocalValues++;
-        	}
+            case 12:
+                if( read_localIndices_temp_plusOne > 5*NXNY ){	//Check if grid point 5 steps backward is available
+                    C_numLocalValues++;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 6) ){	//Check if grid point 6 steps forward is available
+                    C_numLocalValues++;
+                }
+            case 10:
+                if( read_localIndices_temp_plusOne > 4*NXNY ){	//Check if grid point 4 steps backward is available
+                    C_numLocalValues++;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 5) ){	//Check if grid point 5 steps forward is available
+                    C_numLocalValues++;
+                }
+            case 8:
+                if( read_localIndices_temp_plusOne > 3*NXNY ){	//Check if grid point 3 steps backward is available
+                    C_numLocalValues++;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 4) ){	//Check if grid point 4 steps forward is available
+                    C_numLocalValues++;
+                }
+            case 6:
+                if( read_localIndices_temp_plusOne > 2*NXNY ){	//Check if grid point 2 steps backward is available
+                    C_numLocalValues++;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 3) ){	//Check if grid point 3 steps forward is available
+                    C_numLocalValues++;
+                }
+            case 4:
+                if( read_localIndices_temp_plusOne > NXNY ){	//Check if grid point 1 step backward is available
+                    C_numLocalValues++;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 2) ){	//Check if grid point 2 steps forward is available
+                    C_numLocalValues++;
+                }
+            case 2:
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ-1)){	//Check if grid point 1 step forward is available
+                    C_numLocalValues++;
+                }
         }
     }
     /* Allocate local part to create local CSR storage*/
@@ -302,65 +296,69 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     
     ValueType forward_1, forward_2, forward_3, forward_4, forward_5, forward_6;
     ValueType backward_6, backward_5, backward_4, backward_3, backward_2, backward_1;
-
+    
     // set Taylor FD coefficients for each order
-    switch (spatialFDorder)
+    switch (this->spatialFDorder)
     {
-    case 2:
-    	forward_1=1.0;
-    	backward_1=-1.0;
-    	break;
-    case 4:
-    	forward_2=-1.0/24.0;
-    	forward_1=9.0/8.0;
-    	backward_1=-9.0/8.0;
-    	backward_2=1.0/24.0;
-    	break;
-    case 6:
-    	forward_3=3.0/640.0;
-        forward_2=-25.0/384.0;
-       	forward_1=75.0/64.0;
-       	backward_1=-75.0/64.0;
-       	backward_2=25.0/384.0;
-       	backward_3=-3.0/640.0;
-       	break;
-    case 8:
-    	forward_4=-5.0/7168.0;
-    	forward_3=49.0/5120.0;
-    	forward_2=-245.0/3072.0;
-    	forward_1=1225.0/1024.0;
-    	backward_1=-1225.0/1024.0;
-    	backward_2=245.0/3072.0;
-    	backward_3=-49.0/5120.0;
-    	backward_4=5.0/7168.0;
-    	break;
-    case 10:
-    	forward_5=8756999275442633.0/73786976294838206464.0;
-    	forward_4=-8142668969129685.0/4611686018427387904.0;
-    	forward_3=567.0/40960.0;
-    	forward_2=-735.0/8192.0;
-    	forward_1=19845.0/16384.0;
-    	backward_1=-19845.0/16384.0;
-    	backward_2=735.0/8192.0;
-    	backward_3=-567.0/40960.0;
-    	backward_4=8142668969129685.0/4611686018427387904.0;
-    	backward_5=-8756999275442633.0/73786976294838206464.0;
-    	break;
-    case 12:
-    	forward_6=-6448335830095439.0/295147905179352825856.0;
-    	forward_5=1655620175512543.0/4611686018427387904.0;
-    	forward_4=-6842103786556949.0/2305843009213693952.0;
-    	forward_3=628618285389933.0/36028797018963968.0;
-    	forward_2=-436540475965291.0/4503599627370496.0;
-    	forward_1=2750204998582123.0/2251799813685248.0;
-    	backward_1=-2750204998582123.0/2251799813685248.0;
-    	backward_2=436540475965291.0/4503599627370496.0;
-    	backward_3=-628618285389933.0/36028797018963968.0;
-    	backward_4=6842103786556949.0/2305843009213693952.0;
-    	backward_5=-1655620175512543.0/4611686018427387904.0;
-    	backward_6=6448335830095439.0/295147905179352825856.0;
+        case 2:
+            forward_1=1.0;
+            backward_1=-1.0;
+            break;
+        case 4:
+            forward_2=-1.0/24.0;
+            forward_1=9.0/8.0;
+            backward_1=-9.0/8.0;
+            backward_2=1.0/24.0;
+            break;
+        case 6:
+            forward_3=3.0/640.0;
+            forward_2=-25.0/384.0;
+            forward_1=75.0/64.0;
+            backward_1=-75.0/64.0;
+            backward_2=25.0/384.0;
+            backward_3=-3.0/640.0;
+            break;
+        case 8:
+            forward_4=-5.0/7168.0;
+            forward_3=49.0/5120.0;
+            forward_2=-245.0/3072.0;
+            forward_1=1225.0/1024.0;
+            backward_1=-1225.0/1024.0;
+            backward_2=245.0/3072.0;
+            backward_3=-49.0/5120.0;
+            backward_4=5.0/7168.0;
+            break;
+        case 10:
+            forward_5=8756999275442633.0/73786976294838206464.0;
+            forward_4=-8142668969129685.0/4611686018427387904.0;
+            forward_3=567.0/40960.0;
+            forward_2=-735.0/8192.0;
+            forward_1=19845.0/16384.0;
+            backward_1=-19845.0/16384.0;
+            backward_2=735.0/8192.0;
+            backward_3=-567.0/40960.0;
+            backward_4=8142668969129685.0/4611686018427387904.0;
+            backward_5=-8756999275442633.0/73786976294838206464.0;
+            break;
+        case 12:
+            forward_6=-6448335830095439.0/295147905179352825856.0;
+            forward_5=1655620175512543.0/4611686018427387904.0;
+            forward_4=-6842103786556949.0/2305843009213693952.0;
+            forward_3=628618285389933.0/36028797018963968.0;
+            forward_2=-436540475965291.0/4503599627370496.0;
+            forward_1=2750204998582123.0/2251799813685248.0;
+            backward_1=-2750204998582123.0/2251799813685248.0;
+            backward_2=436540475965291.0/4503599627370496.0;
+            backward_3=-628618285389933.0/36028797018963968.0;
+            backward_4=6842103786556949.0/2305843009213693952.0;
+            backward_5=-1655620175512543.0/4611686018427387904.0;
+            backward_6=6448335830095439.0/295147905179352825856.0;
+            break;
+        default:
+            COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.")
+            break;
     }
-
+    
     /* Set the values into the indice arrays and the value array for CSR matrix build */
     for(IndexType i=0; i<numLocalIndices; i++){
         
@@ -370,270 +368,270 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         /*----------*/
         /* Matrix A */
         /*----------*/
-
-        switch (spatialFDorder)
+        
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( read_localIndices_temp_plusOne % NX >= 6){	//Check if grid point 5 steps backward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp-5;
-        		A_write_valuesLocal[A_countJA]=backward_6;
-        		A_countJA++;
-        	}
-        case 10:
-        	if( read_localIndices_temp_plusOne % NX >= 5){	//Check if grid point 4 steps backward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp-4;
-        		A_write_valuesLocal[A_countJA]=backward_5;
-        		A_countJA++;
-       		}
-     	case 8:
-        	if( read_localIndices_temp_plusOne % NX >= 4){	//Check if grid point 3 steps backward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp-3;
-        		A_write_valuesLocal[A_countJA]=backward_4;
-        		A_countJA++;
-       		}
-       	case 6:
-           	if( read_localIndices_temp_plusOne % NX >= 3){	//Check if grid point 2 steps backward is available
-           		A_write_csrJALocal[A_countJA]=read_localIndices_temp-2;
-           		A_write_valuesLocal[A_countJA]=backward_3;
-           		A_countJA++;
-            }
-        case 4:
-        	if( read_localIndices_temp_plusOne % NX != 1 ){	//Check if grid point 1 step backward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp-1;
-        		A_write_valuesLocal[A_countJA]=backward_2;
-        		A_countJA++;
-        	}
-        case 2:
-        	A_write_csrJALocal[A_countJA]=read_localIndices_temp;	//diagonal element
-        	A_write_valuesLocal[A_countJA]=backward_1;
-        	A_countJA++;
-        	if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp+1;
-        		A_write_valuesLocal[A_countJA]=forward_1;
-        		A_countJA++;
-        	}
-        	if(spatialFDorder==2){
-        		break;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 2 steps forward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp+2;
-        		A_write_valuesLocal[A_countJA]=forward_2;
-        		A_countJA++;
-        	}
-        	if(spatialFDorder==4){
-        		break;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-3) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 3 steps forward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp+3;
-        		A_write_valuesLocal[A_countJA]=forward_3;
-        	    A_countJA++;
-        	}
-        	if(spatialFDorder==6){
-        		break;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-4) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 4 steps forward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp+4;
-        		A_write_valuesLocal[A_countJA]=forward_4;
-        		A_countJA++;
-        	}
-        	if(spatialFDorder==8){
-        		break;
-        	}
-       		if( (read_localIndices_temp_plusOne % NX <= NX-5) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 5 steps forward is available
-       			A_write_csrJALocal[A_countJA]=read_localIndices_temp+5;
-       			A_write_valuesLocal[A_countJA]=forward_5;
-       			A_countJA++;
-       		}
-        	if(spatialFDorder==10){
-        		break;
-        	}
-        	if( (read_localIndices_temp_plusOne % NX <= NX-6) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 6 steps forward is available
-        		A_write_csrJALocal[A_countJA]=read_localIndices_temp+6;
-        		A_write_valuesLocal[A_countJA]=forward_6;
-        		A_countJA++;
-        	}
+            case 12:
+                if( read_localIndices_temp_plusOne % NX >= 6){	//Check if grid point 5 steps backward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp-5;
+                    A_write_valuesLocal[A_countJA]=backward_6;
+                    A_countJA++;
+                }
+            case 10:
+                if( read_localIndices_temp_plusOne % NX >= 5){	//Check if grid point 4 steps backward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp-4;
+                    A_write_valuesLocal[A_countJA]=backward_5;
+                    A_countJA++;
+                }
+            case 8:
+                if( read_localIndices_temp_plusOne % NX >= 4){	//Check if grid point 3 steps backward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp-3;
+                    A_write_valuesLocal[A_countJA]=backward_4;
+                    A_countJA++;
+                }
+            case 6:
+                if( read_localIndices_temp_plusOne % NX >= 3){	//Check if grid point 2 steps backward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp-2;
+                    A_write_valuesLocal[A_countJA]=backward_3;
+                    A_countJA++;
+                }
+            case 4:
+                if( read_localIndices_temp_plusOne % NX != 1 ){	//Check if grid point 1 step backward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp-1;
+                    A_write_valuesLocal[A_countJA]=backward_2;
+                    A_countJA++;
+                }
+            case 2:
+                A_write_csrJALocal[A_countJA]=read_localIndices_temp;	//diagonal element
+                A_write_valuesLocal[A_countJA]=backward_1;
+                A_countJA++;
+                if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+1;
+                    A_write_valuesLocal[A_countJA]=forward_1;
+                    A_countJA++;
+                }
+                if(this->spatialFDorder==2){
+                    break;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 2 steps forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+2;
+                    A_write_valuesLocal[A_countJA]=forward_2;
+                    A_countJA++;
+                }
+                if(this->spatialFDorder==4){
+                    break;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-3) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 3 steps forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+3;
+                    A_write_valuesLocal[A_countJA]=forward_3;
+                    A_countJA++;
+                }
+                if(this->spatialFDorder==6){
+                    break;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-4) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 4 steps forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+4;
+                    A_write_valuesLocal[A_countJA]=forward_4;
+                    A_countJA++;
+                }
+                if(this->spatialFDorder==8){
+                    break;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-5) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 5 steps forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+5;
+                    A_write_valuesLocal[A_countJA]=forward_5;
+                    A_countJA++;
+                }
+                if(this->spatialFDorder==10){
+                    break;
+                }
+                if( (read_localIndices_temp_plusOne % NX <= NX-6) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point 6 steps forward is available
+                    A_write_csrJALocal[A_countJA]=read_localIndices_temp+6;
+                    A_write_valuesLocal[A_countJA]=forward_6;
+                    A_countJA++;
+                }
         }
         A_write_csrIALocal[A_countIA]=A_countJA;
         A_countIA++;
-
+        
         /*----------*/
         /* Matrix B */
         /*----------*/
-        switch (spatialFDorder)
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 5*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 5 steps backward is available
-                B_write_csrJALocal[B_countJA]=read_localIndices_temp-5*NX;
-                B_write_valuesLocal[B_countJA]=backward_6;
+            case 12:
+                if( ( read_localIndices_temp_plusOne % NXNY > 5*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 5 steps backward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp-5*NX;
+                    B_write_valuesLocal[B_countJA]=backward_6;
+                    B_countJA++;
+                }
+            case 10:
+                if( ( read_localIndices_temp_plusOne % NXNY > 4*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 4 steps backward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp-4*NX;
+                    B_write_valuesLocal[B_countJA]=backward_5;
+                    B_countJA++;
+                }
+            case 8:
+                if( ( read_localIndices_temp_plusOne % NXNY > 3*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 3 steps backward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp-3*NX;
+                    B_write_valuesLocal[B_countJA]=backward_4;
+                    B_countJA++;
+                }
+            case 6:
+                if( ( read_localIndices_temp_plusOne % NXNY > 2*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 2 steps backward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp-2*NX;
+                    B_write_valuesLocal[B_countJA]=backward_3;
+                    B_countJA++;
+                }
+            case 4:
+                if( ( read_localIndices_temp_plusOne %  NXNY  > NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 1 step backward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp-NX;
+                    B_write_valuesLocal[B_countJA]=backward_2;
+                    B_countJA++;
+                }
+            case 2:
+                B_write_csrJALocal[B_countJA]=read_localIndices_temp;	//diagonal element
+                B_write_valuesLocal[B_countJA]=backward_1;
                 B_countJA++;
-        	}
-        case 10:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 4*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 4 steps backward is available
-                B_write_csrJALocal[B_countJA]=read_localIndices_temp-4*NX;
-                B_write_valuesLocal[B_countJA]=backward_5;
-                B_countJA++;
-        	}
-        case 8:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 3*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 3 steps backward is available
-                B_write_csrJALocal[B_countJA]=read_localIndices_temp-3*NX;
-                B_write_valuesLocal[B_countJA]=backward_4;
-                B_countJA++;
-        	}
-        case 6:
-        	if( ( read_localIndices_temp_plusOne % NXNY > 2*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 2 steps backward is available
-                B_write_csrJALocal[B_countJA]=read_localIndices_temp-2*NX;
-                B_write_valuesLocal[B_countJA]=backward_3;
-                B_countJA++;
-        	}
-        case 4:
-        	if( ( read_localIndices_temp_plusOne %  NXNY  > NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point 1 step backward is available
-                B_write_csrJALocal[B_countJA]=read_localIndices_temp-NX;
-                B_write_valuesLocal[B_countJA]=backward_2;
-                B_countJA++;
-        	}
-        case 2:
-        	B_write_csrJALocal[B_countJA]=read_localIndices_temp;	//diagonal element
-        	B_write_valuesLocal[B_countJA]=backward_1;
-        	B_countJA++;
-        	if( ( read_localIndices_temp_plusOne %  NXNY  <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 1 step forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+NX;
-        		B_write_valuesLocal[B_countJA]=forward_1;
-        		B_countJA++;
-        	}
-        	if(spatialFDorder==2){
-        		break;
-        	}
-        	if( ( read_localIndices_temp_plusOne %  NXNY  <= NX * (NY - 2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 2 steps forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+2*NX;
-        		B_write_valuesLocal[B_countJA]=forward_2;
-        		B_countJA++;
-        	}
-        	if(spatialFDorder==4){
-        		break;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 3) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 3 steps forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+3*NX;
-        		B_write_valuesLocal[B_countJA]=forward_3;
-        		B_countJA++;
-        	}
-        	if(spatialFDorder==6){
-        		break;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 4) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 4 steps forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+4*NX;
-        		B_write_valuesLocal[B_countJA]=forward_4;
-        		B_countJA++;
-        	}
-        	if(spatialFDorder==8){
-        		break;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 5) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 5 steps forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+5*NX;
-        		B_write_valuesLocal[B_countJA]=forward_5;
-        		B_countJA++;
-        	}
-        	if(spatialFDorder==10){
-        		break;
-        	}
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 6) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 6 steps forward is available
-        		B_write_csrJALocal[B_countJA]=read_localIndices_temp+6*NX;
-        		B_write_valuesLocal[B_countJA]=forward_6;
-        		B_countJA++;
-        	}
+                if( ( read_localIndices_temp_plusOne %  NXNY  <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 1 step forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+NX;
+                    B_write_valuesLocal[B_countJA]=forward_1;
+                    B_countJA++;
+                }
+                if(this->spatialFDorder==2){
+                    break;
+                }
+                if( ( read_localIndices_temp_plusOne %  NXNY  <= NX * (NY - 2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 2 steps forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+2*NX;
+                    B_write_valuesLocal[B_countJA]=forward_2;
+                    B_countJA++;
+                }
+                if(this->spatialFDorder==4){
+                    break;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 3) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 3 steps forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+3*NX;
+                    B_write_valuesLocal[B_countJA]=forward_3;
+                    B_countJA++;
+                }
+                if(this->spatialFDorder==6){
+                    break;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 4) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 4 steps forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+4*NX;
+                    B_write_valuesLocal[B_countJA]=forward_4;
+                    B_countJA++;
+                }
+                if(this->spatialFDorder==8){
+                    break;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 5) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 5 steps forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+5*NX;
+                    B_write_valuesLocal[B_countJA]=forward_5;
+                    B_countJA++;
+                }
+                if(this->spatialFDorder==10){
+                    break;
+                }
+                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 6) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 6 steps forward is available
+                    B_write_csrJALocal[B_countJA]=read_localIndices_temp+6*NX;
+                    B_write_valuesLocal[B_countJA]=forward_6;
+                    B_countJA++;
+                }
         }
         B_write_csrIALocal[B_countIA]=B_countJA;
         B_countIA++;
-
+        
         /*----------*/
         /* Matrix C */
         /*----------*/
-
-        switch (spatialFDorder)
+        
+        switch (this->spatialFDorder)
         {
-        case 12:
-        	if( read_localIndices_temp_plusOne > 5*NXNY ){	//Check if grid point 5 steps backward is available
-                C_write_csrJALocal[C_countJA]=read_localIndices_temp-5*NXNY;
-                C_write_valuesLocal[C_countJA]=backward_6;
+            case 12:
+                if( read_localIndices_temp_plusOne > 5*NXNY ){	//Check if grid point 5 steps backward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp-5*NXNY;
+                    C_write_valuesLocal[C_countJA]=backward_6;
+                    C_countJA++;
+                }
+            case 10:
+                if( read_localIndices_temp_plusOne > 4*NXNY ){	//Check if grid point 4 steps backward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp-4*NXNY;
+                    C_write_valuesLocal[C_countJA]=backward_5;
+                    C_countJA++;
+                }
+            case 8:
+                if( read_localIndices_temp_plusOne > 3*NXNY ){	//Check if grid point 3 steps backward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp-3*NXNY;
+                    C_write_valuesLocal[C_countJA]=backward_4;
+                    C_countJA++;
+                }
+            case 6:
+                if( read_localIndices_temp_plusOne > 2*NXNY ){	//Check if grid point 2 steps backward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp-2*NXNY;
+                    C_write_valuesLocal[C_countJA]=backward_3;
+                    C_countJA++;
+                }
+            case 4:
+                if( read_localIndices_temp_plusOne > NXNY ){	//Check if grid point 1 step backward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp-NXNY;
+                    C_write_valuesLocal[C_countJA]=backward_2;
+                    C_countJA++;
+                }
+            case 2:
+                C_write_csrJALocal[C_countJA]=read_localIndices_temp;	//diagonal element
+                C_write_valuesLocal[C_countJA]=backward_1;
                 C_countJA++;
-        	}
-        case 10:
-        	if( read_localIndices_temp_plusOne > 4*NXNY ){	//Check if grid point 4 steps backward is available
-                C_write_csrJALocal[C_countJA]=read_localIndices_temp-4*NXNY;
-                C_write_valuesLocal[C_countJA]=backward_5;
-                C_countJA++;
-        	}
-        case 8:
-        	if( read_localIndices_temp_plusOne > 3*NXNY ){	//Check if grid point 3 steps backward is available
-                C_write_csrJALocal[C_countJA]=read_localIndices_temp-3*NXNY;
-                C_write_valuesLocal[C_countJA]=backward_4;
-                C_countJA++;
-        	}
-        case 6:
-        	if( read_localIndices_temp_plusOne > 2*NXNY ){	//Check if grid point 2 steps backward is available
-                C_write_csrJALocal[C_countJA]=read_localIndices_temp-2*NXNY;
-                C_write_valuesLocal[C_countJA]=backward_3;
-                C_countJA++;
-        	}
-        case 4:
-        	if( read_localIndices_temp_plusOne > NXNY ){	//Check if grid point 1 step backward is available
-                C_write_csrJALocal[C_countJA]=read_localIndices_temp-NXNY;
-                C_write_valuesLocal[C_countJA]=backward_2;
-                C_countJA++;
-        	}
-        case 2:
-        	C_write_csrJALocal[C_countJA]=read_localIndices_temp;	//diagonal element
-        	C_write_valuesLocal[C_countJA]=backward_1;
-        	C_countJA++;
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 1) ){	//Check if grid point 1 step forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_1;
-        		C_countJA++;
-        	}
-        	if(spatialFDorder==2){
-        		break;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 2) ){	//Check if grid point 2 steps forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+2*NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_2;
-        		C_countJA++;
-        	}
-        	if(spatialFDorder==4){
-        		break;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 3) ){	//Check if grid point 3 steps forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+3*NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_3;
-        		C_countJA++;
-        	}
-        	if(spatialFDorder==6){
-        		break;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 4) ){	//Check if grid point 4 steps forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+4*NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_4;
-        		C_countJA++;
-        	}
-        	if(spatialFDorder==8){
-        		break;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 5) ){	//Check if grid point 5 steps forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+5*NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_5;
-        		C_countJA++;
-        	}
-        	if(spatialFDorder==10){
-        		break;
-        	}
-        	if( read_localIndices_temp_plusOne <= NXNY * (NZ - 6) ){	//Check if grid point 6 steps forward is available
-        		C_write_csrJALocal[C_countJA]=read_localIndices_temp+6*NXNY;
-        		C_write_valuesLocal[C_countJA]=forward_6;
-        		C_countJA++;
-        	}
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 1) ){	//Check if grid point 1 step forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_1;
+                    C_countJA++;
+                }
+                if(this->spatialFDorder==2){
+                    break;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 2) ){	//Check if grid point 2 steps forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+2*NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_2;
+                    C_countJA++;
+                }
+                if(this->spatialFDorder==4){
+                    break;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 3) ){	//Check if grid point 3 steps forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+3*NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_3;
+                    C_countJA++;
+                }
+                if(this->spatialFDorder==6){
+                    break;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 4) ){	//Check if grid point 4 steps forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+4*NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_4;
+                    C_countJA++;
+                }
+                if(this->spatialFDorder==8){
+                    break;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 5) ){	//Check if grid point 5 steps forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+5*NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_5;
+                    C_countJA++;
+                }
+                if(this->spatialFDorder==10){
+                    break;
+                }
+                if( read_localIndices_temp_plusOne <= NXNY * (NZ - 6) ){	//Check if grid point 6 steps forward is available
+                    C_write_csrJALocal[C_countJA]=read_localIndices_temp+6*NXNY;
+                    C_write_valuesLocal[C_countJA]=forward_6;
+                    C_countJA++;
+                }
         }
         C_write_csrIALocal[C_countIA]=C_countJA;
         C_countIA++;
     }
-
+    
     /* Release all read and write access */
     read_localIndices.release();
     
@@ -672,17 +670,21 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
  \param NZ Total number of grid points in Z
  \param DH Grid spacing (equidistant)
  \param DT Temporal sampling interval
+ \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm )
 {
     
     SCAI_REGION( "initializeMatrices" )
     
     HOST_PRINT( comm, "Initialization of the matrices A,B,C,D,E,F...\n" );
     
-    derivatives(NX, NY, NZ, spatialFDorder, dist);
+    // Set FD-order to class member
+    this->spatialFDorder=spatialFDorderInput;
+    
+    derivatives(NX, NY, NZ, dist);
     HOST_PRINT( comm, "Matrix A, B and C finished.\n" );
     
     A.setContextPtr( ctx );
@@ -715,38 +717,3 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     
 }
 
-//! \brief Getter method for derivative matrix A
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getA(){
-    return(A);
-}
-
-//! \brief Getter method for derivative matrix B
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getB(){
-    return(B);
-}
-
-//! \brief Getter method for derivative matrix C
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getC(){
-    return(C);
-}
-
-//! \brief Getter method for derivative matrix D
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getD(){
-    return(D);
-}
-
-//! \brief Getter method for derivative matrix E
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getE(){
-    return(E);
-}
-
-//! \brief Getter method for derivative matrix F
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::getF(){
-    return(F);
-}

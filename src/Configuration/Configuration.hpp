@@ -127,7 +127,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(21)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(22)
 {
     // read all lines in file
     
@@ -277,6 +277,10 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
     if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;
+    
+    if(FreeSurface && spatialFDorder>2){
+        COMMON_THROWEXCEPTION(" Free Surface is only implemented for spatialFDorder==2 ! ")
+    }
     
     std::cout << std::endl;
 }

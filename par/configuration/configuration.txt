@@ -19,6 +19,9 @@ DH=50
 DT=2.0e-03    # temporal sampling in seconds
 T=2           # total simulation time
 
+# define order of spatial FD operator
+spatialFDorder=2
+
 # define material parameter
 ModelRead=0
 ModelWrite=0
