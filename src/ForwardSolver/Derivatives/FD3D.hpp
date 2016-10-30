@@ -42,9 +42,7 @@ namespace KITGPI {
                 
                 using Derivatives<ValueType>::FDCoef_f;
                 using Derivatives<ValueType>::FDCoef_b;
-
-                using Derivatives<ValueType>::test;
-
+                
                 void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist );
                 
             };
@@ -125,49 +123,55 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         read_localIndices_temp_plusOne=read_localIndices_temp+1;
         
         /* Check for non-diagonal elements of Dxf */
-                for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-                {
-                	if( (read_localIndices_temp_plusOne % NX >= j/2) || (read_localIndices_temp_plusOne % NX == 0) ){	//Check if grid point (j/2 - 1) steps backward is available
-                		Dxf_numLocalValues++;
-                	}
-                    if( (read_localIndices_temp_plusOne % NX <= NX-j/2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point (j/2) steps forward is available
-                        Dxf_numLocalValues++;
-                    }
-                }
-
-                if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
-                	Dxf_numLocalValues++;
-                }
-
-
-                /* Check for non-diagonal elements of Dyf */
-                for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-                {
-                    if( ( read_localIndices_temp_plusOne % NXNY > (j/2-1)*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point (j/2-1) steps backward is available
-                        Dyf_numLocalValues++;
-                    }
-                    if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - j/2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point j/2 steps forward is available
-                        Dyf_numLocalValues++;
-                    }
-                }
-                if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point 1 step forward is available
-                    Dyf_numLocalValues++;
-                }
-
-                /* Check for non-diagonal elements of Dzf */
-                for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-                {
-                    if( read_localIndices_temp_plusOne > (j/2-1)*NXNY ){	//Check if grid point j/2-1 steps backward is available
-                        Dzf_numLocalValues++;
-                    }
-                    if( read_localIndices_temp_plusOne <= NXNY * (NZ - j/2) ){	//Check if grid point j/2 steps forward is available
-                        Dzf_numLocalValues++;
-                    }
-                }
-                if( read_localIndices_temp_plusOne <= NXNY * (NZ-1)){	//Check if grid point 1 step forward is available
-                	Dzf_numLocalValues++;
-                }
-
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            //Check if grid point (j/2 - 1) steps backward is available
+            if( (read_localIndices_temp_plusOne % NX >= j/2) || (read_localIndices_temp_plusOne % NX == 0) ){
+                Dxf_numLocalValues++;
+            }
+            //Check if grid point (j/2) steps forward is available
+            if( (read_localIndices_temp_plusOne % NX <= NX-j/2) && (read_localIndices_temp_plusOne % NX != 0)){
+                Dxf_numLocalValues++;
+            }
+        }
+        //Check if grid point 1 step forward is available
+        if( read_localIndices_temp_plusOne % NX != 0 ){
+            Dxf_numLocalValues++;
+        }
+        
+        
+        /* Check for non-diagonal elements of Dyf */
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            //Check if grid point (j/2-1) steps backward is available
+            if( ( read_localIndices_temp_plusOne % NXNY > (j/2-1)*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){
+                Dyf_numLocalValues++;
+            }
+            //Check if grid point j/2 steps forward is available
+            if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - j/2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){
+                Dyf_numLocalValues++;
+            }
+        }
+        //Check if grid point 1 step forward is available
+        if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - 1)) && (read_localIndices_temp_plusOne % NXNY != 0) ){
+            Dyf_numLocalValues++;
+        }
+        
+        
+        /* Check for non-diagonal elements of Dzf */
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            //Check if grid point j/2-1 steps backward is available
+            if( read_localIndices_temp_plusOne > (j/2-1)*NXNY ){
+                Dzf_numLocalValues++;
+            }
+            //Check if grid point j/2 steps forward is available
+            if( read_localIndices_temp_plusOne <= NXNY * (NZ - j/2) ){
+                Dzf_numLocalValues++;
+            }
+        }
+        //Check if grid point 1 step forward is available
+        if( read_localIndices_temp_plusOne <= NXNY * (NZ-1)){
+            Dzf_numLocalValues++;
+        }
+        
     }
     /* Allocate local part to create local CSR storage*/
     hmemo::HArray<ValueType> Dxf_valuesLocal(Dxf_numLocalValues);
@@ -210,43 +214,45 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
     IndexType Dzf_countIA=0;
     Dzf_write_csrIALocal[0]=0;
     Dzf_countIA++;
-
+    
     hmemo::ReadAccess<ValueType> read_FDCoef_f(FDCoef_f);
     hmemo::ReadAccess<ValueType> read_FDCoef_b(FDCoef_b);
-
+    
     /* Set the values into the indice arrays and the value array for CSR matrix build */
     for(IndexType i=0; i<numLocalIndices; i++){
         
         read_localIndices_temp=read_localIndices[i];
         read_localIndices_temp_plusOne=read_localIndices_temp+1;
-
+        
         /*------------*/
         /* Matrix Dxf */
         /*------------*/
-
-        for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-        {
-        	if( (read_localIndices_temp_plusOne % NX >= j/2) || (read_localIndices_temp_plusOne % NX == 0) ){	//Check if grid point (j/2 - 1) steps backward is available
+        
+        //Check if grid point (j/2 - 1) steps backward is available
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            if( (read_localIndices_temp_plusOne % NX >= j/2) || (read_localIndices_temp_plusOne % NX == 0) ){
                 Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp-(j/2-1);
                 Dxf_write_valuesLocal[Dxf_countJA]=read_FDCoef_b[j/2-1];
                 Dxf_countJA++;
-        	}
+            }
         }
-        Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp;	//diagonal element
+        //diagonal element
+        Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp;
         Dxf_write_valuesLocal[Dxf_countJA]=read_FDCoef_b[0];
         Dxf_countJA++;
-        if( read_localIndices_temp_plusOne % NX != 0 ){	//Check if grid point 1 step forward is available
-        	Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp+1;
-        	Dxf_write_valuesLocal[Dxf_countJA]=read_FDCoef_f[0];
-        	Dxf_countJA++;
+        //Check if grid point 1 step forward is available
+        if( read_localIndices_temp_plusOne % NX != 0 ){
+            Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp+1;
+            Dxf_write_valuesLocal[Dxf_countJA]=read_FDCoef_f[0];
+            Dxf_countJA++;
         }
-        for (IndexType j=4;j<=this->spatialFDorder;j+=2)
-        {
-        	if( (read_localIndices_temp_plusOne % NX <= NX-j/2) && (read_localIndices_temp_plusOne % NX != 0)){	//Check if grid point (j/2) steps forward is available
+        //Check if grid point (j/2) steps forward is available
+        for (IndexType j=4;j<=this->spatialFDorder;j+=2){
+            if( (read_localIndices_temp_plusOne % NX <= NX-j/2) && (read_localIndices_temp_plusOne % NX != 0)){
                 Dxf_write_csrJALocal[Dxf_countJA]=read_localIndices_temp+j/2;
                 Dxf_write_valuesLocal[Dxf_countJA]=read_FDCoef_f[j/2-1];
                 Dxf_countJA++;
-        	}
+            }
         }
         Dxf_write_csrIALocal[Dxf_countIA]=Dxf_countJA;
         Dxf_countIA++;
@@ -254,25 +260,26 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         /*------------*/
         /* Matrix Dyf */
         /*------------*/
-
-        for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-        {
-            if( ( read_localIndices_temp_plusOne % NXNY > (j/2-1)*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){	//Check if grid point (j/2-1) steps backward is available
+        
+        //Check if grid point (j/2-1) steps backward is available
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            if( ( read_localIndices_temp_plusOne % NXNY > (j/2-1)*NX ) || (read_localIndices_temp_plusOne % NXNY == 0) ){
                 Dyf_write_csrJALocal[Dyf_countJA]=read_localIndices_temp-(j/2-1)*NX;
                 Dyf_write_valuesLocal[Dyf_countJA]=read_FDCoef_b[(j/2-1)];
                 Dyf_countJA++;
             }
         }
-        Dyf_write_csrJALocal[Dyf_countJA]=read_localIndices_temp;	//diagonal element
+        //diagonal element
+        Dyf_write_csrJALocal[Dyf_countJA]=read_localIndices_temp;
         Dyf_write_valuesLocal[Dyf_countJA]=read_FDCoef_b[0];
         Dyf_countJA++;
-        for (IndexType j=2;j<=this->spatialFDorder;j+=2)
-        {
-        	if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - j/2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){	//Check if grid point j/2 steps forward is available
+        //Check if grid point j/2 steps forward is available
+        for (IndexType j=2;j<=this->spatialFDorder;j+=2){
+            if( ( read_localIndices_temp_plusOne % NXNY <= NX * (NY - j/2) ) && (read_localIndices_temp_plusOne % NXNY != 0) ){
                 Dyf_write_csrJALocal[Dyf_countJA]=read_localIndices_temp+(j/2)*NX;
                 Dyf_write_valuesLocal[Dyf_countJA]=read_FDCoef_f[j/2-1];
                 Dyf_countJA++;
-        	}
+            }
         }
         Dyf_write_csrIALocal[Dyf_countIA]=Dyf_countJA;
         Dyf_countIA++;
@@ -281,20 +288,21 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType 
         /* Matrix Dzf */
         /*------------*/
         
-        for (IndexType j=this->spatialFDorder;j>=4;j-=2)
-        {
-            if( read_localIndices_temp_plusOne > (j/2-1)*NXNY ){	//Check if grid point j/2-1 steps backward is available
+        //Check if grid point j/2-1 steps backward is available
+        for (IndexType j=this->spatialFDorder;j>=4;j-=2){
+            if( read_localIndices_temp_plusOne > (j/2-1)*NXNY ){
                 Dzf_write_csrJALocal[Dzf_countJA]=read_localIndices_temp-(j/2-1)*NXNY;
                 Dzf_write_valuesLocal[Dzf_countJA]=read_FDCoef_b[(j/2-1)];
                 Dzf_countJA++;
             }
         }
-        Dzf_write_csrJALocal[Dzf_countJA]=read_localIndices_temp;	//diagonal element
+        //diagonal element
+        Dzf_write_csrJALocal[Dzf_countJA]=read_localIndices_temp;
         Dzf_write_valuesLocal[Dzf_countJA]=read_FDCoef_b[0];
         Dzf_countJA++;
-        for (IndexType j=2;j<=this->spatialFDorder;j+=2)
-        {
-            if( read_localIndices_temp_plusOne <= NXNY * (NZ - j/2) ){	//Check if grid point j/2 steps forward is available
+        //Check if grid point j/2 steps forward is available
+        for (IndexType j=2;j<=this->spatialFDorder;j+=2){
+            if( read_localIndices_temp_plusOne <= NXNY * (NZ - j/2) ){
                 Dzf_write_csrJALocal[Dzf_countJA]=read_localIndices_temp+NXNY;
                 Dzf_write_valuesLocal[Dzf_countJA]=read_FDCoef_f[j/2-1];
                 Dzf_countJA++;

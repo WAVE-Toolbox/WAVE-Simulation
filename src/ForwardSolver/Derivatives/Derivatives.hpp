@@ -18,7 +18,7 @@ namespace KITGPI {
                 
                 //! \brief Default destructor
                 ~Derivatives(){};
-
+                
                 //! \brief Getter method for derivative matrix Dxf
                 virtual lama::CSRSparseMatrix<ValueType>& getDxf();
                 //! \brief Getter method for derivative matrix Dyf
@@ -50,9 +50,7 @@ namespace KITGPI {
                 void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
                 
                 IndexType getSpatialFDorder();
-
-                IndexType test;
-
+                                
                 void setFDCoef(IndexType spFDo);
                 
             protected:
@@ -65,7 +63,7 @@ namespace KITGPI {
                 lama::CSRSparseMatrix<ValueType> Dzb; //!< Derivative matrix Dzb
                 
                 IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
-
+                
                 scai::hmemo::HArray<ValueType> FDCoef_f;
                 scai::hmemo::HArray<ValueType> FDCoef_b;
                 
@@ -133,71 +131,71 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivative
 //! \brief Set FD coefficients for each order
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(IndexType spFDo){
-	FDCoef_f.resize(spFDo/2);
-	FDCoef_b.resize(spFDo/2);
-	scai::hmemo::WriteAccess<ValueType> write_FDCoef_f(FDCoef_f);
-	scai::hmemo::WriteAccess<ValueType> write_FDCoef_b(FDCoef_b);
-
-                    switch(spFDo)
-                    	{
-                    	case 2:
-                        	write_FDCoef_f[0]=1.0;
-                        	write_FDCoef_b[0]=-1.0;
-                            break;
-                        case 4:
-                        	write_FDCoef_f[1]=-1.0/24.0;
-                        	write_FDCoef_f[0]=9.0/8.0;
-                        	write_FDCoef_b[0]=-9.0/8.0;
-                        	write_FDCoef_b[1]=1.0/24.0;
-                            break;
-                        case 6:
-                        	write_FDCoef_f[2]=3.0/640.0;
-                        	write_FDCoef_f[1]=-25.0/384.0;
-                        	write_FDCoef_f[0]=75.0/64.0;
-                        	write_FDCoef_b[0]=-75.0/64.0;
-                        	write_FDCoef_b[1]=25.0/384.0;
-                        	write_FDCoef_b[2]=-3.0/640.0;
-                            break;
-                        case 8:
-                        	write_FDCoef_f[3]=-5.0/7168.0;
-                        	write_FDCoef_f[2]=49.0/5120.0;
-                        	write_FDCoef_f[1]=-245.0/3072.0;
-                        	write_FDCoef_f[0]=1225.0/1024.0;
-                        	write_FDCoef_b[0]=-1225.0/1024.0;
-                        	write_FDCoef_b[1]=245.0/3072.0;
-                        	write_FDCoef_b[2]=-49.0/5120.0;
-                        	write_FDCoef_b[3]=5.0/7168.0;
-                            break;
-                        case 10:
-                        	write_FDCoef_f[4]=8756999275442633.0/73786976294838206464.0;
-                        	write_FDCoef_f[3]=-8142668969129685.0/4611686018427387904.0;
-                        	write_FDCoef_f[2]=567.0/40960.0;
-                        	write_FDCoef_f[1]=-735.0/8192.0;
-                        	write_FDCoef_f[0]=19845.0/16384.0;
-                        	write_FDCoef_b[0]=-19845.0/16384.0;
-                        	write_FDCoef_b[1]=735.0/8192.0;
-                        	write_FDCoef_b[2]=-567.0/40960.0;
-                        	write_FDCoef_b[3]=8142668969129685.0/4611686018427387904.0;
-                        	write_FDCoef_b[4]=-8756999275442633.0/73786976294838206464.0;
-                            break;
-                        case 12:
-                        	write_FDCoef_f[5]=-6448335830095439.0/295147905179352825856.0;
-                        	write_FDCoef_f[4]=1655620175512543.0/4611686018427387904.0;
-                        	write_FDCoef_f[3]=-6842103786556949.0/2305843009213693952.0;
-                        	write_FDCoef_f[2]=628618285389933.0/36028797018963968.0;
-                        	write_FDCoef_f[1]=-436540475965291.0/4503599627370496.0;
-                        	write_FDCoef_f[0]=2750204998582123.0/2251799813685248.0;
-                        	write_FDCoef_b[0]=-2750204998582123.0/2251799813685248.0;
-                        	write_FDCoef_b[1]=436540475965291.0/4503599627370496.0;
-                        	write_FDCoef_b[2]=-628618285389933.0/36028797018963968.0;
-                        	write_FDCoef_b[3]=6842103786556949.0/2305843009213693952.0;
-                        	write_FDCoef_b[4]=-1655620175512543.0/4611686018427387904.0;
-                        	write_FDCoef_b[5]=6448335830095439.0/295147905179352825856.0;
-                            break;
-                        default:
-                            COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.");
-                            break;
-                    }
-                	write_FDCoef_f.release();
-                	write_FDCoef_b.release();
+    FDCoef_f.resize(spFDo/2);
+    FDCoef_b.resize(spFDo/2);
+    scai::hmemo::WriteAccess<ValueType> write_FDCoef_f(FDCoef_f);
+    scai::hmemo::WriteAccess<ValueType> write_FDCoef_b(FDCoef_b);
+    
+    switch(spFDo)
+    {
+        case 2:
+            write_FDCoef_f[0]=1.0;
+            write_FDCoef_b[0]=-1.0;
+            break;
+        case 4:
+            write_FDCoef_f[1]=-1.0/24.0;
+            write_FDCoef_f[0]=9.0/8.0;
+            write_FDCoef_b[0]=-9.0/8.0;
+            write_FDCoef_b[1]=1.0/24.0;
+            break;
+        case 6:
+            write_FDCoef_f[2]=3.0/640.0;
+            write_FDCoef_f[1]=-25.0/384.0;
+            write_FDCoef_f[0]=75.0/64.0;
+            write_FDCoef_b[0]=-75.0/64.0;
+            write_FDCoef_b[1]=25.0/384.0;
+            write_FDCoef_b[2]=-3.0/640.0;
+            break;
+        case 8:
+            write_FDCoef_f[3]=-5.0/7168.0;
+            write_FDCoef_f[2]=49.0/5120.0;
+            write_FDCoef_f[1]=-245.0/3072.0;
+            write_FDCoef_f[0]=1225.0/1024.0;
+            write_FDCoef_b[0]=-1225.0/1024.0;
+            write_FDCoef_b[1]=245.0/3072.0;
+            write_FDCoef_b[2]=-49.0/5120.0;
+            write_FDCoef_b[3]=5.0/7168.0;
+            break;
+        case 10:
+            write_FDCoef_f[4]=8756999275442633.0/73786976294838206464.0;
+            write_FDCoef_f[3]=-8142668969129685.0/4611686018427387904.0;
+            write_FDCoef_f[2]=567.0/40960.0;
+            write_FDCoef_f[1]=-735.0/8192.0;
+            write_FDCoef_f[0]=19845.0/16384.0;
+            write_FDCoef_b[0]=-19845.0/16384.0;
+            write_FDCoef_b[1]=735.0/8192.0;
+            write_FDCoef_b[2]=-567.0/40960.0;
+            write_FDCoef_b[3]=8142668969129685.0/4611686018427387904.0;
+            write_FDCoef_b[4]=-8756999275442633.0/73786976294838206464.0;
+            break;
+        case 12:
+            write_FDCoef_f[5]=-6448335830095439.0/295147905179352825856.0;
+            write_FDCoef_f[4]=1655620175512543.0/4611686018427387904.0;
+            write_FDCoef_f[3]=-6842103786556949.0/2305843009213693952.0;
+            write_FDCoef_f[2]=628618285389933.0/36028797018963968.0;
+            write_FDCoef_f[1]=-436540475965291.0/4503599627370496.0;
+            write_FDCoef_f[0]=2750204998582123.0/2251799813685248.0;
+            write_FDCoef_b[0]=-2750204998582123.0/2251799813685248.0;
+            write_FDCoef_b[1]=436540475965291.0/4503599627370496.0;
+            write_FDCoef_b[2]=-628618285389933.0/36028797018963968.0;
+            write_FDCoef_b[3]=6842103786556949.0/2305843009213693952.0;
+            write_FDCoef_b[4]=-1655620175512543.0/4611686018427387904.0;
+            write_FDCoef_b[5]=6448335830095439.0/295147905179352825856.0;
+            break;
+        default:
+            COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.");
+            break;
+    }
+    write_FDCoef_f.release();
+    write_FDCoef_b.release();
 }
