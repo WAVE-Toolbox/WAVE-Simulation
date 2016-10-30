@@ -50,11 +50,15 @@ namespace KITGPI {
                 void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
                 
                 IndexType getSpatialFDorder();
-                                
-                void setFDCoef(IndexType spFDo);
                 
             protected:
                 
+                void setFDCoef(IndexType spFDo);
+                
+                IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX);
+                IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY);
+                IndexType calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+
                 lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
                 lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
                 lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
@@ -71,6 +75,92 @@ namespace KITGPI {
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+
+//! \brief Calculate number of row elements for Dxf matrix
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX){
+    
+    rowNumber=rowNumber+1;
+    IndexType counter=0;
+    
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        //Check if grid point (j/2 - 1) steps backward is available
+        if( (rowNumber % NX >= j/2) || (rowNumber % NX == 0) ){
+            counter++;
+        }
+        //Check if grid point (j/2) steps forward is available
+        if( (rowNumber % NX <= NX-j/2) && (rowNumber % NX != 0)){
+            counter++;
+        }
+    }
+    
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for Dyf matrix
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX, IndexType NY){
+    
+    rowNumber=rowNumber+1;
+    IndexType NXNY=NX*NY;
+    IndexType counter=0;
+
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        //Check if grid point (j/2-1) steps backward is available
+        if( ( rowNumber % NXNY > (j/2-1)*NX ) || (rowNumber % NXNY == 0) ){
+            counter++;
+        }
+        //Check if grid point j/2 steps forward is available
+        if( ( rowNumber % NXNY <= NX * (NY - j/2) ) && (rowNumber % NXNY != 0) ){
+            counter++;
+        }
+    }
+
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for Dzf matrix
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ){
+    
+    rowNumber=rowNumber+1;
+    IndexType NXNY=NX*NY;
+    IndexType counter=0;
+    
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        //Check if grid point j/2-1 steps backward is available
+        if( rowNumber > (j/2-1)*NXNY ){
+            counter++;
+        }
+        //Check if grid point j/2 steps forward is available
+        if( rowNumber <= NXNY * (NZ - j/2) ){
+            counter++;
+        }
+    }
+    
+    return(counter);
+}
 
 //! \brief Getter method for the spatial FD-order
 template<typename ValueType>
@@ -129,6 +219,10 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivative
 }
 
 //! \brief Set FD coefficients for each order
+/*!
+ *
+ \param spFDo Order of spatial FD-coefficient
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(IndexType spFDo){
     FDCoef_f.resize(spFDo/2);
