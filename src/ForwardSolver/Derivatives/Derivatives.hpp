@@ -58,7 +58,13 @@ namespace KITGPI {
                 IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX);
                 IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY);
                 IndexType calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-
+                
+                void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX);
+                
+                void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY);
+                
+                void setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                
                 lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
                 lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
                 lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
@@ -75,6 +81,85 @@ namespace KITGPI {
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+    
+    IndexType rowNumber_plusOne=rowNumber+1;
+    IndexType NXNY=NX*NY;
+    
+    //Check if grid point j/2-1 steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        if( rowNumber_plusOne > (j/2-1)*NXNY ){
+            csrJALocal[countJA]=rowNumber-(j/2-1)*NXNY;
+            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+            countJA++;
+        }
+    }
+    //Check if grid point j/2 steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        if( rowNumber_plusOne <= NXNY * (NZ - j/2) ){
+            csrJALocal[countJA]=rowNumber+NXNY;
+            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            countJA++;
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY){
+    
+    IndexType rowNumber_plusOne=rowNumber+1;
+    IndexType NXNY=NX*NY;
+    
+    //Check if grid point (j/2-1) steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        if( ( rowNumber_plusOne % NXNY > (j/2-1)*NX ) || (rowNumber_plusOne % NXNY == 0) ){
+            csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+            countJA++;
+        }
+    }
+    //Check if grid point j/2 steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        if( ( rowNumber_plusOne % NXNY <= NX * (NY - j/2) ) && (rowNumber_plusOne % NXNY != 0) ){
+            csrJALocal[countJA]=rowNumber+(j/2)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            countJA++;
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX){
+    
+    IndexType rowNumber_plusOne=rowNumber+1;
+    
+    //Check if grid point (j/2 - 1) steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        if( (rowNumber_plusOne % NX >= j/2) || (rowNumber_plusOne % NX == 0) ){
+            csrJALocal[countJA]=rowNumber-(j/2-1);
+            csrvaluesLocal[countJA]=read_FDCoeff_b[j/2-1];
+            countJA++;
+        }
+    }
+    //Check if grid point (j/2) steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        if( (rowNumber_plusOne % NX <= NX-j/2) && (rowNumber_plusOne % NX != 0)){
+            csrJALocal[countJA]=rowNumber+j/2;
+            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            countJA++;
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+}
 
 //! \brief Calculate number of row elements for Dxf matrix
 /*!
@@ -117,7 +202,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumber
     rowNumber=rowNumber+1;
     IndexType NXNY=NX*NY;
     IndexType counter=0;
-
+    
     for (IndexType j=spatialFDorder;j>=2;j-=2){
         //Check if grid point (j/2-1) steps backward is available
         if( ( rowNumber % NXNY > (j/2-1)*NX ) || (rowNumber % NXNY == 0) ){
@@ -128,7 +213,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumber
             counter++;
         }
     }
-
+    
     return(counter);
 }
 
