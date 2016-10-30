@@ -31,6 +31,8 @@ namespace KITGPI {
             Configuration( std::string filename );
             
             void print();
+
+bool checkConfigPlausibility();
             
             IndexType getNX() { return NX; } ///< Return NX
             IndexType getNY() { return NY; } ///< Return NY (Depth)
@@ -302,3 +304,15 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     std::cout << std::endl;
 }
 
+
+/*! \brief Check plausibility of the configuration file
+ */
+template<typename ValueType>
+bool KITGPI::Configuration::Configuration<ValueType>::checkConfigPlausibility()
+{
+	if ((spatialFDorder % 2 != 0) || (spatialFDorder < 2) || (spatialFDorder > 12))
+	{
+		return false;
+	}
+	return true;	// check is positive
+}

@@ -14,6 +14,7 @@ namespace KITGPI {
             IndexType y; //!< y Position in Y-direction in grid points (Depth)
             IndexType z; //!< z Position in Z-direction in grid points (Horizontal 2)
             
+            /*! \brief Return the minimum of all three values */
             IndexType min(){
                 IndexType temp=0;
                 if(x<y){
@@ -220,6 +221,15 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector
     
 }
 
+/*! \brief Calculation of distance to boundaries the
+ *
+ \param X Coordinate X
+ \param Y Coordinate Y
+ \param Z Coordinate Z
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
@@ -233,7 +243,13 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
     
 }
 
-
+/*! \brief Determination of distance to boundaries
+ *
+ \param coordinate 3D-coordinate structs
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
 {
