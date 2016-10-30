@@ -14,6 +14,7 @@
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface3Delastic.hpp"
+#include "BoundaryCondition/ABS3D.hpp"
 
 namespace KITGPI {
     
@@ -34,7 +35,7 @@ namespace KITGPI {
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
             
-            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist);
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
             
             using ForwardSolver<ValueType>::seismogram;
             
@@ -43,6 +44,9 @@ namespace KITGPI {
             /* Boundary Conditions */
             BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolver<ValueType>::useFreeSurface;
+            
+            BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
+            using ForwardSolver<ValueType>::useDampingBoundary;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -58,14 +62,21 @@ namespace KITGPI {
  \param config Configuration
  \param derivatives Derivatives matrices
  \param dist Distribution of the wave fields
+ \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
         useFreeSurface=true;
         FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+    }
+    
+    /* Prepare Damping Boundary */
+    if(config.getDampingBoundary()){
+        useDampingBoundary=true;
+        DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
     }
     
 }
@@ -289,13 +300,13 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vzz = *vzzPtr;
     
     /* In dependency of the free surface, set the derivative martix E for the pressure update */
-    lama::CSRSparseMatrix<ValueType>* DyBPressurePtr;
-    DyBPressurePtr=&Dyb; // Default: Identical to velocity update
+    lama::CSRSparseMatrix<ValueType>* DybPressurePtr;
+    DybPressurePtr=&Dyb; // Default: Identical to velocity update
     if(useFreeSurface){
         FreeSurface.setModelparameter(model);
-        DyBPressurePtr=&(FreeSurface.getDybPressure());
+        DybPressurePtr=&(FreeSurface.getDybPressure());
     }
-    lama::CSRSparseMatrix<ValueType>& E_P=*DyBPressurePtr;
+    lama::CSRSparseMatrix<ValueType>& DybPressure=*DybPressurePtr;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
@@ -332,7 +343,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-        vyy = E_P * vY;
+        vyy = DybPressure * vY;
         vzz = Dzb * vZ;
         
         update = vxx;
@@ -363,6 +374,11 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         if(useFreeSurface){
             update=vxx+vzz;
             FreeSurface.apply(update,Sxx,Syy,Szz);
+        }
+        
+        /* Apply the damping boundary */
+        if(useDampingBoundary){
+            DampingBoundary.apply(Sxx,Syy,Szz,Sxy,Sxz,Syz,vX,vY,vZ);
         }
         
         /* Apply source and save seismogram */

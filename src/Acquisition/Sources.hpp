@@ -17,7 +17,7 @@ namespace KITGPI {
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
          */
         template <typename ValueType>
-        class Sources : private Coordinates<ValueType>
+        class Sources : protected Coordinates<ValueType>
         {
             
         public:

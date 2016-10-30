@@ -21,7 +21,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor
-            ForwardSolver():useFreeSurface(false){};
+            ForwardSolver():useFreeSurface(false),useDampingBoundary(false){};
             
             //! Default destructor
             ~ForwardSolver(){};
@@ -70,14 +70,16 @@ namespace KITGPI {
              \param config Configuration
              \param derivatives Derivatives matrices
              \param dist Distribution of the wave fields
+             \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist)=0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)=0;
             
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             
         protected:
             
             bool useFreeSurface; //!< Bool if free surface is in use
+            bool useDampingBoundary; //!< Bool if damping boundary is in use
 
             
         };

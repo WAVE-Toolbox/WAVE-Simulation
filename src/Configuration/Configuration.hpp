@@ -73,6 +73,10 @@ bool checkConfigPlausibility();
             
             IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
 
+            IndexType getDampingBoundary() {return DampingBoundary;} ///< Return DampingBoundary
+            IndexType getBoundaryWidth() {return BoundaryWidth;} ///< Return BoundaryWidth
+            ValueType getDampingCoeff() {return DampingCoeff;} ///< Return DampingCoeff
+            
         private:
             
             IndexType NumParameters; ///< Number of parameters in input file
@@ -108,6 +112,10 @@ bool checkConfigPlausibility();
             
             IndexType FreeSurface; ///< Use the free surface==1 or not==0
             
+            IndexType DampingBoundary; ///< Use the Damping Boundary ==1 or not==0
+            ValueType DampingCoeff; ///< Damping coefficient
+            IndexType BoundaryWidth; ///< Width of damping boundary
+            
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
             std::string SeismogramFilename; ///< Filename to write seismograms
@@ -130,7 +138,7 @@ bool checkConfigPlausibility();
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(23)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(26)
 {
     // read all lines in file
     
@@ -209,6 +217,10 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     std::istringstream( map[ "FreeSurface" ] ) >> FreeSurface; // IndexType
     
+    std::istringstream( map[ "DampingBoundary" ] ) >> DampingBoundary; // IndexType
+    std::istringstream( map[ "DampingCoeff" ] ) >> DampingCoeff; // ValueType
+    std::istringstream( map[ "BoundaryWidth" ] ) >> BoundaryWidth; // IndexType
+    
     // calculate other parameters
     
     N = NZ * NX * NY;
@@ -231,10 +243,10 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     double courant = velocity_max * DT / DH;
     
     std::cout << "Configuration:" << std::endl << std::endl;
-    std::cout << "Time Step:\t\t\tDT =\t" << DT << " s" << std::endl;
-    std::cout << "Grid spacing:\t\t\tDH =\t" << DH << " m" << std::endl;
-    std::cout << "Total simulation time:\t\tT  =\t" << T << " s" << std::endl;
-    std::cout << "Order of spatial FD operator:\t\t" << spatialFDorder << std::endl;
+    std::cout << "Time Step: DT = " << DT << " s" << std::endl;
+    std::cout << "Grid spacing: DH = " << DH << " m" << std::endl;
+    std::cout << "Total simulation time: T = " << T << " s" << std::endl;
+    std::cout << "Order of spatial FD operator: " << spatialFDorder << std::endl;
     std::cout << "Criteriums:" << std::endl;
     std::cout << "    Courant-number: " << courant << std::endl;
     if ( courant >= 0.8 )
@@ -249,6 +261,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     std::cout << "    Z: " << DH * NZ << " m (Horizontal)" << std::endl;
     if(FreeSurface==1){
         std::cout << "    A free surface will be set atop the model" << std::endl;
+    }
+    if(DampingBoundary==1){
+        std::cout << "    A damping boundary will be placed at the model boundary." << std::endl;
     }
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;

@@ -72,6 +72,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
+    if(derivatives.getSpatialFDorder() != 2){
+        COMMON_THROWEXCEPTION(" Free Surface is only implemented for SpatialFDorder==2 ! ")
+    }
+    
     active=true;
     
     lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
@@ -80,14 +84,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
     
     /* Local vectors */
     lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
-    //lama::DenseVector<ValueType> modfiyRowLocal(size_vec,0.0); // Vector to manipulate row content of derivative matrix
     
     /* Distributed vectors */
     setSurfaceZero.allocate(dist); // Vector to set elements on surface to zero
     setSurfaceZero=1.0;
     
     hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
-    //hmemo::HArray<ValueType> modfiyRowHArray(size_vec,0.0);
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
