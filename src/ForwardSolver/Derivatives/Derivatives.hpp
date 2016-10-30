@@ -55,14 +55,22 @@ namespace KITGPI {
                 
                 void setFDCoef(IndexType spFDo);
                 
-                IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX);
-                IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY);
+                void calcDxf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                void calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                void calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+
+                typedef void (Derivatives<ValueType>::*setRowElements_DfPtr)(IndexType , IndexType& , IndexType& , hmemo::ReadAccess<ValueType>& ,hmemo::ReadAccess<ValueType>& ,hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType );
+                
+                typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DfPtr)(IndexType , IndexType , IndexType , IndexType);
+                
+                void calcDf(lama::CSRSparseMatrix<ValueType>& Df, calcNumberRowElements_DfPtr calcNumberRowElements_Df,setRowElements_DfPtr setRowElements_Df, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                
+                IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+                IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
                 IndexType calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
                 
-                void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX);
-                
-                void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY);
-                
+                void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 
                 lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
@@ -81,6 +89,93 @@ namespace KITGPI {
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDf(Dxf, &Derivatives<ValueType>::calcNumberRowElements_Dxf, &Derivatives<ValueType>::setRowElements_Dxf, NX, NY, NZ, dist);
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDf(Dyf, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyf, NX, NY, NZ, dist);
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDf(Dzf, &Derivatives<ValueType>::calcNumberRowElements_Dzf, &Derivatives<ValueType>::setRowElements_Dzf, NX, NY, NZ, dist);
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDf(lama::CSRSparseMatrix<ValueType>& Df, calcNumberRowElements_DfPtr calcNumberRowElements_Df,setRowElements_DfPtr setRowElements_Df, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    
+    /* Get local "global" indices */
+    hmemo::HArray<IndexType> localIndices;
+    dist->getOwnedIndexes(localIndices); //here the local indices of each process are retrieved and stored in localIndices
+    
+    /* Do some calculations to avoid it within the for loops */
+    IndexType N=NX*NY*NZ;
+    
+    IndexType numLocalIndices=localIndices.size(); // Number of local indices
+    IndexType numLocalValues=0; // Number of local values of Matrix Df
+    
+    /* Calculate the number of values in each matrix */
+    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    IndexType read_localIndices_temp; // Temporary storage of the local index for the ongoing iterations
+    for(IndexType i=0; i<numLocalIndices; i++){
+        
+        read_localIndices_temp=read_localIndices[i];
+        
+        /* Check for elements of Df */
+        numLocalValues+=(this->*calcNumberRowElements_Df)(read_localIndices_temp,NX,NY,NZ);
+        
+    }
+    
+    /* Allocate local part to create local CSR storage*/
+    hmemo::HArray<ValueType> valuesLocal(numLocalValues);
+    hmemo::HArray<IndexType> csrJALocal(numLocalValues);
+    hmemo::HArray<IndexType> csrIALocal(numLocalIndices+1);
+    
+    /* Get WriteAccess to local part */
+    hmemo::WriteAccess<IndexType> write_csrJALocal(csrJALocal);
+    hmemo::WriteAccess<IndexType> write_csrIALocal(csrIALocal);
+    hmemo::WriteAccess<ValueType> write_valuesLocal(valuesLocal);
+    
+    /* Set some counters to create the CSR Storage */
+    IndexType countJA=0;
+    IndexType countIA=0;
+    write_csrIALocal[0]=0;
+    countIA++;
+    
+    /* Get ReadAccess to FD-Coefficients */
+    hmemo::ReadAccess<ValueType> read_FDCoef_f(FDCoef_f);
+    hmemo::ReadAccess<ValueType> read_FDCoef_b(FDCoef_b);
+    
+    /* Set the values into the indice arrays and the value array for CSR matrix build */
+    for(IndexType i=0; i<numLocalIndices; i++){
+        
+        read_localIndices_temp=read_localIndices[i];
+        
+        /*------------*/
+        /* Matrix Df */
+        /*------------*/
+        (this->*setRowElements_Df)(read_localIndices_temp,countJA,countIA, read_FDCoef_f,read_FDCoef_b,write_csrJALocal,write_csrIALocal,write_valuesLocal,NX,NY,NZ);
+        
+    }
+    
+    /* Release all read and write access */
+    read_localIndices.release();
+    read_FDCoef_f.release();
+    read_FDCoef_b.release();
+    
+    write_csrJALocal.release();
+    write_csrIALocal.release();
+    write_valuesLocal.release();
+    
+    /* Create local CSR storage of Matrix Df, than create distributed CSR matrix Df */
+    lama::CSRStorage<ValueType> Df_LocalCSR(numLocalIndices,N,numLocalValues,csrIALocal,csrJALocal,valuesLocal);
+    Df.assign(Df_LocalCSR,dist,dist);
+    
+}
 
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
@@ -110,7 +205,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
 }
 
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY){
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
     IndexType rowNumber_plusOne=rowNumber+1;
     IndexType NXNY=NX*NY;
@@ -137,7 +232,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
 }
 
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX){
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/){
     
     IndexType rowNumber_plusOne=rowNumber+1;
     
@@ -169,7 +264,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX){
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX,IndexType /*NY*/, IndexType /*NZ*/){
     
     rowNumber=rowNumber+1;
     IndexType counter=0;
@@ -197,7 +292,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumber
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX, IndexType NY){
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
     rowNumber=rowNumber+1;
     IndexType NXNY=NX*NY;

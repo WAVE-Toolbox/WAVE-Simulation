@@ -42,12 +42,7 @@ namespace KITGPI {
                 using Derivatives<ValueType>::Dyb;
                 using Derivatives<ValueType>::Dzb;
                 
-                using Derivatives<ValueType>::FDCoef_f;
-                using Derivatives<ValueType>::FDCoef_b;
-                
                 using Derivatives<ValueType>::spatialFDorder;
-                
-                void derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist );
                 
             };
         } /* end namespace Derivatives */
@@ -87,150 +82,6 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
     initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorderInput, comm );
 }
 
-
-//! \brief Calculation of second order accurate derivatives
-/*!
- *
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param dist Distribution of the wavefield
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::derivatives(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist )
-{
-    SCAI_REGION( "derivatives" )
-    
-    dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
-    
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices); //here the local indices of each process are retrieved and stored in localIndices
-    
-    /* Do some calculations to avoid it within the for loops */
-    IndexType N=NX*NY*NZ;
-    
-    IndexType numLocalIndices=localIndices.size(); // Number of local indices
-    IndexType Dxf_numLocalValues=0; // Number of local values of Matrix Dxf
-    IndexType Dyf_numLocalValues=0; // Number of local values of Matrix Dyf
-    IndexType Dzf_numLocalValues=0; // Number of local values of Matrix Dzf
-    
-    /* Calculate the number of values in each matrix */
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
-    IndexType read_localIndices_temp; // Temporary storage of the local index for the ongoing iterations
-    for(IndexType i=0; i<numLocalIndices; i++){
-        
-        read_localIndices_temp=read_localIndices[i];
-        
-        /* Check for elements of Dxf */
-        Dxf_numLocalValues+=this->calcNumberRowElements_Dxf(read_localIndices_temp,NX);
-        
-        /* Check for elements of Dyf */
-        Dyf_numLocalValues+=this->calcNumberRowElements_Dyf(read_localIndices_temp,NX,NY);
-        
-        /* Check for elements of Dzf */
-        Dzf_numLocalValues+=this->calcNumberRowElements_Dzf(read_localIndices_temp,NX,NY,NZ);
-
-    }
-    
-    /* Allocate local part to create local CSR storage*/
-    hmemo::HArray<ValueType> Dxf_valuesLocal(Dxf_numLocalValues);
-    hmemo::HArray<IndexType> Dxf_csrJALocal(Dxf_numLocalValues);
-    hmemo::HArray<IndexType> Dxf_csrIALocal(numLocalIndices+1);
-    
-    hmemo::HArray<ValueType> Dyf_valuesLocal(Dyf_numLocalValues);
-    hmemo::HArray<IndexType> Dyf_csrJALocal(Dyf_numLocalValues);
-    hmemo::HArray<IndexType> Dyf_csrIALocal(numLocalIndices+1);
-    
-    hmemo::HArray<ValueType> Dzf_valuesLocal(Dzf_numLocalValues);
-    hmemo::HArray<IndexType> Dzf_csrJALocal(Dzf_numLocalValues);
-    hmemo::HArray<IndexType> Dzf_csrIALocal(numLocalIndices+1);
-    
-    /* Get WriteAccess to local part */
-    hmemo::WriteAccess<IndexType> Dxf_write_csrJALocal(Dxf_csrJALocal);
-    hmemo::WriteAccess<IndexType> Dxf_write_csrIALocal(Dxf_csrIALocal);
-    hmemo::WriteAccess<ValueType> Dxf_write_valuesLocal(Dxf_valuesLocal);
-    
-    hmemo::WriteAccess<IndexType> Dyf_write_csrJALocal(Dyf_csrJALocal);
-    hmemo::WriteAccess<IndexType> Dyf_write_csrIALocal(Dyf_csrIALocal);
-    hmemo::WriteAccess<ValueType> Dyf_write_valuesLocal(Dyf_valuesLocal);
-    
-    hmemo::WriteAccess<IndexType> Dzf_write_csrJALocal(Dzf_csrJALocal);
-    hmemo::WriteAccess<IndexType> Dzf_write_csrIALocal(Dzf_csrIALocal);
-    hmemo::WriteAccess<ValueType> Dzf_write_valuesLocal(Dzf_valuesLocal);
-    
-    /* Set some counters to create the CSR Storage */
-    IndexType Dxf_countJA=0;
-    IndexType Dxf_countIA=0;
-    Dxf_write_csrIALocal[0]=0;
-    Dxf_countIA++;
-    
-    IndexType Dyf_countJA=0;
-    IndexType Dyf_countIA=0;
-    Dyf_write_csrIALocal[0]=0;
-    Dyf_countIA++;
-    
-    IndexType Dzf_countJA=0;
-    IndexType Dzf_countIA=0;
-    Dzf_write_csrIALocal[0]=0;
-    Dzf_countIA++;
-    
-    /* Get ReadAccess to FD-Coefficients */
-    hmemo::ReadAccess<ValueType> read_FDCoef_f(FDCoef_f);
-    hmemo::ReadAccess<ValueType> read_FDCoef_b(FDCoef_b);
-    
-    /* Set the values into the indice arrays and the value array for CSR matrix build */
-    for(IndexType i=0; i<numLocalIndices; i++){
-        
-        read_localIndices_temp=read_localIndices[i];
-        
-        /*------------*/
-        /* Matrix Dxf */
-        /*------------*/
-        this->setRowElements_Dxf(read_localIndices_temp,Dxf_countJA,Dxf_countIA, read_FDCoef_f,read_FDCoef_b,Dxf_write_csrJALocal,Dxf_write_csrIALocal,Dxf_write_valuesLocal, NX);
-    
-        /*------------*/
-        /* Matrix Dyf */
-        /*------------*/
-        this->setRowElements_Dyf(read_localIndices_temp,Dyf_countJA,Dyf_countIA, read_FDCoef_f,read_FDCoef_b,Dyf_write_csrJALocal,Dyf_write_csrIALocal,Dyf_write_valuesLocal, NX,NY);
-        
-        /*------------*/
-        /* Matrix Dzf */
-        /*------------*/
-        this->setRowElements_Dzf(read_localIndices_temp,Dzf_countJA,Dzf_countIA, read_FDCoef_f,read_FDCoef_b,Dzf_write_csrJALocal,Dzf_write_csrIALocal,Dzf_write_valuesLocal, NX,NY,NZ);
-        
-    }
-    
-    /* Release all read and write access */
-    read_localIndices.release();
-    read_FDCoef_f.release();
-    read_FDCoef_b.release();
-    
-    Dxf_write_csrJALocal.release();
-    Dxf_write_csrIALocal.release();
-    Dxf_write_valuesLocal.release();
-    
-    Dyf_write_csrJALocal.release();
-    Dyf_write_csrIALocal.release();
-    Dyf_write_valuesLocal.release();
-    
-    Dzf_write_csrJALocal.release();
-    Dzf_write_csrIALocal.release();
-    Dzf_write_valuesLocal.release();
-    
-    /* Create local CSR storage of Matrix Dxf, than create distributed CSR matrix Dxf */
-    lama::CSRStorage<ValueType> Dxf_LocalCSR(numLocalIndices,N,Dxf_numLocalValues,Dxf_csrIALocal,Dxf_csrJALocal,Dxf_valuesLocal);
-    Dxf.assign(Dxf_LocalCSR,dist,dist);
-    
-    /* Create local CSR storage of Matrix Dyf, than create distributed CSR matrix Dyf */
-    lama::CSRStorage<ValueType> Dyf_LocalCSR(numLocalIndices,N,Dyf_numLocalValues,Dyf_csrIALocal,Dyf_csrJALocal,Dyf_valuesLocal);
-    Dyf.assign(Dyf_LocalCSR,dist,dist);
-    
-    /* Create local CSR storage of Matrix Dzf, than create distributed CSR matrix Dzf */
-    lama::CSRStorage<ValueType> Dzf_LocalCSR(numLocalIndices,N,Dzf_numLocalValues,Dzf_csrIALocal,Dzf_csrJALocal,Dzf_valuesLocal);
-    Dzf.assign(Dzf_LocalCSR,dist,dist);
-}
-
 //! \brief Initializsation of the derivative matrices
 /*!
  *
@@ -258,7 +109,10 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     /* Set FD-Coefficients */
     this->setFDCoef(spatialFDorder);
     
-    derivatives(NX, NY, NZ, dist);
+    this->calcDxf(NX, NY, NZ, dist);
+    this->calcDyf(NX, NY, NZ, dist);
+    this->calcDzf(NX, NY, NZ, dist);
+    
     HOST_PRINT( comm, "Matrix Dxf, Dyf and Dzf finished.\n" );
     
     Dxf.setContextPtr( ctx );
