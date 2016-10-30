@@ -31,7 +31,11 @@ namespace KITGPI {
                 virtual lama::CSRSparseMatrix<ValueType>& getDyb();
                 //! \brief Getter method for derivative matrix Dzb
                 virtual lama::CSRSparseMatrix<ValueType>& getDzb();
+        
+                IndexType getSpatialFDorder();
                 
+            protected:
+        
                 //! \brief Initializsation of the derivative matrices
                 /*!
                  *
@@ -49,16 +53,26 @@ namespace KITGPI {
                 
                 void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
                 
-                IndexType getSpatialFDorder();
-                
-            protected:
-                
                 void setFDCoef(IndexType spFDo);
                 
                 void calcDxf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
-
+                
+                lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
+                lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
+                lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
+                lama::CSRSparseMatrix<ValueType> Dxb; //!< Derivative matrix Dxb
+                lama::CSRSparseMatrix<ValueType> Dyb; //!< Derivative matrix Dyb
+                lama::CSRSparseMatrix<ValueType> Dzb; //!< Derivative matrix Dzb
+                
+                IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
+                
+                scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
+                scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
+                
+            private:
+                
                 typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(IndexType , IndexType& , IndexType& , hmemo::ReadAccess<ValueType>& ,hmemo::ReadAccess<ValueType>& ,hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType ); //!< Pointer to set elements functions
                 
                 typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
@@ -72,18 +86,6 @@ namespace KITGPI {
                 void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                
-                lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
-                lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
-                lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
-                lama::CSRSparseMatrix<ValueType> Dxb; //!< Derivative matrix Dxb
-                lama::CSRSparseMatrix<ValueType> Dyb; //!< Derivative matrix Dyb
-                lama::CSRSparseMatrix<ValueType> Dzb; //!< Derivative matrix Dzb
-                
-                IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
-                
-                scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
-                scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
                 
             };
         } /* end namespace Derivatives */
