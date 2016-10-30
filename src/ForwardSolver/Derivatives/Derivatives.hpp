@@ -31,11 +31,11 @@ namespace KITGPI {
                 virtual lama::CSRSparseMatrix<ValueType>& getDyb();
                 //! \brief Getter method for derivative matrix Dzb
                 virtual lama::CSRSparseMatrix<ValueType>& getDzb();
-        
+                
                 IndexType getSpatialFDorder();
                 
             protected:
-        
+                
                 //! \brief Initializsation of the derivative matrices
                 /*!
                  *
@@ -87,10 +87,53 @@ namespace KITGPI {
                 void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 
+                void setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                
             };
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+//
+//
+//template<typename ValueType>
+//void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+//    
+//    IndexType rowNumber_plusOne=rowNumber+1;
+//    IndexType NXNY=NX*NY;
+//    IndexType rowEffective= rowNumber_plusOne % NXNY;
+//    
+//    //Check if grid point (j/2-1) steps backward is available
+//    for (IndexType j=spatialFDorder;j>=2;j-=2){
+//        
+//        if( ( rowEffective - (j/2-1)*NX ) <= 0 || (rowEffective % NXNY == 0) ){
+//            
+//            csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
+//            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+//            
+//            if( ( rowEffective < ( ( (j-2) / 2 ) *NX ) ) {
+//                csrvaluesLocal[countJA] = read_FDCoeff_b[(j/2-1) -1 ];
+//            }
+//            
+//            /* No access of grid points at the free surface */
+//            if( rowEffective < NX) {
+//                csrvaluesLocal[countJA]=0.0;
+//            }
+//            
+//            countJA++;
+//        }
+//    }
+//    //Check if grid point j/2 steps forward is available
+//    for (IndexType j=2;j<=spatialFDorder;j+=2){
+//        if( ( rowNumber_plusOne % NXNY <= NX * (NY - j/2) ) && (rowNumber_plusOne % NXNY != 0) ){
+//            csrJALocal[countJA]=rowNumber+(j/2)*NX;
+//            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+//            countJA++;
+//        }
+//    }
+//    csrIALocal[countIA]=countJA;
+//    countIA++;
+//    
+//}
 
 //! \brief Calculate Dxf matrix
 /*!
@@ -276,21 +319,41 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     
     IndexType rowNumber_plusOne=rowNumber+1;
     IndexType NXNY=NX*NY;
+    IndexType rowEffective= rowNumber % NXNY;
+    IndexType coeffPosEffective;
+    //IndexType coeffPosEffectiveImag;
     
     //Check if grid point (j/2-1) steps backward is available
     for (IndexType j=spatialFDorder;j>=2;j-=2){
-        if( ( rowNumber_plusOne % NXNY > (j/2-1)*NX ) || (rowNumber_plusOne % NXNY == 0) ){
+        
+        coeffPosEffective=(rowEffective - (j/2-1)*NX);
+        
+        if( coeffPosEffective >= 0 ) {
+            
             csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
             csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+            
+//            coeffPosEffectiveImag=(rowEffective - ((j+4)/2-1)*NX);
+//            if( j+4 <= spatialFDorder && coeffPosEffectiveImag<0 ) {
+//                csrvaluesLocal[countJA] += read_FDCoeff_b[( ((j+4)/2) -1)];
+//            }
+//            
+//            if( coeffPosEffective < NX ) {
+//                csrvaluesLocal[countJA]=0.0;
+//            }
+            
             countJA++;
+        
         }
     }
+
     //Check if grid point j/2 steps forward is available
     for (IndexType j=2;j<=spatialFDorder;j+=2){
         if( ( rowNumber_plusOne % NXNY <= NX * (NY - j/2) ) && (rowNumber_plusOne % NXNY != 0) ){
             csrJALocal[countJA]=rowNumber+(j/2)*NX;
             csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
             countJA++;
+        
         }
     }
     csrIALocal[countIA]=countJA;
