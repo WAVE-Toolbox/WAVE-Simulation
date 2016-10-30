@@ -88,6 +88,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
     switch(config.getSeismogramFormat()){
         case 1:
             writeToFileRaw(config.getSeismogramFilename());
+            break;
         case 2:
             setDT(config.getDT());
             writeToFileSU(config.getSeismogramFilename(), config.getNX(), config.getNY(), config.getNZ(), config.getDH());
