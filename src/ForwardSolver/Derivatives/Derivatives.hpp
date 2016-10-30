@@ -59,9 +59,9 @@ namespace KITGPI {
                 void calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
 
-                typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(IndexType , IndexType& , IndexType& , hmemo::ReadAccess<ValueType>& ,hmemo::ReadAccess<ValueType>& ,hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType );
+                typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(IndexType , IndexType& , IndexType& , hmemo::ReadAccess<ValueType>& ,hmemo::ReadAccess<ValueType>& ,hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType ); //!< Pointer to set elements functions
                 
-                typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(IndexType , IndexType , IndexType , IndexType);
+                typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
                 
                 void calcDerivativeMatrix(lama::CSRSparseMatrix<ValueType>& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
@@ -82,29 +82,64 @@ namespace KITGPI {
                 
                 IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
                 
-                scai::hmemo::HArray<ValueType> FDCoef_f;
-                scai::hmemo::HArray<ValueType> FDCoef_b;
+                scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
+                scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
                 
             };
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
+//! \brief Calculate Dxf matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     calcDerivativeMatrix(Dxf, &Derivatives<ValueType>::calcNumberRowElements_Dxf, &Derivatives<ValueType>::setRowElements_Dxf, NX, NY, NZ, dist);
 }
 
+//! \brief Calculate Dyf matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     calcDerivativeMatrix(Dyf, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyf, NX, NY, NZ, dist);
 }
 
+//! \brief Calculate Dzf matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     calcDerivativeMatrix(Dzf, &Derivatives<ValueType>::calcNumberRowElements_Dzf, &Derivatives<ValueType>::setRowElements_Dzf, NX, NY, NZ, dist);
 }
 
+//! \brief Calculate of derivative matrix
+/*!
+ *
+ \param D Derivative matrix
+ \param calcNumberRowElements_D Member-Function to calculate number of elements in a single row
+ \param setRowElements_D Member-Function to set the elements in a single row
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(lama::CSRSparseMatrix<ValueType>& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     
@@ -177,6 +212,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeM
     
 }
 
+//! \brief Function to set elements of a single row of Dzf matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param read_FDCoeff_f FD-coefficients for reading
+ \param read_FDCoeff_b FD-coefficients for reading
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
     
@@ -204,6 +254,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     
 }
 
+//! \brief Function to set elements of a single row of Dyf matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param read_FDCoeff_f FD-coefficients for reading
+ \param read_FDCoeff_b FD-coefficients for reading
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
@@ -231,6 +296,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     
 }
 
+//! \brief Function to set elements of a single row of Dxf matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param read_FDCoeff_f FD-coefficients for reading
+ \param read_FDCoeff_b FD-coefficients for reading
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/){
     
@@ -261,6 +341,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  *
  \param rowNumber Row Indice
  \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
  \return counter Number of elements in this row
  */
 template<typename ValueType>
@@ -289,6 +371,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumber
  \param rowNumber Row Indice
  \param NX Number of grid points in X-direction
  \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Y-direction
  \return counter Number of elements in this row
  */
 template<typename ValueType>
