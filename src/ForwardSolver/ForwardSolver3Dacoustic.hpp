@@ -263,11 +263,11 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     
     /* Get references to required derivatives matrixes */
     lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyf();
     lama::CSRSparseMatrix<ValueType>& Dzf=derivatives.getDzf();
     lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
     lama::CSRSparseMatrix<ValueType>& Dzb=derivatives.getDzb();
+    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDybPressure();
+    lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyfVelocity();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, lambda.getContextPtr());
