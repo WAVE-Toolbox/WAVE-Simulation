@@ -113,8 +113,10 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     this->calcDyf(NX, NY, NZ, dist);
     this->calcDzf(NX, NY, NZ, dist);
     
+    this->calcDyb(NX, NY, NZ, dist);
+    
     HOST_PRINT( comm, "Matrix Dxf, Dyf and Dzf finished.\n" );
-        
+    
     Dxf.setContextPtr( ctx );
     Dyf.setContextPtr( ctx );
     Dzf.setContextPtr( ctx );
@@ -125,8 +127,8 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     Dxb.assignTranspose( Dxf );
     Dxb.scale( -1.0 );
     
-    Dyb.assignTranspose( Dyf );
-    Dyb.scale( -1.0 );
+//    Dyb.assignTranspose( Dyf );
+//    Dyb.scale( -1.0 );
     
     Dzb.assignTranspose( Dzf );
     Dzb.scale( -1.0 );

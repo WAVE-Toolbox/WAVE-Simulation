@@ -59,6 +59,8 @@ namespace KITGPI {
                 void calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
+                void calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+
                 void calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
                 lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
@@ -91,10 +93,81 @@ namespace KITGPI {
                 
                 void setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 
+                void setRowElements_Dyb(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                
             };
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
+
+//! \brief Calculate Dyb matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
+}
+
+//! \brief Function to set elements of a single row of Dyb matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param read_FDCoeff_f FD-coefficients for reading
+ \param read_FDCoeff_b FD-coefficients for reading
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyb(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+    
+    IndexType NXNY=NX*NY;
+    IndexType rowEffective= rowNumber % NXNY;
+    IndexType coeffPosEffective;
+    
+    //Check if grid point (j/2-1) steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        
+        coeffPosEffective=(rowEffective - (j/2)*NX);
+        
+        if( coeffPosEffective >= 0 ) {
+            
+            csrJALocal[countJA]=rowNumber-(j/2)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+            
+            countJA++;
+            
+        }
+    }
+    
+    //Check if grid point j/2 steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        
+        coeffPosEffective= rowEffective + NX*(j/2-1);
+        
+        if( coeffPosEffective < NXNY ) {
+            
+            csrJALocal[countJA]=rowNumber+(j/2-1)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            
+            countJA++;
+            
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
 
 //! \brief Calculate DyfVelocity matrix
 /*!
@@ -105,7 +178,7 @@ namespace KITGPI {
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     calcDerivativeMatrix(Dyf, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfVelocity, NX, NY, NZ, dist);
 }
 
@@ -380,22 +453,22 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
             
             countJA++;
-        
+            
         }
     }
-
+    
     //Check if grid point j/2 steps forward is available
     for (IndexType j=2;j<=spatialFDorder;j+=2){
         
         coeffPosEffective= rowEffective + NX*(j/2);
         
         if( coeffPosEffective < NXNY ) {
-
+            
             csrJALocal[countJA]=rowNumber+(j/2)*NX;
             csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
             
             countJA++;
-        
+            
         }
     }
     csrIALocal[countIA]=countJA;
