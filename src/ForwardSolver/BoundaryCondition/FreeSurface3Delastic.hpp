@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Derivatives/Derivatives.hpp"
+#include "../Derivatives/FD3D.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "FreeSurface.hpp"
 
@@ -23,7 +24,7 @@ namespace KITGPI {
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
                 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType>& model);
                 
@@ -96,13 +97,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
  \param NX Number of grid points in X-Direction
  \param NY Number of grid points in Y-Direction (Depth)
  \param NZ Number of grid points in Z-Direction
+ \param DT Temporal Sampling
+ \param DH Distance between grid points
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& /*derivatives*/, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH){
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
     active=true;
+    
+    Derivatives::FD3D<ValueType>* derivativeFreeSurface= static_cast<Derivatives::FD3D<ValueType>*>(&derivatives);
+    derivativeFreeSurface->useFreeSurface=true;
+    derivativeFreeSurface->calcDyfPressure(NX, NY, NZ, dist);
+    derivativeFreeSurface->calcDyfVelocity(NX, NY, NZ, dist);
+    derivativeFreeSurface->calcDybPressure(NX, NY, NZ, dist);
+    derivativeFreeSurface->calcDybVelocity(NX, NY, NZ, dist);
+    derivativeFreeSurface->DybPressure.scale(lama::Scalar(DT/DH));
+    derivativeFreeSurface->DybVelocity.scale(lama::Scalar(DT/DH));
+    derivativeFreeSurface->DyfPressure.scale(lama::Scalar(DT/DH));
+    derivativeFreeSurface->DyfVelocity.scale(lama::Scalar(DT/DH));
+    derivativeFreeSurface->Dyb.purge();
+    derivativeFreeSurface->Dyf.purge();
     
     selectHorizontalUpdate.allocate(dist);
     selectHorizontalUpdate=0.0;

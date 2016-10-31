@@ -70,7 +70,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
         useFreeSurface=true;
-        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH());
     }
     
     /* Prepare Damping Boundary */
@@ -266,7 +266,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     lama::CSRSparseMatrix<ValueType>& Dzf=derivatives.getDzf();
     lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
     lama::CSRSparseMatrix<ValueType>& Dzb=derivatives.getDzb();
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDybPressure();
+    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
     lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyfVelocity();
     
     /* Init seismograms */

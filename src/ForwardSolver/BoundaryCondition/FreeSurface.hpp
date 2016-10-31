@@ -31,8 +31,10 @@ namespace KITGPI {
                  \param NX Number of grid points in X-Direction
                  \param NY Number of grid points in Y-Direction (Depth)
                  \param NZ Number of grid points in Z-Direction
+                 \param DT Temporal Sampling
+                 \param DH Distance between grid points
                  */
-                virtual void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ)=0;
+                virtual void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)=0;
                 
                 /*! \brief Getter method for active bool
                  *

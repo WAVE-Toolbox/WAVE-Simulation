@@ -70,7 +70,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Co
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
         useFreeSurface=true;
-        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ());
+        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH());
     }
     
     /* Prepare Damping Boundary */

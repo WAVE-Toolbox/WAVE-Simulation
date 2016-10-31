@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Derivatives/Derivatives.hpp"
+#include "../Derivatives/FD3D.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "FreeSurface.hpp"
 
@@ -23,7 +24,7 @@ namespace KITGPI {
                 //! Default destructor
                 ~FreeSurface3Dacoustic(){};
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
                 
                 void apply(lama::DenseVector<ValueType>& p);
                 
@@ -58,22 +59,27 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
 
 /*! \brief Initialitation of the free surface
  *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
  \param NX Number of grid points in X-Direction
  \param NY Number of grid points in Y-Direction (Depth)
  \param NZ Number of grid points in Z-Direction
+ \param DT Temporal Sampling
+ \param DH Distance between grid points
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& /*derivatives*/, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH){
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
     active=true;
-        
+    
+    Derivatives::FD3D<ValueType>* derivativeFreeSurface= static_cast<Derivatives::FD3D<ValueType>*>(&derivatives);
+    derivativeFreeSurface->useFreeSurface=true;
+    derivativeFreeSurface->calcDybVelocity(NX, NY, NZ, dist);
+    derivativeFreeSurface->DyfVelocity.scale(lama::Scalar(DT/DH));
+    derivativeFreeSurface->Dyf.purge();
+    
     /* Distributed vectors */
     setSurfaceZero.allocate(dist); // Vector to set elements on surface to zero
     setSurfaceZero=1.0;
