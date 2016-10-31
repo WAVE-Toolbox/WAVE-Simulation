@@ -42,6 +42,12 @@ namespace KITGPI {
                 using Derivatives<ValueType>::Dyb;
                 using Derivatives<ValueType>::Dzb;
                 
+                using Derivatives<ValueType>::DyfPressure;
+                using Derivatives<ValueType>::DyfVelocity;
+                using Derivatives<ValueType>::DybPressure;
+                using Derivatives<ValueType>::DybVelocity;
+                
+                using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::spatialFDorder;
                 
             };
@@ -61,6 +67,7 @@ namespace KITGPI {
 template<typename ValueType>
 KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
 {
+    useFreeSurface=config.getFreeSurface();
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
 }
 
@@ -110,35 +117,67 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     this->setFDCoef(spatialFDorder);
     
     this->calcDxf(NX, NY, NZ, dist);
-    this->calcDyf(NX, NY, NZ, dist);
     this->calcDzf(NX, NY, NZ, dist);
+    
+    if(useFreeSurface) {
+        this->calcDyfPressure(NX, NY, NZ, dist);
+        this->calcDyfVelocity(NX, NY, NZ, dist);
+        this->calcDybPressure(NX, NY, NZ, dist);
+        this->calcDybVelocity(NX, NY, NZ, dist);
+    } else {
+        this->calcDyf(NX, NY, NZ, dist);
+//        this->calcDyb(NX, NY, NZ, dist);
+    }
     
     HOST_PRINT( comm, "Matrix Dxf, Dyf and Dzf finished.\n" );
     
     Dxf.setContextPtr( ctx );
-    Dyf.setContextPtr( ctx );
     Dzf.setContextPtr( ctx );
     Dxb.setContextPtr( ctx );
-    Dyb.setContextPtr( ctx );
     Dzb.setContextPtr( ctx );
+    
+    if(useFreeSurface) {
+        DybPressure.setContextPtr( ctx );
+        DybVelocity.setContextPtr( ctx );
+        DyfPressure.setContextPtr( ctx );
+        DyfVelocity.setContextPtr( ctx );
+    } else {
+        Dyf.setContextPtr( ctx );
+        Dyb.setContextPtr( ctx );
+    }
     
     Dxb.assignTranspose( Dxf );
     Dxb.scale( -1.0 );
-    
-    Dyb.assignTranspose( Dyf );
-    Dyb.scale( -1.0 );
-    
     Dzb.assignTranspose( Dzf );
     Dzb.scale( -1.0 );
     
+    if(!useFreeSurface){
+        Dyb.assignTranspose( Dyf );
+        Dyb.scale( -1.0 );
+    }
+
     HOST_PRINT( comm, "Matrix Dxb, Dyb and Dzb finished.\n" );
     
     Dxf.scale(lama::Scalar(DT/DH));
-    Dyf.scale(lama::Scalar(DT/DH));
     Dzf.scale(lama::Scalar(DT/DH));
     Dxb.scale(lama::Scalar(DT/DH));
-    Dyb.scale(lama::Scalar(DT/DH));
     Dzb.scale(lama::Scalar(DT/DH));
+    
+    if(useFreeSurface) {
+        DybPressure.scale(lama::Scalar(DT/DH));
+        DybVelocity.scale(lama::Scalar(DT/DH));
+        DyfPressure.scale(lama::Scalar(DT/DH));
+        DyfVelocity.scale(lama::Scalar(DT/DH));
+    } else {
+        Dyf.scale(lama::Scalar(DT/DH));
+        Dyb.scale(lama::Scalar(DT/DH));
+    }
+    
+//    /* DEBUG */
+//    DybPressure.writeToFile("DybPressure.mtx");
+//    DyfPressure.writeToFile("DyfPressure.mtx");
+//    DybVelocity.writeToFile("DybVelocity.mtx");
+//    DyfVelocity.writeToFile("DyfVelocity.mtx");
     
     HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
     

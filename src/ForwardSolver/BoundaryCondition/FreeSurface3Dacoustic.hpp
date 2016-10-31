@@ -68,28 +68,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
  \param NZ Number of grid points in Z-Direction
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& /*derivatives*/, IndexType NX, IndexType NY, IndexType NZ){
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
-    if(derivatives.getSpatialFDorder() != 2){
-        COMMON_THROWEXCEPTION(" Free Surface is only implemented for SpatialFDorder==2 ! ")
-    }
-    
     active=true;
-    
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
-    
-    IndexType size_vec=dist->getGlobalSize();
-    
-    /* Local vectors */
-    lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
-    
+        
     /* Distributed vectors */
     setSurfaceZero.allocate(dist); // Vector to set elements on surface to zero
     setSurfaceZero=1.0;
-    
-    hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -114,18 +101,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
         /* Determine if the current grid point is located on the surface */
         if(coordinateTransformation.locatedOnSurface(rowGlobal,NX,NY,NZ)){
             
-            /* Set vertical updates of the strain to zero at the surface */
-            Dyb.setLocalRow(zeroRowHArray,rowLocal,scai::utilskernel::binary::BinaryOp::MULT);
-            
             /* Set elements at the surface to zero */
             write_setSurfaceZero[rowLocal]=0.0;
-            
-            /* Modify vertical derivative matrix to apply imaging condition */
-            //modfiyRowHArray.init(size_vec,0.0);
-            //hmemo::WriteAccess<ValueType> write_modfiyRowHArray(modfiyRowHArray);
-            //write_modfiyRowHArray[rowGlobal]=2.0;
-            //write_modfiyRowHArray.release();
-            //DybVelocity.setLocalRow(modfiyRowHArray,rowLocal,scai::utilskernel::binary::BinaryOp::MULT);
             
         }
         

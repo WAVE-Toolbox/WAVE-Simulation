@@ -128,17 +128,25 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::i
 }
 
 //! General mapping from 3-D coordinates to 1-D coordinate
+/*
+ \param X 3-D coordinate in X (Horizontal 1)
+ \param Y 3-D coordinate in Y (Depth)
+ \param Z 3-D coordinate in Z (Horizontal 2)
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
-    if ( Z > NZ || X > NX || Y > NY || Z < 1 || X < 1 || Y < 1 )
+    if ( Z >= NZ || X >= NX || Y >= NY || Z < 0 || X < 0 || Y < 0 )
     {
         COMMON_THROWEXCEPTION ( "Could not map from coordinate to indize!" )
         return -100;
     }
     else
     {
-        return ( ( X - 1 ) + ( Y - 1 ) * NX + ( Z - 1 ) * NX * NY );
+        return ( ( X ) + ( Y ) * NX + ( Z ) * NX * NY );
     }
 }
 
