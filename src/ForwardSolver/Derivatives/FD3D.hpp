@@ -114,7 +114,7 @@ void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dme
     this->calcDzf(NX, NY, NZ, dist);
     
     HOST_PRINT( comm, "Matrix Dxf, Dyf and Dzf finished.\n" );
-    
+        
     Dxf.setContextPtr( ctx );
     Dyf.setContextPtr( ctx );
     Dzf.setContextPtr( ctx );

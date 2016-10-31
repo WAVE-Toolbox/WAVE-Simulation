@@ -59,6 +59,8 @@ namespace KITGPI {
                 void calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
+                void calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                
                 lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
                 lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
                 lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
@@ -93,47 +95,93 @@ namespace KITGPI {
         } /* end namespace Derivatives */
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
-//
-//
-//template<typename ValueType>
-//void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
-//    
-//    IndexType rowNumber_plusOne=rowNumber+1;
-//    IndexType NXNY=NX*NY;
-//    IndexType rowEffective= rowNumber_plusOne % NXNY;
-//    
-//    //Check if grid point (j/2-1) steps backward is available
-//    for (IndexType j=spatialFDorder;j>=2;j-=2){
-//        
-//        if( ( rowEffective - (j/2-1)*NX ) <= 0 || (rowEffective % NXNY == 0) ){
-//            
-//            csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
-//            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
-//            
-//            if( ( rowEffective < ( ( (j-2) / 2 ) *NX ) ) {
-//                csrvaluesLocal[countJA] = read_FDCoeff_b[(j/2-1) -1 ];
-//            }
-//            
-//            /* No access of grid points at the free surface */
-//            if( rowEffective < NX) {
-//                csrvaluesLocal[countJA]=0.0;
-//            }
-//            
-//            countJA++;
-//        }
-//    }
-//    //Check if grid point j/2 steps forward is available
-//    for (IndexType j=2;j<=spatialFDorder;j+=2){
-//        if( ( rowNumber_plusOne % NXNY <= NX * (NY - j/2) ) && (rowNumber_plusOne % NXNY != 0) ){
-//            csrJALocal[countJA]=rowNumber+(j/2)*NX;
-//            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
-//            countJA++;
-//        }
-//    }
-//    csrIALocal[countIA]=countJA;
-//    countIA++;
-//    
-//}
+
+//! \brief Calculate DyfVelocity matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(Dyf, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfVelocity, NX, NY, NZ, dist);
+}
+
+//! \brief Function to set elements of a single row of DzfVelocity matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param read_FDCoeff_f FD-coefficients for reading
+ \param read_FDCoeff_b FD-coefficients for reading
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+    
+    IndexType NXNY=NX*NY;
+    IndexType rowEffective= rowNumber % NXNY;
+    IndexType coeffPosEffective;
+    IndexType coeffPosEffectiveImag;
+    
+    //Check if grid point (j/2-1) steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        
+        coeffPosEffective=(rowEffective - (j/2-1)*NX);
+        
+        if( coeffPosEffective >= 0 ) {
+            
+            csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
+            
+            /* Check for stencil outside matrix for imaging */
+            coeffPosEffectiveImag=(rowEffective - ((j+4)/2-1)*NX);
+            if( j+4 <= spatialFDorder && coeffPosEffectiveImag<0 ) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[( ((j+4)/2) -1)];
+            }
+            
+            /* Zeroing elements located at the feee surface */
+            if( coeffPosEffective < NX ) {
+                csrvaluesLocal[countJA]=0.0;
+            }
+            
+            countJA++;
+            
+        }
+    }
+    
+    //Check if grid point j/2 steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        
+        coeffPosEffective= rowEffective + NX*(j/2);
+        
+        if( coeffPosEffective < NXNY ) {
+            
+            csrJALocal[countJA]=rowNumber+(j/2)*NX;
+            csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            
+            /* Check for stencil outside matrix for imaging */
+            coeffPosEffectiveImag=(rowEffective - ((j+2)/2)*NX);
+            if( j+2 <= spatialFDorder && coeffPosEffectiveImag<0 ) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[( ((j+2)/2) -1)];
+            }
+            
+            countJA++;
+            
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
 
 //! \brief Calculate Dxf matrix
 /*!
@@ -317,11 +365,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
-    IndexType rowNumber_plusOne=rowNumber+1;
     IndexType NXNY=NX*NY;
     IndexType rowEffective= rowNumber % NXNY;
     IndexType coeffPosEffective;
-    //IndexType coeffPosEffectiveImag;
     
     //Check if grid point (j/2-1) steps backward is available
     for (IndexType j=spatialFDorder;j>=2;j-=2){
@@ -333,15 +379,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrJALocal[countJA]=rowNumber-(j/2-1)*NX;
             csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
             
-//            coeffPosEffectiveImag=(rowEffective - ((j+4)/2-1)*NX);
-//            if( j+4 <= spatialFDorder && coeffPosEffectiveImag<0 ) {
-//                csrvaluesLocal[countJA] += read_FDCoeff_b[( ((j+4)/2) -1)];
-//            }
-//            
-//            if( coeffPosEffective < NX ) {
-//                csrvaluesLocal[countJA]=0.0;
-//            }
-            
             countJA++;
         
         }
@@ -349,9 +386,14 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
 
     //Check if grid point j/2 steps forward is available
     for (IndexType j=2;j<=spatialFDorder;j+=2){
-        if( ( rowNumber_plusOne % NXNY <= NX * (NY - j/2) ) && (rowNumber_plusOne % NXNY != 0) ){
+        
+        coeffPosEffective= rowEffective + NX*(j/2);
+        
+        if( coeffPosEffective < NXNY ) {
+
             csrJALocal[countJA]=rowNumber+(j/2)*NX;
             csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
+            
             countJA++;
         
         }
