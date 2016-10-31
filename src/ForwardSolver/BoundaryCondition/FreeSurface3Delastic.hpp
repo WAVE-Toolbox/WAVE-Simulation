@@ -27,8 +27,6 @@ namespace KITGPI {
                 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType>& model);
                 
-                lama::CSRSparseMatrix<ValueType>& getDybPressure();
-                
                 void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz);
                 
             private:
@@ -40,7 +38,6 @@ namespace KITGPI {
 
                 lama::DenseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter
                 
-                lama::CSRSparseMatrix<ValueType> DybPressure; //!< Derivative matrix for the pressure update
                 
             };
         } /* end namespace BoundaryCondition */
@@ -67,17 +64,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
 
 }
 
-/*! \brief Getter method for DybPressure matrix
- *
- *
- */
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::getDybPressure(){
-    if(!active){
-        COMMON_THROWEXCEPTION(" Free Surface is not active ! ")
-    }
-    return(DybPressure);
-}
+
 
 
 /*! \brief Apply free surface condition during time stepping
@@ -91,15 +78,13 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::BoundaryCondition::Free
  \param Szz Szz wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& /*Syy*/, lama::DenseVector<ValueType>& Szz){
     
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);
+    
     Sxx +=sumHorizonalDerivative;
     Szz +=sumHorizonalDerivative;
-    
-    /* Set the elements on the surface to zero */
-    Syy.scale(setSurfaceZero);
     
 }
 
@@ -113,34 +98,14 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
  \param NZ Number of grid points in Z-Direction
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& /*derivatives*/, IndexType NX, IndexType NY, IndexType NZ){
     
     HOST_PRINT( dist->getCommunicatorPtr(), "Initialization of the free surface...\n" );
     
-    if(derivatives.getSpatialFDorder() != 2){
-        COMMON_THROWEXCEPTION(" Free Surface is only implemented for SpatialFDorder==2 ! ")
-    }
-    
     active=true;
-    
-    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDyb();
-    DybPressure=DybVelocity;
-    
-    IndexType size_vec=dist->getGlobalSize();
-    
-    /* Local vectors */
-    lama::DenseVector<ValueType> zeroRowLocal(size_vec,0.0); // Zero vector
-    lama::DenseVector<ValueType> modfiyRowLocal(size_vec,0.0); // Vector to manipulate row content of derivative matrix
-    
-    /* Distributed vectors */
-    setSurfaceZero.allocate(dist);
-    setSurfaceZero=1.0; // Vector to set elements on surface to zero
     
     selectHorizontalUpdate.allocate(dist);
     selectHorizontalUpdate=0.0;
-    
-    hmemo::HArray<ValueType> zeroRowHArray(size_vec,0.0);
-    hmemo::HArray<ValueType> modfiyRowHArray(size_vec,0.0);
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -151,10 +116,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     /* Get write access to local part of scaleHorizontalUpdate */
     utilskernel::LArray<ValueType>* selectHorizontalUpdate_LA=&selectHorizontalUpdate.getLocalValues();
     hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
-    
-    /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType>* setSurfaceZero_LA=&setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
     
     KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
     
@@ -169,28 +130,14 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
         /* Determine if the current grid point is located on the surface */
         if(coordinateTransformation.locatedOnSurface(rowGlobal,NX,NY,NZ)){
             
-            /* Set vertical updates of the strain to zero at the surface */
-            DybPressure.setLocalRow(zeroRowHArray,rowLocal,scai::utilskernel::binary::BinaryOp::MULT);
-            
             /* Set horizontal update to -1 at the surface and leave it zero else */
             write_selectHorizontalUpdate[rowLocal]=-1.0;
-            
-            /* Set elements at the surface to zero */
-            write_setSurfaceZero[rowLocal]=0.0;
-            
-            /* Modify vertical derivative matrix to apply imaging condition */
-            modfiyRowHArray.init(size_vec,0.0);
-            hmemo::WriteAccess<ValueType> write_modfiyRowHArray(modfiyRowHArray);
-            write_modfiyRowHArray[rowGlobal]=2.0;
-            write_modfiyRowHArray.release();
-            DybVelocity.setLocalRow(modfiyRowHArray,rowLocal,scai::utilskernel::binary::BinaryOp::MULT);
             
         }
         
     }
     read_localIndices.release();
     write_selectHorizontalUpdate.release();
-    write_setSurfaceZero.release();
-    
+
     HOST_PRINT( dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n" );
 }

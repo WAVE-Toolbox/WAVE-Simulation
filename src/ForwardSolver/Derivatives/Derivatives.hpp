@@ -14,7 +14,7 @@ namespace KITGPI {
             public:
                 
                 //! \brief Default constructor
-                Derivatives():spatialFDorder(0){};
+                Derivatives():spatialFDorder(0),useFreeSurface(false){};
                 
                 //! \brief Default destructor
                 ~Derivatives(){};
@@ -71,6 +71,7 @@ namespace KITGPI {
                 void calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
                 void calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                void calcDyfPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
@@ -87,6 +88,8 @@ namespace KITGPI {
                 lama::CSRSparseMatrix<ValueType> DybPressure; //!< Derivative matrix DybPressure
                 
                 IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
+                
+                bool useFreeSurface; //!< Switch to use free surface or not
                 
                 scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
                 scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
@@ -106,11 +109,9 @@ namespace KITGPI {
                 void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dzf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                
-                void setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                
                 void setRowElements_Dyb(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 
+                void setRowElements_DyfVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_DybPressure(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_DybVelocity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 
@@ -120,41 +121,6 @@ namespace KITGPI {
 } /* end namespace KITGPI */
 
 
-
-//! \brief Getter method for derivative matrix DybPressure
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure(){
-    return(DybPressure);
-}
-//! \brief Getter method for derivative matrix DybVelocity
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity(){
-    return(DybVelocity);
-}
-
-//! \brief Getter method for derivative matrix DyfPressure
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure(){
-    return(DyfPressure);
-}
-//! \brief Getter method for derivative matrix DyfVelocity
-template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity(){
-    return(DyfVelocity);
-}
-
-//! \brief Calculate DybVelocity matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(DybVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybVelocity, NX, NY, NZ, dist);
-}
 
 //! \brief Function to set elements of a single row of DybVelocity matrix
 /*!
@@ -226,19 +192,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     
 }
 
-//! \brief Calculate DybPressure matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(DybPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybPressure, NX, NY, NZ, dist);
-}
-
 //! \brief Function to set elements of a single row of DybPressure matrix
 /*!
  *
@@ -272,7 +225,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA]=read_FDCoeff_b[(j/2-1)];
             
             /* Zeroing elements located at the feee surface */
-            if( coeffPosEffective < NX ) {
+            if( rowEffective < NX ) {
                 csrvaluesLocal[countJA]=0.0;
             }
             
@@ -292,7 +245,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
             
             /* Zeroing elements located at the feee surface */
-            if( coeffPosEffective < NX ) {
+            if( rowEffective < NX ) {
                 csrvaluesLocal[countJA]=0.0;
             }
             
@@ -305,18 +258,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     
 }
 
-//! \brief Calculate Dyb matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
-}
 
 //! \brief Function to set elements of a single row of Dyb matrix
 /*!
@@ -372,19 +313,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     csrIALocal[countIA]=countJA;
     countIA++;
     
-}
-
-//! \brief Calculate DyfVelocity matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(DyfVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfVelocity, NX, NY, NZ, dist);
 }
 
 //! \brief Function to set elements of a single row of DzfVelocity matrix
@@ -499,6 +427,76 @@ template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     calcDerivativeMatrix(Dzf, &Derivatives<ValueType>::calcNumberRowElements_Dzf, &Derivatives<ValueType>::setRowElements_Dzf, NX, NY, NZ, dist);
 }
+
+
+//! \brief Calculate DyfPressure matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(DyfPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyf, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate DybVelocity matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(DybVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybVelocity, NX, NY, NZ, dist);
+}
+
+//! \brief Calculate DybPressure matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(DybPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybPressure, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate Dyb matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate DyfVelocity matrix
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    calcDerivativeMatrix(DyfVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfVelocity, NX, NY, NZ, dist);
+}
+
 
 //! \brief Calculate of derivative matrix
 /*!
@@ -828,6 +826,45 @@ template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
 {
     initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), config.getSpatialFDorder(), comm);
+}
+
+
+//! \brief Getter method for derivative matrix DybPressure
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure(){
+    if(useFreeSurface){
+        return(DybPressure);
+    } else {
+        return(Dyb);
+    }
+}
+//! \brief Getter method for derivative matrix DybVelocity
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity(){
+    if(useFreeSurface){
+        return(DybVelocity);
+    } else {
+        return(Dyb);
+    }
+}
+
+//! \brief Getter method for derivative matrix DyfPressure
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure(){
+    if(useFreeSurface){
+        return(DyfPressure);
+    } else {
+        return(Dyf);
+    }
+}
+//! \brief Getter method for derivative matrix DyfVelocity
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity(){
+    if(useFreeSurface){
+        return(DyfVelocity);
+    } else {
+        return(Dyf);
+    }
 }
 
 //! \brief Getter method for derivative matrix Dxf

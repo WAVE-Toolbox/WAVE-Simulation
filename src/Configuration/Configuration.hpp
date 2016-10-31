@@ -297,10 +297,6 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     }
     if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;
     
-    if(FreeSurface && spatialFDorder>2){
-        COMMON_THROWEXCEPTION(" Free Surface is only implemented for spatialFDorder==2 ! ")
-    }
-    
     std::cout << std::endl;
 }
 

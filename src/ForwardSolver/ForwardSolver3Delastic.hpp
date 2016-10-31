@@ -279,11 +279,14 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     
     /* Get references to required derivatives matrixes */
     lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyf();
     lama::CSRSparseMatrix<ValueType>& Dzf=derivatives.getDzf();
     lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
     lama::CSRSparseMatrix<ValueType>& Dzb=derivatives.getDzb();
+    
+    lama::CSRSparseMatrix<ValueType>& DybPressure=derivatives.getDybPressure();
+    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDybVelocity();
+    lama::CSRSparseMatrix<ValueType>& DyfPressure=derivatives.getDyfPressure();
+    lama::CSRSparseMatrix<ValueType>& DyfVelocity=derivatives.getDyfVelocity();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, vX.getContextPtr());
@@ -299,14 +302,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
-    /* In dependency of the free surface, set the derivative martix E for the pressure update */
-    lama::CSRSparseMatrix<ValueType>* DybPressurePtr;
-    DybPressurePtr=&Dyb; // Default: Identical to velocity update
     if(useFreeSurface){
         FreeSurface.setModelparameter(model);
-        DybPressurePtr=&(FreeSurface.getDybPressure());
     }
-    lama::CSRSparseMatrix<ValueType>& DybPressure=*DybPressurePtr;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
@@ -325,17 +323,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* update velocity */
         /* ----------------*/
         update = Dxf * Sxx;
-        update += Dyb * Sxy;
+        update += DybVelocity * Sxy;
         update += Dzb * Sxz;
         vX += update.scale(inverseDensity);
         
         update = Dxb * Sxy;
-        update += Dyf * Syy;
+        update += DyfVelocity * Syy;
         update += Dzb * Syz;
         vY += update.scale(inverseDensity);
         
         update = Dxb * Sxz;
-        update += Dyb * Syz;
+        update += DybVelocity * Syz;
         update += Dzf * Szz;
         vZ += update.scale(inverseDensity);
         
@@ -358,7 +356,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Szz += update;
         Szz += 2 * vzz.scale(mu);
         
-        update = Dyf * vX;
+        update = DyfPressure * vX;
         update += Dxf * vY;
         Sxy += update.scale(mu);
         
@@ -367,7 +365,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Sxz += update.scale(mu);
         
         update = Dzf * vY;
-        update += Dyf * vZ;
+        update += DyfPressure * vZ;
         Syz += update.scale(mu);
         
         /* Apply free surface to stress update */
