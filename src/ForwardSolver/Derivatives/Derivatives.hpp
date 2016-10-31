@@ -577,6 +577,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeM
     
     /* Create local CSR storage of Matrix D, than create distributed CSR matrix D */
     lama::CSRStorage<ValueType> D_LocalCSR(numLocalIndices,N,numLocalValues,csrIALocal,csrJALocal,valuesLocal);
+    D_LocalCSR.compress();
     D.assign(D_LocalCSR,dist,dist);
     
 }

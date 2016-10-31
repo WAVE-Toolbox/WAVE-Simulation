@@ -65,8 +65,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
 }
 
 
-
-
 /*! \brief Apply free surface condition during time stepping
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
@@ -78,13 +76,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
  \param Szz Szz wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& /*Syy*/, lama::DenseVector<ValueType>& Szz){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
     
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);
     
     Sxx +=sumHorizonalDerivative;
     Szz +=sumHorizonalDerivative;
+    
+    Syy.scale(setSurfaceZero);
     
 }
 
@@ -107,6 +107,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     selectHorizontalUpdate.allocate(dist);
     selectHorizontalUpdate=0.0;
     
+    setSurfaceZero.allocate(dist);
+    setSurfaceZero=1.0;
+    
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
     dist->getOwnedIndexes(localIndices); /* get local indices based on used distribution */
@@ -116,6 +119,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     /* Get write access to local part of scaleHorizontalUpdate */
     utilskernel::LArray<ValueType>* selectHorizontalUpdate_LA=&selectHorizontalUpdate.getLocalValues();
     hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
+    
+    /* Get write access to local part of setSurfaceZero */
+    utilskernel::LArray<ValueType>* setSurfaceZero_LA=&setSurfaceZero.getLocalValues();
+    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
     
     KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
     
@@ -133,11 +140,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
             /* Set horizontal update to -1 at the surface and leave it zero else */
             write_selectHorizontalUpdate[rowLocal]=-1.0;
             
+            /* Set vector at surface to zero  */
+            write_setSurfaceZero[rowLocal]=0.0;
         }
         
     }
     read_localIndices.release();
     write_selectHorizontalUpdate.release();
-
+    write_setSurfaceZero.release();
     HOST_PRINT( dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n" );
 }
