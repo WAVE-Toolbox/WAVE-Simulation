@@ -111,9 +111,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
     
-    if(useFreeSurface){
-        COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
-    }
+//     if(useFreeSurface){
+//         COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
+//     }
     
     dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
     
@@ -147,8 +147,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coeff[j]=exp ( - ( a*a* ( BoundaryWidth-j ) * ( BoundaryWidth-j ) ) );
     }
     
+ 
+    
     Acquisition::Coordinates<ValueType> coordTransform;
     Acquisition::coordinate3D coordinate;
+    Acquisition::coordinate3D coordinatedist;
     
     IndexType coordinateMin;
     
@@ -158,12 +161,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         read_localIndices_temp=read_localIndices[i];
         
         coordinate=coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ );
-        coordinate=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
+        coordinatedist=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
         
-        coordinateMin=coordinate.min();
+        coordinateMin=coordinatedist.min();
         if( coordinateMin < BoundaryWidth ) {
             write_damping[i]=coeff[coordinateMin];
         }
+        
+        if(useFreeSurface){
+		if (coordinate.y < BoundaryWidth) {
+			write_damping[i]=1.0;
+		
+			if (coordinatedist.x < BoundaryWidth)  {
+				write_damping[i]=coeff[coordinatedist.x];
+			}
+		
+			if (coordinatedist.z < BoundaryWidth)  {
+				write_damping[i]=coeff[coordinatedist.z];
+			}
+			
+		}
+	}
+        
         
     }
     
