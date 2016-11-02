@@ -176,6 +176,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
 /*! \brief Calculate Acoustic Lame-Vector from p-Velocity-Vector
  *  Acoustic:   lambda = rho * vP^2
  *  Elastic:    mu = rho * vS^2
+ \param vecV Velocity-Vector which will be used in the calculation (vP: Acoustic, vS: Elastic)
+ \param vecDensity Density-Vector which will be used in the calculation
+ \param vectorLame Lame-Vector which is calculated
+ \param ctx Context
+ \param dist Distribution
+ \param filename Location of external file which will be read in
+ \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorLame, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
@@ -200,6 +207,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::Dens
 
 /*! \brief Calculate Elastic Lame-Vector (Lambda) from VelocityP and VelocityS
  *  Elastic:    lambda = rho * (vP^2 - 2 * vS^2)
+ *
+ \param vecVP Velocity-Vector (VP) which will be used for the calculation
+ \param vecVS Velocity-Vector (VS) which will be used for the calculation
+ \param vecDensity Density-Vector which will be used for the calculation
+ \param vecLambda Lame-Vector which is calculated
+ \param ctx Context
+ \param dist Distribution
+ \param filename Location of external VP-file which will be read in
+ \param filenameS Location of external VS-file which will be read in
+ \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecLambda, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameS, std::string filenameDensity)
@@ -230,6 +247,14 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLame(lama::Dens
 
 
 /*! \brief Calculate Lambda (Acoustic)
+ *
+ \param vecVP Velocity-Vector (VP) which will be used to calculete Lambda
+ \param vecDensity Density-Vector which will be used in the calculation
+ \param vecLambda Lame-Vector which is calculated
+ \param ctx Context
+ \param dist Distribution
+ \param filenameVP Location of external VP-file which will be read in
+ \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecLambda, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVP, std::string filenameDensity)
@@ -239,6 +264,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::De
 
 
 /*! \brief Calculate Lambda (Elastic)
+ *
+ \param vecVP Velocity-Vector (VP) which will be used to calculete Lambda
+ \param vecVS Velocity-Vector (VS) which will be used to calculete Lambda
+ \param vecDensity Density-Vector which will be used in the calculation
+ \param vecLambda Lambda-Vector which is calculated
+ \param ctx Context
+ \param dist Distribution
+ \param filenameVP Location of external VP-file which will be read in
+ \param filenameVS Location of external VS-file which will be read in
+ \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecLambda, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVP, std::string filenameVS, std::string filenameDensity)
@@ -249,6 +284,14 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateLambda(lama::De
 
 
 /*! \brief Calculate Mu (Elastic)
+ *
+ \param vecVS Velocity-Vector (VS) which will be used to calculete Mu
+ \param vecDensity Density-Vector which will be used in the calculation
+ \param vecMu Mu-Vector which is calculated
+ \param ctx Context
+ \param dist Distribution
+ \param filenameVS Location of external VS-file which will be read in
+ \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateMu(lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecMu, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVS, std::string filenameDensity)
