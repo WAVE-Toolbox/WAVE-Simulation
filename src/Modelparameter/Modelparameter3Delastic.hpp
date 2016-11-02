@@ -46,27 +46,27 @@ namespace KITGPI {
             ~FD3Delastic(){};
             
             FD3Delastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho);
-            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda,std::string filenamemu, std::string filenamerho);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
+            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
             FD3Delastic(const FD3Delastic& rhs);
             
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda,lama::Scalar  mu, lama::Scalar  rho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus,lama::Scalar  sWaveModulus, lama::Scalar  rho);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda,std::string filenamemu, std::string filenamerho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             
-            void calculateLameParameters(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
-            void write(std::string filenameLambda,std::string filenamemu, std::string filenamedensity);
+            void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
             void write(std::string filename);
                         
         private:
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::lambda;
-            using Modelparameter<ValueType>::mu;
+            using Modelparameter<ValueType>::pWaveModulus;
+            using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
@@ -91,14 +91,14 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
                 init(ctx,dist,config.getModelFilename());
                 break;
             case 2:
-                calculateLameParameters(ctx,dist,config.getModelFilename());
+                calculateWaveModulus(ctx,dist,config.getModelFilename());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
     } else {
-        init(ctx,dist,config.getLambda(),config.getMu(),config.getRho());
+        init(ctx,dist,config.getPWaveModulus(),config.getSWaveModulus(),config.getRho());
     }
     
     if(config.getModelWrite()){
@@ -111,14 +111,14 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param lambda_const First Lame-Parameter given as Scalar
- \param mu_const Second Lame-Parameter given as Scalar
+ \param pWaveModulus_const P-wave modulus given as Scalar
+ \param sWaveModulus_const S-wave modulus given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho)
 {
-    init(ctx,dist,lambda_const,mu_const,rho);
+    init(ctx,dist,pWaveModulus_const,sWaveModulus_const,rho);
 }
 
 
@@ -127,15 +127,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param lambda_const First Lame-Parameter given as Scalar
- \param mu_const Second Lame-Parameter given as Scalar
+ \param pWaveModulus_const P-wave modulus given as Scalar
+ \param sWaveModulus_const S-wave modulus given as Scalar
  \param rho Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  lambda_const,lama::Scalar  mu_const, lama::Scalar  rho)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho)
 {
-    this->initModelparameter(lambda,ctx,dist,lambda_const);
-    this->initModelparameter(mu,ctx,dist,mu_const);
+    this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
+    this->initModelparameter(sWaveModulus,ctx,dist,sWaveModulus_const);
     this->initModelparameter(density,ctx,dist,rho);
 }
 
@@ -145,14 +145,14 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filenameLambda Name of file that will be read for the first Lame-parameter.
- \param filenamemu Name of file that will be read for the second Lame-parameter.
+ \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda,std::string filenamemu, std::string filenamerho)
+KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho)
 {
-    init(ctx,dist,filenameLambda,filenamemu,filenamerho);
+    init(ctx,dist,filenamePWaveModulus,filenameSWaveModulus,filenamerho);
 }
 
 
@@ -161,16 +161,16 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filenameLambda Name of file that will be read for the first Lame-parameter.
- \param filenamemu Name of file that will be read for the second Lame-parameter.
+ \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameLambda, std::string filenamemu, std::string filenamerho)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho)
 {
-    this->initModelparameter(lambda,ctx,dist,filenameLambda);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
     this->initModelparameter(density,ctx,dist,filenamerho);
-    this->initModelparameter(mu,ctx,dist,filenamemu);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
 }
 
 
@@ -179,7 +179,7 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
@@ -193,17 +193,17 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
-    std::string filenameLambda=filename+".lambda.mtx";
-    std::string filenamemu=filename+".mu.mtx";
+    std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
+    std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(lambda,ctx,dist,filenameLambda);
-    this->initModelparameter(mu,ctx,dist,filenamemu);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
     this->initModelparameter(density,ctx,dist,filenamedensity);
 }
 
@@ -212,29 +212,29 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
 {
-    lambda=rhs.lambda.copy();
-    mu=rhs.mu.copy();
+    pWaveModulus=rhs.pWaveModulus.copy();
+    sWaveModulus=rhs.sWaveModulus.copy();
     density=rhs.density.copy();
 }
 
-/*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates Lambda
+/*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus
  *
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
  \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
  *
- *  Calculates Lambda with
+ *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::calculateLameParameters(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->calculateLambda(velocityP,velocityS,density,lambda,ctx,dist,filenameVelocityP,filenameVelocityS,filenamedensity);
-    this->calculateMu(velocityS,density,mu,ctx,dist,filenameVelocityS,filenamedensity);
+    this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
+    this->calculateSWaveModulus(velocityS,density,sWaveModulus,ctx,dist,filenameVelocityS,filenamedensity);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     
 }
@@ -242,31 +242,31 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::calculateLameParameters(hme
 
 /*! \brief Write model to an external file
  *
- \param filenameLambda Filename for first Lame-Parameter model
- \param filenamemu Name of file that will be read for the second Lame-parameter.
+ \param filenamePWaveModulus Filename for P-wave modulus model
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::write( std::string filenameLambda, std::string filenamemu, std::string filenamedensity)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::write( std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity)
 {
-    this->writeModelparameter(lambda,filenameLambda);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
     this->writeModelparameter(density,filenamedensity);
-    this->writeModelparameter(mu,filenamemu);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
 };
 
 
 /*! \brief Write model to an external file
  *
- \param filename For the first Lame-parameter ".lambda.mtx" is added, for the second ".mu.mtx" and for density ".density.mtx" is added.
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
 {
-    std::string filenameLambda=filename+".lambda.mtx";
-    std::string filenamemu=filename+".mu.mtx";
+    std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
+    std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(lambda,filenameLambda);
-    this->writeModelparameter(mu,filenamemu);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
     this->writeModelparameter(density,filenamedensity);
 };
 

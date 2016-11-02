@@ -261,8 +261,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& lambda=model.getLambda();
-    lama::DenseVector<ValueType>& mu=model.getMu();
+    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -347,26 +347,30 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update = vxx;
         update += vyy;
         update += vzz;
-        update.scale(lambda);
+        update.scale(pWaveModulus);
         
         Sxx += update;
-        Sxx += 2 * vxx.scale(mu);
         Syy += update;
-        Syy += 2 * vyy.scale(mu);
         Szz += update;
-        Szz += 2 * vzz.scale(mu);
+        
+        update=vyy+vzz;
+        Sxx -= 2 * update.scale(sWaveModulus);
+        update=vxx+vzz;
+        Syy -= 2 * update.scale(sWaveModulus);
+        update=vxx+vyy;
+        Szz -= 2 * update.scale(sWaveModulus);
         
         update = DyfPressure * vX;
         update += Dxf * vY;
-        Sxy += update.scale(mu);
+        Sxy += update.scale(sWaveModulus);
         
         update = Dzf * vX;
         update += Dxf * vZ;
-        Sxz += update.scale(mu);
+        Sxz += update.scale(sWaveModulus);
         
         update = Dzf * vY;
         update += DyfPressure * vZ;
-        Syz += update.scale(mu);
+        Syz += update.scale(sWaveModulus);
         
         /* Apply free surface to stress update */
         if(useFreeSurface){

@@ -55,12 +55,16 @@ namespace KITGPI {
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model){
     
-    lama::DenseVector<ValueType>& lambda=model.getLambda();
-    lama::DenseVector<ValueType>& mu=model.getMu();
+    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
     
-    scaleHorizontalUpdate=lambda+2*mu;
+    lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
+    
+    temp=2*sWaveModulus-pWaveModulus;
+    
+    scaleHorizontalUpdate=pWaveModulus;
     scaleHorizontalUpdate.invert();
-    scaleHorizontalUpdate.scale(lambda);
+    scaleHorizontalUpdate.scale(temp);
     scaleHorizontalUpdate.scale(selectHorizontalUpdate);
 
 }
