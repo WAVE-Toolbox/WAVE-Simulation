@@ -137,7 +137,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     // calculate damping function
     ValueType amp=0;
     ValueType coeff[BoundaryWidth];
-    coeff[0]++;  //need a better solution "todo"
     ValueType a=0;
     
     amp=1.0-DampingCoeff/100.0;
@@ -153,7 +152,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
     
-    IndexType coordinateMin;
+    IndexType coordinateMin=0;
+    IndexType coordinatexzMin=0;
+
     
     /* Set the values into the indice arrays and the value array */
     for( IndexType i=0; i<numLocalIndices; i++ ) {
@@ -168,16 +169,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
             write_damping[i]=coeff[coordinateMin];
         }
         
+        
+        
         if(useFreeSurface){
+		coordinatexzMin=!((coordinatedist.x)<(coordinatedist.z))?(coordinatedist.z):(coordinatedist.x);
 		if (coordinate.y < BoundaryWidth) {
 			write_damping[i]=1.0;
-		
-			if (coordinatedist.x < BoundaryWidth)  {
-				write_damping[i]=coeff[coordinatedist.x];
-			}
-		
-			if (coordinatedist.z < BoundaryWidth)  {
-				write_damping[i]=coeff[coordinatedist.z];
+			
+			if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)){
+				write_damping[i]=coeff[coordinatexzMin];
 			}
 			
 		}
