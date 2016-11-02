@@ -111,9 +111,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
     
-    if(useFreeSurface){
-        COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
-    }
+//     if(useFreeSurface){
+//         COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
+//     }
     
     dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
     
@@ -137,7 +137,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     // calculate damping function
     ValueType amp=0;
     ValueType coeff[BoundaryWidth];
-    coeff[0]++;  //need a better solution "todo"
     ValueType a=0;
     
     amp=1.0-DampingCoeff/100.0;
@@ -147,10 +146,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coeff[j]=exp ( - ( a*a* ( BoundaryWidth-j ) * ( BoundaryWidth-j ) ) );
     }
     
+ 
+    
     Acquisition::Coordinates<ValueType> coordTransform;
     Acquisition::coordinate3D coordinate;
+    Acquisition::coordinate3D coordinatedist;
     
-    IndexType coordinateMin;
+    IndexType coordinateMin=0;
+    IndexType coordinatexzMin=0;
+
     
     /* Set the values into the indice arrays and the value array */
     for( IndexType i=0; i<numLocalIndices; i++ ) {
@@ -158,12 +162,27 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         read_localIndices_temp=read_localIndices[i];
         
         coordinate=coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ );
-        coordinate=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
+        coordinatedist=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
         
-        coordinateMin=coordinate.min();
+        coordinateMin=coordinatedist.min();
         if( coordinateMin < BoundaryWidth ) {
             write_damping[i]=coeff[coordinateMin];
         }
+        
+        
+        
+        if(useFreeSurface){
+		coordinatexzMin=!((coordinatedist.x)<(coordinatedist.z))?(coordinatedist.z):(coordinatedist.x);
+		if (coordinate.y < BoundaryWidth) {
+			write_damping[i]=1.0;
+			
+			if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)){
+				write_damping[i]=coeff[coordinatexzMin];
+			}
+			
+		}
+	}
+        
         
     }
     
