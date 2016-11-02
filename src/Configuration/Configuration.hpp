@@ -48,7 +48,7 @@ bool checkConfigPlausibility();
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
-            IndexType getModelParametrisation() {return ModelParametrisation;} ///< Return Read Lame-Model or Velocity-Model
+            IndexType getModelParametrisation() {return ModelParametrisation;} ///< Return Read Wave-Modulus-Model or Velocity-Model
             
             ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
             ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
@@ -61,8 +61,8 @@ bool checkConfigPlausibility();
             
             IndexType getN() { return N; } ///< Return N
             
-            ValueType getLambda() { return lambda; } ///< Return lambda
-            ValueType getMu() { return mu; } ///< Return lambda
+            ValueType getPWaveModulus() { return pWaveModulus; } ///< Return pWaveModulus
+            ValueType getSWaveModulus() { return sWaveModulus; } ///< Return pWaveModulus
 
             IndexType getNT() { return NT; } ///< Return NT
             
@@ -100,7 +100,7 @@ bool checkConfigPlausibility();
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
-            IndexType ModelParametrisation; ///< Read model from File (1=Lame-Vector, 2=Velocity-Vectors)
+            IndexType ModelParametrisation; ///< Read model from File (1=Wave-Modulus-Model-Vector, 2=Velocity-Vectors)
             ValueType velocityP; ///< Density in kilo gramms per cubic meter
             ValueType velocityS; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
@@ -125,8 +125,8 @@ bool checkConfigPlausibility();
             
             IndexType N; ///< Number of total grid points NX*NY*NZ
             
-            ValueType lambda; ///< First Lame parameter
-            ValueType mu; ///<< Second Lame parameter
+            ValueType pWaveModulus; ///< P-wave modulus
+            ValueType sWaveModulus; ///<< S-wave modulus
             IndexType NT; ///< Number of time steps
             
         };
@@ -225,9 +225,9 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     N = NZ * NX * NY;
     
-    lambda =(-2*velocityS*velocityS + velocityP * velocityP ) * rho; // P-wave modulus
-    
-    mu=rho*velocityS*velocityS;
+    sWaveModulus = rho * velocityS * velocityS;
+
+    pWaveModulus = rho * velocityP * velocityP; // P-wave modulus
     
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
     
@@ -276,7 +276,7 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         switch (ModelParametrisation) {
             case 1:
                 std::cout << "    Model will be read in from disk" << std::endl;
-                std::cout << "    First Lame-Parameter: " << ModelFilename << ".lambda.mtx" << std::endl;
+                std::cout << "    P-wave modulus: " << ModelFilename << ".pWaveModulus.mtx" << std::endl;
                 std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
                 break;
             case 2:
