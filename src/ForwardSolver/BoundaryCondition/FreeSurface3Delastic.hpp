@@ -157,8 +157,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
         /* Determine if the current grid point is located on the surface */
         if(coordinateTransformation.locatedOnSurface(rowGlobal,NX,NY,NZ)){
             
-            /* Set horizontal update to -1 at the surface and leave it zero else */
-            write_selectHorizontalUpdate[rowLocal]=-1.0;
+            /* Set horizontal update to 1 at the surface and leave it zero else */
+            write_selectHorizontalUpdate[rowLocal]=1.0;
             
             /* Set vector at surface to zero  */
             write_setSurfaceZero[rowLocal]=0.0;
