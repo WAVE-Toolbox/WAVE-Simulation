@@ -67,8 +67,13 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getTauS();
             IndexType getNumRelaxationMechanisms();
             ValueType getRelaxationFrequency();
+            
 
         private:
+            
+            /*! \brief Prepare the model parameters for modelling */
+            /* Nothing has to be done here */
+            void prepareForModelling(){};
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::pWaveModulus;

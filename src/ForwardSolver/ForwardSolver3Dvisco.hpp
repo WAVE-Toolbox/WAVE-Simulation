@@ -260,6 +260,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     SCAI_REGION( "timestep" )
     
     /* Get references to required modelparameter */
+    model.prepareForModelling();
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
