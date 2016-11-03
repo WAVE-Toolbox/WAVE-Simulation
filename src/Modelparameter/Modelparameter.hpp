@@ -41,7 +41,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            Modelparameter():dirtyFlagInverseDensity(1){};
+            Modelparameter():dirtyFlagInverseDensity(1),numRelaxationMechanisms(0){};
             
             //! Default destructor.
             ~Modelparameter(){};
@@ -71,6 +71,12 @@ namespace KITGPI {
             virtual lama::DenseVector<ValueType>& getVelocityP();
             virtual lama::DenseVector<ValueType>& getVelocityS();
             
+            virtual lama::DenseVector<ValueType>& getTauP();
+            virtual lama::DenseVector<ValueType>& getTauS();
+            
+            virtual IndexType getNumRelaxationMechanisms();
+            virtual ValueType getRelaxationFrequency();
+            
         protected:
             
             IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
@@ -82,6 +88,12 @@ namespace KITGPI {
             
             lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
             lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
+            
+            lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for visco-elastic modelling.
+            lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for visco-elastic modelling.
+            
+            IndexType numRelaxationMechanisms; //!< Number of relaxation mechanisms
+            ValueType relaxationFrequency; //!< Relaxation Frequency
             
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
@@ -99,6 +111,19 @@ namespace KITGPI {
             void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
         };
     }
+}
+
+
+/*! \brief Getter method for relaxation frequency */
+template<typename ValueType>
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency(){
+    return(relaxationFrequency);
+}
+
+/*! \brief Getter method for number of relaxation mechanisms */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMechanisms(){
+    return(numRelaxationMechanisms);
 }
 
 /*! \brief Init a single modelparameter by a constant value
@@ -287,5 +312,18 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     return(velocityS);
 }
 
+/*! \brief Get reference to tauP
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){
+    return(tauP);
+}
 
+/*! \brief Get reference to tauS
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS(){
+    return(tauS);
+}
 

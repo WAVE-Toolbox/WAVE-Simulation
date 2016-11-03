@@ -20,7 +20,7 @@ namespace KITGPI {
     
     namespace ForwardSolver {
         
-        //! \brief 3-D elastic forward solver
+        //! \brief 3-D visco forward solver
         template<typename ValueType>
         class FD3Dvisco : public ForwardSolver<ValueType>
         {
@@ -316,13 +316,11 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     
     ValueType DT=0.002;
     
-    lama::DenseVector<ValueType> tauS(vX.getDistributionPtr());
-    lama::DenseVector<ValueType> tauP(vX.getDistributionPtr());
-    tauS=2.0/30.0;
-    tauP=2.0/30.0;
+    lama::DenseVector<ValueType>& tauS=model.getTauS();
+    lama::DenseVector<ValueType>& tauP=model.getTauP();
     
-    IndexType L=1; // = Number of relaxation mechanisms
-    ValueType relaxationTime=1.0/(2.0*M_PI*5.0); // = 1 / ( 2 * Pi * f_relax )
+    IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
+    ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency ()); // = 1 / ( 2 * Pi * f_relax )
     ValueType inverseRelaxationTime=1.0/relaxationTime; // = 1 / relaxationTime
     ValueType viscoCoeff1=(1.0-DT/(2.0*relaxationTime)); // = 1 - DT / ( 2 * tau_Sigma_l )
     ValueType viscoCoeff2=1.0/(1.0+DT/(2.0*relaxationTime)); // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
@@ -332,10 +330,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType> onePlusLtauS(vX.getDistributionPtr()); // = ( 1 + L * tauS )
     
     onePlusLtauP = 1.0;
-    onePlusLtauP += L * tauP;
+    onePlusLtauP += numRelaxationMechanisms * tauP;
 
     onePlusLtauS = 1.0;
-    onePlusLtauS += L * tauS;
+    onePlusLtauS += numRelaxationMechanisms * tauS;
     
     /* --------------------------------------- */
     /* Start runtime critical part             */

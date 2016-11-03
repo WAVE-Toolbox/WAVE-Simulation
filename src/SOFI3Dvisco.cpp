@@ -8,7 +8,7 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Modelparameter3Delastic.hpp"
+#include "Modelparameter/Modelparameter3Dvisco.hpp"
 #include "Wavefields/Wavefields3Dvisco.hpp"
 
 #include "Acquisition/Receivers.hpp"
@@ -86,7 +86,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::FD3Delastic<ValueType> model(config,ctx,dist);
+    Modelparameter::FD3Dvisco<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
