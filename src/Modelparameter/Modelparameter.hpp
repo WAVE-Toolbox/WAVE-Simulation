@@ -74,6 +74,7 @@ namespace KITGPI {
         protected:
             
             IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
+            IndexType dirtyFlagParametrisation; //!< ==1 if Lame-Parametrisation; ==2 Velocity-Parametrisation
             
             lama::DenseVector<ValueType> lambda; //!< Vector storing first Lame-Parameter.
             lama::DenseVector<ValueType> mu; //!< Vector storing first Lame-Parameter.

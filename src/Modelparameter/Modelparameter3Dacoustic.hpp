@@ -66,9 +66,18 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getMu();
             lama::DenseVector<ValueType>& getVelocityS();
             
+            /* Overloading Operators */
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*=(ValueType rhs);
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator+(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator+=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
+            
         private:
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
+            using Modelparameter<ValueType>::dirtyFlagParametrisation;
             using Modelparameter<ValueType>::lambda;
             using Modelparameter<ValueType>::mu;
             using Modelparameter<ValueType>::density;
@@ -208,8 +217,8 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic& rhs)
 {
-    lambda=rhs.M.copy();
-    density=rhs.density.copy();
+    lambda=rhs.lambda;
+    density=rhs.density;
 }
 
 
@@ -279,3 +288,91 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
     return(velocityS);
 }
 
+/*! \brief Overloading * Operation 
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator*(ValueType rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda * rhs;
+    result.density = this->density * rhs;
+    return result;
+}
+
+/*! \brief free function to multiply
+ *
+ \param lhs Scalar factor with which the vectors are multiplied.
+ \param rhs Vector
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+{
+    return rhs * lhs;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator*=(ValueType rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda * rhs;
+    result.density = this->density * rhs;
+    return result;
+}
+
+/*! \brief Overloading + Operation
+ *
+ \param rhs Model which is added.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator+(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda + rhs.lambda;
+    result.density = this->density + rhs.density;
+    return result;
+}
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is added.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator+=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda + rhs.lambda;
+    result.density = this->density + rhs.density;
+    return result;
+}
+
+/*! \brief Overloading - Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator-(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda - rhs.lambda;
+    result.density = this->density - rhs.density;
+    return result;
+}
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator-=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    result.lambda= this->lambda - rhs.lambda;
+    result.density = this->density - rhs.density;
+    return result;
+}
