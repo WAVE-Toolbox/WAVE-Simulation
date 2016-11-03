@@ -26,6 +26,7 @@ namespace KITGPI {
             Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
             ~Sources(){};
             
+            void init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
             void readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
             void writeSourceAcquisition(std::string filename);
             
@@ -119,6 +120,17 @@ KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::Sources<ValueTy
 template<typename ValueType>
 KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
 :numSourcesGlobal(0),numSourcesLocal(0),numParameter(0)
+{
+    init(config,dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param dist_wavefield Distribution of the wavefields
+ */
+template<typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
 {
     readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
     generateSignals(config.getNT(),config.getDT());
