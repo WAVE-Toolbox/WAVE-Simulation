@@ -33,7 +33,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Dacoustic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT);
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
             
@@ -244,10 +244,9 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
  \param NT Total number of time steps
- \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT){
     
     SCAI_REGION( "timestep" )
     
@@ -275,7 +274,8 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
     
-    
+    dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();
+
     /* --------------------------------------- */
     /* Start runtime critical part             */
     /* --------------------------------------- */

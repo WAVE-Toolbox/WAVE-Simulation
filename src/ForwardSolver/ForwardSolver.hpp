@@ -36,9 +36,8 @@ namespace KITGPI {
              \param wavefield Wavefields for the modelling
              \param derivatives Derivations matrices to calculate the spatial derivatives
              \param NT Total number of time steps
-             \param comm Communicator
              */
-            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
+            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT)=0;
             
             
             /*! \brief Saving seismograms during time stepping

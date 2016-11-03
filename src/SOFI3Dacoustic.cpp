@@ -65,15 +65,6 @@ int main( int argc, char* argv[] )
         config.print();
     }
     
-    if (config.checkConfigPlausibility()==false)	// If the configuration file contains implausible values, each process stops running
-       {
-       	if( comm->getRank() == MASTER )
-       	{
-       		std::cout << "\n\tConfiguration file contains implausible value." << "\n\tProgram terminates\n\n." << std::endl;
-       	}
-       	return 0;
-       }
-
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -106,7 +97,7 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT());
     
     solver.seismogram.write(config);
 

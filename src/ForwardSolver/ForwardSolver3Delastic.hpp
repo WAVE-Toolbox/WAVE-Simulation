@@ -33,7 +33,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Delastic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm);
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT);
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
             
@@ -252,10 +252,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
  \param NT Total number of time steps
- \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT){
     
     SCAI_REGION( "timestep" )
     
@@ -305,6 +304,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     if(useFreeSurface){
         FreeSurface.setModelparameter(model);
     }
+    
+    dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();
+
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
