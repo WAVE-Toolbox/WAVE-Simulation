@@ -13,7 +13,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
-#include "BoundaryCondition/FreeSurface3Delastic.hpp"
+#include "BoundaryCondition/FreeSurface3Dvisco.hpp"
 #include "BoundaryCondition/ABS3D.hpp"
 
 namespace KITGPI {
@@ -42,7 +42,7 @@ namespace KITGPI {
         private:
             
             /* Boundary Conditions */
-            BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            BoundaryCondition::FreeSurface3Dvisco<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolver<ValueType>::useFreeSurface;
             
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
@@ -310,10 +310,6 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
-    if(useFreeSurface){
-        FreeSurface.setModelparameter(model);
-    }
-    
     ValueType DT=0.002;
     
     lama::DenseVector<ValueType>& tauS=model.getTauS();
@@ -334,6 +330,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 
     onePlusLtauS = 1.0;
     onePlusLtauS += numRelaxationMechanisms * tauS;
+    
+    if(useFreeSurface){
+        FreeSurface.setModelparameter(model,tauP,tauS,onePlusLtauP,onePlusLtauS);
+    }
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
@@ -489,7 +489,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         /* Apply free surface to stress update */
         if(useFreeSurface){
             update=vxx+vzz;
-            FreeSurface.apply(update,Sxx,Syy,Szz);
+            FreeSurface.apply(update,update2,Sxx,Syy,Szz,Rxx,Ryy,Rzz);
         }
         
         /* Apply the damping boundary */
