@@ -25,7 +25,7 @@ int main( int argc, char* argv[] )
     ValueType L2=0.0;
     
     seismo_ref.readFromFile(config.getSeismogramFilename());
-    seismo_syn.readFromFile("ci/seismogram_ref.acoustic.mtx");
+    seismo_syn.readFromFile("ci/seismogram_ref.visco.mtx");
     
     seismo_residual=(seismo_ref-seismo_syn);
     L2_scalar=seismo_residual.l2Norm();

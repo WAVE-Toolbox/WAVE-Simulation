@@ -1,19 +1,9 @@
 #include <scai/lama.hpp>
 #include <iostream>
 
-
 #include "../Configuration/Configuration.hpp"
+#include "../Common/HostPrint.hpp"
 
-#define MASTER 0
-
-#define HOST_PRINT( comm, msg )     \
-{                                   \
-int myRank = comm->getRank();   \
-if ( myRank == MASTER )         \
-{                               \
-std::cout << msg;           \
-}                               \
-}
 using namespace KITGPI;
 
 int main( int argc, char* argv[] )
