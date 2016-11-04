@@ -39,14 +39,3 @@ elastic3D-gcc:
     - mpirun -np 4 ./../bin/SOFI3Delastic "ci/configuration_ci.elastic.txt"
     - ./../bin/Tests/Test_SOFI3Delastic "ci/configuration_ci.elastic.txt"
 
-visco3D-gcc:
-  stage: simulation
-  dependencies:
-    - gcc
-  script:
-    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
-    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
-    - OMP_NUM_THREADS=2
-    - cd par/
-    - mpirun -np 4 ./../bin/SOFI3Dvisco "ci/configuration_ci.visco.txt"
-    - ./../bin/Tests/Test_SOFI3Dvisco "ci/configuration_ci.visco.txt"
