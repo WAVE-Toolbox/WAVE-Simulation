@@ -26,6 +26,8 @@ namespace KITGPI {
             Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
             ~Receivers(){};
             
+            void init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
+            
             void readReceiverAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
             void writeReceiverAcquisition(std::string filename);
             
@@ -105,9 +107,18 @@ template<typename ValueType>
 KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
 :numReceiversGlobal(0),numReceiversLocal(0),numParameter(0)
 {
-    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
+    init(config,dist_wavefield);
 }
 
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param dist_wavefield Distribution of the wavefields
+ */
+template<typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
+    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
+}
 
 /*! \brief Get number of global receivers
  *

@@ -76,7 +76,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic<ValueType>:
     
     Derivatives::FD3D<ValueType>* derivativeFreeSurface= static_cast<Derivatives::FD3D<ValueType>*>(&derivatives);
     derivativeFreeSurface->useFreeSurface=true;
-    derivativeFreeSurface->calcDybVelocity(NX, NY, NZ, dist);
+    derivativeFreeSurface->calcDyfVelocity(NX, NY, NZ, dist);
     derivativeFreeSurface->DyfVelocity.scale(lama::Scalar(DT/DH));
     derivativeFreeSurface->Dyf.purge();
     
