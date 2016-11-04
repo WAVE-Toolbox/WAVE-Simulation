@@ -22,5 +22,5 @@ TShift = [0]        # Time shift in s
 SOURCE_FILE=[X, Y, Z, SOURCE_TYPE, WAVELET_TYPE, WAVELET_SHAPE, FC, AMP, TShift,];
 
 #Write mtx file
-write_mtx(OUTPUT_FILENAME,SOURCE_FILE)
+writeMatrix2mtx(OUTPUT_FILENAME,SOURCE_FILE)
 

@@ -36,4 +36,4 @@ RECEIVER_FILE= [X, Y, Z, RECEIVER_TYPE_vec]
 print np.shape(RECEIVER_FILE)[0]
 
 ## Write mtx file
-write_mtx(OUTPUT_FILENAME,RECEIVER_FILE);
+writeMatrix2mtx(OUTPUT_FILENAME,RECEIVER_FILE);

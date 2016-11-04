@@ -1,4 +1,4 @@
-def write_mtx_vector(filename, array):
+def writeVector2mtx(filename, array):
 
     fileID = open(filename, 'w')
     fileID.write('%%MatrixMarket vector array real general\n')

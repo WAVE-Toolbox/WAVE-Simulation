@@ -1,6 +1,6 @@
 import numpy as np
 
-def write_mtx(filename, matrix):
+def writeMatrix2mtx(filename, matrix):
 
     n = np.shape(matrix)[1]
     m = np.shape(matrix)[0]

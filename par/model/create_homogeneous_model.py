@@ -1,4 +1,4 @@
-from writeMtxVector import write_mtx_vector
+from writeVector2mtx import writeVector2mtx
 import numpy as np
 
 ## Input parameter
@@ -16,20 +16,20 @@ VP=np.full(N,velocityP)
 VS=np.full(N,velocityS)
 RHO=np.full(N,density)
 
-write_mtx_vector(filename+'.vp.mtx',VP)
-write_mtx_vector(filename+'.density.mtx',RHO)
+writeVector2mtx(filename+'.vp.mtx',VP)
+writeVector2mtx(filename+'.density.mtx',RHO)
 
 if Model==0:
-    Lambda=velocityP*velocityP*density #Lame acoustic
-    LAMBDA=np.full(N,Lambda)
-    write_mtx_vector(filename+'.lambda.mtx',LAMBDA)
+    pWaveModulus=(velocityP*velocityP)*density #Lame acoustic
+    PWAVEMODULUS=np.full(N,pWaveModulus)
+    writeVector2mtx(filename+'.pWaveModulus.mtx',PWAVEMODULUS)
 elif Model==1:
-    Lambda=(velocityP*velocityP - 2*velocityS*velocityS) *density #Lame acoustic
-    Mu=(velocityS*velocityS)*density
-    LAMBDA=np.full(N,Lambda)
-    MU=np.full(N,Mu)
-    write_mtx_vector(filename+'.vs.mtx',VS)
-    write_mtx_vector(filename+'.lambda.mtx',LAMBDA)
-    write_mtx_vector(filename+'.mu.mtx',MU)
+    pWaveModulus=(velocityP*velocityP)*density #Lame acoustic
+    sWaveModulus=(velocityS*velocityS)*density
+    PWAVEMODULUS=np.full(N,pWaveModulus)
+    SWAVEMODULUS=np.full(N,sWaveModulus)
+    writeVector2mtx(filename+'.vs.mtx',VS)
+    writeVector2mtx(filename+'.pWaveModulus.mtx',PWAVEMODULUS)
+    writeVector2mtx(filename+'.sWaveModulus.mtx',SWAVEMODULUS)
 else:
     print 'Please choose valid Model-Type.'
