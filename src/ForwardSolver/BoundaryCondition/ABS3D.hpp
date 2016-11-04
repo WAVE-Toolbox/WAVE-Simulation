@@ -5,41 +5,41 @@
 
 namespace KITGPI
 {
-
-	namespace ForwardSolver
-	{
-
-		namespace BoundaryCondition
-		{
-
-			//! \brief Class for the calculation of the Absorbing Coefficient matrix for 3-D FD Simulations
-			/*!
-			 * Calculation of the absorbing coefficient matrix for an equidistand grid
-			 *
-			 */
-			template<typename ValueType>
-			class ABS3D : public ABS<ValueType>
-			{
-			public:
-
-				//! Default constructor
-				ABS3D(){};
-
-				//! Default destructor
-				~ABS3D(){};
-
-				void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface);
-
+    
+    namespace ForwardSolver
+    {
+        
+        namespace BoundaryCondition
+        {
+            
+            //! \brief Class for the calculation of the Absorbing Coefficient matrix for 3-D FD Simulations
+            /*!
+             * Calculation of the absorbing coefficient matrix for an equidistand grid
+             *
+             */
+            template<typename ValueType>
+            class ABS3D : public ABS<ValueType>
+            {
+            public:
+                
+                //! Default constructor
+                ABS3D(){};
+                
+                //! Default destructor
+                ~ABS3D(){};
+                
+                void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface);
+                
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4);
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9);
                 
-			private:
+            private:
                 
                 lama::DenseVector<ValueType> damping; //!< Absorbing Coefficient vector
-
-			};
-		} /* end namespace BoundaryCondition */
-	} /* end namespace ForwardSolver */
+                
+            };
+        } /* end namespace BoundaryCondition */
+    } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
 
 
@@ -60,7 +60,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
     v2.scale(damping);
     v3.scale(damping);
     v4.scale(damping);
-
+    
 }
 
 /*! \brief Application of the damping boundary
@@ -90,7 +90,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
     v7.scale(damping);
     v8.scale(damping);
     v9.scale(damping);
-
+    
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix
@@ -108,12 +108,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
 {
-
-	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
     
-//     if(useFreeSurface){
-//         COMMON_THROWEXCEPTION(" Free Surface and ABS boundary are not implemented for simultaneous usage ! ")
-//     }
+    HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
     
     dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
     
@@ -146,15 +142,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coeff[j]=exp ( - ( a*a* ( BoundaryWidth-j ) * ( BoundaryWidth-j ) ) );
     }
     
- 
-    
     Acquisition::Coordinates<ValueType> coordTransform;
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
     
     IndexType coordinateMin=0;
     IndexType coordinatexzMin=0;
-
     
     /* Set the values into the indice arrays and the value array */
     for( IndexType i=0; i<numLocalIndices; i++ ) {
@@ -169,20 +162,17 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
             write_damping[i]=coeff[coordinateMin];
         }
         
-        
-        
         if(useFreeSurface){
-		coordinatexzMin=!((coordinatedist.x)<(coordinatedist.z))?(coordinatedist.z):(coordinatedist.x);
-		if (coordinate.y < BoundaryWidth) {
-			write_damping[i]=1.0;
-			
-			if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)){
-				write_damping[i]=coeff[coordinatexzMin];
-			}
-			
-		}
-	}
-        
+            coordinatexzMin=!((coordinatedist.x)<(coordinatedist.z))?(coordinatedist.z):(coordinatedist.x);
+            if (coordinate.y < BoundaryWidth) {
+                write_damping[i]=1.0;
+                
+                if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)){
+                    write_damping[i]=coeff[coordinatexzMin];
+                }
+                
+            }
+        }
         
     }
     
@@ -190,14 +180,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     read_localIndices.release();
     write_damping.release();
     
-	damping.setContextPtr ( ctx );
-
-	HOST_PRINT ( dist->getCommunicatorPtr(), "Finished with initialization of the Damping Boundary!\n\n" );
-
+    damping.setContextPtr ( ctx );
+    
+    HOST_PRINT ( dist->getCommunicatorPtr(), "Finished with initialization of the Damping Boundary!\n\n" );
+    
 }
-
-
-
-
-
 
