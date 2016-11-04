@@ -69,6 +69,11 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getTauS();
             IndexType getNumRelaxationMechanisms();
             ValueType getRelaxationFrequency();
+        
+            void switch2velocity();
+            void switch2modulus();
+            
+            void prepareForModelling();
             
             /* Overloading Operators */
             KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(lama::Scalar rhs);
@@ -77,16 +82,16 @@ namespace KITGPI {
             KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator+=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
-            
+        
         private:
             
-            /*! \brief Prepare the model parameters for modelling */
-            /* Nothing has to be done here */
-            void prepareForModelling(){};
+            void refreshModule();
+            void refreshVelocity();
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagParametrisation;
-            using Modelparameter<ValueType>::Parametrisation;
+            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagVelocity;
+            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
@@ -104,6 +109,71 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Prepare modellparameter for modelling
+ *
+ * Refreshes the module if parameterisation is in terms of velocities
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::prepareForModelling(){
+    refreshModule();
+}
+
+/*! \brief Switch the default parameterization of this class to modulus
+ *
+ * This will recalulcate the modulus vectors from the velocity vectors.
+ * Moreover, the parametrisation value will be set to zero.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2modulus(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=0;
+    }
+};
+
+/*! \brief Switch the default parameterization of this class to velocity
+ *
+ * This will recalulcate the velocity vectors from the modulus vectors.
+ * Moreover, the parametrisation value will be set to one.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2velocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=1;
+    }
+};
+
+/*! \brief Refresh the velocity vectors with the module values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshVelocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        dirtyFlagVelocity=false;
+    }
+};
+
+/*! \brief Refresh the module vectors with the velocity values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshModule(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        dirtyFlagModulus=false;
+    }
+};
+
+
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class
@@ -119,7 +189,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
                 init(ctx,dist,config.getModelFilename());
                 break;
             case 2:
-                Parametrisation=1;
+                parametrisation=1;
                 calculateModulus(ctx,dist,config.getModelFilename());
                 break;
             default:
@@ -161,6 +231,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const)
 {
+    parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
     this->initModelparameter(density,ctx,dist,rho_const);
 }
@@ -192,6 +263,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
 {
+    parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
     this->initModelparameter(density,ctx,dist,filenamerho);
 }
@@ -221,6 +293,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
@@ -238,8 +311,9 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
     inverseDensity=rhs.inverseDensity;
     density=rhs.density;
     dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
-    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
-    Parametrisation=rhs.Parametrisation;
+    dirtyFlagModulus=rhs.dirtyFlagModulus;
+    dirtyFlagVelocity=rhs.dirtyFlagVelocity;
+    parametrisation=rhs.parametrisation;
 }
 
 
@@ -255,10 +329,11 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::calculateModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
+    // this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     
 }
@@ -343,7 +418,7 @@ IndexType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getNumRelaxationMecha
 }
 
 
-/*! \brief Overloading * Operation 
+/*! \brief Overloading * Operation
  *
  \param rhs Scalar factor with which the vectors are multiplied.
  */
@@ -352,14 +427,14 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
 {
     KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
     result.density = this->density * rhs;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus * rhs;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP * rhs;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -396,14 +471,14 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
 {
     KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
     result.density = this->density + rhs.density;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP + rhs.velocityP;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -428,14 +503,14 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
 {
     KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
     result.density = this->density - rhs.density;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP - rhs.velocityP;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 

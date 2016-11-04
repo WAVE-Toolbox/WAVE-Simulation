@@ -41,7 +41,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            Modelparameter():dirtyFlagInverseDensity(1),dirtyFlagParametrisation(1),Parametrisation(0),numRelaxationMechanisms(0){};
+            Modelparameter():dirtyFlagInverseDensity(true),dirtyFlagModulus(true),dirtyFlagVelocity(true),parametrisation(0),numRelaxationMechanisms(0){};
             
             //! Default destructor.
             ~Modelparameter(){};
@@ -82,9 +82,10 @@ namespace KITGPI {
             
         protected:
             
-            IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
-            IndexType dirtyFlagParametrisation; //!< ==0 if P/S-wave modulus has to be recalculated; ==0 if velocity modulus has to be recalculated;
-            IndexType Parametrisation; //!< ==0 if P/S-wave modulus Parametrisation; ==1 Velocity-Parametrisation
+            bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
+            bool dirtyFlagModulus; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagVelocity; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
             
             lama::DenseVector<ValueType> pWaveModulus; //!< Vector storing P-wave modulus.
             lama::DenseVector<ValueType> sWaveModulus; //!< Vector storing S-wave modulus.
@@ -107,13 +108,22 @@ namespace KITGPI {
             
             void calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity);
             
-            void calculatePWaveModulus(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecPWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVP, std::string filenameDensity);
-            void calculateSWaveModulus(lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecSWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVS, std::string filenameDensity);
+            void calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule );
             
-            void calculateVelocity(lama::DenseVector<ValueType>& vectorModulus, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecInverseDensity);
+            void calcVelocityFromModule(lama::DenseVector<ValueType>& vectorModule, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity);
 
-            void calculateVelocityP(lama::DenseVector<ValueType>& vecPWaveModulus, lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecInverseDensity);
-            void calculateVelocityS(lama::DenseVector<ValueType>& vecSWaveModulus, lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecInverseDensity);
+            /*! \brief Switch parameterization to velocity */
+            virtual void switch2velocity()=0;
+            /*! \brief Switch parameterization to modulus */
+            virtual void switch2modulus()=0;
+            
+            /*! \brief Refresh module if they are dirty */
+            virtual void refreshModule()=0;
+            
+            /*! \brief Refresh velocities if they are dirty */
+            virtual void refreshVelocity()=0;
+            
+            IndexType getParametrisation();
             
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
@@ -123,6 +133,11 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Getter method for parametrisation */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(){
+    return(parametrisation);
+}
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
@@ -206,23 +221,41 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
     vector.allocate(dist);
 };
 
+/*! \brief Calculate a module from velocity
+ *
+ *  Calculates Module = pow(Velocity,2) *  Density
+ *
+ \param vecVelocity Velocity-Vector which will be used in the calculation
+ \param vecDensity Density-Vector which will be used in the calculation
+ \param vectorModule Modulus-Vector which is calculated
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule )
+{
+
+    vectorModule=vecDensity;
+    vectorModule.scale(vecVelocity);
+    vectorModule.scale(vecVelocity);
+    
+};
+
 /*! \brief Calculate S and P wave modulus from velocities
  *  Acoustic:   pWaveModulus = rho * vP^2
  *  Elastic:    sWaveModulus = rho * vS^2
  \param vecV Velocity-Vector which will be used in the calculation (vP: Acoustic, vS: Elastic)
  \param vecDensity Density-Vector which will be used in the calculation
- \param vectorModulus Modulus-Vector which is calculated
+ \param vectorModule Modulus-Vector which is calculated
  \param ctx Context
  \param dist Distribution
  \param filename Location of external file which will be read in
  \param filenameDensity Location of external density-file which will be read in
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
 {
     allocateModelparameter(vecV,ctx,dist);
     allocateModelparameter(vecDensity,ctx,dist);
-    allocateModelparameter(vectorModulus,ctx,dist);
+    allocateModelparameter(vectorModule,ctx,dist);
     
     readModelparameter(vecV,filename);
     readModelparameter(vecDensity,filenameDensity);
@@ -230,95 +263,28 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::D
     vecV.redistribute(dist);
     vecDensity.redistribute(dist);
     
-    vectorModulus=vecV;
-    vectorModulus.scale(vecV);
-    vectorModulus.scale(vecDensity);
+    calcModuleFromVelocity(vecV,vecDensity,vectorModule);
     
 };
 
 
-/*! \brief Calculate P-Wave Modulus
+/*! \brief Calculate velocities from a module
  *
- \param vecVP Velocity-Vector (VP) which will be used to calculete pWaveModulus
- \param vecDensity Density-Vector which will be used in the calculation
- \param vecPWaveModulus pWaveModulus-Vector which is calculated
- \param ctx Context
- \param dist Distribution
- \param filenameVP Location of external VP-file which will be read in
- \param filenameDensity Location of external density-file which will be read in
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculatePWaveModulus(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecPWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVP, std::string filenameDensity)
-{
-    Parametrisation=0;
-    calculateModulus(vecVP,vecDensity,vecPWaveModulus,ctx,dist,filenameVP,filenameDensity);
-};
-
-
-
-/*! \brief Calculate S-Wave Modulus
+ *  Calculates Velocity = sqrt( Modulu / Density )
  *
- \param vecVS Velocity-Vector (VS) which will be used to calculete sWaveModulus
+ \param vectorModule Modulus-Vector which will be used in the calculation
  \param vecDensity Density-Vector which will be used in the calculation
- \param vecSWaveModulus sWaveModulus-Vector which is calculated
- \param ctx Context
- \param dist Distribution
- \param filenameVS Location of external VS-file which will be read in
- \param filenameDensity Location of external density-file which will be read in
+ \param vecVelocity Velocity-Vector which is calculated
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateSWaveModulus(lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecSWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVS, std::string filenameDensity)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(lama::DenseVector<ValueType>& vectorModule, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecVelocity)
 {
-    Parametrisation=0;
-    calculateModulus(vecVS,vecDensity,vecSWaveModulus,ctx,dist,filenameVS,filenameDensity);
-    
-};
-
-
-
-/*! \brief Calculate velocities from S and P wave modulus
- *  Acoustic:   vP = sqrt(pWaveModulus)/rho
- *  Elastic:    vS = sqrt(sWaveModulus)/rho
- \param vectorModulus Modulus-Vector which will be used in the calculation
- \param vecV Velocity-Vector which is calculated
- \param vecinverseDensity inverse-Density-Vector which will be used in the calculation
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateVelocity(lama::DenseVector<ValueType>& vectorModulus, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecInverseDensity)
-{
-    
-    vecV=vectorModulus;
-    vecV.sqrt();
-    vecV.scale(vecInverseDensity);
-    
-};
-
-
-/*! \brief calculate vP
- *
- \param vecPWaveModulus pWaveModulus-Vector which will be used to calculete vP
- \param vecDensity Density-Vector which will be used in the calculation
- \param vecVP Velocity-Vector (vP) which is calculated
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateVelocityP(lama::DenseVector<ValueType>& vecPWaveModulus, lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecInverseDensity)
-{
-    Parametrisation=1;
-    calculateVelocity(vecPWaveModulus,vecVP,vecInverseDensity);
-    
-};
-
-/*! \brief calculate vP
- *
- \param vecPWaveModulus pWaveModulus-Vector which will be used to calculete vP
- \param vecDensity Density-Vector which will be used in the calculation
- \param vecVP Velocity-Vector (vP) which is calculated
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateVelocityS(lama::DenseVector<ValueType>& vecSWaveModulus, lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecInverseDensity)
-{
-    Parametrisation=1;
-    calculateVelocity(vecSWaveModulus,vecVS,vecInverseDensity);
+    /* Modulus = pow(velocity,2) * Density */
+    /* Velocity = sqrt( Modulus / Density )  */
+    vecVelocity=vecDensity;
+    vecVelocity.invert(); /* = 1 / Density */
+    vecVelocity.scale(vectorModule); /* = Modulus / Density */
+    vecVelocity.sqrt(); /* = sqrt( Modulus / Density ) */
     
 };
 
@@ -327,8 +293,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateVelocityS(lama:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
-    if(dirtyFlagInverseDensity==1){
-        dirtyFlagInverseDensity=0;
+    if(dirtyFlagInverseDensity){
+        dirtyFlagInverseDensity=false;
         inverseDensity.assign(density);
         inverseDensity.invert();
     }
@@ -339,7 +305,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
-    dirtyFlagInverseDensity=1; // If density will be changed, the inverse has to be refreshed if it is accessed
+    dirtyFlagInverseDensity=true; // If density will be changed, the inverse has to be refreshed if it is accessed
     return(density);
 }
 
@@ -347,7 +313,17 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
-    dirtyFlagParametrisation=1;
+    
+    // If the model is parameterized in modules, the velocity vector is now dirty
+    if(parametrisation==0){
+        dirtyFlagVelocity=true;
+    }
+    
+    // If the model is parameterized in velocities AND the modulus is dirty, than recalculate
+    if(dirtyFlagModulus && parametrisation==1){
+        refreshModule();
+    }
+    
     return(pWaveModulus);
 }
 
@@ -356,7 +332,17 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
-    dirtyFlagParametrisation=1;
+    
+    // If the model is parameterized in modules, the velocity vector is now dirty
+    if(parametrisation==0){
+        dirtyFlagVelocity=true;
+    }
+    
+    // If the model is parameterized in velocities AND the modulus is dirty, than recalculate
+    if(dirtyFlagModulus && parametrisation==1){
+        refreshModule();
+    }
+    
     return(sWaveModulus);
 }
 
@@ -365,10 +351,17 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
-    if(dirtyFlagParametrisation==1){
-        dirtyFlagParametrisation=0;
-        calculateVelocityP( pWaveModulus,velocityP,inverseDensity);
+
+    // If the model is parameterized in velocities, the modulus vector is now dirty
+    if(parametrisation==1){
+        dirtyFlagModulus=true;
     }
+    
+    // If the model is parameterized in module AND the velocity is dirty, than recalculate
+    if(dirtyFlagVelocity && parametrisation==0){
+        refreshVelocity();
+    }
+    
     return(velocityP);
 }
 
@@ -376,10 +369,17 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
-    if(dirtyFlagParametrisation==1){
-        dirtyFlagParametrisation=0;
-        calculateVelocityP( sWaveModulus,velocityS,inverseDensity);
+
+    // If the model is parameterized in velocities, the modulus vector is now dirty
+    if(parametrisation==1){
+        dirtyFlagModulus=true;
     }
+    
+    // If the model is parameterized in module AND the velocity is dirty, than recalculate
+    if(dirtyFlagVelocity && parametrisation==0){
+        refreshVelocity();
+    }
+    
     return(velocityS);
 }
 

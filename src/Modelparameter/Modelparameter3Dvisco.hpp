@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "Modelparameter3Delastic.hpp"
 
 namespace KITGPI {
     
@@ -57,11 +58,14 @@ namespace KITGPI {
             
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             
-            void calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             void write(std::string filename);
             
             void prepareForModelling();
+            
+            void switch2velocity();
+            void switch2modulus();
             
             /* Overloading Operators */
             KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar rhs);
@@ -73,9 +77,13 @@ namespace KITGPI {
             
         private:
             
+            void refreshModule();
+            void refreshVelocity();
+            
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagParametrisation;
-            using Modelparameter<ValueType>::Parametrisation;
+            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagVelocity;
+            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
@@ -92,14 +100,75 @@ namespace KITGPI {
     }
 }
 
+
+/*! \brief Switch the default parameterization of this class to modulus
+ *
+ * This will recalulcate the modulus vectors from the velocity vectors.
+ * Moreover, the parametrisation value will be set to zero.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2modulus(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=0;
+    }
+};
+
+/*! \brief Switch the default parameterization of this class to velocity
+ *
+ * This will recalulcate the velocity vectors from the modulus vectors.
+ * Moreover, the parametrisation value will be set to one.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2velocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=1;
+    }
+};
+
+/*! \brief Refresh the velocity vectors with the module values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshVelocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagVelocity=false;
+    }
+};
+
+/*! \brief Refresh the module vectors with the velocity values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshModule(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        dirtyFlagModulus=false;
+    }
+};
+
+
 /*! \brief Prepare modellparameter for visco-elastic modelling
  *
- * Applies Equation 12 from Bohlen 2002
+ * Applies Equation 12 from Bohlen 2002 and refreshes the module
  *
- * Double check this equations
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dvisco<ValueType>::prepareForModelling(){
+    
+    refreshModule();
     
     /* Set circular frequency w = 2 * pi * relaxation frequency */
     ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
@@ -138,7 +207,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(Configuration::Configura
                 init(ctx,dist,config.getModelFilename());
                 break;
             case 2:
-                calculateWaveModulus(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -193,6 +262,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, d
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
+    parametrisation=0;
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
     this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
     this->initModelparameter(sWaveModulus,ctx,dist,sWaveModulus_const);
@@ -227,6 +297,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, d
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
@@ -256,8 +327,9 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(const FD3Dvisco& rhs)
     relaxationFrequency=rhs.relaxationFrequency;
     numRelaxationMechanisms=rhs.numRelaxationMechanisms;
     dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
-    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
-    Parametrisation=rhs.Parametrisation;
+    dirtyFlagModulus=rhs.dirtyFlagModulus;
+    dirtyFlagVelocity=rhs.dirtyFlagVelocity;
+    parametrisation=rhs.parametrisation;
     inverseDensity=rhs.inverseDensity;
 }
 
@@ -271,16 +343,17 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(const FD3Dvisco& rhs)
  *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
     std::string filenamedensity=filename+".density.mtx";
     std::string filenameTauP=filename+".tauP.mtx";
     std::string filenameTauS=filename+".tauS.mtx";
     
-    this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
-    this->calculateSWaveModulus(velocityS,density,sWaveModulus,ctx,dist,filenameVelocityS,filenamedensity);
+    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     this->initModelparameter(tauS,ctx,dist,filenameTauS);
     this->initModelparameter(tauP,ctx,dist,filenameTauP);
@@ -336,16 +409,16 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
     result.density = this->density * rhs;
     result.tauS = this->tauS * rhs;
     result.tauP = this->tauP * rhs;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus * rhs;
         result.sWaveModulus= this->sWaveModulus * rhs;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP * rhs;
         result.velocityS= this->velocityS * rhs;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -384,16 +457,16 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
     result.density = this->density + rhs.density;
     result.tauS = this->tauS + rhs.tauS;
     result.tauP = this->tauP + rhs.tauP;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP + rhs.velocityP;
         result.velocityS= this->velocityS + rhs.velocityS;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -420,16 +493,16 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
     result.density = this->density - rhs.density;
     result.tauS = this->tauS - rhs.tauS;
     result.tauP = this->tauP - rhs.tauP;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP - rhs.velocityP;
         result.velocityS= this->velocityS - rhs.velocityS;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 

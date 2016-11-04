@@ -57,7 +57,7 @@ namespace KITGPI {
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             
-            void calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
             void write(std::string filename);
@@ -68,6 +68,11 @@ namespace KITGPI {
             IndexType getNumRelaxationMechanisms();
             ValueType getRelaxationFrequency();
             
+            void switch2velocity();
+            void switch2modulus();
+            
+            void prepareForModelling();
+            
             /* Overloading Operators */
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(lama::Scalar rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator*=(lama::Scalar rhs);
@@ -75,16 +80,16 @@ namespace KITGPI {
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator+=(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator-(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator-=(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
-
+            
         private:
             
-            /*! \brief Prepare the model parameters for modelling */
-            /* Nothing has to be done here */
-            void prepareForModelling(){};
+            void refreshModule();
+            void refreshVelocity();
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagParametrisation;
-            using Modelparameter<ValueType>::Parametrisation;
+            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagVelocity;
+            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
@@ -102,6 +107,75 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Prepare modellparameter for modelling
+ *
+ * Refreshes the module if parameterisation is in terms of velocities
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::prepareForModelling(){
+    refreshModule();
+}
+
+/*! \brief Switch the default parameterization of this class to modulus
+ *
+ * This will recalulcate the modulus vectors from the velocity vectors.
+ * Moreover, the parametrisation value will be set to zero.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::switch2modulus(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=0;
+    }
+};
+
+/*! \brief Switch the default parameterization of this class to velocity
+ *
+ * This will recalulcate the velocity vectors from the modulus vectors.
+ * Moreover, the parametrisation value will be set to one.
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::switch2velocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagModulus=false;
+        dirtyFlagVelocity=false;
+        parametrisation=1;
+    }
+};
+
+/*! \brief Refresh the velocity vectors with the module values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::refreshVelocity(){
+    if(parametrisation==0){
+        this->calcVelocityFromModule(pWaveModulus,density,velocityP);
+        this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagVelocity=false;
+    }
+};
+
+/*! \brief Refresh the module vectors with the velocity values
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::refreshModule(){
+    if(parametrisation==1){
+        this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        dirtyFlagModulus=false;
+    }
+};
+
+
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class
@@ -117,8 +191,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(Configuration::Confi
                 init(ctx,dist,config.getModelFilename());
                 break;
             case 2:
-                dirtyFlagParametrisation=1;
-                calculateWaveModulus(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -161,6 +234,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho)
 {
+    parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
     this->initModelparameter(sWaveModulus,ctx,dist,sWaveModulus_const);
     this->initModelparameter(density,ctx,dist,rho);
@@ -195,6 +269,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho)
 {
+    parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
     this->initModelparameter(density,ctx,dist,filenamerho);
     this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
@@ -225,6 +300,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ct
 template<typename ValueType>
 void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
@@ -245,8 +321,9 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& r
     velocityS=rhs.velocityS;
     density=rhs.density;
     dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
-    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
-    Parametrisation=rhs.Parametrisation;
+    dirtyFlagModulus=rhs.dirtyFlagModulus;
+    dirtyFlagVelocity=rhs.dirtyFlagVelocity;
+    parametrisation=rhs.parametrisation;
     inverseDensity=rhs.inverseDensity;
 }
 
@@ -260,14 +337,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& r
  *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Delastic<ValueType>::calculateWaveModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::FD3Delastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
-    this->calculateSWaveModulus(velocityS,density,sWaveModulus,ctx,dist,filenameVelocityS,filenamedensity);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
+    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     
 }
@@ -344,16 +422,16 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 {
     KITGPI::Modelparameter::FD3Delastic<ValueType> result;
     result.density = this->density * rhs;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus * rhs;
         result.sWaveModulus= this->sWaveModulus * rhs;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP * rhs;
         result.velocityS= this->velocityS * rhs;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -390,16 +468,16 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 {
     KITGPI::Modelparameter::FD3Delastic<ValueType> result;
     result.density = this->density + rhs.density;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP + rhs.velocityP;
         result.velocityS= this->velocityS + rhs.velocityS;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
@@ -424,16 +502,16 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 {
     KITGPI::Modelparameter::FD3Delastic<ValueType> result;
     result.density = this->density - rhs.density;
-    if (Parametrisation==0) {
+    if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
         return result;
-    } if (Parametrisation==1) {
+    } if (parametrisation==1) {
         result.velocityP= this->velocityP - rhs.velocityP;
         result.velocityS= this->velocityS - rhs.velocityS;
         return result;
     } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
     }
 }
 
