@@ -30,28 +30,28 @@ namespace KITGPI {
     //! \brief Modelparameter namespace
     namespace Modelparameter {
         
-        //! Class for Modelparameter for 3-D acoustic simulations (Subsurface properties)
+        //! Class for Modelparameter for acoustic simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the 3-D acoustic finite-difference simulation.
+         This class handels the modelparameter for the acoustic finite-difference simulation.
          */
         template<typename ValueType>
-        class FD3Dacoustic : public Modelparameter<ValueType>
+        class Acoustic : public Modelparameter<ValueType>
         {
         public:
             
             //! Default constructor.
-            FD3Dacoustic(){};
+            Acoustic(){};
             
             //! Destructor, releases all allocated resources.
-            ~FD3Dacoustic(){};
+            ~Acoustic(){};
             
-            FD3Dacoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
+            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
+            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
-            FD3Dacoustic(const FD3Dacoustic& rhs);
+            Acoustic(const Acoustic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
@@ -76,12 +76,12 @@ namespace KITGPI {
             void prepareForModelling();
             
             /* Overloading Operators */
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(lama::Scalar rhs);
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*=(lama::Scalar rhs);
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator+(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator+=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator-=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator*(lama::Scalar rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator*=(lama::Scalar rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator+(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator+=(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator-=(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
         
         private:
             
@@ -115,7 +115,7 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::prepareForModelling(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(){
     refreshModule();
 }
 
@@ -126,7 +126,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::prepareForModelling(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2modulus(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         dirtyFlagModulus=false;
@@ -142,7 +142,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2modulus(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2velocity(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::switch2velocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         dirtyFlagModulus=false;
@@ -155,7 +155,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::switch2velocity(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshVelocity(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::refreshVelocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         dirtyFlagVelocity=false;
@@ -166,7 +166,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshVelocity(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshModule(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         dirtyFlagModulus=false;
@@ -181,7 +181,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -214,7 +214,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(Configuration::Con
  \param rho_const Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const)
 {
     init(ctx,dist,pWaveModulus_const,rho_const);
 }
@@ -229,7 +229,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param rho_const Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const)
 {
     parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
@@ -246,7 +246,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
 {
     init(ctx,dist,filenamePWaveModulus,filenamerho);
 }
@@ -261,7 +261,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
 {
     parametrisation=0;
     this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
@@ -277,7 +277,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     init(ctx,dist,filename);
 }
@@ -291,7 +291,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr 
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density "filename+".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
@@ -304,7 +304,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx
 
 //! \brief Copy constructor
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic& rhs)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic& rhs)
 {
     pWaveModulus=rhs.pWaveModulus;
     velocityP=rhs.velocityP;
@@ -327,7 +327,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic
  *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::calculateModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::calculateModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
@@ -345,7 +345,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::calculateModulus(hmemo::Co
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity)
 {
     this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
     this->writeModelparameter(density,filenamedensity);
@@ -357,7 +357,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write( std::string filenam
  \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename)
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
@@ -371,7 +371,7 @@ void KITGPI::Modelparameter::FD3Dacoustic<ValueType>::write(std::string filename
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getSWaveModulus(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
     COMMON_THROWEXCEPTION("S-wave modulus is not set for acoustic modelling")
     return(sWaveModulus);
 }
@@ -380,7 +380,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityS(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return(velocityS);
 }
@@ -389,7 +389,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getTauP(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -397,7 +397,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getTauS(){
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
@@ -405,14 +405,14 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::g
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency(){
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms(){
     COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
     return(numRelaxationMechanisms);
 }
@@ -423,9 +423,9 @@ IndexType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getNumRelaxationMecha
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator*(lama::Scalar rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator*(lama::Scalar rhs)
 {
-    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    KITGPI::Modelparameter::Acoustic<ValueType> result;
     result.density = this->density * rhs;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus * rhs;
@@ -445,7 +445,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
  \param rhs Vector
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::Acoustic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -456,7 +456,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> operator*(lama::Scalar lhs, KITG
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator*=(lama::Scalar rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator*=(lama::Scalar rhs)
 {
     return this * rhs;
 }
@@ -467,9 +467,9 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
  \param rhs Model which is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator+(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator+(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
 {
-    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    KITGPI::Modelparameter::Acoustic<ValueType> result;
     result.density = this->density + rhs.density;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
@@ -488,7 +488,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
  \param rhs Model which is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator+=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator+=(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
 {
     return this + rhs;
 }
@@ -499,9 +499,9 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
  \param rhs Model which is subtractet.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator-(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator-(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
 {
-    KITGPI::Modelparameter::FD3Dacoustic<ValueType> result;
+    KITGPI::Modelparameter::Acoustic<ValueType> result;
     result.density = this->density - rhs.density;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
@@ -520,7 +520,7 @@ KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacou
  \param rhs Model which is subtractet.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dacoustic<ValueType> KITGPI::Modelparameter::FD3Dacoustic<ValueType>::operator-=(KITGPI::Modelparameter::FD3Dacoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator-=(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
 {
     return this - rhs;
 }

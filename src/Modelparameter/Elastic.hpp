@@ -24,56 +24,62 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
-#include "Modelparameter3Delastic.hpp"
 
 namespace KITGPI {
     
     //! \brief Modelparameter namespace
     namespace Modelparameter {
         
-        //! Class for Modelparameter for 3-D visco-elastic simulations (Subsurface properties)
+        //! Class for Modelparameter for elastic simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the 3-D visco-elastic finite-difference simulation.
+         This class handels the modelparameter for the elastic finite-difference simulation.
          */
         template<typename ValueType>
-        class FD3Dvisco : public Modelparameter<ValueType>
+        class Elastic : public Modelparameter<ValueType>
         {
         public:
             
             //! Default constructor.
-            FD3Dvisco(){};
+            Elastic(){};
             
             //! Destructor, releases all allocated resources.
-            ~FD3Dvisco(){};
+            ~Elastic(){};
             
-            FD3Dvisco(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
+            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
+            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
-            FD3Dvisco(const FD3Dvisco& rhs);
+            Elastic(const Elastic& rhs);
             
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus,lama::Scalar  sWaveModulus, lama::Scalar  rho);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            
-            void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
+            void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
             void write(std::string filename);
             
-            void prepareForModelling();
+            /* Getter methods for not requiered parameters */
+            lama::DenseVector<ValueType>& getTauP();
+            lama::DenseVector<ValueType>& getTauS();
+            IndexType getNumRelaxationMechanisms();
+            ValueType getRelaxationFrequency();
             
             void switch2velocity();
             void switch2modulus();
             
+            void prepareForModelling();
+            
             /* Overloading Operators */
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar rhs);
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*=(lama::Scalar rhs);
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator+(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator+=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator-(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
-            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator-=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator*=(lama::Scalar rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator+(KITGPI::Modelparameter::Elastic<ValueType> rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator+=(KITGPI::Modelparameter::Elastic<ValueType> rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator-=(KITGPI::Modelparameter::Elastic<ValueType> rhs);
             
         private:
             
@@ -91,8 +97,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
             
-            using Modelparameter<ValueType>::tauS;
+            /* Not requiered parameters */
             using Modelparameter<ValueType>::tauP;
+            using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             
@@ -100,6 +107,15 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Prepare modellparameter for modelling
+ *
+ * Refreshes the module if parameterisation is in terms of velocities
+ *
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(){
+    refreshModule();
+}
 
 /*! \brief Switch the default parameterization of this class to modulus
  *
@@ -108,7 +124,7 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2modulus(){
+void KITGPI::Modelparameter::Elastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
@@ -125,7 +141,7 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2modulus(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2velocity(){
+void KITGPI::Modelparameter::Elastic<ValueType>::switch2velocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         this->calcVelocityFromModule(sWaveModulus,density,velocityS);
@@ -139,7 +155,7 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::switch2velocity(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshVelocity(){
+void KITGPI::Modelparameter::Elastic<ValueType>::refreshVelocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         this->calcVelocityFromModule(sWaveModulus,density,velocityS);
@@ -151,7 +167,7 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshVelocity(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshModule(){
+void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
@@ -160,38 +176,6 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::refreshModule(){
 };
 
 
-/*! \brief Prepare modellparameter for visco-elastic modelling
- *
- * Applies Equation 12 from Bohlen 2002 and refreshes the module
- *
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::prepareForModelling(){
-    
-    refreshModule();
-    
-    /* Set circular frequency w = 2 * pi * relaxation frequency */
-    ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
-    ValueType tauSigma= 1.0 / ( 2.0 * M_PI * relaxationFrequency );
-    
-    ValueType sum= w_ref*w_ref*tauSigma*tauSigma / (1.0 + w_ref*w_ref*tauSigma*tauSigma );
-    
-    lama::DenseVector<ValueType> temp(tauS.getDistributionPtr());
-    
-    /* Scaling the S-wave Modulus */
-    temp = 1.0;
-    temp += sum * tauS;
-    temp.invert();
-    sWaveModulus.scale(temp);
-    
-    /* Scaling the P-wave Modulus */
-    temp = 1.0;
-    temp += sum * tauP;
-    temp.invert();
-    pWaveModulus.scale(temp);
-    
-}
-
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class
@@ -199,7 +183,7 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::prepareForModelling(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -213,10 +197,8 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(Configuration::Configura
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
-        initRelaxationMechanisms(config.getNumRelaxationMechanisms(), config.getRelaxationFrequency());
-        
     } else {
-        init(ctx,dist,config.getPWaveModulus(),config.getSWaveModulus(),config.getRho(),config.getTauP(),config.getTauS(),config.getNumRelaxationMechanisms(), config.getRelaxationFrequency());
+        init(ctx,dist,config.getPWaveModulus(),config.getSWaveModulus(),config.getRho());
     }
     
     if(config.getModelWrite()){
@@ -231,45 +213,31 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(Configuration::Configura
  \param dist Distribution
  \param pWaveModulus_const P-wave modulus given as Scalar
  \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho_const Density given as Scalar
- \param tauP_const TauP given as Scalar
- \param tauS_const TauS given as Scalar
- \param numRelaxationMechanisms_in Number of relaxation mechanisms
- \param relaxationFrequency_in Relaxation frequency
+ \param rho Density given as Scalar
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar  tauP_const, lama::Scalar  tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho)
 {
-    init(ctx,dist,pWaveModulus_const,sWaveModulus_const,rho_const,tauP_const,tauS_const);
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
-    
+    init(ctx,dist,pWaveModulus_const,sWaveModulus_const,rho);
 }
 
 
 /*! \brief Initialisation that is generating a homogeneous model
  *
- *  Generates a homogeneous model, which will be initialized by the five given scalar values.
+ *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
  \param pWaveModulus_const P-wave modulus given as Scalar
  \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho_const Density given as Scalar
- \param tauP_const TauP given as Scalar
- \param tauS_const TauS given as Scalar
- \param numRelaxationMechanisms_in Number of relaxation mechanisms
- \param relaxationFrequency_in Relaxation frequency
+ \param rho Density given as Scalar
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho)
 {
     parametrisation=0;
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
     this->initModelparameter(pWaveModulus,ctx,dist,pWaveModulus_const);
     this->initModelparameter(sWaveModulus,ctx,dist,sWaveModulus_const);
-    this->initModelparameter(density,ctx,dist,rho_const);
-    this->initModelparameter(tauS,ctx,dist,tauS_const);
-    this->initModelparameter(tauP,ctx,dist,tauP_const);
-    
+    this->initModelparameter(density,ctx,dist,rho);
 }
 
 
@@ -278,10 +246,45 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, d
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
+ \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho)
+{
+    init(ctx,dist,filenamePWaveModulus,filenameSWaveModulus,filenamerho);
+}
+
+
+/*! \brief Initialisation that is reading models from external files
+ *
+ *  Reads a model from an external file.
+ \param ctx Context
+ \param dist Distribution
+ \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
+ \param filenamerho Name of file that will be read for the Density.
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho)
+{
+    parametrisation=0;
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
+    this->initModelparameter(density,ctx,dist,filenamerho);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
+}
+
+
+/*! \brief Constructor that is reading models from external files
+ *
+ *  Reads a model from an external file.
+ \param ctx Context
+ \param dist Distribution
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     init(ctx,dist,filename);
 }
@@ -292,40 +295,31 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, d
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    std::string filenameTauP=filename+".tauP.mtx";
-    std::string filenameTauS=filename+".tauS.mtx";
     
     this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
     this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
     this->initModelparameter(density,ctx,dist,filenamedensity);
-    this->initModelparameter(tauS,ctx,dist,filenameTauS);
-    this->initModelparameter(tauP,ctx,dist,filenameTauP);
-    
 }
 
 
 //! \brief Copy constructor
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(const FD3Dvisco& rhs)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic& rhs)
 {
     pWaveModulus=rhs.pWaveModulus;
     sWaveModulus=rhs.sWaveModulus;
     velocityP=rhs.velocityP;
     velocityS=rhs.velocityS;
     density=rhs.density;
-    tauS=rhs.tauS;
-    tauP=rhs.tauP;
-    relaxationFrequency=rhs.relaxationFrequency;
-    numRelaxationMechanisms=rhs.numRelaxationMechanisms;
     dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
     dirtyFlagModulus=rhs.dirtyFlagModulus;
     dirtyFlagVelocity=rhs.dirtyFlagVelocity;
@@ -338,63 +332,84 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(const FD3Dvisco& rhs)
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
  *
  *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    std::string filenameTauP=filename+".tauP.mtx";
-    std::string filenameTauS=filename+".tauS.mtx";
     
-    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
     this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
+    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
     this->initModelparameter(density,ctx,dist,filenamedensity);
-    this->initModelparameter(tauS,ctx,dist,filenameTauS);
-    this->initModelparameter(tauP,ctx,dist,filenameTauP);
+    
 }
 
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param filenamePWaveModulus Filename for P-wave modulus model
+ \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
+ \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity)
+{
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
+    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
+};
+
+
+/*! \brief Write model to an external file
+ *
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename)
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    std::string filenameTauP=filename+".tauP.mtx";
-    std::string filenameTauS=filename+".tauS.mtx";
     this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
     this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
     this->writeModelparameter(density,filenamedensity);
-    this->writeModelparameter(tauP,filenameTauP);
-    this->writeModelparameter(tauS,filenameTauS);
-    
 };
 
-/*! \brief Initialisation the relaxation mechanisms
+/*! \brief Get reference to tauP
  *
- \param numRelaxationMechanisms_in Number of relaxation mechanisms
- \param relaxationFrequency_in Relaxation frequency
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::FD3Dvisco<ValueType>::initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in){
-    if(numRelaxationMechanisms_in<1){
-        COMMON_THROWEXCEPTION("The number of relaxation mechanisms should be >0 in an visco-elastic simulation")
-    }
-    if(relaxationFrequency_in<=0){
-        COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an visco-elastic simulation")
-    }
-    numRelaxationMechanisms=numRelaxationMechanisms_in;
-    relaxationFrequency_in=relaxationFrequency;
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauP);
+}
+
+/*! \brief Get reference to tauS
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauS);
+}
+
+/*! \brief Getter method for relaxation frequency */
+template<typename ValueType>
+ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency(){
+    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
+    return(relaxationFrequency);
+}
+
+/*! \brief Getter method for number of relaxation mechanisms */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms(){
+    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
+    return(numRelaxationMechanisms);
 }
 
 
@@ -403,12 +418,10 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::initRelaxationMechanisms(Inde
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator*(lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(lama::Scalar rhs)
 {
-    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    KITGPI::Modelparameter::Elastic<ValueType> result;
     result.density = this->density * rhs;
-    result.tauS = this->tauS * rhs;
-    result.tauP = this->tauP * rhs;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus * rhs;
         result.sWaveModulus= this->sWaveModulus * rhs;
@@ -429,7 +442,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
  \param rhs Vector
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -440,7 +453,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar lhs, KITGPI:
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator*=(lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*=(lama::Scalar rhs)
 {
     return this * rhs;
 }
@@ -451,12 +464,10 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
  \param rhs Model which is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator+(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+(KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
-    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    KITGPI::Modelparameter::Elastic<ValueType> result;
     result.density = this->density + rhs.density;
-    result.tauS = this->tauS + rhs.tauS;
-    result.tauP = this->tauP + rhs.tauP;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
@@ -476,7 +487,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
  \param rhs Model which is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator+=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
     return this + rhs;
 }
@@ -487,12 +498,10 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
  \param rhs Model which is subtractet.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator-(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-(KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
-    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    KITGPI::Modelparameter::Elastic<ValueType> result;
     result.density = this->density - rhs.density;
-    result.tauS = this->tauS - rhs.tauS;
-    result.tauP = this->tauP - rhs.tauP;
     if (parametrisation==0) {
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
@@ -512,7 +521,9 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<V
  \param rhs Model which is subtractet.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator-=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
-    return this - rhs;
+    return this - rhs; 
 }
+
+

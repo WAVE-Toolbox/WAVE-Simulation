@@ -9,7 +9,7 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Modelparameter3Dacoustic.hpp"
+#include "Modelparameter/Acoustic.hpp"
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
 #include "Acquisition/Receivers.hpp"
@@ -87,7 +87,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
+    Modelparameter::Acoustic<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
