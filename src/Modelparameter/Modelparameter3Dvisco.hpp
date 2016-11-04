@@ -62,7 +62,7 @@ namespace KITGPI {
             void write(std::string filename);
             
             void prepareForModelling();
-
+            
             /* Overloading Operators */
             KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar rhs);
             KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*=(lama::Scalar rhs);
@@ -90,7 +90,7 @@ namespace KITGPI {
             
         };
     }
-    }
+}
 
 /*! \brief Prepare modellparameter for visco-elastic modelling
  *
@@ -145,7 +145,7 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(Configuration::Configura
                 break;
         }
         initRelaxationMechanisms(config.getNumRelaxationMechanisms(), config.getRelaxationFrequency());
-
+        
     } else {
         init(ctx,dist,config.getPWaveModulus(),config.getSWaveModulus(),config.getRho(),config.getTauP(),config.getTauS(),config.getNumRelaxationMechanisms(), config.getRelaxationFrequency());
     }
@@ -248,11 +248,17 @@ KITGPI::Modelparameter::FD3Dvisco<ValueType>::FD3Dvisco(const FD3Dvisco& rhs)
 {
     pWaveModulus=rhs.pWaveModulus;
     sWaveModulus=rhs.sWaveModulus;
+    velocityP=rhs.velocityP;
+    velocityS=rhs.velocityS;
     density=rhs.density;
     tauS=rhs.tauS;
     tauP=rhs.tauP;
     relaxationFrequency=rhs.relaxationFrequency;
     numRelaxationMechanisms=rhs.numRelaxationMechanisms;
+    dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
+    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
+    Parametrisation=rhs.Parametrisation;
+    inverseDensity=rhs.inverseDensity;
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus

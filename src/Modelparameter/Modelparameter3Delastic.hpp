@@ -95,7 +95,6 @@ namespace KITGPI {
             /* Not requiered parameters */
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::tauS;
-          
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             
@@ -240,9 +239,15 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx,
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType>::FD3Delastic(const FD3Delastic& rhs)
 {
-    pWaveModulus=rhs.pWaveModulus.copy();
-    sWaveModulus=rhs.sWaveModulus.copy();
-    density=rhs.density.copy();
+    pWaveModulus=rhs.pWaveModulus;
+    sWaveModulus=rhs.sWaveModulus;
+    velocityP=rhs.velocityP;
+    velocityS=rhs.velocityS;
+    density=rhs.density;
+    dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
+    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
+    Parametrisation=rhs.Parametrisation;
+    inverseDensity=rhs.inverseDensity;
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus

@@ -88,13 +88,13 @@ namespace KITGPI {
             using Modelparameter<ValueType>::dirtyFlagParametrisation;
             using Modelparameter<ValueType>::Parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
-            using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
-            using Modelparameter<ValueType>::velocityS;
             
             /* Not requiered parameters */
+            using Modelparameter<ValueType>::velocityS;
+            using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;
@@ -234,7 +234,12 @@ template<typename ValueType>
 KITGPI::Modelparameter::FD3Dacoustic<ValueType>::FD3Dacoustic(const FD3Dacoustic& rhs)
 {
     pWaveModulus=rhs.pWaveModulus;
+    velocityP=rhs.velocityP;
+    inverseDensity=rhs.inverseDensity;
     density=rhs.density;
+    dirtyFlagInverseDensity=rhs.dirtyFlagInverseDensity;
+    dirtyFlagParametrisation=rhs.dirtyFlagParametrisation;
+    Parametrisation=rhs.Parametrisation;
 }
 
 
