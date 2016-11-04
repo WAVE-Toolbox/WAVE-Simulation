@@ -61,6 +61,8 @@ namespace KITGPI {
             
             void write(std::string filename);
             
+            void prepareForModelling();
+
             /* Overloading Operators */
             KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar rhs);
             KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*=(lama::Scalar rhs);
@@ -88,6 +90,37 @@ namespace KITGPI {
             
         };
     }
+    }
+
+/*! \brief Prepare modellparameter for visco-elastic modelling
+ *
+ * Applies Equation 12 from Bohlen 2002
+ *
+ * Double check this equations
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::FD3Dvisco<ValueType>::prepareForModelling(){
+    
+    /* Set circular frequency w = 2 * pi * relaxation frequency */
+    ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
+    ValueType tauSigma= 1.0 / ( 2.0 * M_PI * relaxationFrequency );
+    
+    ValueType sum= w_ref*w_ref*tauSigma*tauSigma / (1.0 + w_ref*w_ref*tauSigma*tauSigma );
+    
+    lama::DenseVector<ValueType> temp(tauS.getDistributionPtr());
+    
+    /* Scaling the S-wave Modulus */
+    temp = 1.0;
+    temp += sum * tauS;
+    temp.invert();
+    sWaveModulus.scale(temp);
+    
+    /* Scaling the P-wave Modulus */
+    temp = 1.0;
+    temp += sum * tauP;
+    temp.invert();
+    pWaveModulus.scale(temp);
+    
 }
 
 /*! \brief Constructor that is using the Configuration class

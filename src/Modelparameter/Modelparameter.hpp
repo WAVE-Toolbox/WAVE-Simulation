@@ -77,6 +77,9 @@ namespace KITGPI {
             virtual IndexType getNumRelaxationMechanisms();
             virtual ValueType getRelaxationFrequency();
             
+            /*! \brief Prepare the model parameters for modelling */
+            virtual void prepareForModelling()=0;
+            
         protected:
             
             IndexType dirtyFlagInverseDensity; //!< ==1 if inverseDensity has to be recalulated; ==0 if inverseDensity is up to date
