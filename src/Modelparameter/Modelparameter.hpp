@@ -41,7 +41,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            Modelparameter():dirtyFlagInverseDensity(1),dirtyFlagParametrisation(0),Parametrisation(0),numRelaxationMechanisms(0){};
+            Modelparameter():dirtyFlagInverseDensity(1),dirtyFlagParametrisation(1),Parametrisation(0),numRelaxationMechanisms(0){};
             
             //! Default destructor.
             ~Modelparameter(){};
@@ -107,12 +107,10 @@ namespace KITGPI {
             void calculatePWaveModulus(lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecPWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVP, std::string filenameDensity);
             void calculateSWaveModulus(lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecSWaveModulus, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenameVS, std::string filenameDensity);
             
-            //##############################################################################################################################
             void calculateVelocity(lama::DenseVector<ValueType>& vectorModulus, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecInverseDensity);
 
             void calculateVelocityP(lama::DenseVector<ValueType>& vecPWaveModulus, lama::DenseVector<ValueType>& vecVP, lama::DenseVector<ValueType>& vecInverseDensity);
             void calculateVelocityS(lama::DenseVector<ValueType>& vecSWaveModulus, lama::DenseVector<ValueType>& vecVS, lama::DenseVector<ValueType>& vecInverseDensity);
-            //##############################################################################################################################
             
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
@@ -274,7 +272,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateSWaveModulus(la
 };
 
 
-//##############################################################################################################################
 
 /*! \brief Calculate velocities from S and P wave modulus
  *  Acoustic:   vP = sqrt(pWaveModulus)/rho
@@ -322,13 +319,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateVelocityS(lama:
     
 };
 
-//##############################################################################################################################
 
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
     if(dirtyFlagInverseDensity==1){
+        dirtyFlagInverseDensity=0;
         inverseDensity.assign(density);
         inverseDensity.invert();
     }
@@ -347,6 +344,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
+    dirtyFlagParametrisation=1;
     return(pWaveModulus);
 }
 
@@ -355,6 +353,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
+    dirtyFlagParametrisation=1;
     return(sWaveModulus);
 }
 
@@ -363,6 +362,10 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
+    if(dirtyFlagParametrisation==1){
+        dirtyFlagParametrisation=0;
+        calculateVelocityP( pWaveModulus,velocityP,inverseDensity);
+    }
     return(velocityP);
 }
 
@@ -370,6 +373,10 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
+    if(dirtyFlagParametrisation==1){
+        dirtyFlagParametrisation=0;
+        calculateVelocityP( sWaveModulus,velocityS,inverseDensity);
+    }
     return(velocityS);
 }
 
