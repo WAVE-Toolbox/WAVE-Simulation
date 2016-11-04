@@ -69,8 +69,8 @@ namespace KITGPI {
             ValueType getRelaxationFrequency();
             
             /* Overloading Operators */
-            KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(ValueType rhs);
-            KITGPI::Modelparameter::FD3Delastic<ValueType> operator*=(ValueType rhs);
+            KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(lama::Scalar rhs);
+            KITGPI::Modelparameter::FD3Delastic<ValueType> operator*=(lama::Scalar rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator+(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator+=(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
             KITGPI::Modelparameter::FD3Delastic<ValueType> operator-(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs);
@@ -331,19 +331,17 @@ IndexType KITGPI::Modelparameter::FD3Delastic<ValueType>::getNumRelaxationMechan
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator*(ValueType rhs)
+KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator*(lama::Scalar rhs)
 {
+    KITGPI::Modelparameter::FD3Delastic<ValueType> result;
+    result.density = this->density * rhs;
     if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.pWaveModulus= this->pWaveModulus * rhs;
         result.sWaveModulus= this->sWaveModulus * rhs;
-        result.density = this->density * rhs;
         return result;
     } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.velocityP= this->velocityP * rhs;
         result.velocityS= this->velocityS * rhs;
-        result.density = this->density * rhs;
         return result;
     } else {
         COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
@@ -357,7 +355,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
  \param rhs Vector
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
+KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -368,23 +366,9 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> operator*(ValueType lhs, KITGPI::
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator*=(ValueType rhs)
+KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator*=(lama::Scalar rhs)
 {
-    if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.pWaveModulus= this->pWaveModulus * rhs;
-        result.sWaveModulus= this->sWaveModulus * rhs;
-        result.density = this->density * rhs;
-        return result;
-    } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.velocityP= this->velocityP * rhs;
-        result.velocityS= this->velocityS * rhs;
-        result.density = this->density * rhs;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
-    }
+    return this * rhs;
 }
 
 
@@ -395,17 +379,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator+(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
 {
+    KITGPI::Modelparameter::FD3Delastic<ValueType> result;
+    result.density = this->density + rhs.density;
     if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
-        result.density = this->density + rhs.density;
         return result;
     } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.velocityP= this->velocityP + rhs.velocityP;
         result.velocityS= this->velocityS + rhs.velocityS;
-        result.density = this->density + rhs.density;
         return result;
     } else {
         COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
@@ -420,21 +402,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator+=(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
 {
-    if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
-        result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
-        result.density = this->density + rhs.density;
-        return result;
-    } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.velocityP= this->velocityP + rhs.velocityP;
-        result.velocityS= this->velocityS + rhs.velocityS;
-        result.density = this->density + rhs.density;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
-    }
+    return this + rhs;
 }
 
 
@@ -445,17 +413,15 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator-(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
 {
+    KITGPI::Modelparameter::FD3Delastic<ValueType> result;
+    result.density = this->density - rhs.density;
     if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
         result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
-        result.density = this->density - rhs.density;
         return result;
     } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
         result.velocityP= this->velocityP - rhs.velocityP;
         result.velocityS= this->velocityS - rhs.velocityS;
-        result.density = this->density - rhs.density;
         return result;
     } else {
         COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
@@ -470,20 +436,7 @@ KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delast
 template<typename ValueType>
 KITGPI::Modelparameter::FD3Delastic<ValueType> KITGPI::Modelparameter::FD3Delastic<ValueType>::operator-=(KITGPI::Modelparameter::FD3Delastic<ValueType> rhs)
 {
-    if (Parametrisation==0) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
-        result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
-        result.density = this->density - rhs.density;
-        return result;
-    } if (Parametrisation==1) {
-        KITGPI::Modelparameter::FD3Delastic<ValueType> result;
-        result.velocityP= this->velocityP - rhs.velocityP;
-        result.velocityS= this->velocityS - rhs.velocityS;
-        result.density = this->density - rhs.density;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
-    }
+    return this - rhs; 
 }
+
 

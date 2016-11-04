@@ -61,9 +61,19 @@ namespace KITGPI {
             
             void write(std::string filename);
             
+            /* Overloading Operators */
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar rhs);
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*=(lama::Scalar rhs);
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator+(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator+=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator-(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
+            KITGPI::Modelparameter::FD3Dvisco<ValueType> operator-=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs);
+            
         private:
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
+            using Modelparameter<ValueType>::dirtyFlagParametrisation;
+            using Modelparameter<ValueType>::Parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
@@ -275,3 +285,122 @@ void KITGPI::Modelparameter::FD3Dvisco<ValueType>::initRelaxationMechanisms(Inde
     relaxationFrequency_in=relaxationFrequency;
 }
 
+
+/*! \brief Overloading * Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator*(lama::Scalar rhs)
+{
+    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    result.density = this->density * rhs;
+    result.tauS = this->tauS * rhs;
+    result.tauP = this->tauP * rhs;
+    if (Parametrisation==0) {
+        result.pWaveModulus= this->pWaveModulus * rhs;
+        result.sWaveModulus= this->sWaveModulus * rhs;
+        return result;
+    } if (Parametrisation==1) {
+        result.velocityP= this->velocityP * rhs;
+        result.velocityS= this->velocityS * rhs;
+        return result;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+    }
+}
+
+
+/*! \brief free function to multiply
+ *
+ \param lhs Scalar factor with which the vectors are multiplied.
+ \param rhs Vector
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+{
+    return rhs * lhs;
+}
+
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator*=(lama::Scalar rhs)
+{
+    return this * rhs;
+}
+
+
+/*! \brief Overloading + Operation
+ *
+ \param rhs Model which is added.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator+(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    result.density = this->density + rhs.density;
+    result.tauS = this->tauS + rhs.tauS;
+    result.tauP = this->tauP + rhs.tauP;
+    if (Parametrisation==0) {
+        result.pWaveModulus= this->pWaveModulus + rhs.pWaveModulus;
+        result.sWaveModulus= this->sWaveModulus + rhs.sWaveModulus;
+        return result;
+    } if (Parametrisation==1) {
+        result.velocityP= this->velocityP + rhs.velocityP;
+        result.velocityS= this->velocityS + rhs.velocityS;
+        return result;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+    }
+}
+
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is added.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator+=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+{
+    return this + rhs;
+}
+
+
+/*! \brief Overloading - Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator-(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+{
+    KITGPI::Modelparameter::FD3Dvisco<ValueType> result;
+    result.density = this->density - rhs.density;
+    result.tauS = this->tauS - rhs.tauS;
+    result.tauP = this->tauP - rhs.tauP;
+    if (Parametrisation==0) {
+        result.pWaveModulus= this->pWaveModulus - rhs.pWaveModulus;
+        result.sWaveModulus= this->sWaveModulus - rhs.sWaveModulus;
+        return result;
+    } if (Parametrisation==1) {
+        result.velocityP= this->velocityP - rhs.velocityP;
+        result.velocityS= this->velocityS - rhs.velocityS;
+        return result;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown Parametrisation! ");
+    }
+}
+
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template<typename ValueType>
+KITGPI::Modelparameter::FD3Dvisco<ValueType> KITGPI::Modelparameter::FD3Dvisco<ValueType>::operator-=(KITGPI::Modelparameter::FD3Dvisco<ValueType> rhs)
+{
+    return this - rhs;
+}
