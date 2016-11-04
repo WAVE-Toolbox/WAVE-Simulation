@@ -61,8 +61,19 @@ namespace KITGPI {
             
             void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
             void write(std::string filename);
-                        
+            
+            /* Getter methods for not requiered parameters */
+            lama::DenseVector<ValueType>& getTauP();
+            lama::DenseVector<ValueType>& getTauS();
+            IndexType getNumRelaxationMechanisms();
+            ValueType getRelaxationFrequency();
+            
+
         private:
+            
+            /*! \brief Prepare the model parameters for modelling */
+            /* Nothing has to be done here */
+            void prepareForModelling(){};
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -71,6 +82,13 @@ namespace KITGPI {
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
+            
+            /* Not requiered parameters */
+            using Modelparameter<ValueType>::tauP;
+            using Modelparameter<ValueType>::tauS;
+          
+            using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::numRelaxationMechanisms;
             
         };
     }
@@ -270,4 +288,33 @@ void KITGPI::Modelparameter::FD3Delastic<ValueType>::write(std::string filename)
     this->writeModelparameter(density,filenamedensity);
 };
 
+/*! \brief Get reference to tauP
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getTauP(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauP);
+}
 
+/*! \brief Get reference to tauS
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Delastic<ValueType>::getTauS(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauS);
+}
+
+/*! \brief Getter method for relaxation frequency */
+template<typename ValueType>
+ValueType KITGPI::Modelparameter::FD3Delastic<ValueType>::getRelaxationFrequency(){
+    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
+    return(relaxationFrequency);
+}
+
+/*! \brief Getter method for number of relaxation mechanisms */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::FD3Delastic<ValueType>::getNumRelaxationMechanisms(){
+    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
+    return(numRelaxationMechanisms);
+}

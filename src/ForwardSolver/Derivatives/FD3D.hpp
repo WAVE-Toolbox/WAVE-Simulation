@@ -12,6 +12,9 @@ namespace KITGPI {
             
             template<typename Type>
             class FreeSurface3Dacoustic;
+            
+            template<typename Type>
+            class FreeSurface3Dvisco;
         }
     }
 }
@@ -37,6 +40,8 @@ namespace KITGPI {
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic;
                 template<typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco;
                 
                 //! Default constructor
                 FD3D(){};

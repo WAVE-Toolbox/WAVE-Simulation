@@ -34,6 +34,12 @@ namespace KITGPI {
             
             /* Getter routines for non-required wavefields: Will throw an error */
             lama::DenseVector<ValueType>& getP();
+            lama::DenseVector<ValueType>& getRxx();
+            lama::DenseVector<ValueType>& getRyy();
+            lama::DenseVector<ValueType>& getRzz();
+            lama::DenseVector<ValueType>& getRyz();
+            lama::DenseVector<ValueType>& getRxz();
+            lama::DenseVector<ValueType>& getRxy();
             
         private:
             
@@ -50,7 +56,12 @@ namespace KITGPI {
             
             /* non-required wavefields */
             using Wavefields<ValueType>::P; //!< Wavefield
-
+            using Wavefields<ValueType>::Rxx;
+            using Wavefields<ValueType>::Ryy;
+            using Wavefields<ValueType>::Rzz;
+            using Wavefields<ValueType>::Ryz;
+            using Wavefields<ValueType>::Rxz;
+            using Wavefields<ValueType>::Rxy;
         };
     }
 }
@@ -75,7 +86,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, d
     this->initWavefield(Syz,ctx,dist);
     this->initWavefield(Sxz,ctx,dist);
     this->initWavefield(Sxy,ctx,dist);
-
+    
 }
 
 /*! \brief Set all wavefields to zero.
@@ -102,3 +113,45 @@ lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
     return(P);
 }
 
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx(){
+    COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D elastic case.")
+    return(Rxx);
+}
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy(){
+    COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D elastic case.")
+    return(Ryy);
+}
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz(){
+    COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D elastic case.")
+    return(Rzz);
+}
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz(){
+    COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D elastic case.")
+    return(Ryz);
+}
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz(){
+    COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D elastic case.")
+    return(Rxz);
+}
+
+//! \brief Not valid in the 3D elastic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy(){
+    COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
+    return(Rxy);
+}

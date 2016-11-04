@@ -41,6 +41,12 @@ namespace KITGPI {
             lama::DenseVector<ValueType>& getSyz();
             lama::DenseVector<ValueType>& getSxz();
             lama::DenseVector<ValueType>& getSxy();
+            lama::DenseVector<ValueType>& getRxx();
+            lama::DenseVector<ValueType>& getRyy();
+            lama::DenseVector<ValueType>& getRzz();
+            lama::DenseVector<ValueType>& getRyz();
+            lama::DenseVector<ValueType>& getRxz();
+            lama::DenseVector<ValueType>& getRxy();
             
         private:
             
@@ -57,6 +63,12 @@ namespace KITGPI {
             using Wavefields<ValueType>::Syz;
             using Wavefields<ValueType>::Sxz;
             using Wavefields<ValueType>::Sxy;
+            using Wavefields<ValueType>::Rxx;
+            using Wavefields<ValueType>::Ryy;
+            using Wavefields<ValueType>::Rzz;
+            using Wavefields<ValueType>::Ryz;
+            using Wavefields<ValueType>::Rxz;
+            using Wavefields<ValueType>::Rxy;
         };
     }
 }
@@ -130,4 +142,47 @@ template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxy(){
     COMMON_THROWEXCEPTION("There is no Syx wavefield in the 3D acoustic case.")
     return(Sxy);
+}
+
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxx(){
+    COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D acoustic case.")
+    return(Rxx);
+}
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRyy(){
+    COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D acoustic case.")
+    return(Ryy);
+}
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRzz(){
+    COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D acoustic case.")
+    return(Rzz);
+}
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRyz(){
+    COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D acoustic case.")
+    return(Ryz);
+}
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxz(){
+    COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D acoustic case.")
+    return(Rxz);
+}
+
+//! \brief Not valid in the 3D acoustic case
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxy(){
+    COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D acoustic case.")
+    return(Rxy);
 }

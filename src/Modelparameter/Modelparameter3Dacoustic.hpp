@@ -62,11 +62,19 @@ namespace KITGPI {
             void write(std::string filenamePWaveModulus, std::string filenamedensity);
             void write(std::string filename);
             
-            /* Getter routines for modelparameters */
+            /* Getter methods for not requiered parameters */
             lama::DenseVector<ValueType>& getSWaveModulus();
             lama::DenseVector<ValueType>& getVelocityS();
+            lama::DenseVector<ValueType>& getTauP();
+            lama::DenseVector<ValueType>& getTauS();
+            IndexType getNumRelaxationMechanisms();
+            ValueType getRelaxationFrequency();
             
         private:
+            
+            /*! \brief Prepare the model parameters for modelling */
+            /* Nothing has to be done here */
+            void prepareForModelling(){};
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -75,6 +83,12 @@ namespace KITGPI {
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
+            
+            /* Not requiered parameters */
+            using Modelparameter<ValueType>::tauP;
+            using Modelparameter<ValueType>::tauS;
+            using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::numRelaxationMechanisms;
             
         };
     }
@@ -277,5 +291,37 @@ template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getVelocityS(){
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return(velocityS);
+}
+
+/*! \brief Get reference to tauP
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getTauP(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauP);
+}
+
+/*! \brief Get reference to tauS
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getTauS(){
+    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    return(tauS);
+}
+
+
+/*! \brief Getter method for relaxation frequency */
+template<typename ValueType>
+ValueType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getRelaxationFrequency(){
+    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
+    return(relaxationFrequency);
+}
+
+/*! \brief Getter method for number of relaxation mechanisms */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::FD3Dacoustic<ValueType>::getNumRelaxationMechanisms(){
+    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
+    return(numRelaxationMechanisms);
 }
 
