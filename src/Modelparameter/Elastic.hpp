@@ -327,14 +327,13 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic& rhs)
     inverseDensity=rhs.inverseDensity;
 }
 
-/*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus
+/*! \brief Initialisator that is reading Velocity-Vector
  *
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
+ \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
  *
- *  Calculates pWaveModulus with
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)

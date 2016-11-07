@@ -57,7 +57,7 @@ namespace KITGPI {
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
             
-            void calculateModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             void write(std::string filenamePWaveModulus, std::string filenamedensity);
             void write(std::string filename);
@@ -190,7 +190,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
                 break;
             case 2:
                 parametrisation=1;
-                calculateModulus(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -316,24 +316,23 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic& rhs)
     parametrisation=rhs.parametrisation;
 }
 
-
-/*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus
+/*! \brief Initialisator that is reading Velocity-Vector
  *
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
  \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
  *
- *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::calculateModulus(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
 {
+    
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    // this->calculatePWaveModulus(velocityP,density,pWaveModulus,ctx,dist,filenameVelocityP,filenamedensity);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
     this->initModelparameter(density,ctx,dist,filenamedensity);
     
 }
