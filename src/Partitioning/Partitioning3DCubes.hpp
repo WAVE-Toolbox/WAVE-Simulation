@@ -89,7 +89,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::cal
     IndexType numRanks=comm->getSize();
     
     /* Check some things */
-    if( procNX*procNY*procNZ != numRanks ){ COMMON_THROWEXCEPTION(" Number of cores differ from config to actual setting  ") }
+    if( procNX*procNY*procNZ != numRanks ){ COMMON_THROWEXCEPTION(" Number of cores differ between config and actual setting  ") }
     if(NX % procNX != 0 ){ COMMON_THROWEXCEPTION(" NX % procNX != 0  ") }
     if(NY % procNY != 0 ){ COMMON_THROWEXCEPTION(" NY % procNY != 0  ") }
     if(NZ % procNZ != 0 ){ COMMON_THROWEXCEPTION(" NZ % procNZ != 0  ") }
@@ -121,7 +121,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::cal
         for(IndexType y=0; y<NY; y++){
             for(IndexType z=0; z<NZ; z++){
                 if( x>=range_x_lower && x<range_x_upper && y>=range_y_lower && y<range_y_upper && z>=range_z_lower && z<range_z_upper ){
-                    indice=this->coordinate2index(x+1,y+1,z+1,NX,NY, NZ);
+                    indice=this->coordinate2index(x,y,z,NX,NY, NZ);
                     write_localIndices[i]=indice;
                     i++;
                 }
