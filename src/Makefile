@@ -21,10 +21,16 @@ SOFI3Dvisco: SOFI3Dvisco.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI3Dvisco SOFI3Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
-SOFI2D: SOFI2Delastic
+SOFI2D: SOFI2Dacoustic  SOFI2Delastic SOFI2Dvisco
+
+SOFI2Dacoustic: SOFI2Dacoustic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI2Dacoustic SOFI2Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
 
 SOFI2Delastic: SOFI2Delastic.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI2Delastic SOFI2Delastic.cpp $(IFLAGS) $(LDFLAGS)
+
+SOFI2Dvisco: SOFI2Dvisco.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
 tests: Test_SOFI3Dacoustic Test_SOFI3Delastic Test_SOFI3Dvisco
