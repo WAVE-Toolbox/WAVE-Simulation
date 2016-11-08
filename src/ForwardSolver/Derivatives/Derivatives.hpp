@@ -1,5 +1,31 @@
 #pragma once
 
+
+/* Forward declaration for friendship */
+namespace KITGPI {
+    namespace ForwardSolver {
+        namespace BoundaryCondition {
+            template<typename Type>
+            class FreeSurface2Delastic;
+            
+            template<typename Type>
+            class FreeSurface2Dacoustic;
+            
+            template<typename Type>
+            class FreeSurface2Dvisco;
+            
+            template<typename Type>
+            class FreeSurfaceElastic;
+            
+            template<typename Type>
+            class FreeSurfaceAcoustic;
+            
+            template<typename Type>
+            class FreeSurfaceVisco;
+        }
+    }
+}
+
 namespace KITGPI {
     
     namespace ForwardSolver {
@@ -12,6 +38,20 @@ namespace KITGPI {
             class Derivatives
             {
             public:
+                
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
+                
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
                 
                 //! \brief Default constructor
                 Derivatives():spatialFDorder(0),useFreeSurface(false){};

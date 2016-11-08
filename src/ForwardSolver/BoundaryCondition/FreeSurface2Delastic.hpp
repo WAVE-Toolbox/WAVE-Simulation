@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Derivatives/Derivatives.hpp"
-#include "../Derivatives/FD3D.hpp"
+#include "../Derivatives/FD2D.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "FreeSurfaceElastic.hpp"
 
@@ -14,17 +14,17 @@ namespace KITGPI {
             
             //! \brief 3-D elastic free surface
             template<typename ValueType>
-            class FreeSurface3Delastic : public FreeSurfaceElastic<ValueType>
+            class FreeSurface2Delastic : public FreeSurfaceElastic<ValueType>
             {
             public:
                 
                 //! Default constructor
-                FreeSurface3Delastic(){};
+                FreeSurface2Delastic(){};
                 
                 //! Default destructor
-                ~FreeSurface3Delastic(){};
+                ~FreeSurface2Delastic(){};
                 
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz);
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy);
 
             private:
                 
@@ -38,7 +38,7 @@ namespace KITGPI {
 } /* end namespace KITGPI */
 
 
-/*! \brief Apply free surface condition during time stepping for 3D simulations
+/*! \brief Apply free surface condition during time stepping for 2D simulations
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
@@ -46,16 +46,14 @@ namespace KITGPI {
  \param sumHorizonalDerivative Sum of horizontal velocity updates
  \param Sxx Sxx wavefield
  \param Syy Syy wavefield
- \param Szz Szz wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy){
     
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);
     
     Sxx +=sumHorizonalDerivative;
-    Szz +=sumHorizonalDerivative;
     
     Syy.scale(setSurfaceZero);
     
