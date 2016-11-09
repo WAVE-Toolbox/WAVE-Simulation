@@ -1,5 +1,4 @@
 #include <scai/lama.hpp>
-
 #include <scai/common/Walltime.hpp>
 
 #include <iostream>
@@ -9,20 +8,19 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Acoustic.hpp"
-#include "Wavefields/Wavefields3Dacoustic.hpp"
+#include "Modelparameter/Viscoelastic.hpp"
+#include "Wavefields/Wavefields2Dvisco.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
+#include "ForwardSolver/ForwardSolver2Dvisco.hpp"
 
-#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
-
-#include "ForwardSolver/Derivatives/FD3D.hpp"
+#include "ForwardSolver/Derivatives/FD2D.hpp"
+#include "ForwardSolver/BoundaryCondition/FreeSurface2Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
-
 #include "Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
@@ -53,13 +51,13 @@ int main( int argc, char* argv[] )
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
-    
+
     if( config.getUseCubePartitioning()){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI2D visco-elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -69,14 +67,14 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FD2D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD2Dvisco<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -87,17 +85,17 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Acoustic<ValueType> model(config,ctx,dist);
+    Modelparameter::Viscoelastic<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Dacoustic<ValueType> solver;
+    ForwardSolver::FD2Dvisco<ValueType> solver;
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
+    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
     
     solver.seismogram.write(config);
 

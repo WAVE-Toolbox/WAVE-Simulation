@@ -1,0 +1,49 @@
+# define spatial sampling: number of grid points in direction
+NX=100 # horizontal 1
+NY=100 # depth
+NZ=100 # horizontal 2
+
+# define Partitioning
+UseCubePartitioning=0
+ProcNX=2
+ProcNY=1
+ProcNZ=1
+
+# define distance between two grid points in meter
+DH=50
+
+# define temporal sampling
+DT=2.0e-03 # temporal sampling in seconds
+T=2      # total simulation time
+
+# define order spatial FD operators
+spatialFDorder=2
+
+# define material parameter
+ModelRead=0
+ModelWrite=0
+ModelFilename=model/model
+ModelParametrisation=2    # 1=Lame, 2=Velocity
+
+# Viscoelastic modelling
+numRelaxationMechanisms=0;
+relaxationFrequency=0.0
+
+# Apply the free surface condition
+FreeSurface=0
+DampingBoundary=0
+BoundaryWidth=10
+DampingCoeff=8.0
+
+velocityP=3500 # P-wave velocity in meter per seconds
+velocityS=2000 # S-wave velocity in meter per seconds
+rho=2000      # P-wave velocity in meter per seconds
+tauP=0.0         # Tau value for P-waves
+tauS=0.0         # Tau value for S-waves
+
+# Acquisition
+SourceFilename=ci/sources_ci.3D.mtx
+ReceiverFilename=ci/receiver_ci.3D.mtx
+SeismogramFilename=ci/seismogram.3D.elastic.ci.mtx
+SeismogramFormat=1 # 1=MTX, 2=SU
+

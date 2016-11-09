@@ -24,8 +24,12 @@ int main( int argc, char* argv[] )
     scai::lama::Scalar L2_scalar=0.0;
     ValueType L2=0.0;
     
-    seismo_ref.readFromFile(config.getSeismogramFilename());
-    seismo_syn.readFromFile("ci/seismogram_ref.visco.mtx");
+    std::string filenameRef=config.getSeismogramFilename();
+    std::size_t pos=filenameRef.find(".ci.mtx");
+    std::string filenameSyn = filenameRef.substr (0,pos) + ".ref.mtx";
+    
+    seismo_ref.readFromFile(filenameRef);
+    seismo_syn.readFromFile(filenameSyn);
     
     seismo_residual=(seismo_ref-seismo_syn);
     L2_scalar=seismo_residual.l2Norm();

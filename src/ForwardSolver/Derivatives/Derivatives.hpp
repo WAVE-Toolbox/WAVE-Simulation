@@ -1,5 +1,31 @@
 #pragma once
 
+
+/* Forward declaration for friendship */
+namespace KITGPI {
+    namespace ForwardSolver {
+        namespace BoundaryCondition {
+            template<typename Type>
+            class FreeSurface2Delastic;
+            
+            template<typename Type>
+            class FreeSurface2Dacoustic;
+            
+            template<typename Type>
+            class FreeSurface2Dvisco;
+            
+            template<typename Type>
+            class FreeSurfaceElastic;
+            
+            template<typename Type>
+            class FreeSurfaceAcoustic;
+            
+            template<typename Type>
+            class FreeSurfaceVisco;
+        }
+    }
+}
+
 namespace KITGPI {
     
     namespace ForwardSolver {
@@ -12,6 +38,20 @@ namespace KITGPI {
             class Derivatives
             {
             public:
+                
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
+                
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
+                template<typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
                 
                 //! \brief Default constructor
                 Derivatives():spatialFDorder(0),useFreeSurface(false){};
@@ -105,6 +145,9 @@ namespace KITGPI {
                 IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
                 IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
                 IndexType calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+                
+                IndexType calcNumberRowElements_Dyb(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+
                 
                 void setRowElements_Dxf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& FDCoeff_f,hmemo::ReadAccess<ValueType>& FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
                 void setRowElements_Dyf(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::ReadAccess<ValueType>& read_FDCoeff_f,hmemo::ReadAccess<ValueType>& read_FDCoeff_b,hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
@@ -453,7 +496,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfPressure
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(DybVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybVelocity, NX, NY, NZ, dist);
+    calcDerivativeMatrix(DybVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_DybVelocity, NX, NY, NZ, dist);
 }
 
 //! \brief Calculate DybPressure matrix
@@ -466,7 +509,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybVelocity
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(DybPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DybPressure, NX, NY, NZ, dist);
+    calcDerivativeMatrix(DybPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_DybPressure, NX, NY, NZ, dist);
 }
 
 
@@ -480,7 +523,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybPressure
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
-    calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
+    calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
 }
 
 
@@ -746,6 +789,49 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumber
         }
     }
     
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for Dyb matrix
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Y-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcNumberRowElements_Dyb(IndexType rowNumber, IndexType NX, IndexType NY, IndexType /*NZ*/){
+    
+    IndexType counter=0;
+    IndexType NXNY=NX*NY;
+    IndexType rowEffective= rowNumber % NXNY;
+    IndexType coeffPosEffective;
+    
+    //Check if grid point (j/2-1) steps backward is available
+    for (IndexType j=spatialFDorder;j>=2;j-=2){
+        
+        coeffPosEffective=(rowEffective - (j/2)*NX);
+        
+        if( coeffPosEffective >= 0 ) {
+            
+            counter++;
+            
+        }
+    }
+    
+    //Check if grid point j/2 steps forward is available
+    for (IndexType j=2;j<=spatialFDorder;j+=2){
+        
+        coeffPosEffective= rowEffective + NX*(j/2-1);
+        
+        if( coeffPosEffective < NXNY ) {
+            
+            counter++;
+            
+        }
+    }
     return(counter);
 }
 
