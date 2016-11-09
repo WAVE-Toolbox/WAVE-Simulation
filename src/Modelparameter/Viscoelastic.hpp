@@ -393,7 +393,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(I
         COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an visco-elastic simulation")
     }
     numRelaxationMechanisms=numRelaxationMechanisms_in;
-    relaxationFrequency_in=relaxationFrequency;
+    relaxationFrequency=relaxationFrequency_in;
 }
 
 
