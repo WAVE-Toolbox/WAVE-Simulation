@@ -17,7 +17,7 @@
 #include "ForwardSolver/ForwardSolver.hpp"
 #include "ForwardSolver/ForwardSolver2Delastic.hpp"
 
-#include "ForwardSolver/Derivatives/FD2D.hpp"
+#include "ForwardSolver/Derivatives/FDTD2D.hpp"
 #include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
@@ -68,7 +68,7 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FD2D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD2D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
