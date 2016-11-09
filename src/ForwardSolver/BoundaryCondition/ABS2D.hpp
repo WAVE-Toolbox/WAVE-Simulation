@@ -147,7 +147,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(dmemo::Dis
         coordinatedist=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
         
         temp=0;
-        IndexType temp=0;
         if(coordinatedist.x<coordinatedist.y){
             temp=coordinatedist.x;
         } else {
