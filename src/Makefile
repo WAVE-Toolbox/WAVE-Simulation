@@ -33,16 +33,10 @@ SOFI2Dvisco: SOFI2Dvisco.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
-tests: Test_SOFI3Dacoustic Test_SOFI3Delastic Test_SOFI3Dvisco
+tests: Test_CompareSeismogram
 
-Test_SOFI3Dacoustic: Tests/Test_SOFI3Dacoustic.cpp
-	$(CC) $(CFLAGS) -o ../bin/Tests/Test_SOFI3Dacoustic Tests/Test_SOFI3Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
-
-Test_SOFI3Delastic: Tests/Test_SOFI3Delastic.cpp
-	$(CC) $(CFLAGS) -o ../bin/Tests/Test_SOFI3Delastic Tests/Test_SOFI3Delastic.cpp $(IFLAGS) $(LDFLAGS)
-
-Test_SOFI3Dvisco: Tests/Test_SOFI3Dvisco.cpp
-	$(CC) $(CFLAGS) -o ../bin/Tests/Test_SOFI3Dvisco Tests/Test_SOFI3Dvisco.cpp $(IFLAGS) $(LDFLAGS)
+Test_CompareSeismogram: Tests/Test_CompareSeismogram.cpp
+	$(CC) $(CFLAGS) -o ../bin/Tests/Test_CompareSeismogram Tests/Test_CompareSeismogram.cpp $(IFLAGS) $(LDFLAGS)
 
 
 clean:

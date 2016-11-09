@@ -24,8 +24,8 @@ acoustic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
+    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.3D.acoustic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.acoustic.txt"
 
 elastic3D-gcc:
   stage: simulation
@@ -36,6 +36,6 @@ elastic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../bin/SOFI3Delastic "ci/configuration_ci.elastic.txt"
-    - ./../bin/Tests/Test_SOFI3Delastic "ci/configuration_ci.elastic.txt"
+    - mpirun -np 4 ./../bin/SOFI3Delastic "ci/configuration_ci.3D.elastic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.elastic.txt"
 
