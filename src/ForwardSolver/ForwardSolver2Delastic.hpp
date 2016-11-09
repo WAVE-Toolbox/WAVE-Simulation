@@ -328,8 +328,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         Sxx += update;
         Syy += update;
         
-        Sxx -= 2 * vyy.scale(sWaveModulus);
-        Syy -= 2 * vxx.scale(sWaveModulus);
+        Sxx -= 2.0 * vyy.scale(sWaveModulus);
+        Syy -= 2.0 * vxx.scale(sWaveModulus);
         
         update = DyfPressure * vX;
         update += Dxf * vY;
@@ -338,8 +338,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         
         /* Apply free surface to stress update */
         if(useFreeSurface){
-            update=vxx;
-            FreeSurface.apply(update,Sxx,Syy);
+            FreeSurface.apply(vxx,Sxx,Syy);
         }
         
         /* Apply the damping boundary */

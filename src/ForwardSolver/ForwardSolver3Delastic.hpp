@@ -357,11 +357,11 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         Szz += update;
         
         update=vyy+vzz;
-        Sxx -= 2 * update.scale(sWaveModulus);
+        Sxx -= 2.0 * update.scale(sWaveModulus);
         update=vxx+vzz;
-        Syy -= 2 * update.scale(sWaveModulus);
+        Syy -= 2.0 * update.scale(sWaveModulus);
         update=vxx+vyy;
-        Szz -= 2 * update.scale(sWaveModulus);
+        Szz -= 2.0 * update.scale(sWaveModulus);
         
         update = DyfPressure * vX;
         update += Dxf * vY;

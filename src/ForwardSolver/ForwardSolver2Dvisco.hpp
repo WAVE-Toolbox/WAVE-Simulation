@@ -350,7 +350,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
         update += vyy;
         update.scale(pWaveModulus);
         
-        update2=inverseRelaxationTime*update;
+        update2 = inverseRelaxationTime * update;
         update2.scale(tauP);
         
         Sxx += DThalf * Rxx;
@@ -368,26 +368,24 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
         
         
         /* Update Sxx and Rxx */
-        update=vyy;
-        update.scale(sWaveModulus);
-        update *= 2.0;
+        vyy.scale(sWaveModulus);
+        vyy *= 2.0;
 
-        update2=inverseRelaxationTime* update;
+        update2 = inverseRelaxationTime* vyy;
         Rxx += update2.scale(tauS);
-        Sxx -= update.scale(onePlusLtauS);
+        Sxx -= vyy.scale(onePlusLtauS);
 
         Rxx *= viscoCoeff2;
         Sxx += DThalf * Rxx;
         
         
         /* Update Syy and Ryy */
-        update=vxx;
-        update.scale(sWaveModulus);
-        update *= 2.0;
+        vxx.scale(sWaveModulus);
+        vxx *= 2.0;
 
-        update2=inverseRelaxationTime* update;
+        update2=inverseRelaxationTime* vxx;
         Ryy += update2.scale(tauS);
-        Syy -= update.scale(onePlusLtauS);
+        Syy -= vxx.scale(onePlusLtauS);
         
         Ryy *= viscoCoeff2;
         Syy += DThalf * Ryy;
@@ -411,8 +409,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
         
         /* Apply free surface to stress update */
         if(useFreeSurface){
-            update=vxx;
-            FreeSurface.apply(update,update2,Sxx,Syy,Rxx,Ryy);
+            FreeSurface.apply(vxx,update2,Sxx,Syy,Rxx,Ryy);
         }
         
         /* Apply the damping boundary */
