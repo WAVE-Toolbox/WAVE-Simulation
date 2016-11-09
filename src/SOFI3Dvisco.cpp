@@ -21,7 +21,7 @@
 #include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
-#include "Partitioning/Partitioning3DCubes.hpp"
+#include "Partitioning/PartitioningCubes.hpp"
 
 
 using namespace scai;
@@ -54,7 +54,7 @@ int main( int argc, char* argv[] )
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
     if( config.getUseCubePartitioning()){
-        Partitioning::Partitioning3DCubes<ValueType> partitioning(config,comm);
+        Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     

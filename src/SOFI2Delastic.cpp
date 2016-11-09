@@ -21,6 +21,7 @@
 #include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
+#include "Partitioning/PartitioningCubes.hpp"
 
 
 using namespace scai;
@@ -51,6 +52,11 @@ int main( int argc, char* argv[] )
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
+    
+    if( config.getUseCubePartitioning()){
+        Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
+        dmemo::DistributionPtr dist=partitioning.getDist();
+    }
     
     HOST_PRINT( comm, "\nSOFI2D elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
