@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(), comm,dist);
     
     solver.seismogram.write(config);
 
