@@ -98,6 +98,14 @@ namespace KITGPI {
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            void runAveraging(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
+            
+            using Modelparameter<ValueType>::xAvDensityMatrix;
+            using Modelparameter<ValueType>::yAvDensityMatrix;
+            using Modelparameter<ValueType>::zAvDensityMatrix;
+            using Modelparameter<ValueType>::xyAvSWaveModulusMatrix;
+            using Modelparameter<ValueType>::xzAvSWaveModulusMatrix;
+            using Modelparameter<ValueType>::yzAvSWaveModulusMatrix;
             
             using Modelparameter<ValueType>::xAvDensity;
             using Modelparameter<ValueType>::yAvDensity;
@@ -105,6 +113,10 @@ namespace KITGPI {
             using Modelparameter<ValueType>::xyAvSWaveModulus;
             using Modelparameter<ValueType>::xzAvSWaveModulus;
             using Modelparameter<ValueType>::yzAvSWaveModulus;
+            using Modelparameter<ValueType>::xyAvTauS;
+            using Modelparameter<ValueType>::xzAvTauS;
+            using Modelparameter<ValueType>::yzAvTauS;
+            
             
         };
     }
@@ -411,25 +423,47 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
     
     HOST_PRINT( comm, "Initialization of the averaging matrices." );
     
-    this->calc_xAvDensity(NX, NY, NZ, dist);
-    this->calc_yAvDensity(NX, NY, NZ, dist);
-    this->calc_zAvDensity(NX, NY, NZ, dist);
-    //S-Wave modulus only in elastic case
-    this->calc_xyAvSWaveModulus(NX, NY, NZ, dist);
-    this->calc_xzAvSWaveModulus(NX, NY, NZ, dist);
-    this->calc_yzAvSWaveModulus(NX, NY, NZ, dist);
+    this->calc_xAvDensityMatrix(NX, NY, NZ, dist);
+    this->calc_yAvDensityMatrix(NX, NY, NZ, dist);
+    this->calc_zAvDensityMatrix(NX, NY, NZ, dist);
+    this->calc_xyAvSWaveModulusMatrix(NX, NY, NZ, dist);
+    this->calc_xzAvSWaveModulusMatrix(NX, NY, NZ, dist);
+    this->calc_yzAvSWaveModulusMatrix(NX, NY, NZ, dist);
     
-    xAvDensity.setContextPtr( ctx );
-    yAvDensity.setContextPtr( ctx );
-    zAvDensity.setContextPtr( ctx );
-    xyAvSWaveModulus.setContextPtr( ctx );
-    xzAvSWaveModulus.setContextPtr( ctx );
-    yzAvSWaveModulus.setContextPtr( ctx );
+    xAvDensityMatrix.setContextPtr( ctx );
+    yAvDensityMatrix.setContextPtr( ctx );
+    zAvDensityMatrix.setContextPtr( ctx );
+    xyAvSWaveModulusMatrix.setContextPtr( ctx );
+    xzAvSWaveModulusMatrix.setContextPtr( ctx );
+    yzAvSWaveModulusMatrix.setContextPtr( ctx );
     
     HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
     
     
 }
+
+
+/*! \brief calculate averaged vectors
+ *
+ \param dist Distribution
+ \param ctx Context
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::runAveraging(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+    
+    this->calculateAveragedDensity(xAvDensity,xAvDensityMatrix,ctx,dist);
+    this->calculateAveragedDensity(yAvDensity,yAvDensityMatrix,ctx,dist);
+    this->calculateAveragedDensity(zAvDensity,zAvDensityMatrix,ctx,dist);
+    
+    this->calculateAveragedSWaveModulus(xyAvSWaveModulus,xyAvSWaveModulusMatrix,ctx,dist);
+    this->calculateAveragedSWaveModulus(xzAvSWaveModulus,xzAvSWaveModulusMatrix,ctx,dist);
+    this->calculateAveragedSWaveModulus(yzAvSWaveModulus,yzAvSWaveModulusMatrix,ctx,dist);
+    
+    this->calculateAveragedTauS(xyAvTauS,xyAvSWaveModulusMatrix,ctx,dist);
+    this->calculateAveragedTauS(xzAvTauS,xzAvSWaveModulusMatrix,ctx,dist);
+    this->calculateAveragedTauS(yzAvTauS,yzAvSWaveModulusMatrix,ctx,dist);
+}
+
 
 /*! \brief Initialisation the relaxation mechanisms
  *
