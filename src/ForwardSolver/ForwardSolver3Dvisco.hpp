@@ -315,7 +315,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& tauP=model.getTauP();
     
     IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
-    ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency ()); // = 1 / ( 2 * Pi * f_relax )
+    ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
     ValueType inverseRelaxationTime=1.0/relaxationTime; // = 1 / relaxationTime
     ValueType viscoCoeff1=(1.0-DT/(2.0*relaxationTime)); // = 1 - DT / ( 2 * tau_Sigma_l )
     ValueType viscoCoeff2=1.0/(1.0+DT/(2.0*relaxationTime)); // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1

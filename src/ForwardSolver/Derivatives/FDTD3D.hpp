@@ -3,21 +3,6 @@
 #include "Derivatives.hpp"
 #include "../../Common/HostPrint.hpp"
 
-/* Forward declaration for friendship */
-namespace KITGPI {
-    namespace ForwardSolver {
-        namespace BoundaryCondition {
-            template<typename Type>
-            class FreeSurface3Delastic;
-            
-            template<typename Type>
-            class FreeSurface3Dacoustic;
-            
-            template<typename Type>
-            class FreeSurface3Dvisco;
-        }
-    }
-}
 
 namespace KITGPI {
     
@@ -32,25 +17,18 @@ namespace KITGPI {
              *
              */
             template<typename ValueType>
-            class FD3D : public Derivatives<ValueType>
+            class FDTD3D : public Derivatives<ValueType>
             {
             public:
                 
-                template<typename>
-                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic;
-                template<typename>
-                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dacoustic;
-                template<typename>
-                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco;
-                
                 //! Default constructor
-                FD3D(){};
+                FDTD3D(){};
                 
                 //! Default destructor
-                ~FD3D(){};
+                ~FDTD3D(){};
                 
-                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
-                FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
+                FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
+                FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
                 
             private:
                 
@@ -88,7 +66,7 @@ namespace KITGPI {
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
 {
     useFreeSurface=config.getFreeSurface();
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
@@ -108,7 +86,7 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm ){
+KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm ){
     initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorderInput, comm );
 }
 
@@ -126,7 +104,7 @@ KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::FD3D(dmemo::DistributionPtr
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm )
 {
     
     SCAI_REGION( "initializeMatrices" )

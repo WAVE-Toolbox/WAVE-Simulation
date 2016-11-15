@@ -19,11 +19,11 @@
 
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 
-#include "ForwardSolver/Derivatives/FD3D.hpp"
+#include "ForwardSolver/Derivatives/FDTD3D.hpp"
 
 #include "Common/HostPrint.hpp"
 
-#include "Partitioning/Partitioning3DCubes.hpp"
+#include "Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -55,7 +55,7 @@ int main( int argc, char* argv[] )
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
     if( config.getUseCubePartitioning()){
-        Partitioning::Partitioning3DCubes<ValueType> partitioning(config,comm);
+        Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
@@ -69,7 +69,7 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     

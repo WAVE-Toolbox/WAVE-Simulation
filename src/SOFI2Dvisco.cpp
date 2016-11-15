@@ -9,20 +9,19 @@
 #include "Configuration/Configuration.hpp"
 
 #include "Modelparameter/Viscoelastic.hpp"
-#include "Wavefields/Wavefields3Dvisco.hpp"
+#include "Wavefields/Wavefields2Dvisco.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
-#include "ForwardSolver/ForwardSolver3Dvisco.hpp"
+#include "ForwardSolver/ForwardSolver2Dvisco.hpp"
 
-#include "ForwardSolver/Derivatives/FDTD3D.hpp"
-#include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
+#include "ForwardSolver/Derivatives/FDTD2D.hpp"
+#include "ForwardSolver/BoundaryCondition/FreeSurface2Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
-
 
 using namespace scai;
 using namespace KITGPI;
@@ -52,13 +51,13 @@ int main( int argc, char* argv[] )
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
-    
+
     if( config.getUseCubePartitioning()){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D visco-elastic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI2D visco-elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -68,14 +67,14 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD2D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dvisco<ValueType> wavefields(ctx,dist);
+    Wavefields::FD2Dvisco<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -92,7 +91,7 @@ int main( int argc, char* argv[] )
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Dvisco<ValueType> solver;
+    ForwardSolver::FD2Dvisco<ValueType> solver;
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
