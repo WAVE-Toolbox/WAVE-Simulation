@@ -7,9 +7,9 @@ NY=100 # depth
 NZ=100 # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=1
+UseCubePartitioning=0
 ProcNX=2
-ProcNY=2
+ProcNY=1
 ProcNZ=1
 
 # define distance between two grid points in meter
@@ -31,7 +31,7 @@ ModelParametrisation=2    # 1=Lame, 2=Velocity
 # Apply the free surface condition
 FreeSurface=0
 # Apply Damping Boundary 1=ABS 2=CPML
-DampingBoundary=1
+DampingBoundary=0
 BoundaryWidth=10
 
 DampingCoeff=8.0
@@ -48,7 +48,7 @@ relaxationFrequency=0
 
 # generate homogeneous model
 velocityP=3500   # P-wave velocity in meter per seconds
-velocityS=2000   # S-wave velocity in meter per seconds
+velocityS=0   # S-wave velocity in meter per seconds
 rho=2000         # Density in kilo gramms per cubic meter
 tauP=0.0        # Tau value for P-waves
 tauS=0.0        # Tau value for S-waves
