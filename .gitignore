@@ -487,6 +487,3 @@ ENV/
 
 # Seismic Unix
 *.su
-
-# KDevelop
-*.kdev4

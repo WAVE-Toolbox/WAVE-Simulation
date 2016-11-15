@@ -495,9 +495,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string filen
     int ntr=int(numTracesGlobal);
     tr.ntr=ntr;    /* number of traces */
     std::string tempstr=filename;
-    tempstr[tempstr.length()-3]='s';
-    tempstr[tempstr.length()-2]='u';
-    tempstr.erase(tempstr.length()-1);
     const char*filetemp=tempstr.c_str();
     FILE * pFile;
     pFile=fopen(filetemp,"wb");

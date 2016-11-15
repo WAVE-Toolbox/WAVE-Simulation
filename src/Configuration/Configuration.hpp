@@ -14,7 +14,18 @@ namespace KITGPI {
     
     //! Configuration namespace
     namespace Configuration {
-        
+
+	template<typename ValueType>
+	  struct PMLVariables{
+		  
+		ValueType VMaxCPML; ///< Maximum velocity in the CPML-Layer    
+		ValueType CenterFrequencyCPML; ///< Center Frequency of the Signal in the CPML-Layer 
+		ValueType KMaxCPML; ///< Maximum velocity in the CPML-Layer    
+		ValueType NPower; ///< Center Frequency of the Signal in the CPML-Layer 
+		
+		
+	    };  
+	    
         //! Class for Configuration of the FD simulation
         /*!
          This class handels the configuration for the finite-difference simulation.
@@ -31,20 +42,20 @@ namespace KITGPI {
             Configuration( std::string filename );
             
             void print();
-
-bool checkConfigPlausibility();
+            
+            bool checkConfigPlausibility();
             
             IndexType getNX() { return NX; } ///< Return NX
             IndexType getNY() { return NY; } ///< Return NY (Depth)
             IndexType getNZ() { return NZ; } ///< Return NZ
-
+            
             ValueType getDH() { return DH; } ///< Return Grid spacing
             
             ValueType getDT() { return DT; } ///< Return Time Step
             ValueType getT() { return T; } ///< Return Total propagation time
             
             IndexType getSpatialFDorder() { return spatialFDorder; } ///< Return order of spatial FD operator
-
+            
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
@@ -53,6 +64,8 @@ bool checkConfigPlausibility();
             ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
             ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
             ValueType getRho() { return rho; } ///< Return Density for homogeneous model
+            ValueType getTauP() { return tauP; } ///< Return tauP for homogeneous model
+            ValueType getTauS() { return tauS; } ///< Return tauS for homogeneous model
             
             std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
             std::string getReceiverFilename() {return ReceiverFilename;} ///< Return Filename of Receiver file
@@ -63,7 +76,7 @@ bool checkConfigPlausibility();
             
             ValueType getPWaveModulus() { return pWaveModulus; } ///< Return pWaveModulus
             ValueType getSWaveModulus() { return sWaveModulus; } ///< Return pWaveModulus
-
+            
             IndexType getNT() { return NT; } ///< Return NT
             
             IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
@@ -72,10 +85,15 @@ bool checkConfigPlausibility();
             IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
             
             IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
-
+            
+            ValueType getRelaxationFrequency() { return relaxationFrequency;} ///< Return relaxationFrequency
+            IndexType getNumRelaxationMechanisms() { return numRelaxationMechanisms;} ///< Return number of relaxation mechanism
+            
             IndexType getDampingBoundary() {return DampingBoundary;} ///< Return DampingBoundary
             IndexType getBoundaryWidth() {return BoundaryWidth;} ///< Return BoundaryWidth
             ValueType getDampingCoeff() {return DampingCoeff;} ///< Return DampingCoeff
+            
+            PMLVariables<ValueType>& getPMLVariables() {return PMLVar;} ///< Return PML Variables
             
         private:
             
@@ -96,7 +114,7 @@ bool checkConfigPlausibility();
             ValueType T;   ///< total simulation time
             
             IndexType spatialFDorder;	///< order of spatial FD operator
-
+            
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
             std::string ModelFilename; ///< Filename to read model
@@ -105,16 +123,24 @@ bool checkConfigPlausibility();
             ValueType velocityS; ///< Density in kilo gramms per cubic meter
             ValueType rho;      ///< P-wave velocity in meter per seconds
             
+            ValueType tauP; ///< Tau value for P-waves
+            ValueType tauS; ///< Tau value for S-waves
+            
             IndexType UseCubePartitioning; ///< Use cubes for partitioning of the wave fields (1=ON, else=OFF)
             IndexType ProcNX; ///< Number of cores in X-direction
             IndexType ProcNY; ///< Number of cores in Y-direction
             IndexType ProcNZ; ///< Number of cores in Z-direction
+            
+            ValueType relaxationFrequency; ///< Relaxation frequency in Hz for first relaxation mechanism
+            ValueType numRelaxationMechanisms; ///< Number of relaxation mechanisms
             
             IndexType FreeSurface; ///< Use the free surface==1 or not==0
             
             IndexType DampingBoundary; ///< Use the Damping Boundary ==1 or not==0
             ValueType DampingCoeff; ///< Damping coefficient
             IndexType BoundaryWidth; ///< Width of damping boundary
+            
+            PMLVariables<ValueType> PMLVar;
             
             std::string SourceFilename; ///< Filename to read source configuration
             std::string ReceiverFilename; ///< Filename to read receiver configuration
@@ -138,7 +164,7 @@ bool checkConfigPlausibility();
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ): NumParameters(26)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ):NumParameters(30),numRelaxationMechanisms(0)
 {
     // read all lines in file
     
@@ -193,17 +219,21 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "T" ] ) >> T;  // ValueType
     
     std::istringstream( map[ "spatialFDorder" ] ) >> spatialFDorder;  // Indextype
-
+    
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
     ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
     std::istringstream( map[ "ModelParametrisation" ] ) >> ModelParametrisation; // IndexType
-
+    
     
     std::istringstream( map[ "velocityP" ] ) >> velocityP; // ValueType
     std::istringstream( map[ "velocityS" ] ) >> velocityS; // ValueType
-
     std::istringstream( map[ "rho" ] ) >> rho; // ValueType
+    
+    std::istringstream( map[ "tauP" ] ) >> tauP; // ValueType
+    std::istringstream( map[ "tauS" ] ) >> tauS; // ValueType
+    std::istringstream( map[ "relaxationFrequency" ] ) >> relaxationFrequency; // ValueType
+    std::istringstream( map[ "numRelaxationMechanisms" ] ) >> numRelaxationMechanisms; // IndexType
     
     SourceFilename = std::istringstream( map[ "SourceFilename" ] ).str(); // std::string
     ReceiverFilename = std::istringstream( map[ "ReceiverFilename" ] ).str(); // std::string
@@ -221,12 +251,18 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     std::istringstream( map[ "DampingCoeff" ] ) >> DampingCoeff; // ValueType
     std::istringstream( map[ "BoundaryWidth" ] ) >> BoundaryWidth; // IndexType
     
+    std::istringstream( map[ "VMaxCPML" ] ) >> PMLVar.VMaxCPML; // ValueType
+    std::istringstream( map[ "CenterFrequencyCPML" ] ) >> PMLVar.CenterFrequencyCPML; // ValueType
+    std::istringstream( map[ "NPower" ] ) >> PMLVar.NPower; // ValueType
+    std::istringstream( map[ "KMaxCPML" ] ) >> PMLVar.KMaxCPML; // ValueType
+    
+    
     // calculate other parameters
     
     N = NZ * NX * NY;
     
     sWaveModulus = rho * velocityS * velocityS;
-
+    
     pWaveModulus = rho * velocityP * velocityP; // P-wave modulus
     
     NT = static_cast<IndexType>( ( T / DT ) + 0.5 ); // MATLAB round(T/DT)
@@ -264,6 +300,13 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     }
     if(DampingBoundary==1){
         std::cout << "    A damping boundary will be placed at the model boundary." << std::endl;
+    }
+      if(DampingBoundary==2){
+        std::cout << "    A CPML boundary will be placed at the model boundary." << std::endl;
+    }
+    if(numRelaxationMechanisms != 0 ) {
+        std::cout << "    Visco-elastic simulation with " << numRelaxationMechanisms<< " Relaxation Mechanisms" << std::endl;
+        std::cout << "    The relaxation frequency is " << relaxationFrequency<< " Hz" << std::endl;
     }
     std::cout << "Acquisition:" << std::endl;
     std::cout << "    Source acquisition will be read in from " << SourceFilename << std::endl;
@@ -306,9 +349,9 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
 template<typename ValueType>
 bool KITGPI::Configuration::Configuration<ValueType>::checkConfigPlausibility()
 {
-	if ((spatialFDorder % 2 != 0) || (spatialFDorder < 2) || (spatialFDorder > 12))
-	{
-		return false;
-	}
-	return true;	// check is positive
+    if ((spatialFDorder % 2 != 0) || (spatialFDorder < 2) || (spatialFDorder > 12))
+    {
+        return false;
+    }
+    return true;	// check is positive
 }

@@ -36,9 +36,9 @@ namespace KITGPI {
              \param wavefield Wavefields for the modelling
              \param derivatives Derivations matrices to calculate the spatial derivatives
              \param NT Total number of time steps
-             \param comm Communicator
+             \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm,dmemo::DistributionPtr dist)=0;
+            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT)=0;
             
             
             /*! \brief Saving seismograms during time stepping
@@ -80,7 +80,7 @@ namespace KITGPI {
             
             bool useFreeSurface; //!< Bool if free surface is in use
             bool useDampingBoundary; //!< Bool if damping boundary is in use
-
+            bool useConvPML; //!< Bool if CPML is in use
             
         };
     } /* end namespace ForwardSolver */

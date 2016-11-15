@@ -18,20 +18,20 @@ namespace KITGPI
              *
              */
             template<typename ValueType>
-            class ABS3D : public ABS<ValueType>
+            class ABS2D : public ABS<ValueType>
             {
             public:
                 
                 //! Default constructor
-                ABS3D(){};
+                ABS2D(){};
                 
                 //! Default destructor
-                ~ABS3D(){};
+                ~ABS2D(){};
                 
                 void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface);
                 
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4);
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9);
+                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3);
+                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5);
                 
             private:
                 
@@ -51,15 +51,13 @@ namespace KITGPI
  \param v1 DenseVector to apply damping boundary
  \param v2 DenseVector to apply damping boundary
  \param v3 DenseVector to apply damping boundary
- \param v4 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3){
     
     v1.scale(damping);
     v2.scale(damping);
     v3.scale(damping);
-    v4.scale(damping);
     
 }
 
@@ -73,24 +71,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
  \param v3 DenseVector to apply damping boundary
  \param v4 DenseVector to apply damping boundary
  \param v5 DenseVector to apply damping boundary
- \param v6 DenseVector to apply damping boundary
- \param v7 DenseVector to apply damping boundary
- \param v8 DenseVector to apply damping boundary
- \param v9 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5){
     
     v1.scale(damping);
     v2.scale(damping);
     v3.scale(damping);
     v4.scale(damping);
     v5.scale(damping);
-    v6.scale(damping);
-    v7.scale(damping);
-    v8.scale(damping);
-    v9.scale(damping);
-    
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix
@@ -106,7 +95,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
  \param useFreeSurface Bool if free surface is in use
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
 {
     
     HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
@@ -147,7 +136,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     Acquisition::coordinate3D coordinatedist;
     
     IndexType coordinateMin=0;
-    IndexType coordinatexzMin=0;
+    IndexType temp;
     
     /* Set the values into the indice arrays and the value array */
     for( IndexType i=0; i<numLocalIndices; i++ ) {
@@ -157,18 +146,23 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coordinate=coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ );
         coordinatedist=coordTransform.edgeDistance(coordinate, NX, NY, NZ );
         
-        coordinateMin=coordinatedist.min();
+        temp=0;
+        if(coordinatedist.x<coordinatedist.y){
+            temp=coordinatedist.x;
+        } else {
+            temp=coordinatedist.y;
+        }
+        coordinateMin=temp;
         if( coordinateMin < BoundaryWidth ) {
             write_damping[i]=coeff[coordinateMin];
         }
         
         if(useFreeSurface){
-            coordinatexzMin=!((coordinatedist.x)<(coordinatedist.z))?(coordinatedist.z):(coordinatedist.x);
             if (coordinate.y < BoundaryWidth) {
                 write_damping[i]=1.0;
                 
-                if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)){
-                    write_damping[i]=coeff[coordinatexzMin];
+                if ((coordinatedist.x < BoundaryWidth)){
+                    write_damping[i]=coeff[coordinatedist.x];
                 }
                 
             }

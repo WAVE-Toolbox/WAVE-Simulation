@@ -10,26 +10,26 @@ namespace KITGPI {
     
     namespace Partitioning {
         
-        //! \brief Creating a partition of 3-D cubes
+        //! \brief Creating a partition of cubes
         /*!
-         * This class can create a partition of the 3-D wavefield that consists of 3-D cubes.
+         * This class can create a partition of the wavefield that consists of cubes.
          *
          * procNX*procNY*procNZ have to be equal to comm->getSize();
          *
          */
         template <typename ValueType>
-        class Partitioning3DCubes : public Partitioning<ValueType>, protected Acquisition::Coordinates<ValueType>
+        class PartitioningCubes : public Partitioning<ValueType>, protected Acquisition::Coordinates<ValueType>
         {
             
         public:
             
             //! Default constructor
-            Partitioning3DCubes(){};
+            PartitioningCubes(){};
             
-            Partitioning3DCubes(Configuration::Configuration<ValueType> config,dmemo::CommunicatorPtr comm);
+            PartitioningCubes(Configuration::Configuration<ValueType> config,dmemo::CommunicatorPtr comm);
             
             //! Default destructor
-            ~Partitioning3DCubes(){};
+            ~PartitioningCubes(){};
             
             dmemo::DistributionPtr getDist();
             
@@ -49,7 +49,7 @@ namespace KITGPI {
  *
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::getDist(){
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDist(){
     if(dist_cubes==NULL){
         COMMON_THROWEXCEPTION ( "Distribution ist not set " )
     }
@@ -62,14 +62,14 @@ dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::get
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::Partitioning3DCubes<ValueType>::Partitioning3DCubes(Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm){
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm){
     dist_cubes=calculate(config.getProcNX(),config.getProcNY(),config.getProcNZ(),config.getNX(),config.getNY(),config.getNZ(),comm);
 }
 
 
-//! \brief Calculation of 3-D cube partition
+//! \brief Calculation of cube partition
 /*!
- * This class can create a partition of the 3-D wavefield that consists of 3-D cubes.
+ * This class can create a partition of the wavefield that consists of cubes.
  *
  * procNX*procNY*procNZ have to be equal to comm->getSize();
  *
@@ -82,19 +82,19 @@ KITGPI::Partitioning::Partitioning3DCubes<ValueType>::Partitioning3DCubes(Config
  \param comm Communicator for the distribution
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm){
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm){
     
     
     IndexType rank=comm->getRank();
     IndexType numRanks=comm->getSize();
     
     /* Check some things */
-    if( procNX*procNY*procNZ != numRanks ){ COMMON_THROWEXCEPTION(" Number of cores differ from config to actual setting  ") }
+    if( procNX*procNY*procNZ != numRanks ){ COMMON_THROWEXCEPTION(" Number of cores differ between config and actual setting  ") }
     if(NX % procNX != 0 ){ COMMON_THROWEXCEPTION(" NX % procNX != 0  ") }
     if(NY % procNY != 0 ){ COMMON_THROWEXCEPTION(" NY % procNY != 0  ") }
     if(NZ % procNZ != 0 ){ COMMON_THROWEXCEPTION(" NZ % procNZ != 0  ") }
     
-    /* Calculate 3-D coordinates of the CPU */
+    /* Calculate coordinates of the CPU */
     IndexType posNX= rank % procNX;
     IndexType posNZ= rank / ( procNX * procNY);
     IndexType posNY= (( rank - ( procNX * procNY ) * posNZ ) / procNX );
@@ -121,7 +121,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::Partitioning3DCubes<ValueType>::cal
         for(IndexType y=0; y<NY; y++){
             for(IndexType z=0; z<NZ; z++){
                 if( x>=range_x_lower && x<range_x_upper && y>=range_y_lower && y<range_y_upper && z>=range_z_lower && z<range_z_upper ){
-                    indice=this->coordinate2index(x+1,y+1,z+1,NX,NY, NZ);
+                    indice=this->coordinate2index(x,y,z,NX,NY, NZ);
                     write_localIndices[i]=indice;
                     i++;
                 }

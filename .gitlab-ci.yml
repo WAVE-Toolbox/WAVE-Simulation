@@ -1,6 +1,6 @@
 stages:
     - build
-    - test
+    - simulation
     
 gcc:
   stage: build
@@ -15,8 +15,9 @@ gcc:
     paths:
       - bin/
 
-acoustic3D-gcc:
-  stage: test
+
+acoustic2D-gcc:
+  stage: simulation
   dependencies:
     - gcc
   script:
@@ -24,11 +25,36 @@ acoustic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.acoustic.txt"
+    - mpirun -np 4 ./../bin/SOFI2Dacoustic "ci/configuration_ci.2D.acoustic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.acoustic.txt"
+
+acoustic3D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.3D.acoustic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.acoustic.txt"
+
+
+elastic2D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI2Delastic "ci/configuration_ci.2D.elastic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.elastic.txt"
 
 elastic3D-gcc:
-  stage: test
+  stage: simulation
   dependencies:
     - gcc
   script:
@@ -36,5 +62,30 @@ elastic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI3Delastic "ci/configuration_ci.elastic.txt"
-    - ./../bin/Tests/Test_SOFI3Delastic "ci/configuration_ci.elastic.txt"
+    - mpirun -np 4 ./../bin/SOFI3Delastic "ci/configuration_ci.3D.elastic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.elastic.txt"
+
+
+visco2D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI2Dvisco "ci/configuration_ci.2D.visco.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.visco.txt"
+
+visco3D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI3Dvisco "ci/configuration_ci.3D.visco.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.visco.txt"

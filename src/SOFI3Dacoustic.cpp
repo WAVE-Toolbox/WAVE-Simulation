@@ -9,7 +9,7 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Modelparameter3Dacoustic.hpp"
+#include "Modelparameter/Acoustic.hpp"
 #include "Wavefields/Wavefields3Dacoustic.hpp"
 
 #include "Acquisition/Receivers.hpp"
@@ -19,11 +19,11 @@
 
 #include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
 
-#include "ForwardSolver/Derivatives/FD3D.hpp"
+#include "ForwardSolver/Derivatives/FDTD3D.hpp"
 
 #include "Common/HostPrint.hpp"
 
-#include "Partitioning/Partitioning3DCubes.hpp"
+#include "Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -55,7 +55,7 @@ int main( int argc, char* argv[] )
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
     if( config.getUseCubePartitioning()){
-        Partitioning::Partitioning3DCubes<ValueType> partitioning(config,comm);
+        Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
@@ -65,20 +65,11 @@ int main( int argc, char* argv[] )
         config.print();
     }
     
-    if (config.checkConfigPlausibility()==false)	// If the configuration file contains implausible values, each process stops running
-       {
-       	if( comm->getRank() == MASTER )
-       	{
-       		std::cout << "\n\tConfiguration file contains implausible value." << "\n\tProgram terminates\n\n." << std::endl;
-       	}
-       	return 0;
-       }
-
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
@@ -96,7 +87,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::FD3Dacoustic<ValueType> model(config,ctx,dist);
+    Modelparameter::Acoustic<ValueType> model(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Forward solver                          */
@@ -106,7 +97,7 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(), comm);
+    solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
     
     solver.seismogram.write(config);
 

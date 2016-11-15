@@ -38,10 +38,16 @@ namespace KITGPI {
             virtual lama::DenseVector<ValueType>& getSxx();
             virtual lama::DenseVector<ValueType>& getSyy();
             virtual lama::DenseVector<ValueType>& getSzz();
-            
             virtual lama::DenseVector<ValueType>& getSyz();
             virtual lama::DenseVector<ValueType>& getSxz();
             virtual lama::DenseVector<ValueType>& getSxy();
+            
+            virtual lama::DenseVector<ValueType>& getRxx();
+            virtual lama::DenseVector<ValueType>& getRyy();
+            virtual lama::DenseVector<ValueType>& getRzz();
+            virtual lama::DenseVector<ValueType>& getRyz();
+            virtual lama::DenseVector<ValueType>& getRxz();
+            virtual lama::DenseVector<ValueType>& getRxy();
             
         protected:
             
@@ -58,6 +64,13 @@ namespace KITGPI {
             lama::DenseVector<ValueType> Sxz; //!< Wavefield
             lama::DenseVector<ValueType> Sxy; //!< Wavefield
             lama::DenseVector<ValueType> P; //!< Wavefield
+            
+            lama::DenseVector<ValueType> Rxx; //!< Relaxation parameter
+            lama::DenseVector<ValueType> Ryy; //!< Relaxation parameter
+            lama::DenseVector<ValueType> Rzz; //!< Relaxation parameter
+            lama::DenseVector<ValueType> Ryz; //!< Relaxation parameter
+            lama::DenseVector<ValueType> Rxz; //!< Relaxation parameter
+            lama::DenseVector<ValueType> Rxy; //!< Relaxation parameter
             
         };
     }
@@ -143,4 +156,40 @@ lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getSxy(
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getP(){
     return(P);
+}
+
+//! \brief Getter routine for Rxx Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRxx(){
+    return(Rxx);
+}
+
+//! \brief Getter routine for Ryy Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRyy(){
+    return(Ryy);
+}
+
+//! \brief Getter routine for Rzz Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRzz(){
+    return(Rzz);
+}
+
+//! \brief Getter routine for Ryz Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRyz(){
+    return(Ryz);
+}
+
+//! \brief Getter routine for Rxz Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRxz(){
+    return(Rxz);
+}
+
+//! \brief Getter routine for Rxy Relaxation parameter
+template<typename ValueType>
+lama::DenseVector<ValueType>& KITGPI::Wavefields::Wavefields<ValueType>::getRxy(){
+    return(Rxy);
 }

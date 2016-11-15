@@ -13,15 +13,15 @@ namespace KITGPI {
             
             //! \brief 3-D acoustic free surface
             template<typename ValueType>
-            class FreeSurface3Dacoustic : public FreeSurfaceAcoustic<ValueType>
+            class FreeSurface2Dacoustic : public FreeSurfaceAcoustic<ValueType>
             {
             public:
                 
                 //! Default constructor
-                FreeSurface3Dacoustic(){};
+                FreeSurface2Dacoustic(){};
                 
                 //! Default destructor
-                ~FreeSurface3Dacoustic(){};
+                ~FreeSurface2Dacoustic(){};
                 
                 
             };

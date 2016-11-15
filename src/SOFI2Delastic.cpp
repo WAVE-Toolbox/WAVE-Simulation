@@ -9,15 +9,15 @@
 #include "Configuration/Configuration.hpp"
 
 #include "Modelparameter/Elastic.hpp"
-#include "Wavefields/Wavefields3Delastic.hpp"
+#include "Wavefields/Wavefields2Delastic.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
-#include "ForwardSolver/ForwardSolver3Delastic.hpp"
+#include "ForwardSolver/ForwardSolver2Delastic.hpp"
 
-#include "ForwardSolver/Derivatives/FDTD3D.hpp"
+#include "ForwardSolver/Derivatives/FDTD2D.hpp"
 #include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
 #include "Common/HostPrint.hpp"
@@ -58,7 +58,7 @@ int main( int argc, char* argv[] )
         dmemo::DistributionPtr dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D elastic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI2D elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -68,14 +68,14 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD2D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Delastic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD2Delastic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -92,7 +92,7 @@ int main( int argc, char* argv[] )
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Delastic<ValueType> solver;
+    ForwardSolver::FD2Delastic<ValueType> solver;
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     

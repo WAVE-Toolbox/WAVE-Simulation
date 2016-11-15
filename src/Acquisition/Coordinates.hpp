@@ -141,7 +141,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 {
     if ( Z >= NZ || X >= NX || Y >= NY || Z < 0 || X < 0 || Y < 0 )
     {
-        COMMON_THROWEXCEPTION ( "Could not map from coordinate to indize!" )
+        COMMON_THROWEXCEPTION ( "Could not map from coordinate to index!\nGiven indix: X=" << X << ", Y=" << Y << ", Z=" << Z << " is located outside of the grid which runs from 0 to (NX-1), 0 to (NY-1) and 0 to (NZ-1)!" )
         return -100;
     }
     else
@@ -243,9 +243,9 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
 {
     coordinate3D distance;
     
-    distance.x=!((NX-X)<(X-1))?(X-1):(NX-X);
-    distance.y=!((NY-Y)<(Y-1))?(Y-1):(NY-Y);
-    distance.z=!((NX-Z)<(Z-1))?(Z-1):(NZ-Z);
+    distance.x=!((NX-1-X)<(X))?(X):(NX-1-X);
+    distance.y=!((NY-1-Y)<(Y))?(Y):(NY-1-Y);
+    distance.z=!((NX-1-Z)<(Z))?(Z):(NZ-1-Z);
     
     return(distance);
     

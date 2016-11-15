@@ -28,7 +28,7 @@ numel_X=numel(X);
 RECEIVER_TYPE_vec=RECEIVER_TYPE(1)*ones(1,numel_X);
 for(i=2:size(RECEIVER_TYPE,2))
     if(size(RECEIVER_TYPE,2)>1)
-        X=[X X]; Y=[Y Y]; Z=[Z Z];
+        X=[X X(1:numel_X)]; Y=[Y Y(1:numel_X)]; Z=[Z Z(1:numel_X)];
         RECEIVER_TYPE_vec=[RECEIVER_TYPE_vec RECEIVER_TYPE(i)*ones(1,numel_X)];
     end
 end

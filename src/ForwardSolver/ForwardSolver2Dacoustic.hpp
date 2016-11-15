@@ -13,9 +13,8 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
-#include "BoundaryCondition/FreeSurface3Dacoustic.hpp"
-#include "BoundaryCondition/ABS3D.hpp"
-
+#include "BoundaryCondition/FreeSurface2Dacoustic.hpp"
+#include "BoundaryCondition/ABS2D.hpp"
 
 namespace KITGPI {
     
@@ -23,16 +22,16 @@ namespace KITGPI {
         
         //! \brief 3-D Acoustic forward solver
         template<typename ValueType>
-        class FD3Dacoustic : public ForwardSolver<ValueType>
+        class FD2Dacoustic : public ForwardSolver<ValueType>
         {
             
         public:
             
             /* Default constructor */
-            FD3Dacoustic(){};
+            FD2Dacoustic(){};
             
             /* Default destructor */
-            ~FD3Dacoustic(){};
+            ~FD2Dacoustic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT);
             
@@ -43,10 +42,10 @@ namespace KITGPI {
         private:
             
             /* Boundary Conditions */
-            BoundaryCondition::FreeSurface3Dacoustic<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            BoundaryCondition::FreeSurface2Dacoustic<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolver<ValueType>::useFreeSurface;
             
-            BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
+            BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -66,7 +65,7 @@ namespace KITGPI {
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
@@ -93,7 +92,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
 {
     
     IndexType numSourcesLocal=sources.getNumSourcesLocal();
@@ -103,7 +102,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::So
         /* Get reference to wavefields */
         lama::DenseVector<ValueType>& vX=wavefield.getVX();
         lama::DenseVector<ValueType>& vY=wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
         lama::DenseVector<ValueType>& p=wavefield.getP();
         
         /* Get reference to sourcesignal storing seismogram */
@@ -145,9 +143,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::So
                 case 3:
                     vY.getLocalValues()[coordinate_local] = vY.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
                     break;
-                case 4:
-                    vZ.getLocalValues()[coordinate_local] = vZ.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    break;
                 default:
                     COMMON_THROWEXCEPTION("Source type is unkown")
                     break;
@@ -171,7 +166,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::applySource(Acquisition::So
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
 {
     
     IndexType numTracesLocal=seismogram.getNumTracesLocal();
@@ -181,7 +176,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
         /* Get reference to wavefields */
         lama::DenseVector<ValueType>& vX=wavefield.getVX();
         lama::DenseVector<ValueType>& vY=wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
         lama::DenseVector<ValueType>& p=wavefield.getP();
         
         /* Get reference to receiver type of seismogram traces */
@@ -220,9 +214,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
                 case 3:
                     write_seismogram_HA[t+NT*i]=vY.getLocalValues()[coordinate_local];
                     break;
-                case 4:
-                    write_seismogram_HA[t+NT*i]=vZ.getLocalValues()[coordinate_local];
-                    break;
                 default:
                     COMMON_THROWEXCEPTION("Receiver type is unkown")
                     break;
@@ -248,7 +239,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::gatherSeismograms(Wavefield
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
@@ -259,14 +250,11 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
     lama::DenseVector<ValueType>& vY=wavefield.getVY();
-    lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
     lama::DenseVector<ValueType>& p=wavefield.getP();
     
     /* Get references to required derivatives matrixes */
     lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dzf=derivatives.getDzf();
     lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>& Dzb=derivatives.getDzb();
     lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
     lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyfVelocity();
     
@@ -299,14 +287,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         update= Dyf * p;
         vY += update.scale(inverseDensity);
 
-        update=  Dzf * p;
-        vZ += update.scale(inverseDensity);
 
-        
         /* pressure update */
         update  =  Dxb * vX;
         update +=  Dyb * vY;
-        update +=  Dzb * vZ;
         p += update.scale(pWaveModulus);
 
         /* Apply free surface to pressure update */
@@ -316,7 +300,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
 
         /* Apply the damping boundary */
         if(useDampingBoundary){
-            DampingBoundary.apply(p,vX,vY,vZ);
+            DampingBoundary.apply(p,vX,vY);
         }
         
         /* Apply source and save seismogram */

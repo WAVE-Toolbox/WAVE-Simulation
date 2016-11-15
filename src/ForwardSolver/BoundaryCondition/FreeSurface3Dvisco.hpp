@@ -1,0 +1,74 @@
+#pragma once
+
+#include "../Derivatives/Derivatives.hpp"
+#include "../../Common/HostPrint.hpp"
+#include "FreeSurfaceVisco.hpp"
+
+namespace KITGPI {
+    
+    namespace ForwardSolver {
+        
+        //! \brief BoundaryCondition namespace
+        namespace BoundaryCondition {
+            
+            //! \brief 3-D visco free surface
+            template<typename ValueType>
+            class FreeSurface3Dvisco : public FreeSurfaceVisco<ValueType>
+            {
+            public:
+                
+                //! Default constructor
+                FreeSurface3Dvisco(){};
+                
+                //! Default destructor
+                ~FreeSurface3Dvisco(){};
+                
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz, lama::DenseVector<ValueType>& Rxx, lama::DenseVector<ValueType>& Ryy, lama::DenseVector<ValueType>& Rzz);
+                
+            private:
+                                
+                using FreeSurfaceVisco<ValueType>::setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
+                using FreeSurfaceVisco<ValueType>::scaleStressHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the stress update
+                using FreeSurfaceVisco<ValueType>::scaleRelaxationHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the update of the relaxation mechanism
+
+            };
+        } /* end namespace BoundaryCondition */
+    } /* end namespace ForwardSolver */
+} /* end namespace KITGPI */
+
+
+/*! \brief Apply free surface condition during time stepping
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param sumHorizonatlDerivative Sum of horizontal velocity updates
+ \param temp DenseVector which is used for temporary storage
+ \param Sxx Sxx wavefield (stress)
+ \param Syy Syy wavefield (stress)
+ \param Szz Szz wavefield (stress)
+ \param Rxx Rxx wavefield (relaxation)
+ \param Ryy Ryy wavefield (relaxation)
+ \param Rzz Rzz wavefield (relaxation)
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco<ValueType>::apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz, lama::DenseVector<ValueType>& Rxx, lama::DenseVector<ValueType>& Ryy, lama::DenseVector<ValueType>& Rzz){
+    
+    
+    /* Update the stress parameter at the free surface */
+    temp=sumHorizonatlDerivative;
+    temp.scale(scaleStressHorizontalUpdate);
+    Sxx +=temp; // Apply horizontal update
+    Szz +=temp; // Apply horizontal update
+    
+    Syy.scale(setSurfaceZero); // Set the free surface to zero
+
+    
+    /* Update relaxation parameter at the free surface */
+    sumHorizonatlDerivative.scale(scaleRelaxationHorizontalUpdate);
+    Rxx +=sumHorizonatlDerivative; // Apply horizontal update
+    Rzz +=sumHorizonatlDerivative; // Apply horizontal update
+    
+    Ryy.scale(setSurfaceZero); // Set the free surface to zero
+
+}
