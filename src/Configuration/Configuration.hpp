@@ -164,7 +164,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ):NumParameters(30),numRelaxationMechanisms(0)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ):NumParameters(34),numRelaxationMechanisms(0)
 {
     // read all lines in file
     

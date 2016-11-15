@@ -30,6 +30,16 @@ namespace KITGPI
 
 				void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar);
 				
+				
+				
+			void applyHalfX(lama::Vector& VecX,lama::DenseVector<ValueType>& Psi);
+			void applyX(lama::Vector& VecX,lama::DenseVector<ValueType>& Psi);
+			void applyHalfY(lama::Vector& VecY,lama::DenseVector<ValueType>& Psi);
+			void applyY(lama::Vector& VecY,lama::DenseVector<ValueType>& Psi);
+			void applyHalfZ(lama::Vector& VecZ,lama::DenseVector<ValueType>& Psi);
+			void applyZ(lama::Vector& VecZ,lama::DenseVector<ValueType>& Psi);
+			
+			private:
 				lama::DenseVector<ValueType> k_x;
 				lama::DenseVector<ValueType> b_x;
 				lama::DenseVector<ValueType> a_x;
@@ -50,15 +60,6 @@ namespace KITGPI
 				lama::DenseVector<ValueType> b_z_half;
 				lama::DenseVector<ValueType> a_z_half;
 				
-			void applyHalfX(lama::Vector& VecX,lama::DenseVector<ValueType>& Psi);
-			void applyX(lama::Vector& VecX,lama::DenseVector<ValueType>& Psi);
-			void applyHalfY(lama::Vector& VecY,lama::DenseVector<ValueType>& Psi);
-			void applyY(lama::Vector& VecY,lama::DenseVector<ValueType>& Psi);
-			void applyHalfZ(lama::Vector& VecZ,lama::DenseVector<ValueType>& Psi);
-			void applyZ(lama::Vector& VecZ,lama::DenseVector<ValueType>& Psi);
-			
-			private:
-			
 				lama::DenseVector<ValueType> update_PmlTemp;
 
 			};

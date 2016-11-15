@@ -31,7 +31,7 @@ ModelParametrisation=2    # 1=Lame, 2=Velocity
 # Apply the free surface condition
 FreeSurface=0
 # Apply Damping Boundary 1=ABS 2=CPML
-DampingBoundary=2
+DampingBoundary=1
 BoundaryWidth=10
 
 DampingCoeff=8.0
