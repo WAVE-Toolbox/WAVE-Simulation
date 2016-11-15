@@ -9,6 +9,8 @@
 #include <scai/lama/matutils/MatrixCreator.hpp>
 #include <scai/lama/norm/L2Norm.hpp>
 
+#include "../Common/HostPrint.hpp"
+
 #include <scai/dmemo/BlockDistribution.hpp>
 
 #include <scai/hmemo/ReadAccess.hpp>
@@ -104,6 +106,12 @@ namespace KITGPI {
             using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+            using Modelparameter<ValueType>::xAvDensity;
+            using Modelparameter<ValueType>::yAvDensity;
+            using Modelparameter<ValueType>::zAvDensity;
             
         };
     }
@@ -365,6 +373,47 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename)
 };
 
 
+//! \brief Initializsation of the Averaging matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param DH Grid spacing (equidistant)
+ \param DT Temporal sampling interval
+ \param spatialFDorderInput FD-order of spatial stencils
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr comm )
+{
+    
+    SCAI_REGION( "initializeMatrices" )
+    
+    HOST_PRINT( comm, "Initialization of the averaging matrices." );
+    
+    this->calc_xAvDensity(NX, NY, NZ, dist);
+    this->calc_yAvDensity(NX, NY, NZ, dist);
+    this->calc_zAvDensity(NX, NY, NZ, dist);
+    //S-Wave modulus only in elastic case
+    //this->calc_xyAvSWaveModulus(NX, NY, NZ, dist);
+    //this->calc_xzAvSWaveModulus(NX, NY, NZ, dist);
+    //this->calc_yzAvSWaveModulus(NX, NY, NZ, dist);
+    
+    xAvDensity.setContextPtr( ctx );
+    yAvDensity.setContextPtr( ctx );
+    zAvDensity.setContextPtr( ctx );
+    //xyAvSWaveModulus.setContextPtr( ctx );
+    //xzAvSWaveModulus.setContextPtr( ctx );
+    //yzAvSWaveModulus.setContextPtr( ctx );
+    
+    HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
+    
+    
+}
+
 
 /*! \brief Get reference to S-wave modulus
  *
@@ -523,3 +572,5 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 {
     return this - rhs;
 }
+
+

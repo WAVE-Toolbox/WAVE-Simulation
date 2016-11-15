@@ -80,6 +80,21 @@ namespace KITGPI {
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling()=0;
             
+            //! \brief Getter method for averaging density matrix in x-direction
+            virtual lama::CSRSparseMatrix<ValueType>& get_xAvDensity();
+            //! \brief Getter method for averaging density matrix in y-direction
+            virtual lama::CSRSparseMatrix<ValueType>& get_yAvDensity();
+            //! \brief Getter method for averaging density matrix in z-direction
+            virtual lama::CSRSparseMatrix<ValueType>& get_zAvDensity();
+            
+            //! \brief Getter method for averaging S-Wave modulus xy-plane
+            virtual lama::CSRSparseMatrix<ValueType>& get_xyAvSWaveModulus();
+            //! \brief Getter method for averaging S-Wave modulus xz-plane
+            virtual lama::CSRSparseMatrix<ValueType>& get_xzAvSWaveModulus();
+            //! \brief Getter method for averaging S-Wave modulus yz-plane
+            virtual lama::CSRSparseMatrix<ValueType>& get_yzAvSWaveModulus();
+            
+            
         protected:
             
             bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
@@ -111,7 +126,7 @@ namespace KITGPI {
             void calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule );
             
             void calcVelocityFromModule(lama::DenseVector<ValueType>& vectorModule, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity);
-
+            
             /*! \brief Switch parameterization to velocity */
             virtual void switch2velocity()=0;
             /*! \brief Switch parameterization to modulus */
@@ -125,10 +140,66 @@ namespace KITGPI {
             
             IndexType getParametrisation();
             
+            //! \brief Initializsation of the aneraging matrices
+            /*!
+             *
+             \param dist Distribution of the wavefield
+             \param ctx Context
+             \param NX Total number of grid points in X
+             \param NY Total number of grid points in Y
+             \param NZ Total number of grid points in Z
+             \param DH Grid spacing (equidistant)
+             \param DT Temporal sampling interval
+             \param spatialFDorder FD-order of spatial stencils
+             \param comm Communicator
+             */
+            virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
+            
+            void calc_xAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calc_yAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calc_zAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            
+            void calc_xyAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calc_xzAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calc_yzAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            
+            lama::CSRSparseMatrix<ValueType> xAvDensity; //!< Averaging density matrix in x-direction
+            lama::CSRSparseMatrix<ValueType> yAvDensity; //!< Averaging density matrix in x-direction
+            lama::CSRSparseMatrix<ValueType> zAvDensity; //!< Averaging density matrix in x-direction
+            
+            lama::CSRSparseMatrix<ValueType> xyAvSWaveModulus; //!< Average S-wave Modulus in xy-plane
+            lama::CSRSparseMatrix<ValueType> xzAvSWaveModulus; //!< Average S-wave Modulus in xz-plane
+            lama::CSRSparseMatrix<ValueType> yzAvSWaveModulus; //!< Average S-wave Modulus in yz-plane
+            
+            
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
             void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            
+            typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(IndexType , IndexType& , IndexType& , hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType ); //!< Pointer to set elements functions
+            
+            typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
+            
+            void calc_AvMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            
+            IndexType calcNumberRowElements_xAvDensity(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_yAvDensity(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_zAvDensity(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_xyAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_xzAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_yzAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            
+            void setRowElements_xAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_yAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_zAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            
+            void setRowElements_xyAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_xzAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_yzAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            
         };
     }
 }
@@ -232,7 +303,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule )
 {
-
+    
     vectorModule=vecDensity;
     vectorModule.scale(vecVelocity);
     vectorModule.scale(vecVelocity);
@@ -351,7 +422,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -369,7 +440,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -398,3 +469,763 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     return(tauS);
 }
 
+
+//! \brief Function to set elements of a single row of x-averaging density matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/){
+    
+    IndexType RowNumber_plusOne = rowNumber + 1;
+    
+    for(IndexType j=0; j<=1; j++) {
+        // Insert 1.0/2.0 on diagonal elements exept for last element in every NX x NX matrix. Here: insert 1
+        if(j==0){
+            csrJALocal[countJA]=rowNumber;
+            if (RowNumber_plusOne % NX == 0) {
+                csrvaluesLocal[countJA]=1.0;
+            } else {
+                csrvaluesLocal[countJA]=1.0/2.0;
+            }
+            countJA++;
+        } else {
+            // Set elaments right to diagonal to 1.0/2.0 exept matrix elements with condition (row%NX)!=0)
+            if (RowNumber_plusOne % NX != 0) {
+                csrJALocal[countJA]=rowNumber+1;
+                csrvaluesLocal[countJA]=1.0/2.0;
+                countJA++;
+            }
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+//! \brief Function to set elements of a single row of y-averaging density matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+    
+    IndexType NXNY = NX * NY;
+    
+    
+    for(IndexType j=0; j<=1; j++) {
+        // Insert 1.0/2.0 on diagonal elements exept for matrix elements in the last NX x NX matrix in every submatrix NXNY x NXNY. Here: insert 1
+        if(j==0){
+            csrJALocal[countJA]=rowNumber;
+            if ((rowNumber % NXNY) >= (NX * (NY - 1))) {
+                csrvaluesLocal[countJA]=1.0;
+            } else {
+                csrvaluesLocal[countJA]=1.0/2.0;
+            }
+            countJA++;
+        } else {
+            // Set elaments NX right to diagonal to 1.0/2.0 not if (row%NXNY) element of {0,...,Nx-1}
+            if ((rowNumber % NXNY) <= (NX * (NY - 1)-1)) {
+                csrJALocal[countJA]=rowNumber+NX;
+                csrvaluesLocal[countJA]=1.0/2.0;
+                countJA++;
+            }
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+
+//! \brief Function to set elements of a single row of x-averaging density matrix
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_zAvDensity(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+    
+    IndexType NXNY = NX * NY;
+    
+    
+    for(IndexType j=0; j<=1; j++) {
+        // Insert 1.0/2.0 on diagonal elements exept for matrix elements in the last NXNY x NXNY matrix. Here: insert 1
+        if(j==0){
+            csrJALocal[countJA]=rowNumber;
+            if (((rowNumber) >= (NXNY * (NZ - 1)))) {
+                csrvaluesLocal[countJA]=1.0;
+            } else {
+                csrvaluesLocal[countJA]=1.0/2.0;
+            }
+            countJA++;
+        } else {
+            // Set elaments NXNY right to diagonal to 1.0/2.0
+            if (rowNumber <= NXNY*(NZ-1)-1) {
+                csrJALocal[countJA]=rowNumber+NXNY;
+                csrvaluesLocal[countJA]=1.0/2.0;
+                countJA++;
+            }
+        }
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+
+//! \brief Function to set elements of a single row averaging s-wave modulus matrix in xy-plane
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xyAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+    
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j <= 1) {
+            if ((rowNumber % NXNY) >= (NX * (NY - 1))) {
+                // Set diagonal elements in last submatrix
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0;
+                    }
+                } else {
+                    csrJALocal[countJA]=rowNumber + j;
+                    csrvaluesLocal[countJA]=1.0/2.0;
+                }
+            } else {
+                // Set diagonal elements and elements right next do diagonal elements
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    csrJALocal[countJA]=rowNumber + j;
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        } else {
+            if ((rowNumber % NXNY) <= (NX * (NY - 1) - 1)) {
+                // Set elements NX and NX+1 right to diagonal elements
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==2) {
+                        //  set last element in the submatrices
+                        csrJALocal[countJA]=rowNumber + NX;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    //set the other elements
+                    csrJALocal[countJA]=rowNumber + NX + j - 2;
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        }
+        countJA++;
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+
+//! \brief Function to set elements of a single row averaging s-wave modulus matrix in xz-plane
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xzAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+    
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j <= 1) {
+            if (rowNumber >= (NXNY * (NZ - 1))) {
+                // Set diagonal elements and elements next to diagonal in last submatrix
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0;
+                    }
+                } else {
+                    csrJALocal[countJA]=rowNumber + j;
+                    csrvaluesLocal[countJA]=1.0/2.0;
+                }
+            } else {
+                // Set diagonal elements and elements next to diagonal elements
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    csrJALocal[countJA]=rowNumber + j;
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        } else {
+            if (rowNumber <= (NXNY * (NZ - 1) - 1)) {
+                // Set elements NXNY right to diagonal
+                if ((rowNumber % NX) == (NX - 1)) {
+                    if (j==2) {
+                        //  set last element in the submatrices
+                        csrJALocal[countJA]=rowNumber + NXNY;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    //set the other elements
+                    csrJALocal[countJA]=rowNumber + NXNY + j-2;
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        }
+        countJA++;
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+
+//! \brief Function to set elements of a single row averaging s-wave modulus matrix in YZ-plane
+/*!
+ *
+ \param rowNumber Number of current row
+ \param countJA Counter for JA Elements
+ \param countIA Counter for IA Elements
+ \param csrJALocal Local values of JA
+ \param csrIALocal Local values of IA
+ \param csrvaluesLocal Local values of the matrix content
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yzAvSWaveModulus(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+    
+    IndexType NXNY = NX * NY;
+    IndexType NXNYNZ = NX * NY * NZ;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j <= 1) {
+            if (rowNumber >= (NXNY * (NZ - 1))) {
+                // Set elements in last submatrix NX x NX
+                if (rowNumber >= NXNYNZ - NX) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0;
+                    }
+                } else {
+                    // Set elements in last submatrix NXNY x NXNY
+                    csrJALocal[countJA]=rowNumber + j * NX;
+                    csrvaluesLocal[countJA]=1.0/2.0;
+                }
+            } else {
+                // Set elements in diagonal submatrices NXNY x NXNY
+                if ((rowNumber % NXNY) >= (NX*(NY - 1))) {
+                    if (j==0) {
+                        csrJALocal[countJA]=rowNumber;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    csrJALocal[countJA]=rowNumber + (j * NX);
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        } else {
+            if (rowNumber <= (NXNY * (NZ - 1) - 1)) {
+                // Set elements NXNY and NYNX+NX right to diagonal elements
+                if((rowNumber % NXNY) >= (NX * (NY - 1))){
+                    if (j==2) {
+                        //  set last element in the submatrices
+                        csrJALocal[countJA]=rowNumber + NXNY;
+                        csrvaluesLocal[countJA]=1.0/2.0;
+                    }
+                } else {
+                    //set the other elements
+                    csrJALocal[countJA]=rowNumber + NXNY + (j-2) * NX;
+                    csrvaluesLocal[countJA]=1.0/4.0;
+                }
+            }
+        }
+        countJA++;
+    }
+    csrIALocal[countIA]=countJA;
+    countIA++;
+    
+}
+
+
+//! \brief Calculate of averaging derivative matrix
+/*!
+ *
+ \param Av Averaging Matrix Av
+ \param calcNumberRowElements Member-Function to calculate number of elements in a single row
+ \param setRowElements Member-Function to set the elements in a single row
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_AvMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+    
+    /* Get local "global" indices */
+    hmemo::HArray<IndexType> localIndices;
+    dist->getOwnedIndexes(localIndices); //here the local indices of each process are retrieved and stored in localIndices
+    
+    /* Number of grid points */
+    IndexType N=NX*NY*NZ;
+    
+    IndexType numLocalIndices=localIndices.size(); // Number of local indices
+    IndexType numLocalValues=0; // Number of local values of Matrix Df
+    
+    /* Calculate the number of values in each matrix */
+    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    IndexType read_localIndices_temp; // Temporary storage of the local index for the ongoing iterations
+    
+    for(IndexType i=0; i<numLocalIndices; i++){
+        
+        read_localIndices_temp=read_localIndices[i];
+        
+        /* Check for elements of Av */
+        numLocalValues+=(this->*calcNumberRowElements)(read_localIndices_temp,NX,NY,NZ);
+        
+    }
+    
+    /* Allocate local part to create local CSR storage*/
+    hmemo::HArray<ValueType> valuesLocal(numLocalValues);
+    hmemo::HArray<IndexType> csrJALocal(numLocalValues);
+    hmemo::HArray<IndexType> csrIALocal(numLocalIndices+1);
+    
+    /* Get WriteAccess to local part */
+    hmemo::WriteAccess<IndexType> write_csrJALocal(csrJALocal);
+    hmemo::WriteAccess<IndexType> write_csrIALocal(csrIALocal);
+    hmemo::WriteAccess<ValueType> write_valuesLocal(valuesLocal);
+    
+    /* Set some counters to create the CSR Storage */
+    IndexType countJA=0;
+    IndexType countIA=0;
+    write_csrIALocal[0]=0;
+    countIA++;
+    
+    /* Set the values into the indice arrays and the value array for CSR matrix build */
+    for(IndexType i=0; i<numLocalIndices; i++){
+        
+        read_localIndices_temp=read_localIndices[i];
+        
+        // write AveragingMatrix
+        (this->*setRowElements)(read_localIndices_temp,countJA,countIA,write_csrJALocal,write_csrIALocal,write_valuesLocal,NX,NY,NZ);
+        
+    }
+    
+    /* Release all read and write access */
+    read_localIndices.release();
+    
+    write_csrJALocal.release();
+    write_csrIALocal.release();
+    write_valuesLocal.release();
+    
+    /* Create local CSR storage of Matrix D, than create distributed CSR matrix D */
+    lama::CSRStorage<ValueType> Av_LocalCSR(numLocalIndices,N,numLocalValues,csrIALocal,csrJALocal,valuesLocal);
+    Av_LocalCSR.compress();
+    Av.assign(Av_LocalCSR,dist,dist);
+    
+}
+
+
+
+//! \brief Wrapper to support configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+}
+
+
+//! \brief Calculate number of row elements for density averaging matrix in x-direction
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xAvDensity(IndexType rowNumber, IndexType NX,IndexType /*NY*/, IndexType /*NZ*/){
+    
+    IndexType counter=0;
+    
+    for (IndexType j=0; j<=1; j++){
+        if((rowNumber % NX) == (NX-1)){
+            if (j==0){
+                counter++;
+            }
+        } else {
+            counter++;
+        }
+    }
+    return(counter);
+}
+
+
+//! \brief Calculate number of row elements for density averaging matrix in y-direction
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_yAvDensity(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
+    
+    IndexType counter=0;
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=1; j++){
+        if((rowNumber % NXNY) >= (NX * (NY - 1))){
+            if (j==0){
+                counter++;
+            }
+        } else {
+            counter++;
+        }
+    }
+    return(counter);
+}
+
+
+//! \brief Calculate number of row elements for density averaging matrix in z-direction
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_zAvDensity(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+    
+    IndexType counter=0;
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=1; j++){
+        if(rowNumber >= (NXNY * (NZ - 1))){
+            if (j==0){
+                counter++;
+            }
+        } else {
+            counter++;
+        }
+    }
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for s-wave modulus averaging matrix in xy-plane
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xyAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
+    
+    IndexType counter=0;
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j<=1) {
+            if (j==0) {
+                counter++;
+            } else {
+                if((rowNumber % NX) <= ((NX - 1) - 1)) {
+                    counter++;
+                }
+            }
+        } else {
+            if ((rowNumber % NXNY) <= (NX * (NY - 1) - 1)) {
+                if (j==2){
+                    counter++;
+                } else {
+                    if ((rowNumber % NX) != (NX - 1)) {
+                        counter++;
+                    }
+                }
+            }
+        }
+    }
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for s-wave modulus averaging matrix in xz-plane
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xzAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+    
+    IndexType counter=0;
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j<=1) {
+            if (j==0) {
+                counter++;
+            } else {
+                if((rowNumber % NX) <= ((NX - 1) - 1)) {
+                    counter++;
+                }
+            }
+        } else {
+            if (rowNumber <= (NXNY * (NZ - 1) - 1)) {
+                if (j==2){
+                    counter++;
+                } else {
+                    if ((rowNumber % NX) != (NX - 1)) {
+                        counter++;
+                    }
+                }
+            }
+            
+        }
+    }
+    return(counter);
+}
+
+//! \brief Calculate number of row elements for s-wave modulus averaging matrix in yz-plane
+/*!
+ *
+ \param rowNumber Row Indice
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \return counter Number of elements in this row
+ */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_yzAvSWaveModulus(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+    
+    IndexType counter=0;
+    IndexType NXNY = NX * NY;
+    
+    for (IndexType j=0; j<=3; j++){
+        if (j<=1) {
+            if (j==0) {
+                counter++;
+            } else {
+                if((rowNumber % NXNY) <= (NX * (NY - 1) - 1)) {
+                    counter++;
+                }
+            }
+        } else {
+            if (rowNumber <= (NXNY * (NZ - 1) - 1)) {
+                if (j==2){
+                    counter++;
+                } else {
+                    if ((rowNumber % NXNY) <= (NX * (NY - 1) - 1)) {
+                        counter++;
+                    }
+                }
+            }
+            
+        }
+    }
+    return(counter);
+}
+
+
+
+//! \brief Calculate density averaging matrix in x-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(xAvDensity, &Modelparameter<ValueType>::calcNumberRowElements_xAvDensity, &Modelparameter<ValueType>::setRowElements_xAvDensity, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate density averaging matrix in y-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_yAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(yAvDensity, &Modelparameter<ValueType>::calcNumberRowElements_yAvDensity, &Modelparameter<ValueType>::setRowElements_yAvDensity, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate density averaging matrix in z-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_zAvDensity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(zAvDensity, &Modelparameter<ValueType>::calcNumberRowElements_zAvDensity, &Modelparameter<ValueType>::setRowElements_zAvDensity, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate s-wave modulus averaging matrix in x-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xyAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(xyAvSWaveModulus, &Modelparameter<ValueType>::calcNumberRowElements_xyAvSWaveModulus, &Modelparameter<ValueType>::setRowElements_xyAvSWaveModulus, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate s-wave modulus averaging matrix in y-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xzAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(xzAvSWaveModulus, &Modelparameter<ValueType>::calcNumberRowElements_xzAvSWaveModulus, &Modelparameter<ValueType>::setRowElements_xzAvSWaveModulus, NX, NY, NZ, dist);
+}
+
+
+//! \brief Calculate s-wave modulus averaging matrix in z-direction
+/*!
+ *
+ \param NX Number of grid points in X-direction
+ \param NY Number of grid points in Y-direction
+ \param NZ Number of grid points in Z-direction
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_yzAvSWaveModulus(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+{
+    calc_AvMatrix(yzAvSWaveModulus, &Modelparameter<ValueType>::calcNumberRowElements_yzAvSWaveModulus, &Modelparameter<ValueType>::setRowElements_yzAvSWaveModulus, NX, NY, NZ, dist);
+}
+
+
+
+//! \brief Getter method for averaging density matrix in x-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xAvDensity(){
+    return(xAvDensity);
+}
+
+
+//! \brief Getter method for averaging density matrix in y-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yAvDensity(){
+    return(yAvDensity);
+}
+
+
+//! \brief Getter method for averaging density matrix in z-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_zAvDensity(){
+    return(zAvDensity);
+}
+
+
+//! \brief Getter method for averaging S-wave modulus matrix x-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xyAvSWaveModulus(){
+    return(xyAvSWaveModulus);
+}
+
+//! \brief Getter method for averaging S-wave modulus matrix y-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xzAvSWaveModulus(){
+    return(xzAvSWaveModulus);
+}
+
+//! \brief Getter method for averaging S-wave modulus matrix z-direction
+template<typename ValueType>
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yzAvSWaveModulus(){
+    return(yzAvSWaveModulus);
+}

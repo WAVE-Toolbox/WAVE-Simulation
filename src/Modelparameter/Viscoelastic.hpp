@@ -11,6 +11,8 @@
 
 #include <scai/dmemo/BlockDistribution.hpp>
 
+#include "../Common/HostPrint.hpp"
+
 #include <scai/hmemo/ReadAccess.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
 #include <scai/hmemo/HArray.hpp>
@@ -94,6 +96,15 @@ namespace KITGPI {
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            
+            using Modelparameter<ValueType>::xAvDensity;
+            using Modelparameter<ValueType>::yAvDensity;
+            using Modelparameter<ValueType>::zAvDensity;
+            using Modelparameter<ValueType>::xyAvSWaveModulus;
+            using Modelparameter<ValueType>::xzAvSWaveModulus;
+            using Modelparameter<ValueType>::yzAvSWaveModulus;
             
         };
     }
@@ -378,6 +389,47 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     this->writeModelparameter(tauS,filenameTauS);
     
 };
+
+//! \brief Initializsation of the Averaging matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param DH Grid spacing (equidistant)
+ \param DT Temporal sampling interval
+ \param spatialFDorderInput FD-order of spatial stencils
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr comm )
+{
+    
+    SCAI_REGION( "initializeMatrices" )
+    
+    HOST_PRINT( comm, "Initialization of the averaging matrices." );
+    
+    this->calc_xAvDensity(NX, NY, NZ, dist);
+    this->calc_yAvDensity(NX, NY, NZ, dist);
+    this->calc_zAvDensity(NX, NY, NZ, dist);
+    //S-Wave modulus only in elastic case
+    this->calc_xyAvSWaveModulus(NX, NY, NZ, dist);
+    this->calc_xzAvSWaveModulus(NX, NY, NZ, dist);
+    this->calc_yzAvSWaveModulus(NX, NY, NZ, dist);
+    
+    xAvDensity.setContextPtr( ctx );
+    yAvDensity.setContextPtr( ctx );
+    zAvDensity.setContextPtr( ctx );
+    xyAvSWaveModulus.setContextPtr( ctx );
+    xzAvSWaveModulus.setContextPtr( ctx );
+    yzAvSWaveModulus.setContextPtr( ctx );
+    
+    HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
+    
+    
+}
 
 /*! \brief Initialisation the relaxation mechanisms
  *
