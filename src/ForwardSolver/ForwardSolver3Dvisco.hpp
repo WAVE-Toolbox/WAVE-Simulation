@@ -270,9 +270,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& xyAvSWaveModulus=model.get_xyAvSWaveModulus();
     lama::DenseVector<ValueType>& xzAvSWaveModulus=model.get_xzAvSWaveModulus();
     lama::DenseVector<ValueType>& yzAvSWaveModulus=model.get_yzAvSWaveModulus();
-////    lama::DenseVector<ValueType>& xyAvTauS=model.get_xyAvTauS();
-////    lama::DenseVector<ValueType>& xyAvTauS=model.get_xzAvTauS();
-////    lama::DenseVector<ValueType>& xyAvTauS=model.get_yzAvTauS();
+    lama::DenseVector<ValueType>& xyAvTauS=model.get_xyAvTauS();
+    lama::DenseVector<ValueType>& xyAvTauS=model.get_xzAvTauS();
+    lama::DenseVector<ValueType>& xyAvTauS=model.get_yzAvTauS();
     
     
     /* Get references to required wavefields */
@@ -390,112 +390,112 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         update += vzz;
         update.scale(pWaveModulus);
         
-        update2=inverseRelaxationTime*update;    //*****
-        update2.scale(tauP);    //*****
+        update2=inverseRelaxationTime*update;
+        update2.scale(tauP);
         
-        Sxx += DThalf * Rxx;    //*****
-        Rxx *= viscoCoeff1;    //*****
-        Rxx -= update2;    //*****
+        Sxx += DThalf * Rxx;
+        Rxx *= viscoCoeff1;
+        Rxx -= update2;
         
-        Syy += DThalf * Ryy;    //*****
-        Ryy *= viscoCoeff1;    //*****
-        Ryy -= update2;    //*****
+        Syy += DThalf * Ryy;
+        Ryy *= viscoCoeff1;
+        Ryy -= update2;
         
-        Szz += DThalf * Rzz;    //*****
-        Rzz *= viscoCoeff1;    //*****
-        Rzz -= update2;    //*****
+        Szz += DThalf * Rzz;
+        Rzz *= viscoCoeff1;
+        Rzz -= update2;
         
-        update.scale(onePlusLtauP);    //*****
-        Sxx += update;    //*****
-        Syy += update;    //*****
-        Szz += update;    //*****
+        update.scale(onePlusLtauP);
+        Sxx += update;
+        Syy += update;
+        Szz += update;
         
         
         /* Update Sxx and Rxx */
-        update=vyy+vzz;    //*****
-        update.scale(sWaveModulus);    //*****
-        update *= 2.0;    //*****
+        update=vyy+vzz;
+        update.scale(sWaveModulus);
+        update *= 2.0;
 
-        update2=inverseRelaxationTime* update;    //*****
-        Rxx += update2.scale(tauS);    //*****
-        Sxx -= update.scale(onePlusLtauS);    //*****
+        update2=inverseRelaxationTime* update;
+        Rxx += update2.scale(tauS);
+        Sxx -= update.scale(onePlusLtauS);
 
-        Rxx *= viscoCoeff2;    //*****
-        Sxx += DThalf * Rxx;    //*****
+        Rxx *= viscoCoeff2;
+        Sxx += DThalf * Rxx;
         
         
         /* Update Syy and Ryy */
-        update=vxx+vzz;    //*****
-        update.scale(sWaveModulus);    //*****
-        update *= 2.0;    //*****
+        update=vxx+vzz;
+        update.scale(sWaveModulus);
+        update *= 2.0;
 
-        update2=inverseRelaxationTime* update;    //*****
-        Ryy += update2.scale(tauS);    //*****
-        Syy -= update.scale(onePlusLtauS);    //*****
+        update2=inverseRelaxationTime* update;
+        Ryy += update2.scale(tauS);
+        Syy -= update.scale(onePlusLtauS);
         
-        Ryy *= viscoCoeff2;    //*****
-        Syy += DThalf * Ryy;    //*****
+        Ryy *= viscoCoeff2;
+        Syy += DThalf * Ryy;
         
         
         /* Update Szz and Szz */
-        update=vxx+vyy;    //*****
-        update.scale(sWaveModulus);    //*****
-        update *= 2.0;    //*****
+        update=vxx+vyy;
+        update.scale(sWaveModulus);
+        update *= 2.0;
 
-        update2=inverseRelaxationTime* update;    //*****
-        Rzz += update2.scale(tauS);    //*****
-        Szz -= update.scale(onePlusLtauS);    //*****
+        update2=inverseRelaxationTime* update;
+        Rzz += update2.scale(tauS);
+        Szz -= update.scale(onePlusLtauS);
         
-        Rzz *= viscoCoeff2;    //*****
-        Szz += DThalf * Rzz;    //*****
+        Rzz *= viscoCoeff2;
+        Szz += DThalf * Rzz;
         
         
         /* Update Sxy and Rxy*/
-        Sxy += DThalf * Rxy;    //*****
-        Rxy *= viscoCoeff1;    //*****
+        Sxy += DThalf * Rxy;
+        Rxy *= viscoCoeff1;
 
         update = DyfPressure * vX;
         update += Dxf * vY;
         update.scale(xyAvSWaveModulus);
 
-        update2 = inverseRelaxationTime * update;    //*****
-        Rxy -= update2.scale(tauS);    //*****
-        Sxy += update.scale(onePlusLtauS);    //*****
+        update2 = inverseRelaxationTime * update;
+        Rxy -= update2.scale(xyAvTauS);
+        Sxy += update.scale(onePlusLtauS);
         
-        Rxy *= viscoCoeff2;    //*****
-        Sxy += DThalf * Rxy;    //*****
+        Rxy *= viscoCoeff2;
+        Sxy += DThalf * Rxy;
 
         
         /* Update Sxz and Rxz */
-        Sxz += DThalf * Rxz;    //*****
-        Rxz *= viscoCoeff1;    //*****
+        Sxz += DThalf * Rxz;
+        Rxz *= viscoCoeff1;
 
         update = Dzf * vX;
         update += Dxf * vZ;
         update.scale(xzAvSWaveModulus);
         
-        update2 = inverseRelaxationTime * update;    //*****
-        Rxz -= update2.scale(tauS);    //*****
-        Sxz += update.scale(onePlusLtauS);    //*****
+        update2 = inverseRelaxationTime * update;
+        Rxz -= update2.scale(xzAvTauS);
+        Sxz += update.scale(onePlusLtauS);
 
-        Rxz *= viscoCoeff2;    //*****
-        Sxz += DThalf * Rxz;    //*****
+        Rxz *= viscoCoeff2;
+        Sxz += DThalf * Rxz;
         
         
         /* Update Syz and Syz */
-        Syz += DThalf * Ryz; //*****
-        Ryz *= viscoCoeff1;    //*****
+        Syz += DThalf * Ryz;
+        Ryz *= viscoCoeff1;
 
         update = Dzf * vY;
         update += DyfPressure * vZ;
         update.scale(yzAvSWaveModulus);
         
-        update2 = inverseRelaxationTime * update;    //*****
-        Ryz -= update2.scale(tauS);    //*****
-        Syz += update.scale(onePlusLtauS);    //*****
+        update2 = inverseRelaxationTime * update;
+        Ryz -= update2.scale(yzAvTauS);
+        Syz += update.scale(onePlusLtauS);
 
-        Ryz *= viscoCoeff2;    //*****
-        Syz += DThalf * Ryz;    //*****
+        Ryz *= viscoCoeff2;
+        Syz += DThalf * Ryz; 
         
         /* Apply free surface to stress update */
         if(useFreeSurface){
