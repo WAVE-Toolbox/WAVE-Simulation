@@ -455,6 +455,53 @@ Die Verwendung des SSG erfordert hinsichtlich numerischer Stabilität, dass die 
 	\mu_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k,l+1,m+1}}
 \end{align*}
 
+Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity. Here $\mu_{k,l,m}$ is the S-wave module and $M$ is the P-wave module. As the system is represented by relaxation bodies the summation over $q$ is equal to the summation over all $L$ Maxwell Bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. \\$r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$ -th relaxation body to help calculate the corresponding stress-tensor component $\sigma_{ij,k,l,m}$
+The components of the stress tensor are given by:
+
+\begin{align*}
+	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} =&\sigma_{xx,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xx,q,k,l,m}^{n-\frac{1}{2}}+ r_{xx,q,k,l,m}^{n+\frac{1}{2}}\right) \\
+	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} =&\sigma_{yy,k,l,m}^{n}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n-} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,q,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
+	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} =&\sigma_{zz,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,i,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
+	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =&\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m}\left(1+L\cdot\tau_{k+\frac{1}{2},l+\frac{1}{2},m}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n \right)\Bigg] + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}}\right) \\
+	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =&\sigma_{xy,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\left(1+L\cdot\tau_{k+\frac{1}{2},l,m+\frac{1}{2}}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
+	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \sigma_{xy,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\left(1+L\cdot\tau_{k,l+\frac{1}{2},m+\frac{1}{2}}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
+\end{align*}
+
+
+\begin{align*}
+	r_{xx,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xx,q,k,l,m}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
+	& + \frac{\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
+	r_{yy,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{yy,q,k,l,m}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
+	& + \frac{\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
+	r_{zz,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{zz,q,k,l,m}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
+	& + \frac{\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
+	r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{k+\frac{1}{2},l+\frac{1}{2},m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k+\frac{1}{2},l+\frac{1}{2},m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^{n} \right)\Bigg]\\
+	r_{xz,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xz,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k+\frac{1}{2},l,m+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^{n} \right)\Bigg]\\
+	r_{yz,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{yz,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k,l+\frac{1}{2},m+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} \right)\Bigg] \\
+\end{align*}
+
+Just as in the elastic case the velocity equations are given by:
+\begin{align*}
+	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\Delta t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
+	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
+	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
+\end{align*}
+
 \section{Ablauf der Wellenfeldberechnung}
 Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten Gleichungen an jedem Ort und zu jeder Zeit ausgewertet werden. Da jeweils der zeitlich vorangegangene Wert benötigt wird muss $n$ stetig erhöht werden. Dagegen spielt die Reihenfolge der räumlichen Abarbeitung keine Rolle. Dagegen werden die Spannungen $\sigma_{ij}^{n+\frac{1}{2}}$ für die Berechnung der Partikelgeschwindigkeiten $v_i^{n+\frac{1}{2}}$ benötigt und müssen daher zuerst berechnet werden.
 
