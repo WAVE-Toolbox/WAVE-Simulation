@@ -271,8 +271,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& xzAvSWaveModulus=model.get_xzAvSWaveModulus();
     lama::DenseVector<ValueType>& yzAvSWaveModulus=model.get_yzAvSWaveModulus();
     lama::DenseVector<ValueType>& xyAvTauS=model.get_xyAvTauS();
-    lama::DenseVector<ValueType>& xyAvTauS=model.get_xzAvTauS();
-    lama::DenseVector<ValueType>& xyAvTauS=model.get_yzAvTauS();
+    lama::DenseVector<ValueType>& xzAvTauS=model.get_xzAvTauS();
+    lama::DenseVector<ValueType>& yzAvTauS=model.get_yzAvTauS();
     
     
     /* Get references to required wavefields */
@@ -495,7 +495,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         Syz += update.scale(onePlusLtauS);
 
         Ryz *= viscoCoeff2;
-        Syz += DThalf * Ryz; 
+        Syz += DThalf * Ryz;
         
         /* Apply free surface to stress update */
         if(useFreeSurface){
