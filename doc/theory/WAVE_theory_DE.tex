@@ -454,9 +454,15 @@ Die Verwendung des SSG erfordert hinsichtlich numerischer Stabilität, dass die 
 	\mu_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k+1,l,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k+1,l,m+1}}\\
 	\mu_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k,l+1,m+1}}
 \end{align*}
-
-Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity. Here $\mu_{k,l,m}$ is the S-wave module and $M$ is the P-wave module. As the system is represented by relaxation bodies the summation over $q$ is equal to the summation over all $L$ Maxwell Bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. \\$r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$ -th relaxation body to help calculate the corresponding stress-tensor component $\sigma_{ij,k,l,m}$
-The components of the stress tensor are given by:
+\\
+Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity. Here $\mu_{k,l,m}$ is the S-wave module and $M$ is the P-wave module. As the system is represented by relaxation bodies the summation over $q$ is equal to the summation over all $L$ Maxwell Bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{k,l,m}^s$ on half grid points is calculated by averaging $\tau_{k,l,m}^s$  from the four surrounding grid points. 
+\begin{align*}
+	\tau_{k+\frac{1}{2},l+\frac{1}{2},m} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l+1,m} + \tau_{k+1,l+1,m}}{4}\\
+	\tau_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l,m+1} + \tau_{k+1,l,m+1}}{4}\\
+	\tau_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{\mu_{k,l,m} + \mu_{k,l+1,m} + \tau^{-1}_{k,l,m+1} + \tau_{k,l+1,m+1}}{4}
+\end{align*}
+$r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$ -th relaxation body to help calculate the corresponding stress-tensor component $\sigma_{ij,k,l,m}$
+\\\\The components of the stress tensor are given by:\\
 
 \begin{align*}
 	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} =&\sigma_{xx,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
