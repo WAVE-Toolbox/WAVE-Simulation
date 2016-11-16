@@ -114,9 +114,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::yAvDensityMatrix;
             using Modelparameter<ValueType>::zAvDensityMatrix;
             
-            using Modelparameter<ValueType>::xAvDensity;
-            using Modelparameter<ValueType>::yAvDensity;
-            using Modelparameter<ValueType>::zAvDensity;
+            using Modelparameter<ValueType>::inverseXAvDensity;
+            using Modelparameter<ValueType>::inverseYAvDensity;
+            using Modelparameter<ValueType>::inverseZAvDensity;
             
         };
     }
@@ -142,6 +142,10 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        
+        this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -182,6 +186,11 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        
+        this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
+
         dirtyFlagModulus=false;
     }
 };
@@ -418,12 +427,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::runAveraging(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
-    
-    this->calculateAveragedDensity(xAvDensity,xAvDensityMatrix,ctx,dist);
-    this->calculateAveragedDensity(yAvDensity,yAvDensityMatrix,ctx,dist);
-    this->calculateAveragedDensity(zAvDensity,zAvDensityMatrix,ctx,dist);
-    
+void KITGPI::Modelparameter::Acoustic<ValueType>::runAveraging(dmemo::DistributionPtr /*dist*/, hmemo::ContextPtr /*ctx*/){
+    this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+    this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+    this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
 }
 
 

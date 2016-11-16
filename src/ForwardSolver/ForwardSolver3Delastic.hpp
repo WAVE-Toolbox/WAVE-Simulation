@@ -263,6 +263,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>& inverseXAvDensity=model.get_InverseXAvDensity();
+    lama::DenseVector<ValueType>& inverseYAvDensity=model.get_InverseYAvDensity();
+    lama::DenseVector<ValueType>& inverseZAvDensity=model.get_InverseZAvDensity();
+    lama::DenseVector<ValueType>& xyAvSWaveModulus=model.get_xyAvSWaveModulus();
+    lama::DenseVector<ValueType>& xzAvSWaveModulus=model.get_xzAvSWaveModulus();
+    lama::DenseVector<ValueType>& yzAvSWaveModulus=model.get_yzAvSWaveModulus();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -328,17 +334,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update = Dxf * Sxx;
         update += DybVelocity * Sxy;
         update += Dzb * Sxz;
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseXAvDensity);
         
         update = Dxb * Sxy;
         update += DyfVelocity * Syy;
         update += Dzb * Syz;
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseYAvDensity);
         
         update = Dxb * Sxz;
         update += DybVelocity * Syz;
         update += Dzf * Szz;
-        vZ += update.scale(inverseDensity);
+        vZ += update.scale(inverseZAvDensity);
         
         /* ----------------*/
         /* pressure update */
@@ -365,15 +371,15 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         
         update = DyfPressure * vX;
         update += Dxf * vY;
-        Sxy += update.scale(sWaveModulus);
+        Sxy += update.scale(xyAvSWaveModulus);
         
         update = Dzf * vX;
         update += Dxf * vZ;
-        Sxz += update.scale(sWaveModulus);
+        Sxz += update.scale(xzAvSWaveModulus);
         
         update = Dzf * vY;
         update += DyfPressure * vZ;
-        Syz += update.scale(sWaveModulus);
+        Syz += update.scale(yzAvSWaveModulus);
         
         /* Apply free surface to stress update */
         if(useFreeSurface){

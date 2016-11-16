@@ -115,9 +115,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::xzAvSWaveModulusMatrix;
             using Modelparameter<ValueType>::yzAvSWaveModulusMatrix;
             
-            using Modelparameter<ValueType>::xAvDensity;
-            using Modelparameter<ValueType>::yAvDensity;
-            using Modelparameter<ValueType>::zAvDensity;
+            using Modelparameter<ValueType>::inverseXAvDensity;
+            using Modelparameter<ValueType>::inverseYAvDensity;
+            using Modelparameter<ValueType>::inverseZAvDensity;
             using Modelparameter<ValueType>::xyAvSWaveModulus;
             using Modelparameter<ValueType>::xzAvSWaveModulus;
             using Modelparameter<ValueType>::yzAvSWaveModulus;
@@ -147,6 +147,14 @@ void KITGPI::Modelparameter::Elastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        
+        this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
+        this->calculateAveragedSWaveModulus(xyAvSWaveModulus,xyAvSWaveModulusMatrix);
+        this->calculateAveragedSWaveModulus(xzAvSWaveModulus,xzAvSWaveModulusMatrix);
+        this->calculateAveragedSWaveModulus(yzAvSWaveModulus,yzAvSWaveModulusMatrix);
+        
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -190,6 +198,14 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        
+        this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+        this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
+        this->calculateAveragedSWaveModulus(xyAvSWaveModulus,xyAvSWaveModulusMatrix);
+        this->calculateAveragedSWaveModulus(xzAvSWaveModulus,xzAvSWaveModulusMatrix);
+        this->calculateAveragedSWaveModulus(yzAvSWaveModulus,yzAvSWaveModulusMatrix);
+        
         dirtyFlagModulus=false;
     }
 };
@@ -446,16 +462,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::runAveraging(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
-    
-    this->calculateAveragedDensity(xAvDensity,xAvDensityMatrix,ctx,dist);
-    this->calculateAveragedDensity(yAvDensity,yAvDensityMatrix,ctx,dist);
-    this->calculateAveragedDensity(zAvDensity,zAvDensityMatrix,ctx,dist);
-    
-    this->calculateAveragedSWaveModulus(xyAvSWaveModulus,xyAvSWaveModulusMatrix,ctx,dist);
-    this->calculateAveragedSWaveModulus(xzAvSWaveModulus,xzAvSWaveModulusMatrix,ctx,dist);
-    this->calculateAveragedSWaveModulus(yzAvSWaveModulus,yzAvSWaveModulusMatrix,ctx,dist);
-    
+void KITGPI::Modelparameter::Elastic<ValueType>::runAveraging(dmemo::DistributionPtr /*dist*/, hmemo::ContextPtr /*ctx*/){
+    this->calculateInverseAveragedDensity(inverseXAvDensity,xAvDensityMatrix);
+    this->calculateInverseAveragedDensity(inverseYAvDensity,yAvDensityMatrix);
+    this->calculateInverseAveragedDensity(inverseZAvDensity,zAvDensityMatrix);
+    this->calculateAveragedSWaveModulus(xyAvSWaveModulus,xyAvSWaveModulusMatrix);
+    this->calculateAveragedSWaveModulus(xzAvSWaveModulus,xzAvSWaveModulusMatrix);
+    this->calculateAveragedSWaveModulus(yzAvSWaveModulus,yzAvSWaveModulusMatrix);
 }
 
 
