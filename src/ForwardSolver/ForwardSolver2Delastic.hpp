@@ -252,6 +252,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -308,11 +311,11 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         /* ----------------*/
         update = Dxf * Sxx;
         update += DybVelocity * Sxy;
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
         update += DyfVelocity * Syy;
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseDensityAverageY);
         
         
         /* ----------------*/
@@ -333,7 +336,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         
         update = DyfPressure * vX;
         update += Dxf * vY;
-        Sxy += update.scale(sWaveModulus);
+        Sxy += update.scale(sWaveModulusAverageXY);
         
         
         /* Apply free surface to stress update */

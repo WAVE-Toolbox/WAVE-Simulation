@@ -264,15 +264,15 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
-    lama::DenseVector<ValueType>& inverseXAvDensity=model.get_InverseXAvDensity();
-    lama::DenseVector<ValueType>& inverseYAvDensity=model.get_InverseYAvDensity();
-    lama::DenseVector<ValueType>& inverseZAvDensity=model.get_InverseZAvDensity();
-    lama::DenseVector<ValueType>& xyAvSWaveModulus=model.get_xyAvSWaveModulus();
-    lama::DenseVector<ValueType>& xzAvSWaveModulus=model.get_xzAvSWaveModulus();
-    lama::DenseVector<ValueType>& yzAvSWaveModulus=model.get_yzAvSWaveModulus();
-    lama::DenseVector<ValueType>& xyAvTauS=model.get_xyAvTauS();
-    lama::DenseVector<ValueType>& xzAvTauS=model.get_xzAvTauS();
-    lama::DenseVector<ValueType>& yzAvTauS=model.get_yzAvTauS();
+    lama::DenseVector<ValueType>& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>& inverseDensityAverageZ=model.getInverseDensityAverageZ();
+    lama::DenseVector<ValueType>& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::DenseVector<ValueType>& sWaveModulusAverageXZ=model.getSWaveModulusAverageXZ();
+    lama::DenseVector<ValueType>& sWaveModulusAverageYZ=model.getSWaveModulusAverageYZ();
+    lama::DenseVector<ValueType>& tauSAverageXY=model.getTauSAverageXY();
+    lama::DenseVector<ValueType>& tauSAverageXZ=model.getTauSAverageXZ();
+    lama::DenseVector<ValueType>& tauSAverageYZ=model.getTauSAverageYZ();
     
     
     /* Get references to required wavefields */
@@ -365,17 +365,17 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         update = Dxf * Sxx;
         update += DybVelocity * Sxy;
         update += Dzb * Sxz;
-        vX += update.scale(inverseXAvDensity);
+        vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
         update += DyfVelocity * Syy;
         update += Dzb * Syz;
-        vY += update.scale(inverseYAvDensity);
+        vY += update.scale(inverseDensityAverageY);
         
         update = Dxb * Sxz;
         update += DybVelocity * Syz;
         update += Dzf * Szz;
-        vZ += update.scale(inverseZAvDensity);
+        vZ += update.scale(inverseDensityAverageZ);
         
         /* ----------------*/
         /* pressure update */
@@ -456,10 +456,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 
         update = DyfPressure * vX;
         update += Dxf * vY;
-        update.scale(xyAvSWaveModulus);
+        update.scale(sWaveModulusAverageXY);
 
         update2 = inverseRelaxationTime * update;
-        Rxy -= update2.scale(xyAvTauS);
+        Rxy -= update2.scale(tauSAverageXY);
         Sxy += update.scale(onePlusLtauS);
         
         Rxy *= viscoCoeff2;
@@ -472,10 +472,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 
         update = Dzf * vX;
         update += Dxf * vZ;
-        update.scale(xzAvSWaveModulus);
+        update.scale(sWaveModulusAverageXZ);
         
         update2 = inverseRelaxationTime * update;
-        Rxz -= update2.scale(xzAvTauS);
+        Rxz -= update2.scale(tauSAverageXZ);
         Sxz += update.scale(onePlusLtauS);
 
         Rxz *= viscoCoeff2;
@@ -488,10 +488,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 
         update = Dzf * vY;
         update += DyfPressure * vZ;
-        update.scale(yzAvSWaveModulus);
+        update.scale(sWaveModulusAverageYZ);
         
         update2 = inverseRelaxationTime * update;
-        Ryz -= update2.scale(yzAvTauS);
+        Ryz -= update2.scale(tauSAverageYZ);
         Syz += update.scale(onePlusLtauS);
 
         Ryz *= viscoCoeff2;

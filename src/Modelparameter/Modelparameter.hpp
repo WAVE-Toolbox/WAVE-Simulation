@@ -80,29 +80,15 @@ namespace KITGPI {
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling()=0;
             
-            //! \brief Getter method for averaging density matrix in x-direction
-            virtual lama::CSRSparseMatrix<ValueType>& get_xAvDensityMatrix();
-            //! \brief Getter method for averaging density matrix in y-direction
-            virtual lama::CSRSparseMatrix<ValueType>& get_yAvDensityMatrix();
-            //! \brief Getter method for averaging density matrix in z-direction
-            virtual lama::CSRSparseMatrix<ValueType>& get_zAvDensityMatrix();
-            
-            //! \brief Getter method for averaging S-Wave modulus xy-plane
-            virtual lama::CSRSparseMatrix<ValueType>& get_xyAvSWaveModulusMatrix();
-            //! \brief Getter method for averaging S-Wave modulus xz-plane
-            virtual lama::CSRSparseMatrix<ValueType>& get_xzAvSWaveModulusMatrix();
-            //! \brief Getter method for averaging S-Wave modulus yz-plane
-            virtual lama::CSRSparseMatrix<ValueType>& get_yzAvSWaveModulusMatrix();
-            
-            virtual lama::DenseVector<ValueType>& get_InverseXAvDensity();
-            virtual lama::DenseVector<ValueType>& get_InverseYAvDensity();
-            virtual lama::DenseVector<ValueType>& get_InverseZAvDensity();
-            virtual lama::DenseVector<ValueType>& get_xyAvSWaveModulus();
-            virtual lama::DenseVector<ValueType>& get_xzAvSWaveModulus();
-            virtual lama::DenseVector<ValueType>& get_yzAvSWaveModulus();
-            virtual lama::DenseVector<ValueType>& get_xyAvTauS();
-            virtual lama::DenseVector<ValueType>& get_xzAvTauS();
-            virtual lama::DenseVector<ValueType>& get_yzAvTauS();
+            virtual lama::DenseVector<ValueType>& getInverseDensityAverageX();
+            virtual lama::DenseVector<ValueType>& getInverseDensityAverageY();
+            virtual lama::DenseVector<ValueType>& getInverseDensityAverageZ();
+            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageXY();
+            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageXZ();
+            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageYZ();
+            virtual lama::DenseVector<ValueType>& getTauSAverageXY();
+            virtual lama::DenseVector<ValueType>& getTauSAverageXZ();
+            virtual lama::DenseVector<ValueType>& getTauSAverageYZ();
             
             
             
@@ -125,17 +111,17 @@ namespace KITGPI {
             lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for visco-elastic modelling.
             lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for visco-elastic modelling.
             
-            lama::DenseVector<ValueType> inverseXAvDensity; //!< Vector storing inverse averaged density in x-direction.
-            lama::DenseVector<ValueType> inverseYAvDensity; //!< Vector storing inverse averaged density in y-direction.
-            lama::DenseVector<ValueType> inverseZAvDensity; //!< Vector storing inverse averaged density in z-direction.
+            lama::DenseVector<ValueType> inverseDensityAverageX; //!< Vector storing inverse averaged density in x-direction.
+            lama::DenseVector<ValueType> inverseDensityAverageY; //!< Vector storing inverse averaged density in y-direction.
+            lama::DenseVector<ValueType> inverseDensityAverageZ; //!< Vector storing inverse averaged density in z-direction.
             
-            lama::DenseVector<ValueType> xyAvSWaveModulus;  //!< Vector storing averaged s-wave modulus in xy-plan.
-            lama::DenseVector<ValueType> xzAvSWaveModulus;  //!< Vector storing averaged s-wave modulus in xz-plan.
-            lama::DenseVector<ValueType> yzAvSWaveModulus;  //!< Vector storing averaged s-wave modulus in yz-plan.
+            lama::DenseVector<ValueType> sWaveModulusAverageXY;  //!< Vector storing averaged s-wave modulus in xy-plan.
+            lama::DenseVector<ValueType> sWaveModulusAverageXZ;  //!< Vector storing averaged s-wave modulus in xz-plan.
+            lama::DenseVector<ValueType> sWaveModulusAverageYZ;  //!< Vector storing averaged s-wave modulus in yz-plan.
             
-            lama::DenseVector<ValueType> xyAvTauS;  //!< Vector storing averaged s-wave modulus in xy-plan.
-            lama::DenseVector<ValueType> xzAvTauS;  //!< Vector storing averaged s-wave modulus in xz-plan.
-            lama::DenseVector<ValueType> yzAvTauS;  //!< Vector storing averaged s-wave modulus in yz-plan.
+            lama::DenseVector<ValueType> tauSAverageXY;  //!< Vector storing averaged s-wave modulus in xy-plan.
+            lama::DenseVector<ValueType> tauSAverageXZ;  //!< Vector storing averaged s-wave modulus in xz-plan.
+            lama::DenseVector<ValueType> tauSAverageYZ;  //!< Vector storing averaged s-wave modulus in yz-plan.
             
             
             IndexType numRelaxationMechanisms; //!< Number of relaxation mechanisms
@@ -182,21 +168,21 @@ namespace KITGPI {
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
             
-            void calc_xAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
-            void calc_yAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
-            void calc_zAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
-            void calc_xyAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
-            void calc_xzAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
-            void calc_yzAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixXY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
-            lama::CSRSparseMatrix<ValueType> xAvDensityMatrix; //!< Averaging density matrix in x-direction
-            lama::CSRSparseMatrix<ValueType> yAvDensityMatrix; //!< Averaging density matrix in x-direction
-            lama::CSRSparseMatrix<ValueType> zAvDensityMatrix; //!< Averaging density matrix in x-direction
+            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixX; //!< Averaging density matrix in x-direction
+            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixY; //!< Averaging density matrix in x-direction
+            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixZ; //!< Averaging density matrix in x-direction
             
-            lama::CSRSparseMatrix<ValueType> xyAvSWaveModulusMatrix; //!< Average S-wave Modulus in xy-plane
-            lama::CSRSparseMatrix<ValueType> xzAvSWaveModulusMatrix; //!< Average S-wave Modulus in xz-plane
-            lama::CSRSparseMatrix<ValueType> yzAvSWaveModulusMatrix; //!< Average S-wave Modulus in yz-plane
+            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixXY; //!< Average S-wave Modulus in xy-plane
+            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixXZ; //!< Average S-wave Modulus in xz-plane
+            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixYZ; //!< Average S-wave Modulus in yz-plane
             
             void calculateInverseAveragedDensity(lama::DenseVector<ValueType>& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix);
             void calculateAveragedSWaveModulus(lama::DenseVector<ValueType>& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix);
@@ -212,22 +198,37 @@ namespace KITGPI {
             
             typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
             
-            void calc_AvMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            //! \brief Getter method for averaging density matrix in x-direction
+            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixX();
+            //! \brief Getter method for averaging density matrix in y-direction
+            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixY();
+            //! \brief Getter method for averaging density matrix in z-direction
+            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixZ();
             
-            IndexType calcNumberRowElements_xAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-            IndexType calcNumberRowElements_yAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-            IndexType calcNumberRowElements_zAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-            IndexType calcNumberRowElements_xyAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-            IndexType calcNumberRowElements_xzAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
-            IndexType calcNumberRowElements_yzAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            //! \brief Getter method for averaging S-Wave modulus xy-plane
+            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixXY();
+            //! \brief Getter method for averaging S-Wave modulus xz-plane
+            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixXZ();
+            //! \brief Getter method for averaging S-Wave modulus yz-plane
+            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixYZ();
+
             
-            void setRowElements_xAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-            void setRowElements_yAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-            void setRowElements_zAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void calcAverageMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
-            void setRowElements_xyAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-            void setRowElements_xzAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-            void setRowElements_yzAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
+            
+            void setRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            
+            void setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
             
         };
     }
@@ -513,7 +514,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/){
     
     IndexType RowNumber_plusOne = rowNumber + 1;
     
@@ -555,7 +556,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xAvDensit
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
     IndexType NXNY = NX * NY;
     
@@ -599,7 +600,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yAvDensit
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_zAvDensityMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
     
     IndexType NXNY = NX * NY;
     
@@ -643,7 +644,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_zAvDensit
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xyAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/){
     
     IndexType NXNY = NX * NY;
     
@@ -710,7 +711,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xyAvSWave
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xzAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
     
     IndexType NXNY = NX * NY;
     
@@ -777,7 +778,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_xzAvSWave
  \param NZ Number of grid points in Z-direction
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yzAvSWaveModulusMatrix(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ){
     
     IndexType NXNY = NX * NY;
     IndexType NXNYNZ = NX * NY * NZ;
@@ -844,7 +845,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_yzAvSWave
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_AvMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -936,7 +937,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initializeMatrices(dmemo
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType /*NY*/, IndexType /*NZ*/){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType NX,IndexType /*NY*/, IndexType /*NZ*/){
     
     IndexType counter=0;
     
@@ -963,7 +964,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_yAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
     
     IndexType counter=0;
     IndexType NXNY = NX * NY;
@@ -991,7 +992,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_zAvDensityMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
     
     IndexType counter=0;
     IndexType NXNY = NX * NY;
@@ -1018,7 +1019,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xyAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType NX,IndexType NY, IndexType /*NZ*/){
     
     IndexType counter=0;
     IndexType NXNY = NX * NY;
@@ -1057,7 +1058,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_xzAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
     
     IndexType counter=0;
     IndexType NXNY = NX * NY;
@@ -1097,7 +1098,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \return counter Number of elements in this row
  */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_yzAvSWaveModulusMatrix(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ){
     
     IndexType counter=0;
     IndexType NXNY = NX * NY;
@@ -1138,9 +1139,9 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(xAvDensityMatrix, &Modelparameter<ValueType>::calcNumberRowElements_xAvDensityMatrix, &Modelparameter<ValueType>::setRowElements_xAvDensityMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(DensityAverageMatrixX, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixX, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixX, NX, NY, NZ, dist);
 }
 
 
@@ -1153,9 +1154,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xAvDensityMatrix(In
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_yAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(yAvDensityMatrix, &Modelparameter<ValueType>::calcNumberRowElements_yAvDensityMatrix, &Modelparameter<ValueType>::setRowElements_yAvDensityMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(DensityAverageMatrixY, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixY, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixY, NX, NY, NZ, dist);
 }
 
 
@@ -1168,9 +1169,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_yAvDensityMatrix(In
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_zAvDensityMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(zAvDensityMatrix, &Modelparameter<ValueType>::calcNumberRowElements_zAvDensityMatrix, &Modelparameter<ValueType>::setRowElements_zAvDensityMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(DensityAverageMatrixZ, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixZ, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixZ, NX, NY, NZ, dist);
 }
 
 
@@ -1183,9 +1184,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_zAvDensityMatrix(In
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xyAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(xyAvSWaveModulusMatrix, &Modelparameter<ValueType>::calcNumberRowElements_xyAvSWaveModulusMatrix, &Modelparameter<ValueType>::setRowElements_xyAvSWaveModulusMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(sWaveModulusAverageMatrixXY, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXY, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXY, NX, NY, NZ, dist);
 }
 
 
@@ -1198,9 +1199,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xyAvSWaveModulusMat
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xzAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(xzAvSWaveModulusMatrix, &Modelparameter<ValueType>::calcNumberRowElements_xzAvSWaveModulusMatrix, &Modelparameter<ValueType>::setRowElements_xzAvSWaveModulusMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(sWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ, NX, NY, NZ, dist);
 }
 
 
@@ -1213,9 +1214,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_xzAvSWaveModulusMat
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calc_yzAvSWaveModulusMatrix(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
 {
-    calc_AvMatrix(yzAvSWaveModulusMatrix, &Modelparameter<ValueType>::calcNumberRowElements_yzAvSWaveModulusMatrix, &Modelparameter<ValueType>::setRowElements_yzAvSWaveModulusMatrix, NX, NY, NZ, dist);
+    calcAverageMatrix(sWaveModulusAverageMatrixYZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixYZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixYZ, NX, NY, NZ, dist);
 }
 
 
@@ -1262,103 +1263,103 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(la
 
 //! \brief Getter method for averaging density matrix in x-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xAvDensityMatrix(){
-    return(xAvDensityMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixX(){
+    return(DensityAverageMatrixX);
 }
 
 
 //! \brief Getter method for averaging density matrix in y-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yAvDensityMatrix(){
-    return(yAvDensityMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixY(){
+    return(DensityAverageMatrixY);
 }
 
 
 //! \brief Getter method for averaging density matrix in z-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_zAvDensityMatrix(){
-    return(zAvDensityMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixZ(){
+    return(DensityAverageMatrixZ);
 }
 
 
 //! \brief Getter method for averaging S-wave modulus matrix x-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xyAvSWaveModulusMatrix(){
-    return(xyAvSWaveModulusMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXY(){
+    return(sWaveModulusAverageMatrixXY);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix y-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xzAvSWaveModulusMatrix(){
-    return(xzAvSWaveModulusMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXZ(){
+    return(sWaveModulusAverageMatrixXZ);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix z-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yzAvSWaveModulusMatrix(){
-    return(yzAvSWaveModulusMatrix);
+lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixYZ(){
+    return(sWaveModulusAverageMatrixYZ);
 }
 
 /*! \brief Get reference to averaged density in x-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_InverseXAvDensity(){
-    return(inverseXAvDensity);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX(){
+    return(inverseDensityAverageX);
 }
 
 /*! \brief Get reference to averaged density in y-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_InverseYAvDensity(){
-    return(inverseYAvDensity);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY(){
+    return(inverseDensityAverageY);
 }
 
 /*! \brief Get reference to averaged density in z-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_InverseZAvDensity(){
-    return(inverseZAvDensity);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ(){
+    return(inverseDensityAverageZ);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xyAvSWaveModulus(){
-    return(xyAvSWaveModulus);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY(){
+    return(sWaveModulusAverageXY);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xzAvSWaveModulus(){
-    return(xzAvSWaveModulus);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ(){
+    return(sWaveModulusAverageXZ);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yzAvSWaveModulus(){
-    return(yzAvSWaveModulus);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ(){
+    return(sWaveModulusAverageYZ);
 }
 
 /*! \brief Get reference to averaged tauS in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xyAvTauS(){
-    return(xyAvTauS);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY(){
+    return(tauSAverageXY);
 }
 
 /*! \brief Get reference to averaged tauS in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_xzAvTauS(){
-    return(xzAvTauS);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ(){
+    return(tauSAverageXZ);
 }
 
 /*! \brief Get reference to averaged tauS in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::get_yzAvTauS(){
-    return(yzAvTauS);
+lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ(){
+    return(tauSAverageYZ);
 }
 

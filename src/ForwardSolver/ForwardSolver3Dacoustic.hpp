@@ -254,9 +254,9 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>& inverseXAvDensity=model.get_InverseXAvDensity();
-    lama::DenseVector<ValueType>& inverseYAvDensity=model.get_InverseYAvDensity();
-    lama::DenseVector<ValueType>& inverseZAvDensity=model.get_InverseZAvDensity();
+    lama::DenseVector<ValueType>& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>& inverseDensityAverageZ=model.getInverseDensityAverageZ();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -296,13 +296,13 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         /* update velocity */
         update= Dxf * p;
-        vX += update.scale(inverseXAvDensity);
+        vX += update.scale(inverseDensityAverageX);
 
         update= Dyf * p;
-        vY += update.scale(inverseYAvDensity);
+        vY += update.scale(inverseDensityAverageY);
 
         update=  Dzf * p;
-        vZ += update.scale(inverseZAvDensity);
+        vZ += update.scale(inverseDensityAverageZ);
 
         
         /* pressure update */
