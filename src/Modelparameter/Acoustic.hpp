@@ -95,6 +95,7 @@ namespace KITGPI {
             
             void refreshModule();
             void refreshVelocity();
+            void calculateAveraging();
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
@@ -106,7 +107,6 @@ namespace KITGPI {
             using Modelparameter<ValueType>::velocityP;
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
-            void calculateAveraging();
             
             using Modelparameter<ValueType>::DensityAverageMatrixX;
             using Modelparameter<ValueType>::DensityAverageMatrixY;
@@ -129,10 +129,6 @@ namespace KITGPI {
             using Modelparameter<ValueType>::tauSAverageXY;
             using Modelparameter<ValueType>::tauSAverageXZ;
             using Modelparameter<ValueType>::tauSAverageYZ;
-            
-            
-
-            
             
         };
     }

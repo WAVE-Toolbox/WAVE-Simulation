@@ -149,6 +149,9 @@ namespace KITGPI {
             /*! \brief Refresh velocities if they are dirty */
             virtual void refreshVelocity()=0;
             
+            /*! \brief Calculate Averaging if they are required */
+            virtual void calculateAveraging()=0;
+            
             IndexType getParametrisation();
             
             //! \brief Initializsation of the aneraging matrices
