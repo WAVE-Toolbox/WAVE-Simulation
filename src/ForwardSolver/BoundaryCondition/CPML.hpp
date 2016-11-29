@@ -51,6 +51,12 @@ namespace KITGPI {
 				lama::DenseVector<ValueType> psi_syz_z;//!< CPML memory Variable
 				lama::DenseVector<ValueType> psi_szz_z;//!< CPML memory Variable
 				
+				lama::DenseVector<ValueType> psi_p_x;//!< CPML memory Variable
+				lama::DenseVector<ValueType> psi_p_y;//!< CPML memory Variable
+				lama::DenseVector<ValueType> psi_p_z;//!< CPML memory Variable
+				
+				
+				
 				lama::DenseVector<ValueType> k_x;//!< CPML coefficient
 				lama::DenseVector<ValueType> b_x;//!< CPML coefficient
 				lama::DenseVector<ValueType> a_x;//!< CPML coefficient

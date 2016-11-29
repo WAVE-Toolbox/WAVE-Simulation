@@ -15,6 +15,7 @@
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface3Dvisco.hpp"
 #include "BoundaryCondition/ABS3D.hpp"
+#include "BoundaryCondition/CPML3D.hpp"
 
 namespace KITGPI {
     
@@ -47,6 +48,9 @@ namespace KITGPI {
             
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
+	    
+	    BoundaryCondition::CPML3D<ValueType> ConvPML; //!< Damping boundary condition class
+            using ForwardSolver<ValueType>::useConvPML;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
@@ -74,9 +78,14 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
     }
     
     /* Prepare Damping Boundary */
-    if(config.getDampingBoundary()){
+    if(config.getDampingBoundary()==1){
         useDampingBoundary=true;
         DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
+    }
+    
+    if(config.getDampingBoundary()==2){
+	useConvPML=true;
+	ConvPML.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH(),config.getBoundaryWidth(),useFreeSurface,config.getPMLVariables());
     }
     
 }
@@ -300,6 +309,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
+    
+    common::unique_ptr<lama::Vector> update_tempPtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector& update_temp = *update_tempPtr; // get Reference of VectorPointer
    
     lama::DenseVector<ValueType> update2(vX.getDistributionPtr());
 
@@ -353,18 +365,42 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         /* update velocity */
         /* ----------------*/
         update = Dxf * Sxx;
-        update += DybVelocity * Sxy;
-        update += Dzb * Sxz;
+	if(useConvPML)  {ConvPML.apply_sxx_x(update);}
+	
+        update_temp = DybVelocity * Sxy;
+	if(useConvPML) { ConvPML.apply_sxy_y(update_temp);}
+	update += update_temp;
+	
+        update_temp = Dzb * Sxz;
+	if(useConvPML)  { ConvPML.apply_sxz_z(update_temp); }
+	update += update_temp;
+	
         vX += update.scale(inverseDensity);
         
         update = Dxb * Sxy;
-        update += DyfVelocity * Syy;
-        update += Dzb * Syz;
+	if(useConvPML) { ConvPML.apply_sxy_x(update);}
+	
+        update_temp = DyfVelocity * Syy;
+	if(useConvPML) { ConvPML.apply_syy_y(update_temp);}
+	update += update_temp;
+	
+        update_temp = Dzb * Syz;
+	if(useConvPML) { ConvPML.apply_syz_z(update_temp);}
+	update += update_temp;
+	
         vY += update.scale(inverseDensity);
         
         update = Dxb * Sxz;
-        update += DybVelocity * Syz;
-        update += Dzf * Szz;
+	if(useConvPML) { ConvPML.apply_sxz_x(update);}
+	
+        update_temp = DybVelocity * Syz;
+	if(useConvPML) { ConvPML.apply_syz_y(update_temp);}
+	update += update_temp;
+	
+        update_temp = Dzf * Szz;
+	if(useConvPML) { ConvPML.apply_szz_z(update_temp);}
+	update += update_temp;
+	
         vZ += update.scale(inverseDensity);
         
         /* ----------------*/
@@ -372,8 +408,11 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         /* ----------------*/
         
         vxx = Dxb * vX;
+	if(useConvPML) { ConvPML.apply_vxx(vxx);}
         vyy = DybPressure * vY;
+	if(useConvPML) { ConvPML.apply_vyy(vyy);}
         vzz = Dzb * vZ;
+	if(useConvPML) { ConvPML.apply_vzz(vzz);}
         
         update = vxx;
         update += vyy;
@@ -445,7 +484,12 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         Rxy *= viscoCoeff1;
 
         update = DyfPressure * vX;
-        update += Dxf * vY;
+	if(useConvPML) { ConvPML.apply_vxy(update);}
+	
+        update_temp = Dxf * vY;
+	if(useConvPML)  {ConvPML.apply_vyx(update_temp);}
+	update += update_temp;
+	
         update.scale(sWaveModulus);
 
         update2 = inverseRelaxationTime * update;
@@ -461,7 +505,12 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         Rxz *= viscoCoeff1;
 
         update = Dzf * vX;
-        update += Dxf * vZ;
+	if(useConvPML) { ConvPML.apply_vxz(update);}
+	
+        update_temp = Dxf * vZ;
+	if(useConvPML)  {ConvPML.apply_vzx(update_temp);}
+	update += update_temp;
+	
         update.scale(sWaveModulus);
         
         update2 = inverseRelaxationTime * update;
@@ -477,7 +526,11 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         Ryz *= viscoCoeff1;
 
         update = Dzf * vY;
-        update += DyfPressure * vZ;
+	if(useConvPML) { ConvPML.apply_vyz(update);}
+
+        update_temp = DyfPressure * vZ;
+	if(useConvPML) { ConvPML.apply_vzy(update_temp);}
+	update += update_temp;
         update.scale(sWaveModulus);
         
         update2 = inverseRelaxationTime * update;
