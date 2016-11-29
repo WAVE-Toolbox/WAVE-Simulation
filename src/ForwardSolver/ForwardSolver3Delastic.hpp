@@ -314,48 +314,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
     
-	
-    lama::DenseVector<ValueType> psi_vxx;
-    lama::DenseVector<ValueType> psi_vyx;
-    lama::DenseVector<ValueType> psi_vzx;
-    lama::DenseVector<ValueType> psi_vxy;
-    lama::DenseVector<ValueType> psi_vyy;
-    lama::DenseVector<ValueType> psi_vzy;
-    lama::DenseVector<ValueType> psi_vxz;
-    lama::DenseVector<ValueType> psi_vyz;
-    lama::DenseVector<ValueType> psi_vzz;
 
-    lama::DenseVector<ValueType> psi_sxx_x;
-    lama::DenseVector<ValueType> psi_sxy_x;
-    lama::DenseVector<ValueType> psi_sxz_x;
-    lama::DenseVector<ValueType> psi_sxy_y;
-    lama::DenseVector<ValueType> psi_syy_y;
-    lama::DenseVector<ValueType> psi_syz_y;
-    lama::DenseVector<ValueType> psi_sxz_z;
-    lama::DenseVector<ValueType> psi_syz_z;
-    lama::DenseVector<ValueType> psi_szz_z;
-    
-    if(useConvPML){
-    psi_vxx.allocate(vX.getDistributionPtr());
-    psi_vyx.allocate(vX.getDistributionPtr());
-    psi_vzx.allocate(vX.getDistributionPtr());
-    psi_vxy.allocate(vX.getDistributionPtr());
-    psi_vyy.allocate(vX.getDistributionPtr());
-    psi_vzy.allocate(vX.getDistributionPtr());
-    psi_vxz.allocate(vX.getDistributionPtr());
-    psi_vyz.allocate(vX.getDistributionPtr());
-    psi_vzz.allocate(vX.getDistributionPtr());
-
-    psi_sxx_x.allocate(vX.getDistributionPtr());
-    psi_sxy_x.allocate(vX.getDistributionPtr());
-    psi_sxz_x.allocate(vX.getDistributionPtr());
-    psi_sxy_y.allocate(vX.getDistributionPtr());
-    psi_syy_y.allocate(vX.getDistributionPtr());
-    psi_syz_y.allocate(vX.getDistributionPtr());
-    psi_sxz_z.allocate(vX.getDistributionPtr());
-    psi_syz_z.allocate(vX.getDistributionPtr());
-    psi_szz_z.allocate(vX.getDistributionPtr());
-    }
     
     
     if(useFreeSurface){
@@ -383,42 +342,42 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* update velocity */
         /* ----------------*/
         update = Dxf * Sxx;
-	if(useConvPML)  ConvPML.applyHalfX(update,psi_sxx_x);
+	if(useConvPML)  {ConvPML.apply_sxx_x(update);}
 	
 	update_temp = DybVelocity * Sxy;
-	if(useConvPML)  ConvPML.applyY(update_temp,psi_sxy_y);
+	if(useConvPML) { ConvPML.apply_sxy_y(update_temp);}
 	update += update_temp;
 	
         update_temp = Dzb * Sxz;
-	if(useConvPML)  ConvPML.applyZ(update_temp,psi_sxz_z);
+	if(useConvPML)  { ConvPML.apply_sxz_z(update_temp); }
 	update += update_temp;
 	
         vX += update.scale(inverseDensity);
         
         
         update = Dxb * Sxy;
-	if(useConvPML)  ConvPML.applyX(update,psi_sxy_x);
+	if(useConvPML) { ConvPML.apply_sxy_x(update);}
 	
         update_temp = DyfVelocity * Syy;
-	if(useConvPML)  ConvPML.applyHalfY(update_temp,psi_syy_y);
+	if(useConvPML) { ConvPML.apply_syy_y(update_temp);}
 	update += update_temp;
 	
         update_temp = Dzb * Syz;
-	if(useConvPML)  ConvPML.applyZ(update_temp,psi_syz_z);
+	if(useConvPML) { ConvPML.apply_syz_z(update_temp);}
 	update += update_temp;
 	
         vY += update.scale(inverseDensity);
         
 	
         update = Dxb * Sxz;
-	if(useConvPML)  ConvPML.applyX(update,psi_sxz_x);
+	if(useConvPML) { ConvPML.apply_sxz_x(update);}
 	
         update_temp = DybVelocity * Syz;
-	if(useConvPML)  ConvPML.applyY(update_temp,psi_syz_y);
+	if(useConvPML) { ConvPML.apply_syz_y(update_temp);}
 	update += update_temp;
 	
         update_temp = Dzf * Szz;
-	if(useConvPML)  ConvPML.applyHalfZ(update_temp,psi_syz_z);
+	if(useConvPML) { ConvPML.apply_szz_z(update_temp);}
 	update += update_temp;
 	
         vZ += update.scale(inverseDensity);
@@ -428,13 +387,13 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-	if(useConvPML)  ConvPML.applyX(vxx,psi_vxx);
+	if(useConvPML) { ConvPML.apply_vxx(vxx);}
 	
         vyy = DybPressure * vY;
-	if(useConvPML)  ConvPML.applyY(vyy,psi_vyy);
+	if(useConvPML) { ConvPML.apply_vyy(vyy);}
 	
         vzz = Dzb * vZ;
-	if(useConvPML)  ConvPML.applyZ(vzz,psi_vzz);
+	if(useConvPML) { ConvPML.apply_vzz(vzz);}
 	
         update = vxx;
         update += vyy;
@@ -454,29 +413,29 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         
 	//================================
         update = DyfPressure * vX;
-	if(useConvPML)  ConvPML.applyHalfY(update,psi_vxy);
+	if(useConvPML) { ConvPML.apply_vxy(update);}
 	
         update_temp = Dxf * vY;
-	if(useConvPML)  ConvPML.applyHalfX(update_temp,psi_vyx);
+	if(useConvPML)  {ConvPML.apply_vyx(update_temp);}
 	update += update_temp;
 	
         Sxy += update.scale(sWaveModulus);
         //====================================
         update = Dzf * vX;
-	if(useConvPML)  ConvPML.applyHalfZ(update,psi_vxz);
+	if(useConvPML) { ConvPML.apply_vxz(update);}
 	
         update_temp = Dxf * vZ;
-	if(useConvPML)  ConvPML.applyHalfX(update_temp,psi_vzx);
+	if(useConvPML)  {ConvPML.apply_vzx(update_temp);}
 	update += update_temp;
 	
         Sxz += update.scale(sWaveModulus);
         //=========================================
         update = Dzf * vY;
-	if(useConvPML)  ConvPML.applyHalfZ(update,psi_vyz);
+	if(useConvPML) { ConvPML.apply_vyz(update);}
 
 	
         update_temp = DyfPressure * vZ;
-	if(useConvPML)  ConvPML.applyHalfY(update_temp,psi_vzy);
+	if(useConvPML) { ConvPML.apply_vzy(update_temp);}
 	update += update_temp;
 	
         Syz += update.scale(sWaveModulus);
