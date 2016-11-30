@@ -15,6 +15,7 @@
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface2Dacoustic.hpp"
 #include "BoundaryCondition/ABS2D.hpp"
+#include "BoundaryCondition/CPML2DAcoustic.hpp"
 
 namespace KITGPI {
     
@@ -47,9 +48,13 @@ namespace KITGPI {
             
             BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
+	    
+	    BoundaryCondition::CPML2DAcoustic<ValueType> ConvPML; //!< Damping boundary condition class
+            using ForwardSolver<ValueType>::useConvPML;
             
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
             void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
+
             
         };
     } /* end namespace ForwardSolver */
@@ -74,9 +79,14 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(C
     }
     
     /* Prepare Damping Boundary */
-    if(config.getDampingBoundary()){
+    if(config.getDampingBoundary()==1){
         useDampingBoundary=true;
         DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
+    }
+    
+    if(config.getDampingBoundary()==2){
+	useConvPML=true;
+	ConvPML.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH(),config.getBoundaryWidth(),useFreeSurface,config.getPMLVariables());
     }
     
 }
@@ -264,6 +274,9 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
     
+    common::unique_ptr<lama::Vector> update_tempPtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector& update_temp = *update_tempPtr; // get Reference of VectorPointer
+    
     dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 
     /* --------------------------------------- */
@@ -282,15 +295,22 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         /* update velocity */
         update= Dxf * p;
+	if(useConvPML) { ConvPML.apply_p_x(update);}
         vX += update.scale(inverseDensity);
 
         update= Dyf * p;
+	if(useConvPML) { ConvPML.apply_p_y(update);}
         vY += update.scale(inverseDensity);
 
 
         /* pressure update */
         update  =  Dxb * vX;
-        update +=  Dyb * vY;
+	if(useConvPML) { ConvPML.apply_vxx(update);}
+	
+	update_temp =  Dyb * vY;
+	if(useConvPML) { ConvPML.apply_vyy(update_temp);}
+	update+=update_temp;
+	
         p += update.scale(pWaveModulus);
 
         /* Apply free surface to pressure update */
