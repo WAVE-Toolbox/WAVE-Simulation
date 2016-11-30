@@ -408,11 +408,13 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         /* ----------------*/
         
         vxx = Dxb * vX;
-	if(useConvPML) { ConvPML.apply_vxx(vxx);}
         vyy = DybPressure * vY;
-	if(useConvPML) { ConvPML.apply_vyy(vyy);}
         vzz = Dzb * vZ;
-	if(useConvPML) { ConvPML.apply_vzz(vzz);}
+	if(useConvPML) { 
+		ConvPML.apply_vxx(vxx);
+		ConvPML.apply_vyy(vyy);
+		ConvPML.apply_vzz(vzz);
+	}
         
         update = vxx;
         update += vyy;

@@ -387,13 +387,13 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-	if(useConvPML) { ConvPML.apply_vxx(vxx);}
-	
         vyy = DybPressure * vY;
-	if(useConvPML) { ConvPML.apply_vyy(vyy);}
-	
         vzz = Dzb * vZ;
-	if(useConvPML) { ConvPML.apply_vzz(vzz);}
+	if(useConvPML) { 
+		ConvPML.apply_vxx(vxx);
+		ConvPML.apply_vyy(vyy);
+		ConvPML.apply_vzz(vzz);
+	}
 	
         update = vxx;
         update += vyy;
