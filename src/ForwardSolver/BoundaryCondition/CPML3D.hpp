@@ -29,9 +29,9 @@ namespace KITGPI
 				~CPML3D() {};
 
 				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar );
-				
+
 				void reset();
-				
+
 				void apply_sxx_x ( lama::Vector& sxx_x );
 				void apply_sxy_x ( lama::Vector& sxy_x );
 				void apply_sxz_x ( lama::Vector& sxz_x );
@@ -104,25 +104,25 @@ namespace KITGPI
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::reset()
 {
-	this->resetVector(psi_vxx);
-	this->resetVector(psi_vyx);
-	this->resetVector(psi_vzx);
-	this->resetVector(psi_vxy);
-	this->resetVector(psi_vyy);
-	this->resetVector(psi_vzy);
-	this->resetVector(psi_vxz);
-	this->resetVector(psi_vyz);
-	this->resetVector(psi_vzz);
-	
-	this->resetVector(psi_sxx_x);
-	this->resetVector(psi_sxy_x);
-	this->resetVector(psi_sxz_x);
-	this->resetVector(psi_sxy_y);
-	this->resetVector(psi_syy_y);
-	this->resetVector(psi_syz_y);
-	this->resetVector(psi_sxz_z);
-	this->resetVector(psi_syz_z);
-	this->resetVector(psi_szz_z);
+	this->resetVector ( psi_vxx );
+	this->resetVector ( psi_vyx );
+	this->resetVector ( psi_vzx );
+	this->resetVector ( psi_vxy );
+	this->resetVector ( psi_vyy );
+	this->resetVector ( psi_vzy );
+	this->resetVector ( psi_vxz );
+	this->resetVector ( psi_vyz );
+	this->resetVector ( psi_vzz );
+
+	this->resetVector ( psi_sxx_x );
+	this->resetVector ( psi_sxy_x );
+	this->resetVector ( psi_sxz_x );
+	this->resetVector ( psi_sxy_y );
+	this->resetVector ( psi_syy_y );
+	this->resetVector ( psi_syz_y );
+	this->resetVector ( psi_sxz_z );
+	this->resetVector ( psi_syz_z );
+	this->resetVector ( psi_szz_z );
 }
 
 //! \brief application of cpml on the derivation of sxx in x direction
@@ -264,17 +264,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzz ( la
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
  \param useFreeSurface Bool if free surface is in use
- \param PMLVar Struct with variables needed for cpml coefficients 
+ \param PMLVar Struct with variables needed for cpml coefficients
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar )
 {
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n" );
-
-	if ( useFreeSurface ) {
-		COMMON_THROWEXCEPTION ( " Free Surface and CPML boundary are not implemented for simultaneous usage ! " )
-	}
 
 	dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
 
@@ -355,13 +351,18 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init ( dmemo::
 
 		if ( gdist.min() < BoundaryWidth ) {
 			if ( gdist.x < BoundaryWidth ) {
-				this->SetCoeffCPML(a_x,b_x,k_x,a_x_half,b_x_half,k_x_half,coordinate.x,gdist.x,BoundaryWidth,PMLVar,i,DT,DH);
+				this->SetCoeffCPML ( a_x,b_x,k_x,a_x_half,b_x_half,k_x_half,coordinate.x,gdist.x,BoundaryWidth,PMLVar,i,DT,DH );
 			}
 			if ( gdist.y < BoundaryWidth ) {
-				this->SetCoeffCPML(a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,coordinate.y,gdist.y,BoundaryWidth,PMLVar,i,DT,DH);
+				this->SetCoeffCPML ( a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,coordinate.y,gdist.y,BoundaryWidth,PMLVar,i,DT,DH );
+				if ( useFreeSurface ) {
+					if ( coordinate.y < BoundaryWidth ) {
+						this->ResetCoeffFreeSurface ( a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,i );
+					}
+				}
 			}
 			if ( gdist.z < BoundaryWidth ) {
-				this->SetCoeffCPML(a_z,b_z,k_z,a_z_half,b_z_half,k_z_half,coordinate.z,gdist.z,BoundaryWidth,PMLVar,i,DT,DH);
+				this->SetCoeffCPML ( a_z,b_z,k_z,a_z_half,b_z_half,k_z_half,coordinate.z,gdist.z,BoundaryWidth,PMLVar,i,DT,DH );
 			}
 
 		}

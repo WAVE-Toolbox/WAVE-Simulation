@@ -29,6 +29,10 @@ namespace KITGPI {
 		void SetCoeffCPML ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,IndexType coord,
 				IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> &PMLVar,IndexType i, ValueType DT , ValueType DH );
 		
+		void ResetCoeffFreeSurface ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
+						lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
+						IndexType i);
+		
 		void applyCPML ( lama::Vector& Vec,lama::DenseVector<ValueType>& Psi,lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv );
 		    
 		    		lama::DenseVector<ValueType> psi_vxx;//!< CPML memory Variable
@@ -206,19 +210,62 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( l
 	write_k_half[i]=1/k_temp;
 
 	write_k.release();
-
 	write_a.release();
-
 	write_b.release();
-
 	write_k_half.release();
-
 	write_a_half.release();
-
 	write_b_half.release();
 
 
 }
+
+/*! \brief Reset CPML coefficients for free surface
+ * 
+ * method to set cpml coefficients for a given gridpoint
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSurface ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
+										 lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
+										 IndexType i)
+{
+
+
+	utilskernel::LArray<ValueType>* k_LA=&kInv.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_k ( *k_LA );
+
+	utilskernel::LArray<ValueType>* b_LA=&b.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_b ( *b_LA );
+
+	utilskernel::LArray<ValueType>* a_LA=&a.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_a ( *a_LA );
+
+	utilskernel::LArray<ValueType>* k_half_LA=&kInv_half.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_k_half ( *k_half_LA );
+
+	utilskernel::LArray<ValueType>* b_half_LA=&b_half.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_b_half ( *b_half_LA );
+
+	utilskernel::LArray<ValueType>* a_half_LA=&a_half.getLocalValues();
+	hmemo::WriteAccess<ValueType> write_a_half ( *a_half_LA );
+
+		write_a[i] = 0.0;
+		write_b[i] = 0.0;
+		write_k[i] = 1.0;
+
+		write_a_half[i] = 0.0;
+		write_b_half[i] = 0.0;
+		write_k_half[i] = 1.0;
+
+	write_k.release();
+	write_a.release();
+	write_b.release();
+	write_k_half.release();
+	write_a_half.release();
+	write_b_half.release();
+}
+
+
+
 
 /*! \brief Application of the CPML
  *
