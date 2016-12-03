@@ -43,7 +43,11 @@ namespace KITGPI {
             ValueType getDT() { return DT; } ///< Return Time Step
             ValueType getT() { return T; } ///< Return Total propagation time
             
-            IndexType getSpatialFDorder() { return spatialFDorder; } ///< Return order of spatial FD operator
+            IndexType getSpatialFDorder()
+            {
+                SCAI_ASSERT_ERROR( spatialFDorder%2 == 0 , " spatialFDorder has to be an integer of 2");
+                return spatialFDorder;
+            } ///< Return order of spatial FD operator
             
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?

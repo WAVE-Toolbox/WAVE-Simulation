@@ -13,11 +13,14 @@ namespace KITGPI {
             public:
                 
                 //! \brief Default constructor
-                ABS(){};
+                ABS()
+                : active(false)
+                {};
                 
                 //! \brief Default destructor
                 ~ABS(){};
                 
+                bool active; //!< Bool if ABS method is active
                 
                 //! \brief Initializsation of the Absorbing-Coefficient matrix
                 /*!

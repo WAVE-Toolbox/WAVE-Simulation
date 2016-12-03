@@ -41,6 +41,8 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     Configuration::Configuration<ValueType> config(argv[1]);
     
+    SCAI_ASSERT( config.getNZ() == 1 , " NZ must be equal to 1 for 2-D simulation" );
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */

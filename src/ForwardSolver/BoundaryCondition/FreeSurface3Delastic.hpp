@@ -29,7 +29,7 @@ namespace KITGPI {
                 
                 using FreeSurfaceElastic<ValueType>::setSurfaceZero;
                 using FreeSurfaceElastic<ValueType>::scaleHorizontalUpdate;
-                
+                using FreeSurfaceElastic<ValueType>::active;
                 
             };
         } /* end namespace BoundaryCondition */
@@ -49,6 +49,8 @@ namespace KITGPI {
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
+    
+    SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);

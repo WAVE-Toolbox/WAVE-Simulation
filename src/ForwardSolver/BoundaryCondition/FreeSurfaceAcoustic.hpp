@@ -53,6 +53,8 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(lama::DenseVector<ValueType>& p){
     
+    SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
+    
     /* Set the elements on the surface to zero */
     p.scale(setSurfaceZero);
     

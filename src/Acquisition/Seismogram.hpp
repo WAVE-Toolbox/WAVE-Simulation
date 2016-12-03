@@ -503,7 +503,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string filen
     Coordinates<ValueType> coordTransform;
     coordinate3D coord3Dsrc;
     coordinate3D coord3Drec;
-    coord3Dsrc=coordTransform.index2coordinate(sourceCoordinate,NX,NY,NZ);  
+    coord3Dsrc=coordTransform.index2coordinate(sourceCoordinate,NX,NY,NZ);
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(2,100,100,100).x == 2, "" )
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(102,100,100,100).y == 1, "" )
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(2,100,100,1).z == 0, "" )
+    
     YS=coord3Dsrc.y;
     XS=coord3Dsrc.x;
     ZS=coord3Dsrc.z;

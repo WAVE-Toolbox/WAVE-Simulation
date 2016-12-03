@@ -259,6 +259,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     
     SCAI_REGION( "timestep" )
     
+    SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
+    
     /* Get references to required modelparameter */
     model.prepareForModelling();
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();

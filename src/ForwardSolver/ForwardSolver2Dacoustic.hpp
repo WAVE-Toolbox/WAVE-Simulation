@@ -243,6 +243,8 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
     
     SCAI_REGION( "timestep" )
     
+    SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
+    
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();

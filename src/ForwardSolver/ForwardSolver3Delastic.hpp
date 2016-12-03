@@ -259,6 +259,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     
     SCAI_REGION( "timestep" )
     
+    SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
+    
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
