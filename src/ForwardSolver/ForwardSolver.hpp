@@ -38,8 +38,7 @@ namespace KITGPI {
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT)=0;
-            
+            virtual void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT)=0;
             
             /*! \brief Saving seismograms during time stepping
              *
@@ -62,7 +61,7 @@ namespace KITGPI {
              \param NT Total number of time steps
              \param t Current time step
              */
-            virtual void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
+            virtual void applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
             
             /*! \brief Initialitation of the boundary conditions
              *
@@ -72,7 +71,7 @@ namespace KITGPI {
              \param dist Distribution of the wave fields
              \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)=0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)=0;
             
             Acquisition::Seismogram<ValueType> seismogram; //!< Storage of seismogram data
             

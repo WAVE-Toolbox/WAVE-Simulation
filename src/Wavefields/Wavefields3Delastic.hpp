@@ -28,7 +28,7 @@ namespace KITGPI {
             //! Default destructor
             ~FD3Delastic(){};
             
-            FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
             void reset();
             

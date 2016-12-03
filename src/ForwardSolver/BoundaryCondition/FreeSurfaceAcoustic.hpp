@@ -23,7 +23,7 @@ namespace KITGPI {
                 
                 virtual ~FreeSurfaceAcoustic()=0;
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
                 void apply(lama::DenseVector<ValueType>& p);
                 

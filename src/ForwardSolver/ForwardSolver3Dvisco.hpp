@@ -33,9 +33,9 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Dvisco(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT);
+            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT) override;
             
-            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
             using ForwardSolver<ValueType>::seismogram;
             
@@ -48,8 +48,8 @@ namespace KITGPI {
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
-            void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
-            void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
+            void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
+            void applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
             
         };
     } /* end namespace ForwardSolver */
@@ -65,7 +65,7 @@ namespace KITGPI {
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
@@ -92,7 +92,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
 {
     
     IndexType numSourcesLocal=sources.getNumSourcesLocal();
@@ -108,23 +108,23 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::applySource(Acquisition::Sourc
         lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
         
         /* Get reference to sourcesignal storing seismogram */
-        Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
+        const  Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
         
         /* Get reference to source type of sources */
-        lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
-        utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_SourceType_LA(*SourceType_LA);
+        const lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
+        const utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_SourceType_LA(*SourceType_LA);
         
         /* Get reference to coordinates of sources */
-        lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
+        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of source signals */
-        lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
-        lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
-        hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
-        hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
+        const lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
+        const lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
+        const hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
+        const hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
         
         /* Get the distribution of the wavefield*/
         dmemo::DistributionPtr dist_wavefield=vX.getDistributionPtr();
@@ -156,9 +156,6 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::applySource(Acquisition::Sourc
                     break;
             }
         }
-        
-        read_coordinates_LA.release();
-        read_sourcesSignals_HA.release();
     }
 }
 
@@ -190,14 +187,14 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::gatherSeismograms(Wavefields::
         lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
         
         /* Get reference to receiver type of seismogram traces */
-        lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
-        utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
+        const lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
+        const utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
         
         /* Get reference to coordinates of seismogram traces */
-        lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
+        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of seismogram traces */
         lama::DenseMatrix<ValueType>& seismogramData=seismogram.getData();
@@ -235,9 +232,6 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::gatherSeismograms(Wavefields::
                     break;
             }
         }
-        
-        read_coordinates_LA.release();
-        write_seismogram_HA.release();
     }
 }
 
@@ -255,7 +249,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::gatherSeismograms(Wavefields::
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT){
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT){
     
     SCAI_REGION( "timestep" )
     

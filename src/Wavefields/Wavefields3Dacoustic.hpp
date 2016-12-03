@@ -30,7 +30,7 @@ namespace KITGPI {
             //! Default destructor
             ~FD3Dacoustic(){};
             
-            FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
             void reset();
             

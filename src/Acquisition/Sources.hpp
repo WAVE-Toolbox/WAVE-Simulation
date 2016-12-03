@@ -23,22 +23,22 @@ namespace KITGPI {
         public:
             
             Sources():numSourcesGlobal(0),numSourcesLocal(0),numParameter(0){};
-            Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
             ~Sources(){};
             
-            void init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
             void readSourceAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
-            void writeSourceAcquisition(std::string filename);
+            void writeSourceAcquisition(std::string filename) const;
             
             void generateSignals(IndexType NT, ValueType DT);
-            void writeSignalsToFileRaw(std::string filename);
+            void writeSignalsToFileRaw(std::string filename) const;
             
-            lama::DenseVector<ValueType>& getCoordinates();
-            lama::DenseVector<ValueType>& getSourceType();
-            Seismogram<ValueType>& getSignals();
+            lama::DenseVector<ValueType> const& getCoordinates() const;
+            lama::DenseVector<ValueType> const& getSourceType() const;
+            Seismogram<ValueType> const& getSignals() const;
             
-            IndexType getNumSourcesGlobal();
-            IndexType getNumSourcesLocal();
+            IndexType getNumSourcesGlobal() const;
+            IndexType getNumSourcesLocal() const;
             
         private:
             
@@ -83,7 +83,8 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getSourceType(){
+lama::DenseVector<ValueType> const& KITGPI::Acquisition::Sources<ValueType>::getSourceType() const
+{
     return(source_type);
 }
 
@@ -95,7 +96,8 @@ lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getSource
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getCoordinates(){
+lama::DenseVector<ValueType> const& KITGPI::Acquisition::Sources<ValueType>::getCoordinates() const
+{
     return(coordinates);
 }
 
@@ -107,7 +109,8 @@ lama::DenseVector<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getCoordi
  *
  */
 template<typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::Sources<ValueType>::getSignals(){
+KITGPI::Acquisition::Seismogram<ValueType>const& KITGPI::Acquisition::Sources<ValueType>::getSignals() const
+{
     return(signals);
 }
 
@@ -118,7 +121,7 @@ KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::Sources<ValueTy
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield)
 :numSourcesGlobal(0),numSourcesLocal(0),numParameter(0)
 {
     init(config,dist_wavefield);
@@ -130,7 +133,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<Va
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield)
 {
     readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
     generateSignals(config.getNT(),config.getDT());
@@ -142,12 +145,10 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<
  \return Number of global sources
  */
 template<typename ValueType>
-IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesGlobal(){
+IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesGlobal() const
+{
     if(numSourcesGlobal==0){
-        numSourcesGlobal=signals.getNumTracesGlobal();
-        if(numSourcesGlobal==0){
             COMMON_THROWEXCEPTION("The signals are not allocated")
-        }
     }
     return(numSourcesGlobal);
 }
@@ -158,7 +159,8 @@ IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesGlobal(){
  \return Number of local sources on this process
  */
 template<typename ValueType>
-IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesLocal(){
+IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesLocal() const
+{
     return(numSourcesLocal);
 }
 
@@ -168,7 +170,8 @@ IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesLocal(){
  \param filename Filename to write source acquisition
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string filename){
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string filename) const
+{
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.assignTranspose(acquisition);
     acquisition_temp.writeToFile(filename);
@@ -332,7 +335,8 @@ void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string 
  \param filename Filename to write source signals
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string filename){
+void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string filename) const
+{
     signals.writeToFileRaw(filename);
 }
 
@@ -355,8 +359,8 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSignals(IndexType NT)
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
     signals.allocate(ctx,dist_wavefield_sources,NT);
     
-    signals.getCoordinates()=coordinates;
-    signals.getTraceType()=source_type;
+    signals.setCoordinates(coordinates);
+    signals.setTraceType(source_type);
 }
 
 

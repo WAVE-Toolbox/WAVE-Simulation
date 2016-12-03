@@ -24,7 +24,7 @@ namespace KITGPI {
                 //! Default destructor
                 virtual ~FreeSurfaceVisco()=0;
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType>& model,lama::DenseVector<ValueType>& tauP,lama::DenseVector<ValueType>& tauS,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS);
                 
