@@ -33,7 +33,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD2Dvisco(){};
             
-            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
@@ -238,7 +238,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::gatherSeismograms(Wavefields::
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT){
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT){
     
     SCAI_REGION( "timestep" )
     
@@ -246,9 +246,9 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     
     /* Get references to required modelparameter */
     model.prepareForModelling();
-    lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
+    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -263,13 +263,13 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& Rxy=wavefield.getRxy();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
+    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
+    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
     
-    lama::CSRSparseMatrix<ValueType>& DybPressure=derivatives.getDybPressure();
-    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDybVelocity();
-    lama::CSRSparseMatrix<ValueType>& DyfPressure=derivatives.getDyfPressure();
-    lama::CSRSparseMatrix<ValueType>& DyfVelocity=derivatives.getDyfVelocity();
+    lama::CSRSparseMatrix<ValueType>const& DybPressure=derivatives.getDybPressure();
+    lama::CSRSparseMatrix<ValueType>const& DybVelocity=derivatives.getDybVelocity();
+    lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
+    lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, vX.getContextPtr());
@@ -285,8 +285,8 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::Vector& vxx = *vxxPtr;
     lama::Vector& vyy = *vyyPtr;
     
-    lama::DenseVector<ValueType>& tauS=model.getTauS();
-    lama::DenseVector<ValueType>& tauP=model.getTauP();
+    lama::DenseVector<ValueType>const& tauS=model.getTauS();
+    lama::DenseVector<ValueType>const& tauP=model.getTauP();
     
     IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
     ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
@@ -305,7 +305,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     onePlusLtauS += numRelaxationMechanisms * tauS;
     
     if(useFreeSurface){
-        FreeSurface.setModelparameter(model,tauP,tauS,onePlusLtauP,onePlusLtauS);
+        FreeSurface.setModelparameter(model,onePlusLtauP,onePlusLtauS);
     }
     
     dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();

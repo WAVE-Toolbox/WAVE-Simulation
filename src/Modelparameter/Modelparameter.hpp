@@ -62,20 +62,20 @@ namespace KITGPI {
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
              */
-            virtual void write(std::string filename)=0;
+            virtual void write(std::string filename) const =0;
             
-            virtual lama::DenseVector<ValueType>& getDensity();
-            virtual lama::DenseVector<ValueType>& getInverseDensity();
-            virtual lama::DenseVector<ValueType>& getPWaveModulus();
-            virtual lama::DenseVector<ValueType>& getSWaveModulus();
-            virtual lama::DenseVector<ValueType>& getVelocityP();
-            virtual lama::DenseVector<ValueType>& getVelocityS();
+            virtual lama::DenseVector<ValueType> const& getDensity();
+            virtual lama::DenseVector<ValueType> const& getInverseDensity();
+            virtual lama::DenseVector<ValueType> const& getPWaveModulus();
+            virtual lama::DenseVector<ValueType> const& getSWaveModulus();
+            virtual lama::DenseVector<ValueType> const& getVelocityP();
+            virtual lama::DenseVector<ValueType> const& getVelocityS();
             
-            virtual lama::DenseVector<ValueType>& getTauP();
-            virtual lama::DenseVector<ValueType>& getTauS();
+            virtual lama::DenseVector<ValueType> const& getTauP();
+            virtual lama::DenseVector<ValueType> const& getTauS();
             
-            virtual IndexType getNumRelaxationMechanisms();
-            virtual ValueType getRelaxationFrequency();
+            virtual IndexType getNumRelaxationMechanisms() const;
+            virtual ValueType getRelaxationFrequency() const;
             
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling()=0;
@@ -104,7 +104,7 @@ namespace KITGPI {
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
-            void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            void writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const;
             
             void calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity);
             
@@ -141,13 +141,15 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
+{
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMechanisms() const
+{
     return(numRelaxationMechanisms);
 }
 
@@ -197,7 +199,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param filename Name of file in which modelparameter will be written
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const
 {
     vector.writeToFile(filename);
 };
@@ -292,7 +294,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(l
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
     if(dirtyFlagInverseDensity){
         dirtyFlagInverseDensity=false;
         inverseDensity.assign(density);
@@ -304,7 +306,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
     dirtyFlagInverseDensity=true; // If density will be changed, the inverse has to be refreshed if it is accessed
     return(density);
 }
@@ -312,7 +314,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
 /*! \brief Get reference to first Lame model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
     
     // If the model is parameterized in modules, the velocity vector is now dirty
     if(parametrisation==0){
@@ -331,7 +333,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
     
     // If the model is parameterized in modules, the velocity vector is now dirty
     if(parametrisation==0){
@@ -350,7 +352,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
 
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
@@ -368,7 +370,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
 
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
@@ -387,14 +389,14 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){
     return(tauP);
 }
 
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS(){
     return(tauS);
 }
 

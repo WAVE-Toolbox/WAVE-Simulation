@@ -33,7 +33,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD2Dacoustic(){};
             
-            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
@@ -233,15 +233,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::gatherSeismograms(Wavefield
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
     SCAI_ASSERT_ERROR( NT > 1 , " Number of time steps has to be greater than zero. ");
     
     /* Get references to required modelparameter */
-    lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType> const& inverseDensity=model.getInverseDensity();
+    lama::DenseVector<ValueType> const& pWaveModulus=model.getPWaveModulus();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -249,10 +249,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
     lama::DenseVector<ValueType>& p=wavefield.getP();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>& Dyb=derivatives.getDyb();
-    lama::CSRSparseMatrix<ValueType>& Dyf=derivatives.getDyfVelocity();
+    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
+    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
+    lama::CSRSparseMatrix<ValueType>const& Dyb=derivatives.getDyb();
+    lama::CSRSparseMatrix<ValueType>const& Dyf=derivatives.getDyfVelocity();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, pWaveModulus.getContextPtr());

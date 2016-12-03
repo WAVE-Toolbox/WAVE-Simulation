@@ -57,8 +57,8 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSu
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model){
     
-    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
     
     lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
     
