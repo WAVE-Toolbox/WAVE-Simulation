@@ -24,6 +24,8 @@
 
 #include <iostream>
 
+#include "../Partitioning/PartitionedInOut.hpp"
+
 namespace KITGPI {
     
     //! \brief Modelparameter namespace
@@ -87,6 +89,9 @@ namespace KITGPI {
             bool dirtyFlagVelocity; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
             
+            IndexType PartitionedIn; //!< ==1 If Module is read from partitioned fileblock; ==0 if module is in single files
+            IndexType PartitionedOut; //!< ==1 If Module is written to partitioned fileblock; ==0 if module is written to single files
+            
             lama::DenseVector<ValueType> pWaveModulus; //!< Vector storing P-wave modulus.
             lama::DenseVector<ValueType> sWaveModulus; //!< Vector storing S-wave modulus.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
@@ -111,7 +116,7 @@ namespace KITGPI {
             void calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule );
             
             void calcVelocityFromModule(lama::DenseVector<ValueType>& vectorModule, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity);
-
+            
             /*! \brief Switch parameterization to velocity */
             virtual void switch2velocity()=0;
             /*! \brief Switch parameterization to modulus */
@@ -125,12 +130,27 @@ namespace KITGPI {
             
             IndexType getParametrisation();
             
+            IndexType getPartitionedIn();
+            IndexType getPartitionedOut();
+            
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename, dmemo::DistributionPtr dist);
         };
     }
+}
+
+/*! \brief Getter method for parametrisation */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedIn(){
+    return(PartitionedIn);
+}
+
+/*! \brief Getter method for parametrisation */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedOut(){
+    return(PartitionedOut);
 }
 
 /*! \brief Getter method for parametrisation */
@@ -183,7 +203,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
     
     allocateModelparameter(vector,ctx,dist);
     
-    readModelparameter(vector,filename);
+    readModelparameter(vector,filename,dist);
     
     vector.redistribute(dist);
     
@@ -192,23 +212,36 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
 
 /*! \brief Write singe modelparameter to an external file
  *
- *  Write a single model to an external file.
+ *  Write a single model to an external file block.
  \param vector Single modelparameter which will be written to filename
  \param filename Name of file in which modelparameter will be written
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
 {
-    vector.writeToFile(filename);
+    if (PartitionedOut==1){
+        PartitionedInOut<ValueType> test;
+        test.writeToDistributedFiles(vector,filename);
+    } else if (PartitionedOut==0){
+        vector.writeToFile(filename);
+    } else  {
+        COMMON_THROWEXCEPTION("Unexpected output option!")
+    }
 };
-
 
 /*! \brief Read a modelparameter from file
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename, dmemo::DistributionPtr dist)
 {
-    vector.readFromFile(filename);
+    if (PartitionedIn==1){
+        PartitionedInOut::readFromDistributedFiles(vector,filename,dist);
+    } else if (PartitionedIn==0) {
+        PartitionedInOut::readFromOneFile(vector,filename,dist);
+    } else  {
+        COMMON_THROWEXCEPTION("Unexpected input option!")
+    }
+    
 };
 
 
@@ -232,7 +265,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule )
 {
-
+    
     vectorModule=vecDensity;
     vectorModule.scale(vecVelocity);
     vectorModule.scale(vecVelocity);
@@ -257,8 +290,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::D
     allocateModelparameter(vecDensity,ctx,dist);
     allocateModelparameter(vectorModule,ctx,dist);
     
-    readModelparameter(vecV,filename);
-    readModelparameter(vecDensity,filenameDensity);
+    readModelparameter(vecV,filename,dist);
+    readModelparameter(vecDensity,filenameDensity,dist);
     
     vecV.redistribute(dist);
     vecDensity.redistribute(dist);
@@ -351,7 +384,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -369,7 +402,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -384,7 +417,8 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
 }
 
 /*! \brief Get reference to tauP
- *
+ 
+ 
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){

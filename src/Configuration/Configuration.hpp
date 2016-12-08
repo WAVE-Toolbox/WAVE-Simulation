@@ -45,6 +45,9 @@ namespace KITGPI {
             
             IndexType getSpatialFDorder() { return spatialFDorder; } ///< Return order of spatial FD operator
             
+            IndexType getPartitionedIn() { return PartitionedIn; } ///< Return parallelize input
+            IndexType getPartitionedOut() { return PartitionedOut; } ///< Return parallelize input
+
             IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
             IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
             std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
@@ -69,9 +72,9 @@ namespace KITGPI {
             IndexType getNT() { return NT; } ///< Return NT
             
             IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
-            IndexType getProcNX() { return ProcNX;} ///< Return number of cores in X-direction
-            IndexType getProcNY() { return ProcNY;} ///< Return number of cores in Y-direction
-            IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
+            IndexType getProcNX() { return ProcNX; } ///< Return number of cores in X-direction
+            IndexType getProcNY() { return ProcNY; } ///< Return number of cores in Y-direction
+            IndexType getProcNZ() { return ProcNZ; } ///< Return number of cores in Z-direction
             
             IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
             
@@ -101,6 +104,9 @@ namespace KITGPI {
             ValueType T;   ///< total simulation time
             
             IndexType spatialFDorder;	///< order of spatial FD operator
+            
+            IndexType PartitionedIn; ///< Read model from distributed file (1=YES, else=NO)
+            IndexType PartitionedOut; ///< Write model to distributed fileblock (1=YES, else=NO)
             
             IndexType ModelRead; ///< Read model from File (1=YES, else=NO)
             IndexType ModelWrite; ///< Write model to File (1=YES, else=NO)
@@ -205,6 +211,9 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
     
     std::istringstream( map[ "spatialFDorder" ] ) >> spatialFDorder;  // Indextype
     
+    std::istringstream( map[ "PartitionedIn" ] ) >> PartitionedIn; //Indextype
+    std::istringstream( map[ "PartitionedOut" ] ) >> PartitionedOut; //Indextype
+    
     std::istringstream( map[ "ModelRead" ] ) >> ModelRead; // IndexType
     std::istringstream( map[ "ModelWrite" ] ) >> ModelWrite; // IndexType
     ModelFilename = std::istringstream( map[ "ModelFilename" ] ).str(); // std::string
@@ -292,21 +301,42 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
     
     if ( ModelRead==1 )
     {
-        switch (ModelParametrisation) {
-            case 1:
-                std::cout << "    Model will be read in from disk" << std::endl;
-                std::cout << "    P-wave modulus: " << ModelFilename << ".pWaveModulus.mtx" << std::endl;
-                std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
-                break;
-            case 2:
-                std::cout << "    Model will be read in from disk" << std::endl;
-                std::cout << "    VelocityP-Data: " << ModelFilename << ".vp.mtx" << std::endl;
-                std::cout << "    VelocityS-Data " << ModelFilename << ".vs.mtx" << std::endl;
-                std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
-                break;
-            default:
-                COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
-                break;
+        if( PartitionedIn==1 ){
+            switch (ModelParametrisation) {
+                case 1:
+                    std::cout << "    Model will be read in from disk" << std::endl;
+                    std::cout << "    P-wave modulus: " << ModelFilename << ".pWaveModulus_%r.mtx" << std::endl;
+                    std::cout << "    Density: " << ModelFilename << ".density_%r.mtx" << std::endl;
+                    
+                    break;
+                case 2:
+                    std::cout << "    Model will be read in from disk" << std::endl;
+                    std::cout << "    VelocityP-Data: " << ModelFilename << ".vp_%r.mtx" << std::endl;
+                    std::cout << "    VelocityS-Data " << ModelFilename << ".vs_%r.mtx" << std::endl;
+                    std::cout << "    Density: " << ModelFilename << ".density_%r.mtx" << std::endl;
+                    break;
+                default:
+                    COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
+                    break;
+            }
+        } else {
+            switch (ModelParametrisation) {
+                case 1:
+                    std::cout << "    Model will be read in from disk" << std::endl;
+                    std::cout << "    P-wave modulus: " << ModelFilename << ".pWaveModulus.mtx" << std::endl;
+                    std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+                    
+                    break;
+                case 2:
+                    std::cout << "    Model will be read in from disk" << std::endl;
+                    std::cout << "    VelocityP-Data: " << ModelFilename << ".vp.mtx" << std::endl;
+                    std::cout << "    VelocityS-Data " << ModelFilename << ".vs.mtx" << std::endl;
+                    std::cout << "    Density: " << ModelFilename << ".density.mtx" << std::endl;
+                    break;
+                default:
+                    COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
+                    break;
+            }
         }
     } else {
         std::cout << "    A homogeneous model will be generated" << std::endl;
@@ -314,7 +344,13 @@ void KITGPI::Configuration::Configuration<ValueType>::print()
         std::cout << "    VelocityS:" << velocityS << " m/s" << std::endl;
         std::cout << "    Density:" << rho << " g/cm3" << std::endl;
     }
-    if(ModelWrite==1)  std::cout << "    The model will be written to " << ModelFilename+".out*" << std::endl;
+    if(ModelWrite==1)  {
+        if( PartitionedOut==1 ){
+            std::cout << "  the model will be written to distributed files." << std::endl;
+        } else {
+            std::cout << "    The model will be written to a single file " << ModelFilename+".out*" << std::endl;
+        }
+    }
     
     std::cout << std::endl;
 }

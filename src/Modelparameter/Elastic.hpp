@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "../Partitioning/PartitioningIO.hpp"
 
 namespace KITGPI {
     
