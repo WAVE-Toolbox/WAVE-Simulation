@@ -135,8 +135,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::switch2modulus(){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
         
-        this->calculateAveraging();
-        
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -181,8 +179,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule(){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
         
-        this->calculateAveraging();
-        
         dirtyFlagModulus=false;
     }
 };
@@ -218,6 +214,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
     temp.invert();
     pWaveModulus.scale(temp);
     
+    calculateAveraging();
 }
 
 /*! \brief Constructor that is using the Configuration class

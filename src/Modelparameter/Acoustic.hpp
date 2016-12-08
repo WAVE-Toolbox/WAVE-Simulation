@@ -142,6 +142,7 @@ namespace KITGPI {
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(){
     refreshModule();
+    calculateAveraging();
 }
 
 /*! \brief Switch the default parameterization of this class to modulus
@@ -154,7 +155,6 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
-        this->calculateAveraging();
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -195,8 +195,6 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
-        
-        this->calculateAveraging();
 
         dirtyFlagModulus=false;
     }

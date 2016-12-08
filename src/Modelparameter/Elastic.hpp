@@ -143,6 +143,7 @@ namespace KITGPI {
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(){
     refreshModule();
+    calculateAveraging();
 }
 
 /*! \brief Switch the default parameterization of this class to modulus
@@ -156,8 +157,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
-        this->calculateAveraging();
         
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
@@ -202,8 +201,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
-        this->calculateAveraging();
         
         dirtyFlagModulus=false;
     }
