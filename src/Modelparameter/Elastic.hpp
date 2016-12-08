@@ -24,7 +24,6 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
-#include "../Partitioning/PartitioningIO.hpp"
 
 namespace KITGPI {
     
@@ -62,6 +61,7 @@ namespace KITGPI {
             
             void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
             void write(std::string filename);
+
             
             /* Getter methods for not requiered parameters */
             lama::DenseVector<ValueType>& getTauP();
@@ -380,6 +380,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename)
     this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
     this->writeModelparameter(density,filenamedensity);
 };
+
 
 /*! \brief Get reference to tauP
  *
