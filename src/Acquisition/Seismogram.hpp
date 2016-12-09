@@ -32,11 +32,11 @@ namespace KITGPI {
             //! Default destructor
             ~Seismogram(){};
             
-            void writeToFileRaw(std::string filename) const; // write only the raw data in text format
-            void writeToFileSU(std::string filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const; // write to Seismic Unix format
             void write(Configuration::Configuration<ValueType> const& config);
+            void writeToFileRaw(std::string const& filename) const;
+            void writeToFileSU(std::string const& filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
             
-            void readFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
+            void readFromFileRaw(std::string const& filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples);
             
             void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
             
@@ -47,6 +47,7 @@ namespace KITGPI {
             
             void resetData();
             
+            /* Getter functions */
             IndexType getNumTracesGlobal() const;
             IndexType getNumTracesLocal() const;
             IndexType getNumSamples() const;
@@ -56,10 +57,11 @@ namespace KITGPI {
             lama::DenseVector<IndexType> const& getTraceType() const;
             lama::DenseVector<IndexType> const& getCoordinates() const;
             
+            /* Setter functions */
             void setDT(ValueType newDT);
             void setSourceCoordinate(IndexType sourceCoord);
-            void setTraceType(lama::DenseVector<IndexType> trace);
-            void setCoordinates(lama::DenseVector<IndexType> coord);
+            void setTraceType(lama::DenseVector<IndexType>const& trace);
+            void setCoordinates(lama::DenseVector<IndexType>const& coord);
             
         private:
             
@@ -112,9 +114,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT){
-    if(newDT<0){
-        COMMON_THROWEXCEPTION(" DT is smaller zero. ")
-    }
+    SCAI_ASSERT(newDT>=0, " DT is smaller zero. ");
     DT=newDT;
 }
 
@@ -148,22 +148,32 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType> const
     const lama::DenseVector<ValueType> traceType_temp(receiver.getReceiversType());
     coordinates=coordinates_temp;
     traceType=traceType_temp;
-    
+
     numTracesLocal=receiver.getNumReceiversLocal();
     numTracesGlobal=receiver.getNumReceiversGlobal();
     numSamples=NT;
+
+    SCAI_ASSERT_ERROR(coordinates_temp.size() == traceType.size(), "Size of coordinates and traceType is different");
+    SCAI_ASSERT_ERROR(coordinates_temp.getDistributionPtr() == traceType.getDistributionPtr(), "Distribution of coordinates and traceType is different");
+    SCAI_ASSERT_ERROR( dist_traces == traceType.getDistributionPtr(), "Distribution of receiver class and traceType is different");
+    SCAI_ASSERT_ERROR(receiver.getNumReceiversGlobal()>=0, " Number of global receiver is smaller zero. ");
+    SCAI_ASSERT_ERROR(receiver.getNumReceiversLocal()>=0, " Number of local receiver is smaller zero. ");
+    SCAI_ASSERT_ERROR(NT>=0, " NT is smaller or equal zero: No Seismogram allocation. ");
+
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(lama::DenseVector<IndexType> trace)
+void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(lama::DenseVector<IndexType>const& trace)
 {
-    traceType=std::move(trace);
+    SCAI_ASSERT_ERROR( trace.size()==numTracesGlobal ,"Given traceType vector has wrong format");
+    traceType=trace;
 };
 
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<IndexType> coord)
+void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<IndexType>const& coord)
 {
-    coordinates=std::move(coord);
+    SCAI_ASSERT_ERROR( coord.size()==numTracesGlobal ,"Given traceType vector has wrong format");
+    coordinates=coord;
 };
 
 //! \brief Get reference to Receiver Type
@@ -176,6 +186,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVecto
 template <typename ValueType>
 lama::DenseVector<IndexType>const& KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
 {
+    SCAI_ASSERT_DEBUG(traceType.size() == numTracesGlobal, "Size mismatch ");
     return(traceType);
 }
 
@@ -190,6 +201,7 @@ lama::DenseVector<IndexType>const& KITGPI::Acquisition::Seismogram<ValueType>::g
 template <typename ValueType>
 lama::DenseVector<IndexType> const& KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates() const
 {
+    SCAI_ASSERT_DEBUG(coordinates.size() == numTracesGlobal, "Size mismatch ");
     return(coordinates);
 }
 
@@ -204,7 +216,9 @@ lama::DenseVector<IndexType> const& KITGPI::Acquisition::Seismogram<ValueType>::
  *
  */
 template <typename ValueType>
-lama::DenseMatrix<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getData(){
+lama::DenseMatrix<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getData()
+{
+    SCAI_ASSERT_DEBUG(data.getNumRows()*data.getNumColumns() == numTracesGlobal*numSamples, "Size mismatch ");
     return(data);
 }
 
@@ -220,6 +234,7 @@ lama::DenseMatrix<ValueType>& KITGPI::Acquisition::Seismogram<ValueType>::getDat
 template <typename ValueType>
 lama::DenseMatrix<ValueType>const& KITGPI::Acquisition::Seismogram<ValueType>::getData() const
 {
+    SCAI_ASSERT_DEBUG(data.getNumRows()*data.getNumColumns() == numTracesGlobal*numSamples, "Size mismatch ");
     return(data);
 }
 
@@ -249,6 +264,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distTraces, IndexType NT)
 {
+    SCAI_ASSERT_ERROR(NT>0, "NT is < 0: No Seismogram allocation ");
+    SCAI_ASSERT_ERROR(distTraces!=NULL , "No valid distribution");
     
     numSamples=NT;
     numTracesGlobal=distTraces->getGlobalSize();
@@ -286,9 +303,11 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
 {
     if(distSamples==NULL){
-        dmemo::DistributionPtr distSamples( new scai::dmemo::NoDistribution ( numSamples ) );
+        SCAI_ASSERT_DEBUG( numSamples>=0 , "numSamples not set" );
+        dmemo::DistributionPtr distSamplestmp( new scai::dmemo::NoDistribution ( numSamples ) );
+        distSamples=distSamplestmp;
     }
-    
+
     data.redistribute(distTraces,distSamples);
     traceType.redistribute(distTraces);
     coordinates.redistribute(distTraces);
@@ -303,7 +322,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::Distributio
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const& filename,dmemo::DistributionPtr distTraces,dmemo::DistributionPtr distSamples)
 {
     data.ReadFromFile(filename);
     
@@ -328,11 +347,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string fil
  \param filename Filename to write seismogram
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string filename) const
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const& filename) const
 {
-    if(data.getNumValues()==0) {
-        COMMON_THROWEXCEPTION("Seismogramm data is not allocated")
-    }
+    SCAI_ASSERT_ERROR(data.getNumValues()>0, "Seismogramm data is not allocated");
     data.writeToFile(filename);
 }
 
@@ -341,9 +358,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string file
 template <typename ValueType>
 ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
 {
-    if(DT==0.0){
-        COMMON_THROWEXCEPTION("DT is not set for this seismogram")
-    }
+    SCAI_ASSERT_ERROR(DT !=0, "Seismogramm data is not allocated");
     return(DT);
 }
 
@@ -352,12 +367,6 @@ ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 {
-    if(numSamples==0){
-        numSamples=data.getNumColumns();
-        if(numSamples==0){
-            COMMON_THROWEXCEPTION("Seismogram is not allocated")
-        }
-    }
     return(numSamples);
 }
 
@@ -374,9 +383,6 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 {
-    if(numTracesGlobal==0){
-            COMMON_THROWEXCEPTION("Seismogram is not allocated")
-    }
     return(numTracesGlobal);
 }
 
@@ -390,7 +396,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
  \param DH Length of space step in meter
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string filename,IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const
 {
     Segy tr;
     /* Define parameters in tr header */

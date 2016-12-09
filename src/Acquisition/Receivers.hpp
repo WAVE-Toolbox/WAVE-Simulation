@@ -31,9 +31,9 @@ namespace KITGPI {
             void readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
             void writeReceiverAcquisition(std::string const& filename) const;
             
+            /* Getter functions */
             IndexType getNumReceiversGlobal() const;
             IndexType getNumReceiversLocal() const;
-            
             dmemo::DistributionPtr getReceiversDistribution() const;
             lama::DenseVector<IndexType> const& getCoordinates() const;
             lama::DenseVector<IndexType> const& getReceiversType() const;
@@ -165,6 +165,10 @@ template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
 {
 
+    SCAI_ASSERT_ERROR(NX>0, "NX<=0");
+    SCAI_ASSERT_ERROR(NY>0, "NX<=0");
+    SCAI_ASSERT_ERROR(NZ>0, "NX<=0");
+    
     /* Read acquisition matrix */
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(filename);
@@ -284,9 +288,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::CommunicatorPtr comm)
 {
-    if(numReceiversGlobal==0){
-        COMMON_THROWEXCEPTION ( " There is no global receiver (numReceiversGlobal==0)! ")
-    }
+    SCAI_ASSERT(numReceiversGlobal==0," There is no global receiver (numReceiversGlobal==0)! ");
     
     dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numReceiversGlobal,localIndices,comm));
 
@@ -301,11 +303,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::C
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::DistributionPtr dist_wavefield)
 {
-    
-    if(coordinates.size()==0){
-        COMMON_THROWEXCEPTION ( " The vector coordinates does not contain any elements ! ")
-    }
-    
+    SCAI_ASSERT(coordinates.size()==0," The vector coordinates does not contain any elements ! ");
     
     this->Global2Local(coordinates,localIndices,dist_wavefield);
     
