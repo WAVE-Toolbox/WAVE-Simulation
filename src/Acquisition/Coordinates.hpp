@@ -51,7 +51,7 @@ namespace KITGPI {
             
         protected:
             
-            void Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
+            void Global2Local(lama::Vector& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
         private:
             
@@ -194,7 +194,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::DenseVector<ValueType>& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
 {
     
     IndexType n_global=coordinatesglobal.size(); // Number of global entries

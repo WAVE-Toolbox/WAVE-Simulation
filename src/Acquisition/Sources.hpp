@@ -33,8 +33,8 @@ namespace KITGPI {
             void generateSignals(IndexType NT, ValueType DT);
             void writeSignalsToFileRaw(std::string filename) const;
             
-            lama::DenseVector<ValueType> const& getCoordinates() const;
-            lama::DenseVector<ValueType> const& getSourceType() const;
+            lama::DenseVector<IndexType> const& getCoordinates() const;
+            lama::DenseVector<IndexType> const& getSourceType() const;
             Seismogram<ValueType> const& getSignals() const;
             
             IndexType getNumSourcesGlobal() const;
@@ -61,12 +61,12 @@ namespace KITGPI {
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
             IndexType numParameter; //!< Number of source parameters given in acquisition matrix
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of sources global (1-D coordinates)
-            lama::DenseVector<ValueType> source_type; //!< Type of source: 1==P, 2==vX, 3==vY, 4==vZ
-            lama::DenseVector<ValueType> wavelet_type; //!< Type of wavelet: 1==Synthetic
+            lama::DenseVector<IndexType> coordinates; //!< Coordinates of sources global (1-D coordinates)
+            lama::DenseVector<IndexType> source_type; //!< Type of source: 1==P, 2==vX, 3==vY, 4==vZ
+            lama::DenseVector<IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic
             
             /* Optional acquisition Settings */
-            lama::DenseVector<ValueType> wavelet_shape; //!< Shape of wavelet: 1==Ricker,2==Sinw,3==sin^3,4==FGaussian,5==Spike,6==integral sin^3
+            lama::DenseVector<IndexType> wavelet_shape; //!< Shape of wavelet: 1==Ricker,2==Sinw,3==sin^3,4==FGaussian,5==Spike,6==integral sin^3
             lama::DenseVector<ValueType> wavelet_fc; //!< Center frequency of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_amp; //!< Amplitude of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
@@ -83,7 +83,7 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType> const& KITGPI::Acquisition::Sources<ValueType>::getSourceType() const
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Sources<ValueType>::getSourceType() const
 {
     return(source_type);
 }
@@ -96,7 +96,7 @@ lama::DenseVector<ValueType> const& KITGPI::Acquisition::Sources<ValueType>::get
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType> const& KITGPI::Acquisition::Sources<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Sources<ValueType>::getCoordinates() const
 {
     return(coordinates);
 }
@@ -264,8 +264,8 @@ void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string 
         hmemo::ReadAccess<ValueType> read_acquisition_HA(*acquisition_HA);
         
         /* Get writeAccess to coordinates vector (local) */
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> write_coordinates_LA(*coordinates_LA);
+        utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
+        hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
         
         /* 2. Calculate 1-D coordinates form 3-D coordinates */
         IndexType X,Y,Z;
@@ -383,8 +383,8 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, Valu
     
     signals.setDT(DT);
     
-    utilskernel::LArray<ValueType>* wavelet_type_LA=&wavelet_type.getLocalValues();
-    hmemo::ReadAccess<ValueType> read_wavelet_type_LA(*wavelet_type_LA);
+    utilskernel::LArray<IndexType>* wavelet_type_LA=&wavelet_type.getLocalValues();
+    hmemo::ReadAccess<IndexType> read_wavelet_type_LA(*wavelet_type_LA);
     IndexType wavelet_type_i;
     
     for(IndexType i=0; i<numSourcesLocal; i++){

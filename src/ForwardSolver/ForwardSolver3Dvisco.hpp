@@ -111,14 +111,14 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::applySource(Acquisition::Sourc
         const  Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
         
         /* Get reference to source type of sources */
-        const lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
-        const utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
-        const hmemo::ReadAccess<ValueType> read_SourceType_LA(*SourceType_LA);
+        const lama::DenseVector<IndexType>& SourceType=signals.getTraceType();
+        const utilskernel::LArray<IndexType>* SourceType_LA=&SourceType.getLocalValues();
+        const hmemo::ReadAccess<IndexType> read_SourceType_LA(*SourceType_LA);
         
         /* Get reference to coordinates of sources */
-        const lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
-        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<IndexType>& coordinates=signals.getCoordinates();
+        const utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<IndexType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of source signals */
         const lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
@@ -187,14 +187,14 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::gatherSeismograms(Wavefields::
         lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
         
         /* Get reference to receiver type of seismogram traces */
-        const lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
-        const utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
-        const hmemo::ReadAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
+        const lama::DenseVector<IndexType>& ReceiverType=seismogram.getTraceType();
+        const utilskernel::LArray<IndexType>* ReceiverType_LA=&ReceiverType.getLocalValues();
+        const hmemo::ReadAccess<IndexType> read_ReceiverType_LA(*ReceiverType_LA);
         
         /* Get reference to coordinates of seismogram traces */
-        const lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
-        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<IndexType>& coordinates=seismogram.getCoordinates();
+        const utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<IndexType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of seismogram traces */
         lama::DenseMatrix<ValueType>& seismogramData=seismogram.getData();

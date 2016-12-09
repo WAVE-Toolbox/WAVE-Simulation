@@ -53,13 +53,13 @@ namespace KITGPI {
             ValueType getDT() const;
             lama::DenseMatrix<ValueType>& getData();
             lama::DenseMatrix<ValueType> const& getData() const;
-            lama::DenseVector<ValueType> const& getTraceType() const;
-            lama::DenseVector<ValueType> const& getCoordinates() const;
+            lama::DenseVector<IndexType> const& getTraceType() const;
+            lama::DenseVector<IndexType> const& getCoordinates() const;
             
             void setDT(ValueType newDT);
             void setSourceCoordinate(IndexType sourceCoord);
-            void setTraceType(lama::DenseVector<ValueType> trace);
-            void setCoordinates(lama::DenseVector<ValueType> coord);
+            void setTraceType(lama::DenseVector<IndexType> trace);
+            void setCoordinates(lama::DenseVector<IndexType> coord);
             
         private:
             
@@ -69,8 +69,8 @@ namespace KITGPI {
             
             /* header information */
             ValueType DT; //!< Temporal sampling in seconds
-            lama::DenseVector<ValueType> traceType; //!< Type of trace (receiver or source type)
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of the traces
+            lama::DenseVector<IndexType> traceType; //!< Type of trace (receiver or source type)
+            lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
             IndexType sourceCoordinate; //!< Coordinate of source
             
             /* raw data */
@@ -155,13 +155,13 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType> const
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(lama::DenseVector<ValueType> trace)
+void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(lama::DenseVector<IndexType> trace)
 {
     traceType=std::move(trace);
 };
 
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<ValueType> coord)
+void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<IndexType> coord)
 {
     coordinates=std::move(coord);
 };
@@ -174,7 +174,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVecto
  *
  */
 template <typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
+lama::DenseVector<IndexType>const& KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
 {
     return(traceType);
 }
@@ -188,7 +188,7 @@ lama::DenseVector<ValueType>const& KITGPI::Acquisition::Seismogram<ValueType>::g
  *
  */
 template <typename ValueType>
-lama::DenseVector<ValueType> const& KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates() const
 {
     return(coordinates);
 }

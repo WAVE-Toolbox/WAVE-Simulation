@@ -35,8 +35,8 @@ namespace KITGPI {
             IndexType getNumReceiversLocal() const;
             
             dmemo::DistributionPtr getReceiversDistribution() const;
-            lama::DenseVector<ValueType> const& getCoordinates() const;
-            lama::DenseVector<ValueType> const& getReceiversType() const;
+            lama::DenseVector<IndexType> const& getCoordinates() const;
+            lama::DenseVector<IndexType> const& getReceiversType() const;
             
         private:
             
@@ -54,8 +54,8 @@ namespace KITGPI {
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the receiver acquisition
             IndexType numParameter; //!< Number of receiver parameters given in acquisition matrix
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
-            lama::DenseVector<ValueType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
+            lama::DenseVector<IndexType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
+            lama::DenseVector<IndexType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
             
         };
     }
@@ -65,7 +65,7 @@ namespace KITGPI {
 /*! \brief Getter method for reference to receiver type
  */
 template<typename ValueType>
-lama::DenseVector<ValueType> const& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType() const
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType() const
 {
     SCAI_ASSERT_ERROR( receiver_type.size() != 0 , "No receivers type set " );
     return(receiver_type);
@@ -75,7 +75,7 @@ lama::DenseVector<ValueType> const& KITGPI::Acquisition::Receivers<ValueType>::g
 /*! \brief Getter method for reference to coordinates
  */
 template<typename ValueType>
-lama::DenseVector<ValueType> const& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates() const
 {
     SCAI_ASSERT_ERROR( coordinates.size() != 0 , "No receivers coordinates set " );
     return(coordinates);
@@ -228,8 +228,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
         hmemo::ReadAccess<ValueType> read_acquisition_HA(*acquisition_HA);
         
         /* Get writeAccess to coordinates vector (local) */
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> write_coordinates_LA(*coordinates_LA);
+        utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
+        hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
         
         /* 2. Calculate 1-D coordinates form 3-D coordinates */
         IndexType X,Y,Z;
