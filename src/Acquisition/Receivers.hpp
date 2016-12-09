@@ -288,7 +288,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::CommunicatorPtr comm)
 {
-    SCAI_ASSERT(numReceiversGlobal==0," There is no global receiver (numReceiversGlobal==0)! ");
+    SCAI_ASSERT(numReceiversGlobal>0," There is no global receiver (numReceiversGlobal==0)! ");
     
     dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numReceiversGlobal,localIndices,comm));
 
@@ -303,7 +303,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::C
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::DistributionPtr dist_wavefield)
 {
-    SCAI_ASSERT(coordinates.size()==0," The vector coordinates does not contain any elements ! ");
+    SCAI_ASSERT(coordinates.size()>0," The vector coordinates does not contain any elements ! ");
     
     this->Global2Local(coordinates,localIndices,dist_wavefield);
     
