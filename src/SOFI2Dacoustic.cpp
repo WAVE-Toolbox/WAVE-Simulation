@@ -47,17 +47,17 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
-    /* execution context */
-    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node communicator */
     dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    /* execution context */
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
     
     if( config.getUseCubePartitioning()){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
-        dmemo::DistributionPtr dist=partitioning.getDist();
+        dist=partitioning.getDist();
     }
     
     HOST_PRINT( comm, "\nSOFI2D acoustic - LAMA Version\n\n" );
@@ -82,8 +82,8 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Receivers<ValueType> receivers(config,dist);
-    Acquisition::Sources<ValueType> sources(config,dist);
+    Acquisition::Receivers<ValueType> receivers(config,ctx,dist);
+    Acquisition::Sources<ValueType> sources(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Modelparameter                          */

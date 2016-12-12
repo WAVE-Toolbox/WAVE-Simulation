@@ -45,23 +45,24 @@ namespace KITGPI {
             void redistribute(dmemo::DistributionPtr distRow,dmemo::DistributionPtr distColumn=NULL);
             void replicate();
             
-            void resetData();
+            inline void resetData();
             
             /* Getter functions */
-            IndexType getNumTracesGlobal() const;
-            IndexType getNumTracesLocal() const;
-            IndexType getNumSamples() const;
-            ValueType getDT() const;
-            lama::DenseMatrix<ValueType>& getData();
-            lama::DenseMatrix<ValueType> const& getData() const;
-            lama::DenseVector<IndexType> const& getTraceType() const;
-            lama::DenseVector<IndexType> const& getCoordinates() const;
+            inline IndexType getNumTracesGlobal() const;
+            inline IndexType getNumTracesLocal() const;
+            inline IndexType getNumSamples() const;
+            inline ValueType getDT() const;
+            inline lama::DenseMatrix<ValueType>& getData();
+            inline lama::DenseMatrix<ValueType> const& getData() const;
+            inline lama::DenseVector<IndexType> const& getTraceType() const;
+            inline lama::DenseVector<IndexType> const& getCoordinates() const;
             
             /* Setter functions */
-            void setDT(ValueType newDT);
-            void setSourceCoordinate(IndexType sourceCoord);
-            void setTraceType(lama::DenseVector<IndexType>const& trace);
-            void setCoordinates(lama::DenseVector<IndexType>const& coord);
+            inline void setDT(ValueType newDT);
+            inline void setContextPtr(hmemo::ContextPtr ctx);
+            inline void setSourceCoordinate(IndexType sourceCoord);
+            inline void setTraceType(lama::DenseVector<IndexType>const& trace);
+            inline void setCoordinates(lama::DenseVector<IndexType>const& coord);
             
         private:
             
@@ -71,7 +72,7 @@ namespace KITGPI {
             
             /* header information */
             ValueType DT; //!< Temporal sampling in seconds
-            lama::DenseVector<IndexType> traceType; //!< Type of trace (receiver or source type)
+            lama::DenseVector<IndexType> traceType; //!< Type of trace (1==P, 2==vX, 3==vY, 4==vZ)
             lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
             IndexType sourceCoordinate; //!< Coordinate of source
             
@@ -80,6 +81,20 @@ namespace KITGPI {
             
         };
     }
+}
+
+
+//! \brief Set context ptr
+/*!
+ *
+ \param ctx Set Context Ptr
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
+{
+    data.setContextPtr(ctx);
+    traceType.setContextPtr(ctx);
+    coordinates.setContextPtr(ctx);
 }
 
 //! \brief Write seismogram to disk
@@ -153,6 +168,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType> const
     numTracesGlobal=receiver.getNumReceiversGlobal();
     numSamples=NT;
 
+    setContextPtr(ctx);
+    
     SCAI_ASSERT_ERROR(coordinates_temp.size() == traceType.size(), "Size of coordinates and traceType is different");
     SCAI_ASSERT_ERROR(coordinates_temp.getDistributionPtr() == traceType.getDistributionPtr(), "Distribution of coordinates and traceType is different");
     SCAI_ASSERT_ERROR( dist_traces == traceType.getDistributionPtr(), "Distribution of receiver class and traceType is different");
@@ -255,7 +272,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 
 //! \brief Allocate seismogram
 /*!
- * Allocates seismogram based on a given distribution of the traces and the number of samples per trace
+ * Allocates seismogram based on a given distribution of the traces and the number of samples per trace.
+ * The data storage of the seismogram will be distributed according to distTraces. Moreover, the number of
+ * local and global traces will be determined based on distTraces. 
  *
  \param ctx Context
  \param distTraces Distribution for traces

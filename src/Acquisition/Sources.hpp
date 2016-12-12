@@ -23,14 +23,14 @@ namespace KITGPI {
         public:
             
             Sources():numSourcesGlobal(0),numSourcesLocal(0),numParameter(0){};
-            explicit Sources(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx,dmemo::DistributionPtr dist_wavefield);
             ~Sources(){};
             
-            void init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             void readSourceAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
             void writeSourceAcquisition(std::string const& filename) const;
             
-            void generateSignals(IndexType NT, ValueType DT);
+            void generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx);
             
             void writeSignalsToFileRaw(std::string const& filename) const;
             
@@ -120,25 +120,27 @@ KITGPI::Acquisition::Seismogram<ValueType>const& KITGPI::Acquisition::Sources<Va
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 :numSourcesGlobal(0),numSourcesLocal(0),numParameter(0)
 {
-    init(config,dist_wavefield);
+    init(config,ctx,dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 {
     readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
-    generateSignals(config.getNT(),config.getDT());
+    generateSignals(config.getNT(),config.getDT(),ctx);
     signals.redistribute(dist_wavefield_sources);
 }
 
@@ -189,6 +191,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string
  \param NY Number of global grid points in Y
  \param NZ Number of global grid points in Z
  \param dist_wavefield Distribution of the wavefields
+ \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
@@ -330,7 +333,7 @@ void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string 
         wavelet_amp.redistribute(dist_wavefield_sources);
         wavelet_tshift.redistribute(dist_wavefield_sources);
     }
-    
+
 }
 
 
@@ -364,6 +367,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, h
     signals.allocate(ctx,dist_wavefield_sources,NT);
     signals.setCoordinates(coordinates);
     signals.setTraceType(source_type);
+    signals.setContextPtr(ctx);
 }
 
 
@@ -376,13 +380,12 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, h
  \param DT Time step interval
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT){
+void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx){
     
     SCAI_ASSERT(numParameter>=5,"Number of source parameters < 5. Cannot generate signals. ");
     SCAI_ASSERT_DEBUG(NT>0, "NT<=0");
     SCAI_ASSERT_DEBUG(DT>0, "DT<=0");
     
-    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
     allocateSeismogram(NT,ctx);
     
     signals.setDT(DT);
