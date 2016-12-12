@@ -92,73 +92,26 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Co
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType /*NT*/, IndexType t)
 {
     
-    IndexType numSourcesLocal=sources.getNumSourcesLocal();
+    /* Get reference to wavefields */
+    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
+    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
+    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
     
-    if(numSourcesLocal>0){
-        
-        /* Get reference to wavefields */
-        lama::DenseVector<ValueType>& vX=wavefield.getVX();
-        lama::DenseVector<ValueType>& vY=wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
-        lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-        lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-        lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
-        
-        /* Get reference to sourcesignal storing seismogram */
-        const Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
-        
-        /* Get reference to source type of sources */
-        const lama::DenseVector<IndexType>& SourceType=signals.getTraceType();
-        const utilskernel::LArray<IndexType>* SourceType_LA=&SourceType.getLocalValues();
-        const hmemo::ReadAccess<IndexType> read_SourceType_LA(*SourceType_LA);
-        
-        /* Get reference to coordinates of sources */
-        const lama::DenseVector<IndexType>& coordinates=signals.getCoordinates();
-        const utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
-        const hmemo::ReadAccess<IndexType> read_coordinates_LA(*coordinates_LA);
-        
-        /* Get reference to storage of source signals */
-        const lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
-        const lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
-        const hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
-        const hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
-        
-        /* Get the distribution of the wavefield*/
-        dmemo::DistributionPtr dist_wavefield=vX.getDistributionPtr();
-        
-        IndexType coordinate_global;
-        IndexType coordinate_local;
-        
-        for(IndexType i=0; i<numSourcesLocal; i++){
-            coordinate_global=read_coordinates_LA[i];
-            coordinate_local=dist_wavefield->global2local(coordinate_global);
-            
-            switch (IndexType(read_SourceType_LA[i])) {
-                case 1:
-                    Sxx.getLocalValues()[coordinate_local] = Sxx.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    Syy.getLocalValues()[coordinate_local] = Syy.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    Szz.getLocalValues()[coordinate_local] = Szz.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    break;
-                case 2:
-                    vX.getLocalValues()[coordinate_local] = vX.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    break;
-                case 3:
-                    vY.getLocalValues()[coordinate_local] = vY.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    break;
-                case 4:
-                    vZ.getLocalValues()[coordinate_local] = vZ.getLocalValues()[coordinate_local] + read_sourcesSignals_HA[t+NT*i];
-                    break;
-                default:
-                    COMMON_THROWEXCEPTION("Source type is unkown")
-                    break;
-            }
-        }
-    }
+    /* Get reference to sourcesignal storing seismogram */
+    const Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
+    const lama::DenseMatrix<ValueType>& sourcesSignalsPressure=signals.getData();
+    const lama::DenseVector<IndexType>& coordinatesPressure=signals.getCoordinates();
+    lama::DenseVector<ValueType> samplesPressure;
+    
+    sourcesSignalsPressure.getColumn(samplesPressure,t);
+    Sxx.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
+    Syy.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
+    Szz.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
+    
 }
-
 
 
 /*! \brief Saving seismograms during time stepping
@@ -171,68 +124,24 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sou
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType /*NT*/, IndexType t)
 {
     
-    IndexType numTracesLocal=seismogram.getNumTracesLocal();
+    /* Get reference to wavefields */
+    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
+    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
+    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
     
-    if(numTracesLocal>0){
-        
-        /* Get reference to wavefields */
-        lama::DenseVector<ValueType>& vX=wavefield.getVX();
-        lama::DenseVector<ValueType>& vY=wavefield.getVY();
-        lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
-        lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-        lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-        lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
-        
-        /* Get reference to receiver type of seismogram traces */
-        const lama::DenseVector<IndexType>& ReceiverType=seismogram.getTraceType();
-        const utilskernel::LArray<IndexType>* ReceiverType_LA=&ReceiverType.getLocalValues();
-        const hmemo::ReadAccess<IndexType> read_ReceiverType_LA(*ReceiverType_LA);
-        
-        /* Get reference to coordinates of seismogram traces */
-        const lama::DenseVector<IndexType>& coordinates=seismogram.getCoordinates();
-        const utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
-        const hmemo::ReadAccess<IndexType> read_coordinates_LA(*coordinates_LA);
-        
-        /* Get reference to storage of seismogram traces */
-        lama::DenseMatrix<ValueType>& seismogramData=seismogram.getData();
-        lama::DenseStorage<ValueType>* seismogram_DS=&seismogramData.getLocalStorage();
-        hmemo::HArray<ValueType>* seismogram_HA=&seismogram_DS->getData();
-        hmemo::WriteAccess<ValueType> write_seismogram_HA(*seismogram_HA);
-        
-        /* Get the distribution of the wavefield*/
-        dmemo::DistributionPtr dist_wavefield=vX.getDistributionPtr();
-        
-        IndexType coordinate_global;
-        IndexType coordinate_local;
-        ValueType temp;
-        
-        for(IndexType i=0; i<numTracesLocal; i++){
-            coordinate_global=read_coordinates_LA[i];
-            coordinate_local=dist_wavefield->global2local(coordinate_global);
-            
-            switch (IndexType(read_ReceiverType_LA[i])) {
-                case 1:
-                    temp=Sxx.getLocalValues()[coordinate_local]+Syy.getLocalValues()[coordinate_local]+Szz.getLocalValues()[coordinate_local];
-                    write_seismogram_HA[t+NT*i]=temp;
-                    break;
-                case 2:
-                    write_seismogram_HA[t+NT*i]=vX.getLocalValues()[coordinate_local];
-                    break;
-                case 3:
-                    write_seismogram_HA[t+NT*i]=vY.getLocalValues()[coordinate_local];
-                    break;
-                case 4:
-                    write_seismogram_HA[t+NT*i]=vZ.getLocalValues()[coordinate_local];
-                    break;
-                default:
-                    COMMON_THROWEXCEPTION("Receiver type is unkown")
-                    break;
-            }
-        }
-    }
+    /* Gather seismogram for the pressure traces */
+    const lama::DenseVector<IndexType>& coordinatesPressure=seismogram.getCoordinates();
+    lama::DenseMatrix<ValueType>& seismogramDataPressure=seismogram.getData();
+    lama::DenseVector<ValueType> samplesPressure;
+    
+    samplesPressure.gather(Sxx,coordinatesPressure,utilskernel::binary::BinaryOp::COPY);
+    samplesPressure.gather(Syy,coordinatesPressure,utilskernel::binary::BinaryOp::ADD);
+    samplesPressure.gather(Szz,coordinatesPressure,utilskernel::binary::BinaryOp::ADD);
+    seismogramDataPressure.setColumn(samplesPressure,t,utilskernel::binary::BinaryOp::COPY);
+    
 }
 
 
@@ -303,7 +212,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     }
     
     dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();
-
+    
     
     /* --------------------------------------- */
     /* Start runtime critical part             */
