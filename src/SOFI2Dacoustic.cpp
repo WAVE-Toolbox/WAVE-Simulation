@@ -82,8 +82,8 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Receivers<ValueType> receivers(config,dist);
-    Acquisition::Sources<ValueType> sources(config,dist);
+    Acquisition::Receivers<ValueType> receivers(config,ctx,dist);
+    Acquisition::Sources<ValueType> sources(config,ctx,dist);
     
     /* --------------------------------------- */
     /* Modelparameter                          */

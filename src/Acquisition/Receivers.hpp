@@ -23,12 +23,12 @@ namespace KITGPI {
         public:
             
             Receivers():numReceiversGlobal(0),numReceiversLocal(0),numParameter(0){};
-            explicit Receivers(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
+            explicit Receivers(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             ~Receivers(){};
             
-            void init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             
-            void readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
+            void readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx);
             void writeReceiverAcquisition(std::string const& filename) const;
             
             /* Getter functions */
@@ -95,23 +95,25 @@ dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDi
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 :numReceiversGlobal(0),numReceiversLocal(0),numParameter(0)
 {
-    init(config,dist_wavefield);
+    init(config,ctx,dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> const& config, dmemo::DistributionPtr dist_wavefield){
-    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield){
+    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield,ctx);
 }
 
 /*! \brief Get number of global receivers
@@ -162,7 +164,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::st
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx)
 {
 
     SCAI_ASSERT_ERROR(NX>0, "NX<=0");
@@ -274,7 +276,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     coordinates.redistribute(dist_wavefield_receivers);
     receiver_type.redistribute(dist_wavefield_receivers);
     
-    
+    coordinates.setContextPtr(ctx);
+    receiver_type.setContextPtr(ctx);
 }
 
 

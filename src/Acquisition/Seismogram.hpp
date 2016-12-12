@@ -59,6 +59,7 @@ namespace KITGPI {
             
             /* Setter functions */
             inline void setDT(ValueType newDT);
+            inline void setContextPtr(hmemo::ContextPtr ctx);
             inline void setSourceCoordinate(IndexType sourceCoord);
             inline void setTraceType(lama::DenseVector<IndexType>const& trace);
             inline void setCoordinates(lama::DenseVector<IndexType>const& coord);
@@ -80,6 +81,20 @@ namespace KITGPI {
             
         };
     }
+}
+
+
+//! \brief Set context ptr
+/*!
+ *
+ \param ctx Set Context Ptr
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
+{
+    data.setContextPtr(ctx);
+    traceType.setContextPtr(ctx);
+    coordinates.setContextPtr(ctx);
 }
 
 //! \brief Write seismogram to disk
@@ -153,6 +168,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::init(Receivers<ValueType> const
     numTracesGlobal=receiver.getNumReceiversGlobal();
     numSamples=NT;
 
+    setContextPtr(ctx);
+    
     SCAI_ASSERT_ERROR(coordinates_temp.size() == traceType.size(), "Size of coordinates and traceType is different");
     SCAI_ASSERT_ERROR(coordinates_temp.getDistributionPtr() == traceType.getDistributionPtr(), "Distribution of coordinates and traceType is different");
     SCAI_ASSERT_ERROR( dist_traces == traceType.getDistributionPtr(), "Distribution of receiver class and traceType is different");
