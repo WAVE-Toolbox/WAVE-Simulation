@@ -55,7 +55,7 @@ int main( int argc, char* argv[] )
     
     if( config.getUseCubePartitioning()){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
-        dmemo::DistributionPtr dist=partitioning.getDist();
+        dist=partitioning.getDist();
     }
     
     HOST_PRINT( comm, "\nSOFI3D visco-elastic - LAMA Version\n\n" );
