@@ -47,26 +47,26 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Viscoelastic(){};
             
-            Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) override;
             
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
-            void write(std::string filename);
+            void write(std::string filename) const override;
             
-            void prepareForModelling();
+            void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
             
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(lama::Scalar rhs);
@@ -78,12 +78,13 @@ namespace KITGPI {
             
         private:
             
-            void refreshModule();
-            void refreshVelocity();
-            void calculateAveraging();
+            void refreshModule() override;
+            void refreshVelocity() override;
+            void calculateAveraging() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocity;
             using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -98,7 +99,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ) override;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
             
             using Modelparameter<ValueType>::DensityAverageMatrixX;
             using Modelparameter<ValueType>::DensityAverageMatrixY;
@@ -134,7 +137,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -152,6 +155,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::switch2velocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=1;
@@ -178,8 +182,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
         dirtyFlagModulus=false;
+        dirtyFlagAveraging = true;
     }
 };
 
@@ -190,9 +194,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
     
     refreshModule();
+    
+    initializeMatrices(dist,ctx,config,comm);
     
     /* Set circular frequency w = 2 * pi * relaxation frequency */
     ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
@@ -224,7 +230,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -390,7 +396,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
@@ -404,6 +410,20 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     this->writeModelparameter(tauS,filenameTauS);
     
 };
+
+//! \brief Wrapper to support configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+}
 
 //! \brief Initializsation of the Averaging matrices
 /*!
@@ -453,15 +473,16 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging(){
-    this->calculateInverseAveragedDensity(inverseDensityAverageX,DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(inverseDensityAverageY,DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(inverseDensityAverageZ,DensityAverageMatrixZ);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageXY,sWaveModulusAverageMatrixXY);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageXZ,sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageYZ,sWaveModulusAverageMatrixYZ);
-    this->calculateAveragedTauS(tauSAverageXY,sWaveModulusAverageMatrixXY);
-    this->calculateAveragedTauS(tauSAverageXZ,sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedTauS(tauSAverageYZ,sWaveModulusAverageMatrixYZ);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageX,DensityAverageMatrixX);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageY,DensityAverageMatrixY);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageZ,DensityAverageMatrixZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXY,sWaveModulusAverageMatrixXY);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXZ,sWaveModulusAverageMatrixXZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageYZ,sWaveModulusAverageMatrixYZ);
+    this->calculateAveragedTauS(tauS,tauSAverageXY,sWaveModulusAverageMatrixXY);
+    this->calculateAveragedTauS(tauS,tauSAverageXZ,sWaveModulusAverageMatrixXZ);
+    this->calculateAveragedTauS(tauS,tauSAverageYZ,sWaveModulusAverageMatrixYZ);
+    dirtyFlagAveraging = false;
 }
 
 

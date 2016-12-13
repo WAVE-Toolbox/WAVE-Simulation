@@ -47,41 +47,41 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Acoustic(){};
             
-            Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
             Acoustic(const Acoustic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             void write(std::string filenamePWaveModulus, std::string filenamedensity);
-            void write(std::string filename);
+            void write(std::string filename) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>& getSWaveModulus();
-            lama::DenseVector<ValueType>& getVelocityS();
-            lama::DenseVector<ValueType>& getTauP();
-            lama::DenseVector<ValueType>& getTauS();
-            lama::DenseVector<ValueType>& getSWaveModulusAverageXY();
-            lama::DenseVector<ValueType>& getSWaveModulusAverageXZ();
-            lama::DenseVector<ValueType>& getSWaveModulusAverageYZ();
-            lama::DenseVector<ValueType>& getTauSAverageXY();
-            lama::DenseVector<ValueType>& getTauSAverageXZ();
-            lama::DenseVector<ValueType>& getTauSAverageYZ();
-            IndexType getNumRelaxationMechanisms();
-            ValueType getRelaxationFrequency();
+            lama::DenseVector<ValueType>const& getSWaveModulus() override;
+            lama::DenseVector<ValueType>const& getVelocityS() override;
+            lama::DenseVector<ValueType>const& getTauP() override;
+            lama::DenseVector<ValueType>const& getTauS() override;
+            lama::DenseVector<ValueType>const& getSWaveModulusAverageXY() override;
+            lama::DenseVector<ValueType>const& getSWaveModulusAverageXZ() override;
+            lama::DenseVector<ValueType>const& getSWaveModulusAverageYZ() override;
+            lama::DenseVector<ValueType>const& getTauSAverageXY() override;
+            lama::DenseVector<ValueType>const& getTauSAverageXZ() override;
+            lama::DenseVector<ValueType>const& getTauSAverageYZ() override;
+            IndexType getNumRelaxationMechanisms() const override;
+            ValueType getRelaxationFrequency() const override;
         
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
-            void prepareForModelling();
+            void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(lama::Scalar rhs);
@@ -93,12 +93,13 @@ namespace KITGPI {
         
         private:
             
-            void refreshModule();
-            void refreshVelocity();
-            void calculateAveraging();
+            void refreshModule() override;
+            void refreshVelocity() override;
+            void calculateAveraging() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocity;
             using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -106,7 +107,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
             
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ) override;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
             
             using Modelparameter<ValueType>::DensityAverageMatrixX;
             using Modelparameter<ValueType>::DensityAverageMatrixY;
@@ -140,8 +143,9 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(){
+void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
     refreshModule();
+    initializeMatrices(dist,ctx,config,comm);
     calculateAveraging();
 }
 
@@ -155,6 +159,7 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -195,7 +200,7 @@ template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
-
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
     }
 };
@@ -208,7 +213,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -383,13 +388,27 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWa
  \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
     this->writeModelparameter(density,filenamedensity);
 };
+
+//! \brief Wrapper to support configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+}
 
 
 //! \brief Initializsation of the Averaging matrices
@@ -411,7 +430,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
     
     SCAI_REGION( "initializeMatrices" )
     
-    HOST_PRINT( comm, "Initialization of the averaging matrices." );
+    HOST_PRINT( comm, "Initialization of the averaging matrices.\n" );
     
     this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
     this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
@@ -433,9 +452,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging(){
-    this->calculateInverseAveragedDensity(inverseDensityAverageX,DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(inverseDensityAverageY,DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(inverseDensityAverageZ,DensityAverageMatrixZ);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageX,DensityAverageMatrixX);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageY,DensityAverageMatrixY);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageZ,DensityAverageMatrixZ);
+    dirtyFlagAveraging = false;
 }
 
 
@@ -443,7 +463,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging(){
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
     COMMON_THROWEXCEPTION("S-wave modulus is not set for acoustic modelling")
     return(sWaveModulus);
 }
@@ -452,7 +472,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSW
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return(velocityS);
 }
@@ -461,7 +481,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getVe
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -469,7 +489,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
@@ -477,14 +497,16 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() const
+{
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms() const
+{
     COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
     return(numRelaxationMechanisms);
 }
@@ -493,7 +515,7 @@ IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanism
 /*! \brief Get reference to S-wave modulus in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXY(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageXY);
 }
@@ -501,7 +523,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSW
 /*! \brief Get reference to S-wave modulus in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageXZ);
 }
@@ -509,7 +531,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSW
 /*! \brief Get reference to S-wave modulus in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageYZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageYZ(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageYZ);
 }
@@ -517,7 +539,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSW
 /*! \brief Get reference to tauS xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXY);
 }
@@ -525,7 +547,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 /*! \brief Get reference to tauS xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXZ);
 }
@@ -533,7 +555,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 /*! \brief Get reference to tauS yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageYZ);
 }
@@ -645,5 +667,3 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 {
     return this - rhs;
 }
-
-

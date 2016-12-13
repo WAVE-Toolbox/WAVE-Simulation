@@ -24,9 +24,9 @@ namespace KITGPI {
                 //! Default destructor
                 virtual ~FreeSurfaceVisco()=0;
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
-                void setModelparameter(Modelparameter::Modelparameter<ValueType>& model,lama::DenseVector<ValueType>& tauP,lama::DenseVector<ValueType>& tauS,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS);
                 
                 
             protected:
@@ -52,16 +52,17 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  *
  *
  \param model which is used during forward modelling
- \param tauP Tau-parameter for P-wave modulus
- \param tauS Tau-parameter for S-wave modulus
  \param onePlusLtauP Parameter with ( 1 + L * tauP )
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model,lama::DenseVector<ValueType>& tauP,lama::DenseVector<ValueType>& tauS,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS){
     
-    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& tauS=model.getTauS();
+    lama::DenseVector<ValueType>const& tauP=model.getTauP();
+    
     
     lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
     lama::DenseVector<ValueType> temp2(sWaveModulus.getDistributionPtr());

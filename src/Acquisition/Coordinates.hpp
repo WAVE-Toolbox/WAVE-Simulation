@@ -139,15 +139,15 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::i
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
-    if ( Z >= NZ || X >= NX || Y >= NY || Z < 0 || X < 0 || Y < 0 )
-    {
-        COMMON_THROWEXCEPTION ( "Could not map from coordinate to index!\nGiven indix: X=" << X << ", Y=" << Y << ", Z=" << Z << " is located outside of the grid which runs from 0 to (NX-1), 0 to (NY-1) and 0 to (NZ-1)!" )
-        return -100;
-    }
-    else
-    {
-        return ( ( X ) + ( Y ) * NX + ( Z ) * NX * NY );
-    }
+    
+    SCAI_ASSERT_ERROR( Z < NZ , "Could not map from coordinate to index!");
+    SCAI_ASSERT_ERROR( X < NX , "Could not map from coordinate to index!");
+    SCAI_ASSERT_ERROR( Y < NY , "Could not map from coordinate to index!");
+    SCAI_ASSERT_ERROR( Z >= 0 , "Could not map from coordinate to index!");
+    SCAI_ASSERT_ERROR( Y >= 0 , "Could not map from coordinate to index!");
+    SCAI_ASSERT_ERROR( X >= 0 , "Could not map from coordinate to index!");
+
+    return ( ( X ) + ( Y ) * NX + ( Z ) * NX * NY );
 }
 
 

@@ -17,12 +17,12 @@ namespace KITGPI {
             class FGaussian : public SourceSignal<ValueType> {
             public:
                 
-                FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                explicit FGaussian(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
                 
                 ///! Destructor
                 ~FGaussian(){};
                 
-                void calc(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                void calc(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
                 
             };
         }

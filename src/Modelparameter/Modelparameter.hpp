@@ -41,7 +41,7 @@ namespace KITGPI {
         public:
             
             //! Default constructor.
-            Modelparameter():dirtyFlagInverseDensity(true),dirtyFlagModulus(true),dirtyFlagVelocity(true),parametrisation(0),numRelaxationMechanisms(0){};
+            Modelparameter():dirtyFlagInverseDensity(true),dirtyFlagModulus(true),dirtyFlagAveraging(true),dirtyFlagVelocity(true),parametrisation(0),numRelaxationMechanisms(0){};
             
             //! Default destructor.
             ~Modelparameter(){};
@@ -62,41 +62,58 @@ namespace KITGPI {
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
              */
-            virtual void write(std::string filename)=0;
+            virtual void write(std::string filename) const =0;
             
-            virtual lama::DenseVector<ValueType>& getDensity();
-            virtual lama::DenseVector<ValueType>& getInverseDensity();
-            virtual lama::DenseVector<ValueType>& getPWaveModulus();
-            virtual lama::DenseVector<ValueType>& getSWaveModulus();
-            virtual lama::DenseVector<ValueType>& getVelocityP();
-            virtual lama::DenseVector<ValueType>& getVelocityS();
+            virtual lama::DenseVector<ValueType> const& getDensity();
+            virtual lama::DenseVector<ValueType> const& getDensity() const;
+            virtual lama::DenseVector<ValueType> const& getInverseDensity();
+            virtual lama::DenseVector<ValueType> const& getInverseDensity() const;
+            virtual lama::DenseVector<ValueType> const& getPWaveModulus();
+            virtual lama::DenseVector<ValueType> const& getPWaveModulus() const;
+            virtual lama::DenseVector<ValueType> const& getSWaveModulus();
+            virtual lama::DenseVector<ValueType> const& getSWaveModulus() const;
+            virtual lama::DenseVector<ValueType> const& getVelocityP();
+            virtual lama::DenseVector<ValueType> const& getVelocityP() const;
+            virtual lama::DenseVector<ValueType> const& getVelocityS();
+            virtual lama::DenseVector<ValueType> const& getVelocityS() const;
             
-            virtual lama::DenseVector<ValueType>& getTauP();
-            virtual lama::DenseVector<ValueType>& getTauS();
+            virtual lama::DenseVector<ValueType> const& getTauP();
+            virtual lama::DenseVector<ValueType> const& getTauP() const;
+            virtual lama::DenseVector<ValueType> const& getTauS();
+            virtual lama::DenseVector<ValueType> const& getTauS() const;
             
-            virtual IndexType getNumRelaxationMechanisms();
-            virtual ValueType getRelaxationFrequency();
+            virtual IndexType getNumRelaxationMechanisms() const;
+            virtual ValueType getRelaxationFrequency() const;
             
             /*! \brief Prepare the model parameters for modelling */
-            virtual void prepareForModelling()=0;
+//            virtual void prepareForModelling()=0;
+            virtual void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)=0;
             
-            virtual lama::DenseVector<ValueType>& getInverseDensityAverageX();
-            virtual lama::DenseVector<ValueType>& getInverseDensityAverageY();
-            virtual lama::DenseVector<ValueType>& getInverseDensityAverageZ();
-            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageXY();
-            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageXZ();
-            virtual lama::DenseVector<ValueType>& getSWaveModulusAverageYZ();
-            virtual lama::DenseVector<ValueType>& getTauSAverageXY();
-            virtual lama::DenseVector<ValueType>& getTauSAverageXZ();
-            virtual lama::DenseVector<ValueType>& getTauSAverageYZ();
-            
-            
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageX();
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageX() const;
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageY();
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageY() const;
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageZ();
+            virtual lama::DenseVector<ValueType> const& getInverseDensityAverageZ() const;
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageXY();
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageXY() const;
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageXZ();
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageXZ() const;
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageYZ();
+            virtual lama::DenseVector<ValueType> const& getSWaveModulusAverageYZ() const;
+            virtual lama::DenseVector<ValueType> const& getTauSAverageXY();
+            virtual lama::DenseVector<ValueType> const& getTauSAverageXY() const;
+            virtual lama::DenseVector<ValueType> const& getTauSAverageXZ();
+            virtual lama::DenseVector<ValueType> const& getTauSAverageXZ() const;
+            virtual lama::DenseVector<ValueType> const& getTauSAverageYZ();
+            virtual lama::DenseVector<ValueType> const& getTauSAverageYZ() const;
             
             
         protected:
             
             bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
             bool dirtyFlagModulus; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagAveraging; //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date
             bool dirtyFlagVelocity; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
             
@@ -130,14 +147,14 @@ namespace KITGPI {
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
-            void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            void writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const;
             
             void calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity);
             
             void calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule );
             
             void calcVelocityFromModule(lama::DenseVector<ValueType>& vectorModule, lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity);
-            
+
             /*! \brief Switch parameterization to velocity */
             virtual void switch2velocity()=0;
             /*! \brief Switch parameterization to modulus */
@@ -168,8 +185,8 @@ namespace KITGPI {
              \param comm Communicator
              */
             virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
-            
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
+//            
+//            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
             
             void calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             void calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
@@ -187,9 +204,9 @@ namespace KITGPI {
             lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixXZ; //!< Average S-wave Modulus in xz-plane
             lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixYZ; //!< Average S-wave Modulus in yz-plane
             
-            void calculateInverseAveragedDensity(lama::DenseVector<ValueType>& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix);
-            void calculateAveragedSWaveModulus(lama::DenseVector<ValueType>& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix);
-            void calculateAveragedTauS(lama::DenseVector<ValueType>& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix);
+            void calculateInverseAveragedDensity(lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix);
+            void calculateAveragedSWaveModulus(lama::DenseVector<ValueType>& vecSWaveModulus, lama::DenseVector<ValueType>& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix);
+            void calculateAveragedTauS(lama::DenseVector<ValueType>& vecTauS, lama::DenseVector<ValueType>& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix);
             
             
         private:
@@ -245,13 +262,15 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
+{
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMechanisms() const
+{
     return(numRelaxationMechanisms);
 }
 
@@ -301,7 +320,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param filename Name of file in which modelparameter will be written
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const
 {
     vector.writeToFile(filename);
 };
@@ -336,7 +355,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule )
 {
-    
+
     vectorModule=vecDensity;
     vectorModule.scale(vecVelocity);
     vectorModule.scale(vecVelocity);
@@ -396,7 +415,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(l
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity(){
     if(dirtyFlagInverseDensity){
         dirtyFlagInverseDensity=false;
         inverseDensity.assign(density);
@@ -408,15 +427,33 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
 /*! \brief Get reference to density model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
+{
+    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
+    return(inverseDensity);
+}
+
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity(){
     dirtyFlagInverseDensity=true; // If density will be changed, the inverse has to be refreshed if it is accessed
+    return(density);
+}
+
+/*! \brief Get reference to density model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
+{
+    SCAI_ASSERT(dirtyFlagInverseDensity == true, "Density has to be recalculated! ");
     return(density);
 }
 
 /*! \brief Get reference to first Lame model parameter
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus(){
     
     // If the model is parameterized in modules, the velocity vector is now dirty
     if(parametrisation==0){
@@ -425,9 +462,19 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     
     // If the model is parameterized in velocities AND the modulus is dirty, than recalculate
     if(dirtyFlagModulus && parametrisation==1){
+        dirtyFlagModulus=false;
         refreshModule();
     }
     
+    return(pWaveModulus);
+}
+
+/*! \brief Get reference to first Lame model parameter
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus() const
+{
+    SCAI_ASSERT(dirtyFlagModulus == false, "Module has to be recalculated! ");
     return(pWaveModulus);
 }
 
@@ -435,7 +482,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus(){
     
     // If the model is parameterized in modules, the velocity vector is now dirty
     if(parametrisation==0){
@@ -450,12 +497,22 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     return(sWaveModulus);
 }
 
+/*! \brief Get reference to second Lame Parameter sWaveModulus
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus() const
+{
+    SCAI_ASSERT(dirtyFlagModulus == false, "Module has to be recalculated! ");
+    return(sWaveModulus);
+}
+
 /*! \brief Get reference to P-wave velocity
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
-    
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
+
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -469,10 +526,20 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     return(velocityP);
 }
 
+/*! \brief Get reference to P-wave velocity
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
+{
+    SCAI_ASSERT(dirtyFlagVelocity == false, "Velocity has to be recalculated! ");
+    return(velocityP);
+}
+
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
     
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
@@ -487,18 +554,45 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>:
     return(velocityS);
 }
 
+/*! \brief Get reference to S-wave velocity
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
+{
+    SCAI_ASSERT(dirtyFlagVelocity == false, "Velocity has to be recalculated! ");
+    return(velocityS);
+}
+
+
 /*! \brief Get reference to tauP
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){
+    return(tauP);
+}
+
+/*! \brief Get reference to tauP
+ *
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP() const
+{
     return(tauP);
 }
 
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS(){
+    return(tauS);
+}
+
+/*! \brief Get reference to tauS
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS() const
+{
     return(tauS);
 }
 
@@ -914,22 +1008,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::
 }
 
 
-
-//! \brief Wrapper to support configuration
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param config Configuration
- \param comm Communicator
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
-{
-    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
-}
-
-
 //! \brief Calculate number of row elements for density averaging matrix in x-direction
 /*!
  *
@@ -1229,9 +1307,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::DenseVector<ValueType>& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix)
 {
-    vecInverseAvDensity = avDensityMatrix* density;
+    vecInverseAvDensity = avDensityMatrix* vecDensity;
     vecInverseAvDensity.invert();
 }
 
@@ -1242,9 +1320,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(lama::DenseVector<ValueType>& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(lama::DenseVector<ValueType>& vecSWaveModulus, lama::DenseVector<ValueType>& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix)
 {
-    vecAvSWaveModulus = sWaveModulus;
+    vecAvSWaveModulus = vecSWaveModulus;
     vecAvSWaveModulus.invert();
     vecAvSWaveModulus = avSWaveModulusMatrix * vecAvSWaveModulus;
     vecAvSWaveModulus.invert();
@@ -1257,9 +1335,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
  \param avTauSMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(lama::DenseVector<ValueType>& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(lama::DenseVector<ValueType>& vecTauS, lama::DenseVector<ValueType>& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix)
 {
-    vecAvTauS = tauS;
+    vecAvTauS = vecTauS;
     vecAvTauS = avTauSMatrix * vecAvTauS;
 }
 
@@ -1306,63 +1384,181 @@ lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueTy
 /*! \brief Get reference to averaged density in x-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(inverseDensityAverageX);
 }
 
 /*! \brief Get reference to averaged density in y-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(inverseDensityAverageY);
 }
 
 /*! \brief Get reference to averaged density in z-direction
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(inverseDensityAverageZ);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(sWaveModulusAverageXY);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(sWaveModulusAverageXZ);
 }
 
 /*! \brief Get reference to averaged s-wave modulus in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(sWaveModulusAverageYZ);
 }
 
 /*! \brief Get reference to averaged tauS in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(tauSAverageXY);
 }
 
 /*! \brief Get reference to averaged tauS in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(tauSAverageXZ);
 }
 
 /*! \brief Get reference to averaged tauS in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ(){
+    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    if(dirtyFlagAveraging == true){
+        calculateAveraging();
+    }
     return(tauSAverageYZ);
 }
+
+/*! \brief Get reference to averaged density in x-direction
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(inverseDensityAverageX);
+}
+
+/*! \brief Get reference to averaged density in y-direction
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(inverseDensityAverageY);
+}
+
+/*! \brief Get reference to averaged density in z-direction
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(inverseDensityAverageZ);
+}
+
+/*! \brief Get reference to averaged s-wave modulus in xy-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(sWaveModulusAverageXY);
+}
+
+/*! \brief Get reference to averaged s-wave modulus in xz-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(sWaveModulusAverageXZ);
+}
+
+/*! \brief Get reference to averaged s-wave modulus in yz-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(sWaveModulusAverageYZ);
+}
+
+/*! \brief Get reference to averaged tauS in xy-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(tauSAverageXY);
+}
+
+/*! \brief Get reference to averaged tauS in xz-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(tauSAverageXZ);
+}
+
+/*! \brief Get reference to averaged tauS in yz-plane
+ */
+template<typename ValueType>
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ() const
+{
+    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
+    return(tauSAverageYZ);
+}
+
 

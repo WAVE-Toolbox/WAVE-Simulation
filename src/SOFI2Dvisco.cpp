@@ -41,6 +41,8 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     Configuration::Configuration<ValueType> config(argv[1]);
     
+    SCAI_ASSERT( config.getNZ() == 1 , " NZ must be equal to 1 for 2-D simulation" );
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -86,6 +88,9 @@ int main( int argc, char* argv[] )
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Viscoelastic<ValueType> model(config,ctx,dist);
+    model.prepareForModelling(config,ctx,dist,comm);
+    model.getInverseDensity();
+    HOST_PRINT( comm, "Model has been prepared for ForwardSolver!\n" );
     
     /* --------------------------------------- */
     /* Forward solver                          */

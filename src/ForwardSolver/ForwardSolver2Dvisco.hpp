@@ -33,9 +33,9 @@ namespace KITGPI {
             /* Default destructor */
             ~FD2Dvisco(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT);
+            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
-            void prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx);
+            void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
             using ForwardSolver<ValueType>::seismogram;
             
@@ -48,8 +48,8 @@ namespace KITGPI {
             BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
-            void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
-            void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t);
+            void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
+            void applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
             
         };
     } /* end namespace ForwardSolver */
@@ -65,7 +65,7 @@ namespace KITGPI {
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
     if(config.getFreeSurface()){
@@ -92,7 +92,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param t Current time step
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)
 {
     
     IndexType numSourcesLocal=sources.getNumSourcesLocal();
@@ -106,23 +106,23 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::applySource(Acquisition::Sourc
         lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
         
         /* Get reference to sourcesignal storing seismogram */
-        Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
+        const Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
         
         /* Get reference to source type of sources */
-        lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
-        utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_SourceType_LA(*SourceType_LA);
+        const lama::DenseVector<ValueType>& SourceType=signals.getTraceType();
+        const utilskernel::LArray<ValueType>* SourceType_LA=&SourceType.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_SourceType_LA(*SourceType_LA);
         
         /* Get reference to coordinates of sources */
-        lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<ValueType>& coordinates=signals.getCoordinates();
+        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of source signals */
-        lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
-        lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
-        hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
-        hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
+        const lama::DenseMatrix<ValueType>& sourcesSignals=signals.getData();
+        const lama::DenseStorage<ValueType>* sourcesSignals_DS=&sourcesSignals.getLocalStorage();
+        const hmemo::HArray<ValueType>* sourcesSignals_HA=&sourcesSignals_DS->getData();
+        const hmemo::ReadAccess<ValueType> read_sourcesSignals_HA(*sourcesSignals_HA);
         
         /* Get the distribution of the wavefield*/
         dmemo::DistributionPtr dist_wavefield=vX.getDistributionPtr();
@@ -150,9 +150,6 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::applySource(Acquisition::Sourc
                     break;
             }
         }
-        
-        read_coordinates_LA.release();
-        read_sourcesSignals_HA.release();
     }
 }
 
@@ -182,14 +179,14 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::gatherSeismograms(Wavefields::
         lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
         
         /* Get reference to receiver type of seismogram traces */
-        lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
-        utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
+        const lama::DenseVector<ValueType>& ReceiverType=seismogram.getTraceType();
+        const utilskernel::LArray<ValueType>* ReceiverType_LA=&ReceiverType.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_ReceiverType_LA(*ReceiverType_LA);
         
         /* Get reference to coordinates of seismogram traces */
-        lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> read_coordinates_LA(*coordinates_LA);
+        const lama::DenseVector<ValueType>& coordinates=seismogram.getCoordinates();
+        const utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
+        const hmemo::ReadAccess<ValueType> read_coordinates_LA(*coordinates_LA);
         
         /* Get reference to storage of seismogram traces */
         lama::DenseMatrix<ValueType>& seismogramData=seismogram.getData();
@@ -224,9 +221,6 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::gatherSeismograms(Wavefields::
                     break;
             }
         }
-        
-        read_coordinates_LA.release();
-        write_seismogram_HA.release();
     }
 }
 
@@ -244,19 +238,20 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::gatherSeismograms(Wavefields::
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, ValueType DT){
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT){
     
     SCAI_REGION( "timestep" )
     
+    SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
+    
     /* Get references to required modelparameter */
-    model.prepareForModelling();
-    lama::DenseVector<ValueType>& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>& sWaveModulus=model.getSWaveModulus();
-    lama::DenseVector<ValueType>& inverseDensityAverageX=model.getInverseDensityAverageX();
-    lama::DenseVector<ValueType>& inverseDensityAverageY=model.getInverseDensityAverageY();
-    lama::DenseVector<ValueType>& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
-    lama::DenseVector<ValueType>& tauSAverageXY=model.getTauSAverageXY();
+    lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
+    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::DenseVector<ValueType>const& tauSAverageXY=model.getTauSAverageXY();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -271,13 +266,13 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::DenseVector<ValueType>& Rxy=wavefield.getRxy();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>& Dxb=derivatives.getDxb();
+    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
+    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
     
-    lama::CSRSparseMatrix<ValueType>& DybPressure=derivatives.getDybPressure();
-    lama::CSRSparseMatrix<ValueType>& DybVelocity=derivatives.getDybVelocity();
-    lama::CSRSparseMatrix<ValueType>& DyfPressure=derivatives.getDyfPressure();
-    lama::CSRSparseMatrix<ValueType>& DyfVelocity=derivatives.getDyfVelocity();
+    lama::CSRSparseMatrix<ValueType>const& DybPressure=derivatives.getDybPressure();
+    lama::CSRSparseMatrix<ValueType>const& DybVelocity=derivatives.getDybVelocity();
+    lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
+    lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
     
     /* Init seismograms */
     seismogram.init(receiver, NT, vX.getContextPtr());
@@ -293,8 +288,8 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::Vector& vxx = *vxxPtr;
     lama::Vector& vyy = *vyyPtr;
     
-    lama::DenseVector<ValueType>& tauS=model.getTauS();
-    lama::DenseVector<ValueType>& tauP=model.getTauP();
+    lama::DenseVector<ValueType>const& tauS=model.getTauS();
+    lama::DenseVector<ValueType>const& tauP=model.getTauP();
     
     IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
     ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
@@ -313,7 +308,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     onePlusLtauS += numRelaxationMechanisms * tauS;
     
     if(useFreeSurface){
-        FreeSurface.setModelparameter(model,tauP,tauS,onePlusLtauP,onePlusLtauS);
+        FreeSurface.setModelparameter(model,onePlusLtauP,onePlusLtauS);
     }
     
     dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();

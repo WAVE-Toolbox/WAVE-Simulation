@@ -28,7 +28,7 @@ namespace KITGPI {
             //! Default destructor
             ~FD2Dvisco(){};
             
-            FD2Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit FD2Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
             void reset();
             

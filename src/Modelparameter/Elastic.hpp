@@ -47,36 +47,36 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
             
-            Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Elastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
             Elastic(const Elastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus,lama::Scalar  sWaveModulus, lama::Scalar  rho);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
-            void write(std::string filename);
+            void write(std::string filename) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>& getTauP();
-            lama::DenseVector<ValueType>& getTauS();
-            lama::DenseVector<ValueType>& getTauSAverageXY();
-            lama::DenseVector<ValueType>& getTauSAverageXZ();
-            lama::DenseVector<ValueType>& getTauSAverageYZ();
-            IndexType getNumRelaxationMechanisms();
-            ValueType getRelaxationFrequency();
+            lama::DenseVector<ValueType>const& getTauP() override;
+            lama::DenseVector<ValueType>const& getTauS() override;
+            lama::DenseVector<ValueType>const& getTauSAverageXY() override;
+            lama::DenseVector<ValueType>const& getTauSAverageXZ() override;
+            lama::DenseVector<ValueType>const& getTauSAverageYZ() override;
+            IndexType getNumRelaxationMechanisms() const override;
+            ValueType getRelaxationFrequency() const override;
             
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
-            void prepareForModelling();
+            void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar rhs);
@@ -88,12 +88,13 @@ namespace KITGPI {
             
         private:
             
-            void refreshModule();
-            void refreshVelocity();
-            void calculateAveraging();
+            void refreshModule() override;
+            void refreshVelocity() override;
+            void calculateAveraging() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocity;
             using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -103,7 +104,9 @@ namespace KITGPI {
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
             
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm );
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ) override;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
 
             
             using Modelparameter<ValueType>::DensityAverageMatrixX;
@@ -129,8 +132,6 @@ namespace KITGPI {
             using Modelparameter<ValueType>::tauSAverageXZ;
             using Modelparameter<ValueType>::tauSAverageYZ;
             
-
-
         };
     }
 }
@@ -141,8 +142,9 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(){
+void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
     refreshModule();
+    initializeMatrices(dist,ctx,config,comm);
     calculateAveraging();
 }
 
@@ -157,7 +159,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -201,8 +203,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
-        
         dirtyFlagModulus=false;
+        dirtyFlagAveraging = true;
     }
 };
 
@@ -214,7 +216,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -401,7 +403,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWav
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
@@ -410,6 +412,20 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename)
     this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
     this->writeModelparameter(density,filenamedensity);
 };
+
+//! \brief Wrapper to support configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+}
 
 //! \brief Initializsation of the Averaging matrices
 /*!
@@ -459,12 +475,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging(){
-    this->calculateInverseAveragedDensity(inverseDensityAverageX,DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(inverseDensityAverageY,DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(inverseDensityAverageZ,DensityAverageMatrixZ);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageXY,sWaveModulusAverageMatrixXY);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageXZ,sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedSWaveModulus(sWaveModulusAverageYZ,sWaveModulusAverageMatrixYZ);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageX,DensityAverageMatrixX);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageY,DensityAverageMatrixY);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageZ,DensityAverageMatrixZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXY,sWaveModulusAverageMatrixXY);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXZ,sWaveModulusAverageMatrixXZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageYZ,sWaveModulusAverageMatrixYZ);
+    dirtyFlagAveraging = false;
 }
 
 
@@ -473,7 +490,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging(){
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -481,21 +498,23 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTau
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency() const
+{
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms() const
+{
     COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
     return(numRelaxationMechanisms);
 }
@@ -503,7 +522,7 @@ IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms
 /*! \brief Get reference to tauS xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXY);
 }
@@ -511,7 +530,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTau
 /*! \brief Get reference to tauS xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXZ);
 }
@@ -519,7 +538,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTau
 /*! \brief Get reference to tauS yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageYZ);
 }

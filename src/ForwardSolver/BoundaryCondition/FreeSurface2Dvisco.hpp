@@ -30,6 +30,7 @@ namespace KITGPI {
                 using FreeSurfaceVisco<ValueType>::setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
                 using FreeSurfaceVisco<ValueType>::scaleStressHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the stress update
                 using FreeSurfaceVisco<ValueType>::scaleRelaxationHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the update of the relaxation mechanism
+                using FreeSurfaceVisco<ValueType>::active;
 
             };
         } /* end namespace BoundaryCondition */
@@ -53,6 +54,7 @@ namespace KITGPI {
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Rxx, lama::DenseVector<ValueType>& Ryy){
     
+    SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     
     /* Update the stress parameter at the free surface */
     temp=sumHorizonatlDerivative;
