@@ -9,12 +9,14 @@
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
 #include "../Acquisition/Seismogram.hpp"
+#include "../Acquisition/SeismogramHandler.hpp"
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface3Delastic.hpp"
 #include "BoundaryCondition/ABS3D.hpp"
+#include "SourceReceiverImpl/FDTD3Delastic.hpp"
 
 namespace KITGPI {
     
@@ -193,6 +195,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
     lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
     
+    SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources,wavefield);
+    
     /* Init seismograms */
     seismogram.init(receiver, NT, vX.getContextPtr());
     
@@ -292,7 +296,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         }
         
         /* Apply source and save seismogram */
-        applySource(sources,wavefield,NT,t);
+        SourceReceiver.applySource(t);
+//        applySource(sources,wavefield,NT,t);
         gatherSeismograms(wavefield,NT,t);
         
     }
