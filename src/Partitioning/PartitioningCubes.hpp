@@ -24,14 +24,14 @@ namespace KITGPI {
         public:
             
             //! Default constructor
-            PartitioningCubes(){};
+            PartitioningCubes() = delete;
             
-            PartitioningCubes(Configuration::Configuration<ValueType> config,dmemo::CommunicatorPtr comm);
+            explicit PartitioningCubes(Configuration::Configuration<ValueType> const& config,dmemo::CommunicatorPtr comm);
             
             //! Default destructor
             ~PartitioningCubes(){};
             
-            dmemo::DistributionPtr getDist();
+            dmemo::DistributionPtr getDist() const;
             
         private:
             
@@ -49,10 +49,9 @@ namespace KITGPI {
  *
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDist(){
-    if(dist_cubes==NULL){
-        COMMON_THROWEXCEPTION ( "Distribution ist not set " )
-    }
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDist() const
+{
+    SCAI_ASSERT_ERROR( dist_cubes !=nullptr ,"Distribution ist not set " );
     return(dist_cubes);
 }
 
@@ -62,7 +61,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm){
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration<ValueType> const& config, dmemo::CommunicatorPtr comm){
     dist_cubes=calculate(config.getProcNX(),config.getProcNY(),config.getProcNZ(),config.getNX(),config.getNY(),config.getNZ(),comm);
 }
 

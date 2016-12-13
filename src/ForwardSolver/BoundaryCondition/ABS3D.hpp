@@ -28,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 ~ABS3D(){};
                 
-                void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface);
+                void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) override;
                 
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4);
                 void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9);
@@ -36,6 +36,7 @@ namespace KITGPI
             private:
                 
                 lama::DenseVector<ValueType> damping; //!< Absorbing Coefficient vector
+                using ABS<ValueType>::active;
                 
             };
         } /* end namespace BoundaryCondition */
@@ -55,6 +56,8 @@ namespace KITGPI
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4){
+    
+    SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     
     v1.scale(damping);
     v2.scale(damping);
@@ -80,6 +83,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9){
+    
+    SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     
     v1.scale(damping);
     v2.scale(damping);
@@ -110,6 +115,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 {
     
     HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n" );
+    
+    active=true;
     
     dmemo::CommunicatorPtr comm=dist->getCommunicatorPtr();
     
@@ -143,6 +150,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     }
     
     Acquisition::Coordinates<ValueType> coordTransform;
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(2,100,100,100).x == 2, "" )
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(102,100,100,100).y == 1, "" )
+    SCAI_ASSERT_DEBUG( coordTransform.index2coordinate(2,100,100,1).z == 0, "" )
+    
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
     

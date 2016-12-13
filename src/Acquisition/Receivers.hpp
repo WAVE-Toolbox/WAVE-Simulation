@@ -23,20 +23,20 @@ namespace KITGPI {
         public:
             
             Receivers():numReceiversGlobal(0),numReceiversLocal(0),numParameter(0){};
-            Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
+            explicit Receivers(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             ~Receivers(){};
             
-            void init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             
-            void readReceiverAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
-            void writeReceiverAcquisition(std::string filename);
+            void readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx);
+            void writeReceiverAcquisition(std::string const& filename) const;
             
-            IndexType getNumReceiversGlobal();
-            IndexType getNumReceiversLocal();
-            
-            dmemo::DistributionPtr getReceiversDistribution();
-            lama::DenseVector<ValueType>& getCoordinates();
-            lama::DenseVector<ValueType>& getReceiversType();
+            /* Getter functions */
+            IndexType getNumReceiversGlobal() const;
+            IndexType getNumReceiversLocal() const;
+            dmemo::DistributionPtr getReceiversDistribution() const;
+            lama::DenseVector<IndexType> const& getCoordinates() const;
+            lama::DenseVector<IndexType> const& getReceiversType() const;
             
         private:
             
@@ -54,8 +54,8 @@ namespace KITGPI {
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the receiver acquisition
             IndexType numParameter; //!< Number of receiver parameters given in acquisition matrix
-            lama::DenseVector<ValueType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
-            lama::DenseVector<ValueType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
+            lama::DenseVector<IndexType> coordinates; //!< Coordinates of receivers global (1-D coordinates)
+            lama::DenseVector<IndexType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
             
         };
     }
@@ -65,11 +65,9 @@ namespace KITGPI {
 /*! \brief Getter method for reference to receiver type
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType()
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Receivers<ValueType>::getReceiversType() const
 {
-    if(receiver_type.size()==0) {
-        COMMON_THROWEXCEPTION ( "No receivers type set" )
-    }
+    SCAI_ASSERT_ERROR( receiver_type.size() != 0 , "No receivers type set " );
     return(receiver_type);
 }
 
@@ -77,11 +75,9 @@ lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getRece
 /*! \brief Getter method for reference to coordinates
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates()
+lama::DenseVector<IndexType> const& KITGPI::Acquisition::Receivers<ValueType>::getCoordinates() const
 {
-    if(coordinates.size()==0) {
-        COMMON_THROWEXCEPTION ( "No receivers coordinates set" )
-    }
+    SCAI_ASSERT_ERROR( coordinates.size() != 0 , "No receivers coordinates set " );
     return(coordinates);
 }
 
@@ -89,11 +85,9 @@ lama::DenseVector<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getCoor
 /*! \brief Getter method for distribution of the receivers based on the wavefield distribution
  */
 template<typename ValueType>
-dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDistribution()
+dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDistribution() const
 {
-    if(dist_wavefield_receivers==NULL) {
-        COMMON_THROWEXCEPTION ( "Receivers distribution not set " )
-    }
+    SCAI_ASSERT_ERROR( dist_wavefield_receivers != nullptr , "Receivers distribution not set " );
     return(dist_wavefield_receivers);
 }
 
@@ -101,23 +95,25 @@ dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDi
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 :numReceiversGlobal(0),numReceiversLocal(0),numParameter(0)
 {
-    init(config,dist_wavefield);
+    init(config,ctx,dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> config, dmemo::DistributionPtr dist_wavefield){
-    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield){
+    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield,ctx);
 }
 
 /*! \brief Get number of global receivers
@@ -125,7 +121,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
  \return Number of global receivers
  */
 template<typename ValueType>
-IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversGlobal(){
+IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversGlobal() const
+{
     return(numReceiversGlobal);
 }
 
@@ -135,7 +132,8 @@ IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversGlobal(){
  \return Number of local receivers on this process
  */
 template<typename ValueType>
-IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversLocal(){
+IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversLocal() const
+{
     return(numReceiversLocal);
 }
 
@@ -145,7 +143,8 @@ IndexType KITGPI::Acquisition::Receivers<ValueType>::getNumReceiversLocal(){
  \param filename Filename to write receivers acquisition
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::string filename){
+void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::string const& filename) const
+{
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.assignTranspose(acquisition);
     acquisition_temp.writeToFile(filename);
@@ -165,9 +164,13 @@ void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::st
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx)
 {
 
+    SCAI_ASSERT_ERROR(NX>0, "NX<=0");
+    SCAI_ASSERT_ERROR(NY>0, "NX<=0");
+    SCAI_ASSERT_ERROR(NZ>0, "NX<=0");
+    
     /* Read acquisition matrix */
     lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(filename);
@@ -231,8 +234,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
         hmemo::ReadAccess<ValueType> read_acquisition_HA(*acquisition_HA);
         
         /* Get writeAccess to coordinates vector (local) */
-        utilskernel::LArray<ValueType>* coordinates_LA=&coordinates.getLocalValues();
-        hmemo::WriteAccess<ValueType> write_coordinates_LA(*coordinates_LA);
+        utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
+        hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
         
         /* 2. Calculate 1-D coordinates form 3-D coordinates */
         IndexType X,Y,Z;
@@ -273,7 +276,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     coordinates.redistribute(dist_wavefield_receivers);
     receiver_type.redistribute(dist_wavefield_receivers);
     
-    
+    coordinates.setContextPtr(ctx);
+    receiver_type.setContextPtr(ctx);
 }
 
 
@@ -287,9 +291,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::CommunicatorPtr comm)
 {
-    if(numReceiversGlobal==0){
-        COMMON_THROWEXCEPTION ( " There is no global receiver (numReceiversGlobal==0)! ")
-    }
+    SCAI_ASSERT(numReceiversGlobal>0," There is no global receiver (numReceiversGlobal==0)! ");
     
     dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numReceiversGlobal,localIndices,comm));
 
@@ -304,11 +306,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::C
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::DistributionPtr dist_wavefield)
 {
-    
-    if(coordinates.size()==0){
-        COMMON_THROWEXCEPTION ( " The vector coordinates does not contain any elements ! ")
-    }
-    
+    SCAI_ASSERT(coordinates.size()>0," The vector coordinates does not contain any elements ! ");
     
     this->Global2Local(coordinates,localIndices,dist_wavefield);
     

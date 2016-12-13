@@ -45,26 +45,26 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Viscoelastic(){};
             
-            Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) override;
             
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
             
-            void write(std::string filename);
+            void write(std::string filename) const override;
             
-            void prepareForModelling();
+            void prepareForModelling() override;
             
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(lama::Scalar rhs);
@@ -76,8 +76,8 @@ namespace KITGPI {
             
         private:
             
-            void refreshModule();
-            void refreshVelocity();
+            void refreshModule() override;
+            void refreshVelocity() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
@@ -198,7 +198,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
@@ -364,7 +364,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";

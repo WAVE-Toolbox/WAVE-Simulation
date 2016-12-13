@@ -14,7 +14,7 @@ namespace KITGPI {
     
     //! Configuration namespace
     namespace Configuration {
-
+        
 	template<typename ValueType>
 	  struct PMLVariables{
 		  
@@ -39,62 +39,65 @@ namespace KITGPI {
              */
             ~Configuration(){}
             
-            Configuration( std::string filename );
+            explicit Configuration( std::string const& filename );
             
-            void print();
+            void print() const;
             
             bool checkConfigPlausibility();
             
-            IndexType getNX() { return NX; } ///< Return NX
-            IndexType getNY() { return NY; } ///< Return NY (Depth)
-            IndexType getNZ() { return NZ; } ///< Return NZ
+            IndexType getNX() const { return NX; } ///< Return NX
+            IndexType getNY() const { return NY; } ///< Return NY (Depth)
+            IndexType getNZ() const { return NZ; } ///< Return NZ
             
-            ValueType getDH() { return DH; } ///< Return Grid spacing
+            ValueType getDH() const { return DH; } ///< Return Grid spacing
             
-            ValueType getDT() { return DT; } ///< Return Time Step
-            ValueType getT() { return T; } ///< Return Total propagation time
+            ValueType getDT() const { return DT; } ///< Return Time Step
+            ValueType getT() const { return T; } ///< Return Total propagation time
             
-            IndexType getSpatialFDorder() { return spatialFDorder; } ///< Return order of spatial FD operator
+            IndexType getSpatialFDorder() const
+            {
+                SCAI_ASSERT_ERROR( spatialFDorder%2 == 0 , " spatialFDorder has to be an integer of 2");
+                return spatialFDorder;
+            } ///< Return order of spatial FD operator
             
-            IndexType getModelRead() {return ModelRead;} ///< Return Read in Model?
-            IndexType getModelWrite() {return ModelWrite;} ///< Return Write Model to file?
-            std::string getModelFilename() {return ModelFilename;} ///< Return Filename of Model
-            IndexType getModelParametrisation() {return ModelParametrisation;} ///< Return Read Wave-Modulus-Model or Velocity-Model
+            IndexType getModelRead() const {return ModelRead;} ///< Return Read in Model?
+            IndexType getModelWrite() const {return ModelWrite;} ///< Return Write Model to file?
+            std::string getModelFilename() const {return ModelFilename;} ///< Return Filename of Model
+            IndexType getModelParametrisation() const {return ModelParametrisation;} ///< Return Read Wave-Modulus-Model or Velocity-Model
             
-            ValueType getVelocityP() { return velocityP; } ///< Return Velocity for homogeneous model
-            ValueType getVelocityS() { return velocityS; } ///< Return Velocity for homogeneous model
-            ValueType getRho() { return rho; } ///< Return Density for homogeneous model
-            ValueType getTauP() { return tauP; } ///< Return tauP for homogeneous model
-            ValueType getTauS() { return tauS; } ///< Return tauS for homogeneous model
+            ValueType getVelocityP() const { return velocityP; } ///< Return Velocity for homogeneous model
+            ValueType getVelocityS() const { return velocityS; } ///< Return Velocity for homogeneous model
+            ValueType getRho() const { return rho; } ///< Return Density for homogeneous model
+            ValueType getTauP() const { return tauP; } ///< Return tauP for homogeneous model
+            ValueType getTauS() const { return tauS; } ///< Return tauS for homogeneous model
             
-            std::string getSourceFilename() {return SourceFilename;} ///< Return Filename of Source file
-            std::string getReceiverFilename() {return ReceiverFilename;} ///< Return Filename of Receiver file
-            std::string getSeismogramFilename() {return SeismogramFilename;} ///< Return Filename of Seismogram file
-            IndexType getSeismogramFormat() {return SeismogramFormat;} ///< Return Seismogram Format
+            std::string getSourceFilename() const {return SourceFilename;} ///< Return Filename of Source file
+            std::string getReceiverFilename() const {return ReceiverFilename;} ///< Return Filename of Receiver file
+            std::string getSeismogramFilename() const {return SeismogramFilename;} ///< Return Filename of Seismogram file
+            IndexType getSeismogramFormat() const {return SeismogramFormat;} ///< Return Seismogram Format
             
-            IndexType getN() { return N; } ///< Return N
+            IndexType getN() const { return N; } ///< Return N
             
-            ValueType getPWaveModulus() { return pWaveModulus; } ///< Return pWaveModulus
-            ValueType getSWaveModulus() { return sWaveModulus; } ///< Return pWaveModulus
+            ValueType getPWaveModulus() const { return pWaveModulus; } ///< Return pWaveModulus
+            ValueType getSWaveModulus() const { return sWaveModulus; } ///< Return pWaveModulus
             
-            IndexType getNT() { return NT; } ///< Return NT
+            IndexType getNT() const { return NT; } ///< Return NT
             
-            IndexType getUseCubePartitioning() { return UseCubePartitioning;} ///< Return UseCubePartitioning
-            IndexType getProcNX() { return ProcNX;} ///< Return number of cores in X-direction
-            IndexType getProcNY() { return ProcNY;} ///< Return number of cores in Y-direction
-            IndexType getProcNZ() { return ProcNZ;} ///< Return number of cores in Z-direction
+            IndexType getUseCubePartitioning() const { return UseCubePartitioning;} ///< Return UseCubePartitioning
+            IndexType getProcNX() const { return ProcNX;} ///< Return number of cores in X-direction
+            IndexType getProcNY() const { return ProcNY;} ///< Return number of cores in Y-direction
+            IndexType getProcNZ() const { return ProcNZ;} ///< Return number of cores in Z-direction
             
-            IndexType getFreeSurface() { return FreeSurface;} ///< Return FreeSurface
+            IndexType getFreeSurface() const { return FreeSurface;} ///< Return FreeSurface
             
-            ValueType getRelaxationFrequency() { return relaxationFrequency;} ///< Return relaxationFrequency
-            IndexType getNumRelaxationMechanisms() { return numRelaxationMechanisms;} ///< Return number of relaxation mechanism
+            ValueType getRelaxationFrequency() const { return relaxationFrequency;} ///< Return relaxationFrequency
+            IndexType getNumRelaxationMechanisms() const { return numRelaxationMechanisms;} ///< Return number of relaxation mechanism
             
-            IndexType getDampingBoundary() {return DampingBoundary;} ///< Return DampingBoundary
-            IndexType getBoundaryWidth() {return BoundaryWidth;} ///< Return BoundaryWidth
-            ValueType getDampingCoeff() {return DampingCoeff;} ///< Return DampingCoeff
+            IndexType getDampingBoundary() const {return DampingBoundary;} ///< Return DampingBoundary
+            IndexType getBoundaryWidth() const {return BoundaryWidth;} ///< Return BoundaryWidth
+            ValueType getDampingCoeff() const {return DampingCoeff;} ///< Return DampingCoeff
             
             PMLVariables<ValueType>& getPMLVariables() {return PMLVar;} ///< Return PML Variables
-            
         private:
             
             IndexType NumParameters; ///< Number of parameters in input file
@@ -164,7 +167,7 @@ namespace KITGPI {
  \param filename of configuration file
  */
 template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string filename ):NumParameters(34),numRelaxationMechanisms(0)
+KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string const& filename ):NumParameters(34),numRelaxationMechanisms(0)
 {
     // read all lines in file
     
@@ -273,7 +276,7 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string file
 /*! \brief Print configuration
  */
 template<typename ValueType>
-void KITGPI::Configuration::Configuration<ValueType>::print()
+void KITGPI::Configuration::Configuration<ValueType>::print() const
 {
     IndexType velocity_max = velocityP;
     double courant = velocity_max * DT / DH;
