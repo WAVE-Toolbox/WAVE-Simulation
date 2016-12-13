@@ -429,7 +429,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
 {
-    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
+//    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
     return(inverseDensity);
 }
 
@@ -474,7 +474,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus() const
 {
-    SCAI_ASSERT(dirtyFlagModulus == false, "Module has to be recalculated! ");
+    SCAI_ASSERT( (dirtyFlagModulus == false) || (parametrisation == 0) , "Module has to be recalculated! ");
     return(pWaveModulus);
 }
 
@@ -503,7 +503,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus() const
 {
-    SCAI_ASSERT(dirtyFlagModulus == false, "Module has to be recalculated! ");
+    SCAI_ASSERT((dirtyFlagModulus == false) || (parametrisation == 0), "Module has to be recalculated! ");
     return(sWaveModulus);
 }
 
@@ -532,7 +532,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
 {
-    SCAI_ASSERT(dirtyFlagVelocity == false, "Velocity has to be recalculated! ");
+    SCAI_ASSERT((dirtyFlagVelocity == false) || (parametrisation == 1), "Velocity has to be recalculated! ");
     return(velocityP);
 }
 
@@ -559,7 +559,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
 {
-    SCAI_ASSERT(dirtyFlagVelocity == false, "Velocity has to be recalculated! ");
+    SCAI_ASSERT((dirtyFlagVelocity == false) || (parametrisation == 1), "Velocity has to be recalculated! ");
     return(velocityS);
 }
 
