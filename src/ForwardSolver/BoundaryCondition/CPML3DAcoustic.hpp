@@ -28,7 +28,7 @@ namespace KITGPI
 				//! Default destructor
 				~CPML3DAcoustic () {};
 
-				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar );
+				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar );
 
 				void reset();
 
@@ -83,6 +83,8 @@ namespace KITGPI
 				using CPML<ValueType>::psi_sxz_z;
 				using CPML<ValueType>::psi_syz_z;
 				using CPML<ValueType>::psi_szz_z;
+				
+				//using CPML<ValueType>::applyCPML;
 
 			};
 		} /* end namespace BoundaryCondition */
@@ -162,7 +164,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::apply_
  \param PMLVar Struct with variables needed for cpml coefficients
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar )
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar )
 {
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n" );

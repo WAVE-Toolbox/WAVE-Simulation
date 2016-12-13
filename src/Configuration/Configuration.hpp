@@ -97,7 +97,7 @@ namespace KITGPI {
             IndexType getBoundaryWidth() const {return BoundaryWidth;} ///< Return BoundaryWidth
             ValueType getDampingCoeff() const {return DampingCoeff;} ///< Return DampingCoeff
             
-            PMLVariables<ValueType>& getPMLVariables() {return PMLVar;} ///< Return PML Variables
+            PMLVariables<ValueType> const& getPMLVariables() const {return PMLVar;} ///< Return PML Variables
         private:
             
             IndexType NumParameters; ///< Number of parameters in input file

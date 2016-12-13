@@ -49,7 +49,7 @@ namespace KITGPI {
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
-	    BoundaryCondition::CPML3DAcoustic<ValueType> ConvPML; //!< Damping boundary condition class
+	    BoundaryCondition::CPML3DAcoustic<ValueType> ConvPML; //!< CPML boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
 
             void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;

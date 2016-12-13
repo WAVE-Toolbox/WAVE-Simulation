@@ -19,7 +19,7 @@ namespace KITGPI {
                 ~CPML(){};
 		
                 //! init CPML coefficient vectors and CPML memory variables
-                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth,bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar)=0;
+                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth,bool useFreeSurface,Configuration::PMLVariables<ValueType> const &PMLVar)=0;
                     
 	    protected:
 		void resetVector ( lama::DenseVector<ValueType>& vector );
@@ -27,13 +27,13 @@ namespace KITGPI {
 		void initVector ( lama::DenseVector<ValueType>& vector,hmemo::ContextPtr ctx, dmemo::DistributionPtr dist );
 		    
 		void SetCoeffCPML ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,IndexType coord,
-				IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> &PMLVar,IndexType i, ValueType DT , ValueType DH );
+				IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> const&PMLVar,IndexType i, ValueType DT , ValueType DH );
 		
 		void ResetCoeffFreeSurface ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
 						lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
 						IndexType i);
 		
-		void applyCPML ( lama::Vector& Vec,lama::DenseVector<ValueType>& Psi,lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv );
+		/*inline*/ void applyCPML ( lama::Vector& Vec,lama::DenseVector<ValueType>& Psi,lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv );
 		    
 		    		lama::DenseVector<ValueType> psi_vxx;//!< CPML memory Variable
 				lama::DenseVector<ValueType> psi_vyx;//!< CPML memory Variable
@@ -116,7 +116,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector ( lam
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
 										 lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
-										 IndexType coord,IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> &PMLVar, 
+										 IndexType coord,IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> const &PMLVar, 
 										 IndexType i, ValueType DT, ValueType DH )
 {
 

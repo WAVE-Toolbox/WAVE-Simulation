@@ -28,7 +28,7 @@ namespace KITGPI
 				//! Default destructor
 				~CPML2D() {};
 
-				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar );
+				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar );
 
 				void reset();
 
@@ -187,7 +187,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy ( la
  \param PMLVar Struct with variables needed for cpml coefficients
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> &PMLVar )
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar )
 {
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n" );
