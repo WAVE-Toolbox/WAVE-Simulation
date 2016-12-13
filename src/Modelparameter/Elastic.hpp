@@ -446,8 +446,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
     
     SCAI_REGION( "initializeMatrices" )
     
-    HOST_PRINT( comm, "Initialization of the averaging matrices." );
-    
+    HOST_PRINT( comm, "Initialization of the averaging matrices.\n" );
     this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
     this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
     this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
@@ -475,6 +474,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging(){
+    
     this->calculateInverseAveragedDensity(density,inverseDensityAverageX,DensityAverageMatrixX);
     this->calculateInverseAveragedDensity(density,inverseDensityAverageY,DensityAverageMatrixY);
     this->calculateInverseAveragedDensity(density,inverseDensityAverageZ,DensityAverageMatrixZ);

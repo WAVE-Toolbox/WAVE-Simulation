@@ -86,7 +86,6 @@ namespace KITGPI {
             virtual ValueType getRelaxationFrequency() const;
             
             /*! \brief Prepare the model parameters for modelling */
-//            virtual void prepareForModelling()=0;
             virtual void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)=0;
             
             virtual lama::DenseVector<ValueType> const& getInverseDensityAverageX();
@@ -185,8 +184,6 @@ namespace KITGPI {
              \param comm Communicator
              */
             virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
-//            
-//            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
             
             void calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             void calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
@@ -753,10 +750,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0;
+                        countJA++;
                     }
                 } else {
                     csrJALocal[countJA]=rowNumber + j;
                     csrvaluesLocal[countJA]=1.0/2.0;
+                    countJA++;
                 }
             } else {
                 // Set diagonal elements and elements right next do diagonal elements
@@ -764,10 +763,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     csrJALocal[countJA]=rowNumber + j;
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         } else {
@@ -778,15 +779,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                         //  set last element in the submatrices
                         csrJALocal[countJA]=rowNumber + NX;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     //set the other elements
                     csrJALocal[countJA]=rowNumber + NX + j - 2;
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         }
-        countJA++;
     }
     csrIALocal[countIA]=countJA;
     countIA++;
@@ -820,10 +822,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0;
+                        countJA++;
                     }
                 } else {
                     csrJALocal[countJA]=rowNumber + j;
                     csrvaluesLocal[countJA]=1.0/2.0;
+                    countJA++;
                 }
             } else {
                 // Set diagonal elements and elements next to diagonal elements
@@ -831,10 +835,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     csrJALocal[countJA]=rowNumber + j;
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         } else {
@@ -845,15 +851,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                         //  set last element in the submatrices
                         csrJALocal[countJA]=rowNumber + NXNY;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     //set the other elements
                     csrJALocal[countJA]=rowNumber + NXNY + j-2;
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         }
-        countJA++;
     }
     csrIALocal[countIA]=countJA;
     countIA++;
@@ -888,11 +895,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0;
+                        countJA++;
                     }
                 } else {
                     // Set elements in last submatrix NXNY x NXNY
                     csrJALocal[countJA]=rowNumber + j * NX;
                     csrvaluesLocal[countJA]=1.0/2.0;
+                    countJA++;
                 }
             } else {
                 // Set elements in diagonal submatrices NXNY x NXNY
@@ -900,10 +909,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                     if (j==0) {
                         csrJALocal[countJA]=rowNumber;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     csrJALocal[countJA]=rowNumber + (j * NX);
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         } else {
@@ -914,15 +925,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
                         //  set last element in the submatrices
                         csrJALocal[countJA]=rowNumber + NXNY;
                         csrvaluesLocal[countJA]=1.0/2.0;
+                        countJA++;
                     }
                 } else {
                     //set the other elements
                     csrJALocal[countJA]=rowNumber + NXNY + (j-2) * NX;
                     csrvaluesLocal[countJA]=1.0/4.0;
+                    countJA++;
                 }
             }
         }
-        countJA++;
     }
     csrIALocal[countIA]=countJA;
     countIA++;
@@ -992,6 +1004,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::
         (this->*setRowElements)(read_localIndices_temp,countJA,countIA,write_csrJALocal,write_csrIALocal,write_valuesLocal,NX,NY,NZ);
         
     }
+    
     
     /* Release all read and write access */
     read_localIndices.release();

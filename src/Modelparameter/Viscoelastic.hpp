@@ -444,7 +444,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
     
     SCAI_REGION( "initializeMatrices" )
     
-    HOST_PRINT( comm, "Initialization of the averaging matrices." );
+    HOST_PRINT( comm, "Initialization of the averaging matrices.\n" );
     
     this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
     this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
