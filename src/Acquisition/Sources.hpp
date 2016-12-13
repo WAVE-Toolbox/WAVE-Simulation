@@ -1,4 +1,5 @@
 #pragma once
+#include "Acquisition.hpp"
 
 #include <scai/lama.hpp>
 #include <scai/dmemo/CyclicDistribution.hpp>
@@ -95,7 +96,8 @@ KITGPI::Acquisition::SeismogramHandler<ValueType> const& KITGPI::Acquisition::So
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
 {
-    IndexType const NUM_ELEMENTS_ENUM=4;
+    
+    SCAI_ASSERT_DEBUG(source_type.size() == coordinates.size(), "Size mismatch")
     
     IndexType count[NUM_ELEMENTS_ENUM]={0,0,0,0};
     lama::DenseVector<IndexType> coord[NUM_ELEMENTS_ENUM];
@@ -109,8 +111,8 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
     for(IndexType i=0; i<numSourcesGlobal;++i){
         tempScalar=source_type.getValue(i);
         tempIndexType=tempScalar.getValue<IndexType>()-1;
-        
         SCAI_ASSERT_DEBUG(tempIndexType >=0 && tempIndexType <=3, "Unkown Source Type");
+        
         ++count[tempIndexType];
     }
     
@@ -131,13 +133,19 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
         
     }
     
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(0)==SeismogramType::P, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(1)==SeismogramType::VX, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(2)==SeismogramType::VY, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(3)==SeismogramType::VZ, "Cast went wrong");
+
     /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
     for(IndexType i=0; i<NUM_ELEMENTS_ENUM; ++i){
+        
         if(coord[i].size()>0){
             dist[i]=getSourceDistribution(coord[i],dist_wavefield);
-            sources.getSeismogram(i).allocate(ctx,dist[i],NT);
+            sources.getSeismogram(static_cast<SeismogramType>(i)).allocate(ctx,dist[i],NT);
             coord[i].redistribute(dist[i]);
-            sources.getSeismogram(i).setCoordinates(coord[i]);
+            sources.getSeismogram(static_cast<SeismogramType>(i)).setCoordinates(coord[i]);
         }
         count[i]=0;
     }
@@ -152,10 +160,16 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
         signals.getData().getRow(temp, i);
         SCAI_ASSERT_DEBUG(temp.size()==NT, "Size mismatch");
         
-        sources.getSeismogram(tempIndexType).getData().setRow(temp,count[tempIndexType],utilskernel::binary::BinaryOp::COPY);
+        sources.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp,count[tempIndexType],utilskernel::binary::BinaryOp::COPY);
         
         ++count[tempIndexType];
     }
+    
+    SCAI_ASSERT_DEBUG(count[0]==sources.getNumTracesGlobal(SeismogramType::P)," Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[1]==sources.getNumTracesGlobal(SeismogramType::VX)," Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[2]==sources.getNumTracesGlobal(SeismogramType::VY)," Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[3]==sources.getNumTracesGlobal(SeismogramType::VZ)," Size mismatch ");
+
 }
 
 
@@ -574,7 +588,7 @@ dmemo::DistributionPtr KITGPI::Acquisition::Sources<ValueType>::getSourceDistrib
     Coordinates<ValueType> coord;
     coord.Global2Local(coordinates,localIndices,dist_wavefield);
     
-    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numSourcesGlobal,localIndices,dist_wavefield->getCommunicatorPtr()));
+    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(coordinates.size(),localIndices,dist_wavefield->getCommunicatorPtr()));
     
     return(dist_temp);
 }

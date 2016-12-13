@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Seismogram.hpp"
+#include "Acquisition.hpp"
 
 namespace KITGPI {
     
     namespace Acquisition {
         
-        
-        enum SeismogramType { P, VX, VY, VZ };
-
         template <typename ValueType>
         class SeismogramHandler
         {
@@ -26,14 +24,12 @@ namespace KITGPI {
             
             inline Seismogram<ValueType>const& getSeismogram(SeismogramType type) const;
             inline Seismogram<ValueType>& getSeismogram(SeismogramType type);
-            inline Seismogram<ValueType>& getSeismogram(IndexType type);
             inline IndexType getNumTracesGlobal(SeismogramType type) const;
             inline IndexType getNumSamples(SeismogramType type) const;
             
         private:
             
             std::vector<Seismogram<ValueType>> seismo;
-            IndexType const NUM_ELEMENTS_ENUM=4;
             
         };
     }
@@ -67,13 +63,6 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(
 {
     SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_ENUM-1, "SeismogramType unkown");
     return(seismo[type].getNumTracesGlobal());
-}
-
-template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(IndexType type)
-{
-    SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_ENUM-1, "SeismogramType unkown");
-    return(seismo[type]);
 }
 
 template <typename ValueType>
