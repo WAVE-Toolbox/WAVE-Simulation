@@ -193,11 +193,8 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration( std::string cons
     
     // check map and assign all values with right "cast" to members
     size_t nArgs = NumParameters;
-    if ( map.size() != nArgs )
-    {
-        std::cout << filename << " does not include a valid configutation with " << nArgs << " arguments." << std::endl;
-    }
-    
+    SCAI_ASSERT(map.size() == nArgs, filename << " does not include a valid configutation with " << nArgs << " arguments.");
+
     std::istringstream( map[ "NZ" ] ) >> NZ; // IndexType
     std::istringstream( map[ "NX" ] ) >> NX; // IndexType
     std::istringstream( map[ "NY" ] ) >> NY; // IndexType
