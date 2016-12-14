@@ -8,8 +8,6 @@
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
-#include "../Acquisition/Seismogram.hpp"
-#include "../Acquisition/SeismogramHandler.hpp"
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
@@ -35,11 +33,9 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Delastic(){};
             
-            void run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
-            
-            using ForwardSolver<ValueType>::seismogram;
             
         private:
             
@@ -49,9 +45,6 @@ namespace KITGPI {
             
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
-            
-            void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
-            void applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t) override;
             
         };
     } /* end namespace ForwardSolver */
@@ -83,69 +76,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Co
     
 }
 
-/*! \brief Appling the sources to the wavefield
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param sources Sources to apply
- \param wavefield Wavefields
- \param NT Total number of time steps
- \param t Current time step
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::applySource(Acquisition::Sources<ValueType> const& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType /*NT*/, IndexType t)
-{
-    
-    /* Get reference to wavefields */
-    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
-    
-    /* Get reference to sourcesignal storing seismogram */
-    const Acquisition::Seismogram<ValueType>& signals=sources.getSignals();
-    const lama::DenseMatrix<ValueType>& sourcesSignalsPressure=signals.getData();
-    const lama::DenseVector<IndexType>& coordinatesPressure=signals.getCoordinates();
-    lama::DenseVector<ValueType> samplesPressure(Sxx.getContextPtr());
-    
-    sourcesSignalsPressure.getColumn(samplesPressure,t);
-    Sxx.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
-    Syy.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
-    Szz.scatter(coordinatesPressure,samplesPressure,utilskernel::binary::BinaryOp::ADD);
-    
-}
-
-
-/*! \brief Saving seismograms during time stepping
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param wavefield Wavefields
- \param NT Total number of time steps
- \param t Current time step
- */
-template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType /*NT*/, IndexType t)
-{
-    
-    /* Get reference to wavefields */
-    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
-    
-    /* Gather seismogram for the pressure traces */
-    const lama::DenseVector<IndexType>& coordinatesPressure=seismogram.getCoordinates();
-    lama::DenseMatrix<ValueType>& seismogramDataPressure=seismogram.getData();
-    lama::DenseVector<ValueType> samplesPressure(Sxx.getContextPtr());
-    
-    samplesPressure.gather(Sxx,coordinatesPressure,utilskernel::binary::BinaryOp::COPY);
-    samplesPressure.gather(Syy,coordinatesPressure,utilskernel::binary::BinaryOp::ADD);
-    samplesPressure.gather(Szz,coordinatesPressure,utilskernel::binary::BinaryOp::ADD);
-    seismogramDataPressure.setColumn(samplesPressure,t,utilskernel::binary::BinaryOp::COPY);
-    
-}
-
 
 /*! \brief Running the 3-D elastic foward solver
  *
@@ -160,7 +90,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::gatherSeismograms(Wavefields
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType> const& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
@@ -195,10 +125,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
     lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
     
-    SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources,wavefield);
-    
-    /* Init seismograms */
-    seismogram.init(receiver, NT, vX.getContextPtr());
+    SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources,receiver,wavefield);
     
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
@@ -297,8 +224,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         
         /* Apply source and save seismogram */
         SourceReceiver.applySource(t);
-//        applySource(sources,wavefield,NT,t);
-        gatherSeismograms(wavefield,NT,t);
+        SourceReceiver.gatherSeismogram(t);
         
     }
     ValueType end_t = common::Walltime::get();

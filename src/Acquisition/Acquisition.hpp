@@ -7,7 +7,14 @@ namespace KITGPI {
         
         enum SeismogramType { P, VX, VY, VZ };
         
-        constexpr IndexType NUM_ELEMENTS_ENUM=4;
+        static std::map< SeismogramType, const char * > SeismogramTypeString = {
+            {P, "p"},
+            {VX, "vx"},
+            {VY, "vy"},
+            {VZ, "vz"}
+        };
+        
+        constexpr IndexType NUM_ELEMENTS_SEISMOGRAMTYPE=4;
         
     }
 }

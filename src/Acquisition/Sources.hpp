@@ -99,9 +99,9 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
     
     SCAI_ASSERT_DEBUG(source_type.size() == coordinates.size(), "Size mismatch")
     
-    IndexType count[NUM_ELEMENTS_ENUM]={0,0,0,0};
-    lama::DenseVector<IndexType> coord[NUM_ELEMENTS_ENUM];
-    dmemo::DistributionPtr dist[NUM_ELEMENTS_ENUM];
+    IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE]={0,0,0,0};
+    lama::DenseVector<IndexType> coord[NUM_ELEMENTS_SEISMOGRAMTYPE];
+    dmemo::DistributionPtr dist[NUM_ELEMENTS_SEISMOGRAMTYPE];
     
     IndexType numSourcesGlobal=source_type.size();
     
@@ -117,7 +117,7 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
     }
     
     /* Allocate lama vectors */
-    for(IndexType i=0; i<NUM_ELEMENTS_ENUM; ++i){
+    for(IndexType i=0; i<NUM_ELEMENTS_SEISMOGRAMTYPE; ++i){
         coord[i].allocate(count[i]);
         count[i]=0;
     }
@@ -139,7 +139,7 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
     SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(3)==SeismogramType::VZ, "Cast went wrong");
 
     /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
-    for(IndexType i=0; i<NUM_ELEMENTS_ENUM; ++i){
+    for(IndexType i=0; i<NUM_ELEMENTS_SEISMOGRAMTYPE; ++i){
         
         if(coord[i].size()>0){
             dist[i]=getSourceDistribution(coord[i],dist_wavefield);
@@ -164,6 +164,8 @@ void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType co
         
         ++count[tempIndexType];
     }
+    
+    sources.setContextPtr(ctx);
     
     SCAI_ASSERT_DEBUG(count[0]==sources.getNumTracesGlobal(SeismogramType::P)," Size mismatch ");
     SCAI_ASSERT_DEBUG(count[1]==sources.getNumTracesGlobal(SeismogramType::VX)," Size mismatch ");
@@ -240,6 +242,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<
     generateSignals(config.getNT(),config.getDT(),ctx);
     signals.redistribute(dist_wavefield_sources);
     initSeismogramHandler(config.getNT(),ctx,dist_wavefield);
+    sources.setDT(config.getDT());
 }
 
 
@@ -466,7 +469,6 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, h
     /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
     signals.allocate(ctx,dist_wavefield_sources,NT);
     signals.setCoordinates(coordinates);
-    signals.setTraceType(source_type);
     signals.setContextPtr(ctx);
 }
 

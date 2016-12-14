@@ -6,10 +6,12 @@
 
 #include "Coordinates.hpp"
 
-
 namespace KITGPI {
     
     namespace Acquisition {
+        
+        template <typename ValueType>
+        class SeismogramHandler;
         
         //! Handling of receivers
         /*!
@@ -17,7 +19,7 @@ namespace KITGPI {
          * It provides the reading of the receivers acquisition from file, the distribution of the receivers and the collection of the seismograms.
          */
         template <typename ValueType>
-        class Receivers : protected Coordinates<ValueType>
+        class Receivers
         {
             
         public:
@@ -37,16 +39,18 @@ namespace KITGPI {
             dmemo::DistributionPtr getReceiversDistribution() const;
             lama::DenseVector<IndexType> const& getCoordinates() const;
             lama::DenseVector<IndexType> const& getReceiversType() const;
+            SeismogramHandler<ValueType> & getSeismogramHandler();
             
         private:
             
-            void getLocalReceivers(dmemo::DistributionPtr dist_wavefield);
-            void getReceiverDistribution(dmemo::CommunicatorPtr comm);
+            void initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield);
             
-            hmemo::HArray<IndexType> localIndices; //!< Global indices of the local receivers
-            
+            dmemo::DistributionPtr getReceiverDistribution(lama::DenseVector<IndexType>const& coordinates, dmemo::DistributionPtr const dist_wavefield) const;
+                        
             IndexType numReceiversGlobal; //!< Number of receivers global
             IndexType numReceiversLocal; //!< Number of receivers local
+            
+            SeismogramHandler<ValueType> receiver;
             
             dmemo::DistributionPtr dist_wavefield_receivers; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT; //!< No distribution of the columns of the seismogram matrix
@@ -61,6 +65,73 @@ namespace KITGPI {
     }
 }
 
+
+template<typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
+{
+    
+    SCAI_ASSERT_DEBUG(receiver_type.size() == coordinates.size(), "Size mismatch")
+    
+    IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE]={0,0,0,0};
+    lama::DenseVector<IndexType> coord[NUM_ELEMENTS_SEISMOGRAMTYPE];
+    dmemo::DistributionPtr dist[NUM_ELEMENTS_SEISMOGRAMTYPE];
+    
+    IndexType numReceiversGlobal=receiver_type.size();
+    
+    /* Count elements for each source type */
+    lama::Scalar tempScalar;
+    IndexType tempIndexType;
+    for(IndexType i=0; i<numReceiversGlobal;++i){
+        tempScalar=receiver_type.getValue(i);
+        tempIndexType=tempScalar.getValue<IndexType>()-1;
+        SCAI_ASSERT_DEBUG(tempIndexType >=0 && tempIndexType <=3, "Unkown Source Type");
+        
+        ++count[tempIndexType];
+    }
+    
+    /* Allocate lama vectors */
+    for(IndexType i=0; i<NUM_ELEMENTS_SEISMOGRAMTYPE; ++i){
+        coord[i].allocate(count[i]);
+        count[i]=0;
+    }
+    
+    /* Sort coordinates */
+    for(IndexType i=0; i<numReceiversGlobal;++i){
+        
+        tempScalar=receiver_type.getValue(i);
+        tempIndexType=tempScalar.getValue<IndexType>()-1;
+        
+        coord[tempIndexType].setValue(count[tempIndexType], coordinates.getValue(i));
+        ++count[tempIndexType];
+        
+    }
+    
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(0)==SeismogramType::P, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(1)==SeismogramType::VX, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(2)==SeismogramType::VY, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(3)==SeismogramType::VZ, "Cast went wrong");
+    
+    /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
+    for(IndexType i=0; i<NUM_ELEMENTS_SEISMOGRAMTYPE; ++i){
+        
+        if(coord[i].size()>0){
+            dist[i]=getReceiverDistribution(coord[i],dist_wavefield);
+            receiver.getSeismogram(static_cast<SeismogramType>(i)).allocate(ctx,dist[i],NT);
+            coord[i].redistribute(dist[i]);
+            receiver.getSeismogram(static_cast<SeismogramType>(i)).setCoordinates(coord[i]);
+        }
+        count[i]=0;
+    }
+    
+    receiver.setContextPtr(ctx);
+}
+
+
+template<typename ValueType>
+KITGPI::Acquisition::SeismogramHandler<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getSeismogramHandler()
+{
+    return(receiver);
+}
 
 /*! \brief Getter method for reference to receiver type
  */
@@ -114,6 +185,8 @@ KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuratio
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield){
     readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield,ctx);
+    initSeismogramHandler(config.getNT(),ctx,dist_wavefield);
+    receiver.setDT(config.getDT());
 }
 
 /*! \brief Get number of global receivers
@@ -237,6 +310,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
         utilskernel::LArray<IndexType>* coordinates_LA=&coordinates.getLocalValues();
         hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
         
+        Coordinates<ValueType> coord;
+        
         /* 2. Calculate 1-D coordinates form 3-D coordinates */
         IndexType X,Y,Z;
         for(IndexType i=0; i<numReceiversGlobal; i++){
@@ -245,7 +320,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
             Y=read_acquisition_HA[ i + numReceiversGlobal*1 ];
             Z=read_acquisition_HA[ i + numReceiversGlobal*2 ];
             
-            write_coordinates_LA[i]=this->coordinate2index(X,Y,Z,NX,NY,NZ);
+            write_coordinates_LA[i]=coord.coordinate2index(X,Y,Z,NX,NY,NZ);
         }
         
         /* Release write and read access to local data */
@@ -257,12 +332,10 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     /* Replicate coordinates on all processes */
     coordinates.redistribute(no_dist_numReceiversGlobal);
     
-    /* Get local receivers from global receivers */
-    getLocalReceivers(dist_wavefield);
-    
-    /* Get receiver distribution */
-    getReceiverDistribution(dist_wavefield->getCommunicatorPtr());
-    
+    dist_wavefield_receivers=getReceiverDistribution(coordinates,dist_wavefield);
+    numReceiversLocal=dist_wavefield_receivers->getLocalSize();
+    numReceiversGlobal=dist_wavefield_receivers->getGlobalSize();
+
     /* Replicate acquisition on all processes */
     acquisition.redistribute(no_dist_numParameter,no_dist_numReceiversGlobal);
     
@@ -281,38 +354,19 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
 }
 
 
-/*! \brief Calculation of the receiver distribution
- *
- * Calculation of the receiver distribution based on the global number of receivers numReceiversGlobal and the local number of receivers numReceiversLocal on each node.
- * Generates a GeneralDistribution.
- *
- \param comm Communicator for the generated distribution
- */
 template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(dmemo::CommunicatorPtr comm)
+dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(lama::DenseVector<IndexType>const& coordinates, dmemo::DistributionPtr const dist_wavefield) const
 {
-    SCAI_ASSERT(numReceiversGlobal>0," There is no global receiver (numReceiversGlobal==0)! ");
+    SCAI_ASSERT_DEBUG(coordinates.size()>0, " The vector coordinates does not contain any elements ! ");
     
-    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(numReceiversGlobal,localIndices,comm));
-
-    dist_wavefield_receivers=dist_temp;
-}
-
-
-/*! \brief Determine the number of local receivers from the global receivers coordinates
- *
- \param dist_wavefield Distribution of the wavefields
- */
-template<typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getLocalReceivers(dmemo::DistributionPtr dist_wavefield)
-{
-    SCAI_ASSERT(coordinates.size()>0," The vector coordinates does not contain any elements ! ");
+    hmemo::HArray<IndexType> localIndices;
     
-    this->Global2Local(coordinates,localIndices,dist_wavefield);
+    Coordinates<ValueType> coord;
+    coord.Global2Local(coordinates,localIndices,dist_wavefield);
     
-    numReceiversLocal=localIndices.size();
-    numReceiversGlobal=coordinates.size();
+    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(coordinates.size(),localIndices,dist_wavefield->getCommunicatorPtr()));
     
+    return(dist_temp);
 }
 
 
