@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-#include "../Partitioning/PartitionedInOut.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
 
 namespace KITGPI {
     
