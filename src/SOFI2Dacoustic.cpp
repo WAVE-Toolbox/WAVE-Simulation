@@ -12,8 +12,8 @@
 #include "Modelparameter/Acoustic.hpp"
 #include "Wavefields/Wavefields2Dacoustic.hpp"
 
-#include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
+#include "Acquisition/Receivers.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
@@ -100,7 +100,7 @@ int main( int argc, char* argv[] )
     
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
     
-    solver.seismogram.write(config);
+    receivers.getSeismogramHandler().writeToFileRaw(config.getSeismogramFilename());
 
     return 0;
 }
