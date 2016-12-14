@@ -33,13 +33,13 @@ namespace KITGPI {
                 
             protected:
                 
-                inline virtual void applySourcePressure(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t) = 0;
+                virtual void applySourcePressure(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t) = 0;
                 inline virtual void applySourceVX(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t) ;
                 inline virtual void applySourceVY(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t) ;
                 inline virtual void applySourceVZ(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t) ;
                 inline void applySourceSingle(Acquisition::Seismogram<ValueType> const& seismo, lama::DenseVector<ValueType>& wavefieldSingle, lama::DenseVector<ValueType>& temp, IndexType t);
                 
-                inline virtual void gatherSeismogramPressure(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t)=0;
+                virtual void gatherSeismogramPressure(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t)=0;
                 inline virtual void gatherSeismogramVX(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t);
                 inline virtual void gatherSeismogramVY(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t);
                 inline virtual void gatherSeismogramVZ(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t);

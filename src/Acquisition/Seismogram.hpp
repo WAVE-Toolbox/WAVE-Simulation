@@ -88,10 +88,10 @@ template <typename ValueType>
 std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(std::string const& filename) const
 {
     SCAI_ASSERT_DEBUG(type>=0 && type <=(NUM_ELEMENTS_SEISMOGRAMTYPE-1), "Wrong Trace Type: " << getTraceType() );
-    SCAI_ASSERT_DEBUG(SeismogramTypeString[SeismogramType::P]=="p","Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(SeismogramTypeString[SeismogramType::VX]=="vx","Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(SeismogramTypeString[SeismogramType::VY]=="vy","Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(SeismogramTypeString[SeismogramType::VZ]=="vz","Error in mapping of SeismogramType to std::string");
+    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::P],"p")==0,"Error in mapping of SeismogramType to std::string");
+    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VX],"vx")==0,"Error in mapping of SeismogramType to std::string");
+    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VY],"vy")==0,"Error in mapping of SeismogramType to std::string");
+    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VZ],"vz")==0,"Error in mapping of SeismogramType to std::string");
 
     std::size_t found = filename.find_last_of(".");
     std::string beforeEnding=filename.substr(0,found);
