@@ -17,12 +17,12 @@ namespace KITGPI {
             class SinThree : public SourceSignal<ValueType> {
             public:
                 
-                SinThree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                explicit SinThree(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
                 
                 ///! Destructor
                 ~SinThree(){};
                 
-                void calc(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                void calc(lama::DenseVector<ValueType>& signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
                 
             };
         }

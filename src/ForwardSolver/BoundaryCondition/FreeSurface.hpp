@@ -40,7 +40,7 @@ namespace KITGPI {
                  *
                  *
                  */
-                virtual bool getActive();
+                virtual bool getActive() const;
                 
             protected:
                 
@@ -57,6 +57,7 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType>::getActive(){
+bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType>::getActive() const
+{
     return(active);
 }

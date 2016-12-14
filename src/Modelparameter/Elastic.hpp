@@ -24,6 +24,8 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
+
 
 namespace KITGPI {
     
@@ -45,34 +47,33 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
             
-            Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
-            Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Elastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
+            explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
             //! Copy Constructor.
             Elastic(const Elastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus,lama::Scalar  sWaveModulus, lama::Scalar  rho);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
             
-            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
-            void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity);
-            void write(std::string filename);
-
+            void write(std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut);
+            void write(std::string filename, IndexType partitionedOut) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>& getTauP();
-            lama::DenseVector<ValueType>& getTauS();
-            IndexType getNumRelaxationMechanisms();
-            ValueType getRelaxationFrequency();
+            lama::DenseVector<ValueType>const& getTauP() override;
+            lama::DenseVector<ValueType>const& getTauS() override;
+            IndexType getNumRelaxationMechanisms() const override;
+            ValueType getRelaxationFrequency() const override;
             
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
-            void prepareForModelling();
+            void prepareForModelling() override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar rhs);
@@ -84,8 +85,8 @@ namespace KITGPI {
             
         private:
             
-            void refreshModule();
-            void refreshVelocity();
+            void refreshModule() override;
+            void refreshVelocity() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
@@ -184,15 +185,15 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
             case 1:
-                init(ctx,dist,config.getModelFilename());
+                init(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             case 2:
-                initVelocities(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -203,7 +204,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration
     }
     
     if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
+        write(config.getModelFilename()+".out",config.getPartitionedIn());
     }
 }
 
@@ -252,9 +253,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
-    init(ctx,dist,filenamePWaveModulus,filenameSWaveModulus,filenamerho);
+    init(ctx,dist,filenamePWaveModulus,filenameSWaveModulus,filenamerho,partitionedIn);
 }
 
 
@@ -268,12 +269,12 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
     parametrisation=0;
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamerho);
-    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamerho,partitionedIn);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus,partitionedIn);
 }
 
 
@@ -285,9 +286,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    init(ctx,dist,filename);
+    init(ctx,dist,filename,partitionedIn);
 }
 
 
@@ -299,16 +300,16 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
 }
 
 
@@ -337,16 +338,16 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic& rhs)
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenameVelocityS=filename+".vs.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
-    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP,partitionedIn);
+    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
     
 }
 
@@ -358,11 +359,11 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPt
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity)
+void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut)
 {
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
-    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus,partitionedOut);
 };
 
 
@@ -371,22 +372,21 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWav
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
 };
-
 
 /*! \brief Get reference to tauP
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -394,21 +394,23 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTau
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency() const
+{
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms() const
+{
     COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
     return(numRelaxationMechanisms);
 }

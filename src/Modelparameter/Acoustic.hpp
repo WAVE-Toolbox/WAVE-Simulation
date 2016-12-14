@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
-#include "../Partitioning/PartitionedInOut.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
 
 namespace KITGPI {
     
@@ -46,35 +46,35 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Acoustic(){};
             
-            Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
-            Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
             //! Copy Constructor.
             Acoustic(const Acoustic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn);
             
-            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
-            void write(std::string filenamePWaveModulus, std::string filenamedensity);
-            void write(std::string filename);
+            void write(std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut);
+            void write(std::string filename, IndexType partitionedOut) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>& getSWaveModulus();
-            lama::DenseVector<ValueType>& getVelocityS();
-            lama::DenseVector<ValueType>& getTauP();
-            lama::DenseVector<ValueType>& getTauS();
-            IndexType getNumRelaxationMechanisms();
-            ValueType getRelaxationFrequency();
+            lama::DenseVector<ValueType>const& getSWaveModulus() override;
+            lama::DenseVector<ValueType>const& getVelocityS() override;
+            lama::DenseVector<ValueType>const& getTauP() override;
+            lama::DenseVector<ValueType>const& getTauS() override;
+            IndexType getNumRelaxationMechanisms() const override;
+            ValueType getRelaxationFrequency() const override;
         
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
-            void prepareForModelling();
+            void prepareForModelling() override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(lama::Scalar rhs);
@@ -86,8 +86,8 @@ namespace KITGPI {
         
         private:
             
-            void refreshModule();
-            void refreshVelocity();
+            void refreshModule() override;
+            void refreshVelocity() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
@@ -182,16 +182,16 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
             case 1:
-                init(ctx,dist,config.getModelFilename());
+                init(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             case 2:
                 parametrisation=1;
-                initVelocities(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -202,7 +202,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
     }
     
     if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
+        write(config.getModelFilename()+".out", config.getPartitionedOut());
     }
 }
 
@@ -247,9 +247,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
-    init(ctx,dist,filenamePWaveModulus,filenamerho);
+    init(ctx,dist,filenamePWaveModulus,filenamerho,partitionedIn);
 }
 
 
@@ -262,11 +262,11 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
     parametrisation=0;
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamerho);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamerho,partitionedIn);
 }
 
 
@@ -278,9 +278,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    init(ctx,dist,filename);
+    init(ctx,dist,filename,partitionedIn);
 }
 
 
@@ -292,14 +292,14 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density "filename+".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
 }
 
 
@@ -326,15 +326,15 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic& rhs)
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
     
 }
 
@@ -345,10 +345,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextP
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut)
 {
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
 };
 
 
@@ -357,12 +357,12 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWa
  \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
 };
 
 
@@ -371,7 +371,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename)
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
     COMMON_THROWEXCEPTION("S-wave modulus is not set for acoustic modelling")
     return(sWaveModulus);
 }
@@ -380,7 +380,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getSW
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return(velocityS);
 }
@@ -389,7 +389,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getVe
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -397,7 +397,7 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
+lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
@@ -405,14 +405,16 @@ lama::DenseVector<ValueType>& KITGPI::Modelparameter::Acoustic<ValueType>::getTa
 
 /*! \brief Getter method for relaxation frequency */
 template<typename ValueType>
-ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency(){
+ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() const
+{
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return(relaxationFrequency);
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
 template<typename ValueType>
-IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms(){
+IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms() const
+{
     COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
     return(numRelaxationMechanisms);
 }

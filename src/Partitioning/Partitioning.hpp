@@ -20,7 +20,7 @@ namespace KITGPI {
             ~Partitioning(){};
             
             //! Getter method for distribution pointer
-            virtual dmemo::DistributionPtr getDist()=0;
+            virtual dmemo::DistributionPtr getDist() const =0;
             
         };
         

@@ -23,7 +23,7 @@ namespace KITGPI {
                 
                 virtual ~FreeSurfaceAcoustic()=0;
                 
-                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH);
+                void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
                 void apply(lama::DenseVector<ValueType>& p);
                 
@@ -52,6 +52,8 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  */
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(lama::DenseVector<ValueType>& p){
+    
+    SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     
     /* Set the elements on the surface to zero */
     p.scale(setSurfaceZero);

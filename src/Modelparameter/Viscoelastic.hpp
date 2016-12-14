@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
 
 namespace KITGPI {
     
@@ -45,26 +46,26 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Viscoelastic(){};
             
-            Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const,IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
             
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             
-            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
-            void write(std::string filename);
+            void write(std::string filename, IndexType partitionedOut) const override;
             
-            void prepareForModelling();
+            void prepareForModelling() override;
             
-            void switch2velocity();
-            void switch2modulus();
+            void switch2velocity() override;
+            void switch2modulus() override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(lama::Scalar rhs);
@@ -76,8 +77,8 @@ namespace KITGPI {
             
         private:
             
-            void refreshModule();
-            void refreshVelocity();
+            void refreshModule() override;
+            void refreshVelocity() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
@@ -198,15 +199,15 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.getModelRead()){
         switch (config.getModelParametrisation()) {
             case 1:
-                init(ctx,dist,config.getModelFilename());
+                init(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             case 2:
-                initVelocities(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getModelFilename(),config.getPartitionedIn());
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -219,7 +220,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Con
     }
     
     if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
+        write(config.getModelFilename()+".out",config.getPartitionedOut());
     }
 }
 
@@ -280,9 +281,9 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    init(ctx,dist,filename);
+    init(ctx,dist,filename,partitionedIn);
 }
 
 
@@ -294,7 +295,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr 
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
@@ -303,11 +304,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx
     std::string filenameTauP=filename+".tauP.mtx";
     std::string filenameTauS=filename+".tauS.mtx";
     
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
-    this->initModelparameter(tauS,ctx,dist,filenameTauS);
-    this->initModelparameter(tauP,ctx,dist,filenameTauP);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(sWaveModulus,ctx,dist,filenameSWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
+    this->initModelparameter(tauS,ctx,dist,filenameTauS,partitionedIn);
+    this->initModelparameter(tauP,ctx,dist,filenameTauP,partitionedIn);
     
 }
 
@@ -342,7 +343,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
  *  Calculates pWaveModulus with
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
@@ -351,11 +352,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
     std::string filenameTauP=filename+".tauP.mtx";
     std::string filenameTauS=filename+".tauS.mtx";
     
-    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS);
-    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
-    this->initModelparameter(tauS,ctx,dist,filenameTauS);
-    this->initModelparameter(tauP,ctx,dist,filenameTauP);
+    this->initModelparameter(velocityS,ctx,dist,filenameVelocityS,partitionedIn);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
+    this->initModelparameter(tauS,ctx,dist,filenameTauS,partitionedIn);
+    this->initModelparameter(tauP,ctx,dist,filenameTauP,partitionedIn);
 }
 
 
@@ -364,18 +365,18 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenameSWaveModulus=filename+".sWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     std::string filenameTauP=filename+".tauP.mtx";
     std::string filenameTauS=filename+".tauS.mtx";
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(sWaveModulus,filenameSWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
-    this->writeModelparameter(tauP,filenameTauP);
-    this->writeModelparameter(tauS,filenameTauS);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(sWaveModulus,filenameSWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
+    this->writeModelparameter(tauP,filenameTauP,partitionedOut);
+    this->writeModelparameter(tauS,filenameTauS,partitionedOut);
     
 };
 

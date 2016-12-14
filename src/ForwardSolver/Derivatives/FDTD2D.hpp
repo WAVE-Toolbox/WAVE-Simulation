@@ -29,15 +29,15 @@ namespace KITGPI {
                 ~FDTD2D(){};
                 
                 FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
-                FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm);
+                FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> const& config, dmemo::CommunicatorPtr comm);
                 
                 /* non-requiered matrixes */
-                lama::CSRSparseMatrix<ValueType>& getDzf();
-                lama::CSRSparseMatrix<ValueType>& getDzb();
+                lama::CSRSparseMatrix<ValueType>const& getDzf() const override;
+                lama::CSRSparseMatrix<ValueType>const& getDzb() const override;
                 
             private:
                 
-                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm ) override;
                 
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
@@ -73,7 +73,7 @@ namespace KITGPI {
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
 {
     useFreeSurface=config.getFreeSurface();
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
@@ -153,14 +153,16 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(d
 
 //! \brief Getter method for derivative matrix Dzb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzb(){
+lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzb() const
+{
     COMMON_THROWEXCEPTION("There is no Dzb derivative matrix in the 2D elastic case.")
     return(Dzb);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzf(){
+lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzf() const
+{
     COMMON_THROWEXCEPTION("There is no Dzf derivative matrix in the 2D elastic case.")
     return(Dzf);
 }
