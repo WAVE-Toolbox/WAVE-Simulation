@@ -220,14 +220,21 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType> const& vector, std::string filename, IndexType partitionedOut) const
-{   
+{
     PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
-    if (partitionedOut==1){
-        partitionOut.writeToDistributedFiles(vector,filename);
-    } else if (partitionedOut==0){
-        vector.writeToFile(filename);
-    } else  {
-        COMMON_THROWEXCEPTION("Unexpected output option!")
+    
+    switch (partitionedOut) {
+        case false:
+            vector.writeToFile(filename);
+            break;
+            
+        case true:
+            partitionOut.writeToDistributedFiles(vector,filename);
+            break;
+            
+        default:
+            COMMON_THROWEXCEPTION("Unexpected output option!")
+            break;
     }
 };
 
@@ -236,15 +243,22 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename, dmemo::DistributionPtr dist, IndexType partitionedIn)
 {
-    PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
-    if (partitionedIn==1){
-        partitionIn.readFromDistributedFiles(vector,filename,dist);
-    } else if (partitionedIn==0) {
-        partitionIn.readFromOneFile(vector,filename,dist);
-    } else  {
-        COMMON_THROWEXCEPTION("Unexpected input option!")
-    }
     
+    PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
+    
+    switch (partitionedIn) {
+        case false:
+            partitionIn.readFromOneFile(vector,filename,dist);
+            break;
+            
+        case true:
+            partitionIn.readFromDistributedFiles(vector,filename,dist);
+            break;
+            
+        default:
+            COMMON_THROWEXCEPTION("Unexpected input option!")
+            break;
+    }
 };
 
 
@@ -268,7 +282,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::DenseVector<ValueType>& vecVelocity, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorModule )
 {
-
+    
     vectorModule=vecDensity;
     vectorModule.scale(vecVelocity);
     vectorModule.scale(vecVelocity);
@@ -387,7 +401,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;
@@ -405,7 +419,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS(){
-
+    
     // If the model is parameterized in velocities, the modulus vector is now dirty
     if(parametrisation==1){
         dirtyFlagModulus=true;

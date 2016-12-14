@@ -16,7 +16,6 @@ using namespace KITGPI;
 namespace KITGPI {
     namespace PartitionedInOut{
         
-        
         //! Handling parallel input/output
         /*!
          * This class accounts for the parallel input and output.
