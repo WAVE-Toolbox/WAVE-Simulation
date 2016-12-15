@@ -346,7 +346,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
 {
     if(data.getNumValues()>0){
         data.writeToFile(addSeismogramTypeToName(filename));
-        data.writeToFile(filename);
     }
 }
 
