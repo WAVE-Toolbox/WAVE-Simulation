@@ -18,7 +18,7 @@ namespace KITGPI {
          *
          */
         template <typename ValueType>
-        class PartitioningCubes : public Partitioning<ValueType>, protected Acquisition::Coordinates<ValueType>
+        class PartitioningCubes : public Partitioning<ValueType>
         {
             
         public:
@@ -51,7 +51,7 @@ namespace KITGPI {
 template <typename ValueType>
 dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDist() const
 {
-    SCAI_ASSERT_ERROR( dist_cubes !=nullptr ,"Distribution ist not set " );
+    SCAI_ASSERT( dist_cubes !=nullptr ,"Distribution ist not set " );
     return(dist_cubes);
 }
 
@@ -88,10 +88,10 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
     IndexType numRanks=comm->getSize();
     
     /* Check some things */
-    if( procNX*procNY*procNZ != numRanks ){ COMMON_THROWEXCEPTION(" Number of cores differ between config and actual setting  ") }
-    if(NX % procNX != 0 ){ COMMON_THROWEXCEPTION(" NX % procNX != 0  ") }
-    if(NY % procNY != 0 ){ COMMON_THROWEXCEPTION(" NY % procNY != 0  ") }
-    if(NZ % procNZ != 0 ){ COMMON_THROWEXCEPTION(" NZ % procNZ != 0  ") }
+    SCAI_ASSERT(procNX*procNY*procNZ == numRanks, " Number of cores differ between config and actual setting  ")
+    SCAI_ASSERT(NX % procNX == 0," NX % procNX != 0  " );
+    SCAI_ASSERT(NY % procNY == 0," NY % procNY != 0  " );
+    SCAI_ASSERT(NZ % procNZ == 0," NZ % procNZ != 0  " );
     
     /* Calculate coordinates of the CPU */
     IndexType posNX= rank % procNX;
@@ -110,6 +110,8 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
     IndexType numGlobalGridPoints= NX * NY * NZ ;
     IndexType numLocalGridPoints=( numGlobalGridPoints ) / numRanks;
     
+    Acquisition::Coordinates<ValueType> coord;
+    
     /* Determine local indices */
     hmemo::HArray<IndexType> localIndices;
     localIndices.resize(numLocalGridPoints);
@@ -120,14 +122,14 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
         for(IndexType y=0; y<NY; y++){
             for(IndexType z=0; z<NZ; z++){
                 if( x>=range_x_lower && x<range_x_upper && y>=range_y_lower && y<range_y_upper && z>=range_z_lower && z<range_z_upper ){
-                    indice=this->coordinate2index(x,y,z,NX,NY, NZ);
+                    indice=coord.coordinate2index(x,y,z,NX,NY, NZ);
                     write_localIndices[i]=indice;
                     i++;
                 }
             }
         }
     }
-    if( i != numLocalGridPoints ) {  COMMON_THROWEXCEPTION(" i != numLocalGridPoints   " << i << numLocalGridPoints ); }
+    SCAI_ASSERT_ERROR(i == numLocalGridPoints, " i != numLocalGridPoints   " << i << numLocalGridPoints );
     write_localIndices.release();
     
     /* create GeneralDistribution */
