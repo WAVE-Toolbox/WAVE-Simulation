@@ -238,11 +238,12 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<Va
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 {
-    readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
-    generateSignals(config.getNT(),config.getDT(),ctx);
+    readSourceAcquisition(config.getString("SourceFilename"),config.getIndex("NX"), config.getIndex("NY"), config.getIndex("NZ"),dist_wavefield);
+    IndexType getNT = static_cast<IndexType>( ( config.getValue("T") / config.getValue("DT") ) + 0.5 );
+    generateSignals(getNT,config.getValue("DT"),ctx);
     signals.redistribute(dist_wavefield_sources);
-    initSeismogramHandler(config.getNT(),ctx,dist_wavefield);
-    sources.setDT(config.getDT());
+    initSeismogramHandler(getNT,ctx,dist_wavefield);
+    sources.setDT(config.getValue("DT"));
 }
 
 
@@ -292,7 +293,6 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string
  \param NY Number of global grid points in Y
  \param NZ Number of global grid points in Z
  \param dist_wavefield Distribution of the wavefields
- \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)

@@ -62,7 +62,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
  */
 template <typename ValueType>
 KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration<ValueType> const& config, dmemo::CommunicatorPtr comm){
-    dist_cubes=calculate(config.getProcNX(),config.getProcNY(),config.getProcNZ(),config.getNX(),config.getNY(),config.getNZ(),comm);
+    dist_cubes=calculate(config.getIndex("ProcNX"),config.getIndex("ProcNY"),config.getIndex("ProcNZ"),config.getIndex("NX"),config.getIndex("NY"),config.getIndex("NZ"),comm);
 }
 
 

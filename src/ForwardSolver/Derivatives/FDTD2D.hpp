@@ -4,7 +4,6 @@
 #include "../../Common/HostPrint.hpp"
 
 
-
 namespace KITGPI {
     
     namespace ForwardSolver {
@@ -75,7 +74,7 @@ namespace KITGPI {
 template<typename ValueType>
 KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
 {
-    useFreeSurface=config.getFreeSurface();
+    useFreeSurface=config.getIndex("FreeSurface");
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
 }
 

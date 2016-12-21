@@ -6,6 +6,7 @@
 
 #include "Coordinates.hpp"
 
+
 namespace KITGPI {
     
     namespace Acquisition {
@@ -21,7 +22,6 @@ namespace KITGPI {
         template <typename ValueType>
         class Receivers
         {
-            
         public:
             
             Receivers():numReceiversGlobal(0),numReceiversLocal(0),numParameter(0){};
@@ -184,9 +184,10 @@ KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuratio
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield){
-    readReceiverAcquisition(config.getReceiverFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield,ctx);
-    initSeismogramHandler(config.getNT(),ctx,dist_wavefield);
-    receiver.setDT(config.getDT());
+    readReceiverAcquisition(config.getString("ReceiverFilename"),config.getIndex("NX"), config.getIndex("NY"), config.getIndex("NZ"),dist_wavefield,ctx);
+    IndexType getNT = static_cast<IndexType>( ( config.getValue("T") / config.getValue("DT") ) + 0.5 );
+    initSeismogramHandler(getNT,ctx,dist_wavefield);
+    receiver.setDT(config.getValue("DT"));
 }
 
 /*! \brief Get number of global receivers

@@ -26,7 +26,7 @@ namespace KITGPI {
         {
 
         public:
-
+            
             //! Default constructor
             Seismogram():numSamples(0),numTracesGlobal(0),numTracesLocal(0),DT(0.0),type(KITGPI::Acquisition::SeismogramType::P){};
 
@@ -122,13 +122,13 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration<ValueType> const& config)
 {
 
-    switch(config.getSeismogramFormat()){
+    switch(config.getIndex("SeismogramFormat")){
         case 1:
-            writeToFileRaw(config.getSeismogramFilename());
+            writeToFileRaw(config.getString("SeismogramFilename"));
             break;
         case 2:
-            setDT(config.getDT());
-            writeToFileSU(config.getSeismogramFilename(), config.getNX(), config.getNY(), config.getNZ(), config.getDH());
+            setDT(config.getValue("DT"));
+            writeToFileSU(config.getString("SeismogramFilename"), config.getIndex("NX"), config.getIndex("NY"), config.getIndex("NZ"), config.getValue("DH"));
             break;
         default:
             COMMON_THROWEXCEPTION(" Unkown SeismogramFormat " )

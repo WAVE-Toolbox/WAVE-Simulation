@@ -1,6 +1,5 @@
 #pragma once
 
-
 /* Forward declaration for friendship */
 namespace KITGPI {
     namespace ForwardSolver {
@@ -913,7 +912,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
 template<typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
 {
-    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), config.getSpatialFDorder(), comm);
+    initializeMatrices(dist,ctx,config.getIndex("NX"), config.getIndex("NY"), config.getIndex("NZ"), config.getValue("DH"), config.getValue("DT"), config.getIndex("spatialFDorder"), comm);
 }
 
 

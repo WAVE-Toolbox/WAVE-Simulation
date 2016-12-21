@@ -23,6 +23,11 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
+
+///#######################################################################################################################################
+///config: config.getUseCubePartitioning(), config.getNZ(), config.getN(), config.getNT(), config.getDT(), config.getSeismogramFilename() config.print()
+///#######################################################################################################################################
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -41,7 +46,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     Configuration::Configuration<ValueType> config(argv[1]);
     
-    SCAI_ASSERT( config.getNZ() == 1 , " NZ must be equal to 1 for 2-D simulation" );
+    SCAI_ASSERT( config.getIndex("NZ") == 1 , " NZ must be equal to 1 for 2-D simulation" );
     
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -52,9 +57,10 @@ int main( int argc, char* argv[] )
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
-    dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
+    IndexType getN = config.getIndex("NZ") * config.getIndex("NX") * config.getIndex("NY");
+    dmemo::DistributionPtr dist( new dmemo::BlockDistribution( getN, comm ) );
 
-    if( config.getUseCubePartitioning()){
+    if( config.getIndex("UseCubePartitioning")){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dist=partitioning.getDist();
     }
@@ -97,9 +103,10 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
+    IndexType getNT = static_cast<IndexType>( ( config.getValue("T") / config.getValue("DT") ) + 0.5 );
+    solver.run(receivers, sources, model, wavefields, derivatives, getNT,config.getValue("DT"));
     
-    receivers.getSeismogramHandler().writeToFileRaw(config.getSeismogramFilename());
+    receivers.getSeismogramHandler().writeToFileRaw(config.getString("SeismogramFilename"));
 
     return 0;
 }

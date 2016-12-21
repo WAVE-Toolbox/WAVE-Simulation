@@ -64,15 +64,15 @@ template<typename ValueType>
 void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
-    if(config.getFreeSurface()){
+    if(config.getIndex("FreeSurface")){
         useFreeSurface=true;
-        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH());
+        FreeSurface.init(dist,derivatives,config.getIndex("NX"),config.getIndex("NY"),config.getIndex("NZ"),config.getValue("DT"),config.getValue("DH"));
     }
     
     /* Prepare Damping Boundary */
-    if(config.getDampingBoundary()){
+    if(config.getIndex("DampingBoundary")){
         useDampingBoundary=true;
-        DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
+        DampingBoundary.init(dist,ctx,config.getIndex("NX"),config.getIndex("NY"),config.getIndex("NZ"),config.getIndex("BoundaryWidth"), config.getValue("DampingCoeff"),useFreeSurface);
     }
     
 }

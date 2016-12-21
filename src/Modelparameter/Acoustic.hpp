@@ -183,25 +183,26 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
 template<typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    if(config.getModelRead()){
-        switch (config.getModelParametrisation()) {
+    if(config.getIndex("ModelRead")){
+        switch (config.getIndex("ModelParametrisation")) {
             case 1:
-                init(ctx,dist,config.getModelFilename());
+                init(ctx,dist,config.getString("ModelFilename"));
                 break;
             case 2:
                 parametrisation=1;
-                initVelocities(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.getString("ModelFilename"));
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
     } else {
-        init(ctx,dist,config.getPWaveModulus(),config.getRho());
+        ValueType getPWaveModulus = config.getValue("rho") * config.getValue("velocityP")* config.getValue("velocityP");
+        init(ctx,dist,getPWaveModulus,config.getValue("rho"));
     }
     
-    if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
+    if(config.getIndex("ModelWrite")){
+        write(config.getString("ModelFilename")+".out");
     }
 }
 
