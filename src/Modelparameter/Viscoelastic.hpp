@@ -212,12 +212,12 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Con
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
-        initRelaxationMechanisms(config.getIndex("NumRelaxationMechanisms"), config.getValue("relaxationFrequency"));
+        initRelaxationMechanisms(config.getIndex("numRelaxationMechanisms"), config.getValue("relaxationFrequency"));
         
     } else {
         ValueType getPWaveModulus = config.getValue("rho") * config.getValue("velocityP")* config.getValue("velocityP");
         ValueType getSWaveModulus = config.getValue("rho") * config.getValue("velocityS")* config.getValue("velocityS");
-        init(ctx,dist,getPWaveModulus,getSWaveModulus,config.getValue("rho"),config.getValue("tauP"),config.getValue("tauS"),config.getIndex("NumRelaxationMechanisms"), config.getValue("relaxationFrequency"));
+        init(ctx,dist,getPWaveModulus,getSWaveModulus,config.getValue("rho"),config.getValue("tauP"),config.getValue("tauS"),config.getIndex("numRelaxationMechanisms"), config.getValue("relaxationFrequency"));
     }
     
     if(config.getIndex("ModelWrite")){
