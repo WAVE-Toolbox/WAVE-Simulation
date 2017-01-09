@@ -657,7 +657,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     //Check if grid point j/2 steps forward is available
     for (IndexType j=2;j<=spatialFDorder;j+=2){
         if( rowNumber_plusOne <= NXNY * (NZ - j/2) ){
-            csrJALocal[countJA]=rowNumber+NXNY;
+            csrJALocal[countJA]=rowNumber+NXNY*(j/2);
             csrvaluesLocal[countJA]=read_FDCoeff_f[j/2-1];
             countJA++;
         }

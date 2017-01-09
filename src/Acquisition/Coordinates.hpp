@@ -49,9 +49,9 @@ namespace KITGPI {
             
             bool locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
             
+            void Global2Local(lama::Vector const& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist) const;
+
         protected:
-            
-            void Global2Local(lama::Vector& coordinatesglobal,hmemo::HArray<IndexType>& coordinateslocal, dmemo::DistributionPtr dist);
             
         private:
             
@@ -194,7 +194,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist)
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector const& coordinatesglobal,hmemo::HArray<IndexType>& localIndices, dmemo::DistributionPtr dist) const
 {
     
     IndexType n_global=coordinatesglobal.size(); // Number of global entries

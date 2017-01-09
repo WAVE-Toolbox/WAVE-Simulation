@@ -28,6 +28,11 @@ int main( int argc, char* argv[] )
     std::size_t pos=filenameRef.find(".ci.mtx");
     std::string filenameSyn = filenameRef.substr (0,pos) + ".ref.mtx";
     
+    std::size_t found = filenameRef.find_last_of(".");
+    std::string beforeEnding=filenameRef.substr(0,found);
+    std::string afterEnding=filenameRef.substr(found);
+    filenameRef=beforeEnding+".p"+afterEnding;
+    
     seismo_ref.readFromFile(filenameRef);
     seismo_syn.readFromFile(filenameSyn);
     
@@ -40,6 +45,8 @@ int main( int argc, char* argv[] )
     if(L2>0.01){
         std::cout << "Seismogram does not match reference solution.\n\n" << std::endl;
         return(1);
+    } else {
+        std::cout << "\n\n!!! Successful !!!\n\n" << std::endl;
     }
     
     return 0;
