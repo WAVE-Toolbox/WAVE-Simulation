@@ -30,16 +30,18 @@ namespace KITGPI {
             
             explicit FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void reset();
+            void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP();
-            lama::DenseVector<ValueType>& getRxx();
-            lama::DenseVector<ValueType>& getRyy();
-            lama::DenseVector<ValueType>& getRzz();
-            lama::DenseVector<ValueType>& getRyz();
-            lama::DenseVector<ValueType>& getRxz();
-            lama::DenseVector<ValueType>& getRxy();
+            lama::DenseVector<ValueType>& getP() override;
+            lama::DenseVector<ValueType>& getRxx() override;
+            lama::DenseVector<ValueType>& getRyy() override;
+            lama::DenseVector<ValueType>& getRzz() override;
+            lama::DenseVector<ValueType>& getRyz() override;
+            lama::DenseVector<ValueType>& getRxz() override;
+            lama::DenseVector<ValueType>& getRxy() override;
+            
+            hmemo::ContextPtr getContextPtr() override;
             
         private:
             
@@ -55,7 +57,7 @@ namespace KITGPI {
             using Wavefields<ValueType>::Sxy;
             
             /* non-required wavefields */
-            using Wavefields<ValueType>::P; //!< Wavefield
+            using Wavefields<ValueType>::P;
             using Wavefields<ValueType>::Rxx;
             using Wavefields<ValueType>::Ryy;
             using Wavefields<ValueType>::Rzz;
@@ -64,6 +66,14 @@ namespace KITGPI {
             using Wavefields<ValueType>::Rxy;
         };
     }
+}
+
+/*! \brief Returns hmemo::ContextPtr from this wavefields
+ */
+template<typename ValueType>
+hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
+{
+    return(VX.getContextPtr());
 }
 
 
