@@ -1,5 +1,6 @@
 #include <scai/lama.hpp>
 #include <scai/common/Walltime.hpp>
+#include <scai/common/Settings.hpp>
 
 #include <iostream>
 
@@ -48,6 +49,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */ 
     /* inter node communicator */
     dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    common::Settings::setRank( comm->getNodeRank() );
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node distribution */
@@ -101,7 +103,7 @@ int main( int argc, char* argv[] )
     IndexType getNT = static_cast<IndexType>( ( config.getValue("T") / config.getValue("DT") ) + 0.5 );
     solver.run(receivers, sources, model, wavefields, derivatives, getNT, config.getValue("DT"));
     
-    receivers.getSeismogramHandler().writeToFileRaw(config.getString("SeismogramFilename"));
+    receivers.getSeismogramHandler().write(config);
 
     return 0;
 }

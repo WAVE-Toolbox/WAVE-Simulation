@@ -44,7 +44,7 @@ namespace KITGPI {
                 inline virtual void gatherSeismogramVY(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t);
                 inline virtual void gatherSeismogramVZ(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefieldIN, IndexType t);
                 inline void gatherSeismogramSingle(Acquisition::Seismogram<ValueType>& seismo, lama::DenseVector<ValueType>& wavefieldSingle, lama::DenseVector<ValueType>& temp, IndexType t);
-
+                
                 /* wavefields */
                 Wavefields::Wavefields<ValueType>& wavefield;
                 
@@ -62,6 +62,12 @@ namespace KITGPI {
                 lama::DenseVector<ValueType> gatherSeismogram_samplesVX;
                 lama::DenseVector<ValueType> gatherSeismogram_samplesVY;
                 lama::DenseVector<ValueType> gatherSeismogram_samplesVZ;
+                
+                lama::DenseVector<ValueType> applySource_samplesPressure;
+                lama::DenseVector<ValueType> gatherSeismogram_samplesPressure;
+                
+            private:
+                void setContextPtrToTemporary(hmemo::ContextPtr ctx);
 
             };
             
@@ -73,7 +79,8 @@ template<typename ValueType>
 KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImpl(Acquisition::Sources<ValueType> const& sourcesIN,Acquisition::Receivers<ValueType>& receiversIN, Wavefields::Wavefields<ValueType>& wavefieldIN)
 :wavefield(wavefieldIN),sources(sourcesIN.getSeismogramHandler()),receivers(receiversIN.getSeismogramHandler())
 {
-    
+    // Set Context of temporary variables to context of wavefields
+    setContextPtrToTemporary(wavefield.getContextPtr());
 }
 
 template<typename ValueType>
@@ -166,4 +173,17 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
     
     sourcesSignals.getColumn(temp,t);
     wavefieldSingle.scatter(coordinates,temp,utilskernel::binary::BinaryOp::ADD);
+}
+
+template<typename ValueType>
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::setContextPtrToTemporary(hmemo::ContextPtr ctx)
+{
+    applySource_samplesVX.setContextPtr(ctx);
+    applySource_samplesVY.setContextPtr(ctx);
+    applySource_samplesVZ.setContextPtr(ctx);
+    gatherSeismogram_samplesVX.setContextPtr(ctx);
+    gatherSeismogram_samplesVY.setContextPtr(ctx);
+    gatherSeismogram_samplesVZ.setContextPtr(ctx);
+    applySource_samplesPressure.setContextPtr(ctx);
+    gatherSeismogram_samplesPressure.setContextPtr(ctx);
 }

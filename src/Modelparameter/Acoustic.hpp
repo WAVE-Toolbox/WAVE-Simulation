@@ -25,8 +25,6 @@
 
 #include "Modelparameter.hpp"
 
-//SCAI_LOG_DEF_TEMPLATE_LOGGER(template <typename ValueType >, KITGPI::Modelparameter::Modelparameter<ValueType>::logger, "Modelparameter.Acoustic" )
-
 namespace KITGPI {
     
     //! \brief Modelparameter namespace
@@ -86,9 +84,7 @@ namespace KITGPI {
             KITGPI::Modelparameter::Acoustic<ValueType> operator-=(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
         
         private:
-            
-//            SCAI_LOG_DECL_STATIC_LOGGER(logger);
-            
+                        
             void refreshModule() override;
             void refreshVelocity() override;
             
@@ -187,7 +183,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
 template<typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-//    SCAI_LOG_INFO(logger, "\t ModelRead = " << config.getIndex("ModelRead"));
     if(config.getIndex("ModelRead")){
         switch (config.getIndex("ModelParametrisation")) {
             case 1:

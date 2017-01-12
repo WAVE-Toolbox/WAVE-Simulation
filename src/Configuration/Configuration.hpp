@@ -14,8 +14,6 @@
 
 using namespace scai;
 
-SCAI_LOG_DEF_TEMPLATE_LOGGER(template<typename ValueType>, KITGPI::Configuration::Configuration<ValueType>::logger, "Configuration" )
-
 //! Namespace of the Geophysical Institute of the Karlsruhe Institute of Technology
 namespace KITGPI {
     
@@ -48,7 +46,6 @@ namespace KITGPI {
             std::string getString(std::string const& parameterName) const;
             
         private:
-            SCAI_LOG_DECL_STATIC_LOGGER(logger);
             
             std::unordered_map<std::string,std::string> configMap; ///< Map that is returned from config File
             
@@ -97,7 +94,6 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration(std::string const
             configMap.insert( std::pair<std::string,std::string>( name, val) );
         }
     }
-    SCAI_LOG_DEBUG(logger, "Map has been created");
     input.close();
 }
 

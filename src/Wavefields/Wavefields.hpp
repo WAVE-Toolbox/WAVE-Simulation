@@ -49,6 +49,8 @@ namespace KITGPI {
             virtual lama::DenseVector<ValueType>& getRxz();
             virtual lama::DenseVector<ValueType>& getRxy();
             
+            virtual hmemo::ContextPtr getContextPtr()=0;
+            
         protected:
             
             void resetWavefield(lama::DenseVector<ValueType>& vector);

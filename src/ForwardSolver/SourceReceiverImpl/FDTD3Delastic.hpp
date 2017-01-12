@@ -36,8 +36,8 @@ namespace KITGPI {
             private:
                 
                 /* Temporary memory */
-                lama::DenseVector<ValueType> applySource_samplesPressure;
-                lama::DenseVector<ValueType> gatherSeismogram_samplesPressure;
+                using SourceReceiverImpl<ValueType>::applySource_samplesPressure;
+                using SourceReceiverImpl<ValueType>::gatherSeismogram_samplesPressure;
             };
             
         }

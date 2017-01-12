@@ -30,20 +30,22 @@ namespace KITGPI {
             
             explicit FD2Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void reset();
+            void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP();
-            lama::DenseVector<ValueType>& getRxx();
-            lama::DenseVector<ValueType>& getRyy();
-            lama::DenseVector<ValueType>& getRzz();
-            lama::DenseVector<ValueType>& getRyz();
-            lama::DenseVector<ValueType>& getRxz();
-            lama::DenseVector<ValueType>& getRxy();
-            lama::DenseVector<ValueType>& getVZ();
-            lama::DenseVector<ValueType>& getSzz();
-            lama::DenseVector<ValueType>& getSyz();
-            lama::DenseVector<ValueType>& getSxz();
+            lama::DenseVector<ValueType>& getP() override;
+            lama::DenseVector<ValueType>& getRxx() override;
+            lama::DenseVector<ValueType>& getRyy() override;
+            lama::DenseVector<ValueType>& getRzz() override;
+            lama::DenseVector<ValueType>& getRyz() override;
+            lama::DenseVector<ValueType>& getRxz() override;
+            lama::DenseVector<ValueType>& getRxy() override;
+            lama::DenseVector<ValueType>& getVZ() override;
+            lama::DenseVector<ValueType>& getSzz() override;
+            lama::DenseVector<ValueType>& getSyz() override;
+            lama::DenseVector<ValueType>& getSxz() override;
+            
+            hmemo::ContextPtr getContextPtr() override;
             
         private:
             
@@ -70,6 +72,13 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Returns hmemo::ContextPtr from this wavefields
+ */
+template<typename ValueType>
+hmemo::ContextPtr KITGPI::Wavefields::FD2Delastic<ValueType>::getContextPtr()
+{
+    return(VX.getContextPtr());
+}
 
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
  *
