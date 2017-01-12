@@ -102,7 +102,7 @@ int main( int argc, char* argv[] )
     
     solver.run( receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
     
-    receivers.getSeismogramHandler().writeToFileRaw(config.getSeismogramFilename());
+    receivers.getSeismogramHandler().write(config);
 
     return 0;
 }
