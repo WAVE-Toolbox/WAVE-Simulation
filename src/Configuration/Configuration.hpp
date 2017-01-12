@@ -37,9 +37,7 @@ namespace KITGPI {
             
             void print() const;
             
-            bool checkConfigPlausibility();
-            
-            std::unordered_map<std::string,std::string>& getMap() const { return configMap; } ///< Return configuration map
+            ValueType get(std::string const& parameterName) const;
             
             IndexType getIndex(std::string const& parameterName) const;
             ValueType getValue(std::string const& parameterName) const;
@@ -170,15 +168,22 @@ void KITGPI::Configuration::Configuration<ValueType>::print() const
     std::cout << std::endl;
 }
 
-
-/*! \brief Check plausibility of the configuration file
+/*! \brief Constructor
+ *
+ \param parameterName name of the parameter
  */
 template<typename ValueType>
-bool KITGPI::Configuration::Configuration<ValueType>::checkConfigPlausibility()
+ValueType KITGPI::Configuration::Configuration<ValueType>::get( std::string const& parameterName) const
 {
-    if ((getIndex("spatialFDorder") % 2 != 0) || (getIndex("spatialFDorder") < 2) || (getIndex("spatialFDorder") > 12))
-    {
-        return false;
+    std::string temp;
+    try {
+        std::string parameterNameTemp = parameterName;
+        std::transform(parameterNameTemp.begin(), parameterNameTemp.end(), parameterNameTemp.begin(), ::tolower);
+        std::istringstream( configMap.at(parameterNameTemp) ) >> temp;
     }
-    return true;	// check is positive
+    catch (...) {
+        COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in configuration file! " )
+    }
+    return temp;
+    
 }

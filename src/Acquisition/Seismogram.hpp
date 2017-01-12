@@ -127,7 +127,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
             writeToFileRaw(config.getString("SeismogramFilename"));
             break;
         case 2:
-            setDT(config.getValue("DT"));
             writeToFileSU(config.getString("SeismogramFilename"), config.getIndex("NX"), config.getIndex("NY"), config.getIndex("NZ"), config.getValue("DH"));
             break;
         default:
