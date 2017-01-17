@@ -418,7 +418,7 @@ The SSG \citep{virieux:86,levander:88} is a method to distribute physical quanti
 		\draw [->] (5.center) to (10.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wave field parameter in 3-D.}
+\caption{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wavefield parameter in 3-D.}
 \label{fig:StagGrid}
 \end{figure}
 
@@ -525,8 +525,8 @@ Just as in the elastic case, the velocity equations are given by:
 	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
 	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
-\section{Calculation of the wave field}
-To simulate the wave fields in space and time all discretised equations for stress and velocity have to be evaluated for each grid point and every time step. Since the temporal preceding value is needed, $n$ has to be increased continuously. The chronological order of calculating spatial derivations however is irrelevant. Whereas stress $\sigma_{ij}^{n+\frac{1}{2}}$ is required to calculate the particle velocity $v_i^{n+\frac{1}{2}}$ and thus has to be calculated first.
+\section{Calculation of the wavefield}
+To simulate the wavefields in space and time all discretised equations for stress and velocity have to be evaluated for each grid point and every time step. Since the temporal preceding value is needed, $n$ has to be increased continuously. The chronological order of calculating spatial derivations however is irrelevant. Whereas stress $\sigma_{ij}^{n+\frac{1}{2}}$ is required to calculate the particle velocity $v_i^{n+\frac{1}{2}}$ and thus has to be calculated first.
 \begin{algorithm}
 \caption{Structure of the finite differences simulation.}
 \label{alg:FD}
@@ -552,7 +552,7 @@ To simulate the wave fields in space and time all discretised equations for stre
 \chapter{Matrix-vektor formalism of finite differences}
 This chapter initially appeals the advantages of the matrix-vector formalism. Subsequently the arrays are vectorised. A central task is, to find a set of matrices, which function equivalently to the FD-operators, applied to $v_i$ and $\sigma_{ij}$. The principles are shown with the aid of simple examples. 
 \section{Motivation}
-The matrix-vector formalism is in the first place simply a compact notation for the same mathematical method. Beside greater clarity, a main benefit is in terms of program processing. It is a universal notation, which can be applied to describe numerous physical problems. Therefore the framework \textit{LAMA} \citep{lama:16}, a plug-in architecture which can be used in \textit{C++}, provides the development of hardware independent software and is additionally executable on heterogenous computer architectures. The software can also be executed either on CPU's or GPU's. To access this functionality, the problem has to be reformulated to a matrix-vector formalism. 
+The matrix-vector formalism is in the first place simply a compact notation for the same mathematical method. Beside greater clarity, a main benefit is in terms of program processing. It is a universal notation, which can be applied to describe numerous physical problems. Therefore the framework \textit{LAMA} \citep{lama:16}, a plug-in architecture which can be used in \textit{C++}, provides the development of hardware independent software and is additionally executable on heterogenous computer architectures. The software can also be executed either on CPUs or GPUs. To access this functionality, the problem has to be reformulated to a matrix-vector formalism. 
 \begin{equation}
 	\vec{y} = A~\vec{x}
 \end{equation}
@@ -842,9 +842,9 @@ Beyond the dashed lines all entries are equal to 0, independent form the FD-oper
 
 All $\underline{D}_{\,i,b}$ can be derived from $\underline{D}_{\,i,f}$ by switching all entries $\neq 0$  in a row with the next value $\neq 0$ to the right. As this is equivalent to a multiplication with $-1$ followed by a transposition is especially obvious for $\underline{D}_{\,y}^4$.
 
-An important property of the FD-coefficient matrix is, how the model border is treated. Because entries beyond the model don't exist. Inevitably this entails that updates of $v_i$ and $\sigma_{ij}$ near the edge have to be calculated from partial FD-operators. At $v_x^{n+1}$ in the last $yz$-plane with $k=NX$ for example it is not possible to refer to grid point beyond the last plane. The second order FD-operator then can only be calculated from $\sigma_{xx}^n$, $\sigma_{xy}^n$ as well as $\sigma_{xz}^n$. Not including values beyond the edge is equal to fixing the wave field and consequently the medium itself at the borders. Thus this provokes a total reflection. 
+An important property of the FD-coefficient matrix is, how the model border is treated. Because entries beyond the model don't exist. Inevitably this entails that updates of $v_i$ and $\sigma_{ij}$ near the edge have to be calculated from partial FD-operators. At $v_x^{n+1}$ in the last $yz$-plane with $k=NX$ for example it is not possible to refer to grid point beyond the last plane. The second order FD-operator then can only be calculated from $\sigma_{xx}^n$, $\sigma_{xy}^n$ as well as $\sigma_{xz}^n$. Not including values beyond the edge is equal to fixing the wavefield and consequently the medium itself at the borders. Thus this provokes a total reflection. 
 
-The discrete components for an acoustic wave field in matrix-vector notation can be written as:
+The discrete components for an acoustic wavefield in matrix-vector notation can be written as:
 \begin{align*}
 	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) 
 \end{align*}
@@ -854,7 +854,7 @@ The discrete components for an acoustic wave field in matrix-vector notation can
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
 \end{align*}
 
-All discrete components of the elastic wave field in matrix-vector notation are: 
+All discrete components of the elastic wavefield in matrix-vector notation are: 
 \begin{align*}
 	\vec{\sigma}_{xx}^{\,n} &= \vec{\sigma}_{xx}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,x,b}^q \vec{v}_x\\
 	\vec{\sigma}_{yy}^{\,n} &= \vec{\sigma}_{yy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,y,b}^q \vec{v}_y\\
@@ -870,7 +870,6 @@ All discrete components of the elastic wave field in matrix-vector notation are:
 	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
-
 
 
 \cleardoublepage
