@@ -33,7 +33,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD3Delastic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
@@ -90,7 +90,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Co
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
@@ -100,6 +100,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>const& inverseDensityAverageZ=model.getInverseDensityAverageZ();
+    lama::DenseVector<ValueType>const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::DenseVector<ValueType>const& sWaveModulusAverageXZ=model.getSWaveModulusAverageXZ();
+    lama::DenseVector<ValueType>const& sWaveModulusAverageYZ=model.getSWaveModulusAverageYZ();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -164,17 +170,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         update = Dxf * Sxx;
         update += DybVelocity * Sxy;
         update += Dzb * Sxz;
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
         update += DyfVelocity * Syy;
         update += Dzb * Syz;
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseDensityAverageY);
         
         update = Dxb * Sxz;
         update += DybVelocity * Syz;
         update += Dzf * Szz;
-        vZ += update.scale(inverseDensity);
+        vZ += update.scale(inverseDensityAverageZ);
         
         /* ----------------*/
         /* pressure update */
@@ -201,15 +207,15 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
         
         update = DyfPressure * vX;
         update += Dxf * vY;
-        Sxy += update.scale(sWaveModulus);
+        Sxy += update.scale(sWaveModulusAverageXY);
         
         update = Dzf * vX;
         update += Dxf * vZ;
-        Sxz += update.scale(sWaveModulus);
+        Sxz += update.scale(sWaveModulusAverageXZ);
         
         update = Dzf * vY;
         update += DyfPressure * vZ;
-        Syz += update.scale(sWaveModulus);
+        Syz += update.scale(sWaveModulusAverageYZ);
         
         /* Apply free surface to stress update */
         if(useFreeSurface){

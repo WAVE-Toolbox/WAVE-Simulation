@@ -34,7 +34,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD2Delastic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
@@ -90,7 +90,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
@@ -100,6 +100,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
     lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::DenseVector<ValueType>const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType>const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::DenseVector<ValueType>const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -155,11 +158,11 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         /* ----------------*/
         update = Dxf * Sxx;
         update += DybVelocity * Sxy;
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
         update += DyfVelocity * Syy;
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseDensityAverageY);
         
         
         /* ----------------*/
@@ -180,7 +183,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         
         update = DyfPressure * vX;
         update += Dxf * vY;
-        Sxy += update.scale(sWaveModulus);
+        Sxy += update.scale(sWaveModulusAverageXY);
         
         
         /* Apply free surface to stress update */

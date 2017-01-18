@@ -34,7 +34,7 @@ namespace KITGPI {
             /* Default destructor */
             ~FD2Dacoustic(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
             void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
@@ -90,7 +90,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType /*DT*/){
     
     SCAI_REGION( "timestep" )
     
@@ -99,6 +99,8 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
     /* Get references to required modelparameter */
     lama::DenseVector<ValueType> const& inverseDensity=model.getInverseDensity();
     lama::DenseVector<ValueType> const& pWaveModulus=model.getPWaveModulus();
+    lama::DenseVector<ValueType> const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::DenseVector<ValueType> const& inverseDensityAverageY=model.getInverseDensityAverageY();
     
     /* Get references to required wavefields */
     lama::DenseVector<ValueType>& vX=wavefield.getVX();
@@ -134,10 +136,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         /* update velocity */
         update= Dxf * p;
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseDensityAverageX);
 
         update= Dyf * p;
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseDensityAverageY);
 
 
         /* pressure update */

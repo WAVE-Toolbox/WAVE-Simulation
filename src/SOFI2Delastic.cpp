@@ -91,6 +91,8 @@ int main( int argc, char* argv[] )
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Elastic<ValueType> model(config,ctx,dist);
+    model.prepareForModelling(config,ctx,dist,comm);
+    HOST_PRINT( comm, "Model has been prepared for ForwardSolver!\n\n" );
     
     /* --------------------------------------- */
     /* Forward solver                          */

@@ -11,6 +11,8 @@
 
 #include <scai/dmemo/BlockDistribution.hpp>
 
+#include "../Common/HostPrint.hpp"
+
 #include <scai/hmemo/ReadAccess.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
 #include <scai/hmemo/HArray.hpp>
@@ -61,7 +63,7 @@ namespace KITGPI {
             
             void write(std::string filename) const override;
             
-            void prepareForModelling() override;
+            void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
             
             void switch2velocity() override;
             void switch2modulus() override;
@@ -78,9 +80,11 @@ namespace KITGPI {
             
             void refreshModule() override;
             void refreshVelocity() override;
+            void calculateAveraging() override;
             
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocity;
             using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
@@ -94,6 +98,28 @@ namespace KITGPI {
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ) override;
+            
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
+            
+            using Modelparameter<ValueType>::DensityAverageMatrixX;
+            using Modelparameter<ValueType>::DensityAverageMatrixY;
+            using Modelparameter<ValueType>::DensityAverageMatrixZ;
+            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXY;
+            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXZ;
+            using Modelparameter<ValueType>::sWaveModulusAverageMatrixYZ;
+            
+            using Modelparameter<ValueType>::inverseDensityAverageX;
+            using Modelparameter<ValueType>::inverseDensityAverageY;
+            using Modelparameter<ValueType>::inverseDensityAverageZ;
+            using Modelparameter<ValueType>::sWaveModulusAverageXY;
+            using Modelparameter<ValueType>::sWaveModulusAverageXZ;
+            using Modelparameter<ValueType>::sWaveModulusAverageYZ;
+            using Modelparameter<ValueType>::tauSAverageXY;
+            using Modelparameter<ValueType>::tauSAverageXZ;
+            using Modelparameter<ValueType>::tauSAverageYZ;
+            
             
         };
     }
@@ -111,6 +137,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::switch2modulus(){
     if(parametrisation==1){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=0;
@@ -128,6 +155,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::switch2velocity(){
     if(parametrisation==0){
         this->calcVelocityFromModule(pWaveModulus,density,velocityP);
         this->calcVelocityFromModule(sWaveModulus,density,velocityS);
+        dirtyFlagAveraging = true;
         dirtyFlagModulus=false;
         dirtyFlagVelocity=false;
         parametrisation=1;
@@ -155,6 +183,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule(){
         this->calcModuleFromVelocity(velocityP,density,pWaveModulus);
         this->calcModuleFromVelocity(velocityS,density,sWaveModulus);
         dirtyFlagModulus=false;
+        dirtyFlagAveraging = true;
     }
 };
 
@@ -165,9 +194,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule(){
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
     
     refreshModule();
+    
+    initializeMatrices(dist,ctx,config,comm);
     
     /* Set circular frequency w = 2 * pi * relaxation frequency */
     ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
@@ -189,6 +220,9 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(){
     temp.invert();
     pWaveModulus.scale(temp);
     
+    calculateAveraging();
+    this->getInverseDensity();
+
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -378,6 +412,81 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     this->writeModelparameter(tauS,filenameTauS);
     
 };
+
+//! \brief Wrapper to support configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+{
+    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+}
+
+//! \brief Initializsation of the Averaging matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param NX Total number of grid points in X
+ \param NY Total number of grid points in Y
+ \param NZ Total number of grid points in Z
+ \param DH Grid spacing (equidistant)
+ \param DT Temporal sampling interval
+ \param spatialFDorderInput FD-order of spatial stencils
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr comm )
+{
+    
+    SCAI_REGION( "initializeMatrices" )
+    
+    HOST_PRINT( comm, "Initialization of the averaging matrices.\n" );
+    
+    this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
+    this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
+    this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
+    this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
+    this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
+    this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
+    
+    DensityAverageMatrixX.setContextPtr( ctx );
+    DensityAverageMatrixY.setContextPtr( ctx );
+    DensityAverageMatrixZ.setContextPtr( ctx );
+    sWaveModulusAverageMatrixXY.setContextPtr( ctx );
+    sWaveModulusAverageMatrixXZ.setContextPtr( ctx );
+    sWaveModulusAverageMatrixYZ.setContextPtr( ctx );
+    
+    HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
+    
+    
+}
+
+
+/*! \brief calculate averaged vectors
+ *
+ \param dist Distribution
+ \param ctx Context
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging(){
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageX,DensityAverageMatrixX);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageY,DensityAverageMatrixY);
+    this->calculateInverseAveragedDensity(density,inverseDensityAverageZ,DensityAverageMatrixZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXY,sWaveModulusAverageMatrixXY);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageXZ,sWaveModulusAverageMatrixXZ);
+    this->calculateAveragedSWaveModulus(sWaveModulus,sWaveModulusAverageYZ,sWaveModulusAverageMatrixYZ);
+    this->calculateAveragedTauS(tauS,tauSAverageXY,sWaveModulusAverageMatrixXY);
+    this->calculateAveragedTauS(tauS,tauSAverageXZ,sWaveModulusAverageMatrixXZ);
+    this->calculateAveragedTauS(tauS,tauSAverageYZ,sWaveModulusAverageMatrixYZ);
+    dirtyFlagAveraging = false;
+}
+
 
 /*! \brief Initialisation the relaxation mechanisms
  *

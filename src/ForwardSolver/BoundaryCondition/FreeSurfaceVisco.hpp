@@ -26,7 +26,7 @@ namespace KITGPI {
                 
                 void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
-                void setModelparameter(Modelparameter::Modelparameter<ValueType>& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS);
                 
                 
             protected:
@@ -56,7 +56,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const& model,lama::DenseVector<ValueType>& onePlusLtauP,lama::DenseVector<ValueType>& onePlusLtauS){
     
     lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
     lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
