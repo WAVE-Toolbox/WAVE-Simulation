@@ -943,10 +943,11 @@ Input variables can be changed in the \shellcmd{configuration.txt} file, located
 
 To run the simulation change the directory to: \\\shellcmdline{FDSimulation\_LAMA/par/}\\
 and start the program by running the shell script \shellcmd{start\_FDSimulation.sh} with  \\\shellcmdline{start start\_FDSimulation.sh}\\
-%If you want to compute on more than one CPU, you can also add the number of CPUs. For example, to run the simulation on 8 CPUs do:\\\shellcmdline{start start\_FDSimulation.sh }
 
 The created Seismogram data is saved in \shellcmd{FDSimulation\_LAMA/par/seismograms/} and can plotted by either using the \shellcmd{plotSeismogram.m} Matlab-script or by executing the Python-script \shellcmd{plotSeismogram.py}.
 As a first test, run the default example by following the commands shown above and create the seismogram. You can compare the seismogram to the seismogram shown in figure \ref{fig:Seismogram}.
+
+To create a html and LaTeX/Pdf documentation, you can can generate a doxygen documentation. Therefore change to directory \shellcmd{FDSimulation\_LAMA/doc/} and run the command \shellcmd{make}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{doc/html/} and \shellcmd{doc/latex/}
 
 \begin{figure}
 \centering
