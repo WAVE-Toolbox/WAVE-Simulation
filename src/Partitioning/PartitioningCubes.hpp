@@ -26,7 +26,7 @@ namespace KITGPI {
             //! Default constructor
             PartitioningCubes() = delete;
             
-            explicit PartitioningCubes(Configuration::Configuration<ValueType> const& config,dmemo::CommunicatorPtr comm);
+            explicit PartitioningCubes(Configuration::Configuration const& config,dmemo::CommunicatorPtr comm);
             
             //! Default destructor
             ~PartitioningCubes(){};
@@ -61,8 +61,8 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration<ValueType> const& config, dmemo::CommunicatorPtr comm){
-    dist_cubes=calculate(config.getIndex("ProcNX"),config.getIndex("ProcNY"),config.getIndex("ProcNZ"),config.getIndex("NX"),config.getIndex("NY"),config.getIndex("NZ"),comm);
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration const& config, dmemo::CommunicatorPtr comm){
+    dist_cubes=calculate(config.get<IndexType>("ProcNX"),config.get<IndexType>("ProcNY"),config.get<IndexType>("ProcNZ"),config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),comm);
 }
 
 

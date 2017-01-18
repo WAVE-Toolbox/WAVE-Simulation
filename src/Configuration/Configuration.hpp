@@ -24,7 +24,6 @@ namespace KITGPI {
         /*!
          This class handels the configuration for the finite-difference simulation.
          */
-        template<typename ValueType>
         class Configuration
         {
         public:
@@ -37,11 +36,8 @@ namespace KITGPI {
             
             void print() const;
             
+            template<typename ValueType>
             ValueType get(std::string const& parameterName) const;
-            
-            IndexType getIndex(std::string const& parameterName) const;
-            ValueType getValue(std::string const& parameterName) const;
-            std::string getString(std::string const& parameterName) const;
             
         private:
             
@@ -56,8 +52,7 @@ namespace KITGPI {
  *
  \param filename of configuration file
  */
-template<typename ValueType>
-KITGPI::Configuration::Configuration<ValueType>::Configuration(std::string const& filename)
+KITGPI::Configuration::Configuration::Configuration(std::string const& filename)
 {
     // read all lines in file
     
@@ -101,89 +96,24 @@ KITGPI::Configuration::Configuration<ValueType>::Configuration(std::string const
  \param parameterName name of the parameter
  */
 template<typename ValueType>
-IndexType KITGPI::Configuration::Configuration<ValueType>::getIndex( std::string const& parameterName) const
+ValueType KITGPI::Configuration::Configuration::get( std::string const& parameterName) const
 {
-    IndexType temp(0);
+    ValueType temp;
     try {
-        std::string parameterNameTemp = parameterName;
-        std::transform(parameterNameTemp.begin(), parameterNameTemp.end(), parameterNameTemp.begin(), ::tolower);
-        std::istringstream( configMap.at(parameterNameTemp) ) >> temp;
+        std::istringstream( configMap.at(parameterName) ) >> temp;
     }
     catch (...) {
-        COMMON_THROWEXCEPTION( "Parameter " << parameterName << ": Not found in configuration file! " << std::endl)
+        COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
     }
-    return static_cast<IndexType>(temp);
+    return(temp);
 }
-
-
-/*! \brief Constructor
- *
- \param parameterName name of the parameter
- */
-template<typename ValueType>
-ValueType KITGPI::Configuration::Configuration<ValueType>::getValue( std::string const& parameterName) const
-{
-    ValueType temp(0);
-    try {
-        std::string parameterNameTemp = parameterName;
-        std::transform(parameterNameTemp.begin(), parameterNameTemp.end(), parameterNameTemp.begin(), ::tolower);
-        std::istringstream( configMap.at(parameterNameTemp) ) >> temp;
-    }
-    catch (...) {
-        COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in configuration file! " << std::endl)
-    }
-    return static_cast<ValueType>(temp);
-}
-
-
-/*! \brief Constructor
- *
- \param parameterName name of the parameter
- */
-template<typename ValueType>
-std::string KITGPI::Configuration::Configuration<ValueType>::getString( std::string const& parameterName) const
-{
-    std::string temp;
-    try {
-        std::string parameterNameTemp = parameterName;
-        std::transform(parameterNameTemp.begin(), parameterNameTemp.end(), parameterNameTemp.begin(), ::tolower);
-        temp = std::istringstream( configMap.at(parameterNameTemp) ).str();
-    }
-    catch (...) {
-    COMMON_THROWEXCEPTION("String " << parameterName << ": Not found in configuration file! " )
-    }
-    return temp;
-    
-}
-
 
 /*! \brief Print configuration
  */
-template<typename ValueType>
-void KITGPI::Configuration::Configuration<ValueType>::print() const
+void KITGPI::Configuration::Configuration::print() const
 {
     std::cout << "\t" << "Configuration: \n" << std::endl;
     for ( std::unordered_map<std::string,std::string>::const_iterator iter = configMap.begin(); iter != configMap.end(); ++iter )
-    std::cout << "\t"<< iter->first << " = " << iter->second << std::endl;
+        std::cout << "\t"<< iter->first << " = " << iter->second << std::endl;
     std::cout << std::endl;
-}
-
-/*! \brief Constructor
- *
- \param parameterName name of the parameter
- */
-template<typename ValueType>
-ValueType KITGPI::Configuration::Configuration<ValueType>::get( std::string const& parameterName) const
-{
-    std::string temp;
-    try {
-        std::string parameterNameTemp = parameterName;
-        std::transform(parameterNameTemp.begin(), parameterNameTemp.end(), parameterNameTemp.begin(), ::tolower);
-        std::istringstream( configMap.at(parameterNameTemp) ) >> temp;
-    }
-    catch (...) {
-        COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in configuration file! " )
-    }
-    return temp;
-    
 }

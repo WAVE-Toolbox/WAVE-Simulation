@@ -45,7 +45,7 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
             
-            explicit Elastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Elastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
@@ -183,28 +183,28 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    if(config.getIndex("ModelRead")){
-        switch (config.getIndex("ModelParametrisation")) {
+    if(config.get<IndexType>("ModelRead")){
+        switch (config.get<IndexType>("ModelParametrisation")) {
             case 1:
-                init(ctx,dist,config.getString("ModelFilename"));
+                init(ctx,dist,config.get<std::string>("ModelFilename"));
                 break;
             case 2:
-                initVelocities(ctx,dist,config.getString("ModelFilename"));
+                initVelocities(ctx,dist,config.get<std::string>("ModelFilename"));
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
     } else {
-        ValueType getPWaveModulus = config.getValue("rho") * config.getValue("velocityP")* config.getValue("velocityP");
-        ValueType getSWaveModulus = config.getValue("rho") * config.getValue("velocityS")* config.getValue("velocityS");
-        init(ctx,dist,getPWaveModulus,getSWaveModulus,config.getValue("rho"));
+        ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP")* config.get<ValueType>("velocityP");
+        ValueType getSWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityS")* config.get<ValueType>("velocityS");
+        init(ctx,dist,getPWaveModulus,getSWaveModulus,config.get<ValueType>("rho"));
     }
     
-    if(config.getIndex("ModelWrite")){
-        write(config.getString("ModelFilename")+".out");
+    if(config.get<IndexType>("ModelWrite")){
+        write(config.get<std::string>("ModelFilename")+".out");
     }
 }
 

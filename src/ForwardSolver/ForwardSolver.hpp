@@ -48,7 +48,7 @@ namespace KITGPI {
              \param dist Distribution of the wave fields
              \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)=0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)=0;
                         
         protected:
             

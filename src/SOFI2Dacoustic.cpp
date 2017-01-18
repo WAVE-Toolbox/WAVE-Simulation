@@ -41,9 +41,9 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Read configuration from file            */
     /* --------------------------------------- */
-    Configuration::Configuration<ValueType> config(argv[1]);
+    Configuration::Configuration config(argv[1]);
     
-    SCAI_ASSERT( config.getIndex("NZ") == 1 , " NZ must be equal to 1 for 2-D simulation" );
+    SCAI_ASSERT( config.get<IndexType>("NZ") == 1 , " NZ must be equal to 1 for 2-D simulation" );
     
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -55,10 +55,10 @@ int main( int argc, char* argv[] )
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
-    IndexType getN = config.getIndex("NZ") * config.getIndex("NX") * config.getIndex("NY");
+    IndexType getN = config.get<IndexType>("NZ") * config.get<IndexType>("NX") * config.get<IndexType>("NY");
     dmemo::DistributionPtr dist( new dmemo::BlockDistribution( getN, comm ) );
     
-    if( config.getIndex("UseCubePartitioning")){
+    if( config.get<IndexType>("UseCubePartitioning")){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dist=partitioning.getDist();
     }
@@ -101,8 +101,8 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    IndexType getNT = static_cast<IndexType>( ( config.getValue("T") / config.getValue("DT") ) + 0.5 );
-    solver.run( receivers, sources, model, wavefields, derivatives, getNT, config.getValue("DT"));
+    IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
+    solver.run( receivers, sources, model, wavefields, derivatives, getNT, config.get<ValueType>("DT"));
     
     receivers.getSeismogramHandler().write(config);
 

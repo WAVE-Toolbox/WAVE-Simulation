@@ -16,7 +16,7 @@ int main( int argc, char* argv[] )
     }
     
     // read configuration parameter from file
-    Configuration::Configuration<ValueType> config(argv[1]);
+    Configuration::Configuration config(argv[1]);
     
     lama::DenseMatrix<ValueType> seismo_ref;
     lama::DenseMatrix<ValueType> seismo_syn;
@@ -24,7 +24,7 @@ int main( int argc, char* argv[] )
     scai::lama::Scalar L2_scalar=0.0;
     ValueType L2=0.0;
     
-    std::string filenameRef=config.getString("SeismogramFilename");
+    std::string filenameRef=config.get<std::string>("SeismogramFilename");
     std::size_t pos=filenameRef.find(".ci.mtx");
     std::string filenameSyn = filenameRef.substr (0,pos) + ".ref.mtx";
     
