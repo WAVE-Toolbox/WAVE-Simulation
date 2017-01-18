@@ -24,6 +24,8 @@
 
 #include <iostream>
 
+#include "../PartitionedInOut/PartitionedInOut.hpp"
+
 namespace KITGPI {
     
     //! \brief Modelparameter namespace
@@ -54,7 +56,7 @@ namespace KITGPI {
              \param dist Distribution
              \param filename filename to read modelparameters (endings will be added by derived classes)
              */
-            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)=0;
+            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)=0;
             
             /*! \brief Abstract write function
              *
@@ -62,7 +64,7 @@ namespace KITGPI {
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
              */
-            virtual void write(std::string filename) const =0;
+            virtual void write(std::string filename, IndexType partitionedOut) const =0;
             
             virtual lama::DenseVector<ValueType> const& getDensity();
             virtual lama::DenseVector<ValueType> const& getDensity() const;
@@ -116,6 +118,9 @@ namespace KITGPI {
             bool dirtyFlagVelocity; //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
             
+            IndexType PartitionedIn; //!< ==1 If Module is read from partitioned fileblock; ==0 if module is in single files
+            IndexType PartitionedOut; //!< ==1 If Module is written to partitioned fileblock; ==0 if module is written to single files
+            
             lama::DenseVector<ValueType> pWaveModulus; //!< Vector storing P-wave modulus.
             lama::DenseVector<ValueType> sWaveModulus; //!< Vector storing S-wave modulus.
             lama::DenseVector<ValueType> density; //!< Vector storing Density.
@@ -144,9 +149,9 @@ namespace KITGPI {
             ValueType relaxationFrequency; //!< Relaxation Frequency
             
             void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
-            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
-            void writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const;
+            void writeModelparameter(lama::DenseVector<ValueType> const& vector, std::string filename, IndexType partitionedOut) const;
             
             void calculateModulus(lama::DenseVector<ValueType>& vecV, lama::DenseVector<ValueType>& vecDensity, lama::DenseVector<ValueType>& vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity);
             
@@ -169,8 +174,9 @@ namespace KITGPI {
             virtual void calculateAveraging()=0;
             
             IndexType getParametrisation();
-            
-            //! \brief Initializsation of the aneraging matrices
+            IndexType getPartitionedIn();
+            IndexType getPartitionedOut();
+//! \brief Initializsation of the aneraging matrices
             /*!
              *
              \param dist Distribution of the wavefield
@@ -179,7 +185,7 @@ namespace KITGPI {
              \param NY Total number of grid points in Y
              \param NZ Total number of grid points in Z
              \param DH Grid spacing (equidistant)
-             \param DT Temporal sampling interval
+
              \param spatialFDorder FD-order of spatial stencils
              \param comm Communicator
              */
@@ -209,9 +215,10 @@ namespace KITGPI {
         private:
             void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
-            
-            typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(IndexType , IndexType& , IndexType& , hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType ); //!< Pointer to set elements functions
+            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename, dmemo::DistributionPtr dist, IndexType partitionedIn);
+
+
+ typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(IndexType , IndexType& , IndexType& , hmemo::WriteAccess<IndexType>& , hmemo::WriteAccess<IndexType>& ,hmemo::WriteAccess<ValueType>& , IndexType , IndexType , IndexType ); //!< Pointer to set elements functions
             
             typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
             
@@ -246,10 +253,24 @@ namespace KITGPI {
             void setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
             void setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
             void setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType& countJA, IndexType& countIA, hmemo::WriteAccess<IndexType>& csrJALocal, hmemo::WriteAccess<IndexType>& csrIALocal,hmemo::WriteAccess<ValueType>& csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-            
+
+
         };
     }
 }
+            
+/*! \brief Getter method for parametrisation */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedIn(){
+    return(PartitionedIn);
+}
+
+/*! \brief Getter method for parametrisation */
+template<typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedOut(){
+    return(PartitionedOut);
+}
+
 
 /*! \brief Getter method for parametrisation */
 template<typename ValueType>
@@ -298,12 +319,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param filename Location of external file which will be read in
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     
     allocateModelparameter(vector,ctx,dist);
     
-    readModelparameter(vector,filename);
+    readModelparameter(vector,filename,dist,partitionedIn);
     
     vector.redistribute(dist);
     
@@ -312,23 +333,52 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
 
 /*! \brief Write singe modelparameter to an external file
  *
- *  Write a single model to an external file.
+ *  Write a single model to an external file block.
  \param vector Single modelparameter which will be written to filename
  \param filename Name of file in which modelparameter will be written
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>const& vector, std::string filename) const
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType> const& vector, std::string filename, IndexType partitionedOut) const
 {
+    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+    
+    switch (partitionedOut) {
+        case false:
     vector.writeToFile(filename);
+            break;
+            
+        case true:
+            partitionOut.writeToDistributedFiles(vector,filename);
+            break;
+            
+        default:
+            COMMON_THROWEXCEPTION("Unexpected output option!")
+            break;
+    }
 };
 
 
 /*! \brief Read a modelparameter from file
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename, dmemo::DistributionPtr dist, IndexType partitionedIn)
 {
-    vector.readFromFile(filename);
+    
+    PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
+    
+    switch (partitionedIn) {
+        case false:
+            partitionIn.readFromOneFile(vector,filename,dist);
+            break;
+            
+        case true:
+            partitionIn.readFromDistributedFiles(vector,filename,dist);
+            break;
+            
+        default:
+            COMMON_THROWEXCEPTION("Unexpected input option!")
+            break;
+    }
 };
 
 
@@ -377,8 +427,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::D
     allocateModelparameter(vecDensity,ctx,dist);
     allocateModelparameter(vectorModule,ctx,dist);
     
-    readModelparameter(vecV,filename);
-    readModelparameter(vecDensity,filenameDensity);
+    readModelparameter(vecV,filename,dist);
+    readModelparameter(vecDensity,filenameDensity,dist);
     
     vecV.redistribute(dist);
     vecDensity.redistribute(dist);
@@ -562,7 +612,6 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueT
 
 
 /*! \brief Get reference to tauP
- *
  */
 template<typename ValueType>
 lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP(){

@@ -9,5 +9,11 @@
 ## Using OpenMPI/IntelMPI
 - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 4 ./../SOFI3Dacoustic`
 
+## Data pre-processing
+- to partition a single vector-file `~/WAVE/scai_lama/build/lama/examples/io/vectorRepartition.exe filename.mtx 1 filename_%r.mtx {NProcessors}`
+
 ## Start the simulation
 - `source start_FDSimulation.sh`
+
+## Data post-processing
+- Merge to a single vector-file `~/WAVE/scai_lama/build/lama/examples/io/vectorRepartition.exe filename_%r.mtx {NProcessors} filename.mtx 1`

@@ -9,8 +9,6 @@
 #include <scai/lama/matutils/MatrixCreator.hpp>
 #include <scai/lama/norm/L2Norm.hpp>
 
-#include "../Common/HostPrint.hpp"
-
 #include <scai/dmemo/BlockDistribution.hpp>
 
 #include <scai/hmemo/ReadAccess.hpp>
@@ -26,6 +24,7 @@
 #include <iostream>
 
 #include "Modelparameter.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
 
 namespace KITGPI {
     
@@ -49,20 +48,20 @@ namespace KITGPI {
             
             explicit Acoustic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
-            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn);
+            explicit Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
             //! Copy Constructor.
             Acoustic(const Acoustic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename) override;
-            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho);
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn);
             
-            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
+            void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
             
-            void write(std::string filenamePWaveModulus, std::string filenamedensity);
-            void write(std::string filename) const override;
+            void write(std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut);
+            void write(std::string filename, IndexType partitionedOut) const override;
             
             /* Getter methods for not requiered parameters */
             lama::DenseVector<ValueType>const& getSWaveModulus() override;
@@ -219,11 +218,11 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
     if(config.get<IndexType>("ModelRead")){
         switch (config.get<IndexType>("ModelParametrisation")) {
             case 1:
-                init(ctx,dist,config.get<std::string>("ModelFilename"));
+                init(ctx,dist,config.get<std::string>("ModelFilename"),config.get<IndexType>("PartitionedIn"));
                 break;
             case 2:
                 parametrisation=1;
-                initVelocities(ctx,dist,config.get<std::string>("ModelFilename"));
+                initVelocities(ctx,dist,config.get<std::string>("ModelFilename"),config.get<IndexType>("PartitionedIn"));
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
@@ -235,7 +234,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
     }
     
     if(config.get<IndexType>("ModelWrite")){
-        write(config.get<std::string>("ModelFilename")+".out");
+        write(config.get<std::string>("ModelFilename")+".out",config.get<IndexType>("PartitionedOut"));
     }
 }
 
@@ -280,9 +279,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
-    init(ctx,dist,filenamePWaveModulus,filenamerho);
+    init(ctx,dist,filenamePWaveModulus,filenamerho,partitionedIn);
 }
 
 
@@ -295,11 +294,11 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param filenamerho Name of file that will be read for the Density.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
     parametrisation=0;
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamerho);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamerho,partitionedIn);
 }
 
 
@@ -311,9 +310,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    init(ctx,dist,filename);
+    init(ctx,dist,filename,partitionedIn);
 }
 
 
@@ -325,14 +324,14 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density "filename+".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation=0;
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(pWaveModulus,ctx,dist,filenamePWaveModulus,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
 }
 
 
@@ -359,15 +358,15 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic& rhs)
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
+void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     
     parametrisation=1;
     std::string filenameVelocityP=filename+".vp.mtx";
     std::string filenamedensity=filename+".density.mtx";
     
-    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP);
-    this->initModelparameter(density,ctx,dist,filenamedensity);
+    this->initModelparameter(velocityP,ctx,dist,filenameVelocityP,partitionedIn);
+    this->initModelparameter(density,ctx,dist,filenamedensity,partitionedIn);
     
 }
 
@@ -378,10 +377,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextP
  \param filenamedensity Filename for Density model
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut)
 {
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
 };
 
 
@@ -390,12 +389,12 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWa
  \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename) const
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
     std::string filenamePWaveModulus=filename+".pWaveModulus.mtx";
     std::string filenamedensity=filename+".density.mtx";
-    this->writeModelparameter(pWaveModulus,filenamePWaveModulus);
-    this->writeModelparameter(density,filenamedensity);
+    this->writeModelparameter(pWaveModulus,filenamePWaveModulus,partitionedOut);
+    this->writeModelparameter(density,filenamedensity,partitionedOut);
 };
 
 //! \brief Wrapper to support configuration
@@ -427,12 +426,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr comm )
+void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr /*comm*/ )
 {
     
     SCAI_REGION( "initializeMatrices" )
     
-    HOST_PRINT( comm, "Initialization of the averaging matrices.\n" );
     
     this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
     this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
@@ -441,8 +439,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
     DensityAverageMatrixX.setContextPtr( ctx );
     DensityAverageMatrixY.setContextPtr( ctx );
     DensityAverageMatrixZ.setContextPtr( ctx );
-    
-    HOST_PRINT( comm, "Finished with initialization of the matrices!\n" );
     
     
 }

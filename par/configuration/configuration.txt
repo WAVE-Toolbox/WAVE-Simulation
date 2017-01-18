@@ -1,5 +1,5 @@
 # format has to be exactly name=value (without any whitespaces)
-# expects exactly these number of arguments (14) and these names
+# expects exactly these number of arguments (31) and these names
 
 # define spatial sampling: number of grid points in direction
 NX=100 # horizontal 1
@@ -21,6 +21,10 @@ T=2           # total simulation time
 
 # define order of spatial FD operator
 spatialFDorder=2
+
+# parallel input-output
+PartitioningIn=0
+PartitioningOut=1
 
 # define material parameter
 ModelRead=0
