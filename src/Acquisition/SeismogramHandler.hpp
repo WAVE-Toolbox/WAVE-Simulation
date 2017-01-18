@@ -18,7 +18,7 @@ namespace KITGPI {
             ~SeismogramHandler(){};
             
             void writeToFileRaw(std::string const& filename) const;
-            void write(Configuration::Configuration<ValueType> const& config) const;
+            void write(Configuration::Configuration const& config) const;
             void resetData();
             
             void setSourceCoordinate(IndexType sourceCoord);
@@ -41,7 +41,7 @@ namespace KITGPI {
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration<ValueType> const& config) const
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const& config) const
 {
     for(auto const& i : seismo){
         i.write(config);

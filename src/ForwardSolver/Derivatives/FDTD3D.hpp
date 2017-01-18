@@ -3,7 +3,6 @@
 #include "Derivatives.hpp"
 #include "../../Common/HostPrint.hpp"
 
-
 namespace KITGPI {
     
     namespace ForwardSolver {
@@ -28,7 +27,7 @@ namespace KITGPI {
                 ~FDTD3D(){};
                 
                 FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
-                FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm);
+                FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm);
                 
             private:
                 
@@ -66,9 +65,9 @@ namespace KITGPI {
  \param comm Communicator
  */
 template<typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
+KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
 {
-    useFreeSurface=config.getFreeSurface();
+    useFreeSurface=config.get<IndexType>("FreeSurface");
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );
 }
 

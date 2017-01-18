@@ -35,7 +35,7 @@ namespace KITGPI {
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
-            void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
+            void prepareBoundaryConditions(Configuration::Configuration const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
         private:
             
@@ -60,18 +60,18 @@ namespace KITGPI {
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
-    if(config.getFreeSurface()){
+    if(config.get<IndexType>("FreeSurface")){
         useFreeSurface=true;
-        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH());
+        FreeSurface.init(dist,derivatives,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DT"),config.get<ValueType>("DH"));
     }
     
     /* Prepare Damping Boundary */
-    if(config.getDampingBoundary()){
+    if(config.get<IndexType>("DampingBoundary")){
         useDampingBoundary=true;
-        DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
+        DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
     }
     
 }

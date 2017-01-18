@@ -24,7 +24,6 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
-
 using namespace scai;
 using namespace KITGPI;
 
@@ -41,13 +40,13 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Read configuration from file            */
     /* --------------------------------------- */
-    Configuration::Configuration<ValueType> config(argv[1]);
+    Configuration::Configuration config(argv[1]);
     
-    SCAI_ASSERT( config.getNZ() == 1 , " NZ must be equal to 1 for 2-D simulation" );
+    SCAI_ASSERT( config.get<IndexType>("NZ") == 1 , " NZ must be equal to 1 for 2-D simulation" );
     
     /* --------------------------------------- */
     /* Context and Distribution                */
-    /* --------------------------------------- */
+    /* --------------------------------------- */ 
     /* inter node communicator */
     dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
     common::Settings::setRank( comm->getNodeRank() );
@@ -55,9 +54,10 @@ int main( int argc, char* argv[] )
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
     /* inter node distribution */
     // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
-    dmemo::DistributionPtr dist( new dmemo::BlockDistribution( config.getN(), comm ) );
+    IndexType getN = config.get<IndexType>("NZ") * config.get<IndexType>("NX") * config.get<IndexType>("NY");
+    dmemo::DistributionPtr dist( new dmemo::BlockDistribution( getN, comm ) );
     
-    if( config.getUseCubePartitioning()){
+    if( config.get<IndexType>("UseCubePartitioning")){
         Partitioning::PartitioningCubes<ValueType> partitioning(config,comm);
         dist=partitioning.getDist();
     }
@@ -102,7 +102,8 @@ int main( int argc, char* argv[] )
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
-    solver.run(receivers, sources, model, wavefields, derivatives, config.getNT(),config.getDT());
+    IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
+    solver.run(receivers, sources, model, wavefields, derivatives, getNT, config.get<ValueType>("DT"));
     
     receivers.getSeismogramHandler().write(config);
 

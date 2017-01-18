@@ -1,6 +1,5 @@
 #pragma once
 
-
 /* Forward declaration for friendship */
 namespace KITGPI {
     namespace ForwardSolver {
@@ -100,7 +99,7 @@ namespace KITGPI {
                  */
                 virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm )=0;
                 
-                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm );
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm );
                 
                 void setFDCoef(IndexType spFDo);
                 
@@ -911,9 +910,9 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
 {
-    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), config.getSpatialFDorder(), comm);
+    initializeMatrices(dist,ctx,config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
 

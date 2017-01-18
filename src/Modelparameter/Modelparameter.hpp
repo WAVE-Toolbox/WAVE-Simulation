@@ -86,7 +86,7 @@ namespace KITGPI {
             virtual ValueType getRelaxationFrequency() const;
             
             /*! \brief Prepare the model parameters for modelling */
-            virtual void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)=0;
+            virtual void prepareForModelling(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)=0;
             
             virtual lama::DenseVector<ValueType> const& getInverseDensityAverageX();
             virtual lama::DenseVector<ValueType> const& getInverseDensityAverageX() const;

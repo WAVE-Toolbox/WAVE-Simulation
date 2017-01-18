@@ -47,7 +47,7 @@ namespace KITGPI {
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
             
-            explicit Elastic(Configuration::Configuration<ValueType>const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            explicit Elastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho);
             explicit Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
@@ -76,7 +76,7 @@ namespace KITGPI {
             void switch2velocity() override;
             void switch2modulus() override;
             
-            void prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
+            void prepareForModelling(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm) override;
             
             /* Overloading Operators */
             KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar rhs);
@@ -106,7 +106,7 @@ namespace KITGPI {
             
             void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm ) override;
             
-            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm );
+            void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration config, dmemo::CommunicatorPtr comm );
 
             
             using Modelparameter<ValueType>::DensityAverageMatrixX;
@@ -142,7 +142,7 @@ namespace KITGPI {
  *
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
+void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
     refreshModule();
     initializeMatrices(dist,ctx,config,comm);
     this->getInverseDensity();
@@ -217,26 +217,28 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
  \param dist Distribution
  */
 template<typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    if(config.getModelRead()){
-        switch (config.getModelParametrisation()) {
+    if(config.get<IndexType>("ModelRead")){
+        switch (config.get<IndexType>("ModelParametrisation")) {
             case 1:
-                init(ctx,dist,config.getModelFilename());
+                init(ctx,dist,config.get<std::string>("ModelFilename"));
                 break;
             case 2:
-                initVelocities(ctx,dist,config.getModelFilename());
+                initVelocities(ctx,dist,config.get<std::string>("ModelFilename"));
                 break;
             default:
                 COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
                 break;
         }
     } else {
-        init(ctx,dist,config.getPWaveModulus(),config.getSWaveModulus(),config.getRho());
+        ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP")* config.get<ValueType>("velocityP");
+        ValueType getSWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityS")* config.get<ValueType>("velocityS");
+        init(ctx,dist,getPWaveModulus,getSWaveModulus,config.get<ValueType>("rho"));
     }
     
-    if(config.getModelWrite()){
-        write(config.getModelFilename()+".out");
+    if(config.get<IndexType>("ModelWrite")){
+        write(config.get<std::string>("ModelFilename")+".out");
     }
 }
 
@@ -423,9 +425,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename) con
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType> config, dmemo::CommunicatorPtr comm )
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration config, dmemo::CommunicatorPtr comm )
 {
-    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), comm);
+    initializeMatrices(dist,ctx,config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), comm);
 }
 
 //! \brief Initializsation of the Averaging matrices

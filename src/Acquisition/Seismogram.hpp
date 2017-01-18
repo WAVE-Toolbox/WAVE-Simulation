@@ -33,7 +33,7 @@ namespace KITGPI {
             //! Default destructor
             ~Seismogram(){};
             
-            void write(Configuration::Configuration<ValueType> const& config) const;
+            void write(Configuration::Configuration const& config) const;
             void writeToFileRaw(std::string const& filename) const;
             void writeToFileSU(std::string const& filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
             
@@ -119,15 +119,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr
  \param config Configuration class
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration<ValueType> const& config) const
+void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const& config) const
 {
-    
-    switch(config.getSeismogramFormat()){
+
+    switch(config.get<IndexType>("SeismogramFormat")){
         case 1:
-            writeToFileRaw(config.getSeismogramFilename());
+            writeToFileRaw(config.get<std::string>("SeismogramFilename"));
             break;
         case 2:
-            writeToFileSU(config.getSeismogramFilename(), config.getNX(), config.getNY(), config.getNZ(), config.getDH());
+            writeToFileSU(config.get<std::string>("SeismogramFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
             break;
         default:
             COMMON_THROWEXCEPTION(" Unkown SeismogramFormat " )
