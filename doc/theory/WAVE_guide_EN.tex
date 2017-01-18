@@ -32,7 +32,9 @@
 	\setlist[enumerate]{itemsep=-12pt}
 \usepackage{subcaption}
 \usepackage{lscape}		%For use of \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
-
+\usepackage{adjustbox}
+\newcommand{\shellcmd}[1]{\indent\indent\texttt{#1}}
+\newcommand{\shellcmdline}[1]{\indent\indent\texttt{\quad#1}}
 
 \KOMAoptions{twoside}
 
@@ -121,6 +123,10 @@
 
 \renewcommand{\theequation}{\arabic{section}.\arabic{equation}} %Die Nummerierung Formeln wird geändert
 
+
+\renewcommand{\partheadmidvskip}{\enskip}
+\renewcommand{\partformat}{\thepart\autodot}
+
 \renewcommand{\arraystretch}{1.2} %Legt den Faktor fest, um den der Zeilenabstand innerhalb einer Tabelle oder eines Array gedeht wird
 \newcommand*\dashline{\hspace{-0.3em}\rotatebox[origin=c]{90}{\scalebox{-0.3}[1]{$-~~-$}}\hspace{-0.3em}}
 
@@ -173,9 +179,10 @@ urlcolor=LinkColor}
 \end{figure}
 
 \begin{center}
-\Large{Theory of finite difference simulation\\ in matrix-vector formalism}\\
+\vspace{2cm}
+\huge{FDSimulation\_LAMA }\\
 \vspace{0.5cm}
-
+\large{HPC finite difference simulation in matrix-vector formalism}
 \end{center}
 
 \vfill
@@ -204,7 +211,7 @@ Supported by the German Ministry of Education and Research (BMBF) through the pr
 \newpage
 
 \tableofcontents % Table of contents is inserted \tableofcontens (insert \addcontentsline, so the content is linked correctly)
-\addcontentsline{toc}{section}{Contents} %"Contents" will be displayed in contents
+\addcontentsline{toc}{chapter}{Contents} %"Contents" will be displayed in contents
 
 
 
@@ -212,6 +219,26 @@ Supported by the German Ministry of Education and Research (BMBF) through the pr
 \setcounter{page}{1}
 
 \cleardoublepage
+%\markboth{}{License}
+\chapter*{License}
+\addcontentsline{toc}{chapter}{License}
+
+FDSimulation\_LAMA is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License (GNU AGPL v3) as published by the Free Software Foundation, version 3.0 of the License only.
+ 
+FDSimulation\_LAMA is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with FDSimulation. See file COPYING and/or \url{https://www.gnu.org/licenses/agpl-3.0.de.html}.
+
+The authors of FDSimulation\_LAMA are listed in file \lstinline{AUTHORS}.
+
+\cleardoublepage
+%\markboth{}{Introduction}
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+
+
+
+\cleardoublepage
+\part{Theory of finite difference simulation in matrix-vector formalism}
 \chapter{Physical derivation of wave propagations}
 
 This chapter contains the theoretical principles for the physical description of wave propagation in elastic media. This also includes the general stress-stain relation of solid objects or viscose fluids. Furthermore conservation of momentum is applied to infinitesimal volume elements.
@@ -276,7 +303,7 @@ The state of stress is represented by an infinitesimal volume element  $\partial
 		\draw [->, color=green] (19.center) to (22.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Representation of the general stress state by a volume element $\partial V = \partial x~ \partial y~ \partial z$. Where $\sigma_{ij}$ corresponds to normal stress and $\tau_{ij}$ to shear stress. }
+\caption[Representation of the general stress state by a volume element.]{Representation of the general stress state by a volume element $\partial V = \partial x~ \partial y~ \partial z$. Where $\sigma_{ij}$ corresponds to normal stress and $\tau_{ij}$ to shear stress. }
 \label{fig:AllgSpZu}
 \end{figure}
 
@@ -418,7 +445,7 @@ The SSG \citep{virieux:86,levander:88} is a method to distribute physical quanti
 		\draw [->] (5.center) to (10.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wavefield parameter in 3-D.}
+\caption[Representation of the \textit{Standard Staggered Grid} (SSG).]{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wavefield parameter in 3-D.}
 \label{fig:StagGrid}
 \end{figure}
 
@@ -552,7 +579,7 @@ To simulate the wavefields in space and time all discretised equations for stres
 \chapter{Matrix-vektor formalism of finite differences}
 This chapter initially appeals the advantages of the matrix-vector formalism. Subsequently the arrays are vectorised. A central task is, to find a set of matrices, which function equivalently to the FD-operators, applied to $v_i$ and $\sigma_{ij}$. The principles are shown with the aid of simple examples. 
 \section{Motivation}
-The matrix-vector formalism is in the first place simply a compact notation for the same mathematical method. Beside greater clarity, a main benefit is in terms of program processing. It is a universal notation, which can be applied to describe numerous physical problems. Therefore the framework \textit{LAMA} \citep{lama:16}, a plug-in architecture which can be used in \textit{C++}, provides the development of hardware independent software and is additionally executable on heterogenous computer architectures. The software can also be executed either on CPUs or GPUs. To access this functionality, the problem has to be reformulated to a matrix-vector formalism. 
+The matrix-vector formalism is in the first place simply a compact notation for the same mathematical method. Beside greater clarity, a main benefit is in terms of program processing. It is a universal notation, which can be applied to describe numerous physical problems. Therefore the framework LAMA \citep{lama:16}, a plug-in architecture which can be used in \textit{C++}, provides the development of hardware independent software and is additionally executable on heterogenous computer architectures. The software can also be executed either on CPUs or GPUs. To access this functionality, the problem has to be reformulated to a matrix-vector formalism. 
 \begin{equation}
 	\vec{y} = A~\vec{x}
 \end{equation}
@@ -606,7 +633,7 @@ All physical quantities, represented by three-dimensional arrays (here $v_x$, $\
 		\draw [->](0.center) to (27.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Transformation from a $4 \times 3 \times 2$-array to a single vector. Showing the indices of the resulting vector.}
+\caption[Transformation from a $4 \times 3 \times 2$-array to a single vector. ]{Transformation from a $4 \times 3 \times 2$-array to a single vector. Showing the indices of the resulting vector.}
 \label{fig:ArrayToVec}
 \end{figure}
 
@@ -621,6 +648,7 @@ Due to an index-shift of all half value indices by $-\frac{1}{2}$, when applied,
 Is the original center of the FD-operator in direction of the derivation, on full grid points,the second order FD-operator theoretically refers to $\left(v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}\right)$. Such as in case of a $\sigma_{xx,k,l,m}$-update where the center of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ is in direction of the derivation. By shifting half value indices by $-\frac{1}{2}$, the operator's center is shifted likewise and the result of $\sigma_{xx,k,l,m}$ at $k$ is calculated from $v_x$ at $k-1$ and $k$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,\mathrm{b}}$, where $b$ stands for \textit{backward}. $i$ represents the derivation direction.
 
 The second case occurs when the center of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$, where the center of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$, in derivation direction $y$, is placed at $l+\frac{1}{2}$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}\right)$ term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ is shifted to $\sigma_{xy,k,l,m}$, which is equal to a shift in $x$ and in $y$-direction by $-\frac{1}{2}$. Thus the center of the FD-operator is shifted to the right, compared to the $\sigma_{xy,k,l,m}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,\mathrm{f}}$, where $f$ indicates \textit{forward}.
+These Determinations manifests itself by shifting the FD-coefficients in the matrix, which in general can be expressed by $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$.
 
 \begin{figure}
 \begin{tikzpicture}
@@ -649,14 +677,11 @@ The second case occurs when the center of the FD-operator is placed on half valu
 		\draw [->](15.center) to (16.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Effect of an index-shift to the FD-operator's position. Left: The original center is placed at $k$ and is relatively shifted to the right, by which it falls back ($\underline{D}_{\,i,b}$). Right: The original center is placed at $k+\frac{1}{2}$ and is relatively shifted to the left, by which it set forward ($\underline{D}_{\,i,f}$).}
+\caption[Effect of an index-shift to the FD-operator's position.]{Effect of an index-shift to the FD-operator's position. Left: The original center is placed at $k$ and is relatively shifted to the right, by which it falls back ($\underline{D}_{\,i,b}$). Right: The original center is placed at $k+\frac{1}{2}$ and is relatively shifted to the left, by which it set forward ($\underline{D}_{\,i,f}$).}
 \label{fig:IndShift}
 \end{figure}
 
-These Determinations manifests itself by shifting the FD-coefficients in the matrix, which in general can be expressed by $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$.
-
 \subsection{Completing the formalism}
-
 An example for an update equation in the matrix-vector formalism is based on equation \ref{eqn:exMV1}, where the index-shift has already been executed:
 \begin{equation}
 	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^2 \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^2 \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
@@ -664,6 +689,7 @@ An example for an update equation in the matrix-vector formalism is based on equ
 The diagonal matrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ contains the density model values. $\underline{D}_{\,i,b}^2$ or $\underline{D}_{\,i,f}^2$ contain the second order FD-coefficients (the order is indicated by the upper index) in derivation direction $i$. Now the matrix $\underline{D}_{\,i}^2$ has to be found, so that the model $\vec{\sigma}_{ij}$ is equivalent to the according FD-operators.
 
 Following, the matrices $\underline{D}_{\,i,f}^2$ and $\underline{D}_{\,i,f}^4$ are shown to point out the impact on the FD-order. Performing the matrix multiplication from equation \ref{eqn:exMV2} leads to the expressions for $\underline{D}_{\,i,b}$.
+
 \begin{align*}
 	\underline{D}_{\,x,f}^2 &= \begin{psmallmatrix}
 \text{-}1 & 1 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
@@ -870,8 +896,172 @@ All discrete components of the elastic wavefield in matrix-vector notation are:
 	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
+\part{Software guide to FDSimulation\_LAMA}
+\chapter{Software Requirements and quick guide}
+
+FDSimulation\_LAMA is part of the \textit{WAVE-project} (\url{http://wave-toolbox.org}) and is a Seismic Finite-Difference modelling framework. 
+
+\section{Software requirements}
+
+To begin with, a \textit{C++}-compiler has to be available. A compiler with \textit{C++11}-standard support is recomended. To execute FDSimulation\_LAMA, make sure a couple of libraries are installed and running properly. All necessary libraries and a short description can be seen below. As the software is meant for high performance computing on cluster networks, it is primarily designed to run on Linux-platforms. The code was tested by using \textit{g++(4.9.3)} and  \textit{clang++(3.9)} as a  \textit{C++}-compiler and using \textit{OpenMPI(1.7.2, 1.10.0)} as \textit{MPI}.
+
+\begin{table}[h!]
+\caption{List of necessary libraries, packages and compiler.}\label{tab:pack}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{lll}
+	\toprule
+	Program & Brief description & Weblink \\
+	\midrule
+	(\textit{C++})-compiler	& The code is written in \textit{C++}, the	 compiler			& \\
+										& has to be able to compile \textit{C++11}-standard					& \\
+	OpenMPI			& Implementation of \textit{MPI} for parallelised  			& \url{https://www.open-mpi.org} \\
+										& calculationsfor parallelised Calculations						& \\
+	LAMA 				& Implementation of the LAMA-framework 			& \url{https://www.libama.org} \\
+										& for high performance computing 	(HPC)							    & \\
+	boost					& Implementation of the \textit{boost}-library	 				& \url{https://www.boost.org}		\\
+										& for debugging																& \\										
+	Python				& Models can be generated using \textit{Python}	 		& \url{https://www.python.org}\\
+	Sphinx				& 	A Python documentation generator 							& \url{http://www.sphinx-doc.org}\\
+	doxygen			& 	Generation of documentation from annotated				& \url{http://www.doxygen.org}\\
+										& \textit{C++}-code 															& \\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+
+\section{Quick guide}
+
+To get started Download, FDSimulation\_LAMA from \url{https://git.scc.kit.edu/WAVE/FDSimulation_LAMA}. 
+
+Unzip the folder (e.g. by entering \shellcmd{tar -zxvf FDSimulation\_LAMA.tgz}) and change to the directory: \\\shellcmdline{FDSimulation\_LAMA/src/}
+
+You can compile the source code by simply entering: \\\shellcmdline{make SOFI}\\ in your command line. \textit{g++} is set to be the default \textit{C++}-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CC=<yourCompiler> SOFI}\\
+To compile only the 2D or 3D version enter \shellcmd{SOFI2D} or \shellcmd{SOFI3D} instead. 
+
+Input variables can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in the following section. 
+
+To run the simulation change the directory to: \\\shellcmdline{FDSimulation\_LAMA/par/}\\
+and start the program by running the shell script \shellcmd{start\_FDSimulation.sh} with  \\\shellcmdline{start start\_FDSimulation.sh}\\
+%If you want to compute on more than one CPU, you can also add the number of CPUs. For example, to run the simulation on 8 CPUs do:\\\shellcmdline{start start\_FDSimulation.sh }
+
+The created Seismogram data is saved in \shellcmd{FDSimulation\_LAMA/par/seismograms/} and can plotted by either using the \shellcmd{plotSeismogram.m} Matlab-script or by executing the Python-script \shellcmd{plotSeismogram.py}.
+As a first test, run the default example by following the commands shown above and create the seismogram. You can compare the seismogram to the seismogram shown in figure \ref{fig:Seismogram}.
+
+\begin{figure}
+\centering
+	\includegraphics[width = .8\textwidth]{images/Test_Seismogram.pdf}
+	\caption[Example pressure seismogram.]{Example pressure seismogram with 2nd order FD-operator and the default values: $NX=NY=NZ=100$, $v_s=\SI{3500}{m\per s}$ and $\rho = \SI{2000}{kg\per\cubic\metre}$.}\label{fig:Seismogram}
+\end{figure}
+
+\section{Configuration}\label{sec:config}
+
+As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file Input variable can be added or or changed. A list of all variables and config parameters that can be added and changed can be found below (see table \ref{tab:config}).
+
+\begin{table}[h!]
+\caption[List of all configuration parameters.]{List of all configuration parameters, that can be added and changed in the config-file.}\label{tab:config}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{lll}
+	\toprule
+	Variable & Short description & Default value \\
+	\midrule
+	NX & Number of grid points in $x$-direction & \num{100} \\
+	NY & Number of grid points in $y$-direction & \num{100} \\
+	NZ & Number of grid points in $z$-direction & \num{100} \\
+	DH & Distance between two grid points& \SI{50}{m}\\
+	DT & Temporal sampling & \SI{2.0e-3}{s}\\
+	T & Total simulation time & \SI{2}{s}\\
+	UseCubePartitioning & Use cubes to partition the wave fields & \num{0}\\
+	ProcNX & Number of cores in $x$-direction & \num{2}\\
+	ProcNY & Number of cores in $y$-direction& \num{1}\\
+	ProcNZ & Number of cores in $z$-direction& \num{1}\\
+	spatialFDorder & Define order of spatial FD operator & \num{2}\\
+	\midrule	 
+	 ModelRead& Read model from File  & \num{0}\\
+	 PartitioningIn&  Read model from distributed file & \num{0}\\
+	 ModelWrite& Write model to file  & \num{0}\\
+	 PartitioningOut& Write model to distributed file-block & \num{0}\\
+	  ModelParametrisation & Parametrisation of read model & \num{2}\\
+	 ModelFilename& Filename-prefix to read model & \shellcmd{model/model}\\
+	 SourceFilename& Filename to read source configuration & \shellcmd{acquisition/sources.mtx} \\
+	 ReceiverFilename	 & Filename to read receiver configuration &  \shellcmd{acquisition/receiver.mtx}\\
+	 SeismogramFilename & Filename to write seismograms&  \shellcmd{seismograms/seismogram.mtx}\\
+	 SeismogramFormat & Seismogram format & \num{1}\\
+	\midrule
+	 velocityP& P-wave velocity $v_p$& \SI{3500}{m\per s} \\
+	 velocityS& S-wave velocity $v_s$&  \SI{0}{m\per s}\\
+	 rho& Density $\rho$&  \SI{2000}{kg\per\cubic\metre}\\
+	 tauP& $\tau$ value for P-waves& \num{0.0}\\
+	 tauS& $\tau$ value for S-waves& \num{0.0}\\
+	\midrule
+	 FreeSurface& Use the free surface & \num{0}\\
+	 DampingBoundary& Use the Damping Boundary & \num{0}\\
+	 BoundaryWidth& Width of damping boundary & \num{10}\\
+	 DampingCoeff& Damping coefficient & \num{8.0}\\
+	 numRelaxationMechanisms & Number of relaxation mechanisms& \num{0}\\
+	 relaxationFrequency& Relaxation frequency for first & \SI{0}{Hz}\\
+	 & relaxation mechanism& \\
+    \bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}	
+
+The parameters can be divided in four main groups. The first group contains parameters to describe the model size (NX, NY, NZ and DH) and temporal parameters (DT and T). The total number of gridpoints is given by 
+\begin{equation*}
+	N=NX\times NY\times NZ
+\end{equation*}
+The total Number of time-steps can be calculated by 
+\begin{equation*}
+	NT = round\left(\frac{T}{DT}+0.5\right)
+\end{equation*}
+The parameter UseCubePartitioning characterises whether the model is partitioned into cubes and then distributed to the CPUs. If UseCubePartitioning $=1$ the model is partitioned in cubes, else it is partitioned automatically. The number of CPUs available in each spatial direction is given by ProcNX, ProcNY and ProcNZ. The Product has to be equal to the total number of used CPUs. 
+The last parameter of the first section, spatialFDorder, defines the order of the FD-operator and therefore the simulation precision.
+
+The second section contains all parameters to manage input and output. The first four parameters ModelRead, ModelWrite, PartitioningIn and PartitioningOut can be set with ($1=$ yes) or (else $=$ no). The values for partitioned input and output are only needed when ModelRead and ModelWrite are set to 1. Make sure, that if you are using partitioning-input, the data is stored in file-blocks. The partitioning and repartitioning of files has to be done in pre- and post-processing (compare section \ref{sec:process}).
+If the model is read from files, also the modelParametrisation has to be set. If (ModelParametrisation $=1$) the data is given a wave-modulus-model-vector. Else if (ModelParametrisation $=2$) velocity-vectors are given.
+ModelFilename, SourceFilename, ReceiverFilename and  SeismogramFilename are given to determine the respective location and filename. ModelFilename is only a prefix to read the model data in directory \shellcmd{model/}. 
+Seismograms can be written in matrix-format (\shellcmd{.MTX}-format $=1$) or in seismic-unix-format (\shellcmd{.SU}-format $=2$). 
+
+In the third section all variables can be set to create a homogeneous model. velocityP ($v_p$) is only needed in elastic and viscoelastic calculations and  tauP ($\tau_p$) and tauS ($\tau_s$) are solely needed in the viscoelastic case. The S-wave ($M$) and P-wave ($\mu$) modules can be calculated by:
+\begin{align*}
+	M&=\rho\cdot v_s^2\\
+	\mu &=\rho\cdot v_p^2\\
+\end{align*}
+By default $v_p$, $\tau_p$ and $\tau_s$ are all set to zero, which means that all simulations are equivalent to the acoustic simulation.  
+
+The fist part of the lat table-section handles free surface and the boundary conditions. Free surface can used by setting (FreeSurface $=1$). If the parameter is set to zero , free surface is not used. 
+The model boundaries are characterised by DampingBoundary, BoundaryWidth and DampingCoeff. The usage of damping boundaries can be set by (DampingBoundary $=1$). Again if the parameter is set to zero , it is not used. 
+The last two parameters describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
+
+To verify the models stability  the courant can be calculated: 
+\begin{equation*}
+	v_{max} \cdot \frac{DT}{DH} \leq 0.8
+\end{equation*}
 
 
+\section{Pre- and post-processing}\label{sec:process}
+
+As already mentioned in section \ref{sec:config}, data can be read from a single file as well as from a partitioned file-block. The advantage of a distributed file system ist, that CPUs can read data simultaneously and therefore with substantial timesaving. Installing LAMA with all examples (\shellcmd{-DBUILD\_EXAMPLES=OFF}), LAMA includes examles to partition and repartition files or fileblocks in \shellcmd{.mtx}-fomat (\shellcmd{vectorRepartition.exe}). 
+
+To partition a single vector-file change to the directory where the files are located and run the following comand:  \\
+\shellcmdline{scai\_lama/build/lama/examples/io/vectorRepartition.exe filename.mtx 1 }\\
+\shellcmdline{filename\_\%r.mtx <NProcessors>}\\
+The first part marked the LAMA-example to repartition a file, \shellcmd{filename.mtx} is a single file (\shellcmd{1}) you want to partition and \shellcmd{filename\_\%r.mtx} is the name of the output file-block. The number of files in a file-block has to be the same as the number of CPUs (\shellcmd{<NProcessors>}) reading the file-block later on. 
+
+To merge a fileblock \shellcmd{filename\_\%r.mtx} to a single vector-file, the command is very similar:\\
+\shellcmdline{scai\_lama/build/lama/examples/io/vectorRepartition.exe filename\_\%r.mtx}\\
+\shellcmdline{<NProcessors> filename.mtx 1}\\
+In this case the name of the file-block and its size is written fist and then the name of the single output-file is written.
+
+\section{Benchmark}
+
+
+\cleardoublepage
+\listoffigures 
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoftables
+\addcontentsline{toc}{chapter}{\listtablename}
 \cleardoublepage
 \bibliography{WAVE_theory}
 \bibliographystyle{apalike}

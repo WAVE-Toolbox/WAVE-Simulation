@@ -1,9 +1,5 @@
-LANG=DE
+TARGET=WAVE_guide_EN
 
-ifeq ($(LANG),DE)
-	TARGET=WAVE_theory_DE
-else
-	TARGET=WAVE_theory_EN
 endif
 
 .PHONY: install
