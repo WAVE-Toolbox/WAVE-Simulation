@@ -98,9 +98,11 @@ KITGPI::Configuration::Configuration::Configuration(std::string const& filename)
 template<typename ValueType>
 ValueType KITGPI::Configuration::Configuration::get( std::string const& parameterName) const
 {
+    std::string tempName=parameterName;
     ValueType temp;
     try {
-        std::istringstream( configMap.at(parameterName) ) >> temp;
+        std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
+        std::istringstream( configMap.at(tempName) ) >> temp;
     }
     catch (...) {
         COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
