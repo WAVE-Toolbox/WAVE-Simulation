@@ -65,16 +65,16 @@ namespace KITGPI {
             void write(std::string filename, IndexType partitionedOut) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>const& getSWaveModulus() override;
-            lama::DenseVector<ValueType>const& getVelocityS() override;
-            lama::DenseVector<ValueType>const& getTauP() override;
-            lama::DenseVector<ValueType>const& getTauS() override;
-            lama::DenseVector<ValueType>const& getSWaveModulusAverageXY() override;
-            lama::DenseVector<ValueType>const& getSWaveModulusAverageXZ() override;
-            lama::DenseVector<ValueType>const& getSWaveModulusAverageYZ() override;
-            lama::DenseVector<ValueType>const& getTauSAverageXY() override;
-            lama::DenseVector<ValueType>const& getTauSAverageXZ() override;
-            lama::DenseVector<ValueType>const& getTauSAverageYZ() override;
+            lama::Vector const& getSWaveModulus() override;
+            lama::Vector const& getVelocityS() override;
+            lama::Vector const& getTauP() override;
+            lama::Vector const& getTauS() override;
+            lama::Vector const& getSWaveModulusAverageXY() override;
+            lama::Vector const& getSWaveModulusAverageXZ() override;
+            lama::Vector const& getSWaveModulusAverageYZ() override;
+            lama::Vector const& getTauSAverageXY() override;
+            lama::Vector const& getTauSAverageXZ() override;
+            lama::Vector const& getTauSAverageYZ() override;
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
         
@@ -474,7 +474,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging(){
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus(){
     COMMON_THROWEXCEPTION("S-wave modulus is not set for acoustic modelling")
     return(sWaveModulus);
 }
@@ -483,7 +483,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to S-wave velocity
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS(){
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return(velocityS);
 }
@@ -492,7 +492,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -500,7 +500,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
@@ -526,7 +526,7 @@ IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanism
 /*! \brief Get reference to S-wave modulus in xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXY(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXY(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageXY);
 }
@@ -534,7 +534,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to S-wave modulus in xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageXZ);
 }
@@ -542,7 +542,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to S-wave modulus in yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageYZ(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageYZ(){
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return(sWaveModulusAverageYZ);
 }
@@ -550,7 +550,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to tauS xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXY);
 }
@@ -558,7 +558,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to tauS xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXZ);
 }
@@ -566,7 +566,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::
 /*! \brief Get reference to tauS yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ(){
+lama::Vector const& KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageYZ);
 }

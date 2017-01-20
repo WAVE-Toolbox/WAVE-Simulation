@@ -37,9 +37,9 @@ namespace KITGPI {
             //! Default destructor
             ~PartitionedInOut(){};
             
-            void readFromDistributedFiles(lama::DenseVector<ValueType>& vec,std::string filename,dmemo::DistributionPtr dist);
-            void readFromOneFile(lama::DenseVector<ValueType>& vec,std::string filename,dmemo::DistributionPtr dist);
-            void writeToDistributedFiles(lama::DenseVector<ValueType> const& vec,std::string filename);
+            void readFromDistributedFiles(lama::Vector & vec,std::string filename,dmemo::DistributionPtr dist);
+            void readFromOneFile(lama::Vector & vec,std::string filename,dmemo::DistributionPtr dist);
+            void writeToDistributedFiles(lama::Vector  const& vec,std::string filename);
             
         };
         
@@ -54,7 +54,7 @@ namespace KITGPI {
  \param dist Distribution of the vector
  */
 template<typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedFiles(lama::DenseVector<ValueType>& vec,std::string filename,dmemo::DistributionPtr dist)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedFiles(lama::Vector & vec,std::string filename,dmemo::DistributionPtr dist)
 {
     std::string fileNameBlockIn = filename.erase(filename.size()-4)+"_%r.mtx";
     vec.readFromFile(fileNameBlockIn);
@@ -68,7 +68,7 @@ void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedF
  \param dist Distribution of the vector
  */
 template<typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(lama::DenseVector<ValueType>& vec,std::string filename,dmemo::DistributionPtr dist)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(lama::Vector & vec,std::string filename,dmemo::DistributionPtr dist)
 {
     vec.readFromFile(filename, "BLOCK");
     vec.redistribute(dist);
@@ -81,7 +81,7 @@ void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(lama
  \param filename Name of the file
  */
 template<typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::writeToDistributedFiles(lama::DenseVector<ValueType> const& vec,std::string filename)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::writeToDistributedFiles(lama::Vector  const& vec,std::string filename)
 {
     common::unique_ptr<lama::Vector> updatePtr( vec.newVector() );
     lama::Vector& tempVector = *updatePtr;

@@ -66,11 +66,11 @@ namespace KITGPI {
             void write(std::string filename, IndexType partitionedOut) const override;
             
             /* Getter methods for not requiered parameters */
-            lama::DenseVector<ValueType>const& getTauP() override;
-            lama::DenseVector<ValueType>const& getTauS() override;
-            lama::DenseVector<ValueType>const& getTauSAverageXY() override;
-            lama::DenseVector<ValueType>const& getTauSAverageXZ() override;
-            lama::DenseVector<ValueType>const& getTauSAverageYZ() override;
+            lama::Vector const& getTauP() override;
+            lama::Vector const& getTauS() override;
+            lama::Vector const& getTauSAverageXY() override;
+            lama::Vector const& getTauSAverageXZ() override;
+            lama::Vector const& getTauSAverageYZ() override;
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
             
@@ -503,7 +503,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging(){
  *
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
+lama::Vector const& KITGPI::Modelparameter::Elastic<ValueType>::getTauP(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauP);
 }
@@ -511,7 +511,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::g
 /*! \brief Get reference to tauS
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
+lama::Vector const& KITGPI::Modelparameter::Elastic<ValueType>::getTauS(){
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return(tauS);
 }
@@ -535,7 +535,7 @@ IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms
 /*! \brief Get reference to tauS xy-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY(){
+lama::Vector const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXY);
 }
@@ -543,7 +543,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::g
 /*! \brief Get reference to tauS xz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ(){
+lama::Vector const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageXZ);
 }
@@ -551,7 +551,7 @@ lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::g
 /*! \brief Get reference to tauS yz-plane
  */
 template<typename ValueType>
-lama::DenseVector<ValueType>const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ(){
+lama::Vector const& KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ(){
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return(tauSAverageYZ);
 }
