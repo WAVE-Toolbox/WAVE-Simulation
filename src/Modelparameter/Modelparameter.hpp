@@ -203,17 +203,17 @@ namespace KITGPI {
             void calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             void calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
-            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixX; //!< Averaging density matrix in x-direction
-            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixY; //!< Averaging density matrix in x-direction
-            lama::CSRSparseMatrix<ValueType> DensityAverageMatrixZ; //!< Averaging density matrix in x-direction
+            typedef lama::CSRSparseMatrix<ValueType> SparseFormat;
+            SparseFormat DensityAverageMatrixX; //!< Averaging density matrix in x-direction
+            SparseFormat DensityAverageMatrixY; //!< Averaging density matrix in x-direction
+            SparseFormat DensityAverageMatrixZ; //!< Averaging density matrix in x-direction
+            SparseFormat sWaveModulusAverageMatrixXY; //!< Average S-wave Modulus in xy-plane
+            SparseFormat sWaveModulusAverageMatrixXZ; //!< Average S-wave Modulus in xz-plane
+            SparseFormat sWaveModulusAverageMatrixYZ; //!< Average S-wave Modulus in yz-plane
             
-            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixXY; //!< Average S-wave Modulus in xy-plane
-            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixXZ; //!< Average S-wave Modulus in xz-plane
-            lama::CSRSparseMatrix<ValueType> sWaveModulusAverageMatrixYZ; //!< Average S-wave Modulus in yz-plane
-            
-            void calculateInverseAveragedDensity(lama::Vector& vecDensity, lama::Vector& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix);
-            void calculateAveragedSWaveModulus(lama::Vector& vecSWaveModulus, lama::Vector& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix);
-            void calculateAveragedTauS(lama::Vector& vecTauS, lama::Vector& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix);
+            void calculateInverseAveragedDensity(lama::Vector& vecDensity, lama::Vector& vecInverseAvDensity, lama::Matrix& avDensityMatrix);
+            void calculateAveragedSWaveModulus(lama::Vector& vecSWaveModulus, lama::Vector& vecAvSWaveModulus, lama::Matrix& avSWaveModulusMatrix);
+            void calculateAveragedTauS(lama::Vector& vecTauS, lama::Vector& vecAvTauS, lama::Matrix& avTauSMatrix);
             
             
         private:
@@ -227,21 +227,21 @@ namespace KITGPI {
             typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
             
             //! \brief Getter method for averaging density matrix in x-direction
-            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixX();
+            virtual lama::Matrix& getDensityAverageMatrixX();
             //! \brief Getter method for averaging density matrix in y-direction
-            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixY();
+            virtual lama::Matrix& getDensityAverageMatrixY();
             //! \brief Getter method for averaging density matrix in z-direction
-            virtual lama::CSRSparseMatrix<ValueType>& getDensityAverageMatrixZ();
+            virtual lama::Matrix& getDensityAverageMatrixZ();
             
             //! \brief Getter method for averaging S-Wave modulus xy-plane
-            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixXY();
+            virtual lama::Matrix& getSWaveModulusAverageMatrixXY();
             //! \brief Getter method for averaging S-Wave modulus xz-plane
-            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixXZ();
+            virtual lama::Matrix& getSWaveModulusAverageMatrixXZ();
             //! \brief Getter method for averaging S-Wave modulus yz-plane
-            virtual lama::CSRSparseMatrix<ValueType>& getSWaveModulusAverageMatrixYZ();
+            virtual lama::Matrix& getSWaveModulusAverageMatrixYZ();
 
             
-            void calcAverageMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+            void calcAverageMatrix(lama::Matrix& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
             IndexType calcNumberRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
             IndexType calcNumberRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
@@ -1007,7 +1007,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::CSRSparseMatrix<ValueType>& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::Matrix& Av, calcNumberRowElements_AvPtr calcNumberRowElements,setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -1373,7 +1373,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::Vector& vecDensity, lama::Vector& vecInverseAvDensity, lama::CSRSparseMatrix<ValueType>& avDensityMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::Vector& vecDensity, lama::Vector& vecInverseAvDensity, lama::Matrix& avDensityMatrix)
 {
     vecInverseAvDensity = avDensityMatrix* vecDensity;
     vecInverseAvDensity.invert();
@@ -1386,7 +1386,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(lama::Vector& vecSWaveModulus, lama::Vector& vecAvSWaveModulus, lama::CSRSparseMatrix<ValueType>& avSWaveModulusMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(lama::Vector& vecSWaveModulus, lama::Vector& vecAvSWaveModulus, lama::Matrix& avSWaveModulusMatrix)
 {
     vecAvSWaveModulus = vecSWaveModulus;
     vecAvSWaveModulus.invert();
@@ -1401,7 +1401,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
  \param avTauSMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(lama::Vector& vecTauS, lama::Vector& vecAvTauS, lama::CSRSparseMatrix<ValueType>& avTauSMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(lama::Vector& vecTauS, lama::Vector& vecAvTauS, lama::Matrix& avTauSMatrix)
 {
     vecAvTauS = vecTauS;
     vecAvTauS = avTauSMatrix * vecAvTauS;
@@ -1410,40 +1410,40 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(la
 
 //! \brief Getter method for averaging density matrix in x-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixX(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixX(){
     return(DensityAverageMatrixX);
 }
 
 
 //! \brief Getter method for averaging density matrix in y-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixY(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixY(){
     return(DensityAverageMatrixY);
 }
 
 
 //! \brief Getter method for averaging density matrix in z-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixZ(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixZ(){
     return(DensityAverageMatrixZ);
 }
 
 
 //! \brief Getter method for averaging S-wave modulus matrix x-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXY(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXY(){
     return(sWaveModulusAverageMatrixXY);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix y-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXZ(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXZ(){
     return(sWaveModulusAverageMatrixXZ);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix z-direction
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixYZ(){
+lama::Matrix& KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixYZ(){
     return(sWaveModulusAverageMatrixYZ);
 }
 
