@@ -8,22 +8,23 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "Configuration/Configuration.hpp"
+#include "../Configuration/Configuration.hpp"
 
-#include "Modelparameter/Acoustic.hpp"
-#include "Wavefields/Wavefields2Dacoustic.hpp"
+#include "../Modelparameter/Acoustic.hpp"
+#include "../Wavefields/Wavefields3Dacoustic.hpp"
 
-#include "Acquisition/Sources.hpp"
-#include "Acquisition/Receivers.hpp"
+#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/Receivers.hpp"
 
-#include "ForwardSolver/ForwardSolver.hpp"
+#include "../ForwardSolver/ForwardSolver.hpp"
 
-#include "ForwardSolver/ForwardSolver2Dacoustic.hpp"
+#include "../ForwardSolver/ForwardSolver3Dacoustic.hpp"
 
-#include "ForwardSolver/Derivatives/FDTD2D.hpp"
+#include "../ForwardSolver/Derivatives/FDTD3D.hpp"
 
-#include "Common/HostPrint.hpp"
-#include "Partitioning/PartitioningCubes.hpp"
+#include "../Common/HostPrint.hpp"
+
+#include "../Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -43,8 +44,6 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
     
-    SCAI_ASSERT( config.get<IndexType>("NZ") == 1 , " NZ must be equal to 1 for 2-D simulation" );
-    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -63,7 +62,7 @@ int main( int argc, char* argv[] )
         dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI2D acoustic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -73,14 +72,14 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FDTD2D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD2Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -99,12 +98,12 @@ int main( int argc, char* argv[] )
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD2Dacoustic<ValueType> solver;
+    ForwardSolver::FD3Dacoustic<ValueType> solver;
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     
     IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
-    solver.run( receivers, sources, model, wavefields, derivatives, getNT, config.get<ValueType>("DT"));
+    solver.run(receivers, sources, model, wavefields, derivatives, getNT, config.get<ValueType>("DT"));
     
     receivers.getSeismogramHandler().write(config);
 

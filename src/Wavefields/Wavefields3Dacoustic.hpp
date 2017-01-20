@@ -50,6 +50,8 @@ namespace KITGPI {
             
             hmemo::ContextPtr getContextPtr() override;
             
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
+            
         private:
             
             /* required wavefields */
@@ -92,6 +94,12 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Dacoustic<ValueType>::getContextPtr()
  */
 template<typename ValueType>
 KITGPI::Wavefields::FD3Dacoustic<ValueType>::FD3Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(ctx,dist);
+}
+
+template<typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX,ctx,dist);
     this->initWavefield(VY,ctx,dist);

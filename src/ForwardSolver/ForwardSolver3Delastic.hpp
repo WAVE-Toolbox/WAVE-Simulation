@@ -97,39 +97,39 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Receivers<V
     SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
     
     /* Get references to required modelparameter */
-    lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
-    lama::DenseVector<ValueType>const& inverseDensityAverageX=model.getInverseDensityAverageX();
-    lama::DenseVector<ValueType>const& inverseDensityAverageY=model.getInverseDensityAverageY();
-    lama::DenseVector<ValueType>const& inverseDensityAverageZ=model.getInverseDensityAverageZ();
-    lama::DenseVector<ValueType>const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
-    lama::DenseVector<ValueType>const& sWaveModulusAverageXZ=model.getSWaveModulusAverageXZ();
-    lama::DenseVector<ValueType>const& sWaveModulusAverageYZ=model.getSWaveModulusAverageYZ();
+    lama::Vector const& inverseDensity=model.getInverseDensity();
+    lama::Vector const& pWaveModulus=model.getPWaveModulus();
+    lama::Vector const& sWaveModulus=model.getSWaveModulus();
+    lama::Vector const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::Vector const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::Vector const& inverseDensityAverageZ=model.getInverseDensityAverageZ();
+    lama::Vector const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::Vector const& sWaveModulusAverageXZ=model.getSWaveModulusAverageXZ();
+    lama::Vector const& sWaveModulusAverageYZ=model.getSWaveModulusAverageYZ();
     
     /* Get references to required wavefields */
-    lama::DenseVector<ValueType>& vX=wavefield.getVX();
-    lama::DenseVector<ValueType>& vY=wavefield.getVY();
-    lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
+    lama::Vector & vX=wavefield.getVX();
+    lama::Vector & vY=wavefield.getVY();
+    lama::Vector & vZ=wavefield.getVZ();
     
-    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
+    lama::Vector & Sxx=wavefield.getSxx();
+    lama::Vector & Syy=wavefield.getSyy();
+    lama::Vector & Szz=wavefield.getSzz();
     
-    lama::DenseVector<ValueType>& Syz=wavefield.getSyz();
-    lama::DenseVector<ValueType>& Sxz=wavefield.getSxz();
-    lama::DenseVector<ValueType>& Sxy=wavefield.getSxy();
+    lama::Vector & Syz=wavefield.getSyz();
+    lama::Vector & Sxz=wavefield.getSxz();
+    lama::Vector & Sxy=wavefield.getSxy();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>const& Dzf=derivatives.getDzf();
-    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>const& Dzb=derivatives.getDzb();
+    lama::Matrix const& Dxf=derivatives.getDxf();
+    lama::Matrix const& Dzf=derivatives.getDzf();
+    lama::Matrix const& Dxb=derivatives.getDxb();
+    lama::Matrix const& Dzb=derivatives.getDzb();
     
-    lama::CSRSparseMatrix<ValueType>const& DybPressure=derivatives.getDybPressure();
-    lama::CSRSparseMatrix<ValueType>const& DybVelocity=derivatives.getDybVelocity();
-    lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
-    lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
+    lama::Matrix const& DybPressure=derivatives.getDybPressure();
+    lama::Matrix const& DybVelocity=derivatives.getDybVelocity();
+    lama::Matrix const& DyfPressure=derivatives.getDyfPressure();
+    lama::Matrix const& DyfVelocity=derivatives.getDyfVelocity();
     
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources,receiver,wavefield);
     

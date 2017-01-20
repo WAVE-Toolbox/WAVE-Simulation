@@ -24,8 +24,13 @@ namespace KITGPI {
             
         public:
             
+            explicit Wavefields(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            Wavefields(){};
+            
             //! Default deconstructor
             ~Wavefields(){};
+            
+            typedef std::shared_ptr<Wavefields<ValueType>>  WavefieldPtr;
             
             //! Reset wavefields
             virtual void reset()=0;
@@ -50,6 +55,8 @@ namespace KITGPI {
             virtual lama::DenseVector<ValueType>& getRxy();
             
             virtual hmemo::ContextPtr getContextPtr()=0;
+            
+            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)=0;
             
         protected:
             
@@ -76,6 +83,13 @@ namespace KITGPI {
             
         };
     }
+}
+
+
+template<typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType>::Wavefields(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(ctx,dist);
 }
 
 /*! \brief Reset a single wavefield to zero.

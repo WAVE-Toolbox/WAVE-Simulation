@@ -32,6 +32,8 @@ namespace KITGPI {
             
             explicit FD2Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
+            
             void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
@@ -76,6 +78,14 @@ namespace KITGPI {
     }
 }
 
+template<typename ValueType>
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    this->initWavefield(VX,ctx,dist);
+    this->initWavefield(VY,ctx,dist);
+    this->initWavefield(P,ctx,dist);
+}
+
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
 template<typename ValueType>
@@ -94,9 +104,7 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextPtr()
 template<typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    this->initWavefield(VX,ctx,dist);
-    this->initWavefield(VY,ctx,dist);
-    this->initWavefield(P,ctx,dist);
+    init(ctx,dist);
 }
 
 

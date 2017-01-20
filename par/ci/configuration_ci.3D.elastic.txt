@@ -1,4 +1,8 @@
 # define spatial sampling: number of grid points in direction
+
+dimension=3D
+equationType=elastic
+
 NX=100 # horizontal 1
 NY=100 # depth
 NZ=100 # horizontal 2

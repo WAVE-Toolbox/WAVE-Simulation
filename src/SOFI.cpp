@@ -10,20 +10,17 @@
 
 #include "Configuration/Configuration.hpp"
 
-#include "Modelparameter/Acoustic.hpp"
-#include "Wavefields/Wavefields3Dacoustic.hpp"
-
 #include "Acquisition/Sources.hpp"
 #include "Acquisition/Receivers.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
-#include "ForwardSolver/ForwardSolver3Dacoustic.hpp"
-
-#include "ForwardSolver/Derivatives/FDTD3D.hpp"
+#include "Modelparameter/Factory.hpp"
+#include "Wavefields/Factory.hpp"
+#include "ForwardSolver/Derivatives/Factory.hpp"
+#include "ForwardSolver/Factory.hpp"
 
 #include "Common/HostPrint.hpp"
-
 #include "Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
@@ -44,6 +41,9 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
     
+    std::string dimension=config.get<std::string>("dimension");
+    std::string equationType=config.get<std::string>("equationType");
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -62,7 +62,7 @@ int main( int argc, char* argv[] )
         dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D acoustic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -72,14 +72,16 @@ int main( int argc, char* argv[] )
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::FDTD3D<ValueType> derivatives( dist, ctx, config, comm );
+    ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives( ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
+    derivatives->init( dist, ctx, config, comm );
     end_t = common::Walltime::get();
     HOST_PRINT( comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n" );
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dacoustic<ValueType> wavefields(ctx,dist);
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields( Wavefields::Factory<ValueType>::Create(dimension,equationType) );
+    wavefields->init(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -90,20 +92,18 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Acoustic<ValueType> model(config,ctx,dist);
-    model.prepareForModelling(config,ctx,dist,comm);
-    HOST_PRINT( comm, "Model has been prepared for ForwardSolver!\n\n" );
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model( Modelparameter::Factory<ValueType>::Create(equationType));
+    model->init(config,ctx,dist);
+    model->prepareForModelling(config,ctx,dist,comm);
     
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-    
-    ForwardSolver::FD3Dacoustic<ValueType> solver;
-    
-    solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
-    
     IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
-    solver.run(receivers, sources, model, wavefields, derivatives, getNT, config.get<ValueType>("DT"));
+    
+    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver( ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
+    solver->prepareBoundaryConditions(config,*derivatives,dist,ctx);
+    solver->run( receivers, sources, *model, *wavefields, *derivatives, getNT, config.get<ValueType>("DT"));
     
     receivers.getSeismogramHandler().write(config);
 

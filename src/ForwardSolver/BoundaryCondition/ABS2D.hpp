@@ -30,8 +30,8 @@ namespace KITGPI
                 
                 void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) override;
                 
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3);
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5);
+                void apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3);
+                void apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4, lama::Vector& v5);
                 
             private:
                 
@@ -54,7 +54,7 @@ namespace KITGPI
  \param v3 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3){
     
     SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     
@@ -76,7 +76,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Den
  \param v5 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4, lama::Vector& v5){
     
     SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     

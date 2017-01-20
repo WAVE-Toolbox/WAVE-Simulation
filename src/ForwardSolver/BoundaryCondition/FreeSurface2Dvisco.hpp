@@ -23,7 +23,7 @@ namespace KITGPI {
                 //! Default destructor
                 ~FreeSurface2Dvisco(){};
                 
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Rxx, lama::DenseVector<ValueType>& Ryy);
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Rxx, lama::Vector& Ryy);
                 
             private:
                 
@@ -52,7 +52,7 @@ namespace KITGPI {
  \param Ryy Ryy wavefield (relaxation)
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Rxx, lama::DenseVector<ValueType>& Ryy){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& temp, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Rxx, lama::Vector& Ryy){
     
     SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     

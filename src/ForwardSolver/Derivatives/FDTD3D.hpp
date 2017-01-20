@@ -29,9 +29,11 @@ namespace KITGPI {
                 FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
                 FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm);
                 
+                void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm ) override;
+                
             private:
                 
-                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm ) override;
                 
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
@@ -66,6 +68,20 @@ namespace KITGPI {
  */
 template<typename ValueType>
 KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
+{
+    init(dist,ctx,config,comm);
+}
+
+//! \brief Initialisation to support Configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
 {
     useFreeSurface=config.get<IndexType>("FreeSurface");
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );

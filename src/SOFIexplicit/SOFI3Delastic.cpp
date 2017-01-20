@@ -7,22 +7,22 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "Configuration/Configuration.hpp"
+#include "../Configuration/Configuration.hpp"
 
-#include "Modelparameter/Viscoelastic.hpp"
-#include "Wavefields/Wavefields3Dvisco.hpp"
+#include "../Modelparameter/Elastic.hpp"
+#include "../Wavefields/Wavefields3Delastic.hpp"
 
-#include "Acquisition/Sources.hpp"
-#include "Acquisition/Receivers.hpp"
+#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/Receivers.hpp"
 
-#include "ForwardSolver/ForwardSolver.hpp"
-#include "ForwardSolver/ForwardSolver3Dvisco.hpp"
+#include "../ForwardSolver/ForwardSolver.hpp"
+#include "../ForwardSolver/ForwardSolver3Delastic.hpp"
 
-#include "ForwardSolver/Derivatives/FDTD3D.hpp"
-#include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
+#include "../ForwardSolver/Derivatives/FDTD3D.hpp"
+#include "../ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
-#include "Common/HostPrint.hpp"
-#include "Partitioning/PartitioningCubes.hpp"
+#include "../Common/HostPrint.hpp"
+#include "../Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -60,7 +60,7 @@ int main( int argc, char* argv[] )
         dist=partitioning.getDist();
     }
     
-    HOST_PRINT( comm, "\nSOFI3D visco-elastic - LAMA Version\n\n" );
+    HOST_PRINT( comm, "\nSOFI3D elastic - LAMA Version\n\n" );
     if( comm->getRank() == MASTER )
     {
         config.print();
@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::FD3Dvisco<ValueType> wavefields(ctx,dist);
+    Wavefields::FD3Delastic<ValueType> wavefields(ctx,dist);
     
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -88,7 +88,7 @@ int main( int argc, char* argv[] )
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Viscoelastic<ValueType> model(config,ctx,dist);
+    Modelparameter::Elastic<ValueType> model(config,ctx,dist);
     model.prepareForModelling(config,ctx,dist,comm);
     HOST_PRINT( comm, "Model has been prepared for ForwardSolver!\n\n" );
     
@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
     /* Forward solver                          */
     /* --------------------------------------- */
     
-    ForwardSolver::FD3Dvisco<ValueType> solver;
+    ForwardSolver::FD3Delastic<ValueType> solver;
     
     solver.prepareBoundaryConditions(config,derivatives,dist,ctx);
     

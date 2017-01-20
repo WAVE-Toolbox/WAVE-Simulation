@@ -30,8 +30,8 @@ namespace KITGPI
                 
                 void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) override;
                 
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4);
-                void apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9);
+                void apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4);
+                void apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4, lama::Vector& v5, lama::Vector& v6, lama::Vector& v7, lama::Vector& v8, lama::Vector& v9);
                 
             private:
                 
@@ -55,7 +55,7 @@ namespace KITGPI
  \param v4 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4){
     
     SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     
@@ -82,7 +82,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Den
  \param v9 DenseVector to apply damping boundary
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::DenseVector<ValueType>& v1, lama::DenseVector<ValueType>& v2, lama::DenseVector<ValueType>& v3, lama::DenseVector<ValueType>& v4, lama::DenseVector<ValueType>& v5, lama::DenseVector<ValueType>& v6, lama::DenseVector<ValueType>& v7, lama::DenseVector<ValueType>& v8, lama::DenseVector<ValueType>& v9){
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Vector& v1, lama::Vector& v2, lama::Vector& v3, lama::Vector& v4, lama::Vector& v5, lama::Vector& v6, lama::Vector& v7, lama::Vector& v8, lama::Vector& v9){
     
     SCAI_ASSERT_DEBUG( active , " ABS is not active " );
     
