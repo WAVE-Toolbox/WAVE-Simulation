@@ -7,22 +7,22 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "Configuration/Configuration.hpp"
+#include "../Configuration/Configuration.hpp"
 
-#include "Modelparameter/Viscoelastic.hpp"
-#include "Wavefields/Wavefields3Dvisco.hpp"
+#include "../Modelparameter/Viscoelastic.hpp"
+#include "../Wavefields/Wavefields3Dvisco.hpp"
 
-#include "Acquisition/Sources.hpp"
-#include "Acquisition/Receivers.hpp"
+#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/Receivers.hpp"
 
-#include "ForwardSolver/ForwardSolver.hpp"
-#include "ForwardSolver/ForwardSolver3Dvisco.hpp"
+#include "../ForwardSolver/ForwardSolver.hpp"
+#include "../ForwardSolver/ForwardSolver3Dvisco.hpp"
 
-#include "ForwardSolver/Derivatives/FDTD3D.hpp"
-#include "ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
+#include "../ForwardSolver/Derivatives/FDTD3D.hpp"
+#include "../ForwardSolver/BoundaryCondition/FreeSurface3Delastic.hpp"
 
-#include "Common/HostPrint.hpp"
-#include "Partitioning/PartitioningCubes.hpp"
+#include "../Common/HostPrint.hpp"
+#include "../Partitioning/PartitioningCubes.hpp"
 
 using namespace scai;
 using namespace KITGPI;
