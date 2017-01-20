@@ -10,6 +10,8 @@ SOFI: SOFI.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
 
 
+SOFIexplicit: SOFI3D SOFI2D
+
 SOFI3D: SOFI3Dacoustic SOFI3Delastic SOFI3Dvisco
 
 SOFI3Dacoustic: SOFI3Dacoustic.cpp

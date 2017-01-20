@@ -102,9 +102,7 @@ int main( int argc, char* argv[] )
     IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
     
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver( ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
-    
     solver->prepareBoundaryConditions(config,*derivatives,dist,ctx);
-    
     solver->run( receivers, sources, *model, *wavefields, *derivatives, getNT, config.get<ValueType>("DT"));
     
     receivers.getSeismogramHandler().write(config);
