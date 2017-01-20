@@ -97,21 +97,21 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Receivers<
     SCAI_ASSERT_ERROR( NT > 1 , " Number of time steps has to be greater than zero. ");
     
     /* Get references to required modelparameter */
-    lama::DenseVector<ValueType> const& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType> const& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType> const& inverseDensityAverageX=model.getInverseDensityAverageX();
-    lama::DenseVector<ValueType> const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::Vector const& inverseDensity=model.getInverseDensity();
+    lama::Vector const& pWaveModulus=model.getPWaveModulus();
+    lama::Vector const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::Vector const& inverseDensityAverageY=model.getInverseDensityAverageY();
     
     /* Get references to required wavefields */
-    lama::DenseVector<ValueType>& vX=wavefield.getVX();
-    lama::DenseVector<ValueType>& vY=wavefield.getVY();
-    lama::DenseVector<ValueType>& p=wavefield.getP();
+    lama::Vector& vX=wavefield.getVX();
+    lama::Vector& vY=wavefield.getVY();
+    lama::Vector& p=wavefield.getP();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>const& Dyb=derivatives.getDyb();
-    lama::CSRSparseMatrix<ValueType>const& Dyf=derivatives.getDyfVelocity();
+    lama::Matrix const& Dxf=derivatives.getDxf();
+    lama::Matrix const& Dxb=derivatives.getDxb();
+    lama::Matrix const& Dyb=derivatives.getDyb();
+    lama::Matrix const& Dyf=derivatives.getDyfVelocity();
     
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources,receiver,wavefield);
     

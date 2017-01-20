@@ -97,34 +97,34 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
     
     /* Get references to required modelparameter */
-    lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
-    lama::DenseVector<ValueType>const& inverseDensityAverageX=model.getInverseDensityAverageX();
-    lama::DenseVector<ValueType>const& inverseDensityAverageY=model.getInverseDensityAverageY();
-    lama::DenseVector<ValueType>const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
-    lama::DenseVector<ValueType>const& tauSAverageXY=model.getTauSAverageXY();
+    lama::Vector const& inverseDensity=model.getInverseDensity();
+    lama::Vector const& pWaveModulus=model.getPWaveModulus();
+    lama::Vector const& sWaveModulus=model.getSWaveModulus();
+    lama::Vector const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::Vector const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::Vector const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::Vector const& tauSAverageXY=model.getTauSAverageXY();
     
     /* Get references to required wavefields */
-    lama::DenseVector<ValueType>& vX=wavefield.getVX();
-    lama::DenseVector<ValueType>& vY=wavefield.getVY();
+    lama::Vector & vX=wavefield.getVX();
+    lama::Vector & vY=wavefield.getVY();
     
-    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-    lama::DenseVector<ValueType>& Sxy=wavefield.getSxy();
+    lama::Vector & Sxx=wavefield.getSxx();
+    lama::Vector & Syy=wavefield.getSyy();
+    lama::Vector & Sxy=wavefield.getSxy();
     
-    lama::DenseVector<ValueType>& Rxx=wavefield.getRxx();
-    lama::DenseVector<ValueType>& Ryy=wavefield.getRyy();
-    lama::DenseVector<ValueType>& Rxy=wavefield.getRxy();
+    lama::Vector & Rxx=wavefield.getRxx();
+    lama::Vector & Ryy=wavefield.getRyy();
+    lama::Vector & Rxy=wavefield.getRxy();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
+    lama::Matrix const& Dxf=derivatives.getDxf();
+    lama::Matrix const& Dxb=derivatives.getDxb();
     
-    lama::CSRSparseMatrix<ValueType>const& DybPressure=derivatives.getDybPressure();
-    lama::CSRSparseMatrix<ValueType>const& DybVelocity=derivatives.getDybVelocity();
-    lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
-    lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
+    lama::Matrix const& DybPressure=derivatives.getDybPressure();
+    lama::Matrix const& DybVelocity=derivatives.getDybVelocity();
+    lama::Matrix const& DyfPressure=derivatives.getDyfPressure();
+    lama::Matrix const& DyfVelocity=derivatives.getDyfVelocity();
     
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources,receiver,wavefield);
     
@@ -139,8 +139,8 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::Vector& vxx = *vxxPtr;
     lama::Vector& vyy = *vyyPtr;
     
-    lama::DenseVector<ValueType>const& tauS=model.getTauS();
-    lama::DenseVector<ValueType>const& tauP=model.getTauP();
+    lama::Vector const& tauS=model.getTauS();
+    lama::Vector const& tauP=model.getTauP();
     
     IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
     ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
