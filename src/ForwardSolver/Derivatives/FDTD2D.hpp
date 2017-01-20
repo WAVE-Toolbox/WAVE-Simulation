@@ -30,6 +30,8 @@ namespace KITGPI {
                 FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm );
                 FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm);
                 
+                void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm) override;
+                
                 /* non-requiered matrixes */
                 lama::CSRSparseMatrix<ValueType>const& getDzf() const override;
                 lama::CSRSparseMatrix<ValueType>const& getDzb() const override;
@@ -73,6 +75,20 @@ namespace KITGPI {
  */
 template<typename ValueType>
 KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
+{
+    init(dist,ctx,config,comm);
+}
+
+//! \brief Initialisation to support Configuration
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param config Configuration
+ \param comm Communicator
+ */
+template<typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
 {
     useFreeSurface=config.get<IndexType>("FreeSurface");
     Derivatives<ValueType>::initializeMatrices(dist,ctx, config, comm );

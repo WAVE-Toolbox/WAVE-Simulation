@@ -43,6 +43,8 @@ namespace KITGPI {
             
             hmemo::ContextPtr getContextPtr() override;
             
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
+            
         private:
             
             /* required wavefields */
@@ -87,6 +89,12 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
 template<typename ValueType>
 KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
+    init(ctx,dist);
+}
+
+template<typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
     this->initWavefield(VX,ctx,dist);
     this->initWavefield(VY,ctx,dist);
     this->initWavefield(VZ,ctx,dist);
@@ -96,7 +104,6 @@ KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, d
     this->initWavefield(Syz,ctx,dist);
     this->initWavefield(Sxz,ctx,dist);
     this->initWavefield(Sxy,ctx,dist);
-    
 }
 
 /*! \brief Set all wavefields to zero.

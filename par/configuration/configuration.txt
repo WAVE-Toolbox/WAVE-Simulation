@@ -1,6 +1,9 @@
 # format has to be exactly name=value (without any whitespaces)
 # expects exactly these number of arguments (31) and these names
 
+dimension=3D
+equationType=acoustic
+
 # define spatial sampling: number of grid points in direction
 NX=100 # horizontal 1
 NY=100 # depth

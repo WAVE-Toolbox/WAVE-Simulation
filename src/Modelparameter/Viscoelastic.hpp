@@ -54,6 +54,7 @@ namespace KITGPI {
             Viscoelastic(const Viscoelastic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const,lama::Scalar  sWaveModulus_const, lama::Scalar  rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
             
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
@@ -232,6 +233,18 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(config,ctx,dist);
+}
+
+/*! \brief Initialisation that is using the Configuration class
+ *
+ \param config Configuration class
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.get<IndexType>("ModelRead")){
         switch (config.get<IndexType>("ModelParametrisation")) {

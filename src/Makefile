@@ -6,7 +6,8 @@ LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilsk
 
 install: clean SOFI tests
 
-SOFI: SOFI3D SOFI2D
+SOFI: SOFI.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
 
 
 SOFI3D: SOFI3Dacoustic SOFI3Delastic SOFI3Dvisco

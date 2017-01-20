@@ -38,6 +38,8 @@ namespace KITGPI {
             {
             public:
                 
+                typedef std::shared_ptr<Derivatives<ValueType>> DerivativesPtr;
+                
                 template<typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic;
                 template<typename>
@@ -79,6 +81,8 @@ namespace KITGPI {
                 virtual lama::CSRSparseMatrix<ValueType>const& getDybVelocity() const;
                 //! \brief Getter method for derivative matrix DybPressure
                 virtual lama::CSRSparseMatrix<ValueType>const& getDybPressure() const;
+                
+                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )=0;
                 
                 IndexType getSpatialFDorder() const;
                 

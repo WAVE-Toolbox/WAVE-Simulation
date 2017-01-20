@@ -37,6 +37,8 @@ namespace KITGPI {
             
             hmemo::ContextPtr getContextPtr() override;
             
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
+            
         private:
             
             /* required wavefields */
@@ -81,6 +83,12 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
 template<typename ValueType>
 KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
+    init(ctx,dist);
+}
+
+template<typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
     this->initWavefield(VX,ctx,dist);
     this->initWavefield(VY,ctx,dist);
     this->initWavefield(VZ,ctx,dist);
@@ -96,7 +104,6 @@ KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo
     this->initWavefield(Ryz,ctx,dist);
     this->initWavefield(Rxz,ctx,dist);
     this->initWavefield(Rxy,ctx,dist);
-
 }
 
 /*! \brief Set all wavefields to zero.

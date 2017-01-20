@@ -48,6 +48,8 @@ namespace KITGPI {
             //! Default destructor.
             ~Modelparameter(){};
             
+            typedef std::shared_ptr<Modelparameter<ValueType>>  ModelparameterPtr;
+            
             /*! \brief Abstract initialisation function
              *
              * Standard initialisation function
@@ -57,6 +59,8 @@ namespace KITGPI {
              \param filename filename to read modelparameters (endings will be added by derived classes)
              */
             virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)=0;
+            
+            virtual void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) =0;
             
             /*! \brief Abstract write function
              *

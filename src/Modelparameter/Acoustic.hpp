@@ -55,6 +55,7 @@ namespace KITGPI {
             Acoustic(const Acoustic& rhs);
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus_const, lama::Scalar  rho_const);
+            void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn);
             
@@ -214,6 +215,18 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::refreshModule(){
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(config,ctx,dist);
+}
+
+/*! \brief Initialisation that is using the Configuration class
+ *
+ \param config Configuration class
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.get<IndexType>("ModelRead")){
         switch (config.get<IndexType>("ModelParametrisation")) {

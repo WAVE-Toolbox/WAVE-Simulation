@@ -57,6 +57,7 @@ namespace KITGPI {
             
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  pWaveModulus,lama::Scalar  sWaveModulus, lama::Scalar  rho);
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
             
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
@@ -218,6 +219,18 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule(){
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(config,ctx,dist);
+}
+
+/*! \brief Initialisation that is using the Configuration class
+ *
+ \param config Configuration class
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ */
+template<typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if(config.get<IndexType>("ModelRead")){
         switch (config.get<IndexType>("ModelParametrisation")) {

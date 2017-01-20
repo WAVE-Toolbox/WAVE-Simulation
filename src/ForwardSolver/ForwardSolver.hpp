@@ -20,6 +20,8 @@ namespace KITGPI {
         {
         public:
             
+            typedef std::shared_ptr<ForwardSolver<ValueType>> ForwardSolverPtr;
+            
             //! Default constructor
             ForwardSolver():useFreeSurface(false),useDampingBoundary(false){};
             
