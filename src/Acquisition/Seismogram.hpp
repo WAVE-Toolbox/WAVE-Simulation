@@ -84,6 +84,11 @@ namespace KITGPI {
     }
 }
 
+//! \brief Adding ending to seismogram-filename-string
+/*!
+ *
+ \param filename Filename of output
+ */
 template <typename ValueType>
 std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(std::string const& filename) const
 {
@@ -158,13 +163,22 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType s
     sourceCoordinate=sourceCoord;
 }
 
-
+//! \brief Set type of trace
+/*!
+ *
+ \param trace Trace
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType trace)
 {
     type=trace;
 };
 
+//! \brief Setter function for coordinates
+/*!
+ *
+ \param coord DenseVector with coordinates
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<IndexType>const& coord)
 {

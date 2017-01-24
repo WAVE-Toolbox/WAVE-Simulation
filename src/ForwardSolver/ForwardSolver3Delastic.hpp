@@ -27,10 +27,10 @@ namespace KITGPI {
             
         public:
             
-            /* Default constructor */
+            //! Default constructor
             FD3Delastic(){};
             
-            /* Default destructor */
+            //! Default destructor
             ~FD3Delastic(){};
             
             void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;

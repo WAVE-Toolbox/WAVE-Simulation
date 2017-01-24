@@ -12,19 +12,24 @@ namespace KITGPI {
         
         namespace Derivatives {
             
-            
+            //! \brief Factory class.
             template<typename ValueType>
             class Factory
             {
                 
             public:
                 
+                //! \brief Declare Derivatives pointer
                 typedef typename Derivatives<ValueType>::DerivativesPtr  DerivativesPtr;
                 
                 Factory() = delete;
                 Factory(Factory const&) = delete;
                 void operator=(Factory const&) = delete;
                 
+                /*! \brief Create derivatives with factory methode.
+                 *
+                 \param dimension Dimension of the model (2D, 3D)
+                 */
                 static DerivativesPtr Create( std::string const& dimension ) {
                     
                     // Assert correctness of input values

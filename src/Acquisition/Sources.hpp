@@ -14,7 +14,7 @@ namespace KITGPI {
     
     namespace Acquisition {
         
-        //! Handling of sources
+        //! \brief Handling of sources
         /*!
          * This class accounts for the handling of seismic sources.
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
@@ -25,8 +25,10 @@ namespace KITGPI {
             
         public:
             
+            //! \brief Default constructor
             Sources():numSourcesGlobal(0),numSourcesLocal(0),numParameter(0){};
             explicit Sources(Configuration::Configuration const& config, hmemo::ContextPtr ctx,dmemo::DistributionPtr dist_wavefield);
+            //! \brief Default destructor
             ~Sources(){};
             
             void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
@@ -58,9 +60,8 @@ namespace KITGPI {
             
             dmemo::DistributionPtr dist_wavefield_sources; //!< Calculated Distribution of the sources based on the distribution of the wavefields
             
-            //! Source signals
-            Seismogram<ValueType> signals;
-            SeismogramHandler<ValueType> sources;
+            Seismogram<ValueType> signals; //!< Source signals
+            SeismogramHandler<ValueType> sources; //!< Sources
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
@@ -92,7 +93,12 @@ KITGPI::Acquisition::SeismogramHandler<ValueType> const& KITGPI::Acquisition::So
     return(sources);
 }
 
-
+/*! \brief initialize seismogram handler
+ *
+ \param NT Numer of timesteps
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
 {
@@ -457,6 +463,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string 
  * The source signal matrix is allocated based on the distributions.
  *
  \param NT Number of time steps
+ \param ctx context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, hmemo::ContextPtr ctx)
@@ -480,6 +487,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, h
  *
  \param NT Number of time steps
  \param DT Time step interval
+ \param ctx context
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx){
@@ -579,7 +587,11 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     
 }
 
-
+/*! \brief Getter methode for Source Distribution.
+ *
+ \param coordinates
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 dmemo::DistributionPtr KITGPI::Acquisition::Sources<ValueType>::getSourceDistribution(lama::DenseVector<IndexType>const& coordinates, dmemo::DistributionPtr const dist_wavefield) const
 {

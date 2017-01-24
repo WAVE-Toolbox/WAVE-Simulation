@@ -21,9 +21,9 @@ namespace KITGPI {
          * This class accounts for the parallel input and output.
          * It provides the readin of a single file in block distribution or several files in block distribution and can write to a fileblock 
          * To obtain a fileblock from a single file the  vectorRepartition.exe or matrixRepartition.exe can be executed by 
-         *          scai_lama/build/lama/examples/io/vectorRepartition.exe <filename.mtx> 1 <filename_%r.mtx> <NProcessors>
+         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename.mtx} 1 {filename_%r.mtx} {NProcessors}
          * To rearrange a fileblock in a single file execute:
-         *          scai_lama/build/lama/examples/io/vectorRepartition.exe <filename_%r.mtx> <NProcessors> <filename.mtx> 1
+         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename_%r.mtx} {NProcessors} {filename.mtx} 1
          */
         template<typename ValueType>
         class PartitionedInOut
