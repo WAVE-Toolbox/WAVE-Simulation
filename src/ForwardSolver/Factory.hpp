@@ -13,21 +13,26 @@
 
 namespace KITGPI {
     
-    //! \brief ForwardSolver namespace
     namespace ForwardSolver {
         
-        //! \brief Abstract class for forward solver
+        //! \brief Factory class.
         template<typename ValueType>
         class Factory
         {
         public:
             
+            //! \brief Declare ForwardSolver pointer
             typedef typename ForwardSolver<ValueType>::ForwardSolverPtr  ForwardSolverPtr;
             
             Factory() = delete;
             Factory(Factory const&) = delete;
             void operator=(Factory const&) = delete;
             
+            /*! \brief Create the right simmulation with factory methode.
+             *
+             \param dimension Dimension of the model (2D, 3D)
+             \param type Simmulation type (acoustic, elsstic, viscoelastic)
+             */
             static ForwardSolverPtr Create( std::string const& dimension, std::string const& type ) {
                 
                 // Assert correctness of input values

@@ -29,7 +29,7 @@ namespace KITGPI {
         {
         public:
             
-            /*! \brief Default deconstructor
+            /*! \brief Default destructor
              */
             ~Configuration(){}
             

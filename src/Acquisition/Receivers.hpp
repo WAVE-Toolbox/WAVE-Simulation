@@ -13,9 +13,9 @@ namespace KITGPI {
         
         template <typename ValueType>
         class SeismogramHandler;
-        
-        //! Handling of receivers
-        /*!
+
+        /*! \brief Handling of receivers
+         *
          * This class accounts for the handling of seismic receivers.
          * It provides the reading of the receivers acquisition from file, the distribution of the receivers and the collection of the seismograms.
          */
@@ -24,8 +24,11 @@ namespace KITGPI {
         {
         public:
             
+            //! \brief Default constructor
             Receivers():numReceiversGlobal(0),numReceiversLocal(0),numParameter(0){};
             explicit Receivers(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
+            
+            //! \brief Default destructor
             ~Receivers(){};
             
             void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
@@ -50,7 +53,7 @@ namespace KITGPI {
             IndexType numReceiversGlobal; //!< Number of receivers global
             IndexType numReceiversLocal; //!< Number of receivers local
             
-            SeismogramHandler<ValueType> receiver;
+            SeismogramHandler<ValueType> receiver; //!< receiver
             
             dmemo::DistributionPtr dist_wavefield_receivers; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT; //!< No distribution of the columns of the seismogram matrix
@@ -66,6 +69,12 @@ namespace KITGPI {
 }
 
 
+/*! \brief initialize seismogram handler
+ *
+ \param NT Numer of timesteps
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
 {
@@ -126,7 +135,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::initSeismogramHandler(IndexType 
     receiver.setContextPtr(ctx);
 }
 
-
+/*! \brief Getter method for seismogram handler
+ */
 template<typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>& KITGPI::Acquisition::Receivers<ValueType>::getSeismogramHandler()
 {
@@ -236,6 +246,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::writeReceiverAcquisition(std::st
  \param NY Number of global grid points in Y
  \param NZ Number of global grid points in Z
  \param dist_wavefield Distribution of the wavefields
+ \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx)
@@ -354,7 +365,11 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     receiver_type.setContextPtr(ctx);
 }
 
-
+/*! \brief getter function for receiver distribution
+ *
+ \param coordinates Filename to read receivers acquisition
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiverDistribution(lama::DenseVector<IndexType>const& coordinates, dmemo::DistributionPtr const dist_wavefield) const
 {

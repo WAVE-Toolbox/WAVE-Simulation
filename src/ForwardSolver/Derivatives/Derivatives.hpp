@@ -38,6 +38,7 @@ namespace KITGPI {
             {
             public:
                 
+                //! \brief Declare Derivatives pointer
                 typedef std::shared_ptr<Derivatives<ValueType>> DerivativesPtr;
                 
                 template<typename>
@@ -82,8 +83,11 @@ namespace KITGPI {
                 //! \brief Getter method for derivative matrix DybPressure
                 virtual lama::Matrix const& getDybPressure() const;
                 
+                //! \brief Initialization
                 virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )=0;
                 
+                
+                //! \brief Getter method for spatial FD-order
                 IndexType getSpatialFDorder() const;
                 
             protected:
@@ -118,7 +122,7 @@ namespace KITGPI {
                 void calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
-                typedef lama::CSRSparseMatrix<ValueType> SparseFormat;
+                typedef lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
                 SparseFormat Dxf; //!< Derivative matrix Dxf
                 SparseFormat Dyf; //!< Derivative matrix Dyf
                 SparseFormat Dzf; //!< Derivative matrix Dzf

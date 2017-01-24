@@ -3,7 +3,6 @@
 
 namespace KITGPI {
     
-    //! \brief Acquisition namespace
     namespace Acquisition {
         
         /*! \brief Struct to save 3-D coordinates
@@ -72,7 +71,7 @@ namespace KITGPI {
 /* Mapping */
 /* ------- */
 
-/*! Returns bool if given coordinate is located on the surface
+/*! \brief Returns bool if given coordinate is located on the surface
  *
  \param coordinate 1-D coordinate
  \param NX Number of grid points in X
@@ -91,7 +90,14 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coo
     }
 }
 
-//! General mapping from 1-D coordinate to 3-D coordinate
+
+/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+ *
+ \param coordinate 1-D coordinate
+ \param NX Number of grid points in X
+ \param NY Number of grid points in Y
+ *
+ */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY)
 {
@@ -127,8 +133,9 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::i
     return(map3Dindex2coordinate(coordinate,NX,NY));
 }
 
-//! General mapping from 3-D coordinates to 1-D coordinate
-/*
+
+/*! \brief General mapping from 3-D coordinates to 1-D coordinate
+ *
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
@@ -156,6 +163,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 /* ---------- */
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
+ *
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
@@ -171,6 +179,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexTyp
 }
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
+ *
  \param coordinate as a coordinate3D struct
  \param NX Total number of grid points in X (Horizontal 1)
  \param NY Total number of grid points in Y (Depth)
@@ -189,6 +198,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  *
  * Calculate the number of coordinates within the local processing unit as well as
  * the coordinates of the local coordinates.
+ *
  \param coordinatesglobal DenseVector with global coordinates
  \param localIndices DenseVector with local coordinates
  \param dist Distribution of global grid

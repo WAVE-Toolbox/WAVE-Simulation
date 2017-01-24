@@ -20,6 +20,7 @@ namespace KITGPI {
         {
         public:
             
+            //! \brief Declare ForwardSolver pointer
             typedef std::shared_ptr<ForwardSolver<ValueType>> ForwardSolverPtr;
             
             //! Default constructor

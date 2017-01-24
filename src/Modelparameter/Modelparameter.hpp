@@ -31,7 +31,7 @@ namespace KITGPI {
     //! \brief Modelparameter namespace
     namespace Modelparameter {
         
-        //! Abstract class for a single Modelparameter (Subsurface properties)
+        //! \brief Abstract class for a single Modelparameter (Subsurface properties)
         /*!
          * This class handels a single modelparameter.
          * As this class is an abstract class, all constructors are protected.
@@ -39,7 +39,6 @@ namespace KITGPI {
         template<typename ValueType>
         class Modelparameter
         {
-            
         public:
             
             //! Default constructor.
@@ -48,18 +47,24 @@ namespace KITGPI {
             //! Default destructor.
             ~Modelparameter(){};
             
+            //! \brief Modelparameter pointer
             typedef std::shared_ptr<Modelparameter<ValueType>>  ModelparameterPtr;
             
-            /*! \brief Abstract initialisation function
-             *
+            /*! \brief Abstract initialization function
              * Standard initialisation function
-             *
              \param ctx Context
              \param dist Distribution
              \param filename filename to read modelparameters (endings will be added by derived classes)
+             \param partitionedIn Partitioned input
              */
             virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)=0;
             
+            /*! \brief Abstract initialisation function
+             * Standard initialisation function
+             \param config Configuration from configuration file
+             \param ctx Context
+             \param dist Distribution
+             */
             virtual void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) =0;
             
             /*! \brief Abstract write function
@@ -67,6 +72,7 @@ namespace KITGPI {
              * Standard write function
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
+             \param partitionedOut Partitioned output
              */
             virtual void write(std::string filename, IndexType partitionedOut) const =0;
             
@@ -180,7 +186,7 @@ namespace KITGPI {
             IndexType getParametrisation();
             IndexType getPartitionedIn();
             IndexType getPartitionedOut();
-//! \brief Initializsation of the aneraging matrices
+            //! \brief Initializsation of the aneraging matrices
             /*!
              *
              \param dist Distribution of the wavefield
@@ -189,8 +195,7 @@ namespace KITGPI {
              \param NY Total number of grid points in Y
              \param NZ Total number of grid points in Z
              \param DH Grid spacing (equidistant)
-
-             \param spatialFDorder FD-order of spatial stencils
+             \param DT Temporal sampling interval
              \param comm Communicator
              */
             virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, dmemo::CommunicatorPtr comm )=0;
@@ -203,7 +208,7 @@ namespace KITGPI {
             void calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             void calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
             
-            typedef lama::CSRSparseMatrix<ValueType> SparseFormat;
+            typedef lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix 
             SparseFormat DensityAverageMatrixX; //!< Averaging density matrix in x-direction
             SparseFormat DensityAverageMatrixY; //!< Averaging density matrix in x-direction
             SparseFormat DensityAverageMatrixZ; //!< Averaging density matrix in x-direction
@@ -321,6 +326,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param ctx Context
  \param dist Distribution
  \param filename Location of external file which will be read in
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::Vector& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -340,6 +346,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  *  Write a single model to an external file block.
  \param vector Single modelparameter which will be written to filename
  \param filename Name of file in which modelparameter will be written
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::Vector const& vector, std::string filename, IndexType partitionedOut) const
@@ -1367,10 +1374,11 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
 }
 
 
-/*! \brief calculate averaged s-wave modulus
+/*! \brief calculate averaged inverse density modulus
  *
- \param vecAvSWaveModulus Averaged s-wave modulus vector which is calculated
- \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
+ \param vecDensity Density vector.
+ \param vecInverseAvDensity Averaged inverse density vector which is calculated
+ \param avDensityMatrix Averaging matrix which is used to calculate averaged vector
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::Vector& vecDensity, lama::Vector& vecInverseAvDensity, lama::Matrix& avDensityMatrix)
@@ -1382,6 +1390,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
 
 /*! \brief calculate averaged s-wave modulus
  *
+ \param vecSWaveModulus s-wave modulus vector
  \param vecAvSWaveModulus Averaged s-wave modulus vector which is calculated
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
@@ -1397,6 +1406,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
 
 /*! \brief calculate averaged tauS
  *
+ \param vecTauS TauS vector
  \param vecAvTauS Averaged tauS vector which is calculated
  \param avTauSMatrix Averaging matrix which is used to calculate averaged vector
  */

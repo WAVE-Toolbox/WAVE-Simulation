@@ -8,13 +8,19 @@ namespace KITGPI {
     
     namespace Acquisition {
         
+        /*! \brief class for a single Seismogram
+         *
+         * This class handels a single seismogram.
+         */
         template <typename ValueType>
         class SeismogramHandler
         {
             
         public:
             
+            //! \brief Default constructor
             explicit SeismogramHandler();
+            //! \brief Default destructor
             ~SeismogramHandler(){};
             
             void writeToFileRaw(std::string const& filename) const;
@@ -34,12 +40,17 @@ namespace KITGPI {
             
             void setTraceType();
             
-            std::vector<Seismogram<ValueType>> seismo;
+            std::vector<Seismogram<ValueType>> seismo; //!< vector in which the seismogram is stored
             
         };
     }
 }
 
+
+//! \brief write the seismogram.
+/*!
+ \param config Configuration
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const& config) const
 {
@@ -48,6 +59,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
     }
 }
 
+/*! \brief Default constructor. */
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
 :seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
@@ -56,6 +68,7 @@ KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     setTraceType();
 }
 
+/*! \brief Setter method for trace type. */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
 {
@@ -72,6 +85,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
     }
 }
 
+//! \brief Constant methode to write to RAW-file.
+/*!
+ \param filename Filename of the output file
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::string const& filename) const
 {
@@ -80,6 +97,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::stri
     }
 }
 
+/*! \brief Method to reset data. */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
 {
@@ -88,6 +106,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
     }
 }
 
+//! \brief Constant getter methode for number of samples.
+/*!
+ \param type Type of the seismogram
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(SeismogramType type) const
 {
@@ -95,6 +117,10 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(Seism
     return(seismo[type].getNumSamples());
 }
 
+//! \brief Constant getter methode for number of global traces.
+/*!
+ \param type Type of the seismogram
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(SeismogramType type) const
 {
@@ -102,6 +128,10 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(
     return(seismo[type].getNumTracesGlobal());
 }
 
+//! \brief Constant getter methode for the seismogram.
+/*!
+ \param type Type of the seismogram
+ */
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>const& KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramType type) const
 {
@@ -109,6 +139,10 @@ KITGPI::Acquisition::Seismogram<ValueType>const& KITGPI::Acquisition::Seismogram
     return(seismo[type]);
 }
 
+//! \brief Getter methode for the seismogram.
+/*!
+ \param type Type of the seismogram
+ */
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramType type)
 {
@@ -116,6 +150,10 @@ KITGPI::Acquisition::Seismogram<ValueType>& KITGPI::Acquisition::SeismogramHandl
     return(seismo[type]);
 }
 
+//! \brief Methode to set the right context-pointer.
+/*!
+ \param ctx Context
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
 {
@@ -124,6 +162,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setContextPtr(hmemo::Con
     }
 }
 
+//! \brief Methode to set DT.
+/*!
+ \param newDT Temporal sampling which will be set to the seismogram
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
 {
@@ -132,6 +174,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
+//! \brief Methode to set Source Coordinate.
+/*!
+ \param sourceCoord Source coordinate in 1-D format
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSourceCoordinate(IndexType sourceCoord)
 {

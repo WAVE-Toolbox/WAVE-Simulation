@@ -326,6 +326,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -340,6 +341,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr 
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -386,6 +388,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param partitionedIn Partitioned input
  *
  *  Calculates pWaveModulus with
  */
@@ -410,6 +413,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
@@ -451,7 +455,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
  \param NZ Total number of grid points in Z
  \param DH Grid spacing (equidistant)
  \param DT Temporal sampling interval
- \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template<typename ValueType>
@@ -479,8 +482,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
 
 /*! \brief calculate averaged vectors
  *
- \param dist Distribution
- \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging(){

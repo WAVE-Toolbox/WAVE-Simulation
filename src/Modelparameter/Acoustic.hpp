@@ -141,6 +141,10 @@ namespace KITGPI {
  *
  * Refreshes the module if parameterisation is in terms of velocities
  *
+ \param config Configuration class
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ \param comm Communicator pointer
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm){
@@ -290,6 +294,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param dist Distribution
  \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
@@ -305,6 +310,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param dist Distribution
  \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
+ \param partitionedIn Partitioned Inpiut
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenamerho, IndexType partitionedIn)
@@ -321,6 +327,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dm
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -335,6 +342,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(hmemo::ContextPtr ctx, dme
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density "filename+".density.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -368,6 +376,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic& rhs)
  \param ctx Context
  \param dist Distribution
  \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
+ \param partitionedIn Partitioned input
  *
  */
 template<typename ValueType>
@@ -388,6 +397,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextP
  *
  \param filenamePWaveModulus Filename for P-wave modulus model
  \param filenamedensity Filename for Density model
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut)
@@ -400,6 +410,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write( std::string filenamePWa
 /*! \brief Write model to an external file
  *
  \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
@@ -435,7 +446,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
  \param NZ Total number of grid points in Z
  \param DH Grid spacing (equidistant)
  \param DT Temporal sampling interval
- \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template<typename ValueType>
@@ -458,8 +468,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(dmemo::Dist
 
 /*! \brief calculate averaged vectors
  *
- \param dist Distribution
- \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging(){

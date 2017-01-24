@@ -19,12 +19,15 @@ namespace KITGPI {
         
         namespace SourceReceiverImpl {
             
+            //! \brief FDTD3Dacoustic class
             template<typename ValueType>
             class FDTD3Dacoustic : public FDTDacoustic<ValueType>
             {
             public:
                 
+                //! Default constructor
                 FDTD3Dacoustic()=delete;
+                //! Default destructor
                 ~FDTD3Dacoustic(){};
                 
                 using FDTDacoustic<ValueType>::FDTDacoustic;

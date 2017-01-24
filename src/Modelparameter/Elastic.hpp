@@ -298,6 +298,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
  \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus,std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
@@ -314,6 +315,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
  \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamerho Name of file that will be read for the Density.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
@@ -331,6 +333,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -345,6 +348,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
+ \param partitionedIn Partitioned input
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
@@ -382,6 +386,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic& rhs)
  \param ctx Context
  \param dist Distribution
  \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
+ \param partitionedIn Partitioned input
  *
  */
 template<typename ValueType>
@@ -404,6 +409,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPt
  \param filenamePWaveModulus Filename for P-wave modulus model
  \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
  \param filenamedensity Filename for Density model
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut)
@@ -417,6 +423,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write( std::string filenamePWav
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
+ \param partitionedOut Partitioned output
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
@@ -453,7 +460,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
  \param NZ Total number of grid points in Z
  \param DH Grid spacing (equidistant)
  \param DT Temporal sampling interval
- \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template<typename ValueType>
@@ -482,8 +488,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
 
 /*! \brief calculate averaged vectors
  *
- \param dist Distribution
- \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging(){
