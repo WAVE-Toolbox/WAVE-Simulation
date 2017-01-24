@@ -2,13 +2,13 @@
 %		LAMA_Implementation_Doc
 %
 \documentclass[pdftex,a4paper,parskip,listof=totoc,bibliography=totoc,onehalfspacing,12pt]{scrreprt}
-\usepackage[ngerman]{babel}
+\usepackage[english]{babel} % If german is needed add ngerman in first bracket 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{textcomp}
 \usepackage{multirow}
-%\usepackage{graphicx} wird von pdfpages mitgeladen
+%\usepackage{graphicx} is loaded with pdfpages
 \usepackage{pict2e}
 \usepackage{multicol}
 \usepackage[automark]{scrpage2}
@@ -17,36 +17,36 @@
 \usepackage{natbib}
 \usepackage{booktabs}
 \usepackage{amsmath}
-\usepackage{mathtools}			%Zur Benutzung von \mathrlap und \mathllap
-\usepackage{amsfonts}			%Zur Benutzung von \mathbb{R} (Anzeige des Symbols für Reelle Zahlen)
+\usepackage{mathtools}			%For use of \mathrlap and \mathllap
+\usepackage{amsfonts}			%For use of \mathbb{R} (e.g. show real number letter)
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{pdfpages}
 \usepackage{eso-pic}
 \usepackage{dirtree}
 \usepackage{multirow}
-\usepackage{gauss}				% Zur Verwendung von \newcommand*\dashline... (Senkrechter Strich in Arrays)
+\usepackage{gauss}				% For use of \newcommand*\dashline... (vertical line in arrays)
 \usepackage[vlined]{algorithm2e}
 \usepackage{enumitem}
 	\setlist[itemize]{itemsep=-12pt}
 	\setlist[enumerate]{itemsep=-12pt}
 \usepackage{subcaption}
-\usepackage{lscape}		%Zur Benutzung von \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
-
-
+\usepackage{lscape}		%For use of \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
+\usepackage{adjustbox}
 \KOMAoptions{twoside}
+\setcounter{MaxMatrixCols}{50}
 
 \usepackage[left=25mm,right=25mm,bottom=35mm, footskip=20mm]{geometry}
 
-\usepackage{siunitx}		%Darstellung von Einheiten
-\sisetup{per-mode=fraction}	%Darstellung von Brüchen
+\usepackage{siunitx}		% Show units
+\sisetup{per-mode=fraction}	% Representation of fractions
 
 
 \usepackage{listings}
-\usepackage{scrhack}		% Komaoption \KOMAoption{listof}{leveldown} wirkt nun auch auf lstlistoflistings 
+\usepackage{scrhack}		% Comma-option \KOMAoption{listof}{leveldown} only effects lstlistoflistings 
 
-\lstdefinestyle{MyMatlab}		% Definition von eigenen Listing-styles
-{						% Anwenden mit "\lstinputlisting[style=MyMatlab]{../reflexion/Matlab_Skripte/resample.m}"
+\lstdefinestyle{MyMatlab}		% Definition of individual listing-styles
+{						% Applications with "\lstinputlisting[style=MyMatlab]{../reflexion/Matlab_Skripte/resample.m}"
 	language={Matlab},
 	captionpos={t},
 	inputencoding={latin1},
@@ -121,13 +121,32 @@
 
 \renewcommand{\theequation}{\arabic{section}.\arabic{equation}} %Die Nummerierung Formeln wird geändert
 
+
+\renewcommand{\partheadmidvskip}{\enskip}
+\renewcommand{\partformat}{\thepart\autodot}
+
 \renewcommand{\arraystretch}{1.2} %Legt den Faktor fest, um den der Zeilenabstand innerhalb einer Tabelle oder eines Array gedeht wird
 \newcommand*\dashline{\hspace{-0.3em}\rotatebox[origin=c]{90}{\scalebox{-0.3}[1]{$-~~-$}}\hspace{-0.3em}}
+\newcommand*\longdashline{\hspace{-0.3em}\rotatebox[origin=c]{90}{\scalebox{-0.4}[1]{$-~~-~~-~~-$}}\hspace{-0.3em}}
 
 %\setlength{\oddsidemargin}{20mm} 
 %\setlength{\evensidemargin}{20mm} 
 
 \renewcommand*{\chapterheadstartvskip}{\vspace*{-1\baselineskip}}	%legt Abstand vor chapter fest
+
+\newcommand{\CC}[1][]{$\text{C\hspace{0ex}}^{_{_{_{++}}}}					%Write nicer ++ signs in C++
+                      \ifthenelse{\equal{#1}{}}{}{\text{\hspace{-.625ex}#1}}$} 
+\newcommand{\clang}[1][]{$\text{clang\hspace{0ex}}^{_{_{_{++}}}}		%Write nicer ++ signs in clang++
+                      \ifthenelse{\equal{#1}{}}{}{\text{\hspace{-.25ex}(#1)}}$} 
+\newcommand{\gCC}[1][]{$\text{g\hspace{0ex}}^{_{_{_{++}}}}				%Write nicer ++ signs in g++
+                      \ifthenelse{\equal{#1}{}}{}{\text{\hspace{-.25ex}(#1)}}$} 
+                      
+\newcommand\coolover[2]{\mathrlap{\smash{%
+\overbrace{\phantom{\begin{matrix} #2 %
+\end{matrix}}}^{\mbox{$#1$}}}}#2}
+                      
+\newcommand{\shellcmd}[1]{\indent\indent\texttt{#1}}	%change font for shell entries  
+\newcommand{\shellcmdline}[1]{\indent\indent\texttt{\quad#1}} 	%change font for command lines and indention
 
 
 \makeatother
@@ -159,6 +178,8 @@ urlcolor=LinkColor}
 
 \begin{document}
 
+\selectlanguage{english}
+
 \numberwithin{equation}{chapter} %legt die Formelnummerierung fest
 
 
@@ -171,9 +192,10 @@ urlcolor=LinkColor}
 \end{figure}
 
 \begin{center}
-\Large{Theorie der Finite Differenzen Simulation\\ im Matrix-Vektor Formalismus}\\
+\vspace{2cm}
+\huge{FDSimulation\_LAMA }\\
 \vspace{0.5cm}
-
+\large{HPC Finite Difference Simulation in Matrix-Vector Formalism}
 \end{center}
 
 \vfill
@@ -181,7 +203,7 @@ urlcolor=LinkColor}
 {\Large{\url{wave-toolbox.org}}}
 
 
-{\small Dokumentation erstellt am \today}
+{\small Document created \today}
 \end{center}
 
 \newpage 
@@ -201,8 +223,8 @@ Supported by the German Ministry of Education and Research (BMBF) through the pr
 
 \newpage
 
-\tableofcontents %Inhaltsverzeichnis wird eingefügt \tableofcontens einfügen vor \addcontentsline, damit der Verweis beim Klicken im Dokument richtig funktioniert
-\addcontentsline{toc}{section}{Inhaltsverzeichnis} %Inhaltsverzeichnis wird im Inhaltsverzeichnis angezeigt
+\tableofcontents % Table of contents is inserted \tableofcontens (insert \addcontentsline, so the content is linked correctly)
+\addcontentsline{toc}{chapter}{Contents} %"Contents" will be displayed in contents
 
 
 
@@ -210,15 +232,37 @@ Supported by the German Ministry of Education and Research (BMBF) through the pr
 \setcounter{page}{1}
 
 \cleardoublepage
-\chapter{Physikalische Herleitung der Wellenausbreitung}
+%\markboth{}{License}
+\chapter*{License}
+\addcontentsline{toc}{chapter}{License}
 
-In diesem Kapitel werden die theoretischen Grundlagen für die physikalische Beschreibung der Wellenausbreitung in elastischen Medien gelegt. Dazu zählt die allgemeine Spannungs-Dehnungs-Beziehung von Festkörpern bzw. viskosen Fluiden. Des Weiteren wird die Impulserhaltung am infinitesimalen Volumenelement angewendet.
+FDSimulation\_LAMA is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License (GNU AGPL v3) as published by the Free Software Foundation, version 3.0 of the License only.
+ 
+FDSimulation\_LAMA is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with FDSimulation. See file LICENSE and/or \url{https://www.gnu.org/licenses/agpl-3.0.de.html}.
 
-\section{Allgemeiner Spannungszustand}
+The authors of FDSimulation\_LAMA are listed in file \lstinline{AUTHORS}.
+
+\cleardoublepage
+%\markboth{}{Introduction}
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+
+
+
+\cleardoublepage
+\part{Theory of Finite Difference Simulation in Matrix-Vector Formalism}
+\chapter{Physical Derivation of Wave Propagations}
+
+This chapter contains the theoretical principles for the physical description of wave propagation in elastic media. This also includes the general stress-stain relation of solid objects or viscose fluids. Furthermore conservation of momentum is applied to infinitesimal volume elements.
+
+\section{General State of Stress}
 \label{kap:AllSp}
-Anders als nicht viskose Fluide können viskose Fluide und Festkörper unter Schubspannung stehen und die Normalspannung in den 3 Raumrichtungen sind im Allgemeinen verschieden. Dies ist durch die nun vorhandene inneren Reibung zu erklären.
 
-Der Spannungszustand wird anhand eines infinitesimalen Volumenelements $\partial V = \partial x~ \partial y~ \partial z$ in Abbildung \ref{fig:AllgSpZu} dargestellt.
+Other than not viscose fluids, viscose fluids and solid objects can be under shear stress. The normal stress in all spatial directions is generally varying. This can be explained by internal friction.
+
+The state of stress is represented by an infinitesimal volume element  $\partial V = \partial x~ \partial y~ \partial z$, as shown in figure \ref{fig:AllgSpZu}.
+
 
 \begin{figure}
 \centering
@@ -272,13 +316,14 @@ Der Spannungszustand wird anhand eines infinitesimalen Volumenelements $\partial
 		\draw [->, color=green] (19.center) to (22.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Darstellung des allgemeinen Spannungszustandes anhand des Volumenelements $\partial V = \partial x~ \partial y~ \partial z$.}
+\caption[Representation of the general stress state by a volume element.]{Representation of the general stress state by a volume element $\partial V = \partial x~ \partial y~ \partial z$. Where $\sigma_{ij}$ corresponds to normal stress and $\tau_{ij}$ to shear stress. }
 \label{fig:AllgSpZu}
 \end{figure}
 
-Bei der Indexnotation $\sigma_{ij}$ bezeichnet $i$ die Richtung der Flächennormalen, auf welche die Spannung wirkt und $j$ die Richtung der Spannung selbst. $\sigma_{ii}$ sind Normalspannungen mit der Konvention $\sigma_{ii} > 0$: Zug, $\sigma_{ij} < 0$: Druck. $\sigma_{ij}$ mit $i \neq j$ werden auch mit $\tau_{ij}$ bezeichnet und stellen die Schubspannungen dar.
+In index notation $\sigma_{ij}$, index $i$ represents the direction of the surface normal, which is affected by the stress and index $j$ describes the direction of the stress itself. 
+$\sigma_{ii}$ correspond to normal stress with the convention $\sigma_{ii} > 0$: drag and $\sigma_{ii} < 0$: pressure. $\sigma_{ij}$ with  $i \neq j$ are also denoted by $\tau_{ij}$ and correspond to shear stress. 
 
-Da der Spannungszustand Körper im statischen Gleichgewicht darstellt, ist für jede Spannung auf den drei verdeckten Seiten je eine entgegen gerichtete Gegenspannung vorhanden.
+As the state of stress represents an object in a static equilibrium, for every tension on one of the three covered sides there exists a counter-stress in the opposite direction. 
 
 \begin{minipage}[t]{0.4\textwidth}
 \begin{equation}
@@ -293,85 +338,86 @@ Da der Spannungszustand Körper im statischen Gleichgewicht darstellt, ist für 
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-Damit das Volumenelement nicht in Rotation gerät muss also gelten, dass $\sigma_{ij} = \sigma_{ji}$ (Drehimpulserhaltung). Daraus folgt, dass $\sigma_{ij}$ symmetrisch ist und \num{6} unabhängige Spannungen besitzt.
+To prevent the volume from rotation the following must apply: $\sigma_{ij} = \sigma_{ji}$ (conservation of angular momentum). Hence, $\sigma_{ij}$ is symmetric and contains \num{6} independent entries of stress.
 \end{minipage}
 
-Durch das Hookesche Gesetz wird der Zusammenhang zwischen Spannung un Dehnung hergestellt. Für kleine Dehnungen gegenüber der Wellenlänge, was bei der Propagation von seismischen Wellen stets gegeben ist, hängt jede Spannungskomponente näherungsweise linear von den Dehnungen ab.
+By applying Hook's law a connection between stress and dilatation  can be established. In case of small dilatations in comparison to the wavelength, which in case of seismic waves is always given, the dependancy of the stress component to dilatation can be approximated as a linear relation.
 
 \begin{minipage}[t]{0.4\textwidth}
 \begin{equation}
-	\sigma_{ij} = C_{ijkl} \epsilon_{kl}
+	\sigma_{ij} = C_{ijkl} \cdot\epsilon_{kl}
 \end{equation}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
-$\sigma_{ij}$: Spannungstensor\\
-$\epsilon_{kl}$: Verzerrungstensor\\
-$C_{ijkl}$: Elastizitätstensor
+$\sigma_{ij}$: stress tensor\\
+$\epsilon_{kl}$: strain tensor\\
+$C_{ijkl}$: elastic moduli
 \end{minipage}
 
-Der Elastizitätstensor $C$ ist \num{4}-dimensional und hat im Allgemeinen $3^4 = 81$ Elemente. Aufgrund der Symmetrie von $\sigma$ und $\epsilon$ reduziert sich die Zahl der unabhängigen Komponenten auf 36. Aus energetischen Überlegungen reduziert sich diese weiter auf \num{21} und bei isotropen Medien schließlich auf \num{2}.
+The elastic moduli $C_{ijkl}$ is \num{4}-dimensional and  in general has $3^4 = 81$ elements. Because $\sigma_{ij}$ and $\epsilon_{kl}$ are symmetrical, the number of independent components reduces to \num{36}. With energetic reasoning the problem can be reduced furthermore to \num{21} and in isotropic media eventually even to \num{2} components. 
 
-Somit lässt sich das generalisierte Hookesche Gesetz für linear elastische, isotrope Medien formulieren:
+Thus the generalised Hook's law for linear elastic and isotropic media can be derived:
 \begin{align}
 	\sigma_{ij} &= \lambda \epsilon_{rr} \delta_{ij} + 2 \mu \epsilon_{ij}\label{eqn:GenHook}\\
 	\epsilon_{ij} &= \frac{1}{2} \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right)\label{eqn:Dehnij}
 \end{align}
-Hier bezeichnet $\lambda$ die erste Lamé-Konstante und $\mu$ die zweite Lamé-Konstante (auch Schubmodul genannt). $\delta_{ij}$ ist das Kronecker-Delta. $\epsilon_{ij}$ bezeichnet nun den linearisierten Verzerrungstensor. $u_i$ ist die Verschiebung eines Partikels in Richtung $i$.
+Here $\lambda$ is the first Lam\'{e} parameter and $\mu$ the second Lam\'{e} parameter. $\delta_{ij}$ is equivalent to the Kronecker delta. $\epsilon_{ij}$ represents the linear strain tensor and $u_i$ resembles the displacement of a particle in $i$-direction.
 
-\section{Impulserhaltung}
-Neben der Spannungs-Dehnungs-Beziehung ist die Impulserhaltung (Kraftdichtebilanz) der Kern der elastischen Wellenausbreitung. Sie entspricht prinzipiell der differentiellen Formulierung des dynamischen Gleichgewichts pro Volumeneinheit. Man betrachte dazu ein infinitesimales Volumen mit der Kantenlänge $\partial x_i$. Auf ihn wirken zwei Arten von Kräften, Volumenkraft und Oberflächenkraft. \citep{landau:97}
+\section{Conservation of Momentum}
 
-Die Volumenkraft, Trägheitskraft und Gravitationskraft, wirkt auf den Körper aufgrund seines massebehafteten Volumens.
+Beside the stress-stain relation, conservation of momentum is main a core concept for elastic wave propagation. In principle conservation of momentum corresponds to differential formulation of a dynamic equilibrium per volume unit. There are two applying force to an infinitesimal volume with edge length $\partial x_i$, volume force and surface force. \citep{landau:97}
 
-Die Trägheitskraft lässt sich mit dem zweiten Newtonschen Axiom in seiner ursprünglichen Formulierung schreiben als:
+Volume force, inertial force and gravitational force apply to objects due to having mass. 
+Inertial forces can be derived by applying Newton's  second law of motion in it's original formulation: 
 \begin{equation}
-	\frac{\mathrm{d} p}{\mathrm{d} t} = \frac{\mathrm{d} (\partial m \cdot v_i)}{\mathrm{d} t} = \underbrace{\frac{\mathrm{d} (\partial m)}{\mathrm{d} t}}_{\mathrlap{\text{$= 0$ , da $m$ unabhängig von $t$}}} v_i + \partial m \frac{\mathrm{d} v_i}{\mathrm{d} t}
+	\frac{\mathrm{d} p}{\mathrm{d} t} = \frac{\mathrm{d} (\partial m \cdot v_i)}{\mathrm{d} t} = \underbrace{\frac{\mathrm{d} (\partial m)}{\mathrm{d} t}}_{\mathrlap{\text{$= 0$ , as $m$ is $t$-independent}}} v_i + \partial m \frac{\mathrm{d} v_i}{\mathrm{d} t}
 \end{equation}
-und als Trägheitskraftdichte mit $v_i = v_i (x_k,t)$:
+Writing the inertial force density with $v_i = v_i (x_k,t)$:
 \begin{equation}
-	f_{T,i} = \frac{\partial m}{\partial V} \frac{\mathrm{d} v_i}{\mathrm{d} t} = \rho \frac{\mathrm{d} v_i}{\mathrm{d} t} = \rho \bigg[ \frac{\partial v_i}{\partial t} + \underbrace{v_k \frac{\partial v_i}{\partial x_k}}_{\mathrlap{\substack{\text{$\approx 0$ , da Verschiebungen klein}\\\text{gegenüber Wellenlängen}}}} \bigg] \approx \rho \frac{\partial v_i}{\partial t}\label{eqn:TKD}
+	f_{I,i} = \frac{\partial m}{\partial V} \frac{\mathrm{d} v_i}{\mathrm{d} t} = \rho \frac{\mathrm{d} v_i}{\mathrm{d} t} = \rho \bigg[ \frac{\partial v_i}{\partial t} + \underbrace{v_k \frac{\partial v_i}{\partial x_k}}_{\mathrlap{\substack{\text{$\approx 0$, for small shifts in relation}\\\text{ to the wavelength}}}} \bigg] \approx \rho \frac{\partial v_i}{\partial t}\label{eqn:TKD}
 \end{equation}
-Für elastische Raumwellen kann die Gravitationskraft vernachlässigt werden. Sie spielt lediglich für sehr niederfrequente Eigenschwingungen der Erde eine Rolle.
+For elastic body waves, the gravitational force can be ignored. Only in case of low frequent natural oscillation, gravitation has an effect and should be considered.
 
-Die Oberflächenkraft wirkt auf den Körper aufgrund des Spannungszustandes. Die Berechnung erfolgt anhand der Kräftebilanz für alle drei Raumrichtungen.
-
-Zunächst wird die Oberflächenkraft als Integral des Spannungsvektors $\vec{s}$ über die Oberfläche eines Volumenelements $\partial V$ dargestellt.
+Surface forces affect an object due to its stress conditions. The derivation of surface forces is made by evaluating the force balance in all three spatial directions.
+To begin with the surface force can be written as an integration of the stress vector $\vec{s}$ over the object's surface $\partial V$.
 \begin{equation}
-	\vec{F}_O = \int_A \vec{s} ~\mathrm{d}A
+	\vec{F}_s = \int_A \vec{s} ~\mathrm{d}A
 \end{equation}
-
-Allgemein lässt sich der Spannungsvektor, der auf einer beliebigen Fläche steht, durch Multiplikation des transponierten Spannungstensors mit der Flächennormalen $\vec{n}$ berechnen. Hier ist zu beachten, dass der Spannungstensor aufgrund der Drehimpulserhaltung symmetrisch ist (s. Kapitel \ref{kap:AllSp}) und somit gilt $\sigma^T = \sigma$
+In general the stress vector, perpendicular to an arbitrary surface, can be calculated by multiplying the transposed stress tensor with the normal vector of the surface $\vec{n}$. Note that the stress tensor is symmetric due to conservation of angular momentum (see chapter \ref{kap:AllSp}) and therefore $\sigma^T = \sigma$ applies.
 \begin{equation}
-	\vec{s} = \sigma^\mathrm{T} \vec{n}
+	\vec{s} = \sigma^\mathrm{T} \cdot\vec{n}
 \end{equation}
-Mit dem gerichteten Flächenelement $\mathrm{d}\vec{A} = \vec{n} ~\mathrm{d}A$ lässt sich die Oberflächenkraft umschreiben.
+With a directed plane element $\mathrm{d}\vec{A} = \vec{n} ~\mathrm{d}A$, the surface force can be rewritten to: 
 \begin{equation}
-	\vec{F}_O = \int_A \sigma \vec{n} ~\mathrm{d}A = \int_A \sigma \mathrm{d}\vec{A} 
+	\vec{F}_s = \int_A \sigma \cdot\vec{n} ~\mathrm{d}A = \int_A \sigma \mathrm{d}\vec{A} 
 \end{equation}
-Der Integralsatz von Gauß $\int_A \vec{F}~\mathrm{d}\vec{A} = \int_V \operatorname{div} \vec{F} ~\mathrm{d}V$ ermöglicht es das Oberflächenintegral in ein Volumenintegral zu überführen. Dies ist hier vorteilhaft, da so durch das Volumenelement geteilt werden kann, wodurch man die gewünschte Größe einer Oberflächenkraftdichte $\vec{f}_{O}$ erhält.
+The divergence theorem also known as Gauss's theorem $\int_A \vec{F}~\mathrm{d}\vec{A} = \int_V \operatorname{div} \vec{F} ~\mathrm{d}V$ enable to transfer the surface integral to a volume integral. This is beneficial to obtain the surface force density $\vec{f}_{s}$, by simply dividing the surface force by the volume. 
 \begin{align}
-	\vec{F}_O &= \int_A \sigma \mathrm{d}\vec{A} = \int_V \operatorname{div} \sigma ~\mathrm{d}V\\
-	\vec{f}_O &= \frac{\vec{F}_O}{\mathrm{d}V} = \operatorname{div} \sigma~~~~~~~\vec{f}_{O,i} = \frac{\partial \sigma_{ij}}{\partial x_j}\label{eqn:OFKD}
+	\vec{F}_s &= \int_A \sigma \mathrm{d}\vec{A} = \int_V \operatorname{div} \sigma ~\mathrm{d}V\\
+	\vec{f}_s &= \frac{\vec{F}_s}{\mathrm{d}V} = \operatorname{div} \sigma~~~~~~~\vec{f}_{s,i} = \frac{\partial \sigma_{ij}}{\partial x_j}\label{eqn:OFKD}
 \end{align}
-Schließlich kann das Kraftdichtegleichgewicht $f_{T,i} = f_{O,i}$ aus Gleichung \ref{eqn:TKD} und \ref{eqn:OFKD} zur elastischen Bewegungsgleichung ausformuliert werden.
+Finally the equilibrium of forces $f_{T,i} = f_{s,i}$, resulting from equation \ref{eqn:TKD} and \ref{eqn:OFKD} can be formulated to obtain the equation of motion 
 \begin{equation}
 	\rho \frac{\partial v_i}{\partial t} =  \frac{\partial \sigma_{ji}}{\partial x_j}\label{eqn:ElBewGl}
 \end{equation}
-Die drei Gleichungen \ref{eqn:ElBewGl}, \ref{eqn:GenHook} und \ref{eqn:Dehnij} beschreiben die vollständige Wellenausbreitung in linear elastischen, isotropen Medien.
 
-Ableiten der Materialgesetze nach der Zeit führt zusammen mit Gl. \ref{eqn:ElBewGl} auf die sogenannte Spannungs-Geschwindigkeits Formulierung:
+The tree equations \ref{eqn:ElBewGl}, \ref{eqn:GenHook} and \ref{eqn:Dehnij} describe a complete wave propagation in linear elastic and isotropic media.
+Time-derivation of equations \ref{eqn:GenHook} and \ref{eqn:Dehnij} together with equation \ref{eqn:ElBewGl} leads to the stress-velocity formulation:
 \begin{align}
 	\frac{\partial\sigma_{ij}}{\partial t} &= \lambda \frac{\epsilon_{rr}}{\partial t} \delta_{ij} + 2 \mu \frac{\epsilon_{ij}}{\partial t}\label{eqn:GenHookdt}\\
 	\frac{\partial\epsilon_{ij}}{\partial t} &= \frac{1}{2} \left( \frac{\partial v_i}{\partial x_j} + \frac{\partial v_j}{\partial x_i} \right)\label{eqn:Dehnijdt}
 \end{align}
-
 \cleardoublepage
-\chapter{Diskretisierung der Wellengleichung}
-Zur Lösung der Wellengleichung mit finiten Differenzen müssen die physikalisch kontinuierliche Raum und Zeit in mathematisch diskretisierte Gitter aufgelöst werden. Für die Koordinaten gilt $x=k \cdot \Delta x$, $y=l \cdot \Delta y$, $z=m \cdot \Delta z$, $t=n \cdot \Delta t$. $\Delta x, \Delta y, \Delta z$ bezeichnen die räumlichen Abstände der Gitterpunkte in der jeweiligen Richtung, $\Delta t$ der zeitliche Abstand. Das Gitter hat eine Gesamtgröße von $NX \times NY \times NZ$. Die Simulationsdauer beträgt $NT \cdot \Delta t$.
 
-\section{Definition des \textit{Standard Staggered Grid} (SSG)}
-Das SSG \citep{virieux:86,levander:88} ist eine Methode die physikalischen Größen so auf und zwischen Gitterpunkten zu verteilen, damit sich die partiellen Differentialgleichungen der Wellengleichung jeweils auf einen gemeinsamen Punkt im Gitter beziehen. Die Gestalt des SSG in drei Dimensionen ist in Abbildung \ref{fig:StagGrid} dargestellt. Die zeitliche Dimension ist nicht explizit gezeigt. Die Spannungen $\sigma$ liegen zeitlich auf halben Gitterpunkten, die Partikelgeschwindigkeiten $v$ auf ganzen.
+\chapter{Discretization}
+
+To solve the wave equations with finite differences, the physical continuous space and time have to be discretised in mathematical grids. Space and time coordinates are given by $x=k \cdot \Delta x$, $y=l \cdot \Delta y$, $z=m \cdot \Delta z$ and $t=n \cdot \Delta t$. The spacial intervals between grid points in each direction are represented by $\Delta x, \Delta y$ and $\Delta z$. $\Delta t$ is equivalent to a time interval. The total grid size $N$ is equal to $NX \times NY \times NZ$ and the simulation duration $T$ is $NT \cdot \Delta t$.
+
+\section{Definition of the \textit{Standard Staggered Grid} (SSG)} \label{sec:SSG}
+
+The SSG \citep{virieux:86,levander:88} is a method to distribute physical quantities over grid points, so the partial differential wave equations each refer to a common grid point. The shape of the SSG in three dimensions is shown in figure \ref{fig:StagGrid}. Here temporal dimension is not shown explicitly. Stress components $\sigma_{ij}$ are temporally located on half-spaced grid points, the particle velocity $v_{i}$ is situated on full grid points.
+
 \begin{figure}
 \begin{tikzpicture}
 	\begin{pgfonlayer}{nodelayer}
@@ -412,76 +458,88 @@ Das SSG \citep{virieux:86,levander:88} ist eine Methode die physikalischen Grö�
 		\draw [->] (5.center) to (10.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Darstellung des \textit{Standard Staggered Grid} (SSG) mit der Verteilung von Material- und Wellenfeldparametern in 3-D.}
+\caption[Representation of the \textit{Standard Staggered Grid} (SSG).]{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wavefield parameter in 3-D.}
 \label{fig:StagGrid}
 \end{figure}
 
-Nach dem Lösungsansatz mit finiten Differenzen werden die analytischen Berechnungen der räumlichen und zeitlichen Ableitungen durch ein gewichtetes Mittel (FD-Operatoren) von Werten auf umgebenden Gitterpunkten genähert. Es stehen FD-Operatoren verschiedener Ordnung zur Verfügung, die eine unterschiedliche Anzahl von Gitterpunkten für die Näherung miteinbeziehen. Je weiter sie greifen, desto besser ist die Näherung, jedoch steigt auch der Berechnungsaufwand.
+Using the solution approach of finite differences, the analytical calculations of spatial and time derivation are approximated by calculating the weighted average (FD-operators) of surrounding grid points. Depending on the FD-operator order, more surrounding grid points are included in the averaging. Models can be approximated more exactly by using higher orders, at the expense of higher computing effort and thus higher computing time.
 
-Für eine praktikable Umsetzung des FD-Schemas erfolgt die Lösung der Wellengleichung in einem rekursiven Zeitschrittverfahren. Dazu werden die zeitlichen Ableitungen von Spannungen und Partikelgeschwindigkeiten durch FD-Operatoren 2. Ordnung ersetzt. Hierbei entstehen je zwei zeitlich aufeinander folgende Werte von $\sigma_{ij}$ bzw. $v_i$.
+To accomplish a feasible implementation of the finite difference calculations to solve the wave equations, calculations are made in recursive time-stepping. Therefor time derivation of stress and particle velocity are replaced by second order FD-operators, resulting in two temporal successive values of stress $\sigma_{ij}$ or velocity $v_i$.
 \begin{align}
-	\rho \frac{\partial v_i}{\partial t} &= \frac{\partial \sigma_{ji}}{\partial x_j} ~ &\text{mit} \quad \left.\frac{\partial v_i}{\partial t}\right\rvert^{n+\frac{1}{2}} &\approx \frac{v_i^{n+1} - v_i^{n}}{\Delta t}\notag\\
+	\rho \frac{\partial v_i}{\partial t} &= \frac{\partial \sigma_{ji}}{\partial x_j} \qquad \qquad \qquad \quad \,\,\,\, \text{with} \quad \left.\frac{\partial v_i}{\partial t}\right\rvert^{n+\frac{1}{2}} \approx \frac{v_i^{n+1} - v_i^{n}}{\Delta t}\notag\\
 	&\rightarrow v_i^{n+1} \approx v_i^n + \frac{\Delta t}{\rho}  \left.\frac{\partial \sigma_{ji}}{\partial x_j}\right\rvert^{n+\frac{1}{2}}\label{eqn:ElBewGlDis}\\
-	\frac{\partial \sigma_{ij}}{\partial t} &= \lambda \frac{\partial \epsilon_{rr}}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t} ~ &\text{mit} \quad \left.\frac{\partial \sigma_{ij}}{\partial t}\right\rvert^n &\approx \frac{\sigma_{ij}^{n+\frac{1}{2}} - \sigma_{ij}^{n-\frac{1}{2}}}{\Delta t}\notag\\
-	&\rightarrow \sigma_{ij}^{n+\frac{1}{2}} \approx \sigma_{ij}^{n-\frac{1}{2}} + \Delta t \cdot \lambda \left.\frac{\partial \epsilon_{rr}}{\partial t}\right\rvert^n \delta_{ij} + 2 \cdot \Delta t \cdot \mu \left.\frac{\partial \epsilon_{ij}}{\partial t}\right\rvert^n
+	\frac{\partial \sigma_{ij}}{\partial t} &= \lambda \frac{\partial \epsilon_{rr}}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t} \qquad \text{with} \quad \left.\frac{\partial \sigma_{ij}}{\partial t}\right\rvert^n \approx \frac{\sigma_{ij}^{n+\frac{1}{2}} - \sigma_{ij}^{n-\frac{1}{2}}}{\Delta t}\notag\\
+	&\rightarrow \sigma_{ij}^{n+\frac{1}{2}} \approx \sigma_{ij}^{n-\frac{1}{2}} + \Delta t \cdot \lambda \left.\frac{\partial \epsilon_{rr}}{\partial t}\right\rvert^n \delta_{ij} + 2 \cdot \Delta t \cdot \mu \left. \frac{\partial \epsilon_{ij}}{\partial t}\right\rvert^n
 \end{align}
-An Gleichung \ref{eqn:ElBewGlDis} ist bereits zu erkennen, wie die Definition der Geschwindigkeit auf ganzen und der Spannungen auf halben Gitterpunkten dazu führt, dass sich die Gleichung auf einen gemeinsamen Punkt beziehen.
+In equation \ref{eqn:ElBewGlDis} it can be seen that velocity is defined on full grid points whereas stress is defined on half grid points. This leads to the fact that the equations are referring to a joint grid point. 
 
-Eine kompakte Beschreibung des kompletten FD-Schemas lässt sich durch das Verwenden von Platzhaltern der räumlichen Ableitungen für FD-Operatoren beliebiger Ordnung erzielen. Hochgestellt findet sich der Zeitschritt und tiefgestellt der räumliche Mittelpunkt. Für 2. bzw. 4. Ordnung gilt:
+A compact definition of the FD-scheme can be made by defining fractions for each order of the spatial derivation as shown below. 
+In the following equations upper indices represents the time increments and lower indices describes the spatial centres. 
+
+For second and forth order the following applies: 
 \begin{align}
-	\left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{2.O.}{\coloneqq} \frac{\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}}{\Delta x}\label{eqn:FDO2O}\\
-	\left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{4.O.}{\coloneqq} \frac{\frac{9}{8}\left(\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}\right) - \frac{1}{24}\left(\sigma_{xx,k+2,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k-1,l,m}^{n+\frac{1}{2}}\right)}{\Delta x}
+	\mathcal{O}_2: \qquad   \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}}{\Delta x}\label{eqn:FDO2O}\\
+	\mathcal{O}_4: \qquad  \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\frac{9}{8}\left(\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}\right) - \frac{1}{24}\left(\sigma_{xx,k+2,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k-1,l,m}^{n+\frac{1}{2}}\right)}{\Delta x}
 \end{align}
-
-Damit lässt sich die elastische Wellengleichung unter Verwendung des SSG wie folgt diskretisieren:
+Consequently by usage of the SSG, the elastic wave equation can be discretised as follows:
 \begin{align*}
 	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} &= \sigma_{xx,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t  \cdot\mu_{k,l,m} \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n\\
 	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} &= \sigma_{yy,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t \cdot \mu_{k,l,m} \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n\\
-	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} &= \sigma_{zz,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t \cdot \mu_{k,l,m} \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n\\
+	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} &= \sigma_{zz,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t \cdot \mu_{k,l,m} \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n
+\end{align*}
+\begin{align*}
 	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} &= \sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m} \left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n \right)\\
 	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}} \left( \left.\frac{\partial v_x}{\partial z}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\\
-	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}} \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)\\
+	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}} \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)
+\end{align*}
+\begin{align*}
 	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\Delta t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
 	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
 	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
-
-
-Die Verwendung des SSG erfordert hinsichtlich numerischer Stabilität, dass die Dichte $\rho$ auf Zwischengitterpunkten aus den Dichtewerten der umgebenden ganzzahligen Gitterpunkten arithmetisch gemittelt werden. Für den 2. Lamé Parameter $\mu$ hingegen ist eine harmonische Mittelung notwendig.
+Using the SSG  requires numerical stability. Density $\rho_{klm}$ on half grid points is arithmetically averaged from surrounding full grid points. The first Lam\'{e} parameter $\mu_{k,l,m}$ however is harmonically averaged. 
 \begin{align*}
-	\rho_{k+\frac{1}{2},l,m} &= \frac{\rho_{k,l,m} + \rho_{k+1,l,m}}{2} \quad \rho_{k,l+\frac{1}{2},m} = \frac{\rho_{k,l,m} + \rho_{k,l+1,m}}{2} \quad \rho_{k,l,m+\frac{1}{2}} = \frac{\rho_{k,l,m} + \rho_{k,l,m+1}}{2}\\
+	\rho_{k+\frac{1}{2},l,m} &= \frac{\rho_{k,l,m} + \rho_{k+1,l,m}}{2} \quad \rho_{k,l+\frac{1}{2},m} = \frac{\rho_{k,l,m} + \rho_{k,l+1,m}}{2} \quad \rho_{k,l,m+\frac{1}{2}} = \frac{\rho_{k,l,m} + \rho_{k,l,m+1}}{2}
+\end{align*}
+\begin{align*}
 	\mu_{k+\frac{1}{2},l+\frac{1}{2},m} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k+1,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k+1,l+1,m}}\\
 	\mu_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k+1,l,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k+1,l,m+1}}\\
 	\mu_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k,l+1,m+1}}
 \end{align*}
 \\
-Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity. Here $\mu_{k,l,m}$ is the S-wave module and $M$ is the P-wave module. As the system is represented by relaxation bodies the summation over $q$ is equal to the summation over all $L$ Maxwell Bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{k,l,m}^s$ on half grid points is calculated by averaging $\tau_{k,l,m}^s$  from the four surrounding grid points. 
+Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity. Here $\mu_{k,l,m}$ is the first Lam\'{e} parameter or S-wave module and $M_{k,l,m}$ is the P-wave module.
+The S- and P-wave module are defined as:
+\begin{align}
+	\mu_{k,l,m}&= \rho_{,k,l,m}\cdot v_{S,k,l,m}^{2}\\
+	M_{k,l,m} &= \rho_{,k,l,m}\cdot v_{P,k,l,m}^{2}
+\end{align}
+ Where $v_{S,k,l,m}$ is the velocity of the S-wave and $v_{P,k,l,m}$ is the velocity of the P-wave.
+As the system is represented by relaxation bodies the summation over $q$ is equal to the summation over all $L$ Maxwell-bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{k,l,m}^s$ on half grid points is calculated by averaging $\tau_{k,l,m}^s$  from the four surrounding grid points. 
 \begin{align*}
 	\tau_{k+\frac{1}{2},l+\frac{1}{2},m} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l+1,m} + \tau_{k+1,l+1,m}}{4}\\
 	\tau_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l,m+1} + \tau_{k+1,l,m+1}}{4}\\
 	\tau_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{\mu_{k,l,m} + \mu_{k,l+1,m} + \tau^{-1}_{k,l,m+1} + \tau_{k,l+1,m+1}}{4}
 \end{align*}
-$r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$ -th relaxation body to help calculate the corresponding stress-tensor component $\sigma_{ij,k,l,m}$
-\\\\The components of the stress tensor are given by:\\
 
+Further on $r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$-th relaxation body, to help calculating the corresponding stress-tensor component $\sigma_{ij,k,l,m}$.
+\\\\The components of the stress tensor are given by:
 \begin{align*}
-	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} =&\sigma_{xx,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} =& \;\sigma_{xx,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xx,q,k,l,m}^{n-\frac{1}{2}}+ r_{xx,q,k,l,m}^{n+\frac{1}{2}}\right) \\
-	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} =&\sigma_{yy,k,l,m}^{n}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} =&\;\sigma_{yy,k,l,m}^{n}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n-} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,q,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
-	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} =&\sigma_{zz,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
+	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} =&\;\sigma_{zz,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,i,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
-	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =&\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m}\left(1+L\cdot\tau_{k+\frac{1}{2},l+\frac{1}{2},m}^s \right)\cdot \\ 
+	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =&\;\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m}\left(1+L\cdot\tau_{k+\frac{1}{2},l+\frac{1}{2},m}^s \right)\cdot \\ 
 	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n \right)\Bigg] + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}}\right) \\
-	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =&\sigma_{xy,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\left(1+L\cdot\tau_{k+\frac{1}{2},l,m+\frac{1}{2}}^s \right)\cdot \\ 
+	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =&\;\sigma_{xy,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\left(1+L\cdot\tau_{k+\frac{1}{2},l,m+\frac{1}{2}}^s \right)\cdot \\ 
 	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
-	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \sigma_{xy,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\left(1+L\cdot\tau_{k,l+\frac{1}{2},m+\frac{1}{2}}^s \right)\cdot \\ 
+	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \;\sigma_{xy,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\left(1+L\cdot\tau_{k,l+\frac{1}{2},m+\frac{1}{2}}^s \right)\cdot \\ 
 	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
 \end{align*}
-
 
 \begin{align*}
 	r_{xx,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xx,q,k,l,m}^{n-\frac{1}{2}} \\ 
@@ -501,18 +559,16 @@ $r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$ -th rel
 	& -\frac{\mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k,l+\frac{1}{2},m+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} \right)\Bigg] \\
 \end{align*}
 
-Just as in the elastic case the velocity equations are given by:
+Just as in the elastic case, the velocity equations for the viscoelastic case are given by:
 \begin{align*}
 	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\Delta t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
 	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
 	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
-
-\section{Ablauf der Wellenfeldberechnung}
-Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten Gleichungen an jedem Ort und zu jeder Zeit ausgewertet werden. Da jeweils der zeitlich vorangegangene Wert benötigt wird muss $n$ stetig erhöht werden. Dagegen spielt die Reihenfolge der räumlichen Abarbeitung keine Rolle. Dagegen werden die Spannungen $\sigma_{ij}^{n+\frac{1}{2}}$ für die Berechnung der Partikelgeschwindigkeiten $v_i^{n+\frac{1}{2}}$ benötigt und müssen daher zuerst berechnet werden.
-
+\section{Calculation of the Wavefield}
+To simulate the wavefields in space and time all discretised equations for stress and velocity have to be evaluated for each grid point and every time step. Since the temporal preceding value is needed, $n$ has to be increased continuously. The chronological order of calculating spatial derivations however is irrelevant. Whereas stress $\sigma_{ij}^{n+\frac{1}{2}}$ is required to calculate the particle velocity $v_i^{n+\frac{1}{2}}$ and thus has to be calculated first. The corresponding algorithm structure is shown below. 
 \begin{algorithm}
-\caption{Finite Differenzen Simulationsablauf}
+\caption{Structure of the finite differences simulation.}
 \label{alg:FD}
 \For{n=1 \KwTo NT}{
 	\For{k=1 \KwTo NX}{
@@ -533,21 +589,23 @@ Zur Simulation des Wellenfeldes in Raum und Zeit muss jede der 9 diskretisierten
 \end{algorithm}
 
 \cleardoublepage
-\chapter{Matrix-Vektor Formalismus des FD-Schemas}
-In diesem Kapitel werden zunächst die Vorteile des neuen Formalismus angesprochen. Anschließend wird die Vektorisierung der Arrays vorgenommen. Ein zentraler Schritt stellt die Auffindung von speziellen Matrizen dar, welche die FD-Operatoren auf $v_i$ und $\sigma_{ij}$ anwenden. Diese werden für ein übersichtliches Beispiel aufgeführt.
+\chapter{Matrix-Vektor Formalism of Finite Differences}
+This chapter initially appeals the advantages of the matrix-vector formalism. Subsequently the arrays are vectorised. A central task is, to find a set of matrices, which function equivalently to the FD-operators, applied to $v_i$ and $\sigma_{ij}$. The principles are shown with the aid of simple examples. 
 \section{Motivation}
-Der Matrix-Vektor Formalismus bedeutet zunächst lediglich eine kompakte Schreibweise der identischen Mathematik. Neben einer besseren Übersichtlichkeit ergeben sich die großen Vorteile erst auf Seiten der programmtechnischen Verarbeitung. Es handelt sich um eine universelle Schreibweise in die eine Vielzahl von unterschiedlichen physikalischen Problemen gebracht werden kann. So bietet das Framework \textit{LAMA} \citep{lama:16} eine Softwarestruktur für \textit{C++}, die das Schreiben von hardwareunabhängigen Programmen ermöglicht, welche zudem auf heterogenen Rechnerarchitekturen ausführbar sind. Ein Zugang zu dieser Funktionalität ist das Formulieren von Problemen im Matrix-Vektor Formalismus.
+The matrix-vector formalism is in the first place simply a compact notation for the same mathematical method. Beside greater clarity, a main benefit is in terms of program processing. It is a universal notation, which can be applied to describe numerous physical problems. Therefore the framework LAMA \citep{lama:16}, a plug-in architecture which can be used in \CC, provides the development of hardware independent software and is additionally executable on heterogenous computer architectures. The software can also be executed either on CPUs or GPUs. To access this functionality, the problem has to be reformulated to a matrix-vector formalism. 
 \begin{equation}
-	\vec{y} = A~\vec{x}
+	\vec{y} = A\cdot\vec{x}
 \end{equation}
 
-\section{Vektorisierung der Arrays}
-Wie bereits erwähnt ist die Reihenfolge der räumlichen Abarbeitung irrelevant. Dies ist Voraussetzung damit sich die drei räumlichen Schleifen sowohl für die Berechnung von $v_i$ also auch von $\sigma_{ij}$ durch Matrixoperationen ersetzen lassen. Für das Verständnis diesen Schrittes werden die diskretisierten Gleichungen mit FD-Operatoren 2. Ordnung (vgl. Gleichung \ref{eqn:FDO2O}) ersetzt, hier für eine äquidistante Gittergröße ($\Delta x = \Delta y = \Delta z = \Delta h$). Da in Programmiersprachen keine halben Indizes angesprochen werden können, sind intern all diese auf vorangegangene ganze Indizes verschoben. Für das Update von $v_x$ und $\sigma_{xy}$ gilt damit:
+\section{Vectorisation of Arrays}
+As already mentioned, the order of spatial derivation is irrelevant. This is a precondition to replace the previous formalism of three spatial loops, to calculate both $v_i$ and $\sigma_{ij}$ with matrix operations. For a better understanding, the discretised equations from section \ref{sec:SSG}, for the second order FD-operators (compare equation \ref{eqn:FDO2O}) are replaced. In this case for an equidistant grid ($\Delta x = \Delta y = \Delta z = \Delta h$). As programming language only handles full indices, half value indices are set to previous full value indices. 
+
+Therefore, to update $v_x$ and $\sigma_{xy}$  the following applies:
 \begin{multline}
 	v_{x,k,l,m}^{n+1} = v_{x,k,l,m}^n + \frac{\Delta t}{\rho_{k,l,m} \cdot \Delta h} \cdot\\  \left( \sigma_{xx,k+1,l,m}^{n} - \sigma_{xx,k,l,m}^{n} + \sigma_{xy,k,l,m}^{n} - \sigma_{xy,k,l-1,m}^{n} + \sigma_{xz,k,l,m}^{n} - \sigma_{xz,k,l,m-1}^{n} \right)\label{eqn:exMV1}
 \end{multline}
 
-Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensionalen Arrays vorliegen (hier $v_x$, $\sigma_{ij}$ und $\rho$) in Vektoren umgewandelt werden müssen. Das Vorgehen ist Konvention, muss aber konsequent eingehalten werden. Abbildung \ref{fig:ArrayToVec} illustriert die Umwandlung eines $4 \times 3 \times 2$-Arrays in einen Vektor. Zuerst wird die x-Richtung, danach die y-Richtung und zuletzt die z-Richtung projiziert.
+All physical quantities, represented by three-dimensional arrays (here $v_x$, $\sigma_{ii}$ and $\rho$), have to be converted to vectors. The approach has to be applied consequently. Figure \ref{fig:ArrayToVec} illustrates the conversation from a $4 \times 3 \times 2$-array to a single vector. Projecting first the x-direction then y-direction and finally the z-direction.
 
 \begin{figure}
 \centering
@@ -588,17 +646,22 @@ Es ist nun zu erkennen, dass alle physikalischen Größen, die in dreidimensiona
 		\draw [->](0.center) to (27.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Umwandlung eines $4 \times 3 \times 2$-Arrays in einen Vektor. Dargestellt ist der Index des sich ergebenden Vektors.}
+\caption[Transformation from a $4 \times 3 \times 2$-array to a single vector. ]{Transformation from a $4 \times 3 \times 2$-array to a single vector. Showing the indices of the resulting vector.}
 \label{fig:ArrayToVec}
 \end{figure}
 
-\section{Einführung der FD-Koeffizienten Matrizen}
-Der größter Schritt des neuen Formalismus ist das Auffinden der FD-Koeffizienten Matrizen $\underline{D}$.
+\section{Introducing the FD-Coefficient Matrices}
 
-\subsection{Auswirkung der Indexverschiebung}
-Aufgrund der Verschiebung aller halben Indizes um $-\frac{1}{2}$ muss bei der Anwendung unterschieden werden. Liegt das ursprüngliche Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem ganzen Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xx,k,l,m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ in der Ableitungsrichtung $x$ auf $k$ liegt, so greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}$ zurück. Nach der Reduzierung der halben Indizes um $-\frac{1}{2}$ verschiebt sich die Mitte des Operators ebenfalls nach links und das Ergebnis von $\sigma_{xx,k,l,m}$ an der Stelle $k$ wird aus $v_x$-Werten an den Stellen $k-1$ und $k$ berechnet (s. Abbildung \ref{fig:IndShift} links). Diese Geometrie ist bei allen $\frac{\partial v_i}{\partial x_i}$ sowie $\frac{\partial \sigma_{ij}}{\partial x_j}$ mit $i\neq j$ gegeben. Die hierzu passende FD-Koeffizienten Matrix wird mit $\underline{D}_{\,i,\mathrm{b}}$ mit b für \textit{backward} bezeichnet. Das $i$ steht für die Ableitungsrichtung.
+The biggest step in applying the new formalism is, finding the according FD-coefficient matrices $\underline{D}_i$.
 
-Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operators in seiner Ableitungsrichtung auf einem halben Gitterpunkt, wie z.B. bei dem Update von $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ wo das Zentrum von $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$ in der Ableitungsrichtung $y$ auf $l+\frac{1}{2}$ liegt. Dann greift der FD-Operator 2. Ordnung theoretisch auf den Term $v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}$ zurück. Diese $v_x$ Werte müssen in $y$-Richtung nicht verschoben werden. Jedoch wird der hiermit berechnete Wert $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ auf $\sigma_{xy,k,l,m}$, also in $y$-Richtung, verschoben, womit das Zentrum des FD-Operators nun aus Sicht von $\sigma_{xy,k,l,m}$ rechts befindet (s. Abbildung \ref{fig:IndShift} rechts). Diese Verschiebung findet sich bei allen $\frac{\partial v_i}{\partial x_j}$ mit $i\neq j$ und $\frac{\partial \sigma_{ii}}{\partial x_i}$. Hierfür lautet die Bezeichnung $\underline{D}_{\,i,\mathrm{f}}$ mit f für \textit{forward}.
+\subsection{Consequence of an Index-Shift}
+
+Due to an index-shift of all half value indices by $(-\frac{1}{2})$, when applied, it must be distinguished between two cases. 
+
+Is the original centre of the FD-operator in direction of the derivation, on full grid points, the second order FD-operator theoretically refers to $\left(v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}\right)$. Such as in case of a $\sigma_{xx,k,l,m}$-update where the centre of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ is in direction of the derivation. By shifting half value indices by $(-\frac{1}{2})$, the operator's centre is shifted likewise and the result of $\sigma_{xx,k,l,m}$ at $k$ is calculated from $v_x$ at $(k-1)$ and $k$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,b}$, where $b$ stands for \textit{backward}. $i$ represents the derivation direction.
+
+The second case occurs when the centre of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$, where the centre of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$, in derivation direction $y$, is placed at $(l+\frac{1}{2})$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}\right)$-term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ is shifted to $\sigma_{xy,k,l,m}$, which is equal to a shift in $x$ and in $y$-direction by $(-\frac{1}{2})$. Thus the centre of the FD-operator is shifted to the right, compared to the $\sigma_{xy,k,l,m}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,f}$, where $f$ indicates \textit{forward}.
+These Determinations manifests itself by shifting the FD-coefficients in the matrix, which in general can be expressed by $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$.
 
 \begin{figure}
 \begin{tikzpicture}
@@ -627,22 +690,19 @@ Der hiervon zu unterscheidende Fall liegt vor, wenn das Zentrum eines FD-Operato
 		\draw [->](15.center) to (16.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption{Wirkung der Indexverschiebung auf die Lage der FD-Operatoren. Links: Ursprünglicher Mittelpunkt liegt auf $k$ und verschiebt sich relativ nach rechts, wodurch er zurückgreift ($\underline{D}_{\,i,b}$). Rechts: Ursprünglicher Mittelpunkt liegt auf $k+\frac{1}{2}$ und verschiebt sich relativ nach links, wodurch er vorgreift ($\underline{D}_{\,i,f}$).}
+\caption[Effect of an index-shift to the FD-operator's position.]{Effect of an index-shift to the FD-operator's position. Left: The original center is placed at $k$ and is relatively shifted to the right, by which it falls back ($\underline{D}_{\,i,b}$). Right: The original center is placed at $k+\frac{1}{2}$ and is relatively shifted to the left, by which it set forward ($\underline{D}_{\,i,f}$).}
 \label{fig:IndShift}
 \end{figure}
 
-
-Die Auswirkung dieser Unterscheidung äußert sich in einer Verschiebung der FD-Koeffizienten in der Matrix, was sich allgemein durch $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$ ausdrücken lässt.
-
-\subsection{Vervollständigung des Formalismus}
-
-Ein Beispiel für eine Updategleichung im neuen Matrix-Vektor Formalismus basiert auf Gleichung \ref{eqn:exMV1}, wo die Indexverschiebung bereits durchgeführt wurde:
+\subsection{Completing the Formalism}\label{sec:Mat}
+An example for an update equation in the matrix-vector formalism is based on equation \ref{eqn:exMV1}, where the index-shift has already been executed:
 \begin{equation}
 	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^2 \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^2 \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
 \end{equation}
-Die Diagonalmatrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ enthält die Werte des Dichtemodells. $\underline{D}_{\,i,b}^2$ bzw. $\underline{D}_{\,i,f}^2$  beinhaltet die FD-Koeffizienten 2. Ordnung für die Ableitungsrichtung $i$. Die Aufgabe besteht nun darin, die Matrizen $\underline{D}_{\,i}^2$ zu finden, sodass sie die Modellvektoren $\vec{\sigma}_{ij}$ auf die FD-Operatoren abbilden. 
+The diagonal matrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ contains the density model values. $\underline{D}_{\,i,b}^2$ or $\underline{D}_{\,i,f}^2$ contain the second order FD-coefficients (the order is indicated by the upper index) in spatial derivation direction $i$. Now the matrix $\underline{D}_{\,i}^2$ has to be found, so that the model $\vec{\sigma}_{ij}$ is equivalent to the according FD-operators.
 
-Nachfolgend werden die Matrizen $\underline{D}_{\,i,f}^2$ und $\underline{D}_{\,i,f}^4$ dargestellt um sich die Auswirkungen der FD-Ordnung machen zu können. Man führe die Multiplikation folgender Matrizen in Gleichung \ref{eqn:exMV2} für obiges Beispiel aus und überzeuge sich vom Ergebnis. Anschließend folgt die Entwicklung der $\underline{D}_{\,i,b}$.
+Following, the matrices $\underline{D}_{\,i,f}^2$ and $\underline{D}_{\,i,f}^4$ are shown to point out the impact on the FD-order. Performing the matrix multiplication from equation \ref{eqn:exMV2} leads to the expressions for $\underline{D}_{\,i,b}$.
+
 \begin{align*}
 	\underline{D}_{\,x,f}^2 &= \begin{psmallmatrix}
 \text{-}1 & 1 & 0 & 0 &\dashline& 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 && 0 & 0 & 0 & 0 \\
@@ -817,36 +877,268 @@ Nachfolgend werden die Matrizen $\underline{D}_{\,i,f}^2$ und $\underline{D}_{\,
 \end{psmallmatrix}
 \end{align*}
 
-Außerhalb der senkrechten gestrichelten Linien sind alle Einträge Null, unabhängig von der Ordnung der FD-Operatoren. Der Grund hierfür ist der Tatsache geschuldet, dass an diesen Stellen ein Sprung $y\rightarrow y+1$ nach $NX$ Einträgen bei $\underline{D}_{\,x}$ oder $z\rightarrow z+1$ nach $NX \cdot NY$ Einträgen bei $\underline{D}_{\,y}$ stattfindet.
+Beyond the dashed lines all entries are equal to 0, independent form the FD-operator's order. The reason for this is due to the fact that at this position the indices have to skip from $y\rightarrow y+1$ after $NX$ entries in $\underline{D}_{\,x}$ or from $z\rightarrow z+1$ afrter $NX \cdot NY$ entries in $\underline{D}_{\,y}$.
 
-Alle $\underline{D}_{\,i,b}$ lassen sich aus $\underline{D}_{\,i,f}$ ableiten, indem alle Einträge ungleich Null einer Zeile durch ihren rechten Nachfolger ungleich Null ersetzt werden. Dass dies einer Multiplikation mit $-1$ und einem Transponieren entspricht wird besonders bei $\underline{D}_{\,y}^4$ deutlich.
+All $\underline{D}_{\,i,b}$ can be derived from $\underline{D}_{\,i,f}$ by switching all entries $\neq 0$  in a row with the next value $\neq 0$ to the right. As this is equivalent to a multiplication with $(-1)$ followed by a transposition is obvious especially for $\underline{D}_{\,y}^4$.
 
+An important property of the FD-coefficient matrix is, how the model border is treated. Because entries beyond the model don't exist. Inevitably this entails that updates of $v_i$ and $\sigma_{ij}$ near the edge have to be calculated from partial FD-operators. At $v_x^{n+1}$ in the last $yz$-plane with $k=NX$ for example it is not possible to refer to grid point beyond the last plane. The second order FD-operator then can only be calculated from $\sigma_{xx}^n$, $\sigma_{xy}^n$ as well as $\sigma_{xz}^n$. Not including values beyond the edge is equal to fixing the wavefield and consequently the medium itself at the borders. Thus this provokes a total reflection. 
 
-Eine wichtige Eigenschaft der FD-Koeffizienten-Matrizen liegt in ihrer Behandlung des Modellrandes über welchen sie niemals hinaus greifen. Dies führt zwangsläufig dazu, dass das Update von $v_i$ und $\sigma_{ij}$ in der Nähe des Randes aus einem unvollständigen FD-Operator berechnet wird. So wird für $v_x^{n+1}$ in der letzten $y-z-$Ebene mit $k=NX$ nicht vorgegriffen und bei einem FD-Operator 2. Ordnung lediglich je ein Wert von $\sigma_{xx}^n$, $\sigma_{xy}^n$ und $\sigma_{xz}^n$ verwendet. Das nicht Beachten aller Größen außerhalb des Randes entspricht einem Festhalten des Wellenfeldes und damit der festen Einspannung des Mediums. Die Folge ist eine vollständige Reflexion.
-
-Alle diskretisierte Komponenten der elastischen Wellengleichung in Matrix-Vektor Schreibweise lauten:
+The discrete components for an acoustic wavefield in matrix-vector notation can be written as:
 \begin{align*}
-	\vec{\sigma}_{xx}^{\,n} &= \vec{\sigma}_{xx}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,x,b}^q \vec{v}_x\\
-	\vec{\sigma}_{yy}^{\,n} &= \vec{\sigma}_{yy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,y,b}^q \vec{v}_y\\
-	\vec{\sigma}_{zz}^{\,n} &= \vec{\sigma}_{zz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,z,b}^q \vec{v}_z\\
-	\vec{\sigma}_{xy}^{\,n} &= \vec{\sigma}_{xy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x + \underline{D}_{\,x,f}^q \vec{v}_y \right)\\
-	\vec{\sigma}_{xz}^{\,n} &= \vec{\sigma}_{xz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x + \underline{D}_{\,x,f}^q \vec{v}_z \right)\\
-	\vec{\sigma}_{yz}^{\,n} &= \vec{\sigma}_{yz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y + \underline{D}_{\,y,f}^q \vec{v}_z \right)\\
-	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
-	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
-	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
+	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) 
 \end{align*}
-
-\newpage
-
-Acoustic version:
 \begin{align*}
-	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) \\
 	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p}^{\,n}  \right)\\
 	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p}^{\,n} \right)\\
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
 \end{align*}
 
+All discrete components of the elastic wavefield in matrix-vector notation are: 
+\begin{align*}
+	\vec{\sigma}_{xx}^{\,n} &= \vec{\sigma}_{xx}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,x,b}^q \vec{v}_x\\
+	\vec{\sigma}_{yy}^{\,n} &= \vec{\sigma}_{yy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,y,b}^q \vec{v}_y\\
+	\vec{\sigma}_{zz}^{\,n} &= \vec{\sigma}_{zz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,z,b}^q \vec{v}_z
+\end{align*}
+\begin{align*}
+	\vec{\sigma}_{xy}^{\,n} &= \vec{\sigma}_{xy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x + \underline{D}_{\,x,f}^q \vec{v}_y \right)\\
+	\vec{\sigma}_{xz}^{\,n} &= \vec{\sigma}_{xz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x + \underline{D}_{\,x,f}^q \vec{v}_z \right)\\
+	\vec{\sigma}_{yz}^{\,n} &= \vec{\sigma}_{yz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y + \underline{D}_{\,y,f}^q \vec{v}_z \right)
+\end{align*}
+\begin{align*}
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
+\end{align*}
+
+\subsection{Introducing Averaging Matrices}
+As mentioned in section \ref{fig:StagGrid}, to calculate the elastic and viscoelastic wave equations in time propagation, density $\rho_{k,l,m}$ and the first Lam\'{e} parameter $\mu_{k,l,m}$ have to be averaged. $\rho_{k,l,m}$ can be written in matrix-vector formalism as:
+\begin{equation*}
+\vec{\rho}_{i}=\frac{1}{2}\cdot\underline{A}^{\text{a}}_{i} \cdot\vec{\rho}	
+\end{equation*}
+Postulating the arithmetical averaging matrix $\underline{A}^{\text{a}}_{i}$ in $i$-direction is trivial and similar to $\underline{D}_{\,i,f}^2$ whereby it should be noted that $\underline{A}^{a}_{i}$ has only entries $=1$. The upper index $a$ represents arithmetical averaging.
+
+Establishing the matrices for harmonic averaging more complicated. In matrix-vector formalism averaging the first Lam\'{e} parameter $\mu_{k,l,m}$ in the $ij$-plane can be calculated as follows.
+\begin{equation*}
+\vec{\mu}_{ij}=\left(\underline{A}^{h}_{ij} \cdot\vec{\mu}	\right)^{-1}
+\end{equation*}
+Here the upper index $h$ defines harmonic averaging. After multiplying $\vec{\mu}$ with the average matrix $\underline{A}^{h}_{ij}$ all calculated values have to be inverted to get $\vec{\mu}_{ij}$.
+To illustrate the the matrices, as in section \ref{sec:Mat}, again example for averaging in the $xy$-plane for model in size $NX\times 4 \times 2$ is shown below: 
+\begin{align*}
+	\underline{A}^{h}_{xy} &= \tiny\begin{psmallmatrix}
+	\frac{1}{4} & 0 & \dots   & &   &&  \frac{1}{4} & 0 & \dots   & &   &\dashline&  \frac{1}{4} & 0 & \dots   & &   &&  & \frac{1}{4} & 0 & \dots & & &\dashline& & & && & & & & && & & && & && & & & & \\
+  	& \frac{1}{4} & 0 & \dots &   &&   & \frac{1}{4} & 0 & \dots &   &\dashline&   & \frac{1}{4} & 0 & \dots &   &&   & & \frac{1}{4} & 0 & \dots & &\dashline  & & & && & & & & && && & & & && & & & & \\
+    & & \frac{1}{4} & 0 & \dots    &&  &  & \frac{1}{4} & 0 & \dots    &\dashline&   & & \frac{1}{4} & 0 & \dots   &&  &  &  & \frac{1}{4} & 0 & \dots &\dashline & & & && & & & & && & && & & && & & & & \\
+   	& &  & \ddots &     &&  &  & & \ddots &   &\longdashline& &   & &  \ddots &  &    &&  &  & & \ddots &   &\longdashline& & & & && & & & & &&& & & & & && & & & & \\
+    & & & & \frac{1}{4} &&  & & & & \frac{1}{4} &\dashline& & & & & \frac{1}{4} && & & & & & \frac{1}{4}  &\dashline & & & &&& & & & & && & & & & && & & & & \\
+    &   &     & &   &&  \frac{1}{2} & 0 & \dots   & &   &\dashline&    &   &     & &   &&  & \frac{1}{2} & 0 & \dots & &   & \dashline& & && && & & & & && & & & & && & & & & \\
+ 	& &   &  &   &&   & \frac{1}{2} & 0 & \dots &   &\dashline&   &   &   &   &   &&   & & \frac{1}{2} & 0 & \dots && \dashline& & & && && & & & && & & & & && & & & & \\
+   	& &   &   &      &&  &  & \frac{1}{2} & 0 & \dots    &\dashline&   & &   &   &     &&  &  &  & \frac{1}{2} & 0 & \dots&\dashline & & && && & & & & && & & & & && & & & & \\
+   	& &  &   &    &&  &  & & \ddots &  &\longdashline&&   & &    &  &    &&  &  & & \ddots &   &\longdashline     & & & & && & & & & && & & & && && & & & & \\
+    & & & &   &&  & & & & \frac{1}{2} &\dashline& & & & &   && & & & & & \frac{1}{2}  &\dashline & & & && & & & & && & & & && && & & & & \\ \hline
+	& & & & & && & & & & && && & & & && & & & &\dashline& \frac{1}{4} & 0 & \dots   & &   &&  \frac{1}{4} & 0 & \dots   & &   &\dashline&  \frac{1}{4} & 0 & \dots   & &   &&  & \frac{1}{4} & 0 & \dots & \\
+  	& & & & & && & & & & && && & & & && & & & &\dashline& & \frac{1}{4} & 0 & \dots &   &&   & \frac{1}{4} & 0 & \dots &   &\dashline&   & \frac{1}{4} & 0 & \dots &   &&   & & \frac{1}{4} & 0 & \dots \\
+    & & & & & && & & & & &&& & & & & && & & & &\dashline& & & \frac{1}{4} & 0 & \dots    &&  &  & \frac{1}{4} & 0 & \dots    &\dashline&   & & \frac{1}{4} & 0 & \dots   &&  &  &  & \frac{1}{4} & 0 & \dots \\
+   	& & & & & && & & & & &&& & & & & && & & && \longdashline& & &  & \ddots &     &&  &  & & \ddots &   &     \longdashline & &   & &  \ddots &  &    &&  &  & & \ddots &   & \\
+    & & & & & && & & & & && && & & & && & & &&\dashline& &  & & & \frac{1}{4} &&  & & & & \frac{1}{4} &\dashline& & & & & \frac{1}{4} && & & & & & \frac{1}{4} \\
+    & & & & & && & & & & &&& & & & & && & & & &\dashline & &  &     & &   &&  \frac{1}{2} & 0 & \dots   & &   &\dashline&    &   &     & &   &&  & \frac{1}{2} & 0 & \dots & &  \\
+ 	&  & & & & && & & & & &&& & & & & && & & & & \dashline & & &  &  &   &&   & \frac{1}{2} & 0 & \dots &   &\dashline&   &   &   &   &   &&   & & \frac{1}{2} & 0 & \dots & \\
+    & & & & & && & & & & &&& & & & & && & & & &\dashline & & &  &   &      &&  &  & \frac{1}{2} & 0 & \dots    &\dashline&   & &   &   &     &&  &  &  & \frac{1}{2} & 0 & \dots\\
+   	& & & & & && & & & & &&& & & & & && & & &  &\longdashline &  & & &   &    &&  &  & & \ddots &  &\longdashline     &&   & &    &  &    &&  &  & & \ddots &   &    \\
+   	& & & & & && & & & & &&& & & & & && & & &  &\dashline & & &  & &   &&  & & & & \frac{1}{2} &\dashline& & & & &   && & & & & & \frac{1}{2}\\ 
+    \end{psmallmatrix}	\normalsize
+\end{align*}
+Mark, that in case a border plane is reached, the averaging can only be calculated from two other grid-points. In this case the matrix elements contain the factor $(\frac{1}{2})$ instead of $(\frac{1}{4})$. This principle can also be used to obtain the averaging matrices $\underline{A}^{h}_{yz}$ and $\underline{A}^{h}_{xz}$ in the $yz$- and $xz$-planes. 
+\cleardoublepage
+
+
+
+\part{Software Guide to FDSimulation\_LAMA}
+\chapter{Software Requirements and Quick Guide}
+
+FDSimulation\_LAMA is developed as a part of the WAVE-project (\url{http://wave-toolbox.org}) and is a Seismic Finite-Difference modelling framework. 
+
+\section{Software Requirements}
+
+To begin with, a \CC-compiler has to be available. A compiler with  \CC[11]-standard support is needed. To compile FDSimulation\_LAMA, make sure a couple of libraries are installed and running properly. All necessary libraries for proper usage and a short description can be seen in table \ref{tab:pack}. A \CC-compiler and LAMA are mandatory whereas the other libraries and software is optional to execute FDSimulation\_LAMA.
+As the software is meant for high performance computing (HPC) on cluster networks, it is primarily designed to run on Linux-platforms. The code has been tested using \gCC[4.9.3], \clang[3.9] as a  \CC-compiler and using OpenMPI(1.7.2, 1.10.0) as MPI implementation.
+
+\begin{table}[h!]
+\caption{List of necessary libraries, packages and compiler.}\label{tab:pack}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{lll}
+	\toprule
+	Program & Brief description & Weblink \\
+	\midrule
+	\CC-compiler	& The code is written in \CC[], the compiler	has 		& \\
+										& to be compatible to compile \CC[11]-standard					& \\
+LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.org} \\
+	& computing 	(HPC)							    & \\
+	\midrule
+	OpenMPI			& Implementation of MPI for parallelised  			& \url{https://www.open-mpi.org} \\
+										& calculations						& \\
+		boost					& Implementation of the boost-library	for  				& \url{https://www.boost.org}		\\
+										& debugging																& \\										
+	Python				& Models can be generated using Python 		& \url{https://www.python.org}\\
+	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\										
+	Sphinx				& 	A Python documentation generator 							& \url{http://www.sphinx-doc.org}\\
+	doxygen			& 	Generation of documentation from annotated				& \url{http://www.doxygen.org}\\
+										& \CC-code 															& \\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+
+\section{Quick Guide}
+
+\subsection{Installation}
+To get started Download, FDSimulation\_LAMA. 
+
+You can either download the software directly from \url{https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/repository/archive.zip?ref=master} and unzip the folder (e.g. by entering \shellcmd{tar -zxvf FDSimulation\_LAMA.tgz}).
+
+Alternatively you can also get FDSimulation\_LAMA by entering the command: \\\shellcmdline{git clone https://git.scc.kit.edu/WAVE/FDSimulation\_LAMA.git}
+
+As preparatory steps environment variables have to be linked to LAMA. Add the following lines to the \shellcmd{{\char`\~}/.bashrc}:
+\\\shellcmdline{ `export SCAI\_ROOT=[PATH\_TO\_LAMA\_BUILD]`}
+\\\shellcmdline{ `export DYLD\_LIBRARY\_PATH=\$\{SCAI\_ROOT\}/lib:\$\{DYLD\_LIBRARY\_PATH\}`}
+\\\shellcmdline{ `export LD\_LIBRARY\_PATH=\$\{SCAI\_ROOT\}/lib:\$\{LD\_LIBRARY\_PATH\}`}
+\\\shellcmdline{ `export OMP\_NUM\_THREADS=1`}\\
+You can also find the instructions in \shellcmd{FDSimulation\_LAMA/par/README.md}. 
+
+Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/src/}
+
+You can compile the source code by simply entering: \\\shellcmdline{make SOFI}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CC=<yourCompiler> SOFI}
+
+The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
+
+To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{FDSimulation\_LAMA/doc/} and run the command \shellcmd{make}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{doc/html/} and \shellcmd{doc/latex/}.
+
+\subsection{Example}
+
+To run the simulation change the directory to: \\\shellcmdline{FDSimulation\_LAMA/par/}\\
+and start the program by running the shell script \shellcmd{start\_FDSimulation.sh} with  \\\shellcmdline{source start\_FDSimulation.sh}\\
+
+The synthetic Seismogram data is saved in \shellcmd{par/seismograms/} and can be plotted by either using either the \shellcmd{plotSeismogram.m} Matlab-script or by executing the Python-script \shellcmd{plotSeismogram.py}.
+As a first test, run the default example by following the commands to obtain the seismogram. You can compare the seismogram to the seismogram shown in figure \ref{fig:Seismogram}.
+
+\begin{figure}[h!]
+\centering
+	\includegraphics[width = .8\textwidth]{images/Test_Seismogram.png}
+	\caption[Example pressure seismogram.]{Example pressure seismogram with 2nd order FD-operator and the default values: $NX=NY=NZ=100$, $v_p=\SI{3500}{m\per s}$ and $\rho = \SI{2000}{kg\per\cubic\metre}$.}\label{fig:Seismogram}
+\end{figure}
+
+\section{Configuration}\label{sec:config}
+
+\begin{table}[h!]
+\caption[List of all configuration parameters.]{List of all configuration parameters, that can be added and changed in the config-file.}\label{tab:config}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	dimension & Dimension of the model  & string & 3D\\
+	equationType & Type of the wave equations & string & acoustic \\
+	NX & Number of grid points in $x$-direction & int & \num{100} \\
+	NY & Number of grid points in $y$-direction & int & \num{100} \\
+	NZ & Number of grid points in $z$-direction & int & \num{100} \\
+	DH & Distance between two grid points & double & \SI{50}{m}\\
+	DT & Temporal sampling & double & \SI{2.0e-3}{s}\\
+	T & Total simulation time & double & \SI{2}{s}\\
+	UseCubePartitioning & Use cubes to partition the wave fields & int & \num{0}\\
+	ProcNX & Number of cores in $x$-direction & int & \num{2}\\
+	ProcNY & Number of cores in $y$-direction & int & \num{1}\\
+	ProcNZ & Number of cores in $z$-direction & int & \num{1}\\
+	spatialFDorder & Define order of spatial FD operator & int & \num{2}\\
+	\midrule	 
+	 ModelRead& Read model from File  & int & \num{0}\\
+	 PartitioningIn&  Read model from distributed file & int & \num{0}\\
+	 ModelWrite& Write model to file  & int & \num{0}\\
+	 PartitioningOut& Write model to distributed file-block & int & \num{0}\\
+	  ModelParametrisation & Parametrisation of read model & int & \num{2}\\
+	 ModelFilename& Filename-prefix to read model & int & \shellcmd{model/model}\\
+	 SourceFilename& Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources.mtx}\end{tabular}  \\
+	 ReceiverFilename	 & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever.mtx}\end{tabular}  \\
+	 SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram.mtx}\end{tabular}  \\
+	 SeismogramFormat & Seismogram format & int & \num{1}\\
+	\midrule
+	 velocityP& P-wave velocity $v_p$ & double & \SI{3500}{m\per s} \\
+	 velocityS& S-wave velocity $v_s$ & double  &  \SI{0}{m\per s}\\
+	 rho& Density $\rho$ & double &  \SI{2000}{kg\per\cubic\metre}\\
+	 tauP& $\tau$ value for P-waves & double & \num{0.0}\\
+	 tauS& $\tau$ value for S-waves & double & \num{0.0}\\
+	 numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
+	 relaxationFrequency& Relaxation frequency for first & double & \SI{0}{Hz}\\
+	 & relaxation mechanism& & \\
+	\midrule
+	 FreeSurface& Use the free surface & int & \num{0}\\
+	 DampingBoundary& Use the Damping Boundary & int & \num{0}\\
+	 BoundaryWidth& Width of damping boundary & int & \num{10}\\
+	 DampingCoeff& Damping coefficient & double & \num{8.0}\\
+    \bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}	
+
+As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file Input variables can be added or changed. A list of all variables and config parameters that can be added and changed can be found in table \ref{tab:config}.
+
+The parameters can be divided in four main groups. The first group contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\textit{NX}, \textit{NY}, \textit{NZ} and \textit{DH}) and temporal parameters (\textit{DT} and \textit{T}). The total number of gridpoints is given by 
+\begin{equation*}
+	N=NX\times NY\times NZ
+\end{equation*}
+The total Number of time-steps can be calculated by 
+\begin{equation*}
+	NT = round\left(\frac{T}{DT}+0.5\right)
+\end{equation*}
+The parameter \textit{UseCubePartitioning} characterises whether the model is partitioned into cubes and then distributed to the CPUs/GPUs. If \textit{UseCubePartitioning} $=1$ the model is partitioned in cubes, else it is partitioned automatically. The number of CPUs/GPUs available in each spatial direction is given by \textit{ProcNX}, \textit{ProcNY} and \textit{ProcNZ}. The product has to be equal to the total number of used CPUs/GPUs. 
+The last parameter of the first section, \textit{spatialFDorder}, defines the order of the spatial FD-operator and therefore, influences the accuracy of the simulation significantly.
+
+The second section contains all parameters to manage input and output. The first four parameters \textit{ModelRead}, \textit{ModelWrite}, \textit{PartitioningIn} and  \textit{PartitioningOut} can be set with ($1=$ yes) or (else $=$ no). The values for partitioned input and output are only needed when \textit{ModelRead} and \textit{ModelWrite} are set to 1. Make sure, that if you are using partitioning-input, the data is distributed properly. The partitioning and repartitioning of files has to be done during pre- and post-processing (section \ref{sec:process}).
+If the model is read from files, the \textit{ModelParametrisation} has to be set. If \textit{ModelParametrisation} $=1$ the data is interpreted as a wave-modulus-model-vector. Else if \textit{ModelParametrisation} $=2$ velocity-vectors are given.
+\textit{ModelFilename}, \textit{SourceFilename}, \textit{ReceiverFilename} and  \textit{SeismogramFilename} are given to determine the respective location and filename. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{morel.vp.mtx}).
+Seismograms can be written in matrix-format (\shellcmd{.MTX}-format $=1$) or in seismic-unix-format (\shellcmd{.SU}-format $=2$). 
+
+In the third section all variables can be set to create a homogeneous model on-the-fly. The variable \textit{velocityP} ($v_p$) is only needed in elastic and viscoelastic calculations and  \textit{tauP} ($\tau_p$) and \textit{tauS} ($\tau_s$) are solely needed in the viscoelastic case. 
+The S-wave ($M$) and P-wave ($\mu$) modules can be calculated by:
+\begin{align*}
+	M&=\rho\cdot v_s^2\\
+	\mu &=\rho\cdot v_p^2\\
+\end{align*}
+The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \shellcmd{createHomoge- neousModel.py} in \shellcmd{model/} are examples how to generate external models in both mentioned parametrisation. 
+The last two parameters of the table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
+
+The fist part of the last table-section handles and the boundary conditions. Free surface can used by setting (\textit{FreeSurface} $=1$). If the parameter is set to 0, free surface is not used. 
+The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$). Again, if the parameter is set to 0, it is not used. 
+
+
+To verify the models stability  the courant can be calculated: 
+\begin{equation*}
+	v_{max} \cdot \frac{DT}{DH} \leq 0.43
+\end{equation*}
+
+\clearpage
+\section{Pre- and Post-Processing}\label{sec:process}
+
+As already mentioned in section \ref{sec:config}, data can be read from a single file as well as from a partitioned file-block. The advantage of a distributed file system ist, that CPUs/GPUs can read data simultaneously and therefore with substantial timesaving. Installing LAMA with all examples (\shellcmd{-DBUILD\_EXAMPLES=ON}), LAMA includes examples to partition and repartition files or file-blocks in \shellcmd{.mtx}-format (\shellcmd{vectorRepartition.exe}). 
+
+To partition a single vector-file change to the directory where the files are located and run the following comand:  \\
+\shellcmdline{\$SCAI\_ROOT/lama/examples/io/vectorRepartition.exe filename.mtx 1 }\\
+\shellcmdline{filename\_\%r.mtx <NProcessors>}\\
+The first part marks the LAMA-example to repartition a file, \shellcmd{filename.mtx} is a single file (\shellcmd{1}) you want to partition and \shellcmd{filename\_\%r.mtx} is the name of the output file-block. The number of files in a file-block has to be the same as the number of CPUs/GPUs (\shellcmd{<NProcessors>}) reading the file-block later on. 
+
+To merge a fileblock \shellcmd{filename\_\%r.mtx} to a single vector-file, the command is very similar:\\
+\shellcmdline{\$SCAI\_ROOT/lama/examples/io/vectorRepartition.exe filename\_\%r.mtx}\\
+\shellcmdline{<NProcessors> filename.mtx 1}\\
+In this case the name of the file-block and its size is written fist and then the name of the single output-file.
+
+\section{Benchmark}
+
+
+\cleardoublepage
+\listoffigures 
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoftables
+\addcontentsline{toc}{chapter}{\listtablename}
 \cleardoublepage
 \bibliography{WAVE_theory}
 \bibliographystyle{apalike}
