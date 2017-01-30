@@ -1,7 +1,7 @@
 clearvars; close all;
 
 %% Read seismogram
-filename='seismogram.mtx';
+filename='seismogram.p.mtx';
 seismogram=readSeismogram(filename);
 
 %% Plot seismogram

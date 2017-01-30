@@ -8,6 +8,7 @@
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
+#include "../Acquisition/Seismogram.hpp"
 
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
@@ -28,16 +29,15 @@ namespace KITGPI {
             
         public:
             
-            /* Default constructor */
+            //! Default constructor
             FD3Dvisco(){};
             
-            /* Default destructor */
+            //! Default destructor
             ~FD3Dvisco(){};
             
-            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT) override;
             
-            void prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
-            
+            void prepareBoundaryConditions(Configuration::Configuration const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) override;
             
         private:
             
@@ -66,23 +66,22 @@ namespace KITGPI {
  \param ctx Context
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration<ValueType> const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration const& config, Derivatives::Derivatives<ValueType>& derivatives,dmemo::DistributionPtr dist, hmemo::ContextPtr ctx){
     
     /* Prepare Free Surface */
-    if(config.getFreeSurface()){
+    if(config.get<IndexType>("FreeSurface")){
         useFreeSurface=true;
-        FreeSurface.init(dist,derivatives,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH());
+        FreeSurface.init(dist,derivatives,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DT"),config.get<ValueType>("DH"));
     }
     
     /* Prepare Damping Boundary */
-    if(config.getDampingBoundary()==1){
+    if(config.get<IndexType>("DampingBoundary")){
         useDampingBoundary=true;
-        DampingBoundary.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getBoundaryWidth(), config.getDampingCoeff(),useFreeSurface);
+        DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
     }
     
-    if(config.getDampingBoundary()==2){
-	useConvPML=true;
-	ConvPML.init(dist,ctx,config.getNX(),config.getNY(),config.getNZ(),config.getDT(),config.getDH(),config.getBoundaryWidth(),useFreeSurface,config.getPMLVariables());
+    if(config.get<IndexType>("DampingBoundary")==2){
+	useConvPML=true;	ConvPML.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("DT"),config.get<IndexType>("DH"),config.get<IndexType>("BoundaryWidth"),config.get<ValueType>("NPower"),config.get<ValueType>("KMaxCPML"),config.get<ValueType>("CenterFrequencyCPML"),config.get<ValueType>("VMaxCPML"),useFreeSurface);
     }
 }
 
@@ -99,47 +98,56 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param DT Temporal Sampling intervall in seconds
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT){
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType> const& sources, Modelparameter::Modelparameter<ValueType> const& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>const& derivatives, IndexType NT, ValueType DT){
     
     SCAI_REGION( "timestep" )
     
     SCAI_ASSERT_ERROR( NT > 0 , " Number of time steps has to be greater than zero. ");
     
     /* Get references to required modelparameter */
-    model.prepareForModelling();
-    lama::DenseVector<ValueType>const& inverseDensity=model.getInverseDensity();
-    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::Vector const& inverseDensity=model.getInverseDensity();
+    lama::Vector const& pWaveModulus=model.getPWaveModulus();
+    lama::Vector const& sWaveModulus=model.getSWaveModulus();
+	lama::Vector const& inverseDensityAverageX=model.getInverseDensityAverageX();
+    lama::Vector const& inverseDensityAverageY=model.getInverseDensityAverageY();
+    lama::Vector const& inverseDensityAverageZ=model.getInverseDensityAverageZ();
+    lama::Vector const& sWaveModulusAverageXY=model.getSWaveModulusAverageXY();
+    lama::Vector const& sWaveModulusAverageXZ=model.getSWaveModulusAverageXZ();
+    lama::Vector const& sWaveModulusAverageYZ=model.getSWaveModulusAverageYZ();
+    lama::Vector const& tauSAverageXY=model.getTauSAverageXY();
+    lama::Vector const& tauSAverageXZ=model.getTauSAverageXZ();
+    lama::Vector const& tauSAverageYZ=model.getTauSAverageYZ();
+    
     
     /* Get references to required wavefields */
-    lama::DenseVector<ValueType>& vX=wavefield.getVX();
-    lama::DenseVector<ValueType>& vY=wavefield.getVY();
-    lama::DenseVector<ValueType>& vZ=wavefield.getVZ();
+    lama::Vector& vX=wavefield.getVX();
+    lama::Vector& vY=wavefield.getVY();
+    lama::Vector& vZ=wavefield.getVZ();
     
-    lama::DenseVector<ValueType>& Sxx=wavefield.getSxx();
-    lama::DenseVector<ValueType>& Syy=wavefield.getSyy();
-    lama::DenseVector<ValueType>& Szz=wavefield.getSzz();
-    lama::DenseVector<ValueType>& Syz=wavefield.getSyz();
-    lama::DenseVector<ValueType>& Sxz=wavefield.getSxz();
-    lama::DenseVector<ValueType>& Sxy=wavefield.getSxy();
+    lama::Vector& Sxx=wavefield.getSxx();
+    lama::Vector& Syy=wavefield.getSyy();
+    lama::Vector& Szz=wavefield.getSzz();
+    lama::Vector& Syz=wavefield.getSyz();
+    lama::Vector& Sxz=wavefield.getSxz();
+    lama::Vector& Sxy=wavefield.getSxy();
     
-    lama::DenseVector<ValueType>& Rxx=wavefield.getRxx();
-    lama::DenseVector<ValueType>& Ryy=wavefield.getRyy();
-    lama::DenseVector<ValueType>& Rzz=wavefield.getRzz();
-    lama::DenseVector<ValueType>& Ryz=wavefield.getRyz();
-    lama::DenseVector<ValueType>& Rxz=wavefield.getRxz();
-    lama::DenseVector<ValueType>& Rxy=wavefield.getRxy();
+    lama::Vector& Rxx=wavefield.getRxx();
+    lama::Vector& Ryy=wavefield.getRyy();
+    lama::Vector& Rzz=wavefield.getRzz();
+    lama::Vector& Ryz=wavefield.getRyz();
+    lama::Vector& Rxz=wavefield.getRxz();
+    lama::Vector& Rxy=wavefield.getRxy();
     
     /* Get references to required derivatives matrixes */
-    lama::CSRSparseMatrix<ValueType>const& Dxf=derivatives.getDxf();
-    lama::CSRSparseMatrix<ValueType>const& Dzf=derivatives.getDzf();
-    lama::CSRSparseMatrix<ValueType>const& Dxb=derivatives.getDxb();
-    lama::CSRSparseMatrix<ValueType>const& Dzb=derivatives.getDzb();
+    lama::Matrix const& Dxf=derivatives.getDxf();
+    lama::Matrix const& Dzf=derivatives.getDzf();
+    lama::Matrix const& Dxb=derivatives.getDxb();
+    lama::Matrix const& Dzb=derivatives.getDzb();
     
-    lama::CSRSparseMatrix<ValueType>const& DybPressure=derivatives.getDybPressure();
-    lama::CSRSparseMatrix<ValueType>const& DybVelocity=derivatives.getDybVelocity();
-    lama::CSRSparseMatrix<ValueType>const& DyfPressure=derivatives.getDyfPressure();
-    lama::CSRSparseMatrix<ValueType>const& DyfVelocity=derivatives.getDyfVelocity();
+    lama::Matrix const& DybPressure=derivatives.getDybPressure();
+    lama::Matrix const& DybVelocity=derivatives.getDybVelocity();
+    lama::Matrix const& DyfPressure=derivatives.getDyfPressure();
+    lama::Matrix const& DyfVelocity=derivatives.getDyfVelocity();
     
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources,receiver,wavefield);
     
@@ -159,8 +167,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
     lama::Vector& vyy = *vyyPtr;
     lama::Vector& vzz = *vzzPtr;
         
-    lama::DenseVector<ValueType>const& tauS=model.getTauS();
-    lama::DenseVector<ValueType>const& tauP=model.getTauP();
+    lama::Vector const& tauS=model.getTauS();
+    lama::Vector const& tauP=model.getTauP();
     
     IndexType numRelaxationMechanisms=model.getNumRelaxationMechanisms(); // = Number of relaxation mechanisms
     ValueType relaxationTime=1.0/(2.0*M_PI*model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
@@ -211,7 +219,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 	if(useConvPML)  { ConvPML.apply_sxz_z(update_temp); }
 	update += update_temp;
 	
-        vX += update.scale(inverseDensity);
+        vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
 	if(useConvPML) { ConvPML.apply_sxy_x(update);}
@@ -224,7 +232,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 	if(useConvPML) { ConvPML.apply_syz_z(update_temp);}
 	update += update_temp;
 	
-        vY += update.scale(inverseDensity);
+        vY += update.scale(inverseDensityAverageY);
         
         update = Dxb * Sxz;
 	if(useConvPML) { ConvPML.apply_sxz_x(update);}
@@ -237,7 +245,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 	if(useConvPML) { ConvPML.apply_szz_z(update_temp);}
 	update += update_temp;
 	
-        vZ += update.scale(inverseDensity);
+        vZ += update.scale(inverseDensityAverageZ);
         
         /* ----------------*/
         /* pressure update */
@@ -323,15 +331,14 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 
         update = DyfPressure * vX;
 	if(useConvPML) { ConvPML.apply_vxy(update);}
-	
         update_temp = Dxf * vY;
 	if(useConvPML)  {ConvPML.apply_vyx(update_temp);}
 	update += update_temp;
-	
-        update.scale(sWaveModulus);
+
+        update.scale(sWaveModulusAverageXY);
 
         update2 = inverseRelaxationTime * update;
-        Rxy -= update2.scale(tauS);
+        Rxy -= update2.scale(tauSAverageXY);
         Sxy += update.scale(onePlusLtauS);
         
         Rxy *= viscoCoeff2;
@@ -349,10 +356,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
 	if(useConvPML)  {ConvPML.apply_vzx(update_temp);}
 	update += update_temp;
 	
-        update.scale(sWaveModulus);
+        update.scale(sWaveModulusAverageXZ);
         
         update2 = inverseRelaxationTime * update;
-        Rxz -= update2.scale(tauS);
+        Rxz -= update2.scale(tauSAverageXZ);
         Sxz += update.scale(onePlusLtauS);
 
         Rxz *= viscoCoeff2;
@@ -369,10 +376,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::Receivers<Val
         update_temp = DyfPressure * vZ;
 	if(useConvPML) { ConvPML.apply_vzy(update_temp);}
 	update += update_temp;
-        update.scale(sWaveModulus);
+        update.scale(sWaveModulusAverageYZ);
         
         update2 = inverseRelaxationTime * update;
-        Ryz -= update2.scale(tauS);
+        Ryz -= update2.scale(tauSAverageYZ);
         Syz += update.scale(onePlusLtauS);
 
         Ryz *= viscoCoeff2;

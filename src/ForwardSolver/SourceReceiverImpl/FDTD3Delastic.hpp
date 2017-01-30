@@ -20,12 +20,15 @@ namespace KITGPI {
         //! \brief SourceReceiverImpl namespace
         namespace SourceReceiverImpl {
             
+            //! \brief FDTD2Delastic class
             template<typename ValueType>
             class FDTD3Delastic : public SourceReceiverImpl<ValueType>
             {
             public:
                 
+                //! Default constructor
                 FDTD3Delastic()=delete;
+                //! Default destructor
                 ~FDTD3Delastic(){};
                 
                 using SourceReceiverImpl<ValueType>::SourceReceiverImpl;
@@ -36,14 +39,21 @@ namespace KITGPI {
             private:
                 
                 /* Temporary memory */
-                lama::DenseVector<ValueType> applySource_samplesPressure;
-                lama::DenseVector<ValueType> gatherSeismogram_samplesPressure;
+                using SourceReceiverImpl<ValueType>::applySource_samplesPressure;
+                using SourceReceiverImpl<ValueType>::gatherSeismogram_samplesPressure;
             };
             
         }
     }
 }
 
+/*! \brief Gether the seismogram pressure.
+ *
+ *
+ \param seismo Seismogram
+ \param wavefield Wavefields
+ \param t Time-step
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gatherSeismogramPressure(Acquisition::Seismogram<ValueType>& seismo, Wavefields::Wavefields<ValueType>& wavefield, IndexType t)
 {
@@ -62,6 +72,13 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gather
     seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure,t,utilskernel::binary::BinaryOp::COPY);
 }
 
+/*! \brief Applying pressure from source.
+ *
+ *
+ \param seismo Seismogram
+ \param wavefield Wavefields
+ \param t Time-step
+ */
 template<typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::applySourcePressure(Acquisition::Seismogram<ValueType> const& seismo, Wavefields::Wavefields<ValueType>& wavefield, IndexType t)
 {

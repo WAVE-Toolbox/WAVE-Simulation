@@ -14,7 +14,7 @@ namespace KITGPI {
     
     namespace Acquisition {
         
-        //! Handling of sources
+        //! \brief Handling of sources
         /*!
          * This class accounts for the handling of seismic sources.
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
@@ -25,11 +25,13 @@ namespace KITGPI {
             
         public:
             
+            //! \brief Default constructor
             Sources():numSourcesGlobal(0),numSourcesLocal(0),numParameter(0){};
-            explicit Sources(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx,dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration const& config, hmemo::ContextPtr ctx,dmemo::DistributionPtr dist_wavefield);
+            //! \brief Default destructor
             ~Sources(){};
             
-            void init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
             void readSourceAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
             
             void writeSourceAcquisition(std::string const& filename) const;
@@ -58,9 +60,8 @@ namespace KITGPI {
             
             dmemo::DistributionPtr dist_wavefield_sources; //!< Calculated Distribution of the sources based on the distribution of the wavefields
             
-            //! Source signals
-            Seismogram<ValueType> signals;
-            SeismogramHandler<ValueType> sources;
+            Seismogram<ValueType> signals; //!< Source signals
+            SeismogramHandler<ValueType> sources; //!< Sources
             
             /* Acquisition Settings */
             lama::DenseMatrix<ValueType> acquisition; //!< Matrix that stores the source acquisition
@@ -92,7 +93,12 @@ KITGPI::Acquisition::SeismogramHandler<ValueType> const& KITGPI::Acquisition::So
     return(sources);
 }
 
-
+/*! \brief initialize seismogram handler
+ *
+ \param NT Numer of timesteps
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType const NT,hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
 {
@@ -223,7 +229,7 @@ KITGPI::Acquisition::Seismogram<ValueType>const& KITGPI::Acquisition::Sources<Va
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 :numSourcesGlobal(0),numSourcesLocal(0),numParameter(0)
 {
     init(config,ctx,dist_wavefield);
@@ -236,13 +242,14 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration<Va
  \param dist_wavefield Distribution of the wavefields
  */
 template<typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration<ValueType> const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const& config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 {
-    readSourceAcquisition(config.getSourceFilename(),config.getNX(), config.getNY(), config.getNZ(),dist_wavefield);
-    generateSignals(config.getNT(),config.getDT(),ctx);
+    readSourceAcquisition(config.get<std::string>("SourceFilename"),config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"),dist_wavefield);
+    IndexType getNT = static_cast<IndexType>( ( config.get<ValueType>("T") / config.get<ValueType>("DT") ) + 0.5 );
+    generateSignals(getNT,config.get<ValueType>("DT"),ctx);
     signals.redistribute(dist_wavefield_sources);
-    initSeismogramHandler(config.getNT(),ctx,dist_wavefield);
-    sources.setDT(config.getDT());
+    initSeismogramHandler(getNT,ctx,dist_wavefield);
+    sources.setDT(config.get<ValueType>("DT"));
 }
 
 
@@ -292,7 +299,6 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string
  \param NY Number of global grid points in Y
  \param NZ Number of global grid points in Z
  \param dist_wavefield Distribution of the wavefields
- \param ctx Context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string const& filename,IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
@@ -457,6 +463,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string 
  * The source signal matrix is allocated based on the distributions.
  *
  \param NT Number of time steps
+ \param ctx context
  */
 template<typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, hmemo::ContextPtr ctx)
@@ -480,6 +487,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, h
  *
  \param NT Number of time steps
  \param DT Time step interval
+ \param ctx context
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx){
@@ -579,7 +587,11 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     
 }
 
-
+/*! \brief Getter methode for Source Distribution.
+ *
+ \param coordinates
+ \param dist_wavefield Distribution of the wavefields
+ */
 template<typename ValueType>
 dmemo::DistributionPtr KITGPI::Acquisition::Sources<ValueType>::getSourceDistribution(lama::DenseVector<IndexType>const& coordinates, dmemo::DistributionPtr const dist_wavefield) const
 {

@@ -24,8 +24,14 @@ namespace KITGPI {
             
         public:
             
-            //! Default deconstructor
+            explicit Wavefields(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
+            //! Default constructor
+            Wavefields(){};
+            //! Default destructor
             ~Wavefields(){};
+            
+            //! \brief Declare Wavefield pointer
+            typedef std::shared_ptr<Wavefields<ValueType>>  WavefieldPtr;
             
             //! Reset wavefields
             virtual void reset()=0;
@@ -48,6 +54,12 @@ namespace KITGPI {
             virtual lama::DenseVector<ValueType>& getRyz();
             virtual lama::DenseVector<ValueType>& getRxz();
             virtual lama::DenseVector<ValueType>& getRxy();
+            
+            //! Declare getter variable for context pointer
+            virtual hmemo::ContextPtr getContextPtr()=0;
+            
+            //! \brief Initialization
+            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)=0;
             
         protected:
             
@@ -76,7 +88,19 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Wavefields constructor
+ *
+ \param ctx Context pointer
+ \param dist Distribution
+ */
+template<typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType>::Wavefields(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(ctx,dist);
+}
+
 /*! \brief Reset a single wavefield to zero.
+ \param vector Vector to be reset to 0
  */
 template<typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(lama::DenseVector<ValueType>& vector)
@@ -87,6 +111,10 @@ void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(lama::DenseVector
 /*! \brief Intitialisation of a single wavefield vector.
  *
  * This method will set the context, allocate the the wavefield and set the field to zero.
+ *
+ \param vector Vector to be set
+ \param ctx Context pointer
+ \param dist Distribution
  */
 template<typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(lama::DenseVector<ValueType>& vector,hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)

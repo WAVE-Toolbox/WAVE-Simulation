@@ -23,7 +23,7 @@ namespace KITGPI {
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
                 
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz);
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz);
 
             private:
                 
@@ -48,7 +48,7 @@ namespace KITGPI {
  \param Szz Szz wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz){
     
     SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     

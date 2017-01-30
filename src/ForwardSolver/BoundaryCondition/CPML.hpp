@@ -19,7 +19,7 @@ namespace KITGPI {
                 ~CPML(){};
 		
                 //! init CPML coefficient vectors and CPML memory variables
-                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth,bool useFreeSurface,Configuration::PMLVariables<ValueType> const &PMLVar)=0;
+                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth,ValueType NPower,ValueType KMaxCPML,ValueType CenterFrequencyCPML,ValueType VMaxCPML, bool useFreeSurface)=0;
                     
 	    protected:
 		void resetVector ( lama::DenseVector<ValueType>& vector );
@@ -27,7 +27,7 @@ namespace KITGPI {
 		void initVector ( lama::DenseVector<ValueType>& vector,hmemo::ContextPtr ctx, dmemo::DistributionPtr dist );
 		    
 		void SetCoeffCPML ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,IndexType coord,
-				IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> const&PMLVar,IndexType i, ValueType DT , ValueType DH );
+				IndexType gdist, IndexType BoundaryWidth,ValueType NPower,ValueType KMaxCPML,ValueType CenterFrequencyCPML,ValueType VMaxCPML,IndexType i, ValueType DT , ValueType DH );
 		
 		void ResetCoeffFreeSurface ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
 						lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
@@ -116,18 +116,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector ( lam
 template<typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( lama::DenseVector<ValueType>& a, lama::DenseVector<ValueType>& b,lama::DenseVector<ValueType>& kInv,
 										 lama::DenseVector<ValueType>& a_half, lama::DenseVector<ValueType>& b_half,lama::DenseVector<ValueType>& kInv_half,
-										 IndexType coord,IndexType gdist, IndexType BoundaryWidth,Configuration::PMLVariables<ValueType> const &PMLVar, 
-										 IndexType i, ValueType DT, ValueType DH )
+										 IndexType coord,IndexType gdist, IndexType BoundaryWidth,ValueType NPower,ValueType KMaxCPML,ValueType CenterFrequencyCPML,ValueType VMaxCPML, IndexType i, ValueType DT, ValueType DH )
 {
 
-	ValueType NPower=PMLVar.NPower;
-	ValueType K_Max_Pml=PMLVar.KMaxCPML;
 	
 	ValueType RCoef=0.0008;
 	
-	ValueType alpha_max_Pml=2.0 * M_PI * ( PMLVar.CenterFrequencyCPML/2.0 );
+	ValueType alpha_max_Pml=2.0 * M_PI * (CenterFrequencyCPML/2.0 );
 	
-	ValueType d0 = - ( NPower + 1 ) * PMLVar.VMaxCPML * log ( RCoef ) / ( 2.0 * BoundaryWidth*DH );
+	ValueType d0 = - ( NPower + 1 ) * VMaxCPML * log ( RCoef ) / ( 2.0 * BoundaryWidth*DH );
 	
 	
 	ValueType PositionNorm=0.0;
@@ -163,7 +160,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( l
 	if ( coord < BoundaryWidth ) {
 		PositionNorm= ( ValueType ) ( BoundaryWidth-gdist ) /BoundaryWidth;
 		d = d0 * pow ( PositionNorm,NPower );
-		k_temp = 1.0 + ( K_Max_Pml - 1.0 ) * pow ( PositionNorm,NPower );
+		k_temp = 1.0 + ( KMaxCPML - 1.0 ) * pow ( PositionNorm,NPower );
 		alpha_prime = alpha_max_Pml * ( 1.0 - PositionNorm );
 		b_temp = exp ( - ( d / k_temp + alpha_prime ) * DT );
 		/* avoid division by zero outside the PML */
@@ -180,7 +177,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( l
 	} else if ( gdist < BoundaryWidth-1 ) {
 		PositionNorm= ( ValueType ) ( BoundaryWidth-gdist-1 ) /BoundaryWidth;
 		d = d0 * pow ( PositionNorm,NPower );
-		k_temp = 1.0 + ( K_Max_Pml - 1.0 ) * pow ( PositionNorm,NPower );
+		k_temp = 1.0 + ( KMaxCPML - 1.0 ) * pow ( PositionNorm,NPower );
 		alpha_prime = alpha_max_Pml * ( 1.0 - PositionNorm );
 		b_temp = exp ( - ( d / k_temp + alpha_prime ) * DT );
 		/* avoid division by zero outside the PML */
@@ -198,7 +195,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML ( l
 	/* half points */
 	PositionNorm= ( ValueType ) ( BoundaryWidth-gdist-0.5 ) /BoundaryWidth;
 	d = d0 * pow ( PositionNorm,NPower );
-	k_temp = 1.0 + ( K_Max_Pml - 1.0 ) * pow ( PositionNorm,NPower );
+	k_temp = 1.0 + ( KMaxCPML - 1.0 ) * pow ( PositionNorm,NPower );
 	alpha_prime = alpha_max_Pml * ( 1.0 - PositionNorm );
 	b_temp = exp ( - ( d / k_temp + alpha_prime ) * DT );
 	/* avoid division by zero outside the PML */

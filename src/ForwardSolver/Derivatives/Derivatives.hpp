@@ -1,6 +1,5 @@
 #pragma once
 
-
 /* Forward declaration for friendship */
 namespace KITGPI {
     namespace ForwardSolver {
@@ -39,6 +38,9 @@ namespace KITGPI {
             {
             public:
                 
+                //! \brief Declare Derivatives pointer
+                typedef std::shared_ptr<Derivatives<ValueType>> DerivativesPtr;
+                
                 template<typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic;
                 template<typename>
@@ -60,27 +62,32 @@ namespace KITGPI {
                 ~Derivatives(){};
                 
                 //! \brief Getter method for derivative matrix Dxf
-                virtual lama::CSRSparseMatrix<ValueType>const& getDxf() const;
+                virtual lama::Matrix const& getDxf() const;
                 //! \brief Getter method for derivative matrix Dyf
-                virtual lama::CSRSparseMatrix<ValueType>const& getDyf() const;
+                virtual lama::Matrix const& getDyf() const;
                 //! \brief Getter method for derivative matrix Dzf
-                virtual lama::CSRSparseMatrix<ValueType>const& getDzf() const;
+                virtual lama::Matrix const& getDzf() const;
                 //! \brief Getter method for derivative matrix Dxb
-                virtual lama::CSRSparseMatrix<ValueType>const& getDxb() const;
+                virtual lama::Matrix const& getDxb() const;
                 //! \brief Getter method for derivative matrix Dyb
-                virtual lama::CSRSparseMatrix<ValueType>const& getDyb() const;
+                virtual lama::Matrix const& getDyb() const;
                 //! \brief Getter method for derivative matrix Dzb
-                virtual lama::CSRSparseMatrix<ValueType>const& getDzb() const;
+                virtual lama::Matrix const& getDzb() const;
                 
                 //! \brief Getter method for derivative matrix DyfVelocity
-                virtual lama::CSRSparseMatrix<ValueType>const& getDyfVelocity() const;
+                virtual lama::Matrix const& getDyfVelocity() const;
                 //! \brief Getter method for derivative matrix DyfPressure
-                virtual lama::CSRSparseMatrix<ValueType>const& getDyfPressure() const;
+                virtual lama::Matrix const& getDyfPressure() const;
                 //! \brief Getter method for derivative matrix DybVelocity
-                virtual lama::CSRSparseMatrix<ValueType>const& getDybVelocity() const;
+                virtual lama::Matrix const& getDybVelocity() const;
                 //! \brief Getter method for derivative matrix DybPressure
-                virtual lama::CSRSparseMatrix<ValueType>const& getDybPressure() const;
+                virtual lama::Matrix const& getDybPressure() const;
                 
+                //! \brief Initialization
+                virtual void init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )=0;
+                
+                
+                //! \brief Getter method for spatial FD-order
                 IndexType getSpatialFDorder() const;
                 
             protected:
@@ -100,7 +107,7 @@ namespace KITGPI {
                  */
                 virtual void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, dmemo::CommunicatorPtr comm )=0;
                 
-                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm );
+                void initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm );
                 
                 void setFDCoef(IndexType spFDo);
                 
@@ -115,17 +122,17 @@ namespace KITGPI {
                 void calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 void calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
-                lama::CSRSparseMatrix<ValueType> Dxf; //!< Derivative matrix Dxf
-                lama::CSRSparseMatrix<ValueType> Dyf; //!< Derivative matrix Dyf
-                lama::CSRSparseMatrix<ValueType> Dzf; //!< Derivative matrix Dzf
-                lama::CSRSparseMatrix<ValueType> Dxb; //!< Derivative matrix Dxb
-                lama::CSRSparseMatrix<ValueType> Dyb; //!< Derivative matrix Dyb
-                lama::CSRSparseMatrix<ValueType> Dzb; //!< Derivative matrix Dzb
-                
-                lama::CSRSparseMatrix<ValueType> DyfVelocity; //!< Derivative matrix DyfVelocity
-                lama::CSRSparseMatrix<ValueType> DyfPressure; //!< Derivative matrix DyfPressure
-                lama::CSRSparseMatrix<ValueType> DybVelocity; //!< Derivative matrix DybVelocity
-                lama::CSRSparseMatrix<ValueType> DybPressure; //!< Derivative matrix DybPressure
+                typedef lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
+                SparseFormat Dxf; //!< Derivative matrix Dxf
+                SparseFormat Dyf; //!< Derivative matrix Dyf
+                SparseFormat Dzf; //!< Derivative matrix Dzf
+                SparseFormat Dxb; //!< Derivative matrix Dxb
+                SparseFormat Dyb; //!< Derivative matrix Dyb
+                SparseFormat Dzb; //!< Derivative matrix Dzb
+                SparseFormat DyfVelocity; //!< Derivative matrix DyfVelocity
+                SparseFormat DyfPressure; //!< Derivative matrix DyfPressure
+                SparseFormat DybVelocity; //!< Derivative matrix DybVelocity
+                SparseFormat DybPressure; //!< Derivative matrix DybPressure
                 
                 IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
                 
@@ -140,7 +147,7 @@ namespace KITGPI {
                 
                 typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(IndexType , IndexType , IndexType , IndexType); //!< Pointer to counting elements functions
                 
-                void calcDerivativeMatrix(lama::CSRSparseMatrix<ValueType>& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
+                void calcDerivativeMatrix(lama::Matrix& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist);
                 
                 IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
                 IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX,IndexType NY, IndexType NZ);
@@ -553,7 +560,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity
  \param dist Distribution
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(lama::CSRSparseMatrix<ValueType>& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(lama::Matrix& D, calcNumberRowElements_DPtr calcNumberRowElements_D,setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist){
     
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -911,15 +918,15 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
  \param comm Communicator
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration<ValueType>const& config, dmemo::CommunicatorPtr comm )
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const& config, dmemo::CommunicatorPtr comm )
 {
-    initializeMatrices(dist,ctx,config.getNX(), config.getNY(), config.getNZ(), config.getDH(), config.getDT(), config.getSpatialFDorder(), comm);
+    initializeMatrices(dist,ctx,config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
 
 //! \brief Getter method for derivative matrix DybPressure
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure() const
 {
     if(useFreeSurface){
         return(DybPressure);
@@ -929,7 +936,7 @@ lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Deriv
 }
 //! \brief Getter method for derivative matrix DybVelocity
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity() const
 {
     if(useFreeSurface){
         return(DybVelocity);
@@ -940,7 +947,7 @@ lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Deriv
 
 //! \brief Getter method for derivative matrix DyfPressure
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure() const
 {
     if(useFreeSurface){
         return(DyfPressure);
@@ -950,7 +957,7 @@ lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Deriv
 }
 //! \brief Getter method for derivative matrix DyfVelocity
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity() const
 {
     if(useFreeSurface){
         return(DyfVelocity);
@@ -961,42 +968,42 @@ lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Deriv
 
 //! \brief Getter method for derivative matrix Dxf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
 {
     return(Dxf);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
 {
     return(Dyf);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
 {
     return(Dzf);
 }
 
 //! \brief Getter method for derivative matrix Dxb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
 {
     return(Dxb);
 }
 
 //! \brief Getter method for derivative matrix Dyb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
 {
     return(Dyb);
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template<typename ValueType>
-lama::CSRSparseMatrix<ValueType>const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
+lama::Matrix const& KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
 {
     return(Dzb);
 }

@@ -5,8 +5,7 @@ fileID = fopen(filename,'r');
 HEADER = fgets(fileID);
 SIZE = fgets(fileID);
 size=str2num(SIZE);
-
-A=fscanf(fileID,'%d %d %e',[3 size(3)]);
-Seismogram=accumarray([A(1,:)' A(2,:)'],A(3,:));
+A=fscanf(fileID,'%e',[1 size(1)*size(2)]);
+Seismogram=reshape(A(:),[size(2), size(1)]);
 
 end

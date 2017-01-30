@@ -32,22 +32,26 @@ namespace KITGPI {
             
             explicit FD2Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void reset();
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
+            
+            void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getVZ();
-            lama::DenseVector<ValueType>& getSxx();
-            lama::DenseVector<ValueType>& getSyy();
-            lama::DenseVector<ValueType>& getSzz();
-            lama::DenseVector<ValueType>& getSyz();
-            lama::DenseVector<ValueType>& getSxz();
-            lama::DenseVector<ValueType>& getSxy();
-            lama::DenseVector<ValueType>& getRxx();
-            lama::DenseVector<ValueType>& getRyy();
-            lama::DenseVector<ValueType>& getRzz();
-            lama::DenseVector<ValueType>& getRyz();
-            lama::DenseVector<ValueType>& getRxz();
-            lama::DenseVector<ValueType>& getRxy();
+            lama::DenseVector<ValueType>& getVZ() override;
+            lama::DenseVector<ValueType>& getSxx() override;
+            lama::DenseVector<ValueType>& getSyy() override;
+            lama::DenseVector<ValueType>& getSzz() override;
+            lama::DenseVector<ValueType>& getSyz() override;
+            lama::DenseVector<ValueType>& getSxz() override;
+            lama::DenseVector<ValueType>& getSxy() override;
+            lama::DenseVector<ValueType>& getRxx() override;
+            lama::DenseVector<ValueType>& getRyy() override;
+            lama::DenseVector<ValueType>& getRzz() override;
+            lama::DenseVector<ValueType>& getRyz() override;
+            lama::DenseVector<ValueType>& getRxz() override;
+            lama::DenseVector<ValueType>& getRxy() override;
+            
+            hmemo::ContextPtr getContextPtr() override;
             
         private:
             
@@ -74,6 +78,21 @@ namespace KITGPI {
     }
 }
 
+template<typename ValueType>
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    this->initWavefield(VX,ctx,dist);
+    this->initWavefield(VY,ctx,dist);
+    this->initWavefield(P,ctx,dist);
+}
+
+/*! \brief Returns hmemo::ContextPtr from this wavefields
+ */
+template<typename ValueType>
+hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextPtr()
+{
+    return(VX.getContextPtr());
+}
 
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
  *
@@ -85,9 +104,7 @@ namespace KITGPI {
 template<typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    this->initWavefield(VX,ctx,dist);
-    this->initWavefield(VY,ctx,dist);
-    this->initWavefield(P,ctx,dist);
+    init(ctx,dist);
 }
 
 

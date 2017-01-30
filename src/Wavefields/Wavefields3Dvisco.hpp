@@ -30,10 +30,14 @@ namespace KITGPI {
             
             explicit FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void reset();
+            void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP();
+            lama::DenseVector<ValueType>& getP() override;
+            
+            hmemo::ContextPtr getContextPtr() override;
+            
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
             
         private:
             
@@ -61,6 +65,13 @@ namespace KITGPI {
     }
 }
 
+/*! \brief Returns hmemo::ContextPtr from this wavefields
+ */
+template<typename ValueType>
+hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
+{
+    return(VX.getContextPtr());
+}
 
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
  *
@@ -71,6 +82,12 @@ namespace KITGPI {
  */
 template<typename ValueType>
 KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
+    init(ctx,dist);
+}
+
+template<typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX,ctx,dist);
     this->initWavefield(VY,ctx,dist);
@@ -87,7 +104,6 @@ KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo
     this->initWavefield(Ryz,ctx,dist);
     this->initWavefield(Rxz,ctx,dist);
     this->initWavefield(Rxy,ctx,dist);
-
 }
 
 /*! \brief Set all wavefields to zero.

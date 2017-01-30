@@ -30,17 +30,21 @@ namespace KITGPI {
             
             explicit FD2Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
             
-            void reset();
+            void reset() override;
             
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP();
-            lama::DenseVector<ValueType>& getVZ();
-            lama::DenseVector<ValueType>& getSzz();
-            lama::DenseVector<ValueType>& getSyz();
-            lama::DenseVector<ValueType>& getSxz();
-            lama::DenseVector<ValueType>& getRzz();
-            lama::DenseVector<ValueType>& getRyz();
-            lama::DenseVector<ValueType>& getRxz();
+            lama::DenseVector<ValueType>& getP() override;
+            lama::DenseVector<ValueType>& getVZ() override;
+            lama::DenseVector<ValueType>& getSzz() override;
+            lama::DenseVector<ValueType>& getSyz() override;
+            lama::DenseVector<ValueType>& getSxz() override;
+            lama::DenseVector<ValueType>& getRzz() override;
+            lama::DenseVector<ValueType>& getRyz() override;
+            lama::DenseVector<ValueType>& getRxz() override;
+            
+            hmemo::ContextPtr getContextPtr() override;
+            
+            void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
             
         private:
             
@@ -70,6 +74,14 @@ namespace KITGPI {
 }
 
 
+/*! \brief Returns hmemo::ContextPtr from this wavefields
+ */
+template<typename ValueType>
+hmemo::ContextPtr KITGPI::Wavefields::FD2Dvisco<ValueType>::getContextPtr()
+{
+    return(VX.getContextPtr());
+}
+
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
  *
  * Initialisation of 2D viscoelastic wavefields
@@ -80,6 +92,12 @@ namespace KITGPI {
 template<typename ValueType>
 KITGPI::Wavefields::FD2Dvisco<ValueType>::FD2Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
+    init(ctx,dist);
+}
+
+template<typename ValueType>
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+{
     this->initWavefield(VX,ctx,dist);
     this->initWavefield(VY,ctx,dist);
     this->initWavefield(Sxx,ctx,dist);
@@ -88,7 +106,6 @@ KITGPI::Wavefields::FD2Dvisco<ValueType>::FD2Dvisco(hmemo::ContextPtr ctx, dmemo
     this->initWavefield(Rxx,ctx,dist);
     this->initWavefield(Ryy,ctx,dist);
     this->initWavefield(Rxy,ctx,dist);
-
 }
 
 /*! \brief Set all wavefields to zero.

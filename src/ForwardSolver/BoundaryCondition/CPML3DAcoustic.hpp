@@ -28,7 +28,7 @@ namespace KITGPI
 				//! Default destructor
 				~CPML3DAcoustic () {};
 
-				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar );
+				void init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT,IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML,ValueType VMaxCPML,bool useFreeSurface);
 
 				void reset();
 
@@ -161,10 +161,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::apply_
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
  \param useFreeSurface Bool if free surface is in use
- \param PMLVar Struct with variables needed for cpml coefficients
+ \param NPower degree of the damping profile
+ \param KMaxCPML 
+ \param CenterFrequencyCPML Center frequency inside the boundaries
+ \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth, bool useFreeSurface,Configuration::PMLVariables<ValueType> const&PMLVar )
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init ( dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,IndexType NX, IndexType NY, IndexType NZ,ValueType DT, IndexType DH, IndexType BoundaryWidth,ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML,ValueType VMaxCPML, bool useFreeSurface)
 {
 
 	HOST_PRINT ( dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n" );
@@ -236,10 +239,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init (
 
 		if ( gdist.min() < BoundaryWidth ) {
 			if ( gdist.x < BoundaryWidth ) {
-				this->SetCoeffCPML ( a_x,b_x,k_x,a_x_half,b_x_half,k_x_half,coordinate.x,gdist.x,BoundaryWidth,PMLVar,i,DT,DH );
+				this->SetCoeffCPML ( a_x,b_x,k_x,a_x_half,b_x_half,k_x_half,coordinate.x,gdist.x,BoundaryWidth,NPower,KMaxCPML,CenterFrequencyCPML,VMaxCPML,i,DT,DH );
 			}
 			if ( gdist.y < BoundaryWidth ) {
-				this->SetCoeffCPML ( a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,coordinate.y,gdist.y,BoundaryWidth,PMLVar,i,DT,DH );
+				this->SetCoeffCPML ( a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,coordinate.y,gdist.y,BoundaryWidth,NPower,KMaxCPML,CenterFrequencyCPML,VMaxCPML,i,DT,DH );
 				if ( useFreeSurface ) {
 					if ( coordinate.y < BoundaryWidth ) {
 						this->ResetCoeffFreeSurface ( a_y,b_y,k_y,a_y_half,b_y_half,k_y_half,i );
@@ -247,7 +250,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init (
 				}
 			}
 			if ( gdist.z < BoundaryWidth ) {
-				this->SetCoeffCPML ( a_z,b_z,k_z,a_z_half,b_z_half,k_z_half,coordinate.z,gdist.z,BoundaryWidth,PMLVar,i,DT,DH );
+				this->SetCoeffCPML ( a_z,b_z,k_z,a_z_half,b_z_half,k_z_half,coordinate.z,gdist.z,BoundaryWidth,NPower,KMaxCPML,CenterFrequencyCPML,VMaxCPML,i,DT,DH );
 			}
 
 		}

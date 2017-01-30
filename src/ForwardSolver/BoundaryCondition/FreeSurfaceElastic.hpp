@@ -25,10 +25,10 @@ namespace KITGPI {
                 
                 void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType>& derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
                 
-                void setModelparameter(Modelparameter::Modelparameter<ValueType>& model);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const& model);
                 
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz);
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy);
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz);
+                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& Sxx, lama::Vector& Syy);
 
             protected:
                 
@@ -55,10 +55,10 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSu
  \param model which is used during forward modelling
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType>& model){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const& model){
     
-    lama::DenseVector<ValueType>const& pWaveModulus=model.getPWaveModulus();
-    lama::DenseVector<ValueType>const& sWaveModulus=model.getSWaveModulus();
+    lama::Vector const& pWaveModulus=model.getPWaveModulus();
+    lama::Vector const& sWaveModulus=model.getSWaveModulus();
     
     lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
     
@@ -82,7 +82,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
  \param Syy Syy wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::Vector& Sxx, lama::Vector& Syy){
     
     SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
     
@@ -106,7 +106,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
  \param Szz Szz wavefield
  */
 template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::DenseVector<ValueType>& Sxx, lama::DenseVector<ValueType>& Syy, lama::DenseVector<ValueType>& Szz){
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz){
     
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);

@@ -6,31 +6,34 @@ LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilsk
 
 install: clean SOFI tests
 
-SOFI: SOFI3D SOFI2D
+SOFI: SOFI.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
 
+
+SOFIexplicit: SOFI3D SOFI2D
 
 SOFI3D: SOFI3Dacoustic SOFI3Delastic SOFI3Dvisco
 
-SOFI3Dacoustic: SOFI3Dacoustic.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI3Dacoustic SOFI3Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
+SOFI3Dacoustic: SOFIexplicit/SOFI3Dacoustic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI3Dacoustic SOFIexplicit/SOFI3Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
 
-SOFI3Delastic: SOFI3Delastic.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI3Delastic SOFI3Delastic.cpp $(IFLAGS) $(LDFLAGS)
+SOFI3Delastic: SOFIexplicit/SOFI3Delastic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI3Delastic SOFIexplicit/SOFI3Delastic.cpp $(IFLAGS) $(LDFLAGS)
 
-SOFI3Dvisco: SOFI3Dvisco.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI3Dvisco SOFI3Dvisco.cpp $(IFLAGS) $(LDFLAGS)
+SOFI3Dvisco: SOFIexplicit/SOFI3Dvisco.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI3Dvisco SOFIexplicit/SOFI3Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
 SOFI2D: SOFI2Dacoustic  SOFI2Delastic SOFI2Dvisco
 
-SOFI2Dacoustic: SOFI2Dacoustic.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI2Dacoustic SOFI2Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
+SOFI2Dacoustic: SOFIexplicit/SOFI2Dacoustic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI2Dacoustic SOFIexplicit/SOFI2Dacoustic.cpp $(IFLAGS) $(LDFLAGS)
 
-SOFI2Delastic: SOFI2Delastic.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI2Delastic SOFI2Delastic.cpp $(IFLAGS) $(LDFLAGS)
+SOFI2Delastic: SOFIexplicit/SOFI2Delastic.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI2Delastic SOFIexplicit/SOFI2Delastic.cpp $(IFLAGS) $(LDFLAGS)
 
-SOFI2Dvisco: SOFI2Dvisco.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
+SOFI2Dvisco: SOFIexplicit/SOFI2Dvisco.cpp
+	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFIexplicit/SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
 tests: Test_CompareSeismogram
