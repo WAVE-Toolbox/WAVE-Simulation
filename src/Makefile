@@ -1,10 +1,20 @@
 CC=g++
+GTESTS=ON
 CFLAGS=-std=c++11 -fopenmp -Wall -Wextra -Werror
 IFLAGS=-I${SCAI_ROOT}/include -L${SCAI_ROOT}/lib -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
 LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking -lscai_tracing -lscai_logging -lscai_common
 
+ifeq ($(GTESTS),ON)
+	IFLAGS += -I${GTEST_DIR}/include -L${GTEST_DIR}/
+	LDFLAGS += -lgtest -lgtest_main
+	CFLAGS += -isystem -pthread
+endif
+
+
 
 install: clean SOFI tests
+
+
 
 SOFI: SOFI.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
@@ -36,10 +46,17 @@ SOFI2Dvisco: SOFIexplicit/SOFI2Dvisco.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFIexplicit/SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
-tests: Test_CompareSeismogram
+
+tests: Test_CompareSeismogram Test_unit
+
+UNITTESTPATH := $(shell find $(shell pwd) -name '*UnitTest.cpp')
+
+Test_unit: $(UNITTESTPATH)
+	$(CC) $(CFLAGS) -o ../bin/Tests/Test_unit $(UNITTESTPATH) $(IFLAGS) $(LDFLAGS)
 
 Test_CompareSeismogram: Tests/Test_CompareSeismogram.cpp
 	$(CC) $(CFLAGS) -o ../bin/Tests/Test_CompareSeismogram Tests/Test_CompareSeismogram.cpp $(IFLAGS) $(LDFLAGS)
+
 
 
 clean:
