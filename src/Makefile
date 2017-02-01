@@ -6,7 +6,7 @@ LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilsk
 # Flags for googletest framework
 IFLAGSTEST = -I${GTEST_DIR}/include -L${GTEST_DIR}/
 LDFLAGSTEST = -lgtest -lgtest_main
-CFLAGSTEST = -isystem -pthread
+CFLAGSTEST = -isystem -pthread -fprofile-arcs -ftest-coverage -fPIC -O0
 
 
 
