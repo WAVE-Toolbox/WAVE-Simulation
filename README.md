@@ -16,7 +16,7 @@ Contributing:
 - See the contributing guidelines provided in `CONTRIBUTING.md`
 
 Requirement:
-- Framework [LAMA](https://www.libama.org)
+- Framework [LAMA](https://www.libama.org) Version >= 2.1
 - Compiler with C++11 support
 
 Tested with:
