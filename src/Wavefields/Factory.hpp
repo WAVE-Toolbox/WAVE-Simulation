@@ -32,31 +32,35 @@ namespace KITGPI {
              \param dimension Dimension of the model (2D, 3D)
              \param type Simmulation type (acoustic, elsstic, viscoelastic)
              */
-            static WavefieldPtr Create( std::string const& dimension, std::string const& type ) {
+            static WavefieldPtr Create( std::string dimension, std::string type ) {
                 
+                // transform to lower cases
+                std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+                std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
+
                 // Assert correctness of input values
-                SCAI_ASSERT_ERROR(dimension.compare("2D")==0 ||dimension.compare("3D")==0, "Unkown dimension" );
+                SCAI_ASSERT_ERROR(dimension.compare("2d")==0 ||dimension.compare("3d")==0, "Unkown dimension" );
                 SCAI_ASSERT_ERROR(type.compare("acoustic")==0 || type.compare("elastic")==0 || type.compare("visco")==0, "Unkown type" );
                 
                 // 2D
-                if( dimension.compare("2D") == 0 && type.compare("acoustic") == 0 ){
+                if( dimension.compare("2d") == 0 && type.compare("acoustic") == 0 ){
                     return WavefieldPtr(new FD2Dacoustic<ValueType>);
                 }
-                if( dimension.compare("2D") == 0 && type.compare("elastic") == 0 ){
+                if( dimension.compare("2d") == 0 && type.compare("elastic") == 0 ){
                     return WavefieldPtr(new FD2Delastic<ValueType>);
                 }
-                if( dimension.compare("2D") == 0 && type.compare("visco") == 0 ){
+                if( dimension.compare("2d") == 0 && type.compare("visco") == 0 ){
                     return WavefieldPtr(new FD2Dvisco<ValueType>);
                 }
                 
                 // 3D
-                if( dimension.compare("3D") == 0 && type.compare("acoustic") == 0 ){
+                if( dimension.compare("3d") == 0 && type.compare("acoustic") == 0 ){
                     return WavefieldPtr(new FD3Dacoustic<ValueType>);
                 }
-                if( dimension.compare("3D") == 0 && type.compare("elastic") == 0 ){
+                if( dimension.compare("3d") == 0 && type.compare("elastic") == 0 ){
                     return WavefieldPtr(new FD3Delastic<ValueType>);
                 }
-                if( dimension.compare("3D") == 0 && type.compare("visco") == 0 ){
+                if( dimension.compare("3d") == 0 && type.compare("visco") == 0 ){
                     return WavefieldPtr(new FD3Dvisco<ValueType>);
                 }
                 

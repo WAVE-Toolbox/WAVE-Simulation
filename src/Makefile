@@ -3,8 +3,17 @@ CFLAGS=-std=c++11 -fopenmp -Wall -Wextra -Werror
 IFLAGS=-I${SCAI_ROOT}/include -L${SCAI_ROOT}/lib -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
 LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking -lscai_tracing -lscai_logging -lscai_common
 
+# Flags for googletest framework
+IFLAGSTEST = -I${GTEST_DIR}/include -L${GTEST_DIR}/
+LDFLAGSTEST = -lgtest -lgtest_main
+CFLAGSTEST = -isystem -pthread -fprofile-arcs -ftest-coverage -fPIC -O0
 
-install: clean SOFI tests
+
+
+
+install: clean SOFI
+
+
 
 SOFI: SOFI.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
@@ -36,10 +45,17 @@ SOFI2Dvisco: SOFIexplicit/SOFI2Dvisco.cpp
 	$(CC) $(CFLAGS) -o ../bin/SOFI2Dvisco SOFIexplicit/SOFI2Dvisco.cpp $(IFLAGS) $(LDFLAGS)
 
 
-tests: Test_CompareSeismogram
 
-Test_CompareSeismogram: Tests/Test_CompareSeismogram.cpp
+tests: integrationTest unitTest
+
+UNITTESTPATH := $(shell find $(shell pwd) -name '*UnitTest.cpp')
+
+unitTest: $(UNITTESTPATH)
+	$(CC) $(CFLAGS) $(CFLAGSTEST) -o ../bin/Tests/Test_unit $(UNITTESTPATH) $(IFLAGS) $(IFLAGSTEST) $(LDFLAGS) $(LDFLAGSTEST)
+
+integrationTest: Tests/Test_CompareSeismogram.cpp
 	$(CC) $(CFLAGS) -o ../bin/Tests/Test_CompareSeismogram Tests/Test_CompareSeismogram.cpp $(IFLAGS) $(LDFLAGS)
+
 
 
 clean:
