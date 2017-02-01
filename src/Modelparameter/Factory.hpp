@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <string>
 #include "Modelparameter.hpp"
 #include "Acoustic.hpp"
 #include "Elastic.hpp"
@@ -29,7 +30,10 @@ namespace KITGPI {
              *
              \param type Simmulation type (acoustic, elsstic, viscoelastic)
              */
-            static ModelparameterPtr Create( std::string const& type ) {
+            static ModelparameterPtr Create( std::string type ) {
+                
+                // transform to lower cases
+                std::transform(type.begin(), type.end(), type.begin(), ::tolower);
                 
                 // Assert correctness of input values
                 SCAI_ASSERT_ERROR(type.compare("acoustic")==0 || type.compare("elastic")==0 || type.compare("visco")==0, "Unkown type" );
