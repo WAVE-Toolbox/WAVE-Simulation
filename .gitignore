@@ -487,3 +487,7 @@ ENV/
 
 # Seismic Unix
 *.su
+
+# Code Coverage
+*.gcda
+*.gcno

@@ -17,6 +17,10 @@ Different kinds of parallelization are possible:
 - Using OpenMPI/IntelMPI:
  - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 4 ./../SOFI3Dacoustic`
 
+## Start the tests
+To test the proper functionality of the installation, you can run the tests:
+
+- `source start_tests.sh`
 
 ## Data processing
 
