@@ -109,14 +109,15 @@ ValueType KITGPI::Configuration::Configuration::get( std::string const& paramete
         COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
     }
     return(temp);
-}
-
+    }
+    
 /*! \brief Print configuration
  */
 void KITGPI::Configuration::Configuration::print() const
-{
+    {
     std::cout << "\t" << "Configuration: \n" << std::endl;
     for ( std::unordered_map<std::string,std::string>::const_iterator iter = configMap.begin(); iter != configMap.end(); ++iter )
         std::cout << "\t"<< iter->first << " = " << iter->second << std::endl;
     std::cout << std::endl;
 }
+

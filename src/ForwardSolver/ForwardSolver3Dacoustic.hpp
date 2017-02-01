@@ -15,6 +15,7 @@
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface3Dacoustic.hpp"
 #include "BoundaryCondition/ABS3D.hpp"
+#include "BoundaryCondition/CPML3DAcoustic.hpp"
 #include "SourceReceiverImpl/FDTD3Dacoustic.hpp"
 
 namespace KITGPI {
@@ -47,6 +48,10 @@ namespace KITGPI {
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
+	    BoundaryCondition::CPML3DAcoustic<ValueType> ConvPML; //!< CPML boundary condition class
+            using ForwardSolver<ValueType>::useConvPML;
+            
+            
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
@@ -70,13 +75,17 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
     }
     
     /* Prepare Damping Boundary */
-    if(config.get<IndexType>("DampingBoundary")){
-        useDampingBoundary=true;
-        DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
+    if(config.get<IndexType>("DampingBoundary")==1){
+        if(config.get<IndexType>("DampingBoundaryType")==1){
+            useDampingBoundary=true;
+            DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
+        }
+        
+        if(config.get<IndexType>("DampingBoundaryType")==2){
+            useConvPML=true;	ConvPML.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DT"),config.get<IndexType>("DH"),config.get<IndexType>("BoundaryWidth"),config.get<ValueType>("NPower"),config.get<ValueType>("KMaxCPML"),config.get<ValueType>("CenterFrequencyCPML"),config.get<ValueType>("VMaxCPML"),useFreeSurface);
+        }
     }
-    
 }
-
 
 /*! \brief Running the 3-D acoustic foward solver
  *
@@ -123,6 +132,9 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
     
+    common::unique_ptr<lama::Vector> update_tempPtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector& update_temp = *update_tempPtr; // get Reference of VectorPointer
+    
     dmemo::CommunicatorPtr comm=inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 
     /* --------------------------------------- */
@@ -141,19 +153,30 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Receivers<
         
         /* update velocity */
         update= Dxf * p;
+	if(useConvPML) { ConvPML.apply_p_x(update);}
         vX += update.scale(inverseDensityAverageX);
 
         update= Dyf * p;
+	if(useConvPML) { ConvPML.apply_p_y(update);}
         vY += update.scale(inverseDensityAverageY);
 
         update=  Dzf * p;
+	if(useConvPML) { ConvPML.apply_p_z(update);}
         vZ += update.scale(inverseDensityAverageZ);
 
         
         /* pressure update */
         update  =  Dxb * vX;
-        update +=  Dyb * vY;
-        update +=  Dzb * vZ;
+	if(useConvPML) { ConvPML.apply_vxx(update);}
+	
+        update_temp =  Dyb * vY;
+	if(useConvPML) { ConvPML.apply_vyy(update_temp);}
+	update+=update_temp;
+	
+        update_temp =  Dzb * vZ;
+	if(useConvPML) { ConvPML.apply_vzz(update_temp);}
+	update+=update_temp;
+	
         p += update.scale(pWaveModulus);
 
         /* Apply free surface to pressure update */

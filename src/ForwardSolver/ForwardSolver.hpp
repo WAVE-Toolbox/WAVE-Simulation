@@ -24,7 +24,7 @@ namespace KITGPI {
             typedef std::shared_ptr<ForwardSolver<ValueType>> ForwardSolverPtr;
             
             //! Default constructor
-            ForwardSolver():useFreeSurface(false),useDampingBoundary(false){};
+            ForwardSolver():useFreeSurface(false),useDampingBoundary(false),useConvPML(false){};
             
             //! Default destructor
             ~ForwardSolver(){};
@@ -57,7 +57,7 @@ namespace KITGPI {
             
             bool useFreeSurface; //!< Bool if free surface is in use
             bool useDampingBoundary; //!< Bool if damping boundary is in use
-
+            bool useConvPML; //!< Bool if CPML is in use
             
         };
     } /* end namespace ForwardSolver */

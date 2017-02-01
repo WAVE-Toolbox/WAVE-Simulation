@@ -15,6 +15,7 @@
 #include "Derivatives/Derivatives.hpp"
 #include "BoundaryCondition/FreeSurface2Delastic.hpp"
 #include "BoundaryCondition/ABS2D.hpp"
+#include "BoundaryCondition/CPML2D.hpp"
 #include "SourceReceiverImpl/FDTD2Delastic.hpp"
 
 namespace KITGPI {
@@ -47,6 +48,9 @@ namespace KITGPI {
             BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
             
+	    BoundaryCondition::CPML2D<ValueType> ConvPML; //!< Damping boundary condition class
+            using ForwardSolver<ValueType>::useConvPML;
+            
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
@@ -70,16 +74,21 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
     }
     
     /* Prepare Damping Boundary */
-    if(config.get<IndexType>("DampingBoundary")){
-        useDampingBoundary=true;
-        DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
+    if(config.get<IndexType>("DampingBoundary")==1){
+        if(config.get<IndexType>("DampingBoundaryType")==1){
+            useDampingBoundary=true;
+            DampingBoundary.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"),useFreeSurface);
+        }
+        if(config.get<IndexType>("DampingBoundaryType")==2){
+            useConvPML=true;	ConvPML.init(dist,ctx,config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DT"),config.get<IndexType>("DH"),config.get<IndexType>("BoundaryWidth"),config.get<ValueType>("NPower"),config.get<ValueType>("KMaxCPML"),config.get<ValueType>("CenterFrequencyCPML"),config.get<ValueType>("VMaxCPML"),useFreeSurface);
+        }
     }
-    
 }
 
-/*! \brief Running the 3-D elastic foward solver
+
+/*! \brief Running the 2-D elastic foward solver
  *
- * Start the 3-D forward solver as defined by the given parameters
+ * Start the 2-D forward solver as defined by the given parameters
  *
  \param receiver Configuration of the receivers
  \param sources Configuration of the sources
@@ -127,6 +136,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
     common::unique_ptr<lama::Vector> updatePtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector& update = *updatePtr; // get Reference of VectorPointer
     
+    common::unique_ptr<lama::Vector> update_tempPtr( vX.newVector() ); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector& update_temp = *update_tempPtr; // get Reference of VectorPointer
+    
     common::unique_ptr<lama::Vector> vxxPtr( vX.newVector() );
     common::unique_ptr<lama::Vector> vyyPtr( vX.newVector() );
     
@@ -157,11 +169,20 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         /* update velocity */
         /* ----------------*/
         update = Dxf * Sxx;
-        update += DybVelocity * Sxy;
+        if(useConvPML)  {ConvPML.apply_sxx_x(update);}
+        
+	update_temp = DybVelocity * Sxy;
+	if(useConvPML) { ConvPML.apply_sxy_y(update_temp);}
+	update += update_temp;
+	
         vX += update.scale(inverseDensityAverageX);
         
         update = Dxb * Sxy;
-        update += DyfVelocity * Syy;
+	if(useConvPML) { ConvPML.apply_sxy_x(update);}
+        update_temp = DyfVelocity * Syy;
+	if(useConvPML) { ConvPML.apply_syy_y(update_temp);}
+	update += update_temp;
+
         vY += update.scale(inverseDensityAverageY);
         
         
@@ -170,6 +191,10 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         /* ----------------*/
         vxx = Dxb * vX;
         vyy = DybPressure * vY;
+        if(useConvPML) {
+	ConvPML.apply_vxx(vxx);
+	ConvPML.apply_vyy(vyy);
+	}
         
         update = vxx;
         update += vyy;
@@ -182,7 +207,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Receivers<V
         Syy -= 2.0 * vxx.scale(sWaveModulus);
         
         update = DyfPressure * vX;
-        update += Dxf * vY;
+	if(useConvPML) { ConvPML.apply_vxy(update);}
+	
+        update_temp = Dxf * vY;
+	if(useConvPML)  {ConvPML.apply_vyx(update_temp);}
+	update += update_temp;
+
         Sxy += update.scale(sWaveModulusAverageXY);
         
         

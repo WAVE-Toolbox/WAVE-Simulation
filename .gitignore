@@ -488,6 +488,9 @@ ENV/
 # Seismic Unix
 *.su
 
+# Kdevelop
+*.kdev4
+
 # Code Coverage
 *.gcda
 *.gcno

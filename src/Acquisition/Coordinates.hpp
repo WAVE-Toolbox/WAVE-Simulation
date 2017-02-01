@@ -254,9 +254,9 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
 {
     coordinate3D distance;
     
-    distance.x=!((NX-X)<(X-1))?(X-1):(NX-X);
-    distance.y=!((NY-Y)<(Y-1))?(Y-1):(NY-Y);
-    distance.z=!((NX-Z)<(Z-1))?(Z-1):(NZ-Z);
+    distance.x=!((NX-1-X)<(X))?(X):(NX-1-X);
+    distance.y=!((NY-1-Y)<(Y))?(Y):(NY-1-Y);
+    distance.z=!((NX-1-Z)<(Z))?(Z):(NZ-1-Z);
     
     return(distance);
     
