@@ -1,19 +1,36 @@
 stages:
     - build
+    - unittest
     - simulation
     
+
 gcc:
   stage: build
   before_script:
     - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`
   script:
     - echo "g++ Version:" && g++ --version
-    - cd src/ && make install CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
+    - cd src/ && make install tests CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
   artifacts:
     when: on_success
-    expire_in: 10 min
+    expire_in: 30 min
     paths:
       - bin/
+
+
+unittest-gcc:
+  stage: unittest
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}:${LD_LIBRARY_PATH}
+    - PATH=${GCOVR_DIR}:${PATH}
+    - cd src/ && make unitTest CC=g++ CFLAGS="-std=c++11"
+    - OMP_NUM_THREADS=2
+    - cd ../bin/Tests/ && ./Test_unit
+    - cd ../../src/
+    - gcovr -r . --branch --gcov-exclude=.+\.UnitTest.+\.
 
 
 acoustic2D-gcc:

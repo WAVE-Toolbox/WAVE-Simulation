@@ -2,6 +2,8 @@
 
 Master: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)  Develop: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
 
+Master: [![coverage report](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/coverage.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)  Develop: [![coverage report](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/coverage.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
+
 *Seismic Finite-Difference modelling developed within the [WAVE-Project](http://wave-toolbox.org).*
 
 Get started:
