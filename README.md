@@ -10,9 +10,12 @@ Get started:
 Documentation:
 - Type `make` in `doc/`
 
+Contributing:
+- See the contributing guidelines provided in `CONTRIBUTING.md`
+
 Requirement:
-- Framework [LAMA](https://www.libama.org) (Development-Version)
-- Compiler with C++11 support recommended
+- Framework [LAMA](https://www.libama.org)
+- Compiler with C++11 support
 
 Tested with:
 - Compiler: g++ (4.9.3), clang++ (3.9)
