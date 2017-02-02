@@ -1,10 +1,12 @@
 #pragma once
 
-namespace KITGPI {
-    
+namespace KITGPI
+{
+
     //! Partitioning namespace
-    namespace Partitioning {
-        
+    namespace Partitioning
+    {
+
         //! \brief Abstract class for partitioning
         /*!
          *
@@ -12,17 +14,15 @@ namespace KITGPI {
         template <typename ValueType>
         class Partitioning
         {
-        protected:
+          protected:
             //! Default constructor
             Partitioning(){};
-            
+
             //! Default destructor
             ~Partitioning(){};
-            
+
             //! Getter method for distribution pointer
-            virtual dmemo::DistributionPtr getDist() const =0;
-            
+            virtual dmemo::DistributionPtr getDist() const = 0;
         };
-        
     }
 }

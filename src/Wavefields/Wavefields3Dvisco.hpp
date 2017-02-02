@@ -9,38 +9,38 @@
 
 #include "Wavefields.hpp"
 
-namespace KITGPI {
-    
-    namespace Wavefields {
-        
+namespace KITGPI
+{
+
+    namespace Wavefields
+    {
+
         /*! \brief The class FD3Dvisco holds the wavefields for 3D visco elastic simulation
          *
          */
-        template<typename ValueType>
+        template <typename ValueType>
         class FD3Dvisco : public Wavefields<ValueType>
         {
-            
-        public:
-            
+
+          public:
             //! Default constructor
             FD3Dvisco(){};
-            
+
             //! Default destructor
             ~FD3Dvisco(){};
-            
+
             explicit FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            
+
             void reset() override;
-            
+
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP() override;
-            
+            lama::DenseVector<ValueType> &getP() override;
+
             hmemo::ContextPtr getContextPtr() override;
-            
+
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
-            
-        private:
-            
+
+          private:
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;
@@ -57,20 +57,19 @@ namespace KITGPI {
             using Wavefields<ValueType>::Ryz;
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
-            
+
             /* non-required wavefields */
             using Wavefields<ValueType>::P; //!< Wavefield
-
         };
     }
 }
 
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
-template<typename ValueType>
+template <typename ValueType>
 hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
 {
-    return(VX.getContextPtr());
+    return (VX.getContextPtr());
 }
 
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
@@ -80,35 +79,35 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
  /param ctx Context
  /param dist Distribution
  */
-template<typename ValueType>
+template <typename ValueType>
 KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    init(ctx,dist);
+    init(ctx, dist);
 }
 
-template<typename ValueType>
+template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    this->initWavefield(VX,ctx,dist);
-    this->initWavefield(VY,ctx,dist);
-    this->initWavefield(VZ,ctx,dist);
-    this->initWavefield(Sxx,ctx,dist);
-    this->initWavefield(Syy,ctx,dist);
-    this->initWavefield(Szz,ctx,dist);
-    this->initWavefield(Syz,ctx,dist);
-    this->initWavefield(Sxz,ctx,dist);
-    this->initWavefield(Sxy,ctx,dist);
-    this->initWavefield(Rxx,ctx,dist);
-    this->initWavefield(Ryy,ctx,dist);
-    this->initWavefield(Rzz,ctx,dist);
-    this->initWavefield(Ryz,ctx,dist);
-    this->initWavefield(Rxz,ctx,dist);
-    this->initWavefield(Rxy,ctx,dist);
+    this->initWavefield(VX, ctx, dist);
+    this->initWavefield(VY, ctx, dist);
+    this->initWavefield(VZ, ctx, dist);
+    this->initWavefield(Sxx, ctx, dist);
+    this->initWavefield(Syy, ctx, dist);
+    this->initWavefield(Szz, ctx, dist);
+    this->initWavefield(Syz, ctx, dist);
+    this->initWavefield(Sxz, ctx, dist);
+    this->initWavefield(Sxy, ctx, dist);
+    this->initWavefield(Rxx, ctx, dist);
+    this->initWavefield(Ryy, ctx, dist);
+    this->initWavefield(Rzz, ctx, dist);
+    this->initWavefield(Ryz, ctx, dist);
+    this->initWavefield(Rxz, ctx, dist);
+    this->initWavefield(Rxy, ctx, dist);
 }
 
 /*! \brief Set all wavefields to zero.
  */
-template<typename ValueType>
+template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::reset()
 {
     this->resetWavefield(VX);
@@ -128,11 +127,10 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::reset()
     this->resetWavefield(Rxy);
 }
 
-
 //! \brief Not valid in the 3D visco-elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Dvisco<ValueType>::getP(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getP()
+{
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D visco-elastic case.")
-    return(P);
+    return (P);
 }
-

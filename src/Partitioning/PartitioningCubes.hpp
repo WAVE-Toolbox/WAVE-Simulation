@@ -1,15 +1,17 @@
 #pragma once
 
-#include "Partitioning.hpp"
 #include "../Acquisition/Coordinates.hpp"
 #include "../Configuration/Configuration.hpp"
+#include "Partitioning.hpp"
 
 using namespace scai;
 
-namespace KITGPI {
-    
-    namespace Partitioning {
-        
+namespace KITGPI
+{
+
+    namespace Partitioning
+    {
+
         //! \brief Creating a partition of cubes
         /*!
          * This class can create a partition of the wavefield that consists of cubes.
@@ -20,30 +22,25 @@ namespace KITGPI {
         template <typename ValueType>
         class PartitioningCubes : public Partitioning<ValueType>
         {
-            
-        public:
-            
+
+          public:
             //! Default constructor
             PartitioningCubes() = delete;
-            
-            explicit PartitioningCubes(Configuration::Configuration const& config,dmemo::CommunicatorPtr comm);
-            
+
+            explicit PartitioningCubes(Configuration::Configuration const &config, dmemo::CommunicatorPtr comm);
+
             //! Default destructor
             ~PartitioningCubes(){};
-            
+
             dmemo::DistributionPtr getDist() const;
-            
-        private:
-            
-            dmemo::DistributionPtr calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm);
-            
+
+          private:
+            dmemo::DistributionPtr calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm);
+
             dmemo::DistributionPtr dist_cubes; //!< Distribution
-            
         };
-        
     }
 }
-
 
 /*! \brief Getter method for the disttribution pointer *
  *
@@ -51,8 +48,8 @@ namespace KITGPI {
 template <typename ValueType>
 dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDist() const
 {
-    SCAI_ASSERT( dist_cubes !=nullptr ,"Distribution ist not set " );
-    return(dist_cubes);
+    SCAI_ASSERT(dist_cubes != nullptr, "Distribution ist not set ");
+    return (dist_cubes);
 }
 
 /*! \brief Constructor based on the configuration class and the communicator
@@ -61,10 +58,10 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration const& config, dmemo::CommunicatorPtr comm){
-    dist_cubes=calculate(config.get<IndexType>("ProcNX"),config.get<IndexType>("ProcNY"),config.get<IndexType>("ProcNZ"),config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),comm);
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration const &config, dmemo::CommunicatorPtr comm)
+{
+    dist_cubes = calculate(config.get<IndexType>("ProcNX"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), comm);
 }
-
 
 //! \brief Calculation of cube partition
 /*!
@@ -81,59 +78,59 @@ KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configurat
  \param comm Communicator for the distribution
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX,IndexType procNY,IndexType procNZ,IndexType NX,IndexType NY,IndexType NZ, dmemo::CommunicatorPtr comm){
-    
-    
-    IndexType rank=comm->getRank();
-    IndexType numRanks=comm->getSize();
-    
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm)
+{
+
+    IndexType rank = comm->getRank();
+    IndexType numRanks = comm->getSize();
+
     /* Check some things */
-    SCAI_ASSERT(procNX*procNY*procNZ == numRanks, " Number of cores differ between config and actual setting  ")
-    SCAI_ASSERT(NX % procNX == 0," NX % procNX != 0  " );
-    SCAI_ASSERT(NY % procNY == 0," NY % procNY != 0  " );
-    SCAI_ASSERT(NZ % procNZ == 0," NZ % procNZ != 0  " );
-    
+    SCAI_ASSERT(procNX * procNY * procNZ == numRanks, " Number of cores differ between config and actual setting  ")
+    SCAI_ASSERT(NX % procNX == 0, " NX % procNX != 0  ");
+    SCAI_ASSERT(NY % procNY == 0, " NY % procNY != 0  ");
+    SCAI_ASSERT(NZ % procNZ == 0, " NZ % procNZ != 0  ");
+
     /* Calculate coordinates of the CPU */
-    IndexType posNX= rank % procNX;
-    IndexType posNZ= rank / ( procNX * procNY);
-    IndexType posNY= (( rank - ( procNX * procNY ) * posNZ ) / procNX );
-    
+    IndexType posNX = rank % procNX;
+    IndexType posNZ = rank / (procNX * procNY);
+    IndexType posNY = ((rank - (procNX * procNY) * posNZ) / procNX);
+
     /* Calculate range of grid points */
-    IndexType range_x_lower=( NX / procNX ) * posNX;
-    IndexType range_y_lower=( NY / procNY ) * posNY;
-    IndexType range_z_lower=( NZ / procNZ ) * posNZ;
-    
-    IndexType range_x_upper=( NX / procNX ) * (posNX+1);
-    IndexType range_y_upper=( NY / procNY ) * (posNY+1);
-    IndexType range_z_upper=( NZ / procNZ ) * (posNZ+1);
-    
-    IndexType numGlobalGridPoints= NX * NY * NZ ;
-    IndexType numLocalGridPoints=( numGlobalGridPoints ) / numRanks;
-    
+    IndexType range_x_lower = (NX / procNX) * posNX;
+    IndexType range_y_lower = (NY / procNY) * posNY;
+    IndexType range_z_lower = (NZ / procNZ) * posNZ;
+
+    IndexType range_x_upper = (NX / procNX) * (posNX + 1);
+    IndexType range_y_upper = (NY / procNY) * (posNY + 1);
+    IndexType range_z_upper = (NZ / procNZ) * (posNZ + 1);
+
+    IndexType numGlobalGridPoints = NX * NY * NZ;
+    IndexType numLocalGridPoints = (numGlobalGridPoints) / numRanks;
+
     Acquisition::Coordinates<ValueType> coord;
-    
+
     /* Determine local indices */
     hmemo::HArray<IndexType> localIndices;
     localIndices.resize(numLocalGridPoints);
     hmemo::WriteAccess<IndexType> write_localIndices(localIndices);
-    IndexType i=0;
+    IndexType i = 0;
     IndexType indice;
-    for(IndexType x=0; x<NX; x++){
-        for(IndexType y=0; y<NY; y++){
-            for(IndexType z=0; z<NZ; z++){
-                if( x>=range_x_lower && x<range_x_upper && y>=range_y_lower && y<range_y_upper && z>=range_z_lower && z<range_z_upper ){
-                    indice=coord.coordinate2index(x,y,z,NX,NY, NZ);
-                    write_localIndices[i]=indice;
+    for (IndexType x = 0; x < NX; x++) {
+        for (IndexType y = 0; y < NY; y++) {
+            for (IndexType z = 0; z < NZ; z++) {
+                if (x >= range_x_lower && x < range_x_upper && y >= range_y_lower && y < range_y_upper && z >= range_z_lower && z < range_z_upper) {
+                    indice = coord.coordinate2index(x, y, z, NX, NY, NZ);
+                    write_localIndices[i] = indice;
                     i++;
                 }
             }
         }
     }
-    SCAI_ASSERT_ERROR(i == numLocalGridPoints, " i != numLocalGridPoints   " << i << numLocalGridPoints );
+    SCAI_ASSERT_ERROR(i == numLocalGridPoints, " i != numLocalGridPoints   " << i << numLocalGridPoints);
     write_localIndices.release();
-    
+
     /* create GeneralDistribution */
-    dmemo::DistributionPtr dist_cubus( new dmemo::GeneralDistribution(numGlobalGridPoints,localIndices,comm));
-    
-    return(dist_cubus);
+    dmemo::DistributionPtr dist_cubus(new dmemo::GeneralDistribution(numGlobalGridPoints, localIndices, comm));
+
+    return (dist_cubus);
 }

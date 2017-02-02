@@ -9,44 +9,44 @@
 
 #include "Wavefields.hpp"
 
-namespace KITGPI {
-    
-    namespace Wavefields {
-        
+namespace KITGPI
+{
+
+    namespace Wavefields
+    {
+
         /*! \brief The class FD3Delastic holds the wavefields for 3D elastic simulation
          *
          */
-        template<typename ValueType>
+        template <typename ValueType>
         class FD3Delastic : public Wavefields<ValueType>
         {
-            
-        public:
-            
+
+          public:
             //! Default constructor
             FD3Delastic(){};
-            
+
             //! Default destructor
             ~FD3Delastic(){};
-            
+
             explicit FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            
+
             void reset() override;
-            
+
             /* Getter routines for non-required wavefields: Will throw an error */
-            lama::DenseVector<ValueType>& getP() override;
-            lama::DenseVector<ValueType>& getRxx() override;
-            lama::DenseVector<ValueType>& getRyy() override;
-            lama::DenseVector<ValueType>& getRzz() override;
-            lama::DenseVector<ValueType>& getRyz() override;
-            lama::DenseVector<ValueType>& getRxz() override;
-            lama::DenseVector<ValueType>& getRxy() override;
-            
+            lama::DenseVector<ValueType> &getP() override;
+            lama::DenseVector<ValueType> &getRxx() override;
+            lama::DenseVector<ValueType> &getRyy() override;
+            lama::DenseVector<ValueType> &getRzz() override;
+            lama::DenseVector<ValueType> &getRyz() override;
+            lama::DenseVector<ValueType> &getRxz() override;
+            lama::DenseVector<ValueType> &getRxy() override;
+
             hmemo::ContextPtr getContextPtr() override;
-            
+
             void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist) override;
-            
-        private:
-            
+
+          private:
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;
@@ -57,7 +57,7 @@ namespace KITGPI {
             using Wavefields<ValueType>::Syz;
             using Wavefields<ValueType>::Sxz;
             using Wavefields<ValueType>::Sxy;
-            
+
             /* non-required wavefields */
             using Wavefields<ValueType>::P;
             using Wavefields<ValueType>::Rxx;
@@ -72,12 +72,11 @@ namespace KITGPI {
 
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
-template<typename ValueType>
+template <typename ValueType>
 hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
 {
-    return(VX.getContextPtr());
+    return (VX.getContextPtr());
 }
-
 
 /*! \brief Constructor which will set context, allocate and set the wavefields to zero.
  *
@@ -86,29 +85,29 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
  /param ctx Context
  /param dist Distribution
  */
-template<typename ValueType>
+template <typename ValueType>
 KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    init(ctx,dist);
+    init(ctx, dist);
 }
 
-template<typename ValueType>
+template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
-    this->initWavefield(VX,ctx,dist);
-    this->initWavefield(VY,ctx,dist);
-    this->initWavefield(VZ,ctx,dist);
-    this->initWavefield(Sxx,ctx,dist);
-    this->initWavefield(Syy,ctx,dist);
-    this->initWavefield(Szz,ctx,dist);
-    this->initWavefield(Syz,ctx,dist);
-    this->initWavefield(Sxz,ctx,dist);
-    this->initWavefield(Sxy,ctx,dist);
+    this->initWavefield(VX, ctx, dist);
+    this->initWavefield(VY, ctx, dist);
+    this->initWavefield(VZ, ctx, dist);
+    this->initWavefield(Sxx, ctx, dist);
+    this->initWavefield(Syy, ctx, dist);
+    this->initWavefield(Szz, ctx, dist);
+    this->initWavefield(Syz, ctx, dist);
+    this->initWavefield(Sxz, ctx, dist);
+    this->initWavefield(Sxy, ctx, dist);
 }
 
 /*! \brief Set all wavefields to zero.
  */
-template<typename ValueType>
+template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
 {
     this->resetWavefield(VX);
@@ -122,53 +121,58 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
     this->resetWavefield(Sxy);
 }
 
-
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getP(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
+{
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D elastic case.")
-    return(P);
+    return (P);
 }
 
-
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx()
+{
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D elastic case.")
-    return(Rxx);
+    return (Rxx);
 }
 
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy()
+{
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D elastic case.")
-    return(Ryy);
+    return (Ryy);
 }
 
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz()
+{
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D elastic case.")
-    return(Rzz);
+    return (Rzz);
 }
 
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz()
+{
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D elastic case.")
-    return(Ryz);
+    return (Ryz);
 }
 
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz()
+{
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D elastic case.")
-    return(Rxz);
+    return (Rxz);
 }
 
 //! \brief Not valid in the 3D elastic case
-template<typename ValueType>
-lama::DenseVector<ValueType>& KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy(){
+template <typename ValueType>
+lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy()
+{
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
-    return(Rxy);
+    return (Rxy);
 }
