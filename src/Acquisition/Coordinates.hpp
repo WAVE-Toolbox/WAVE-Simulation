@@ -140,12 +140,12 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
 
-    SCAI_ASSERT_ERROR(Z < NZ, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(X < NX, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Y < NY, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Z >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Y >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(X >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NX, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Y < NY, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Z >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
 
     return ((X) + (Y)*NX + (Z)*NX * NY);
 }
@@ -240,6 +240,14 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector cons
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
+
+    SCAI_ASSERT(Z < NZ, "No valid argument!");
+    SCAI_ASSERT(X < NX, "No valid argument!");
+    SCAI_ASSERT(Y < NY, "No valid argument!");
+    SCAI_ASSERT(Z >= 0, "No valid argument!");
+    SCAI_ASSERT(Y >= 0, "No valid argument!");
+    SCAI_ASSERT(X >= 0, "No valid argument!");
+
     coordinate3D distance;
 
     distance.x = !((NX - 1 - X) < (X)) ? (X) : (NX - 1 - X);

@@ -143,12 +143,12 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "Preparation of the model parameters…\n");
-    
+
     refreshModule();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
-    
+
     HOST_PRINT(comm, "Model ready!\n\n");
 }
 
@@ -238,6 +238,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+
         switch (config.get<IndexType>("ModelParametrisation")) {
         case 1:
             init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
@@ -249,6 +252,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
             COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
             break;
         }
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+
     } else {
         ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
         ValueType getSWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityS") * config.get<ValueType>("velocityS");

@@ -224,7 +224,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
 
     calculateAveraging();
     this->getInverseDensity();
-    
+
     HOST_PRINT(comm, "Model ready!\n\n");
 }
 
@@ -250,6 +250,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+
         switch (config.get<IndexType>("ModelParametrisation")) {
         case 1:
             init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
@@ -262,6 +265,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
             break;
         }
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
 
     } else {
         ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
