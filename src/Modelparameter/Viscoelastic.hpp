@@ -196,6 +196,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule()
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
+    HOST_PRINT(comm, "Preparation of the model parameters…\n");
 
     refreshModule();
 
@@ -223,6 +224,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
 
     calculateAveraging();
     this->getInverseDensity();
+    
+    HOST_PRINT(comm, "Model ready!\n\n");
 }
 
 /*! \brief Constructor that is using the Configuration class

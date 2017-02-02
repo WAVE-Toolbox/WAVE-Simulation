@@ -142,10 +142,14 @@ namespace KITGPI
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
+    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+    
     refreshModule();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
+    
+    HOST_PRINT(comm, "Model ready!\n\n");
 }
 
 /*! \brief Switch the default parameterization of this class to modulus
