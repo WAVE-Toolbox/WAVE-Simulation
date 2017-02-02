@@ -38,7 +38,7 @@ If one of the test cases fails, the script will give an error message and will a
 Since the modelling code supports parallel I/O operations some pre- and post-processing steps maybe required to split or merge data. In order to use the binaries mentioned below, you have to build [LAMA](www.libama.org) with the option `BUILD_EXAMPLES=ON`.
 
 #### Data pre-processing
-- to partition a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.mtx 1 filename_%r.mtx {NProcessors}`
+- to partition a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.mtx 1 filename.%r.mtx {NProcessors}`
 
 #### Data post-processing
-- Merge to a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename_%r.mtx {NProcessors} filename.mtx 1`
+- Merge to a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.%r.mtx {NProcessors} filename.mtx 1`

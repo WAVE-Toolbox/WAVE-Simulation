@@ -23,9 +23,9 @@ namespace KITGPI
          * This class accounts for the parallel input and output.
          * It provides the readin of a single file in block distribution or several files in block distribution and can write to a fileblock 
          * To obtain a fileblock from a single file the  vectorRepartition.exe or matrixRepartition.exe can be executed by 
-         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename.mtx} 1 {filename_%r.mtx} {NProcessors}
+         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename.mtx} 1 {filename.%r.mtx} {NProcessors}
          * To rearrange a fileblock in a single file execute:
-         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename_%r.mtx} {NProcessors} {filename.mtx} 1
+         *          scai_lama/build/lama/examples/io/vectorRepartition.exe {filename.%r.mtx} {NProcessors} {filename.mtx} 1
          */
         template <typename ValueType>
         class PartitionedInOut
@@ -48,13 +48,13 @@ namespace KITGPI
 /*! \brief read the distributed file and redistribut the entries
  *
  \param vec Vector which is returned
- \param filename Name of the file Block (without "_%r")
+ \param filename Name of the file Block (without ".%r")
  \param dist Distribution of the vector
  */
 template <typename ValueType>
 void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedFiles(lama::Vector &vec, std::string filename, dmemo::DistributionPtr dist)
 {
-    std::string fileNameBlockIn = filename.erase(filename.size() - 4) + "_%r.mtx";
+    std::string fileNameBlockIn = filename.erase(filename.size() - 4) + ".%r.mtx";
     vec.readFromFile(fileNameBlockIn);
     vec.redistribute(dist);
 }
@@ -83,8 +83,8 @@ void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::writeToDistributedFi
     common::unique_ptr<lama::Vector> updatePtr(vec.newVector());
     lama::Vector &tempVector = *updatePtr;
     tempVector = vec;
-    std::string distFileName = filename.erase(filename.size() - 4) + "_dist.mtx";
-    std::string fileNameBlockOut = filename.erase(filename.size() - 4) + "_%r.mtx";
+    std::string distFileName = filename.erase(filename.size() - 4) + ".dist.mtx";
+    std::string fileNameBlockOut = filename.erase(filename.size() - 4) + ".%r.mtx";
     lama::PartitionIO::write(tempVector.getDistribution(), distFileName);
 
     dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr();
