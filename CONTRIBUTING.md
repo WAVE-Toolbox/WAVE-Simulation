@@ -15,6 +15,7 @@ To ensure that the code will stay easy to maintain and extend, all developers ar
 For consistent source code formatting a clang-format style file is provided.
 Please config your integrated development environment (IDE) to format source code according to the style file given by the `.clang-format` file located within the `src/` folder.
 All major IDEs (e.g. Kdevelop, XCode, emacs, vim) support this file type.
+Alternatively, a manual source code formatting is possible by the shell script, which is located in `src/Scripts/formatSourceCode.sh`.
 
 You may be required to install the clang-format tool on your machine.
 Since clang-format is part of llvm project, more information are given on [llvm.org](llvm.org) or [https://clang.llvm.org/docs/ClangFormat.html](https://clang.llvm.org/docs/ClangFormat.html).
@@ -34,5 +35,7 @@ Before you commit your changes make sure all tests pass without errors.
 Two kinds of tests are provided:
 1. Unit tests (based on the [Google Test framework](https://github.com/google/googletest))
 2. Full integration tests
+
+You can run the tests by the script `par/start_tests.sh`. However, in order to use the Google Test framework, you have to set the environment variable `GTEST_DIR` to the location of the compiled Google Test library (`libgtest.*` and `libgtest_main.*`). The integration test has no special requirements apart LAMA and MPI. 
 
 The unit tests will verify the functionality of individual functions and classes, while the integration tests will run the whole forward code and verify that the obtained result is identical to a reference solution.
