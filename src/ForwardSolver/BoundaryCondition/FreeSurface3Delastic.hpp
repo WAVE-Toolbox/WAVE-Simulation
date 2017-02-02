@@ -1,41 +1,40 @@
 #pragma once
 
-#include "../Derivatives/Derivatives.hpp"
 #include "../../Common/HostPrint.hpp"
+#include "../Derivatives/Derivatives.hpp"
 #include "FreeSurfaceElastic.hpp"
 
-namespace KITGPI {
-    
-    namespace ForwardSolver {
-        
+namespace KITGPI
+{
+
+    namespace ForwardSolver
+    {
+
         //! \brief BoundaryCondition namespace
-        namespace BoundaryCondition {
-            
+        namespace BoundaryCondition
+        {
+
             //! \brief 3-D elastic free surface
-            template<typename ValueType>
+            template <typename ValueType>
             class FreeSurface3Delastic : public FreeSurfaceElastic<ValueType>
             {
-            public:
-                
+              public:
                 //! Default constructor
                 FreeSurface3Delastic(){};
-                
+
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
-                
-                void apply(lama::Vector& sumHorizonatlDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz);
 
-            private:
-                
+                void apply(lama::Vector &sumHorizonatlDerivative, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz);
+
+              private:
                 using FreeSurfaceElastic<ValueType>::setSurfaceZero;
                 using FreeSurfaceElastic<ValueType>::scaleHorizontalUpdate;
                 using FreeSurfaceElastic<ValueType>::active;
-                
             };
         } /* end namespace BoundaryCondition */
-    } /* end namespace ForwardSolver */
+    }     /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
-
 
 /*! \brief Apply free surface condition during time stepping for 3D simulations
  *
@@ -47,18 +46,17 @@ namespace KITGPI {
  \param Syy Syy wavefield
  \param Szz Szz wavefield
  */
-template<typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector& sumHorizonalDerivative, lama::Vector& Sxx, lama::Vector& Syy, lama::Vector& Szz){
-    
-    SCAI_ASSERT_DEBUG( active , " FreeSurface is not active " );
-    
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector &sumHorizonalDerivative, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz)
+{
+
+    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
+
     /* Apply horizontal update, which replaces the vertical one */
     sumHorizonalDerivative.scale(scaleHorizontalUpdate);
-    
-    Sxx +=sumHorizonalDerivative;
-    Szz +=sumHorizonalDerivative;
-    
-    Syy.scale(setSurfaceZero);
-    
-}
 
+    Sxx += sumHorizonalDerivative;
+    Szz += sumHorizonalDerivative;
+
+    Syy.scale(setSurfaceZero);
+}
