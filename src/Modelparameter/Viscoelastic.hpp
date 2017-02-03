@@ -418,16 +418,33 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
-    std::string filenameSWaveModulus = filename + ".sWaveModulus.mtx";
+
     std::string filenamedensity = filename + ".density.mtx";
     std::string filenameTauP = filename + ".tauP.mtx";
     std::string filenameTauS = filename + ".tauS.mtx";
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
-    this->writeModelparameter(sWaveModulus, filenameSWaveModulus, partitionedOut);
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
     this->writeModelparameter(tauP, filenameTauP, partitionedOut);
     this->writeModelparameter(tauS, filenameTauS, partitionedOut);
+
+    std::string filenameP;
+    std::string filenameS;
+
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
+    switch (parametrisation) {
+    case 0:
+        filenameP = filename + ".pWaveModulus.mtx";
+        filenameS = filename + ".sWaveModulus.mtx";
+        this->writeModelparameter(pWaveModulus, filenameP, partitionedOut);
+        this->writeModelparameter(sWaveModulus, filenameS, partitionedOut);
+    case 1:
+        filenameP = filename + ".vp.mtx";
+        filenameS = filename + ".vs.mtx";
+        this->writeModelparameter(velocityP, filenameP, partitionedOut);
+        this->writeModelparameter(velocityS, filenameS, partitionedOut);
+        break;
+    }
 };
 
 //! \brief Wrapper to support configuration
