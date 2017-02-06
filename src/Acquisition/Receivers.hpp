@@ -20,6 +20,14 @@ namespace KITGPI
          *
          * This class accounts for the handling of seismic receivers.
          * It provides the reading of the receivers acquisition from file, the distribution of the receivers and the collection of the seismograms.
+         *
+         *
+         * This class will first read-in the global receiver configuration from a receiver configuration file and
+         * afterwards it will determine the individual #SeismogramType of each receiver, and based on the #SeismogramType it will
+         * initialize the #Seismogram's of the #SeismogramHandler #receiver.\n\n
+         * The #coordinates and #receiver_type vectors contain the coordinates and #SeismogramType of all receivers, whereas the
+         * individual Seismogram of the SeismogramHandler #receiver will hold the receivers seperated based on the #SeismogramType.
+         *
          */
         template <typename ValueType>
         class Receivers
@@ -53,7 +61,7 @@ namespace KITGPI
             IndexType numReceiversGlobal; //!< Number of receivers global
             IndexType numReceiversLocal;  //!< Number of receivers local
 
-            SeismogramHandler<ValueType> receiver; //!< receiver
+            SeismogramHandler<ValueType> receiver; //!< SeismogramHandler to handle the receiver seismograms
 
             dmemo::DistributionPtr dist_wavefield_receivers; //!< Calculated Distribution of the receivers based on the distribution of the wavefields
             dmemo::DistributionPtr no_dist_NT;               //!< No distribution of the columns of the seismogram matrix
@@ -62,13 +70,16 @@ namespace KITGPI
             lama::DenseMatrix<ValueType> acquisition;   //!< Matrix that stores the receiver acquisition
             IndexType numParameter;                     //!< Number of receiver parameters given in acquisition matrix
             lama::DenseVector<IndexType> coordinates;   //!< Coordinates of receivers global (1-D coordinates)
-            lama::DenseVector<IndexType> receiver_type; //!< Type of Receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
+            lama::DenseVector<IndexType> receiver_type; //!< #SeismogramType of the receivers: 1==Pressure, 2==vX, 3==vY, 4==vZ
         };
     }
 }
 
-/*! \brief initialize seismogram handler
+/*! \brief Initialization of the receiver SeismogramHandler
  *
+ * This method initializes the SeismogramHandler, which is used to save the seismograms of the receivers.
+ * This method will determine which receivers belong to which #SeismogramType. 
+ * Based on the receiveres for each #SeismogramType the method will calculate the distribution for the receiveres for each #SeismogramType and will use this distribution to allocate the #SeismogramHandler.
  \param NT Numer of timesteps
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -133,6 +144,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::initSeismogramHandler(IndexType 
 }
 
 /*! \brief Getter method for seismogram handler
+ * 
+ * This method will return the SeismogramHandler of this receiver class. 
+ \return The SeismogramHandler of the receivers.
  */
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType> &KITGPI::Acquisition::Receivers<ValueType>::getSeismogramHandler()
@@ -140,7 +154,10 @@ KITGPI::Acquisition::SeismogramHandler<ValueType> &KITGPI::Acquisition::Receiver
     return (receiver);
 }
 
-/*! \brief Getter method for reference to receiver type
+/*! \brief Getter method for reference to the vector containing the receiver type
+ *
+ * The values of the receiver types correspond to the #SeismogramType enum.\n
+ * The size of the receiver type vector is equal to the number of global receivers.
  */
 template <typename ValueType>
 lama::DenseVector<IndexType> const &KITGPI::Acquisition::Receivers<ValueType>::getReceiversType() const
@@ -149,7 +166,10 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Receivers<ValueType>::g
     return (receiver_type);
 }
 
-/*! \brief Getter method for reference to coordinates
+/*! \brief Getter method for reference to the coordinates vector
+ * 
+ * The coordinates vector stores the 1-D coordinates of the receivers.\n
+ * The size of the coordinates vector is equal to the number of global receivers.
  */
 template <typename ValueType>
 lama::DenseVector<IndexType> const &KITGPI::Acquisition::Receivers<ValueType>::getCoordinates() const
@@ -158,7 +178,9 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Receivers<ValueType>::g
     return (coordinates);
 }
 
-/*! \brief Getter method for distribution of the receivers based on the wavefield distribution
+/*! \brief Getter method for the global distribution of the receivers based on the wavefield distribution
+ *
+ * This method returns the distribution of the global receivers.
  */
 template <typename ValueType>
 dmemo::DistributionPtr KITGPI::Acquisition::Receivers<ValueType>::getReceiversDistribution() const
@@ -356,8 +378,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::readReceiverAcquisition(std::str
     receiver_type.setContextPtr(ctx);
 }
 
-/*! \brief getter function for receiver distribution
+/*! \brief Calculation of the distribution of the receivers
  *
+ * This method calculates the local receivers based on the vector conatining the global receiver coordinates. 
  \param coordinates Filename to read receivers acquisition
  \param dist_wavefield Distribution of the wavefields
  */

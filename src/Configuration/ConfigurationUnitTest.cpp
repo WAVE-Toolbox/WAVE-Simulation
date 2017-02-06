@@ -13,10 +13,10 @@ TEST(ConfigurationTest, readFromUnkownFile)
 TEST(ConfigurationTest, getFunction)
 {
     Configuration::Configuration config("../src/Tests/Testfiles/configuration_1.txt");
-    EXPECT_EQ(1.2124445, config.get<double>("testvalue1"));
-    EXPECT_EQ(100, config.get<int>("testvalue2"));
-    EXPECT_EQ(-1.2124445, config.get<double>("testvalue3"));
-    EXPECT_EQ(-100, config.get<int>("testvalue4"));
+    ASSERT_EQ(1.2124445, config.get<double>("testvalue1"));
+    ASSERT_EQ(100, config.get<int>("testvalue2"));
+    ASSERT_EQ(-1.2124445, config.get<double>("testvalue3"));
+    ASSERT_EQ(-100, config.get<int>("testvalue4"));
     ASSERT_EQ("test123", config.get<std::string>("testvalue5"));
     ASSERT_EQ("capiTAL", config.get<std::string>("TESTVALUE6"));
     ASSERT_EQ("capiTAL", config.get<std::string>("testvalue6"));
@@ -32,10 +32,10 @@ TEST(ConfigurationTest, readAdditionalConfigFromFile)
     Configuration::Configuration config("../src/Tests/Testfiles/configuration_1.txt");
     config.readFromFile("../src/Tests/Testfiles/configuration_2.txt");
 
-    EXPECT_EQ(1.2124445, config.get<double>("testvalue1"));
-    EXPECT_EQ(100, config.get<int>("testvalue2"));
-    EXPECT_EQ(-1.2124445, config.get<double>("testvalue3"));
-    EXPECT_EQ(-100, config.get<int>("testvalue4"));
+    ASSERT_EQ(1.2124445, config.get<double>("testvalue1"));
+    ASSERT_EQ(100, config.get<int>("testvalue2"));
+    ASSERT_EQ(-1.2124445, config.get<double>("testvalue3"));
+    ASSERT_EQ(-100, config.get<int>("testvalue4"));
     ASSERT_EQ("test123", config.get<std::string>("testvalue5"));
     ASSERT_EQ("capiTAL", config.get<std::string>("TESTVALUE6"));
     ASSERT_EQ("capiTAL", config.get<std::string>("testvalue6"));
@@ -50,13 +50,13 @@ TEST(ConfigurationTest, readAdditionalConfigFromFile)
 
     config.readFromFile("../src/Tests/Testfiles/configuration_2.txt", false);
     ASSERT_EQ(1.2124445, config.get<double>("testvalue1"));
-    EXPECT_NE(0.12345, config.get<double>("testvalue1"));
+    ASSERT_EQ(0.12345, config.get<double>("testvalue1"));
     ASSERT_EQ("test/test/file.su", config.get<std::string>("additionalValue1"));
     ASSERT_EQ(123, config.get<int>("additionalValue2"));
 
     config.readFromFile("../src/Tests/Testfiles/configuration_2.txt", true);
     ASSERT_NE(1.2124445, config.get<double>("testvalue1"));
-    EXPECT_EQ(0.12345, config.get<double>("testvalue1"));
+    ASSERT_EQ(0.12345, config.get<double>("testvalue1"));
     ASSERT_EQ("test/test/file.su", config.get<std::string>("additionalValue1"));
     ASSERT_EQ(123, config.get<int>("additionalValue2"));
 }
