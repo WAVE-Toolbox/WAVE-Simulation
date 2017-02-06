@@ -4,10 +4,13 @@ IFLAGS=-I${SCAI_ROOT}/include -L${SCAI_ROOT}/lib -DSCAI_ASSERT_LEVEL_DEBUG -DSCA
 LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking -lscai_tracing -lscai_logging -lscai_common
 
 # Flags for googletest framework
+CODECOVERAGE=OFF
 IFLAGSTEST = -I${GTEST_DIR}/include -L${GTEST_DIR}/
 LDFLAGSTEST = -lgtest -lgtest_main
-CFLAGSTEST = -isystem -pthread -fprofile-arcs -ftest-coverage -fPIC -O0
-
+CFLAGSTEST = -isystem -pthread 
+ifeq ($(CODECOVERAGE),ON)
+	CFLAGSTEST += -fprofile-arcs -ftest-coverage -fPIC -O0
+endif
 
 
 
