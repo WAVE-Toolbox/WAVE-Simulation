@@ -50,7 +50,7 @@ TEST(ConfigurationTest, readAdditionalConfigFromFile)
 
     config.readFromFile("../src/Tests/Testfiles/configuration_2.txt", false);
     ASSERT_EQ(1.2124445, config.get<double>("testvalue1"));
-    ASSERT_EQ(0.12345, config.get<double>("testvalue1"));
+    ASSERT_NE(0.12345, config.get<double>("testvalue1"));
     ASSERT_EQ("test/test/file.su", config.get<std::string>("additionalValue1"));
     ASSERT_EQ(123, config.get<int>("additionalValue2"));
 
