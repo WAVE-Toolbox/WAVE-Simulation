@@ -29,7 +29,7 @@ unittest-gcc:
     - cd src/ && make unitTest CC=g++ CFLAGS="-std=c++11" CODECOVERAGE=ON
     - OMP_NUM_THREADS=2
     - cd ../par && ./../bin/Tests/Test_unit
-    - cd ../../src/
+    - cd ../src/
     - gcovr -r . --branch --gcov-exclude=.+\.UnitTest.+\.
 
 

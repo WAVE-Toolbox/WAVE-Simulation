@@ -22,8 +22,8 @@ TEST(ConfigurationTest, getFunction)
     ASSERT_EQ("capiTAL", config.get<std::string>("testvalue6"));
     ASSERT_NE("capital", config.get<std::string>("testvalue6"));
     ASSERT_ANY_THROW(config.get<std::string>("UnkownValue"));
-    ASSERT_EQ(true, config.get<bool>("testvalue7"));
-    ASSERT_EQ(false, config.get<bool>("testvalue8"));
+    ASSERT_TRUE(config.get<bool>("testvalue7"));
+    ASSERT_FALSE(config.get<bool>("testvalue8"));
     ASSERT_EQ("/file/path/test.mtx", config.get<std::string>("testvalue9"));
 }
 
@@ -41,8 +41,8 @@ TEST(ConfigurationTest, readAdditionalConfigFromFile)
     ASSERT_EQ("capiTAL", config.get<std::string>("testvalue6"));
     ASSERT_NE("capital", config.get<std::string>("testvalue6"));
     ASSERT_ANY_THROW(config.get<std::string>("UnkownValue"));
-    ASSERT_EQ(true, config.get<bool>("testvalue7"));
-    ASSERT_EQ(false, config.get<bool>("testvalue8"));
+    ASSERT_TRUE(config.get<bool>("testvalue7"));
+    ASSERT_FALSE(config.get<bool>("testvalue8"));
     ASSERT_EQ("/file/path/test.mtx", config.get<std::string>("testvalue9"));
 
     ASSERT_EQ("test/test/file.su", config.get<std::string>("additionalValue1"));
