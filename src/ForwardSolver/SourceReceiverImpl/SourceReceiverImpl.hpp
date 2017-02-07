@@ -89,7 +89,7 @@ KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::Source
 {
 
     // Set source coordinate to receiver seismogram handler
-    if (sourcesIN.getNumSourcesGlobal() == 1) {
+    if (sources.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
         lama::Scalar temp = sourcesIN.getCoordinates().getValue(0);

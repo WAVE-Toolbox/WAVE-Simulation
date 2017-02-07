@@ -1,14 +1,10 @@
 #pragma once
-#include "Acquisition.hpp"
 
-#include "Coordinates.hpp"
-#include "Seismogram.hpp"
-#include "SourceSignal/all.hpp"
-#include <scai/dmemo/CyclicDistribution.hpp>
+#include <scai/dmemo.hpp>
 #include <scai/lama.hpp>
-#include <scai/lama/DenseVector.hpp>
 
-#include "SeismogramHandler.hpp"
+#include "AcquisitionGeometry.hpp"
+#include "SourceSignal/all.hpp"
 
 namespace KITGPI
 {
@@ -16,58 +12,43 @@ namespace KITGPI
     namespace Acquisition
     {
 
+        template <typename ValueType>
+        class AcquisitionGeometry;
+
+        template <typename ValueType>
+        class Seismogram;
+
+        template <typename ValueType>
+        class SeismogramHandler;
+
         //! \brief Handling of sources
         /*!
          * This class accounts for the handling of seismic sources.
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
          */
         template <typename ValueType>
-        class Sources
+        class Sources : public AcquisitionGeometry<ValueType>
         {
 
           public:
             //! \brief Default constructor
-            Sources() : numSourcesGlobal(0), numSourcesLocal(0), numParameter(0){};
+            Sources(){};
+
             explicit Sources(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
+
             //! \brief Default destructor
             ~Sources(){};
 
             void init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
-            void readSourceAcquisition(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield);
 
-            void writeSourceAcquisition(std::string const &filename) const;
             void writeSignalsToFileRaw(std::string const &filename) const;
 
             void generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx);
 
-            /* Getter member functions */
-            lama::DenseVector<IndexType> const &getCoordinates() const;
-            lama::DenseVector<IndexType> const &getSourceType() const;
-            SeismogramHandler<ValueType> const &getSeismogramHandler() const;
-            Seismogram<ValueType> const &getSignals() const;
-            IndexType getNumSourcesGlobal() const;
-            IndexType getNumSourcesLocal() const;
-
           private:
-            dmemo::DistributionPtr getSourceDistribution(lama::DenseVector<IndexType> const &coordinates, dmemo::DistributionPtr const dist_wavefield) const;
+            Seismogram<ValueType> signals; //!< Source signals
 
-            void allocateSeismogram(IndexType NT, hmemo::ContextPtr ctx);
-            void generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT);
-            void initSeismogramHandler(IndexType const NT, hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield);
-
-            IndexType numSourcesGlobal; //!< Number of sources global
-            IndexType numSourcesLocal;  //!< Number of sources local
-
-            dmemo::DistributionPtr dist_wavefield_sources; //!< Calculated Distribution of the sources based on the distribution of the wavefields
-
-            Seismogram<ValueType> signals;        //!< Source signals
-            SeismogramHandler<ValueType> sources; //!< Sources
-
-            /* Acquisition Settings */
-            lama::DenseMatrix<ValueType> acquisition;  //!< Matrix that stores the source acquisition
-            IndexType numParameter;                    //!< Number of source parameters given in acquisition matrix
-            lama::DenseVector<IndexType> coordinates;  //!< Coordinates of sources global (1-D coordinates)
-            lama::DenseVector<IndexType> source_type;  //!< Type of source: 1==P, 2==vX, 3==vY, 4==vZ
+            /* Requiered acquisition Settings */
             lama::DenseVector<IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic
 
             /* Optional acquisition Settings */
@@ -75,143 +56,16 @@ namespace KITGPI
             lama::DenseVector<ValueType> wavelet_fc;     //!< Center frequency of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_amp;    //!< Amplitude of synthetic wavelet
             lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
+
+            void initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, lama::DenseMatrix<ValueType> acquisition, dmemo::DistributionPtr dist_wavefield_traces, hmemo::ContextPtr ctx) override;
+            void checkRequiredNumParameter(IndexType numParameterCheck) override;
+
+            void copySignalsToSeismogramHandler();
+
+            void allocateSeismogram(IndexType NT, dmemo::DistributionPtr dist_traces, hmemo::ContextPtr ctx);
+            void generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT);
         };
     }
-}
-
-/*! \brief Get reference to SeismogramHandler
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- */
-template <typename ValueType>
-KITGPI::Acquisition::SeismogramHandler<ValueType> const &KITGPI::Acquisition::Sources<ValueType>::getSeismogramHandler() const
-{
-    return (sources);
-}
-
-/*! \brief initialize seismogram handler
- *
- \param NT Numer of timesteps
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::initSeismogramHandler(IndexType const NT, hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
-{
-
-    SCAI_ASSERT_DEBUG(source_type.size() == coordinates.size(), "Size mismatch")
-
-    IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
-    lama::DenseVector<IndexType> coord[NUM_ELEMENTS_SEISMOGRAMTYPE];
-    dmemo::DistributionPtr dist[NUM_ELEMENTS_SEISMOGRAMTYPE];
-
-    IndexType numSourcesGlobal = source_type.size();
-
-    /* Count elements for each source type */
-    lama::Scalar tempScalar;
-    IndexType tempIndexType;
-    for (IndexType i = 0; i < numSourcesGlobal; ++i) {
-        tempScalar = source_type.getValue(i);
-        tempIndexType = tempScalar.getValue<IndexType>() - 1;
-        SCAI_ASSERT_DEBUG(tempIndexType >= 0 && tempIndexType <= 3, "Unkown Source Type");
-
-        ++count[tempIndexType];
-    }
-
-    /* Allocate lama vectors */
-    for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; ++i) {
-        coord[i].allocate(count[i]);
-        count[i] = 0;
-    }
-
-    /* Sort coordinates */
-    for (IndexType i = 0; i < numSourcesGlobal; ++i) {
-
-        tempScalar = source_type.getValue(i);
-        tempIndexType = tempScalar.getValue<IndexType>() - 1;
-
-        coord[tempIndexType].setValue(count[tempIndexType], coordinates.getValue(i));
-        ++count[tempIndexType];
-    }
-
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(0) == SeismogramType::P, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(1) == SeismogramType::VX, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(2) == SeismogramType::VY, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(3) == SeismogramType::VZ, "Cast went wrong");
-
-    /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
-    for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; ++i) {
-
-        if (coord[i].size() > 0) {
-            dist[i] = getSourceDistribution(coord[i], dist_wavefield);
-            sources.getSeismogram(static_cast<SeismogramType>(i)).allocate(ctx, dist[i], NT);
-            coord[i].redistribute(dist[i]);
-            sources.getSeismogram(static_cast<SeismogramType>(i)).setCoordinates(coord[i]);
-        }
-        count[i] = 0;
-    }
-
-    lama::DenseVector<ValueType> temp;
-
-    /* Copy data to the seismogram handler */
-    for (IndexType i = 0; i < numSourcesGlobal; ++i) {
-        tempScalar = source_type.getValue(i);
-        tempIndexType = tempScalar.getValue<IndexType>() - 1;
-
-        signals.getData().getRow(temp, i);
-        SCAI_ASSERT_DEBUG(temp.size() == NT, "Size mismatch");
-
-        sources.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], utilskernel::binary::BinaryOp::COPY);
-
-        ++count[tempIndexType];
-    }
-
-    sources.setContextPtr(ctx);
-
-    SCAI_ASSERT_DEBUG(count[0] == sources.getNumTracesGlobal(SeismogramType::P), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[1] == sources.getNumTracesGlobal(SeismogramType::VX), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[2] == sources.getNumTracesGlobal(SeismogramType::VY), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[3] == sources.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
-}
-
-/*! \brief Get reference to source type
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- */
-template <typename ValueType>
-lama::DenseVector<IndexType> const &KITGPI::Acquisition::Sources<ValueType>::getSourceType() const
-{
-    SCAI_ASSERT_DEBUG(numSourcesGlobal == source_type.size(), "Size mismatch");
-    return (source_type);
-}
-
-/*! \brief Get reference to source coordinates
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- */
-template <typename ValueType>
-lama::DenseVector<IndexType> const &KITGPI::Acquisition::Sources<ValueType>::getCoordinates() const
-{
-    SCAI_ASSERT_DEBUG(numSourcesGlobal == coordinates.size(), "Size mismatch");
-    return (coordinates);
-}
-
-/*! \brief Get reference to signals matrix
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- */
-template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::Sources<ValueType>::getSignals() const
-{
-    return (signals);
 }
 
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
@@ -222,9 +76,8 @@ KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::Sources<V
  */
 template <typename ValueType>
 KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
-    : numSourcesGlobal(0), numSourcesLocal(0), numParameter(0)
 {
-    init(config, ctx, dist_wavefield);
+    this->init(config, ctx, dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -236,231 +89,18 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
 {
-    readSourceAcquisition(config.get<std::string>("SourceFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield);
-    IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
-    generateSignals(getNT, config.get<ValueType>("DT"), ctx);
-    signals.redistribute(dist_wavefield_sources);
-    initSeismogramHandler(getNT, ctx, dist_wavefield);
-    sources.setDT(config.get<ValueType>("DT"));
-}
+    IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-/*! \brief Get number of global sources
- *
- \return Number of global sources
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesGlobal() const
-{
-    return (numSourcesGlobal);
-}
+    /* Read acquisition from file */
+    this->readAcquisitionFromFile(config.get<std::string>("SourceFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
 
-/*! \brief Get number of local sources
- *
- \return Number of local sources on this process
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Sources<ValueType>::getNumSourcesLocal() const
-{
-    return (numSourcesLocal);
-}
+    /* init seismogram handler */
+    this->initSeismogramHandler(NT, ctx, dist_wavefield);
+    this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
 
-/*! \brief Write source acquisition to file
- *
- \param filename Filename to write source acquisition
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSourceAcquisition(std::string const &filename) const
-{
-    lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.assignTranspose(acquisition);
-    acquisition_temp.writeToFile(filename);
-}
-
-/*! \brief Read source acquisition from file
- *
- * This method reads in the source acquisition, calculates the 1-D coordinates from the 3-D coordinates,
- * splits up the source configuration into the corresponding vectors and calculates the source distribution.
- * The parameter vectors will be distributed accordingly to the source distribution.
- *
- \param filename Filename to read source acquisition
- \param NX Number of global grid points in X
- \param NY Number of global grid points in Y
- \param NZ Number of global grid points in Z
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::readSourceAcquisition(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield)
-{
-
-    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NY > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NZ > 0, "NX<=0");
-
-    /* Read acquisition matrix */
-    lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(filename);
-
-    IndexType nrow_temp = acquisition_temp.getNumRows();
-    IndexType ncolumn_temp = acquisition_temp.getNumColumns();
-
-    /* Derive number of sources and number of read-in parameters */
-    numSourcesGlobal = nrow_temp;
-    numParameter = ncolumn_temp;
-
-    /* Check if number of parameters is supported */
-    if (numParameter < 5 || numParameter > 9) {
-        COMMON_THROWEXCEPTION("Source acquisition file has an unkown format ")
-    }
-
-    /* Distribution: Master process only (comm->myRank()==0) */
-    dmemo::DistributionPtr dist_master_numParameter(new dmemo::CyclicDistribution(numParameter, numParameter, dist_wavefield->getCommunicatorPtr()));
-    dmemo::DistributionPtr dist_master_numSourcesGlobal(new dmemo::CyclicDistribution(numSourcesGlobal, numSourcesGlobal, dist_wavefield->getCommunicatorPtr()));
-
-    /* Distribution: Replicated on all processes */
-    dmemo::DistributionPtr no_dist_numSourcesGlobal(new scai::dmemo::NoDistribution(numSourcesGlobal));
-    dmemo::DistributionPtr no_dist_numParameter(new scai::dmemo::NoDistribution(numParameter));
-
-    /* Allocate acquisition matrix on master */
-    acquisition.allocate(dist_master_numParameter, no_dist_numSourcesGlobal);
-
-    /* Allocate coordinates on master */
-    coordinates.allocate(dist_master_numSourcesGlobal);
-
-    /* Allocate source parameter vectors on master */
-    source_type.allocate(dist_master_numSourcesGlobal);
-    wavelet_type.allocate(dist_master_numSourcesGlobal);
-    if (numParameter > 5) {
-        wavelet_shape.allocate(dist_master_numSourcesGlobal);
-        wavelet_fc.allocate(dist_master_numSourcesGlobal);
-        wavelet_amp.allocate(dist_master_numSourcesGlobal);
-        wavelet_tshift.allocate(dist_master_numSourcesGlobal);
-    }
-
-    /* Local operations on master: 1. Transpose acquisition, 2. calculate 1-D coordinates  */
-    if (dist_wavefield->getCommunicator().getRank() == 0) {
-
-        /* Get WriteAccess to local data of acquisition */
-        lama::DenseStorage<ValueType> *acquisition_DS = &acquisition.getLocalStorage();
-        hmemo::HArray<ValueType> *acquisition_HA = &acquisition_DS->getData();
-        hmemo::WriteAccess<ValueType> write_acquisition_HA(*acquisition_HA);
-
-        /* Get Readaccess to local data of acquisition_temp */
-        lama::DenseStorage<ValueType> *acquisition_temp_DS = &acquisition_temp.getLocalStorage();
-        hmemo::HArray<ValueType> *acquisition_temp_HA = &acquisition_temp_DS->getData();
-        hmemo::ReadAccess<ValueType> read_acquisition_temp_HA(*acquisition_temp_HA);
-
-        /* Transpose local data */
-        for (IndexType row = 0; row < nrow_temp; row++) {
-            for (IndexType column = 0; column < ncolumn_temp; column++) {
-                write_acquisition_HA[row + nrow_temp * column] = read_acquisition_temp_HA[column + ncolumn_temp * row];
-            }
-        }
-
-        /* Release write and read access to local data */
-        write_acquisition_HA.release();
-        read_acquisition_temp_HA.release();
-
-        /* Get readAccess to acquisition matrix (local) */
-        acquisition_DS = &acquisition.getLocalStorage();
-        acquisition_HA = &acquisition_DS->getData();
-        hmemo::ReadAccess<ValueType> read_acquisition_HA(*acquisition_HA);
-
-        /* Get writeAccess to coordinates vector (local) */
-        utilskernel::LArray<IndexType> *coordinates_LA = &coordinates.getLocalValues();
-        hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
-
-        Coordinates<ValueType> coord;
-
-        /* 2. Calculate 1-D coordinates form 3-D coordinates */
-        IndexType X, Y, Z;
-        for (IndexType i = 0; i < numSourcesGlobal; i++) {
-
-            X = read_acquisition_HA[i + numSourcesGlobal * 0];
-            Y = read_acquisition_HA[i + numSourcesGlobal * 1];
-            Z = read_acquisition_HA[i + numSourcesGlobal * 2];
-
-            write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z, NX, NY, NZ);
-        }
-
-        /* Release write and read access to local data */
-        read_acquisition_HA.release();
-        write_coordinates_LA.release();
-    }
-
-    /* Replicate coordinates on all processes */
-    coordinates.redistribute(no_dist_numSourcesGlobal);
-
-    /* Get local sources from global sources */
-    dist_wavefield_sources = getSourceDistribution(coordinates, dist_wavefield);
-
-    numSourcesLocal = dist_wavefield_sources->getLocalSize();
-    numSourcesGlobal = dist_wavefield_sources->getGlobalSize();
-
-    /* Replicate acquisition on all processes */
-    acquisition.redistribute(no_dist_numParameter, no_dist_numSourcesGlobal);
-
-    /* Allocate source parameter vectors on all processes */
-    source_type.allocate(numSourcesGlobal);
-    wavelet_type.allocate(numSourcesGlobal);
-    if (numParameter > 5) {
-        wavelet_shape.allocate(numSourcesGlobal);
-        wavelet_fc.allocate(numSourcesGlobal);
-        wavelet_amp.allocate(numSourcesGlobal);
-        wavelet_tshift.allocate(numSourcesGlobal);
-    }
-
-    /* Save source configurations from acquisition matrix in vectors */
-    acquisition.getRow(source_type, 3);
-    acquisition.getRow(wavelet_type, 4);
-    if (numParameter > 5) {
-        acquisition.getRow(wavelet_shape, 5);
-        acquisition.getRow(wavelet_fc, 6);
-        acquisition.getRow(wavelet_amp, 7);
-        acquisition.getRow(wavelet_tshift, 8);
-    }
-
-    /* Redistribute source parameter vectors to corresponding processes */
-    coordinates.redistribute(dist_wavefield_sources);
-    source_type.redistribute(dist_wavefield_sources);
-    wavelet_type.redistribute(dist_wavefield_sources);
-    if (numParameter > 5) {
-        wavelet_shape.redistribute(dist_wavefield_sources);
-        wavelet_fc.redistribute(dist_wavefield_sources);
-        wavelet_amp.redistribute(dist_wavefield_sources);
-        wavelet_tshift.redistribute(dist_wavefield_sources);
-    }
-}
-
-/*! \brief Write source signals to file
- *
- \param filename Filename to write source signals
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string const &filename) const
-{
-    signals.writeToFileRaw(filename);
-}
-
-/*! \brief Allocation of the source signals matrix
- *
- * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.
- * The source signal matrix is allocated based on the distributions.
- *
- \param NT Number of time steps
- \param ctx context
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, hmemo::ContextPtr ctx)
-{
-    SCAI_ASSERT_DEBUG(NT > 0, "NT<=0");
-    if (dist_wavefield_sources == NULL) {
-        COMMON_THROWEXCEPTION("Row distribution of sources (dist_wavefield_sources) is not set!")
-    }
-
-    /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
-    signals.allocate(ctx, dist_wavefield_sources, NT);
-    signals.setCoordinates(coordinates);
-    signals.setContextPtr(ctx);
+    /* Generate Signals */
+    generateSignals(NT, config.get<ValueType>("DT"), ctx);
+    copySignalsToSeismogramHandler();
 }
 
 /*! \brief Generation of the source signals
@@ -476,11 +116,11 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx)
 {
 
-    SCAI_ASSERT(numParameter >= 5, "Number of source parameters < 5. Cannot generate signals. ");
+    SCAI_ASSERT(this->getNumParameter() >= 5, "Number of source parameters < 5. Cannot generate signals. ");
     SCAI_ASSERT_DEBUG(NT > 0, "NT<=0");
     SCAI_ASSERT_DEBUG(DT > 0, "DT<=0");
 
-    allocateSeismogram(NT, ctx);
+    allocateSeismogram(NT, this->getSeismogramTypes().getDistributionPtr(), ctx);
 
     signals.setDT(DT);
 
@@ -488,7 +128,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, Valu
     hmemo::ReadAccess<IndexType> read_wavelet_type_LA(*wavelet_type_LA);
     IndexType wavelet_type_i;
 
-    for (IndexType i = 0; i < numSourcesLocal; i++) {
+    for (IndexType i = 0; i < this->getNumTracesLocal(); i++) {
 
         /* Cast to IndexType */
         wavelet_type_i = read_wavelet_type_LA[i];
@@ -519,7 +159,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT)
 {
 
-    SCAI_ASSERT(numParameter >= 9, "Number of source parameters <= 9. Cannot generate synthetic signals. ");
+    SCAI_ASSERT(this->getNumParameter() >= 9, "Number of source parameters <= 9. Cannot generate synthetic signals. ");
 
     lama::DenseVector<ValueType> signalVector;
     signalVector.allocate(NT);
@@ -567,22 +207,108 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     signalsMatrix.setRow(signalVector, SourceLocal, utilskernel::binary::BinaryOp::COPY);
 }
 
-/*! \brief Getter methode for Source Distribution.
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::checkRequiredNumParameter(IndexType numParameterCheck)
+{
+
+    if (numParameterCheck < 5 || numParameterCheck > 9) {
+        COMMON_THROWEXCEPTION("Source acquisition file has an unkown format ")
+    }
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, lama::DenseMatrix<ValueType> acquisition, dmemo::DistributionPtr dist_wavefield_traces, hmemo::ContextPtr ctx)
+{
+    /* Allocate source parameter vectors on all processes */
+    wavelet_type.allocate(numTracesGlobal);
+    if (numParameter > 5) {
+        wavelet_shape.allocate(numTracesGlobal);
+        wavelet_fc.allocate(numTracesGlobal);
+        wavelet_amp.allocate(numTracesGlobal);
+        wavelet_tshift.allocate(numTracesGlobal);
+    }
+
+    /* Save source configurations from acquisition matrix in vectors */
+    acquisition.getRow(wavelet_type, 4);
+    if (numParameter > 5) {
+        acquisition.getRow(wavelet_shape, 5);
+        acquisition.getRow(wavelet_fc, 6);
+        acquisition.getRow(wavelet_amp, 7);
+        acquisition.getRow(wavelet_tshift, 8);
+    }
+
+    /* Redistribute source parameter vectors to corresponding processes */
+    wavelet_type.redistribute(dist_wavefield_traces);
+    wavelet_type.setContextPtr(ctx);
+    if (numParameter > 5) {
+        wavelet_shape.redistribute(dist_wavefield_traces);
+        wavelet_fc.redistribute(dist_wavefield_traces);
+        wavelet_amp.redistribute(dist_wavefield_traces);
+        wavelet_tshift.redistribute(dist_wavefield_traces);
+
+        wavelet_shape.setContextPtr(ctx);
+        wavelet_fc.setContextPtr(ctx);
+        wavelet_amp.setContextPtr(ctx);
+        wavelet_tshift.setContextPtr(ctx);
+    }
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
+{
+
+    lama::Scalar tempScalar;
+    IndexType tempIndexType;
+    lama::DenseVector<ValueType> temp;
+    SeismogramHandler<ValueType> &seismograms = this->getSeismogramHandler();
+    IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
+
+    /* Copy data to the seismogram handler */
+    for (IndexType i = 0; i < this->getNumTracesGlobal(); ++i) {
+        tempScalar = this->getSeismogramTypes().getValue(i);
+        tempIndexType = tempScalar.getValue<IndexType>() - 1;
+
+        signals.getData().getRow(temp, i);
+
+        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], utilskernel::binary::BinaryOp::COPY);
+
+        ++count[tempIndexType];
+    }
+
+    SCAI_ASSERT_DEBUG(count[0] == seismograms.getNumTracesGlobal(SeismogramType::P), " Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[1] == seismograms.getNumTracesGlobal(SeismogramType::VX), " Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[2] == seismograms.getNumTracesGlobal(SeismogramType::VY), " Size mismatch ");
+    SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
+}
+
+/*! \brief Write source signals to file
  *
- \param coordinates
- \param dist_wavefield Distribution of the wavefields
+ \param filename Filename to write source signals
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Acquisition::Sources<ValueType>::getSourceDistribution(lama::DenseVector<IndexType> const &coordinates, dmemo::DistributionPtr const dist_wavefield) const
+void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string const &filename) const
 {
-    SCAI_ASSERT_DEBUG(coordinates.size() > 0, " The vector coordinates does not contain any elements ! ");
+    signals.writeToFileRaw(filename);
+}
 
-    hmemo::HArray<IndexType> localIndices;
+/*! \brief Allocation of the source signals matrix
+ *
+ * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.
+ * The source signal matrix is allocated based on the distributions.
+ *
+ \param NT Number of time steps
+ \param ctx context
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, dmemo::DistributionPtr dist_traces, hmemo::ContextPtr ctx)
+{
+    SCAI_ASSERT_DEBUG(NT > 0, "NT<=0");
+    if (dist_traces == NULL) {
+        COMMON_THROWEXCEPTION("Row distribution of sources (dist_wavefield_sources) is not set!")
+    }
 
-    Coordinates<ValueType> coord;
-    coord.Global2Local(coordinates, localIndices, dist_wavefield);
-
-    dmemo::DistributionPtr dist_temp(new dmemo::GeneralDistribution(coordinates.size(), localIndices, dist_wavefield->getCommunicatorPtr()));
-
-    return (dist_temp);
+    /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
+    signals.allocate(ctx, dist_traces, NT);
+    signals.setCoordinates(this->getCoordinates());
+    signals.setContextPtr(ctx);
 }

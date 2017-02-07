@@ -34,6 +34,7 @@ namespace KITGPI
             inline Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             inline Seismogram<ValueType> &getSeismogram(SeismogramType type);
             inline IndexType getNumTracesGlobal(SeismogramType type) const;
+            inline IndexType getNumTracesTotal() const;
             inline IndexType getNumSamples(SeismogramType type) const;
 
           private:
@@ -132,6 +133,21 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(Seism
 {
     SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramType unkown");
     return (seismo[type].getNumSamples());
+}
+
+//! \brief Getter method for the total number of traces
+/*!
+ * This method returns the total number of global traces, which is the sum of the number of global traces of all handled #Seismogram.\n
+ \return Total number of handled traces
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesTotal() const
+{
+    IndexType sum = 0;
+    for (auto &i : seismo) {
+        sum += i.getNumTracesGlobal();
+    }
+    return sum;
 }
 
 //! \brief Getter method for the number of global traces
