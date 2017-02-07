@@ -6,7 +6,7 @@
 using namespace scai;
 using namespace KITGPI;
 
-TEST(CoordinateTest, locatedOnSurface)
+TEST(CoordinateTest, TestLocatedOnSurface)
 {
 
     int NX = 5;
@@ -25,7 +25,7 @@ TEST(CoordinateTest, locatedOnSurface)
     EXPECT_FALSE(test.locatedOnSurface(coord3, NX, NY, NZ));
 }
 
-TEST(CoordinateTest, index2coordinate)
+TEST(CoordinateTest, TestIndex2coordinate)
 {
 
     // Grid
@@ -57,7 +57,7 @@ TEST(CoordinateTest, index2coordinate)
     EXPECT_EQ(sampleSolution.z, result.z);
 }
 
-TEST(CoordinateTest, coordinate2index)
+TEST(CoordinateTest, TestCoordinate2index)
 {
 
     // Grid
@@ -93,7 +93,7 @@ TEST(CoordinateTest, coordinate2index)
     EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, -testZ, NX, NY, NZ));
 }
 
-TEST(CoordinateTest, estimateDistanceToEdges3D)
+TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
 {
 
     // Grid
