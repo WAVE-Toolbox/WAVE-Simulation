@@ -19,9 +19,9 @@ namespace KITGPI
     namespace Acquisition
     {
 
-        //! Seismogram class
+        //! Handling of a seismic seismogram
         /*!
-         * This class handels a seismogram which consists of several traces.
+         * This class handels a single seismogram which consists of several traces.
          */
         template <typename ValueType>
         class Seismogram
@@ -72,10 +72,10 @@ namespace KITGPI
             IndexType numTracesLocal;  //!< Number of local traces
 
             /* header information */
-            ValueType DT;                             //!< Temporal sampling in seconds
-            SeismogramType type;                      //!< Type of trace
+            ValueType DT;                             //!< Temporal sampling interval in seconds
+            SeismogramType type;                      //!< Type of trace as #SeismogramType
             lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
-            IndexType sourceCoordinate;               //!< Coordinate of source
+            IndexType sourceCoordinate;               //!< Coordinate of source point (in case a single source is used)
 
             /* raw data */
             lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
@@ -83,9 +83,10 @@ namespace KITGPI
     }
 }
 
-//! \brief Adding ending to seismogram-filename-string
+//! \brief Adding ending to the seismogram-filename-string
 /*!
  *
+ * This member function adds the #SeismogramType to the filname ending.
  \param filename Filename of output
  */
 template <typename ValueType>
@@ -104,10 +105,11 @@ std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(
     return (beforeEnding + "." + traceTypeString + afterEnding);
 }
 
-//! \brief Set context ptr
+//! \brief Setter method for the context ptr
 /*!
  *
- \param ctx Set Context Ptr
+ * This method sets the Context to the coordinates and to the seismogram data.
+ \param ctx Set ContextPtr
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
@@ -116,10 +118,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr
     coordinates.setContextPtr(ctx);
 }
 
-//! \brief Write seismogram to disk
+//! \brief Write the seismogram to disk
 /*!
  *
- \param config Configuration class
+ * This method writes the seismogram data to disk. It uses the Configuration class to determine the filename and some requiered header information.\n
+ * The output format is determined by the input parameter `SeismogramFormat`, which will be requested to the Configuration class. \n
+ * **Supported Formats:**\n
+ * 1. MTX: MatrixMaker format
+ * 2. SU: SeismicUnix format
+ \param config Configuration class which is used to determine the filename and header information
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config) const
@@ -138,10 +145,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
     }
 }
 
-//! \brief Set the temporal sampling DT
+//! \brief Setter method for the temporal sampling DT
 /*!
  *
- \param newDT Temporal sampling which will be set to the seismogram
+ * This method will set the temporal sampling DT to this class.
+ \param newDT Temporal sampling which will be set in seconds
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT)
@@ -150,20 +158,23 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT)
     DT = newDT;
 }
 
-//! \brief Set the source coordinate
+//! \brief Setter method for the source coordinate
 /*!
  *
+ * This method sets the source coordinate to this class. The source coordinate will be used for calculation of the header information (e.g. Offset), mainly during seismogram output to disk.
  \param sourceCoord Source coordinate in 1-D format
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceCoord)
 {
+    SCAI_ASSERT_DEBUG(sourceCoord >= 0, "sourceCoord is not valid");
     sourceCoordinate = sourceCoord;
 }
 
-//! \brief Set type of trace
+//! \brief Setter method for the #SeismogramType
 /*!
  *
+ * This method will set the #SeismogramType to this class.
  \param trace Trace
  */
 template <typename ValueType>
@@ -172,9 +183,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
     type = trace;
 };
 
-//! \brief Setter function for coordinates
+//! \brief Setter function for the coordinates of the traces
 /*!
  *
+ * This method will set the coordinates of the traces to this class. 
+ * The size of the coordinate vector has to be equal to the number of global traces.
  \param coord DenseVector with coordinates
  */
 template <typename ValueType>
@@ -184,8 +197,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVecto
     coordinates = coord;
 };
 
-//! \brief Get reference to Receiver Type
+//! \brief Getter method for #SeismogramType
 /*!
+ *
+ * This method returns the #SeismogramType of this seismogram.
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
@@ -197,7 +212,7 @@ KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::
     return (type);
 }
 
-//! \brief Get reference to coordinates
+//! \brief Getter method for reference to coordinates vector
 /*!
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
@@ -211,10 +226,10 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::
     return (coordinates);
 }
 
-//! \brief Get reference to seismogram data
+//! \brief Getter method for reference to seismogram data
 /*!
  *
- * For usage as seismogram
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
@@ -227,10 +242,10 @@ lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDat
     return (data);
 }
 
-//! \brief Get reference to seismogram data
+//! \brief Getter method for const reference to seismogram data
 /*!
  *
- * For usage as receiver
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
@@ -243,9 +258,9 @@ lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::
     return (data);
 }
 
-//! \brief Replicate seismogram on all processes
+//! \brief Replicate the seismogram data on all processes
 /*!
- * Creates a copy of the seismogram on all processe
+ * Creates a copy of the seismogram data on all processe
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
@@ -257,7 +272,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
     redistribute(no_dist_Traces, no_dist_numSamples);
 }
 
-//! \brief Allocate seismogram
+//! \brief Allocate of the seismogram data
 /*!
  * Allocates seismogram based on a given distribution of the traces and the number of samples per trace.
  * The data storage of the seismogram will be distributed according to distTraces. Moreover, the number of
@@ -286,8 +301,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx,
     coordinates.allocate(distTraces);
 }
 
-//! \brief reset seismogram set the seismogram data to zero
+//! \brief Reset of the seismogram data
 /*!
+ * This method sets the seismogra data to zero. 
+ * However, the memory will stay allocated, only the content is overwriten by zeros.
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
@@ -295,9 +312,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
     data.scale(0.0);
 }
 
-//! \brief Redistribute seismogram data
+//! \brief Redistribute the seismogram data
 /*!
  *
+ * Redistribution of the seismogram data according to the given distributions.
  \param distTraces Distribution of traces
  \param distSamples Distribution of temporal samples
  */
@@ -352,7 +370,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
     }
 }
 
-//! \brief Get temporal sampling
+/*! \brief Getter method for the temporal sampling
+ *
+ * This method returns the temporal sampling DT in seconds.
+ \return DT in seconds
+ */
 template <typename ValueType>
 ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
 {
@@ -360,21 +382,33 @@ ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
     return (DT);
 }
 
-//! \brief Get number of samples per trace
+/*! \brief Getter method for the number of samples per trace
+ *
+ *
+ \return The number of samples per trace
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 {
     return (numSamples);
 }
 
-//! \brief Get number of local traces
+/*! \brief Getter method for the number of local traces
+ *
+ *
+ \return The number of local traces on this process
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 {
     return (numTracesLocal);
 }
 
-//! \brief Get number of global traces
+/*! \brief Getter method for the number of global traces
+*
+*
+\return The number of global traces of this seismogram
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 {
@@ -384,6 +418,8 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 //! \brief Write a seismogram to disk in Seismic Unix (SEG-Y) format
 /*!
  *
+ * This method writes the seismogram in the Seismic Unix format to disk.
+ * Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
  \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
  \param NX Number of grid points in X direction
  \param NY Number of grid points in Y direction

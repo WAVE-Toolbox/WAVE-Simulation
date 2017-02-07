@@ -196,6 +196,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule()
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
+    HOST_PRINT(comm, "Preparation of the model parameters…\n");
 
     refreshModule();
 
@@ -223,6 +224,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
 
     calculateAveraging();
     this->getInverseDensity();
+
+    HOST_PRINT(comm, "Model ready!\n\n");
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -247,6 +250,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+
         switch (config.get<IndexType>("ModelParametrisation")) {
         case 1:
             init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
@@ -259,6 +265,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
             break;
         }
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
 
     } else {
         ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
@@ -410,16 +418,33 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::Cont
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
-    std::string filenameSWaveModulus = filename + ".sWaveModulus.mtx";
+
     std::string filenamedensity = filename + ".density.mtx";
     std::string filenameTauP = filename + ".tauP.mtx";
     std::string filenameTauS = filename + ".tauS.mtx";
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
-    this->writeModelparameter(sWaveModulus, filenameSWaveModulus, partitionedOut);
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
     this->writeModelparameter(tauP, filenameTauP, partitionedOut);
     this->writeModelparameter(tauS, filenameTauS, partitionedOut);
+
+    std::string filenameP;
+    std::string filenameS;
+
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
+    switch (parametrisation) {
+    case 0:
+        filenameP = filename + ".pWaveModulus.mtx";
+        filenameS = filename + ".sWaveModulus.mtx";
+        this->writeModelparameter(pWaveModulus, filenameP, partitionedOut);
+        this->writeModelparameter(sWaveModulus, filenameS, partitionedOut);
+    case 1:
+        filenameP = filename + ".vp.mtx";
+        filenameS = filename + ".vs.mtx";
+        this->writeModelparameter(velocityP, filenameP, partitionedOut);
+        this->writeModelparameter(velocityS, filenameS, partitionedOut);
+        break;
+    }
 };
 
 //! \brief Wrapper to support configuration

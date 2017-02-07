@@ -15,7 +15,7 @@ namespace KITGPI
 
             /*! \brief Abstract class to create SourceSignals
              *
-             * As this class is an abstract class, all methods are protected.
+             * As this class is an abstract class.
              */
             template <typename ValueType>
             class SourceSignal

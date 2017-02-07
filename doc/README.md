@@ -2,12 +2,10 @@
 
 - Complete documentation: `make all`
 
-## Theory
+## Documentation for theory
 
 - Make target `make install_theory`
-- Select language by `LANGUAGE` to `DE` or `EN`
- - eg. `make install_theory LANGUAGE=EN` for english
-- Output: `theory/WAVE_theory_${LANGUAGE}.pdf`
+- Output: `theory/WAVE_theory_EN.pdf`
 - Requirement: *pdflatex* and *bibtex*
 
 ## Documentation for source code

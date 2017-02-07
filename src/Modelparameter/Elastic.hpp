@@ -62,7 +62,7 @@ namespace KITGPI
 
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
-            void write(std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut);
+            void write(std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut) const;
             void write(std::string filename, IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
@@ -142,10 +142,14 @@ namespace KITGPI
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
+    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+
     refreshModule();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
+
+    HOST_PRINT(comm, "Model ready!\n\n");
 }
 
 /*! \brief Switch the default parameterization of this class to modulus
@@ -234,6 +238,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+
         switch (config.get<IndexType>("ModelParametrisation")) {
         case 1:
             init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
@@ -245,6 +252,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
             COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
             break;
         }
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+
     } else {
         ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
         ValueType getSWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityS") * config.get<ValueType>("velocityS");
@@ -399,17 +409,28 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPt
 
 /*! \brief Write model to an external file
  *
- \param filenamePWaveModulus Filename for P-wave modulus model
- \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
+ \param filenameP Filename for P-wave modulus / P-wave velocity model
+ \param filenameS Filename for S-wave modulus / S-wave velocity model
  \param filenamedensity Filename for Density model
  \param partitionedOut Partitioned output
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut)
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filenameP, std::string filenameS, std::string filenamedensity, IndexType partitionedOut) const
 {
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(sWaveModulus, filenameSWaveModulus, partitionedOut);
+
+    switch (parametrisation) {
+    case 0:
+        this->writeModelparameter(pWaveModulus, filenameP, partitionedOut);
+        this->writeModelparameter(sWaveModulus, filenameS, partitionedOut);
+        break;
+    case 1:
+        this->writeModelparameter(velocityP, filenameP, partitionedOut);
+        this->writeModelparameter(velocityS, filenameS, partitionedOut);
+        break;
+    }
 };
 
 /*! \brief Write model to an external file
@@ -420,12 +441,24 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filenamePWave
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
-    std::string filenameSWaveModulus = filename + ".sWaveModulus.mtx";
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
+    std::string filenameP;
+    std::string filenameS;
     std::string filenamedensity = filename + ".density.mtx";
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
-    this->writeModelparameter(sWaveModulus, filenameSWaveModulus, partitionedOut);
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
+
+    switch (parametrisation) {
+    case 0:
+        filenameP = filename + ".pWaveModulus.mtx";
+        filenameS = filename + ".sWaveModulus.mtx";
+        break;
+    case 1:
+        filenameP = filename + ".vp.mtx";
+        filenameS = filename + ".vs.mtx";
+        break;
+    }
+
+    write(filenameP, filenameS, filenamedensity, partitionedOut);
 };
 
 //! \brief Wrapper to support configuration

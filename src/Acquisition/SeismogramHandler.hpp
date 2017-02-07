@@ -10,16 +10,15 @@ namespace KITGPI
     namespace Acquisition
     {
 
-        /*! \brief class for a single Seismogram
+        /*! \brief Handling of a set of seismograms e.g. different components.
          *
-         * This class handels a single seismogram.
+         * This class stores a Seismogram for each #SeismogramType. This allows easy Seismogram handling, as only one SeismogramHandler can handle a whole multi-component seismogram.
          */
         template <typename ValueType>
         class SeismogramHandler
         {
 
           public:
-            //! \brief Default constructor
             explicit SeismogramHandler();
             //! \brief Default destructor
             ~SeismogramHandler(){};
@@ -40,14 +39,17 @@ namespace KITGPI
           private:
             void setTraceType();
 
-            std::vector<Seismogram<ValueType>> seismo; //!< vector in which the seismogram is stored
+            std::vector<Seismogram<ValueType>> seismo; //!< Vector which holds the individual Seismogram classes
         };
     }
 }
 
-//! \brief write the seismogram.
+//! \brief Method to write all handled Seismogram to file
 /*!
- \param config Configuration
+ * This method allows to write all handled Seismogram to file. The Configuration class will be used to determine requiered information,
+ * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ *
+ \param config Configuration class, which will be used to determine filename and header information
  */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config) const
@@ -57,7 +59,13 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
     }
 }
 
-/*! \brief Default constructor. */
+/*! \brief Constructor
+ *
+ * This constructor will initialize the handled Seismogram.
+ * The number of handled Seismogram will be determined by the variable #NUM_ELEMENTS_SEISMOGRAMTYPE.
+ * Since #NUM_ELEMENTS_SEISMOGRAMTYPE is equal to the number of different #SeismogramType, the SeismogramHandler will store a Seismogram for each #SeismogramType.
+ * Moreover, the #SeismogramType will be set to all handled Seismogram, so each Seismogram knows which #SeismogramType it is.
+ */
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     : seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
@@ -66,7 +74,10 @@ KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     setTraceType();
 }
 
-/*! \brief Setter method for trace type. */
+/*! \brief Setter method for #SeismogramType
+ *
+ * This method sets the #SeismogramType to each handled Seismogram. The #SeismogramType is assigned in the same order the #SeismogramType are defined in the corresponding enum.
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
 {
@@ -83,8 +94,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
     }
 }
 
-//! \brief Constant methode to write to RAW-file.
+//! \brief Write all handled Seismogram to a raw-file.
 /*!
+ *
+ * This method writes all handled Seismogram to a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticly.
  \param filename Filename of the output file
  */
 template <typename ValueType>
@@ -95,7 +108,11 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::stri
     }
 }
 
-/*! \brief Method to reset data. */
+/*! \brief Method to reset the Seismogram data
+ *
+ * This method resets the Seismogram data (the content of the traces). The reset will set all values to zero.
+ * However, the memory (number of samples * number of traces * number of Seismograms) will stay allocated, only the values are set to zero.
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
 {
@@ -104,9 +121,11 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
     }
 }
 
-//! \brief Constant getter methode for number of samples.
+//! \brief Getter method for the number of samples
 /*!
- \param type Type of the seismogram
+ * This method returns the number of temporal samples of the specified #SeismogramType.\n
+ * See getSeismogram() for information how to use #SeismogramType as input parameter.
+ \param type #SeismogramType of the desired Seismogram
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(SeismogramType type) const
@@ -115,9 +134,11 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(Seism
     return (seismo[type].getNumSamples());
 }
 
-//! \brief Constant getter methode for number of global traces.
+//! \brief Getter method for the number of global traces
 /*!
- \param type Type of the seismogram
+ * This method returns the number of global traces for the specified #SeismogramType.\n
+* See getSeismogram() for information how to use #SeismogramType as input parameter.
+ \param type #SeismogramType of the desired Seismogram
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(SeismogramType type) const
@@ -126,9 +147,16 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(
     return (seismo[type].getNumTracesGlobal());
 }
 
-//! \brief Constant getter methode for the seismogram.
+//! \brief Getter method for the Seismogram class
 /*!
- \param type Type of the seismogram
+ * This method returns the Seismogram class for the specified #SeismogramType.
+ *
+ * **Example Usage:**\n
+ * To get const access to the pressure seismogram (SeismogramType::P):\n
+ * `const Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramType::P);`\n
+ * or to the VX seismogram (SeismogramType::VX):\n
+ * `const Acquisition::Seismogram vx = handler.getSeismogram(Acquisition::SeismogramType::VX);`\n
+ \param type #SeismogramType of the desired Seismogram
  */
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramType type) const
@@ -137,9 +165,16 @@ KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::Seismogra
     return (seismo[type]);
 }
 
-//! \brief Getter methode for the seismogram.
+//! \brief Getter method for the Seismogram class
 /*!
- \param type Type of the seismogram
+ * This method returns the Seismogram class for the specified #SeismogramType.
+ *
+ * **Example Usage:**\n
+ * To get const access to the pressure seismogram (SeismogramType::P):\n
+ * `Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramType::P);`\n
+ * or to the VX seismogram (SeismogramType::VX):\n
+ * `Acquisition::Seismogram vx = handler.getSeismogram(Acquisition::SeismogramType::VX);`\n
+ \param type #SeismogramType of the desired Seismogram
  */
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramType type)
@@ -148,8 +183,9 @@ KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandl
     return (seismo[type]);
 }
 
-//! \brief Methode to set the right context-pointer.
+//! \brief Setter method for the context type
 /*!
+ * This method sets the context to all handled Seismogram.
  \param ctx Context
  */
 template <typename ValueType>
@@ -160,8 +196,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setContextPtr(hmemo::Con
     }
 }
 
-//! \brief Methode to set DT.
+//! \brief Setter methode to set DT.
 /*!
+ *
+ * This method sets the temporal sampling DT to all handled Seismogram.
  \param newDT Temporal sampling which will be set to the seismogram
  */
 template <typename ValueType>
@@ -172,8 +210,9 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
-//! \brief Methode to set Source Coordinate.
+//! \brief Setter methode to set source coordinate
 /*!
+ * This method sets the source coordinate to all handled Seismogram.
  \param sourceCoord Source coordinate in 1-D format
  */
 template <typename ValueType>

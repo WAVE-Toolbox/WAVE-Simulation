@@ -8,6 +8,8 @@ namespace KITGPI
     {
 
         /*! \brief Struct to save 3-D coordinates
+         *
+         * This struct saves coordinates as 3-D components.
          */
         struct coordinate3D {
             IndexType x; //!< x Position in X-direction in grid points (Horizontal 1)
@@ -30,7 +32,7 @@ namespace KITGPI
             }
         };
 
-        /*! \brief This class manages the transformation of Coordinates
+        /*! \brief This class manages the transformation of Coordinates from 3-D to 1-D and vice-versa
          */
         template <typename ValueType>
         class Coordinates
@@ -51,7 +53,6 @@ namespace KITGPI
 
             void Global2Local(lama::Vector const &coordinatesglobal, hmemo::HArray<IndexType> &coordinateslocal, dmemo::DistributionPtr dist) const;
 
-          protected:
           private:
             // Coordinate --> Index:
             IndexType map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ);
@@ -69,6 +70,7 @@ namespace KITGPI
 
 /*! \brief Returns bool if given coordinate is located on the surface
  *
+ * This method determines if a given coordinate is located on the surface of the modelling domain.
  \param coordinate 1-D coordinate
  \param NX Number of grid points in X
  \param NY Number of grid points in Y
@@ -140,12 +142,12 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
 
-    SCAI_ASSERT_ERROR(Z < NZ, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(X < NX, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Y < NY, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Z >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(Y >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT_ERROR(X >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NX, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Y < NY, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Z >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
 
     return ((X) + (Y)*NX + (Z)*NX * NY);
 }
@@ -156,6 +158,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
  *
+ * This method returns the 1-D coordinate of 3-D coordinates.
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
@@ -172,6 +175,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexTyp
 
 /*! \brief Convert 3-D coordinates to 1-D coordinates
  *
+ * This method returns the 1-D coordinate of 3-D coordinates.
  \param coordinate as a coordinate3D struct
  \param NX Total number of grid points in X (Horizontal 1)
  \param NY Total number of grid points in Y (Depth)
@@ -228,8 +232,9 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector cons
     }
 }
 
-/*! \brief Calculation of distance to boundaries the
+/*! \brief Calculation of distance to boundaries of the modelling domain
  *
+ * This method calculates the distance of a given coordinate to the boundaries of the modelling domain.
  \param X Coordinate X
  \param Y Coordinate Y
  \param Z Coordinate Z
@@ -240,6 +245,14 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector cons
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
+
+    SCAI_ASSERT(Z < NZ, "No valid argument!");
+    SCAI_ASSERT(X < NX, "No valid argument!");
+    SCAI_ASSERT(Y < NY, "No valid argument!");
+    SCAI_ASSERT(Z >= 0, "No valid argument!");
+    SCAI_ASSERT(Y >= 0, "No valid argument!");
+    SCAI_ASSERT(X >= 0, "No valid argument!");
+
     coordinate3D distance;
 
     distance.x = !((NX - 1 - X) < (X)) ? (X) : (NX - 1 - X);
@@ -251,6 +264,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
 
 /*! \brief Determination of distance to boundaries
  *
+ * This method calculates the distance of a given coordinate3D to the boundaries of the modelling domain.
  \param coordinate 3D-coordinate structs
  \param NX Total number of grid points in X
  \param NY Total number of grid points in Y

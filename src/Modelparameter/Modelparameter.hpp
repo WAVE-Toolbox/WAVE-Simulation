@@ -161,8 +161,6 @@ namespace KITGPI
 
             void writeModelparameter(lama::Vector const &vector, std::string filename, IndexType partitionedOut) const;
 
-            void calculateModulus(lama::Vector &vecV, lama::Vector &vecDensity, lama::Vector &vectorOut, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity);
-
             void calcModuleFromVelocity(lama::Vector &vecVelocity, lama::Vector &vecDensity, lama::Vector &vectorModule);
 
             void calcVelocityFromModule(lama::Vector &vectorModule, lama::Vector &vecV, lama::Vector &vecDensity);
@@ -406,33 +404,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(l
     vectorModule = vecDensity;
     vectorModule.scale(vecVelocity);
     vectorModule.scale(vecVelocity);
-};
-
-/*! \brief Calculate S and P wave modulus from velocities
- *  Acoustic:   pWaveModulus = rho * vP^2
- *  Elastic:    sWaveModulus = rho * vS^2
- \param vecV Velocity-Vector which will be used in the calculation (vP: Acoustic, vS: Elastic)
- \param vecDensity Density-Vector which will be used in the calculation
- \param vectorModule Modulus-Vector which is calculated
- \param ctx Context
- \param dist Distribution
- \param filename Location of external file which will be read in
- \param filenameDensity Location of external density-file which will be read in
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateModulus(lama::Vector &vecV, lama::Vector &vecDensity, lama::Vector &vectorModule, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, std::string filenameDensity)
-{
-    allocateModelparameter(vecV, ctx, dist);
-    allocateModelparameter(vecDensity, ctx, dist);
-    allocateModelparameter(vectorModule, ctx, dist);
-
-    readModelparameter(vecV, filename, dist);
-    readModelparameter(vecDensity, filenameDensity, dist);
-
-    vecV.redistribute(dist);
-    vecDensity.redistribute(dist);
-
-    calcModuleFromVelocity(vecV, vecDensity, vectorModule);
 };
 
 /*! \brief Calculate velocities from a module

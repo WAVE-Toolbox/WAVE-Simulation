@@ -1,7 +1,5 @@
 TARGET=WAVE_guide_EN
 
-endif
-
 .PHONY: install
 install: pdf
 

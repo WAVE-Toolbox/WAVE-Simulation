@@ -26,10 +26,10 @@ unittest-gcc:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}:${LD_LIBRARY_PATH}
     - PATH=${GCOVR_DIR}:${PATH}
-    - cd src/ && make unitTest CC=g++ CFLAGS="-std=c++11"
+    - cd src/ && make unitTest CC=g++ CFLAGS="-std=c++11" CODECOVERAGE=ON
     - OMP_NUM_THREADS=2
-    - cd ../bin/Tests/ && ./Test_unit
-    - cd ../../src/
+    - cd ../par && ./../bin/Tests/Test_unit
+    - cd ../src/
     - gcovr -r . --branch --gcov-exclude=.+\.UnitTest.+\.
 
 

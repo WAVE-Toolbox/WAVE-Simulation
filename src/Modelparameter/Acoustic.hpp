@@ -62,7 +62,7 @@ namespace KITGPI
 
             void initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
-            void write(std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut);
+            void write(std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut) const;
             void write(std::string filename, IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
@@ -148,10 +148,14 @@ namespace KITGPI
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
 {
+    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+
     refreshModule();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
+
+    HOST_PRINT(comm, "Model ready!\n\n");
 }
 
 /*! \brief Switch the default parameterization of this class to modulus
@@ -236,6 +240,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+
         switch (config.get<IndexType>("ModelParametrisation")) {
         case 1:
             init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
@@ -248,6 +255,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
             COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
             break;
         }
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+
     } else {
         ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
         init(ctx, dist, getPWaveModulus, config.get<ValueType>("rho"));
@@ -390,29 +400,50 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initVelocities(hmemo::ContextP
 
 /*! \brief Write model to an external file
  *
- \param filenamePWaveModulus Filename for P-wave modulus model
+ \param filenameP Filename for P-wave modulus / P-wave velocity model
  \param filenamedensity Filename for Density model
  \param partitionedOut Partitioned output
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filenamePWaveModulus, std::string filenamedensity, IndexType partitionedOut)
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filenameP, std::string filenamedensity, IndexType partitionedOut) const
 {
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
+
+    switch (parametrisation) {
+    case 0:
+        this->writeModelparameter(pWaveModulus, filenameP, partitionedOut);
+        break;
+    case 1:
+        this->writeModelparameter(velocityP, filenameP, partitionedOut);
+        break;
+    }
 };
 
 /*! \brief Write model to an external file
  *
- \param filename Filename to write files. For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
+ \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
  \param partitionedOut Partitioned output
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
+    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+
+    std::string filenameP;
     std::string filenamedensity = filename + ".density.mtx";
-    this->writeModelparameter(pWaveModulus, filenamePWaveModulus, partitionedOut);
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
+
+    switch (parametrisation) {
+    case 0:
+        filenameP = filename + ".pWaveModulus.mtx";
+        break;
+    case 1:
+        filenameP = filename + ".vp.mtx";
+        break;
+    }
+
+    write(filenameP, filenamedensity, partitionedOut);
 };
 
 //! \brief Wrapper to support configuration

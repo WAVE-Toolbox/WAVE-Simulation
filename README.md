@@ -4,7 +4,7 @@ Master: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/m
 
 Master: [![coverage report](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/coverage.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)  Develop: [![coverage report](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/coverage.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
 
-*Seismic Finite-Difference modelling developed within the [WAVE-Project](http://wave-toolbox.org).*
+*Seismic Finite-Difference modelling developed by the [WAVE-Project](http://wave-toolbox.org).*
 
 Get started:
 - See `README.md` in `par/`
