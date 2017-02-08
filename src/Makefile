@@ -44,6 +44,7 @@ unitTest: $(SOFI_UNITTEST_OBJ) $(SOFI_LIB_OBJ)
 	$(CC) $(CFLAGS) $(CFLAGSTEST) $(SOFI_UNITTEST_OBJ) $(SOFI_LIB_OBJ) -o ../bin/Tests/Test_unit $(IFLAGS) $(IFLAGSTEST) $(LDFLAGS) $(LDFLAGSTEST)
 
 integrationTest: Tests/Test_CompareSeismogram.cpp
+	mkdir -p ../bin/Tests/
 	$(CC) $(CFLAGS) $(SOFI_LIB_OBJ) -o ../bin/Tests/Test_CompareSeismogram Tests/Test_CompareSeismogram.cpp $(IFLAGS) $(LDFLAGS)
 
 clean:
