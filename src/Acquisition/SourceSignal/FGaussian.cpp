@@ -1,4 +1,5 @@
 #include "FGaussian.hpp"
+using namespace scai;
 
 /*! \brief Constructor generating a FGaussian signal
  *
@@ -31,7 +32,7 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(lama::DenseVe
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
-    
+
     /*
      *  t=0:DT:(NT*DT-DT);
      *  tau=pi*FC*(t-1.2/FC);
@@ -52,4 +53,3 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(lama::DenseVe
 
 template class KITGPI::Acquisition::SourceSignal::FGaussian<float>;
 template class KITGPI::Acquisition::SourceSignal::FGaussian<double>;
-

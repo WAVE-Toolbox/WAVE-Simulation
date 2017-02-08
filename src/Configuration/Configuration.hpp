@@ -32,7 +32,7 @@ namespace KITGPI
 
             explicit Configuration(std::string const &filename);
 
-            void readFromFile(std::string const &filename, bool overwrite);
+            void readFromFile(std::string const &filename, bool overwrite = false);
 
             void print() const;
 
@@ -40,10 +40,9 @@ namespace KITGPI
             ReturnType get(std::string const &parameterName) const;
 
           private:
-            void add2map(std::string const &KEY, std::string const &VALUE, bool overwrite);
+            void add2map(std::string const &KEY, std::string const &VALUE, bool overwrite = false);
 
             std::unordered_map<std::string, std::string> configMap; ///< Map that is used for internal handling of the `KEY=VALUE` pairs
         };
     }
 }
-

@@ -1,5 +1,7 @@
 
 #pragma once
+#include <scai/dmemo.hpp>
+#include <scai/hmemo.hpp>
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
@@ -52,7 +54,7 @@ namespace KITGPI
              \param dist Distribution of the wave fields
              \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) = 0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
 
           protected:
             bool useFreeSurface;     //!< Bool if free surface is in use

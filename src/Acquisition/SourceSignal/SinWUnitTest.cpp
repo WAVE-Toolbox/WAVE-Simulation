@@ -10,15 +10,15 @@ using namespace KITGPI;
 
 TEST(SinWTest, TestConstructor)
 {
-    int NT=4;
-    double DT=1;
-    double FC=1;
-    double AMP=1;
-    double Tshift=0;
-    
+    int NT = 4;
+    double DT = 1;
+    double FC = 1;
+    double AMP = 1;
+    double Tshift = 0;
+
     lama::DenseVector<double> sampleResult;
     sampleResult.allocate(NT);
-    
+
     //calculate sample result
     lama::DenseVector<double> zero(NT, 0.0);
     lama::DenseVector<double> help(NT, 0.0);
@@ -40,32 +40,30 @@ TEST(SinWTest, TestConstructor)
     zero = zero / 2.0;
     help = help - zero;
     sampleResult = lama::Scalar(AMP) * help;
-    
+
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
     EXPECT_NO_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, FC, AMP, Tshift));
-    
+
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
     Acquisition::SourceSignal::SinW<double>(testResult2, NT, DT, FC, AMP, Tshift);
-    
-    EXPECT_EQ(sampleResult.getValue(3),testResult2.getValue(3));
-    
+
+    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
 TEST(SinWTest, TestAsserts)
 {
-    int NT=4;
-    double DT=10;
-    double FC=1;
-    double AMP=1;
-    double Tshift=0;
+    int NT = 4;
+    double DT = 10;
+    double FC = 1;
+    double AMP = 1;
+    double Tshift = 0;
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    
+
     EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, -NT, DT, FC, AMP, Tshift));
     EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, -DT, FC, AMP, Tshift));
     EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, -FC, AMP, Tshift));
-    
 }

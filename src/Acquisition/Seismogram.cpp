@@ -557,4 +557,3 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
 
 template class KITGPI::Acquisition::Seismogram<double>;
 template class KITGPI::Acquisition::Seismogram<float>;
-

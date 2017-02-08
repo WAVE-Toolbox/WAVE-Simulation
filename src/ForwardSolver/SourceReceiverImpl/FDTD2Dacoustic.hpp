@@ -2,7 +2,6 @@
 #pragma once
 
 #include <scai/lama.hpp>
-#include <scai/lama/DenseVector.hpp>
 
 #include "../../Acquisition/Acquisition.hpp"
 #include "../../Acquisition/Seismogram.hpp"

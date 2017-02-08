@@ -1,5 +1,7 @@
 #pragma once
 
+#include <scai/dmemo.hpp>
+
 namespace KITGPI
 {
 
@@ -22,7 +24,7 @@ namespace KITGPI
             ~Partitioning(){};
 
             //! Getter method for distribution pointer
-            virtual dmemo::DistributionPtr getDist() const = 0;
+            virtual scai::dmemo::DistributionPtr getDist() const = 0;
         };
     }
 }

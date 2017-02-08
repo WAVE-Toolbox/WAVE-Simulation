@@ -20,12 +20,12 @@ namespace KITGPI
             class Ricker : public SourceSignal<ValueType>
             {
               public:
-                explicit Ricker(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                explicit Ricker(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
 
                 ///! Destructor
                 ~Ricker(){};
 
-                void calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
+                void calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
             };
         }
     }

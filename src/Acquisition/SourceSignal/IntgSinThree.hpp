@@ -20,12 +20,12 @@ namespace KITGPI
             class IntgSinThree : public SourceSignal<ValueType>
             {
               public:
-                explicit IntgSinThree(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
+                explicit IntgSinThree(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift);
 
                 ///! Destructor
                 ~IntgSinThree(){};
 
-                void calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
+                void calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) override;
             };
         }
     }

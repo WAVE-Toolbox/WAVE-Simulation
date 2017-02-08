@@ -1,7 +1,7 @@
 #include <scai/lama.hpp>
 
 #include "Acquisition.hpp"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 using namespace scai;
 using namespace KITGPI;

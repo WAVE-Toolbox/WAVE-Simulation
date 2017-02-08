@@ -2,7 +2,6 @@
 
 #include <scai/lama.hpp>
 
-
 namespace KITGPI
 {
 
@@ -10,7 +9,7 @@ namespace KITGPI
     {
 
         using namespace scai;
-        
+
         /*! \brief Struct to save 3-D coordinates
          *
          * This struct saves coordinates as 3-D components.

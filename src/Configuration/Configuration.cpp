@@ -12,7 +12,7 @@
  \param VALUE for the KEY to add
  \param overwrite Bool which indicates if `VALUE`s for existing `KEY`s will be overwritten by the new `VALUE`
  */
-void KITGPI::Configuration::Configuration::add2map(std::string const &KEY, std::string const &VALUE, bool overwrite = false)
+void KITGPI::Configuration::Configuration::add2map(std::string const &KEY, std::string const &VALUE, bool overwrite)
 {
     if (configMap.count(KEY) == 0) {
         configMap.insert(std::pair<std::string, std::string>(KEY, VALUE));
@@ -41,7 +41,7 @@ void KITGPI::Configuration::Configuration::add2map(std::string const &KEY, std::
  \param filename of the configuration file to read in
  \param overwrite Bool which indicates if existing entries will be overriden or not
  */
-void KITGPI::Configuration::Configuration::readFromFile(std::string const &filename, bool overwrite = false)
+void KITGPI::Configuration::Configuration::readFromFile(std::string const &filename, bool overwrite)
 {
     std::string line;
     std::ifstream input(filename.c_str());
@@ -60,16 +60,16 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
                 lineEnd = commentPos1;
             }
         }
-        
+
         std::string::size_type equalPos = line.find_first_of("=", 0);
-        
+
         if (std::string::npos != equalPos) {
             // tokenize it  name = val
             std::string name = line.substr(0, equalPos);
             size_t len = lineEnd - (equalPos + 1);
             std::string val = line.substr(equalPos + 1, len);
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-            
+
             add2map(name, val, overwrite);
         }
     }
@@ -129,8 +129,8 @@ ReturnType KITGPI::Configuration::Configuration::get(std::string const &paramete
 void KITGPI::Configuration::Configuration::print() const
 {
     std::cout << "\t"
-    << "Configuration: \n"
-    << std::endl;
+              << "Configuration: \n"
+              << std::endl;
     for (std::unordered_map<std::string, std::string>::const_iterator iter = configMap.begin(); iter != configMap.end(); ++iter)
         std::cout << "\t" << iter->first << " = " << iter->second << std::endl;
     std::cout << std::endl;

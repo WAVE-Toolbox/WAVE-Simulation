@@ -25,7 +25,7 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
 
-                void apply(lama::Vector &sumHorizonatlDerivative, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz);
+                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz);
 
               private:
                 using FreeSurfaceElastic<ValueType>::setSurfaceZero;
@@ -35,28 +35,3 @@ namespace KITGPI
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
-
-/*! \brief Apply free surface condition during time stepping for 3D simulations
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param sumHorizonalDerivative Sum of horizontal velocity updates
- \param Sxx Sxx wavefield
- \param Syy Syy wavefield
- \param Szz Szz wavefield
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(lama::Vector &sumHorizonalDerivative, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz)
-{
-
-    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
-
-    /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative.scale(scaleHorizontalUpdate);
-
-    Sxx += sumHorizonalDerivative;
-    Szz += sumHorizonalDerivative;
-
-    Syy.scale(setSurfaceZero);
-}

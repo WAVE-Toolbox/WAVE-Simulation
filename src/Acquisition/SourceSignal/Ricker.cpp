@@ -1,4 +1,5 @@
 #include "Ricker.hpp"
+using namespace scai;
 
 /*! \brief Constructor generating a Ricker signal
  *
@@ -31,7 +32,7 @@ void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(lama::DenseVecto
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
-    
+
     /*
      *  t=0:DT:(NT*DT-DT);
      *  tau=pi*FC*(t-1.5/FC);
