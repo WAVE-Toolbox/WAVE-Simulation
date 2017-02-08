@@ -3,6 +3,8 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
 

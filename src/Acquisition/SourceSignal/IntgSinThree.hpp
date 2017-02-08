@@ -59,6 +59,10 @@ template <typename ValueType>
 void KITGPI::Acquisition::SourceSignal::IntgSinThree<ValueType>::calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
 
+    SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
+    
     /*
      *  t=0:DT:(NT*DT-DT);
      *  when t>=tshift && t<=tshift+1.0/FC;

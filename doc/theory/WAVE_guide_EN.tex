@@ -984,6 +984,7 @@ LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.o
 	Sphinx				& 	A Python documentation generator 							& \url{http://www.sphinx-doc.org}\\
 	doxygen			& 	Generation of documentation from annotated				& \url{http://www.doxygen.org}\\
 										& \CC-code 															& \\
+	googletest & Implementation of gtest for unit-tests & \url{http://code.google.com/p/googletest}\\
 	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1131,8 +1132,23 @@ To merge a fileblock \shellcmd{filename\_\%r.mtx} to a single vector-file, the c
 \shellcmdline{<NProcessors> filename.mtx 1}\\
 In this case the name of the file-block and its size is written fist and then the name of the single output-file.
 
-\section{Benchmark}
+\section{Unit Tests}
+To guarantee a functioning framework, FDSimulation\_LAMA includes unit-tests using the googletest framework. To run all unit-tests, you first have to install googletest (e.g. from \url{http://code.google.com/p/googletest}). 
 
+As preparatory steps environment variables have to be linked to googletest. Add the following lines to the \shellcmd{{\char`\~}/.bashrc}:
+\\\shellcmdline{ `export GTEST\_DIR=[PATH\_TO\_GTEST\_DIRECTORY]`}
+\\\shellcmdline{ `export LD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{LD\_LIBRARY\_PATH\}`}
+\\\shellcmdline{ `export DYLD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{DYLD\_LIBRARY\_PATH\}}
+
+To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/src/} \\ and compile the tests by simply entering:\\\shellcmdline{make tests}
+
+The executable file is located in the directory:
+\\\shellcmdline{FDSimulation\_LAMA/bin/Tests/}\\
+To execute the unit-tests run the \shellcmd{Test\_Unit} file by entering:
+\\\shellcmdline{./Test\_Unit}\\ 
+For faultless function of FDSimulation\_LAMA all tests should execute without failure.
+
+\section{Benchmark}
 
 \cleardoublepage
 \listoffigures 

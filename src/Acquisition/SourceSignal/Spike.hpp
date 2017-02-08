@@ -59,6 +59,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::SourceSignal::Spike<ValueType>::calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType /*FC*/, ValueType AMP, ValueType Tshift)
 {
 
+    SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
+    
     /*
      *  Spike;
      */

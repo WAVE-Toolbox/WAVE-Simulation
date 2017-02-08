@@ -6,7 +6,7 @@
 using namespace scai;
 using namespace KITGPI;
 
-TEST(AcquisitionTest, Parameters)
+TEST(AcquisitionTest, TestParameters)
 {
 
     ASSERT_EQ(0, (Acquisition::SeismogramType::P));
@@ -15,7 +15,7 @@ TEST(AcquisitionTest, Parameters)
     ASSERT_EQ(3, (Acquisition::SeismogramType::VZ));
 }
 
-TEST(AcquisitionTest, Mapping)
+TEST(AcquisitionTest, TestMapping)
 {
 
     ASSERT_EQ("p", (Acquisition::SeismogramTypeString[Acquisition::SeismogramType::P]));
@@ -24,7 +24,7 @@ TEST(AcquisitionTest, Mapping)
     ASSERT_EQ("vz", (Acquisition::SeismogramTypeString[Acquisition::SeismogramType::VZ]));
 }
 
-TEST(AcquisitionTest, ArrayLength)
+TEST(AcquisitionTest, TestArrayLength)
 {
 
     int nSeismogramType = sizeof(Acquisition::SeismogramType);

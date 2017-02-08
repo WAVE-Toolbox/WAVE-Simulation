@@ -4,6 +4,8 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
 
@@ -59,6 +61,10 @@ template <typename ValueType>
 void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
 
+    SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
+    
     /*
      *  t=0:DT:(NT*DT-DT);
      *  when t>=tshift && t<=tshift+1.0/FC;
