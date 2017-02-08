@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-std=c++11 -fopenmp -Wall -Wextra -Werror
-IFLAGS=-I${SCAI_ROOT}/include -L${SCAI_ROOT}/lib -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-LDFLAGS=-lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking -lscai_tracing -lscai_logging -lscai_common
+IFLAGS=-I${SCAI_ROOT}/include -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
+LDFLAGS= -L${SCAI_ROOT}/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking -lscai_tracing -lscai_logging -lscai_common
 
 # Flags for googletest framework
 CODECOVERAGE=OFF
@@ -16,10 +16,18 @@ endif
 
 install: clean SOFI
 
+.cpp.o:
+	$(CC) $(CFLAGS) -c  $< -o $@ $(IFLAGS)
 
+subdirs := $(wildcard */)
+SOFI_SCR := $(wildcard $(addsuffix */*.cpp,$(subdirs))) $(wildcard **/*.cpp)
+SOFIUnitTest_SCR := $(wildcard $(addsuffix */*UnitTest.cpp,$(subdirs))) $(wildcard */*UnitTest.cpp)
+SOFI_SCR := $(filter-out $(SOFIUnitTest_SCR) $(wildcard **/*Test_CompareSeismogram.cpp), $(SOFI_SCR))
 
-SOFI: SOFI.cpp
-	$(CC) $(CFLAGS) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
+SOFI_OBJ = $(SOFI_SCR:%.cpp=%.o)
+
+SOFI: SOFI.cpp $(SOFI_OBJ)
+	$(CC) $(CFLAGS) $(SOFI_OBJ) -o ../bin/SOFI SOFI.cpp $(IFLAGS) $(LDFLAGS)
 
 
 SOFIexplicit: SOFI3D SOFI2D
