@@ -1,5 +1,4 @@
 #pragma once
-using namespace scai;
 
 namespace KITGPI
 {

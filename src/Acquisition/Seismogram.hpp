@@ -36,11 +36,11 @@ namespace KITGPI
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
 
-            void readFromFileRaw(std::string const &filename, dmemo::DistributionPtr distTraces, dmemo::DistributionPtr distSamples);
+            void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
-            void allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distSeismogram, IndexType NT);
+            void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, IndexType NT);
 
-            void redistribute(dmemo::DistributionPtr distRow, dmemo::DistributionPtr distColumn = NULL);
+            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = NULL);
             void replicate();
 
             void resetData();
@@ -50,17 +50,17 @@ namespace KITGPI
             IndexType getNumTracesLocal() const;
             IndexType getNumSamples() const;
             ValueType getDT() const;
-            lama::DenseMatrix<ValueType> &getData();
-            lama::DenseMatrix<ValueType> const &getData() const;
-            lama::DenseVector<IndexType> const &getCoordinates() const;
+            scai::lama::DenseMatrix<ValueType> &getData();
+            scai::lama::DenseMatrix<ValueType> const &getData() const;
+            scai::lama::DenseVector<IndexType> const &getCoordinates() const;
             SeismogramType getTraceType() const;
 
             /* Setter functions */
             void setDT(ValueType newDT);
-            void setContextPtr(hmemo::ContextPtr ctx);
+            void setContextPtr(scai::hmemo::ContextPtr ctx);
             void setSourceCoordinate(IndexType sourceCoord);
             void setTraceType(SeismogramType trace);
-            void setCoordinates(lama::DenseVector<IndexType> const &coord);
+            void setCoordinates(scai::lama::DenseVector<IndexType> const &coord);
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;
@@ -70,13 +70,13 @@ namespace KITGPI
             IndexType numTracesLocal;  //!< Number of local traces
 
             /* header information */
-            ValueType DT;                             //!< Temporal sampling interval in seconds
-            SeismogramType type;                      //!< Type of trace as #SeismogramType
-            lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
-            IndexType sourceCoordinate;               //!< Coordinate of source point (in case a single source is used)
+            ValueType DT;                                   //!< Temporal sampling interval in seconds
+            SeismogramType type;                            //!< Type of trace as #SeismogramType
+            scai::lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
+            IndexType sourceCoordinate;                     //!< Coordinate of source point (in case a single source is used)
 
             /* raw data */
-            lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
+            scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
         };
     }
 }

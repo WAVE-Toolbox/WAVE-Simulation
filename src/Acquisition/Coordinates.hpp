@@ -8,8 +8,6 @@ namespace KITGPI
     namespace Acquisition
     {
 
-        using namespace scai;
-
         /*! \brief Struct to save 3-D coordinates
          *
          * This struct saves coordinates as 3-D components.
@@ -54,7 +52,7 @@ namespace KITGPI
 
             bool locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType NZ);
 
-            void Global2Local(lama::Vector const &coordinatesglobal, hmemo::HArray<IndexType> &coordinateslocal, dmemo::DistributionPtr dist) const;
+            void Global2Local(scai::lama::Vector const &coordinatesglobal, scai::hmemo::HArray<IndexType> &coordinateslocal, scai::dmemo::DistributionPtr dist) const;
 
           private:
             // Coordinate --> Index:

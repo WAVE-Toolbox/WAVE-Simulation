@@ -1,4 +1,5 @@
 #include "Coordinates.hpp"
+using namespace scai;
 
 /* ------- */
 /* Mapping */

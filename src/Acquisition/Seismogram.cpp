@@ -1,4 +1,5 @@
 #include "Seismogram.hpp"
+using namespace scai;
 
 //! \brief Adding ending to the seismogram-filename-string
 /*!
@@ -29,7 +30,7 @@ std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(
  \param ctx Set ContextPtr
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::ContextPtr ctx)
 {
     data.setContextPtr(ctx);
     coordinates.setContextPtr(ctx);

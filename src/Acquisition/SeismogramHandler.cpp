@@ -1,4 +1,5 @@
 #include "SeismogramHandler.hpp"
+using namespace scai;
 
 //! \brief Method to write all handled Seismogram to file
 /*!

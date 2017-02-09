@@ -1,4 +1,5 @@
 #include "Sources.hpp"
+using namespace scai;
 
 /*! \brief Constructor based on the configuration class and the distribution of the wavefields
  *

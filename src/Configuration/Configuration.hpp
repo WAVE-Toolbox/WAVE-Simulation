@@ -8,8 +8,6 @@
 #include <string>
 #include <unordered_map>
 
-using namespace scai;
-
 //! Namespace of the Geophysical Institute of the Karlsruhe Institute of Technology
 namespace KITGPI
 {

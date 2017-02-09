@@ -3,6 +3,7 @@
 #include "../Configuration/Configuration.hpp"
 #include "Acquisition.hpp"
 #include "Seismogram.hpp"
+#include <scai/hmemo.hpp>
 
 namespace KITGPI
 {
@@ -29,7 +30,7 @@ namespace KITGPI
 
             void setSourceCoordinate(IndexType sourceCoord);
             void setDT(ValueType newDT);
-            void setContextPtr(hmemo::ContextPtr ctx);
+            void setContextPtr(scai::hmemo::ContextPtr ctx);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);

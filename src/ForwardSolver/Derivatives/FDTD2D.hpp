@@ -34,8 +34,8 @@ namespace KITGPI
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm) override;
 
                 /* non-requiered matrixes */
-                lama::Matrix const &getDzf() const override;
-                lama::Matrix const &getDzb() const override;
+                scai::lama::Matrix const &getDzf() const override;
+                scai::lama::Matrix const &getDzb() const override;
 
               private:
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
