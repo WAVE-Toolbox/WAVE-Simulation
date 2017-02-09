@@ -7,7 +7,7 @@
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     init(config, ctx, dist_wavefield);
 }
@@ -19,7 +19,7 @@ KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuratio
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 

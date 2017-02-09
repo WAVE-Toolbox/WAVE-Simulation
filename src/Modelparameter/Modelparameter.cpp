@@ -45,7 +45,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMec
  \param value Value which will be used to initialize the single modelparameter to a homogenoeus model
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::Vector &vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar value)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar value)
 {
 
     allocateModelparameter(vector, ctx, dist);
@@ -63,7 +63,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::Vector &vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
 
     allocateModelparameter(vector, ctx, dist);
@@ -81,7 +81,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama:
  \param partitionedOut Partitioned output
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::Vector const &vector, std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector const &vector, std::string filename, IndexType partitionedOut) const
 {
     PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
 
@@ -103,7 +103,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama
 /*! \brief Read a modelparameter from file
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::Vector &vector, std::string filename, dmemo::DistributionPtr dist, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType partitionedIn)
 {
 
     PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
@@ -126,7 +126,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama:
 /*! \brief Allocate a single modelparameter
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(lama::Vector &vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
     vector.allocate(dist);
@@ -141,7 +141,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(l
  \param vectorModule Modulus-Vector which is calculated
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(lama::Vector &vecVelocity, lama::Vector &vecDensity, lama::Vector &vectorModule)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(scai::lama::Vector &vecVelocity, scai::lama::Vector &vecDensity, scai::lama::Vector &vectorModule)
 {
 
     vectorModule = vecDensity;
@@ -158,7 +158,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(l
  \param vecVelocity Velocity-Vector which is calculated
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(lama::Vector &vectorModule, lama::Vector &vecDensity, lama::Vector &vecVelocity)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(scai::lama::Vector &vectorModule, scai::lama::Vector &vecDensity, scai::lama::Vector &vecVelocity)
 {
     /* Modulus = pow(velocity,2) * Density */
     /* Velocity = sqrt( Modulus / Density )  */
@@ -171,7 +171,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(l
 /*! \brief Get reference to density model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity()
 {
     if (dirtyFlagInverseDensity) {
         dirtyFlagInverseDensity = false;
@@ -184,7 +184,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to density model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
 {
     //    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
     return (inverseDensity);
@@ -193,7 +193,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to density model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity()
 {
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
     return (density);
@@ -202,7 +202,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensit
 /*! \brief Get reference to density model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
 {
     SCAI_ASSERT(dirtyFlagInverseDensity == true, "Density has to be recalculated! ");
     return (density);
@@ -211,7 +211,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensit
 /*! \brief Get reference to first Lame model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus()
 {
 
     // If the model is parameterized in modules, the velocity vector is now dirty
@@ -231,7 +231,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveM
 /*! \brief Get reference to first Lame model parameter
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveModulus() const
 {
     SCAI_ASSERT((dirtyFlagModulus == false) || (parametrisation == 0), "Module has to be recalculated! ");
     return (pWaveModulus);
@@ -241,7 +241,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPWaveM
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus()
 {
 
     // If the model is parameterized in modules, the velocity vector is now dirty
@@ -261,7 +261,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus() const
 {
     SCAI_ASSERT((dirtyFlagModulus == false) || (parametrisation == 0), "Module has to be recalculated! ");
     return (sWaveModulus);
@@ -271,7 +271,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP()
 {
 
     // If the model is parameterized in velocities, the modulus vector is now dirty
@@ -291,7 +291,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVeloci
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
 {
     SCAI_ASSERT((dirtyFlagVelocity == false) || (parametrisation == 1), "Velocity has to be recalculated! ");
     return (velocityP);
@@ -300,7 +300,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVeloci
 /*! \brief Get reference to S-wave velocity
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS()
 {
 
     // If the model is parameterized in velocities, the modulus vector is now dirty
@@ -319,7 +319,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVeloci
 /*! \brief Get reference to S-wave velocity
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
 {
     SCAI_ASSERT((dirtyFlagVelocity == false) || (parametrisation == 1), "Velocity has to be recalculated! ");
     return (velocityS);
@@ -328,7 +328,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVeloci
 /*! \brief Get reference to tauP
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP()
 {
     return (tauP);
 }
@@ -337,7 +337,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP()
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP() const
 {
     return (tauP);
 }
@@ -345,7 +345,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS()
 {
     return (tauS);
 }
@@ -353,7 +353,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS() const
 {
     return (tauS);
 }
@@ -372,7 +372,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauS()
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType /*NY*/, IndexType /*NZ*/)
 {
 
     IndexType RowNumber_plusOne = rowNumber + 1;
@@ -414,7 +414,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAv
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
 
     IndexType NXNY = NX * NY;
@@ -456,7 +456,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAv
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
 {
 
     IndexType NXNY = NX * NY;
@@ -498,7 +498,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_DensityAv
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
 
     IndexType NXNY = NX * NY;
@@ -569,7 +569,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
 {
 
     IndexType NXNY = NX * NY;
@@ -640,7 +640,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, hmemo::WriteAccess<IndexType> &csrJALocal, hmemo::WriteAccess<IndexType> &csrIALocal, hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ)
 {
 
     IndexType NXNY = NX * NY;
@@ -711,7 +711,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setRowElements_SWaveModu
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(lama::Matrix &Av, calcNumberRowElements_AvPtr calcNumberRowElements, setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrix(scai::lama::Matrix &Av, calcNumberRowElements_AvPtr calcNumberRowElements, setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
 
     /* Get local "global" indices */
@@ -986,7 +986,7 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::calcNumberRowElemen
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(DensityAverageMatrixX, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixX, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixX, NX, NY, NZ, dist);
 }
@@ -1000,7 +1000,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(DensityAverageMatrixY, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixY, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixY, NX, NY, NZ, dist);
 }
@@ -1014,7 +1014,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(DensityAverageMatrixZ, &Modelparameter<ValueType>::calcNumberRowElements_DensityAverageMatrixZ, &Modelparameter<ValueType>::setRowElements_DensityAverageMatrixZ, NX, NY, NZ, dist);
 }
@@ -1028,7 +1028,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXY(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXY(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(sWaveModulusAverageMatrixXY, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXY, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXY, NX, NY, NZ, dist);
 }
@@ -1042,7 +1042,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(sWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ, NX, NY, NZ, dist);
 }
@@ -1056,7 +1056,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
     calcAverageMatrix(sWaveModulusAverageMatrixYZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixYZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixYZ, NX, NY, NZ, dist);
 }
@@ -1068,7 +1068,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param avDensityMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(lama::Vector &vecDensity, lama::Vector &vecInverseAvDensity, lama::Matrix &avDensityMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::Vector &vecDensity, scai::lama::Vector &vecInverseAvDensity, scai::lama::Matrix &avDensityMatrix)
 {
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity.invert();
@@ -1081,7 +1081,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(lama::Vector &vecSWaveModulus, lama::Vector &vecAvSWaveModulus, lama::Matrix &avSWaveModulusMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::Vector &vecSWaveModulus, scai::lama::Vector &vecAvSWaveModulus, scai::lama::Matrix &avSWaveModulusMatrix)
 {
     vecAvSWaveModulus = vecSWaveModulus;
     vecAvSWaveModulus.invert();
@@ -1096,7 +1096,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
  \param avTauSMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(lama::Vector &vecTauS, lama::Vector &vecAvTauS, lama::Matrix &avTauSMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(scai::lama::Vector &vecTauS, scai::lama::Vector &vecAvTauS, scai::lama::Matrix &avTauSMatrix)
 {
     vecAvTauS = vecTauS;
     vecAvTauS = avTauSMatrix * vecAvTauS;
@@ -1104,42 +1104,42 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(la
 
 //! \brief Getter method for averaging density matrix in x-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixX()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixX()
 {
     return (DensityAverageMatrixX);
 }
 
 //! \brief Getter method for averaging density matrix in y-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixY()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixY()
 {
     return (DensityAverageMatrixY);
 }
 
 //! \brief Getter method for averaging density matrix in z-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixZ()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAverageMatrixZ()
 {
     return (DensityAverageMatrixZ);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix x-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXY()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXY()
 {
     return (sWaveModulusAverageMatrixXY);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix y-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXZ()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixXZ()
 {
     return (sWaveModulusAverageMatrixXZ);
 }
 
 //! \brief Getter method for averaging S-wave modulus matrix z-direction
 template <typename ValueType>
-lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixYZ()
+scai::lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageMatrixYZ()
 {
     return (sWaveModulusAverageMatrixYZ);
 }
@@ -1147,7 +1147,7 @@ lama::Matrix &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulus
 /*! \brief Get reference to averaged density in x-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1159,7 +1159,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged density in y-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1171,7 +1171,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged density in z-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1183,7 +1183,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged s-wave modulus in xy-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1195,7 +1195,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged s-wave modulus in xz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1207,7 +1207,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged s-wave modulus in yz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1219,7 +1219,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged tauS in xy-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1231,7 +1231,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAv
 /*! \brief Get reference to averaged tauS in xz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1243,7 +1243,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAv
 /*! \brief Get reference to averaged tauS in yz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
     if (dirtyFlagAveraging == true) {
@@ -1255,7 +1255,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAv
 /*! \brief Get reference to averaged density in x-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageX() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (inverseDensityAverageX);
@@ -1264,7 +1264,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged density in y-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageY() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (inverseDensityAverageY);
@@ -1273,7 +1273,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged density in z-direction
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensityAverageZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (inverseDensityAverageZ);
@@ -1282,7 +1282,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInvers
 /*! \brief Get reference to averaged s-wave modulus in xy-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXY() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (sWaveModulusAverageXY);
@@ -1291,7 +1291,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged s-wave modulus in xz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageXZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (sWaveModulusAverageXZ);
@@ -1300,7 +1300,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged s-wave modulus in yz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveModulusAverageYZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (sWaveModulusAverageYZ);
@@ -1309,7 +1309,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSWaveM
 /*! \brief Get reference to averaged tauS in xy-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXY() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (tauSAverageXY);
@@ -1318,7 +1318,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAv
 /*! \brief Get reference to averaged tauS in xz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageXZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (tauSAverageXZ);
@@ -1327,7 +1327,7 @@ lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAv
 /*! \brief Get reference to averaged tauS in yz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ() const
+scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::getTauSAverageYZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
     return (tauSAverageYZ);

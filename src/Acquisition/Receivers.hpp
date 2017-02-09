@@ -30,12 +30,12 @@ namespace KITGPI
             //! \brief Default constructor
             Receivers(){};
 
-            explicit Receivers(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
+            explicit Receivers(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
             //! \brief Default destructor
             ~Receivers(){};
 
-            void init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
           private:
             void checkRequiredNumParameter(IndexType numParameterCheck);

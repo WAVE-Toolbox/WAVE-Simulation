@@ -11,7 +11,7 @@ using namespace scai;
  \param Tshift Time to shift wavelet
  */
 template <typename ValueType>
-KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::SinThree(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
+KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::SinThree(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
     calc(signal, NT, DT, FC, AMP, Tshift);
 }
@@ -26,7 +26,7 @@ KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::SinThree(lama::DenseVect
  \param Tshift Time to shift wavelet
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
+void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");

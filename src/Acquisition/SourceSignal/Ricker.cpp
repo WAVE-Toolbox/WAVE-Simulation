@@ -11,7 +11,7 @@ using namespace scai;
  \param Tshift Time to shift wavelet
  */
 template <typename ValueType>
-KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::Ricker(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
+KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::Ricker(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
     calc(signal, NT, DT, FC, AMP, Tshift);
 }
@@ -26,7 +26,7 @@ KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::Ricker(lama::DenseVector<V
  \param Tshift Time to shift wavelet
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
+void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift)
 {
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");

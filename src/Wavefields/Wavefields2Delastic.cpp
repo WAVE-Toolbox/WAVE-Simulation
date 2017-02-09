@@ -18,13 +18,13 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Delastic<ValueType>::getContextPtr()
  /param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Delastic<ValueType>::FD2Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD2Delastic<ValueType>::FD2Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     init(ctx, dist);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -47,7 +47,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::reset()
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSxz()
 {
     COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 2D elastic case.")
     return (Sxz);
@@ -55,7 +55,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSxz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSyz()
 {
     COMMON_THROWEXCEPTION("There is no Syz wavefield in the 2D elastic case.")
     return (Syz);
@@ -63,7 +63,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSyz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSzz()
 {
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D elastic case.")
     return (Szz);
@@ -71,7 +71,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSzz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getVZ()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getVZ()
 {
     COMMON_THROWEXCEPTION("There is no VZ wavefield in the 2D elastic case.")
     return (VZ);
@@ -79,7 +79,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getVZ(
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 2D elastic case.")
     return (P);
@@ -87,7 +87,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getP()
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 2D elastic case.")
     return (Rxx);
@@ -95,7 +95,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxx
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 2D elastic case.")
     return (Ryy);
@@ -103,7 +103,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyy
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D elastic case.")
     return (Rzz);
@@ -111,7 +111,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRzz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D elastic case.")
     return (Ryz);
@@ -119,7 +119,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D elastic case.")
     return (Rxz);
@@ -127,7 +127,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxz
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D elastic case.")
     return (Rxy);

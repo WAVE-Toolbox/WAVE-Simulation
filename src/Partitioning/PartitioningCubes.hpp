@@ -25,7 +25,7 @@ namespace KITGPI
             //! Default constructor
             PartitioningCubes() = delete;
 
-            explicit PartitioningCubes(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
+            explicit PartitioningCubes(KITGPI::Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
             //! Default destructor
             ~PartitioningCubes(){};

@@ -1,12 +1,12 @@
 #include "AcquisitionGeometry.hpp"
 
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initOptionalAcquisitionParameter(IndexType /*numParameter*/, IndexType /*numTracesGlobal*/, lama::DenseMatrix<ValueType> /*acquisition*/, dmemo::DistributionPtr /*dist_wavefield_traces*/, hmemo::ContextPtr /*ctx*/)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initOptionalAcquisitionParameter(IndexType /*numParameter*/, IndexType /*numTracesGlobal*/, scai::lama::DenseMatrix<ValueType> /*acquisition*/, scai::dmemo::DistributionPtr /*dist_wavefield_traces*/, hmemo::ContextPtr /*ctx*/)
 {
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(IndexType const NT, hmemo::ContextPtr const ctx, dmemo::DistributionPtr const dist_wavefield)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(IndexType const NT, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist_wavefield)
 {
 
     SCAI_ASSERT_DEBUG(seismogramTypes.size() == coordinates.size(), "Size mismatch");
@@ -70,7 +70,7 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFile(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, dmemo::DistributionPtr dist_wavefield, hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFile(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
@@ -185,7 +185,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFil
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calcDistribution(lama::DenseVector<IndexType> const &coordinates, dmemo::DistributionPtr const dist_wavefield) const
+dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calcDistribution(scai::lama::DenseVector<IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield) const
 {
     SCAI_ASSERT_DEBUG(coordinates.size() > 0, " The vector coordinates does not contain any elements ! ");
 

@@ -5,7 +5,7 @@ using namespace scai;
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
 template <typename ValueType>
-hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
+scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
 {
     return (VX.getContextPtr());
 }
@@ -18,13 +18,13 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
  /param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     init(ctx, dist);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -67,7 +67,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::reset()
 
 //! \brief Not valid in the 3D visco-elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D visco-elastic case.")
     return (P);

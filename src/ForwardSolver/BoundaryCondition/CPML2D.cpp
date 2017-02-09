@@ -18,56 +18,56 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::reset()
 
 //! \brief application of cpml on the derivation of sxx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(lama::Vector &sxx_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(scai::lama::Vector &sxx_x)
 {
     this->applyCPML(sxx_x, psi_sxx_x, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(lama::Vector &sxy_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(scai::lama::Vector &sxy_x)
 {
     this->applyCPML(sxy_x, psi_sxy_x, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(lama::Vector &sxy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::Vector &sxy_y)
 {
     this->applyCPML(sxy_y, psi_sxy_y, a_y, b_y, k_y);
 }
 
 //! \brief application of cpml on the derivation of syy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(lama::Vector &syy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::Vector &syy_y)
 {
     this->applyCPML(syy_y, psi_syy_y, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(lama::Vector &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(scai::lama::Vector &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of vy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(lama::Vector &vyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai::lama::Vector &vyx)
 {
     this->applyCPML(vyx, psi_vyx, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of vx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(lama::Vector &vxy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::Vector &vxy)
 {
     this->applyCPML(vxy, psi_vxy, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(lama::Vector &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::Vector &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y, k_y);
 }
@@ -90,7 +90,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(lama
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");

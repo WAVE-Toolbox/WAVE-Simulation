@@ -37,7 +37,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
  \param Syy Syy wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector &sumHorizonalDerivative, lama::Vector &Sxx, lama::Vector &Syy)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
@@ -61,7 +61,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
  \param Szz Szz wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(lama::Vector &sumHorizonalDerivative, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz)
 {
 
     /* Apply horizontal update, which replaces the vertical one */
@@ -85,7 +85,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the free surface...\n");

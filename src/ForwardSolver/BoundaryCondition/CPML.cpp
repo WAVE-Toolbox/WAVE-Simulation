@@ -4,7 +4,7 @@ using namespace scai;
 /*! \brief Reset a single Vector to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(lama::DenseVector<ValueType> &vector)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai::lama::DenseVector<ValueType> &vector)
 {
     vector = 0.0;
 }
@@ -14,7 +14,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(lama
 * This method will set the context, allocate the the wavefield and set the field to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(lama::DenseVector<ValueType> &vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
     vector.allocate(dist);
@@ -27,9 +27,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(lama:
  * method to set cpml coefficients for a given gridpoint
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(lama::DenseVector<ValueType> &a, lama::DenseVector<ValueType> &b, lama::DenseVector<ValueType> &kInv,
-                                                                             lama::DenseVector<ValueType> &a_half, lama::DenseVector<ValueType> &b_half, lama::DenseVector<ValueType> &kInv_half,
-                                                                             IndexType coord, IndexType gdist, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, IndexType i, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv, scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half, IndexType coord, IndexType gdist, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, IndexType i, ValueType DT, ValueType DH)
 {
 
     ValueType RCoef = 0.0008;

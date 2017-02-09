@@ -10,7 +10,7 @@ using namespace scai;
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const &config, dmemo::CommunicatorPtr comm)
+KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     init(dist, ctx, config, comm);
 }
@@ -24,7 +24,7 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::Distributio
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration const &config, dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
     Derivatives<ValueType>::initializeMatrices(dist, ctx, config, comm);
@@ -44,7 +44,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(dmemo::Distribu
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm)
+KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
 {
     initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorderInput, comm);
 }
@@ -63,7 +63,7 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(dmemo::Distributio
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
 {
 
     SCAI_REGION("initializeMatrices")

@@ -13,7 +13,7 @@
  \param Ryy Ryy wavefield (relaxation)
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::apply(lama::Vector &sumHorizonatlDerivative, lama::Vector &temp, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Rxx, lama::Vector &Ryy)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &temp, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Rxx, scai::lama::Vector &Ryy)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");

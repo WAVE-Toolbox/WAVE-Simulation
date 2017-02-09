@@ -160,7 +160,7 @@ KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandl
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setContextPtr(hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setContextPtr(scai::hmemo::ContextPtr ctx)
 {
     for (auto &i : seismo) {
         i.setContextPtr(ctx);

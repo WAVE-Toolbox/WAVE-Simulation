@@ -18,13 +18,13 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
  /param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     init(ctx, dist);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -55,7 +55,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D elastic case.")
     return (P);
@@ -63,7 +63,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D elastic case.")
     return (Rxx);
@@ -71,7 +71,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D elastic case.")
     return (Ryy);
@@ -79,7 +79,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D elastic case.")
     return (Rzz);
@@ -87,7 +87,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D elastic case.")
     return (Ryz);
@@ -95,7 +95,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D elastic case.")
     return (Rxz);
@@ -103,7 +103,7 @@ lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
     return (Rxy);

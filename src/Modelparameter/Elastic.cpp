@@ -8,7 +8,7 @@ using namespace scai;
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "Preparation of the model parameters…\n");
 
@@ -91,7 +91,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule()
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     init(config, ctx, dist);
 }
@@ -103,7 +103,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
 
@@ -144,7 +144,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar pWaveModulus_const, lama::Scalar sWaveModulus_const, lama::Scalar rho)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho)
 {
     init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho);
 }
@@ -159,7 +159,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar pWaveModulus_const, lama::Scalar sWaveModulus_const, lama::Scalar rho)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho)
 {
     parametrisation = 0;
     this->initModelparameter(pWaveModulus, ctx, dist, pWaveModulus_const);
@@ -178,7 +178,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
     init(ctx, dist, filenamePWaveModulus, filenameSWaveModulus, filenamerho, partitionedIn);
 }
@@ -194,7 +194,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
 {
     parametrisation = 0;
     this->initModelparameter(pWaveModulus, ctx, dist, filenamePWaveModulus, partitionedIn);
@@ -211,7 +211,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dme
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     init(ctx, dist, filename, partitionedIn);
 }
@@ -225,7 +225,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(hmemo::ContextPtr ctx, dmemo
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation = 0;
     std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
@@ -263,7 +263,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation = 1;
     std::string filenameVelocityP = filename + ".vp.mtx";
@@ -338,7 +338,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, Ind
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration config, dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm)
 {
     initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), comm);
 }
@@ -356,7 +356,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::Distr
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
 
     SCAI_REGION("initializeMatrices")
@@ -396,7 +396,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
  *
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -405,7 +405,7 @@ lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS()
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -430,7 +430,7 @@ IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXY);
@@ -439,7 +439,7 @@ lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXZ);
@@ -448,7 +448,7 @@ lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
-lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
@@ -459,7 +459,7 @@ lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(scai::lama::Scalar rhs)
 {
     KITGPI::Modelparameter::Elastic<ValueType> result;
     result.density = this->density * rhs;
@@ -483,7 +483,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -493,7 +493,7 @@ KITGPI::Modelparameter::Elastic<ValueType> operator*(lama::Scalar lhs, KITGPI::M
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*=(lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar rhs)
 {
     return *this * rhs;
 }

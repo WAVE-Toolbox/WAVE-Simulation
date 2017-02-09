@@ -108,7 +108,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
  \param coord DenseVector with coordinates
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(lama::DenseVector<IndexType> const &coord)
+void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::DenseVector<IndexType> const &coord)
 {
     SCAI_ASSERT_ERROR(coord.size() == numTracesGlobal, "Given traceType vector has wrong format");
     coordinates = coord;
@@ -200,7 +200,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
  \param NT Total number of samples per trace
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::allocate(hmemo::ContextPtr ctx, dmemo::DistributionPtr distTraces, IndexType NT)
+void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
@@ -237,7 +237,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::DistributionPtr distTraces, dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     if (distSamples == NULL) {
         SCAI_ASSERT_DEBUG(numSamples >= 0, "numSamples not set");
@@ -257,7 +257,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(dmemo::Distributio
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, dmemo::DistributionPtr distTraces, dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     data.readFromFile(filename);
 

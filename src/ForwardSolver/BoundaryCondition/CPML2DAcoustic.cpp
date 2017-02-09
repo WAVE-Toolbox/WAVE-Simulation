@@ -14,28 +14,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::reset(
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vxx(lama::Vector &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vxx(scai::lama::Vector &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vyy(lama::Vector &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vyy(scai::lama::Vector &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y, k_y);
 }
 
 //! \brief application of cpml on the derivation of p in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_x(lama::Vector &p_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_x(scai::lama::Vector &p_x)
 {
     this->applyCPML(p_x, psi_p_x, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of p in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_y(lama::Vector &p_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_y(scai::lama::Vector &p_y)
 {
     this->applyCPML(p_y, psi_p_y, a_y_half, b_y_half, k_y_half);
 }
@@ -58,7 +58,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");

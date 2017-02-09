@@ -13,7 +13,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  \param p p wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(lama::Vector &p)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(scai::lama::Vector &p)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::a
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the free surface...\n");

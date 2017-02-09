@@ -72,7 +72,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule()
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "Preparation of the model parameters…\n");
 
@@ -113,7 +113,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     init(config, ctx, dist);
 }
@@ -125,7 +125,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Con
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     if (config.get<IndexType>("ModelRead")) {
 
@@ -171,7 +171,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar pWaveModulus_const, lama::Scalar sWaveModulus_const, lama::Scalar rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
     init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho_const, tauP_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
@@ -191,7 +191,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr 
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar pWaveModulus_const, lama::Scalar sWaveModulus_const, lama::Scalar rho_const, lama::Scalar tauP_const, lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
     parametrisation = 0;
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
@@ -211,7 +211,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     init(ctx, dist, filename, partitionedIn);
 }
@@ -225,7 +225,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(hmemo::ContextPtr 
  \param partitionedIn Partitioned input
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation = 0;
     std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
@@ -272,7 +272,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
  *  Calculates pWaveModulus with
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
     parametrisation = 1;
     std::string filenameVelocityP = filename + ".vp.mtx";
@@ -334,7 +334,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, Configuration::Configuration config, dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm)
 {
     initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), comm);
 }
@@ -352,7 +352,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
 
     SCAI_REGION("initializeMatrices")
@@ -413,7 +413,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(I
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*(lama::Scalar rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*(scai::lama::Scalar rhs)
 {
     KITGPI::Modelparameter::Viscoelastic<ValueType> result;
     result.density = this->density * rhs;
@@ -439,7 +439,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(lama::Scalar lhs, KITGPI::Modelparameter::Viscoelastic<ValueType> rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::Viscoelastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -449,7 +449,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(lama::Scalar lhs, KITG
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*=(lama::Scalar rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*=(scai::lama::Scalar rhs)
 {
     return *this * rhs;
 }

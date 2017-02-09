@@ -17,7 +17,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configuration::Configuration const &config, dmemo::CommunicatorPtr comm)
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(KITGPI::Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     dist_cubes = calculate(config.get<IndexType>("ProcNX"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), comm);
 }
@@ -37,7 +37,7 @@ KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(Configurat
  \param comm Communicator for the distribution
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, dmemo::CommunicatorPtr comm)
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::CommunicatorPtr comm)
 {
 
     IndexType rank = comm->getRank();

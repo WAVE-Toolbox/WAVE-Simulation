@@ -6,7 +6,7 @@ using namespace scai;
  \param vector Vector to be reset to 0
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(lama::DenseVector<ValueType> &vector)
+void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(scai::lama::DenseVector<ValueType> &vector)
 {
     vector.assign(0.0);
 }
@@ -20,7 +20,7 @@ void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(lama::DenseVector
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(lama::DenseVector<ValueType> &vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
     vector.allocate(dist);
@@ -30,112 +30,112 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(lama::DenseVector<
 
 //! \brief Getter routine for vX wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVX()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVX()
 {
     return (VX);
 }
 
 //! \brief Getter routine for vY wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVY()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVY()
 {
     return (VY);
 }
 
 //! \brief Getter routine for vZ wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVZ()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVZ()
 {
     return (VZ);
 }
 
 //! \brief Getter routine for Sxx wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxx()
 {
     return (Sxx);
 }
 
 //! \brief Getter routine for Syy wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSyy()
 {
     return (Syy);
 }
 
 //! \brief Getter routine for Szz wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSzz()
 {
     return (Szz);
 }
 
 //! \brief Getter routine for Syz wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSyz()
 {
     return (Syz);
 }
 
 //! \brief Getter routine for Sxz wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxz()
 {
     return (Sxz);
 }
 
 //! \brief Getter routine for Sxy wavefield
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getSxy()
 {
     return (Sxy);
 }
 
 //! \brief Getter routine for P
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getP()
 {
     return (P);
 }
 
 //! \brief Getter routine for Rxx Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxx()
 {
     return (Rxx);
 }
 
 //! \brief Getter routine for Ryy Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRyy()
 {
     return (Ryy);
 }
 
 //! \brief Getter routine for Rzz Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRzz()
 {
     return (Rzz);
 }
 
 //! \brief Getter routine for Ryz Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRyz()
 {
     return (Ryz);
 }
 
 //! \brief Getter routine for Rxz Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxz()
 {
     return (Rxz);
 }
 
 //! \brief Getter routine for Rxy Relaxation parameter
 template <typename ValueType>
-lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxy()
 {
     return (Rxy);
 }

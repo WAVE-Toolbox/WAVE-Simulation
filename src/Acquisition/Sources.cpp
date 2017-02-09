@@ -7,7 +7,7 @@
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     this->init(config, ctx, dist_wavefield);
 }
@@ -19,7 +19,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
@@ -45,7 +45,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
  \param ctx context
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::Sources<ValueType>::generateSignals(IndexType NT, ValueType DT, scai::hmemo::ContextPtr ctx)
 {
 
     SCAI_ASSERT(this->getNumParameter() >= 5, "Number of source parameters < 5. Cannot generate signals. ");
@@ -149,7 +149,7 @@ void KITGPI::Acquisition::Sources<ValueType>::checkRequiredNumParameter(IndexTyp
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, lama::DenseMatrix<ValueType> acquisition, dmemo::DistributionPtr dist_wavefield_traces, hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, scai::lama::DenseMatrix<ValueType> acquisition, scai::dmemo::DistributionPtr dist_wavefield_traces, scai::hmemo::ContextPtr ctx)
 {
     /* Allocate source parameter vectors on all processes */
     wavelet_type.allocate(numTracesGlobal);
@@ -232,7 +232,7 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string 
  \param ctx context
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, dmemo::DistributionPtr dist_traces, hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx)
 {
     SCAI_ASSERT_DEBUG(NT > 0, "NT<=0");
     if (dist_traces == NULL) {

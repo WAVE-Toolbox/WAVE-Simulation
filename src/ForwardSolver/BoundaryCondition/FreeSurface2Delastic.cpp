@@ -11,7 +11,7 @@ using namespace scai;
  \param Syy Syy wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::apply(lama::Vector &sumHorizonalDerivative, lama::Vector &Sxx, lama::Vector &Syy)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");

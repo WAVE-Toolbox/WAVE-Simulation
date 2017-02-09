@@ -11,7 +11,7 @@ using namespace scai;
  \param v3 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vector &v1, lama::Vector &v2, lama::Vector &v3)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vec
  \param v5 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vector &v1, lama::Vector &v2, lama::Vector &v3, lama::Vector &v4, lama::Vector &v5)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3, scai::lama::Vector &v4, scai::lama::Vector &v5)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -58,7 +58,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(lama::Vec
  \param useFreeSurface Bool if free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n");

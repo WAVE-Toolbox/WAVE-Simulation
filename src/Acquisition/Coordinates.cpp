@@ -134,7 +134,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param dist Distribution of global grid
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(lama::Vector const &coordinatesglobal, hmemo::HArray<IndexType> &localIndices, dmemo::DistributionPtr dist) const
+void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(scai::lama::Vector const &coordinatesglobal, scai::hmemo::HArray<IndexType> &localIndices, scai::dmemo::DistributionPtr dist) const
 {
 
     IndexType n_global = coordinatesglobal.size(); // Number of global entries

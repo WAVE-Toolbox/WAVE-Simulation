@@ -16,7 +16,7 @@ using namespace scai;
  \param Rzz Rzz wavefield (relaxation)
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco<ValueType>::apply(lama::Vector &sumHorizonatlDerivative, lama::Vector &temp, lama::Vector &Sxx, lama::Vector &Syy, lama::Vector &Szz, lama::Vector &Rxx, lama::Vector &Ryy, lama::Vector &Rzz)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco<ValueType>::apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &temp, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz, scai::lama::Vector &Rxx, scai::lama::Vector &Ryy, scai::lama::Vector &Rzz)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");

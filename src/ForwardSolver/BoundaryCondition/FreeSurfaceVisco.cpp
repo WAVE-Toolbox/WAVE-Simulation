@@ -13,7 +13,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, lama::Vector &onePlusLtauP, lama::Vector &onePlusLtauS)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector &onePlusLtauP, scai::lama::Vector &onePlusLtauS)
 {
 
     lama::Vector const &pWaveModulus = model.getPWaveModulus();
@@ -73,7 +73,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the free surface...\n");
