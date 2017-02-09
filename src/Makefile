@@ -8,9 +8,6 @@ CODECOVERAGE=OFF
 IFLAGSTEST = -I${GTEST_DIR}/include
 LDFLAGSTEST = -L${GTEST_DIR}/ -lgtest -lgtest_main
 CFLAGSTEST = -isystem -pthread 
-ifeq ($(CODECOVERAGE),ON)
-	CFLAGSTEST += -fprofile-arcs -ftest-coverage -fPIC -O0
-endif
 
 
 all: SOFI tests
