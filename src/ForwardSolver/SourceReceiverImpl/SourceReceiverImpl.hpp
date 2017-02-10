@@ -3,10 +3,9 @@
 #include <scai/lama.hpp>
 
 #include "../../Acquisition/Acquisition.hpp"
-#include "../../Acquisition/Receivers.hpp"
+#include "../../Acquisition/AcquisitionGeometry.hpp"
 #include "../../Acquisition/Seismogram.hpp"
 #include "../../Acquisition/SeismogramHandler.hpp"
-#include "../../Acquisition/Sources.hpp"
 
 #include "../../Modelparameter/Modelparameter.hpp"
 #include "../../Wavefields/Wavefields.hpp"
@@ -28,7 +27,7 @@ namespace KITGPI
               public:
                 //! Default constructor
                 SourceReceiverImpl() = delete;
-                explicit SourceReceiverImpl(Acquisition::Sources<ValueType> const &sourcesIN, Acquisition::Receivers<ValueType> &receiversIN, Wavefields::Wavefields<ValueType> &wavefieldIN);
+                explicit SourceReceiverImpl(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
                 //! Default destructor
                 ~SourceReceiverImpl(){};
 

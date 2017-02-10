@@ -9,16 +9,9 @@
 
 #include "ForwardSolver.hpp"
 
-#include "../Acquisition/Receivers.hpp"
-#include "../Acquisition/Seismogram.hpp"
-#include "../Acquisition/Sources.hpp"
-
-#include "../Modelparameter/Modelparameter.hpp"
-#include "../Wavefields/Wavefields.hpp"
 #include "BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPML2D.hpp"
 #include "BoundaryCondition/FreeSurface2Dvisco.hpp"
-#include "Derivatives/Derivatives.hpp"
 #include "SourceReceiverImpl/FDTD2Delastic.hpp"
 
 namespace KITGPI
@@ -39,7 +32,7 @@ namespace KITGPI
             //! Default destructor
             ~FD2Dvisco(){};
 
-            void run(Acquisition::Receivers<ValueType> &receiver, Acquisition::Sources<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 

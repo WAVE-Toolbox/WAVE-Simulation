@@ -3,8 +3,7 @@
 #include <scai/dmemo.hpp>
 #include <scai/hmemo.hpp>
 
-#include "../Acquisition/Receivers.hpp"
-#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/AcquisitionGeometry.hpp"
 
 #include "../Common/HostPrint.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
@@ -44,7 +43,7 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::Receivers<ValueType> &receiver, Acquisition::Sources<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) = 0;
 
             /*! \brief Initialitation of the boundary conditions
              *

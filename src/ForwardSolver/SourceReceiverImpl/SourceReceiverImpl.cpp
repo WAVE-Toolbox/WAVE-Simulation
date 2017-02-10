@@ -3,20 +3,20 @@ using namespace scai;
 
 /*! \brief default methode  for Source-Reciever Implementation.
  *
- \param sourcesIN Sources
- \param receiversIN Recievers
+ \param sourceConfig Sources
+ \param receiverConfig Recievers
  \param wavefieldIN Wavefield
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImpl(Acquisition::Sources<ValueType> const &sourcesIN, Acquisition::Receivers<ValueType> &receiversIN, Wavefields::Wavefields<ValueType> &wavefieldIN)
-    : wavefield(wavefieldIN), sources(sourcesIN.getSeismogramHandler()), receivers(receiversIN.getSeismogramHandler())
+KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImpl(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN)
+    : wavefield(wavefieldIN), sources(sourceConfig.getSeismogramHandler()), receivers(receiverConfig.getSeismogramHandler())
 {
 
     // Set source coordinate to receiver seismogram handler
     if (sources.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
-        lama::Scalar temp = sourcesIN.getCoordinates().getValue(0);
+        lama::Scalar temp = sourceConfig.getCoordinates().getValue(0);
         receivers.setSourceCoordinate(temp.getValue<IndexType>());
     } else {
         /* If more than one source is injected at the same time, the source coordinate is

@@ -1,14 +1,6 @@
-
 #pragma once
 
 #include <scai/lama.hpp>
-
-#include "../../Acquisition/Acquisition.hpp"
-#include "../../Acquisition/Seismogram.hpp"
-#include "../../Acquisition/SeismogramHandler.hpp"
-
-#include "../../Modelparameter/Modelparameter.hpp"
-#include "../../Wavefields/Wavefields.hpp"
 
 #include "FDTDacoustic.hpp"
 
