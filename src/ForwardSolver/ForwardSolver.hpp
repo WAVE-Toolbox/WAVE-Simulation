@@ -1,8 +1,9 @@
 
 #pragma once
+#include <scai/dmemo.hpp>
+#include <scai/hmemo.hpp>
 
-#include "../Acquisition/Receivers.hpp"
-#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/AcquisitionGeometry.hpp"
 
 #include "../Common/HostPrint.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
@@ -42,7 +43,7 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::Receivers<ValueType> &receiver, Acquisition::Sources<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT) = 0;
 
             /*! \brief Initialitation of the boundary conditions
              *
@@ -52,7 +53,7 @@ namespace KITGPI
              \param dist Distribution of the wave fields
              \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx) = 0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
 
           protected:
             bool useFreeSurface;     //!< Bool if free surface is in use

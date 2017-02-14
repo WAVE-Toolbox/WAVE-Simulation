@@ -9,11 +9,16 @@ data, numrow, numcol =read_Seismogram(filename)
 #Plot Seismogram
 plt.figure(facecolor='white')
 x = np.arange(0,numrow,1)
+filling = False
 
 for i in range(numcol):
     yi = data[:,i]
     normalized_yi = yi / yi.max(axis=0) +i+1
-    plt.plot(normalized_yi,x, c='k')
+    if filling:
+        plt.fill_between(x, i+1, normalized_yi, facecolor='black')
+        plt.plot(x,normalized_yi, c='k', linewidth=.5)
+    else:
+        plt.plot(x,normalized_yi, c='k')
 
 #Plot-Style
 plt.title('Normalized traces')

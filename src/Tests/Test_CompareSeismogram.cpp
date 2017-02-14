@@ -4,8 +4,6 @@
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
 
-using namespace KITGPI;
-
 int main(int argc, char *argv[])
 {
     typedef double ValueType;
@@ -17,11 +15,11 @@ int main(int argc, char *argv[])
     }
 
     // read configuration parameter from file
-    Configuration::Configuration config(argv[1]);
+    KITGPI::Configuration::Configuration config(argv[1]);
 
-    lama::DenseMatrix<ValueType> seismo_ref;
-    lama::DenseMatrix<ValueType> seismo_syn;
-    lama::DenseMatrix<ValueType> seismo_residual;
+    scai::lama::DenseMatrix<ValueType> seismo_ref;
+    scai::lama::DenseMatrix<ValueType> seismo_syn;
+    scai::lama::DenseMatrix<ValueType> seismo_residual;
     scai::lama::Scalar L2_scalar = 0.0;
     ValueType L2 = 0.0;
 

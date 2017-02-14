@@ -36,7 +36,7 @@ namespace KITGPI
                  \param DT Temporal Sampling
                  \param DH Distance between grid points
                  */
-                virtual void init(dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) = 0;
 
                 /*! \brief Getter method for active bool
                  *
@@ -50,13 +50,3 @@ namespace KITGPI
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
-
-/*! \brief Getter method for active bool
- *
- *
- */
-template <typename ValueType>
-bool KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType>::getActive() const
-{
-    return (active);
-}

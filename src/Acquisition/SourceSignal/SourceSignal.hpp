@@ -3,8 +3,6 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-using namespace scai;
-
 namespace KITGPI
 {
 
@@ -38,7 +36,7 @@ namespace KITGPI
                  \param AMP Amplitude
                  \param Tshift Time to shift wavelet
                  */
-                virtual void calc(lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) = 0;
+                virtual void calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) = 0;
             };
         }
     }
