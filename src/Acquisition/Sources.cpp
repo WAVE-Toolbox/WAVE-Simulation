@@ -13,8 +13,8 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
     /* Read acquisition matrix */
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
     acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
-	
-    this->init(acquisition_temp,config, ctx, dist_wavefield);
+
+    this->init(acquisition_temp, config, ctx, dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -24,7 +24,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp,Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
@@ -104,7 +104,6 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     /* Cast to IndexType */
     IndexType wavelet_shape_i = wavelet_shape.getLocalValues()[SourceLocal];
 
-    
     switch (wavelet_shape_i) {
     case 1:
         /* Ricker */

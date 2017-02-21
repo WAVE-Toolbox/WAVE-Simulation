@@ -1,8 +1,8 @@
 #pragma once
 
+#include "AcquisitionGeometry.hpp"
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
-#include "AcquisitionGeometry.hpp"
 
 namespace KITGPI
 {
@@ -34,7 +34,7 @@ namespace KITGPI
             //! \brief Default destructor
             ~Receivers(){};
 
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp,Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
           private:
             void checkRequiredNumParameter(IndexType numParameterCheck);
