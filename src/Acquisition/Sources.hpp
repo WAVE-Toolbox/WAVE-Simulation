@@ -39,7 +39,7 @@ namespace KITGPI
             //! \brief Default destructor
             ~Sources(){};
 
-            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp,Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
             void writeSignalsToFileRaw(std::string const &filename) const;
 

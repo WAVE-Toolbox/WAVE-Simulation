@@ -1,4 +1,5 @@
 #include "AcquisitionGeometry.hpp"
+#include "SourceReceiverConfiguration/ReceiversOnBoundaries.hpp"
 using namespace scai;
 
 template <typename ValueType>
@@ -71,24 +72,21 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFile(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NZ > 0, "NX<=0");
-
-    /* Read acquisition matrix */
-    lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(filename);
-
+   
     IndexType nrow_temp = acquisition_temp.getNumRows();
     IndexType ncolumn_temp = acquisition_temp.getNumColumns();
 
     /* Derive number of traces and number of read-in parameters */
     numTracesGlobal = nrow_temp;
     numParameter = ncolumn_temp;
-
+	
+    
     checkRequiredNumParameter(numParameter);
 
     /* Distribution: Master process only (comm->myRank()==0) */
@@ -179,6 +177,8 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFil
 
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
 }
+
+
 
 /*! \brief Getter methode for Distribution.
  *

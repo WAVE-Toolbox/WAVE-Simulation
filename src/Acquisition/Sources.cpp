@@ -1,7 +1,7 @@
 #include "Sources.hpp"
 using namespace scai;
 
-/*! \brief Constructor based on the configuration class and the distribution of the wavefields
+/*! \brief Constructor based on the configuration class and the distribution of the wavefields. This constructor will read the acquistion from the Sourcefile
  *
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
@@ -10,7 +10,11 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
-    this->init(config, ctx, dist_wavefield);
+    /* Read acquisition matrix */
+    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+	
+    this->init(acquisition_temp,config, ctx, dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -20,12 +24,12 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp,Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
-    this->readAcquisitionFromFile(config.get<std::string>("SourceFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
@@ -100,6 +104,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     /* Cast to IndexType */
     IndexType wavelet_shape_i = wavelet_shape.getLocalValues()[SourceLocal];
 
+    
     switch (wavelet_shape_i) {
     case 1:
         /* Ricker */
