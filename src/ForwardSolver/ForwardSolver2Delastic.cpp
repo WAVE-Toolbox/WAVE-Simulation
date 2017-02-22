@@ -124,7 +124,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        vX += update.scale(inverseDensityAverageX);
+	update.scale(inverseDensityAverageX);
+        vX += update;
 
         update = Dxb * Sxy;
         if (useConvPML) {
@@ -135,8 +136,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_syy_y(update_temp);
         }
         update += update_temp;
-
-        vY += update.scale(inverseDensityAverageY);
+	
+	update.scale(inverseDensityAverageY);
+        vY += update;
 
         /* ----------------*/
         /* pressure update */
@@ -155,8 +157,10 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         Sxx += update;
         Syy += update;
 
-        Sxx -= 2.0 * vyy.scale(sWaveModulus);
-        Syy -= 2.0 * vxx.scale(sWaveModulus);
+	vyy.scale(sWaveModulus);
+        Sxx -= 2.0 * vyy;
+	vxx.scale(sWaveModulus);
+        Syy -= 2.0 * vxx;
 
         update = DyfPressure * vX;
         if (useConvPML) {
@@ -169,7 +173,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        Sxy += update.scale(sWaveModulusAverageXY);
+	update.scale(sWaveModulusAverageXY);
+        Sxy += update;
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {

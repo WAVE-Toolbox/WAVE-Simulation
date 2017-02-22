@@ -98,13 +98,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         if (useConvPML) {
             ConvPML.apply_p_x(update);
         }
-        vX += update.scale(inverseDensityAverageX);
+        update.scale(inverseDensityAverageX);
+        vX += update;
 
         update = Dyf * p;
         if (useConvPML) {
             ConvPML.apply_p_y(update);
         }
-        vY += update.scale(inverseDensityAverageY);
+        update.scale(inverseDensityAverageY);
+        vY += update;
 
         /* pressure update */
         update = Dxb * vX;
@@ -117,8 +119,9 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
             ConvPML.apply_vyy(update_temp);
         }
         update += update_temp;
-
-        p += update.scale(pWaveModulus);
+	
+	update.scale(pWaveModulus);
+        p += update;
 
         /* Apply free surface to pressure update */
         if (useFreeSurface) {
