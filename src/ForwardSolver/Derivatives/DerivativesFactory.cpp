@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "DerivativesFactory.hpp"
 using namespace scai;
 
 template <typename ValueType>

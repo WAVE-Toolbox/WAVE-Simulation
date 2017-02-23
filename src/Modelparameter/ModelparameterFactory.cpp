@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "ModelparameterFactory.hpp"
 
 template <typename ValueType>
 typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KITGPI::Modelparameter::Factory<ValueType>::Create(std::string type)

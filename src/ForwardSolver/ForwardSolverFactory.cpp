@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "ForwardSolverFactory.hpp"
 
 template <typename ValueType>
 typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGPI::ForwardSolver::Factory<ValueType>::Create(std::string dimension, std::string type)

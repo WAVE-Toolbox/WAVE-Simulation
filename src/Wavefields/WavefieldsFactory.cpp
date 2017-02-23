@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "WavefieldsFactory.hpp"
 
 using namespace scai;
 

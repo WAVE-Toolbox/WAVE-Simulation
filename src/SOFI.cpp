@@ -15,10 +15,10 @@
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
-#include "ForwardSolver/Derivatives/Factory.hpp"
-#include "ForwardSolver/Factory.hpp"
-#include "Modelparameter/Factory.hpp"
-#include "Wavefields/Factory.hpp"
+#include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
+#include "ForwardSolver/ForwardSolverFactory.hpp"
+#include "Modelparameter/ModelparameterFactory.hpp"
+#include "Wavefields/WavefieldsFactory.hpp"
 
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
