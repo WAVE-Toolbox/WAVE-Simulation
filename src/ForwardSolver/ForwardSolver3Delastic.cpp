@@ -140,7 +140,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxz_z(update_temp);
         }
         update += update_temp;
-        vX += update.scale(inverseDensityAverageX);
+	update.scale(inverseDensityAverageX);
+        vX += update;
 
         update = Dxb * Sxy;
         if (useConvPML) {
@@ -159,7 +160,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        vY += update.scale(inverseDensityAverageY);
+	update.scale(inverseDensityAverageY);
+        vY += update;
 
         update = Dxb * Sxz;
         if (useConvPML) {
@@ -178,7 +180,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        vZ += update.scale(inverseDensityAverageZ);
+	update.scale(inverseDensityAverageZ);
+        vZ += update;
 
         /* ----------------*/
         /* pressure update */
@@ -202,11 +205,14 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         Szz += update;
 
         update = vyy + vzz;
-        Sxx -= 2.0 * update.scale(sWaveModulus);
+	update.scale(sWaveModulus);
+        Sxx -= 2.0 * update;
         update = vxx + vzz;
-        Syy -= 2.0 * update.scale(sWaveModulus);
+	update.scale(sWaveModulus);
+        Syy -= 2.0 * update;
         update = vxx + vyy;
-        Szz -= 2.0 * update.scale(sWaveModulus);
+	update.scale(sWaveModulus);
+        Szz -= 2.0 * update;
 
         update = DyfPressure * vX;
         if (useConvPML) {
@@ -217,7 +223,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_vyx(update_temp);
         }
         update += update_temp;
-        Sxy += update.scale(sWaveModulusAverageXY);
+	update.scale(sWaveModulusAverageXY);
+        Sxy += update;
 
         update = Dzf * vX;
         if (useConvPML) {
@@ -229,7 +236,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        Sxz += update.scale(sWaveModulusAverageXZ);
+	update.scale(sWaveModulusAverageXZ);
+        Sxz += update;
 
         update = Dzf * vY;
         if (useConvPML) {
@@ -240,7 +248,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_vzy(update_temp);
         }
         update += update_temp;
-        Syz += update.scale(sWaveModulusAverageYZ);
+	update.scale(sWaveModulusAverageYZ);
+        Syz += update;
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {

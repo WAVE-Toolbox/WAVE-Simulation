@@ -172,7 +172,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-        vX += update.scale(inverseDensityAverageX);
+	update.scale(inverseDensityAverageX);
+        vX += update;
 
         update = Dxb * Sxy;
         if (useConvPML) {
@@ -191,7 +192,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-        vY += update.scale(inverseDensityAverageY);
+	update.scale(inverseDensityAverageY);
+        vY += update;
 
         update = Dxb * Sxz;
         if (useConvPML) {
@@ -210,7 +212,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-        vZ += update.scale(inverseDensityAverageZ);
+	update.scale(inverseDensityAverageZ);
+        vZ += update;
 
         /* ----------------*/
         /* pressure update */
@@ -256,8 +259,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-        Rxx += update2.scale(tauS);
-        Sxx -= update.scale(onePlusLtauS);
+	update2.scale(tauS);
+        Rxx += update2;
+	update.scale(onePlusLtauS);
+        Sxx -= update;
 
         Rxx *= viscoCoeff2;
         Sxx += DThalf * Rxx;
@@ -268,8 +273,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-        Ryy += update2.scale(tauS);
-        Syy -= update.scale(onePlusLtauS);
+	update2.scale(tauS);
+        Ryy += update2;
+	update.scale(onePlusLtauS);
+        Syy -= update;
 
         Ryy *= viscoCoeff2;
         Syy += DThalf * Ryy;
@@ -280,8 +287,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-        Rzz += update2.scale(tauS);
-        Szz -= update.scale(onePlusLtauS);
+	update2.scale(tauS);
+        Rzz += update2;
+	update.scale(onePlusLtauS);
+        Szz -= update;
 
         Rzz *= viscoCoeff2;
         Szz += DThalf * Rzz;
@@ -303,8 +312,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageXY);
 
         update2 = inverseRelaxationTime * update;
-        Rxy -= update2.scale(tauSAverageXY);
-        Sxy += update.scale(onePlusLtauS);
+	update2.scale(tauSAverageXY);
+        Rxy -= update2;
+	update.scale(onePlusLtauS);
+        Sxy += update;
 
         Rxy *= viscoCoeff2;
         Sxy += DThalf * Rxy;
@@ -327,8 +338,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageXZ);
 
         update2 = inverseRelaxationTime * update;
-        Rxz -= update2.scale(tauSAverageXZ);
-        Sxz += update.scale(onePlusLtauS);
+	update2.scale(tauSAverageXZ);
+        Rxz -= update2;
+	update.scale(onePlusLtauS);
+        Sxz += update;
 
         Rxz *= viscoCoeff2;
         Sxz += DThalf * Rxz;
@@ -350,8 +363,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageYZ);
 
         update2 = inverseRelaxationTime * update;
-        Ryz -= update2.scale(tauSAverageYZ);
-        Syz += update.scale(onePlusLtauS);
+	update2.scale(tauSAverageYZ);
+        Ryz -= update2;
+	update.scale(onePlusLtauS);
+        Syz += update;
 
         Ryz *= viscoCoeff2;
         Syz += DThalf * Ryz;
