@@ -103,8 +103,20 @@ int main(int argc, char *argv[])
 
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
-    solver->run(receivers, sources, *model, *wavefields, *derivatives, getNT, config.get<ValueType>("DT"));
 
+    HOST_PRINT(comm, "Start time stepping\n"
+                         << "Total Number of time steps: " << getNT << "\n");
+    start_t = common::Walltime::get();
+
+    /* Start and end counter for time stepping */
+    IndexType tStart=0;
+    IndexType tEnd=getNT;
+    
+    solver->run(receivers, sources, *model, *wavefields, *derivatives,tStart, tEnd, config.get<ValueType>("DT"));
+
+    end_t = common::Walltime::get();
+    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+    
     receivers.getSeismogramHandler().write(config);
 
     return 0;

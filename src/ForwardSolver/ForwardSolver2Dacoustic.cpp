@@ -33,25 +33,26 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(C
     }
 }
 
-/*! \brief Running the 3-D acoustic foward solver
+/*! \brief Running the 2-D acoustic foward solver
  *
- * Start the 3-D forward solver as defined by the given parameters
+ * Start the 2-D forward solver as defined by the given parameters
  *
  \param receiver Configuration of the receivers
  \param sources Configuration of the sources
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param NT Total number of time steps
+ \param tStart Counter start in for loop over time steps
+ \param tEnd Counter end  in for loop over time steps
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
 {
 
     SCAI_REGION("timestep")
 
-    SCAI_ASSERT_ERROR(NT > 1, " Number of time steps has to be greater than zero. ");
+    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
     lama::Vector const &inverseDensity = model.getInverseDensity();
@@ -84,13 +85,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     /* Start runtime critical part             */
     /* --------------------------------------- */
 
-    HOST_PRINT(comm, "Start time stepping\n");
-    ValueType start_t = common::Walltime::get();
-
-    for (IndexType t = 0; t < NT; t++) {
+    for (IndexType t = tStart; t < tEnd; t++) {
 
         if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << " from " << NT << "\n");
+            HOST_PRINT(comm, "Calculating time step " << t << "\n");
         }
 
         /* update velocity */
@@ -119,8 +117,8 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
             ConvPML.apply_vyy(update_temp);
         }
         update += update_temp;
-	
-	update.scale(pWaveModulus);
+
+        update.scale(pWaveModulus);
         p += update;
 
         /* Apply free surface to pressure update */
@@ -137,8 +135,6 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
     }
-    ValueType end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Stop runtime critical part             */

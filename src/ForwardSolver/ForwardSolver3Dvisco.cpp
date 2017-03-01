@@ -42,16 +42,17 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param NT Total number of time steps
+ \param tStart Counter start in for loop over time steps
+ \param tEnd Counter end  in for loop over time steps
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType DT)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType DT)
 {
 
     SCAI_REGION("timestep")
 
-    SCAI_ASSERT_ERROR(NT > 0, " Number of time steps has to be greater than zero. ");
+    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
     lama::Vector const &inverseDensity = model.getInverseDensity();
@@ -144,12 +145,10 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     /* Start runtime critical part             */
     /* --------------------------------------- */
 
-    HOST_PRINT(comm, "Start time stepping\n");
-    ValueType start_t = common::Walltime::get();
-    for (IndexType t = 0; t < NT; t++) {
+    for (IndexType t = tStart; t < tEnd; t++) {
 
         if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << " from " << NT << "\n");
+            HOST_PRINT(comm, "Calculating time step " << t << "\n");
         }
 
         /* ----------------*/
@@ -172,7 +171,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-	update.scale(inverseDensityAverageX);
+        update.scale(inverseDensityAverageX);
         vX += update;
 
         update = Dxb * Sxy;
@@ -192,7 +191,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-	update.scale(inverseDensityAverageY);
+        update.scale(inverseDensityAverageY);
         vY += update;
 
         update = Dxb * Sxz;
@@ -212,7 +211,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         }
         update += update_temp;
 
-	update.scale(inverseDensityAverageZ);
+        update.scale(inverseDensityAverageZ);
         vZ += update;
 
         /* ----------------*/
@@ -259,9 +258,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauS);
+        update2.scale(tauS);
         Rxx += update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Sxx -= update;
 
         Rxx *= viscoCoeff2;
@@ -273,9 +272,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauS);
+        update2.scale(tauS);
         Ryy += update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Syy -= update;
 
         Ryy *= viscoCoeff2;
@@ -287,9 +286,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update *= 2.0;
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauS);
+        update2.scale(tauS);
         Rzz += update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Szz -= update;
 
         Rzz *= viscoCoeff2;
@@ -312,9 +311,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageXY);
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauSAverageXY);
+        update2.scale(tauSAverageXY);
         Rxy -= update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Sxy += update;
 
         Rxy *= viscoCoeff2;
@@ -338,9 +337,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageXZ);
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauSAverageXZ);
+        update2.scale(tauSAverageXZ);
         Rxz -= update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Sxz += update;
 
         Rxz *= viscoCoeff2;
@@ -363,9 +362,9 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         update.scale(sWaveModulusAverageYZ);
 
         update2 = inverseRelaxationTime * update;
-	update2.scale(tauSAverageYZ);
+        update2.scale(tauSAverageYZ);
         Ryz -= update2;
-	update.scale(onePlusLtauS);
+        update.scale(onePlusLtauS);
         Syz += update;
 
         Ryz *= viscoCoeff2;
@@ -386,8 +385,6 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
     }
-    ValueType end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Stop runtime critical part             */
