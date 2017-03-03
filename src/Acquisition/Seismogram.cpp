@@ -556,5 +556,82 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
     }
 }
 
+/*! \brief Overloading * Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*(scai::lama::Scalar rhs)
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result;
+    result.data = this->data * rhs;
+    return result;
+}
+
+/*! \brief free function to multiply
+ *
+ \param lhs Scalar factor with which the vectors are multiplied.
+ \param rhs Vector
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    return rhs * lhs;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar rhs)
+{
+    return rhs * *this;
+}
+
+/*! \brief Overloading + Operation
+ *
+ \param rhs Model which is added.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result;
+    result.data = this->data + rhs.data;
+    return result;
+}
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is added.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    return *this + rhs;
+}
+
+/*! \brief Overloading - Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result;
+    result.data = this->data - rhs.data;
+    return result;
+}
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    return *this - rhs;
+}
+
 template class KITGPI::Acquisition::Seismogram<double>;
 template class KITGPI::Acquisition::Seismogram<float>;

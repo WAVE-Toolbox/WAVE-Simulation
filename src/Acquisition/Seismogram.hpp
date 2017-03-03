@@ -62,6 +62,14 @@ namespace KITGPI
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<IndexType> const &coord);
 
+            /* Overloading Operators */
+            KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;
 
