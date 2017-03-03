@@ -1,6 +1,20 @@
 #include "Seismogram.hpp"
 using namespace scai;
 
+//! \brief Copy constructor
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
+{
+    numSamples = rhs.numSamples;
+    numTracesGlobal = rhs.numTracesGlobal;
+    numTracesLocal = rhs.numTracesLocal;
+    DT = rhs.DT;
+    type = rhs.type;
+    coordinates = rhs.coordinates;
+    sourceCoordinate = rhs.sourceCoordinate;
+    data = rhs.data;
+}
+
 //! \brief Adding ending to the seismogram-filename-string
 /*!
  *

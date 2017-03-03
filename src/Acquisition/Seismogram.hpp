@@ -32,6 +32,9 @@ namespace KITGPI
             //! Default destructor
             ~Seismogram(){};
 
+            //! Copy Constructor.
+            Seismogram(const Seismogram &rhs);
+
             void write(Configuration::Configuration const &config) const;
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
