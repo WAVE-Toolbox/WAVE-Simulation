@@ -72,6 +72,7 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
             KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs);
             KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs);
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;

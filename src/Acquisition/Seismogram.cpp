@@ -647,5 +647,26 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
     return *this - rhs;
 }
 
+/*! \brief Overloading copy assignment operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs)
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result;
+    
+    result.numSamples = rhs.numSamples;
+    result.numTracesGlobal = rhs.numTracesGlobal;
+    result.numTracesLocal = rhs.numTracesLocal;
+    result.DT = rhs.DT;
+    result.type = rhs.type;
+    result.coordinates = rhs.coordinates;
+    result.sourceCoordinate = rhs.sourceCoordinate;
+    result.data = rhs.data;
+    
+    return result;
+}
+
 template class KITGPI::Acquisition::Seismogram<double>;
 template class KITGPI::Acquisition::Seismogram<float>;
