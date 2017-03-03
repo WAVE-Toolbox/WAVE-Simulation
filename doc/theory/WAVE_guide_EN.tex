@@ -1010,6 +1010,8 @@ Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/src/}
 
 You can compile the source code by simply entering: \\\shellcmdline{make SOFI}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CC=<yourCompiler> SOFI}
 
+To compile the program on more than one CPU add \shellcmd{-j <numberCPUs>} to the \shellcmd{make} command.
+
 The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
 
 To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{FDSimulation\_LAMA/doc/} and run the command \shellcmd{make}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{doc/html/} and \shellcmd{doc/latex/}.
@@ -1144,8 +1146,8 @@ To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/s
 
 The executable file is located in the directory:
 \\\shellcmdline{FDSimulation\_LAMA/bin/Tests/}\\
-To execute the unit-tests run the \shellcmd{Test\_Unit} file by entering:
-\\\shellcmdline{./Test\_Unit}\\ 
+To execute the unit-tests change to the \shellcmd{/par} folder and run the \shellcmd{Test\_unit} file by entering:
+\\\shellcmdline{./../bin/Tests/Test\_unit}\\ 
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}

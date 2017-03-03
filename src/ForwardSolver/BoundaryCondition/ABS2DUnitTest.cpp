@@ -17,7 +17,7 @@ TEST(ABS2DTest, TestApplyThrows)
     
     ForwardSolver::BoundaryCondition::ABS2D<double> test;
     
-    EXPECT_ANY_THROW(test.apply(testVector, testVector, testVector));
-    EXPECT_ANY_THROW(test.apply(testVector, testVector, testVector, testVector, testVector));
+    ASSERT_ANY_THROW(test.apply(testVector, testVector, testVector));
+    ASSERT_ANY_THROW(test.apply(testVector, testVector, testVector, testVector, testVector));
     
 }
