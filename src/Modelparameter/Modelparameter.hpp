@@ -12,9 +12,9 @@
 
 #include <scai/dmemo/BlockDistribution.hpp>
 
+#include <scai/hmemo/HArray.hpp>
 #include <scai/hmemo/ReadAccess.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
-#include <scai/hmemo/HArray.hpp>
 
 #include <scai/tracing.hpp>
 
@@ -24,140 +24,239 @@
 
 #include <iostream>
 
-namespace KITGPI {
-    
+#include "../Common/HostPrint.hpp"
+#include "../Configuration/Configuration.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
+
+namespace KITGPI
+{
+
     //! \brief Modelparameter namespace
-    namespace Modelparameter {
-        
-        //! Abstract class for a single Modelparameter (Subsurface properties)
+    namespace Modelparameter
+    {
+
+        //! \brief Abstract class for a single Modelparameter (Subsurface properties)
         /*!
          * This class handels a single modelparameter.
          * As this class is an abstract class, all constructors are protected.
          */
-        template<typename ValueType>
+        template <typename ValueType>
         class Modelparameter
         {
-            
-        public:
-            
+          public:
             //! Default constructor.
-            Modelparameter(){};
-            
+            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagModulus(true), dirtyFlagAveraging(true), dirtyFlagVelocity(true), parametrisation(0), numRelaxationMechanisms(0){};
+
             //! Default destructor.
             ~Modelparameter(){};
-            
-            /*! \brief Abstract initialisation function
-             *
+
+            //! \brief Modelparameter pointer
+            typedef std::shared_ptr<Modelparameter<ValueType>> ModelparameterPtr;
+
+            /*! \brief Abstract initialization function
              * Standard initialisation function
-             *
              \param ctx Context
              \param dist Distribution
              \param filename filename to read modelparameters (endings will be added by derived classes)
+             \param partitionedIn Partitioned input
              */
-            virtual void init(hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)=0;
-            
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) = 0;
+
+            /*! \brief Abstract initialisation function
+             * Standard initialisation function
+             \param config Configuration from configuration file
+             \param ctx Context
+             \param dist Distribution
+             */
+            virtual void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+
             /*! \brief Abstract write function
              *
              * Standard write function
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
+             \param partitionedOut Partitioned output
              */
-            virtual void write(std::string filename)=0;
-            
-            //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>& getDensity()=0;
-            //! \brief Get referenec to density model parameter
-            virtual lama::DenseVector<ValueType>& getInverseDensity()=0;
-            //! \brief Get referenec to first Lame model parameter
-            virtual lama::DenseVector<ValueType>& getM()=0;
-            //! \brief Get referenec to P-wave velocity
-            virtual lama::DenseVector<ValueType>& getVelocityP()=0;
-            //! \brief Get referenec to S-wave velocity
-            virtual lama::DenseVector<ValueType>& getVelocityS()=0;
-            
-        protected:
-            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value);
-            void initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename);
-            
-            void writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
-            
-            
-        private:
-            void allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            
-            void readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename);
+            virtual void write(std::string filename, IndexType partitionedOut) const = 0;
+
+            virtual scai::lama::Vector const &getDensity();
+            virtual scai::lama::Vector const &getDensity() const;
+            virtual scai::lama::Vector const &getInverseDensity();
+            virtual scai::lama::Vector const &getInverseDensity() const;
+            virtual scai::lama::Vector const &getPWaveModulus();
+            virtual scai::lama::Vector const &getPWaveModulus() const;
+            virtual scai::lama::Vector const &getSWaveModulus();
+            virtual scai::lama::Vector const &getSWaveModulus() const;
+            virtual scai::lama::Vector const &getVelocityP();
+            virtual scai::lama::Vector const &getVelocityP() const;
+            virtual scai::lama::Vector const &getVelocityS();
+            virtual scai::lama::Vector const &getVelocityS() const;
+
+            virtual scai::lama::Vector const &getTauP();
+            virtual scai::lama::Vector const &getTauP() const;
+            virtual scai::lama::Vector const &getTauS();
+            virtual scai::lama::Vector const &getTauS() const;
+
+            virtual IndexType getNumRelaxationMechanisms() const;
+            virtual ValueType getRelaxationFrequency() const;
+
+            /*! \brief Prepare the model parameters for modelling */
+            virtual void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
+
+            virtual scai::lama::Vector const &getInverseDensityAverageX();
+            virtual scai::lama::Vector const &getInverseDensityAverageX() const;
+            virtual scai::lama::Vector const &getInverseDensityAverageY();
+            virtual scai::lama::Vector const &getInverseDensityAverageY() const;
+            virtual scai::lama::Vector const &getInverseDensityAverageZ();
+            virtual scai::lama::Vector const &getInverseDensityAverageZ() const;
+            virtual scai::lama::Vector const &getSWaveModulusAverageXY();
+            virtual scai::lama::Vector const &getSWaveModulusAverageXY() const;
+            virtual scai::lama::Vector const &getSWaveModulusAverageXZ();
+            virtual scai::lama::Vector const &getSWaveModulusAverageXZ() const;
+            virtual scai::lama::Vector const &getSWaveModulusAverageYZ();
+            virtual scai::lama::Vector const &getSWaveModulusAverageYZ() const;
+            virtual scai::lama::Vector const &getTauSAverageXY();
+            virtual scai::lama::Vector const &getTauSAverageXY() const;
+            virtual scai::lama::Vector const &getTauSAverageXZ();
+            virtual scai::lama::Vector const &getTauSAverageXZ() const;
+            virtual scai::lama::Vector const &getTauSAverageYZ();
+            virtual scai::lama::Vector const &getTauSAverageYZ() const;
+
+          protected:
+            bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
+            bool dirtyFlagModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date
+            bool dirtyFlagVelocity;       //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            IndexType parametrisation;    //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
+
+            IndexType PartitionedIn;  //!< ==1 If Module is read from partitioned fileblock; ==0 if module is in single files
+            IndexType PartitionedOut; //!< ==1 If Module is written to partitioned fileblock; ==0 if module is written to single files
+
+            scai::lama::DenseVector<ValueType> pWaveModulus;   //!< Vector storing P-wave modulus.
+            scai::lama::DenseVector<ValueType> sWaveModulus;   //!< Vector storing S-wave modulus.
+            scai::lama::DenseVector<ValueType> density;        //!< Vector storing Density.
+            scai::lama::DenseVector<ValueType> inverseDensity; //!< Vector storing inverted density.
+
+            scai::lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
+            scai::lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
+
+            scai::lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for visco-elastic modelling.
+            scai::lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for visco-elastic modelling.
+
+            scai::lama::DenseVector<ValueType> inverseDensityAverageX; //!< Vector storing inverse averaged density in x-direction.
+            scai::lama::DenseVector<ValueType> inverseDensityAverageY; //!< Vector storing inverse averaged density in y-direction.
+            scai::lama::DenseVector<ValueType> inverseDensityAverageZ; //!< Vector storing inverse averaged density in z-direction.
+
+            scai::lama::DenseVector<ValueType> sWaveModulusAverageXY; //!< Vector storing averaged s-wave modulus in xy-plan.
+            scai::lama::DenseVector<ValueType> sWaveModulusAverageXZ; //!< Vector storing averaged s-wave modulus in xz-plan.
+            scai::lama::DenseVector<ValueType> sWaveModulusAverageYZ; //!< Vector storing averaged s-wave modulus in yz-plan.
+
+            scai::lama::DenseVector<ValueType> tauSAverageXY; //!< Vector storing averaged s-wave modulus in xy-plan.
+            scai::lama::DenseVector<ValueType> tauSAverageXZ; //!< Vector storing averaged s-wave modulus in xz-plan.
+            scai::lama::DenseVector<ValueType> tauSAverageYZ; //!< Vector storing averaged s-wave modulus in yz-plan.
+
+            IndexType numRelaxationMechanisms; //!< Number of relaxation mechanisms
+            ValueType relaxationFrequency;     //!< Relaxation Frequency
+
+            void initModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar value);
+            void initModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
+
+            void writeModelparameter(scai::lama::Vector const &vector, std::string filename, IndexType partitionedOut) const;
+
+            void calcModuleFromVelocity(scai::lama::Vector &vecVelocity, scai::lama::Vector &vecDensity, scai::lama::Vector &vectorModule);
+
+            void calcVelocityFromModule(scai::lama::Vector &vectorModule, scai::lama::Vector &vecV, scai::lama::Vector &vecDensity);
+
+            /*! \brief Switch parameterization to velocity */
+            virtual void switch2velocity() = 0;
+            /*! \brief Switch parameterization to modulus */
+            virtual void switch2modulus() = 0;
+
+            /*! \brief Refresh module if they are dirty */
+            virtual void refreshModule() = 0;
+
+            /*! \brief Refresh velocities if they are dirty */
+            virtual void refreshVelocity() = 0;
+
+            /*! \brief Calculate Averaging if they are required */
+            virtual void calculateAveraging() = 0;
+
+            IndexType getParametrisation();
+            IndexType getPartitionedIn();
+            IndexType getPartitionedOut();
+            //! \brief Initializsation of the aneraging matrices
+            /*!
+             *
+             \param dist Distribution of the wavefield
+             \param ctx Context
+             \param NX Total number of grid points in X
+             \param NY Total number of grid points in Y
+             \param NZ Total number of grid points in Z
+             \param DH Grid spacing (equidistant)
+             \param DT Temporal sampling interval
+             \param comm Communicator
+             */
+            virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) = 0;
+
+            void calcDensityAverageMatrixX(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixY(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+
+            void calcSWaveModulusAverageMatrixXY(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixXZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixYZ(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+
+            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
+            SparseFormat DensityAverageMatrixX;                          //!< Averaging density matrix in x-direction
+            SparseFormat DensityAverageMatrixY;                          //!< Averaging density matrix in x-direction
+            SparseFormat DensityAverageMatrixZ;                          //!< Averaging density matrix in x-direction
+            SparseFormat sWaveModulusAverageMatrixXY;                    //!< Average S-wave Modulus in xy-plane
+            SparseFormat sWaveModulusAverageMatrixXZ;                    //!< Average S-wave Modulus in xz-plane
+            SparseFormat sWaveModulusAverageMatrixYZ;                    //!< Average S-wave Modulus in yz-plane
+
+            void calculateInverseAveragedDensity(scai::lama::Vector &vecDensity, scai::lama::Vector &vecInverseAvDensity, scai::lama::Matrix &avDensityMatrix);
+            void calculateAveragedSWaveModulus(scai::lama::Vector &vecSWaveModulus, scai::lama::Vector &vecAvSWaveModulus, scai::lama::Matrix &avSWaveModulusMatrix);
+            void calculateAveragedTauS(scai::lama::Vector &vecTauS, scai::lama::Vector &vecAvTauS, scai::lama::Matrix &avTauSMatrix);
+
+          private:
+            void allocateModelparameter(scai::lama::Vector &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+
+            void readModelparameter(scai::lama::Vector &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType partitionedIn);
+
+            typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(IndexType, IndexType &, IndexType &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<ValueType> &, IndexType, IndexType, IndexType); //!< Pointer to set elements functions
+
+            typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType, IndexType, IndexType, IndexType); //!< Pointer to counting elements functions
+
+            //! \brief Getter method for averaging density matrix in x-direction
+            virtual scai::lama::Matrix &getDensityAverageMatrixX();
+            //! \brief Getter method for averaging density matrix in y-direction
+            virtual scai::lama::Matrix &getDensityAverageMatrixY();
+            //! \brief Getter method for averaging density matrix in z-direction
+            virtual scai::lama::Matrix &getDensityAverageMatrixZ();
+
+            //! \brief Getter method for averaging S-Wave modulus xy-plane
+            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixXY();
+            //! \brief Getter method for averaging S-Wave modulus xz-plane
+            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixXZ();
+            //! \brief Getter method for averaging S-Wave modulus yz-plane
+            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixYZ();
+
+            void calcAverageMatrix(scai::lama::Matrix &Av, calcNumberRowElements_AvPtr calcNumberRowElements, setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+
+            IndexType calcNumberRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+            IndexType calcNumberRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+
+            void setRowElements_DensityAverageMatrixX(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_DensityAverageMatrixY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_DensityAverageMatrixZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+
+            void setRowElements_SWaveModulusAverageMatrixXY(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_SWaveModulusAverageMatrixXZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+            void setRowElements_SWaveModulusAverageMatrixYZ(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
         };
     }
 }
-
-/*! \brief Init a single modelparameter by a constant value
- *
- \param vector Singel modelparameter which will be initialized
- \param ctx Context
- \param dist Distribution
- \param value Value which will be used to initialize the single modelparameter to a homogenoeus model
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, lama::Scalar  value)
-{
-    
-    allocateModelparameter(vector,ctx,dist);
-    
-    vector.assign(value);
-    
-}
-
-
-/*! \brief Init a single modelparameter by reading a model from an external file
- *
- *  Reads a single model from an external mtx file.
- \param vector Singel modelparameter which will be initialized
- \param ctx Context
- \param dist Distribution
- \param filename Location of external file which will be read in
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist, std::string filename)
-{
-    
-    allocateModelparameter(vector,ctx,dist);
-    
-    readModelparameter(vector,filename);
-    
-    vector.redistribute(dist);
-    
-    writeModelparameter(vector,filename);
-}
-
-
-/*! \brief Write singe modelparameter to an external file
- *
- *  Write a single model to an external file.
- \param vector Single modelparameter which will be written to filename
- \param filename Name of file in which modelparameter will be written
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
-{
-    vector.writeToFile(filename);
-};
-
-
-/*! \brief Read a modelparameter from file
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(lama::DenseVector<ValueType>& vector, std::string filename)
-{
-    vector.readFromFile(filename);
-};
-
-
-/*! \brief Allocate a single modelparameter
- */
-template<typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
-{
-    vector.setContextPtr(ctx);
-    vector.allocate(dist);
-};
-

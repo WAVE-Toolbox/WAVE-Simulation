@@ -1,31 +1,36 @@
 
 #pragma once
+#include <scai/dmemo.hpp>
+#include <scai/hmemo.hpp>
 
-#include "../Acquisition/Receivers.hpp"
-#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/AcquisitionGeometry.hpp"
 
+#include "../Common/HostPrint.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
-#include "../Derivatives/Derivatives.hpp"
-#include "../Common/HostPrint.hpp"
+#include "Derivatives/Derivatives.hpp"
 
-namespace KITGPI {
-    
+namespace KITGPI
+{
+
     //! \brief ForwardSolver namespace
-    namespace ForwardSolver {
-        
+    namespace ForwardSolver
+    {
+
         //! \brief Abstract class for forward solver
-        template<typename ValueType>
+        template <typename ValueType>
         class ForwardSolver
         {
-        public:
-            
+          public:
+            //! \brief Declare ForwardSolver pointer
+            typedef std::shared_ptr<ForwardSolver<ValueType>> ForwardSolverPtr;
+
             //! Default constructor
-            ForwardSolver(){};
-            
+            ForwardSolver() : useFreeSurface(false), useDampingBoundary(false), useConvPML(false){};
+
             //! Default destructor
             ~ForwardSolver(){};
-            
+
             /*! \brief Running the foward solver
              *
              * Start the forward solver as defined by the given parameters
@@ -36,34 +41,24 @@ namespace KITGPI {
              \param wavefield Wavefields for the modelling
              \param derivatives Derivations matrices to calculate the spatial derivatives
              \param NT Total number of time steps
-             \param comm Communicator
+             \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::Receivers<ValueType>& receiver, Acquisition::Sources<ValueType>& sources, Modelparameter::Modelparameter<ValueType>& model, Wavefields::Wavefields<ValueType>& wavefield, Derivatives::Derivatives<ValueType>& derivatives, IndexType NT, dmemo::CommunicatorPtr comm)=0;
-            
-            
-            /*! \brief Saving seismograms during time stepping
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType TStart, IndexType TEnd, ValueType DT) = 0;
+
+            /*! \brief Initialitation of the boundary conditions
              *
-             * THIS METHOD IS CALLED DURING TIME STEPPING
-             * DO NOT WASTE RUNTIME HERE
              *
-             \param wavefield Wavefields
-             \param NT Total number of time steps
-             \param t Current time step
+             \param config Configuration
+             \param derivatives Derivatives matrices
+             \param dist Distribution of the wave fields
+             \param ctx Context
              */
-            virtual void gatherSeismograms(Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
-            
-            /*! \brief Appling the sources to the wavefield
-             *
-             * THIS METHOD IS CALLED DURING TIME STEPPING
-             * DO NOT WASTE RUNTIME HERE
-             *
-             \param sources Sources to apply
-             \param wavefield Wavefields
-             \param NT Total number of time steps
-             \param t Current time step
-             */
-            virtual void applySource(Acquisition::Sources<ValueType>& sources, Wavefields::Wavefields<ValueType>& wavefield,IndexType NT, IndexType t)=0;
-            
+            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
+
+          protected:
+            bool useFreeSurface;     //!< Bool if free surface is in use
+            bool useDampingBoundary; //!< Bool if damping boundary is in use
+            bool useConvPML;         //!< Bool if CPML is in use
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

@@ -1,10 +1,4 @@
-LANG=DE
-
-ifeq ($(LANG),DE)
-	TARGET=WAVE_theory_DE
-else
-	TARGET=WAVE_theory_EN
-endif
+TARGET=WAVE_guide_EN
 
 .PHONY: install
 install: pdf

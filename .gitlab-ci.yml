@@ -1,40 +1,105 @@
 stages:
     - build
-    - test
+    - unittest
+    - simulation
     
+
 gcc:
   stage: build
   before_script:
     - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`
   script:
     - echo "g++ Version:" && g++ --version
-    - cd src/ && make install CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
+    - cd src/ && make all CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
   artifacts:
     when: on_success
-    expire_in: 10 min
+    expire_in: 30 min
     paths:
       - bin/
 
-openmp-gcc:
-  stage: test
-  dependencies:
-    - gcc
-  script:
-    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
-    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
-    - OMP_NUM_THREADS=4
-    - cd par/
-    - ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
 
-openmpi-gcc:
-  stage: test
+unittest-gcc:
+  stage: unittest
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}:${LD_LIBRARY_PATH}
+    - cd par/
+    - ./../bin/Tests/Test_unit
+
+
+acoustic2D-gcc:
+  stage: simulation
   dependencies:
     - gcc
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
-    - OMP_NUM_THREADS=1
+    - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../bin/SOFI3Dacoustic "ci/configuration_ci.txt"
-    - ./../bin/Tests/Test_SOFI3Dacoustic "ci/configuration_ci.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.acoustic.txt"
+
+acoustic3D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.acoustic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.acoustic.txt"
+
+
+elastic2D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.elastic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.elastic.txt"
+
+elastic3D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.elastic.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.elastic.txt"
+
+
+visco2D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.visco.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.visco.txt"
+
+visco3D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.visco.txt"
+    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.visco.txt"
+

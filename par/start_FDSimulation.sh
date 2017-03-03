@@ -1,4 +1,4 @@
 #!/bin/bash
-rm seismograms/seismogram.mtx
+rm -rf seismograms/seismogram.p.mtx
 export OMP_NUM_THREADS=2
-mpirun -np 2 ./../bin/SOFI3Dacoustic "configuration/configuration.txt"
+mpirun -np 2 ./../bin/SOFI "configuration/configuration.txt"
