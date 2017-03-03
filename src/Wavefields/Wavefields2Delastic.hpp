@@ -49,6 +49,12 @@ namespace KITGPI
             scai::hmemo::ContextPtr getContextPtr() override;
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            
+            /* Overloading Operators */
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
 
           private:
             /* required wavefields */

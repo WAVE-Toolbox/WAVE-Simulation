@@ -39,6 +39,12 @@ namespace KITGPI
             scai::hmemo::ContextPtr getContextPtr() override;
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            
+            /* Overloading Operators */
+            KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
+            KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
 
           private:
             /* required wavefields */
