@@ -109,14 +109,14 @@ int main(int argc, char *argv[])
     start_t = common::Walltime::get();
 
     /* Start and end counter for time stepping */
-    IndexType tStart=0;
-    IndexType tEnd=getNT;
-    
-    solver->run(receivers, sources, *model, *wavefields, *derivatives,tStart, tEnd, config.get<ValueType>("DT"));
+    IndexType tStart = 0;
+    IndexType tEnd = getNT;
+
+    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
 
     end_t = common::Walltime::get();
     HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
-    
+
     receivers.getSeismogramHandler().write(config);
 
     return 0;

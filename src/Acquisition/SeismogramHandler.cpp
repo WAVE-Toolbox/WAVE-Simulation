@@ -182,6 +182,20 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
+//! \brief Setter methode to set Index for trace-normalization.
+/*!
+ *
+ * This method sets the index for trace-normalization.
+ \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setNormalizeTraces(IndexType normalizeTrace)
+{
+    for (auto &i : seismo) {
+        i.setNormalizeTraces(normalizeTrace);
+    }
+}
+
 //! \brief Setter methode to set source coordinate
 /*!
  * This method sets the source coordinate to all handled Seismogram.

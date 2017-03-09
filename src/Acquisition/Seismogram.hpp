@@ -27,7 +27,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), DT(0.0), normalizeTraces(0), type(KITGPI::Acquisition::SeismogramType::P){};
 
             //! Default destructor
             ~Seismogram(){};
@@ -48,10 +48,13 @@ namespace KITGPI
 
             void resetData();
 
+            void normalizeTrace();
+
             /* Getter functions */
             IndexType getNumTracesGlobal() const;
             IndexType getNumTracesLocal() const;
             IndexType getNumSamples() const;
+            IndexType getNormalizeTraces() const;
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
@@ -64,6 +67,7 @@ namespace KITGPI
             void setSourceCoordinate(IndexType sourceCoord);
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<IndexType> const &coord);
+            void setNormalizeTraces(IndexType normalizeTrace);
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar rhs);
@@ -83,6 +87,7 @@ namespace KITGPI
 
             /* header information */
             ValueType DT;                                   //!< Temporal sampling interval in seconds
+            IndexType normalizeTraces;                      //!< L2 Norm of seismogram is calculated
             SeismogramType type;                            //!< Type of trace as #SeismogramType
             scai::lama::DenseVector<IndexType> coordinates; //!< Coordinates of the traces
             IndexType sourceCoordinate;                     //!< Coordinate of source point (in case a single source is used)

@@ -34,6 +34,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
+    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
     generateSignals(NT, config.get<ValueType>("DT"), ctx);

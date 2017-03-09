@@ -30,6 +30,7 @@ namespace KITGPI
 
             void setSourceCoordinate(IndexType sourceCoord);
             void setDT(ValueType newDT);
+            void setNormalizeTraces(IndexType NormalizeTrace);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;

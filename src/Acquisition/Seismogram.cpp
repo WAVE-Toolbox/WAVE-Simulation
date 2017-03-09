@@ -77,6 +77,59 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
     }
 }
 
+//###################################################################################################################################
+
+//! \brief Normalize the seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
+{
+    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+
+    scai::lama::DenseVector<ValueType> tempRow;
+    scai::lama::Scalar tempMax;
+    scai::lama::Scalar tempInverseMax;
+
+    if (normalizeTraces == 1) {
+        for (IndexType i = 0; i < numTracesGlobal; i++) {
+            tempRow.assign(0.0);
+            data.getRow(tempRow, i);
+            tempMax = tempRow.max();
+            tempInverseMax = 1 / tempMax;
+            tempRow *= tempInverseMax;
+            data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
+        }
+    }
+}
+
+//! \brief Setter method for the temporal sampling DT
+/*!
+ *
+ * This method will set the temporal sampling DT to this class.
+ \param newDT Temporal sampling which will be set in seconds
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalizeTrace)
+{
+    SCAI_ASSERT(normalizeTrace >= 0, " L2Norm is smaller zero. ");
+    SCAI_ASSERT(normalizeTrace <= 1, " L2Norm is greater tha 1. ");
+    normalizeTraces = normalizeTrace;
+}
+
+//! \brief Getter method for reference to L2 norm
+/*!
+ *
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
+{
+    return (normalizeTraces);
+}
+
+//###################################################################################################################################
+
 //! \brief Setter method for the temporal sampling DT
 /*!
  *
@@ -655,7 +708,7 @@ template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs)
 {
     KITGPI::Acquisition::Seismogram<ValueType> result;
-    
+
     result.numSamples = rhs.numSamples;
     result.numTracesGlobal = rhs.numTracesGlobal;
     result.numTracesLocal = rhs.numTracesLocal;
@@ -664,7 +717,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
     result.coordinates = rhs.coordinates;
     result.sourceCoordinate = rhs.sourceCoordinate;
     result.data = rhs.data;
-    
+
     return result;
 }
 
