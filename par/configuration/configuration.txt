@@ -66,4 +66,4 @@ SourceFilename=acquisition/sources.mtx         # location of source file
 ReceiverFilename=acquisition/receiver.mtx      # location of receiver file
 SeismogramFilename=seismograms/seismogram.mtx  # target location of seismogram
 SeismogramFormat=1                             # 1=MTX, 2=SU
-normalizeTraces=0                              # 1=Normalize Traces of the seismogram, 0=Not Normalized
+NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized

@@ -16,12 +16,12 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
     }
 }
 
-//! \brief Method to write normalize Seismogram-traces 
+//! \brief Method to write normalize Seismogram-traces
 /*!
  *
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize() 
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
 {
     for (auto &i : seismo) {
         i.getNormalizeTraces();

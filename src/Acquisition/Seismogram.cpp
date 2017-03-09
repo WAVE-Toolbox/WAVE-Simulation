@@ -85,10 +85,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
-    if ( normalizeTraces == 1){
-        
+    if (normalizeTraces == 1) {
+
         SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
-        
+
         scai::lama::DenseVector<ValueType> tempRow;
         scai::lama::Scalar tempMax;
         scai::lama::Scalar tempInverseMax;
@@ -105,7 +105,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
         }
     }
 }
-
 
 //! \brief Setter method for the temporal sampling DT
 /*!
@@ -168,8 +167,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::Dens
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalize)
 {
-    SCAI_ASSERT(normalize >= 0, " L2Norm is smaller zero. ");
-    SCAI_ASSERT(normalize <= 1, " L2Norm is greater tha 1. ");
+    SCAI_ASSERT(normalize >= 0 && normalize <= 1, " Index has to be 1 or 0 ");
     normalizeTraces = normalize;
 }
 
