@@ -77,58 +77,35 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
     }
 }
 
-//###################################################################################################################################
-
 //! \brief Normalize the seismogram-traces
 /*!
  *
+ * This methode normalized the traces of the seismogram after the time stepping.
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
-    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
-
-    scai::lama::DenseVector<ValueType> tempRow;
-    scai::lama::Scalar tempMax;
-    scai::lama::Scalar tempInverseMax;
-
-    if (normalizeTraces == 1) {
-        for (IndexType i = 0; i < numTracesGlobal; i++) {
-            tempRow.assign(0.0);
-            data.getRow(tempRow, i);
-            tempMax = tempRow.max();
-            tempInverseMax = 1 / tempMax;
-            tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
+    if ( normalizeTraces == 1){
+        
+        SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+        
+        scai::lama::DenseVector<ValueType> tempRow;
+        scai::lama::Scalar tempMax;
+        scai::lama::Scalar tempInverseMax;
+        if (normalizeTraces == 1) {
+            for (IndexType i = 0; i < numTracesGlobal; i++) {
+                tempMax = 0.0;
+                tempRow.assign(0.0);
+                data.getRow(tempRow, i);
+                tempMax = tempRow.max();
+                tempInverseMax = 1 / tempMax;
+                tempRow *= tempInverseMax;
+                data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
+            }
         }
     }
 }
 
-//! \brief Setter method for the temporal sampling DT
-/*!
- *
- * This method will set the temporal sampling DT to this class.
- \param newDT Temporal sampling which will be set in seconds
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalizeTrace)
-{
-    SCAI_ASSERT(normalizeTrace >= 0, " L2Norm is smaller zero. ");
-    SCAI_ASSERT(normalizeTrace <= 1, " L2Norm is greater tha 1. ");
-    normalizeTraces = normalizeTrace;
-}
-
-//! \brief Getter method for reference to L2 norm
-/*!
- *
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
-{
-    return (normalizeTraces);
-}
-
-//###################################################################################################################################
 
 //! \brief Setter method for the temporal sampling DT
 /*!
@@ -181,6 +158,20 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::Dens
     SCAI_ASSERT_ERROR(coord.size() == numTracesGlobal, "Given traceType vector has wrong format");
     coordinates = coord;
 };
+
+//! \brief Setter methode to set Index for trace-normalization.
+/*!
+ *
+ * This method sets the index for trace-normalization.
+ \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalize)
+{
+    SCAI_ASSERT(normalize >= 0, " L2Norm is smaller zero. ");
+    SCAI_ASSERT(normalize <= 1, " L2Norm is greater tha 1. ");
+    normalizeTraces = normalize;
+}
 
 //! \brief Getter method for #SeismogramType
 /*!
@@ -353,6 +344,17 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
     if (data.getNumValues() > 0) {
         data.writeToFile(addSeismogramTypeToName(filename));
     }
+}
+
+/*! \brief Getter method for reference normalization index
+ *
+ *
+ \return NormalizeTraces Index 
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
+{
+    return (normalizeTraces);
 }
 
 /*! \brief Getter method for the temporal sampling

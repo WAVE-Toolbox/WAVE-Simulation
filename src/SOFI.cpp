@@ -116,7 +116,8 @@ int main(int argc, char *argv[])
 
     end_t = common::Walltime::get();
     HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
-
+    
+    receivers.getSeismogramHandler().normalize();
     receivers.getSeismogramHandler().write(config);
 
     return 0;
