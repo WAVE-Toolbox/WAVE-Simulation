@@ -50,3 +50,4 @@ SourceFilename=ci/sources_ci.3D.mtx
 ReceiverFilename=ci/receiver_ci.3D.mtx
 SeismogramFilename=ci/seismogram.3D.acoustic.ci.mtx
 SeismogramFormat=1 # 1=MTX, 2=SU
+NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
