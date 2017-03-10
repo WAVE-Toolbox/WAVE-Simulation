@@ -92,17 +92,43 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
         scai::lama::DenseVector<ValueType> tempRow;
         scai::lama::Scalar tempMax;
         scai::lama::Scalar tempInverseMax;
-        if (normalizeTraces == 1) {
-            for (IndexType i = 0; i < numTracesGlobal; i++) {
-                tempMax = 0.0;
-                tempRow.assign(0.0);
-                data.getRow(tempRow, i);
-                tempMax = tempRow.max();
-                tempInverseMax = 1 / tempMax;
-                tempRow *= tempInverseMax;
-                data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
-            }
+
+        for (IndexType i = 0; i < numTracesGlobal; i++) {
+            tempMax = 0.0;
+            tempRow.assign(0.0);
+            data.getRow(tempRow, i);
+            tempMax = tempRow.max();
+            tempInverseMax = 1 / tempMax;
+            tempRow *= tempInverseMax;
+            data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
         }
+    }
+}
+
+//! \brief Integrate the seismogram-traces
+/*!
+ *
+ * This methode integrate the traces of the seismogram.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
+{
+    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+
+    scai::lama::DenseVector<ValueType> tempRow;
+    scai::lama::Scalar integral;
+    scai::lama::DenseVector<ValueType> integralVector;
+    integralVector.allocate(numTracesGlobal);
+    integralVector.assign(0.0);
+
+    for (IndexType i = 0; i < numTracesGlobal; i++) {
+        integral = 0.0;
+        tempRow.assign(0.0);
+        data.getRow(tempRow, i);
+        integral = tempRow.sum();
+        integral = integral * DT;
+        integralVector.setValue(i, integral);
+        std::cout << "integral of " << i << ". trace is: " << integral << std::endl;
     }
 }
 

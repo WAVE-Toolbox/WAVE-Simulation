@@ -29,6 +29,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
     }
 }
 
+//! \brief Method to integrate the Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
+{
+    for (auto &i : seismo) {
+        i.integrateTraces();
+    }
+}
+
 /*! \brief Constructor
  *
  * This constructor will initialize the handled Seismogram.

@@ -27,6 +27,7 @@ namespace KITGPI
             void writeToFileRaw(std::string const &filename) const;
             void write(Configuration::Configuration const &config) const;
             void normalize();
+            void integrate();
             void resetData();
 
             void setSourceCoordinate(IndexType sourceCoord);
