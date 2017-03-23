@@ -180,10 +180,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::
 {
 
     update_PmlTemp = Vec;
-    Psi.scale(b);
-    update_PmlTemp.scale(a);
+    Psi *= b;
+    update_PmlTemp *= a;
     Psi += update_PmlTemp;
-    Vec.scale(kInv);
+    Vec *= kInv;
     Vec += Psi;
 }
 

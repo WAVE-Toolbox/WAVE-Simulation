@@ -18,12 +18,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative.scale(scaleHorizontalUpdate);
+    sumHorizonalDerivative *= scaleHorizontalUpdate;
 
     Sxx += sumHorizonalDerivative;
     Szz += sumHorizonalDerivative;
 
-    Syy.scale(setSurfaceZero);
+    Syy *= setSurfaceZero;
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<float>;

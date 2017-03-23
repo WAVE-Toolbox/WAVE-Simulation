@@ -20,16 +20,16 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::ap
 
     /* Update the stress parameter at the free surface */
     temp = sumHorizonatlDerivative;
-    temp.scale(scaleStressHorizontalUpdate);
+    temp *= scaleStressHorizontalUpdate;
     Sxx += temp; // Apply horizontal update
 
-    Syy.scale(setSurfaceZero); // Set the free surface to zero
+    Syy *= setSurfaceZero; // Set the free surface to zero
 
     /* Update relaxation parameter at the free surface */
-    sumHorizonatlDerivative.scale(scaleRelaxationHorizontalUpdate);
+    sumHorizonatlDerivative *= scaleRelaxationHorizontalUpdate;
     Rxx += sumHorizonatlDerivative; // Apply horizontal update
 
-    Ryy.scale(setSurfaceZero); // Set the free surface to zero
+    Ryy *= setSurfaceZero; // Set the free surface to zero
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<float>;

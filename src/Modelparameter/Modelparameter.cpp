@@ -145,8 +145,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModuleFromVelocity(s
 {
 
     vectorModule = vecDensity;
-    vectorModule.scale(vecVelocity);
-    vectorModule.scale(vecVelocity);
+    vectorModule *= vecVelocity;
+    vectorModule *= vecVelocity;
 };
 
 /*! \brief Calculate velocities from a module
@@ -164,7 +164,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(s
     /* Velocity = sqrt( Modulus / Density )  */
     vecVelocity = vecDensity;
     vecVelocity.invert();            /* = 1 / Density */
-    vecVelocity.scale(vectorModule); /* = Modulus / Density */
+    vecVelocity *= vectorModule; /* = Modulus / Density */
     vecVelocity.sqrt();              /* = sqrt( Modulus / Density ) */
 };
 

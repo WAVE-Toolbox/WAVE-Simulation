@@ -92,13 +92,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
     temp = 1.0;
     temp += sum * tauS;
     temp.invert();
-    sWaveModulus.scale(temp);
+    sWaveModulus *= temp;
 
     /* Scaling the P-wave Modulus */
     temp = 1.0;
     temp += sum * tauP;
     temp.invert();
-    pWaveModulus.scale(temp);
+    pWaveModulus *= temp;
 
     calculateAveraging();
     this->getInverseDensity();

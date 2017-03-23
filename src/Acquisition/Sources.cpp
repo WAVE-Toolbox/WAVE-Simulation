@@ -141,7 +141,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     }
 
     lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
-    signalsMatrix.setRow(signalVector, SourceLocal, utilskernel::binary::BinaryOp::COPY);
+    signalsMatrix.setRow(signalVector, SourceLocal, scai::common::binary::BinaryOp::COPY);
 }
 
 template <typename ValueType>
@@ -207,7 +207,7 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
 
         signals.getData().getRow(temp, i);
 
-        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], utilskernel::binary::BinaryOp::COPY);
+        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::binary::BinaryOp::COPY);
 
         ++count[tempIndexType];
     }

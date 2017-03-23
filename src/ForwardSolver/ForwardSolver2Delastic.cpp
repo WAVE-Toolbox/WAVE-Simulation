@@ -123,7 +123,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        update.scale(inverseDensityAverageX);
+        update *= inverseDensityAverageX;
         vX += update;
 
         update = Dxb * Sxy;
@@ -136,7 +136,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        update.scale(inverseDensityAverageY);
+        update *= inverseDensityAverageY;
         vY += update;
 
         /* ----------------*/
@@ -151,14 +151,14 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
         update = vxx;
         update += vyy;
-        update.scale(pWaveModulus);
+        update *= pWaveModulus;
 
         Sxx += update;
         Syy += update;
 
-        vyy.scale(sWaveModulus);
+        vyy *= sWaveModulus;
         Sxx -= 2.0 * vyy;
-        vxx.scale(sWaveModulus);
+        vxx *= sWaveModulus;
         Syy -= 2.0 * vxx;
 
         update = DyfPressure * vX;
@@ -172,7 +172,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        update.scale(sWaveModulusAverageXY);
+        update *= sWaveModulusAverageXY;
         Sxy += update;
 
         /* Apply free surface to stress update */
