@@ -28,6 +28,21 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
     resetWavefield(vector);
 }
 
+/*! \brief Methode to Write Wavefield for timestep t
+ *
+ \param vector Vector written to file
+ \param type Wavefield-type (acoustic, elastic, viscoelastic)
+ \param t Timestep
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t)
+{
+    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(t) + ".mtx";
+    std::cout << "snapshot for Timestep " << t << "has been written to: " << fileName;
+
+    vector.writeToFile(fileName);
+}
+
 //! \brief Getter routine for vX wavefield
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getVX()

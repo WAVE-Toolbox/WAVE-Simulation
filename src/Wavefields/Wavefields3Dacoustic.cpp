@@ -32,6 +32,32 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
     this->initWavefield(P, ctx, dist);
 }
 
+/*! \brief override Methode tor write Wavefield Snapshot to file
+ *
+ *
+ /param type Type of the Seismogram
+ /param t Current Timestep
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(std::string type, IndexType t)
+{
+    this->writeWavefield(VX, "VX", type, t);
+    this->writeWavefield(VY, "VY", type, t);
+    this->writeWavefield(VZ, "VZ", type, t);
+    this->writeWavefield(P, "P", type, t);
+}
+
+/*! \brief Wrapper Function to Write Snapshot of the Wavefield
+ *
+ *
+ /param t Current Timestep
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::writeSnapshot(IndexType t)
+{
+    write(type, t);
+}
+
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
