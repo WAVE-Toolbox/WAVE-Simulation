@@ -40,6 +40,9 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
+            void write(std::string type, IndexType t) override;
+            void writeSnapshot(IndexType t);
+
           private:
             /* required wavefields */
             using Wavefields<ValueType>::VX;
@@ -60,6 +63,8 @@ namespace KITGPI
 
             /* non-required wavefields */
             using Wavefields<ValueType>::P; //!< Wavefield
+
+            std::string type = "Visco3D";
         };
     }
 }

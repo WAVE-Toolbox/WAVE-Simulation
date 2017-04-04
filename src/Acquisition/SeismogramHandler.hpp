@@ -26,10 +26,13 @@ namespace KITGPI
 
             void writeToFileRaw(std::string const &filename) const;
             void write(Configuration::Configuration const &config) const;
+            void normalize();
+            void integrate();
             void resetData();
 
             void setSourceCoordinate(IndexType sourceCoord);
             void setDT(ValueType newDT);
+            void setNormalizeTraces(IndexType normalize);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;

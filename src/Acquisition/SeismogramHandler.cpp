@@ -16,6 +16,31 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
     }
 }
 
+//! \brief Method to write normalize Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
+{
+    for (auto &i : seismo) {
+        i.getNormalizeTraces();
+        i.normalizeTrace();
+    }
+}
+
+//! \brief Method to integrate the Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
+{
+    for (auto &i : seismo) {
+        i.integrateTraces();
+    }
+}
+
 /*! \brief Constructor
  *
  * This constructor will initialize the handled Seismogram.
@@ -179,6 +204,20 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
 {
     for (auto &i : seismo) {
         i.setDT(newDT);
+    }
+}
+
+//! \brief Setter methode to set Index for trace-normalization.
+/*!
+ *
+ * This method sets the index for trace-normalization.
+ \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setNormalizeTraces(IndexType normalize)
+{
+    for (auto &i : seismo) {
+        i.setNormalizeTraces(normalize);
     }
 }
 

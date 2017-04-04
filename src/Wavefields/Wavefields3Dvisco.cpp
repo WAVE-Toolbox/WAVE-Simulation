@@ -43,6 +43,43 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
     this->initWavefield(Rxy, ctx, dist);
 }
 
+/*! \brief override Methode tor write Wavefield Snapshot to file
+ *
+ *
+ /param type Type of the Seismogram
+ /param t Current Timestep
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::write(std::string type, IndexType t)
+{
+    this->writeWavefield(VX, "VX", type, t);
+    this->writeWavefield(VY, "VY", type, t);
+    this->writeWavefield(VZ, "VZ", type, t);
+    this->writeWavefield(Sxx, "Sxx", type, t);
+    this->writeWavefield(Syy, "Syy", type, t);
+    this->writeWavefield(Szz, "Szz", type, t);
+    this->writeWavefield(Sxy, "Sxy", type, t);
+    this->writeWavefield(Sxz, "Sxz", type, t);
+    this->writeWavefield(Syz, "Syz", type, t);
+    this->writeWavefield(Rxx, "Rxx", type, t);
+    this->writeWavefield(Ryy, "Ryy", type, t);
+    this->writeWavefield(Rzz, "Rzz", type, t);
+    this->writeWavefield(Rxy, "Rxy", type, t);
+    this->writeWavefield(Rxz, "Rxz", type, t);
+    this->writeWavefield(Ryz, "Ryz", type, t);
+}
+
+/*! \brief Wrapper Function to Write Snapshot of the Wavefield
+ *
+ *
+ /param t Current Timestep
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::writeSnapshot(IndexType t)
+{
+    write(type, t);
+}
+
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>

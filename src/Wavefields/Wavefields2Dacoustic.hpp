@@ -33,8 +33,6 @@ namespace KITGPI
 
             explicit FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-
             void reset() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
@@ -53,6 +51,11 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> &getRxy() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
+
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+
+            void write(std::string type, IndexType t) override;
+            void writeSnapshot(IndexType t);
 
           private:
             /* required wavefields */
@@ -74,6 +77,8 @@ namespace KITGPI
             using Wavefields<ValueType>::Ryz;
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
+
+            std::string type = "Acoustic2D";
         };
     }
 }

@@ -27,10 +27,13 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), normalizeTraces(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
 
             //! Default destructor
             ~Seismogram(){};
+
+            //! Copy Constructor.
+            Seismogram(const Seismogram &rhs);
 
             void write(Configuration::Configuration const &config) const;
             void writeToFileRaw(std::string const &filename) const;
@@ -45,10 +48,14 @@ namespace KITGPI
 
             void resetData();
 
+            void normalizeTrace();
+            void integrateTraces();
+
             /* Getter functions */
             IndexType getNumTracesGlobal() const;
             IndexType getNumTracesLocal() const;
             IndexType getNumSamples() const;
+            IndexType getNormalizeTraces() const;
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
@@ -61,6 +68,16 @@ namespace KITGPI
             void setSourceCoordinate(IndexType sourceCoord);
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<IndexType> const &coord);
+            void setNormalizeTraces(IndexType normalizeTrace);
+
+            /* Overloading Operators */
+            KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs);
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;
@@ -68,6 +85,8 @@ namespace KITGPI
             IndexType numSamples;      //!< Number of samples of one trace
             IndexType numTracesGlobal; //!< Number of global traces
             IndexType numTracesLocal;  //!< Number of local traces
+            IndexType normalizeTraces; //!< L2 Norm of seismogram is calculated
+            scai::lama::DenseVector<ValueType> integralVector;
 
             /* header information */
             ValueType DT;                                   //!< Temporal sampling interval in seconds
