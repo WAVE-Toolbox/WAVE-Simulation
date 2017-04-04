@@ -19,9 +19,9 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD2Delastic<ValueType>::gather
     lama::DenseMatrix<ValueType> &seismogramDataPressure = seismo.getData();
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
 
-    gatherSeismogram_samplesPressure.gather(Sxx, coordinates, scai::common::binary::BinaryOp::COPY);
-    gatherSeismogram_samplesPressure.gather(Syy, coordinates, scai::common::binary::BinaryOp::ADD);
-    seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure, t, scai::common::binary::BinaryOp::COPY);
+    gatherSeismogram_samplesPressure.gather(Sxx, coordinates, scai::utilskernel::binary::BinaryOp::COPY);
+    gatherSeismogram_samplesPressure.gather(Syy, coordinates, scai::utilskernel::binary::BinaryOp::ADD);
+    seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure, t, scai::utilskernel::binary::BinaryOp::COPY);
 }
 
 /*! \brief Applying pressure from source.
@@ -43,8 +43,8 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD2Delastic<ValueType>::applyS
     const lama::DenseVector<IndexType> &coordinatesPressure = seismo.getCoordinates();
 
     sourcesSignalsPressure.getColumn(applySource_samplesPressure, t);
-    Sxx.scatter(coordinatesPressure, applySource_samplesPressure, scai::common::binary::BinaryOp::ADD);
-    Syy.scatter(coordinatesPressure, applySource_samplesPressure, scai::common::binary::BinaryOp::ADD);
+    Sxx.scatter(coordinatesPressure, applySource_samplesPressure, scai::utilskernel::binary::BinaryOp::ADD);
+    Syy.scatter(coordinatesPressure, applySource_samplesPressure, scai::utilskernel::binary::BinaryOp::ADD);
 }
 
 template class KITGPI::ForwardSolver::SourceReceiverImpl::FDTD2Delastic<double>;
