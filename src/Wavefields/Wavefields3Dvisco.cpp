@@ -110,5 +110,79 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::ge
     return (P);
 }
 
+/*! \brief Overloading * Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(scai::lama::Scalar rhs)
+{
+    KITGPI::Wavefields::FD3Dvisco<ValueType> result;
+    result.VX = this->VX * rhs;
+    result.VY = this->VY * rhs;
+    result.VZ = this->VZ * rhs;
+    result.P = this->P * rhs;
+    result.Sxx = this->Sxx * rhs;
+    result.Syy = this->Syy * rhs;
+    result.Szz = this->Szz * rhs;
+    result.Sxy = this->Sxy * rhs;
+    result.Sxz = this->Sxz * rhs;
+    result.Syz = this->Syz * rhs;
+    return result;
+}
+
+/*! \brief free function to multiply
+ *
+ \param lhs Scalar factor with which the vectors are multiplied.
+ \param rhs Vector
+ */
+template <typename ValueType>
+KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+{
+    return rhs * lhs;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(scai::lama::Scalar rhs)
+{
+    return rhs * *this;
+}
+
+/*! \brief Overloading * Operation
+ *
+ \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+{
+    KITGPI::Wavefields::FD3Dvisco<ValueType> result;
+    result.VX = this->VX * rhs.VX;
+    result.VY = this->VY * rhs.VY;
+    result.VZ = this->VZ * rhs.VZ;
+    result.P = this->P * rhs.P;
+    result.Sxx = this->Sxx * rhs.Sxx;
+    result.Syy = this->Syy * rhs.Syy;
+    result.Szz = this->Szz * rhs.Szz;
+    result.Sxy = this->Sxy * rhs.Sxy;
+    result.Sxz = this->Sxz * rhs.Sxz;
+    result.Syz = this->Syz * rhs.Syz;
+    return result;
+}
+
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+{
+    return rhs * *this;
+}
+
 template class KITGPI::Wavefields::FD3Dvisco<float>;
 template class KITGPI::Wavefields::FD3Dvisco<double>;

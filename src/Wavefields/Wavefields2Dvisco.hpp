@@ -46,6 +46,12 @@ namespace KITGPI
             scai::hmemo::ContextPtr getContextPtr() override;
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            
+            /* Overloading Operators */
+            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
+            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
 
             void write(std::string type, IndexType t) override;
             void writeSnapshot(IndexType t);

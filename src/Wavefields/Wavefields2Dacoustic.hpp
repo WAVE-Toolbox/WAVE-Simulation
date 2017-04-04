@@ -51,6 +51,12 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> &getRxy() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
+            
+            /* Overloading Operators */
+            KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*(KITGPI::Wavefields::FD2Dacoustic<ValueType> rhs);
+            KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*=(KITGPI::Wavefields::FD2Dacoustic<ValueType> rhs);
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
