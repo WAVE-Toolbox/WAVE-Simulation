@@ -100,7 +100,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
             tempMax = tempRow.max();
             tempInverseMax = 1 / tempMax;
             tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, utilskernel::binary::BinaryOp::COPY);
+            data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
         }
     }
 }
