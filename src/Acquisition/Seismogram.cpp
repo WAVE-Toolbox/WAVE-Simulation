@@ -66,10 +66,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
 
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        writeToFileRaw(config.get<std::string>("SeismogramFilename"));
+        writeToFileRaw(config.get<std::string>("SeismogramFilename")+".mtx");
         break;
     case 2:
-        writeToFileSU(config.get<std::string>("SeismogramFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        writeToFileSU(config.get<std::string>("SeismogramFilename")+".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
