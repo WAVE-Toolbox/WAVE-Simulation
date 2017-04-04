@@ -45,8 +45,8 @@ DampingBoundary=0         # 1=ON, 0=OFF
 DampingBoundaryType=1     # Type of damping boundary: 1=ABS 2=CPML
 BoundaryWidth=10          # Width of damping boundary in grid points
 DampingCoeff=8.0          # Damping coefficient 
-VMaxCPML=3500.0
-CenterFrequencyCPML=5.0
+VMaxCPML=3500.0           # Maximum velocity of the CPML
+CenterFrequencyCPML=5.0   # Center frequency inside the boundaries
 NPower=4.0
 KMaxCPML=1.0
     

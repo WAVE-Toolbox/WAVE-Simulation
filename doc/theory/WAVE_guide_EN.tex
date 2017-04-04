@@ -33,6 +33,7 @@
 \usepackage{subcaption}
 \usepackage{lscape}		%For use of \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
 \usepackage{adjustbox}
+\usepackage{longtable}
 \KOMAoptions{twoside}
 \setcounter{MaxMatrixCols}{50}
 
@@ -980,7 +981,13 @@ LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.o
 		boost					& Implementation of the boost-library	for  				& \url{https://www.boost.org}		\\
 										& debugging																& \\										
 	Python				& Models can be generated using Python 		& \url{https://www.python.org}\\
-	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\										
+	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\	
+	
+	
+	Seismic Un*x	& 	Seismic processing package, to generate a  	& \url{http://www.cwp.mines.edu/cwpcodes}\\ 
+											&  Seismogram from SU-data  															& \\
+	
+	
 	Sphinx				& 	A Python documentation generator 							& \url{http://www.sphinx-doc.org}\\
 	doxygen			& 	Generation of documentation from annotated				& \url{http://www.doxygen.org}\\
 										& \CC-code 															& \\
@@ -1072,11 +1079,26 @@ As a first test, run the default example by following the commands to obtain the
 	 numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
 	 relaxationFrequency& Relaxation frequency for first & double & \SI{0}{Hz}\\
 	 & relaxation mechanism& & \\
+	  \bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}	
+	 \begin{table}[h!]
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	  Variable & Short description & Type &Example value\;\;\;\\
 	\midrule
 	 FreeSurface& Use the free surface & int & \num{0}\\
 	 DampingBoundary& Use the Damping Boundary & int & \num{0}\\
+	 DampingBoundaryType& Type of damping boundary & int & \num{1}\\
 	 BoundaryWidth& Width of damping boundary & int & \num{10}\\
 	 DampingCoeff& Damping coefficient & double & \num{8.0}\\
+	 VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
+	 CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
+	 NPower& Degree of the damping profile & int &\num{4}\\
+	 KMaxCPML& ?????? & double &\num{1.0}\\
     \bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1110,7 +1132,8 @@ The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \she
 The last two parameters of the table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
 The fist part of the last table-section handles and the boundary conditions. Free surface can used by setting (\textit{FreeSurface} $=1$). If the parameter is set to 0, free surface is not used. 
-The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$). Again, if the parameter is set to 0, it is not used. 
+The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
+If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
 
 
 To verify the models stability  the courant can be calculated: 
@@ -1145,8 +1168,8 @@ To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/s
 
 The executable file is located in the directory:
 \\\shellcmdline{FDSimulation\_LAMA/bin/Tests/}\\
-To execute the unit-tests run the \shellcmd{Test\_Unit} file by entering:
-\\\shellcmdline{./Test\_Unit}\\ 
+To execute the unit-tests change to the \shellcmd{/par} folder and run the \shellcmd{Test\_unit} file by entering:
+\\\shellcmdline{./../bin/Tests/Test\_unit}\\ 
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}
