@@ -38,7 +38,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
 
     scaleStressHorizontalUpdate = pWaveModulus;
     scaleStressHorizontalUpdate *= onePlusLtauP;           // = ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.invert();                      // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
+    scaleStressHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
     scaleStressHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) ) ) / ( ( P-wave Modul * ( 1 + L * tauP) )
     scaleStressHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 
@@ -56,7 +56,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
 
     scaleRelaxationHorizontalUpdate = pWaveModulus;
     scaleRelaxationHorizontalUpdate *= tauP;                   // = ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate.invert();                      // = 1 / ( P-wave Modul * tauP )
+    scaleRelaxationHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * tauP )
     scaleRelaxationHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP ) ) / ( ( P-wave Modul tauP) )
     scaleRelaxationHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 }

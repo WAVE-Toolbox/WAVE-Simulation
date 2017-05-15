@@ -18,6 +18,9 @@ namespace KITGPI
             template <typename Type>
             class FreeSurface2Dvisco;
 
+            //            template <typename Type>
+            //            class FreeSurface2Dsh;
+
             template <typename Type>
             class FreeSurfaceElastic;
 
@@ -54,6 +57,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
+                //                template <typename>
+                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dsh;
 
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic;
@@ -61,6 +66,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
+                //                template <typename>
+                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH;
 
                 //! \brief Default constructor
                 Derivatives() : spatialFDorder(0), useFreeSurface(false){};

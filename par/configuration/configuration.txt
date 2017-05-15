@@ -3,8 +3,8 @@
 # Use the hashtag "#" for comments
 
 # Type of forward simulation
-dimension=3D              # Dimension: 2D or 3D
-equationType=acoustic     # Type of wave equation: acoustic, elastic, visco
+dimension=2D              # Dimension: 2D or 3D
+equationType=sh    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 NX=100                    # horizontal 1
@@ -56,7 +56,7 @@ relaxationFrequency=0     # Relaxation frequency
 
 # generate homogeneous model
 velocityP=3500            # P-wave velocity in meter per seconds
-velocityS=0               # S-wave velocity in meter per seconds
+velocityS=2000               # S-wave velocity in meter per seconds
 rho=2000                  # Density in kilo gramms per cubic meter
 tauP=0.0                  # Tau value for P-waves
 tauS=0.0                  # Tau value for S-waves

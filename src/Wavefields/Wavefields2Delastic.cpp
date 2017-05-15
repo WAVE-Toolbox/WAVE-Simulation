@@ -170,7 +170,6 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
     KITGPI::Wavefields::FD2Delastic<ValueType> result;
     result.VX = this->VX * rhs;
     result.VY = this->VY * rhs;
-    result.P = this->P * rhs;
     result.Sxx = this->Sxx * rhs;
     result.Syy = this->Syy * rhs;
     result.Sxy = this->Sxy * rhs;
@@ -208,13 +207,11 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
     KITGPI::Wavefields::FD2Delastic<ValueType> result;
     result.VX = this->VX * rhs.VX;
     result.VY = this->VY * rhs.VY;
-    result.P = this->P * rhs.P;
     result.Sxx = this->Sxx * rhs.Sxx;
     result.Syy = this->Syy * rhs.Syy;
     result.Sxy = this->Sxy * rhs.Sxy;
     return result;
 }
-
 
 /*! \brief Overloading *= Operation
  *
