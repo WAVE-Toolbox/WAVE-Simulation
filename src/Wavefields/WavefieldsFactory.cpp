@@ -37,7 +37,7 @@ typename KITGPI::Wavefields::Wavefields<ValueType>::WavefieldPtr KITGPI::Wavefie
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return WavefieldPtr();
 }
 
 template class KITGPI::Wavefields::Factory<double>;

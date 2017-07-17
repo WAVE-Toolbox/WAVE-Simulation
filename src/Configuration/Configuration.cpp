@@ -115,7 +115,7 @@ ReturnType KITGPI::Configuration::Configuration::get(std::string const &paramete
     ReturnType temp;
     try {
         std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
-        std::istringstream(configMap.at(tempName)) >> temp;
+        std::istringstream input(configMap.at(tempName)); input >> temp;
     } catch (...) {
         COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
     }

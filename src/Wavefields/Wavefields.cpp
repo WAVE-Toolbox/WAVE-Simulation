@@ -37,7 +37,7 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t)
 {
-    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(t) + ".mtx";
+    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(static_cast<long long>( t ) ) + ".mtx";
     std::cout << "snapshot for Timestep " << t << "has been written to: " << fileName;
 
     vector.writeToFile(fileName);

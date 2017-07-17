@@ -43,7 +43,7 @@ namespace KITGPI
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, IndexType NT);
 
-            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = NULL);
+            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = scai::dmemo::DistributionPtr());
             void replicate();
 
             void resetData();

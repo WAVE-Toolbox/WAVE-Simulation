@@ -52,7 +52,7 @@ template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     : seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
 {
-    seismo.shrink_to_fit();
+    // seismo.shrink_to_fit();
     setTraceType();
 }
 
