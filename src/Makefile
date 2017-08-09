@@ -29,7 +29,7 @@ SOFI_INTEGRATIONTEST_TARGET=$(BINDIR)/Tests/Test_CompareSeismogram
 ######################
 all: sofi tests
 
-install: clean SOFI 
+install: clean sofi 
 
 tests: integrationTest unitTest
 
