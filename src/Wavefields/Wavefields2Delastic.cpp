@@ -215,7 +215,6 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
     return result;
 }
 
-
 /*! \brief Overloading *= Operation
  *
  \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.

@@ -14,7 +14,7 @@ using namespace KITGPI;
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "Preparation of the model parameters\n");
 
     refreshModule();
     initializeMatrices(dist, ctx, config, comm);

@@ -163,9 +163,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModule(s
     /* Modulus = pow(velocity,2) * Density */
     /* Velocity = sqrt( Modulus / Density )  */
     vecVelocity = vecDensity;
-    vecVelocity.invert();            /* = 1 / Density */
+    vecVelocity.invert();        /* = 1 / Density */
     vecVelocity *= vectorModule; /* = Modulus / Density */
-    vecVelocity.sqrt();              /* = sqrt( Modulus / Density ) */
+    vecVelocity.sqrt();          /* = sqrt( Modulus / Density ) */
 };
 
 /*! \brief Get reference to density model parameter
