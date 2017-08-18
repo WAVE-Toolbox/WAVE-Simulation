@@ -74,7 +74,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::refreshModule()
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "Preparation of the model parameters\n");
 
     refreshModule();
 

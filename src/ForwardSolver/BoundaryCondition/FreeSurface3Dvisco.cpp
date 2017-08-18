@@ -27,7 +27,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Dvisco<ValueType>::ap
     Sxx += temp; // Apply horizontal update
     Szz += temp; // Apply horizontal update
 
-    Syy *=setSurfaceZero; // Set the free surface to zero
+    Syy *= setSurfaceZero; // Set the free surface to zero
 
     /* Update relaxation parameter at the free surface */
     sumHorizonatlDerivative *= scaleRelaxationHorizontalUpdate;

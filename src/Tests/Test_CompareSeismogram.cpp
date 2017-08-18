@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     scai::lama::Scalar L2_scalar = 0.0;
     ValueType L2 = 0.0;
 
-    std::string filenameRef = config.get<std::string>("SeismogramFilename")+".mtx";
+    std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::size_t pos = filenameRef.find(".ci.mtx");
     std::string filenameSyn = filenameRef.substr(0, pos) + ".ref.mtx";
 

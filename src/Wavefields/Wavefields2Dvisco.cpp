@@ -200,7 +200,6 @@ KITGPI::Wavefields::FD2Dvisco<ValueType> KITGPI::Wavefields::FD2Dvisco<ValueType
     return result;
 }
 
-
 /*! \brief Overloading *= Operation
  *
  \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.

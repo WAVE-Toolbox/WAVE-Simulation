@@ -219,7 +219,6 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<Val
     return result;
 }
 
-
 /*! \brief Overloading *= Operation
  *
  \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.
