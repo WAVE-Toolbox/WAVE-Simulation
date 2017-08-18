@@ -51,6 +51,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     : seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
+// seismo(4) initializes 4 Seismogram objects by calling the default constructor of the Class Seismogram. Other constructors can be called by e.g. seismo(4,Seismogram<ValueType>(a,b...))
 {
     seismo.shrink_to_fit();
     setTraceType();
@@ -88,6 +89,22 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::stri
     for (auto const &i : seismo) {
         i.writeToFileRaw(filename);
     }
+}
+
+//! \brief Read all handled Seismogram from a raw-file.
+/*!
+ *
+ * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticly.
+ \param filename Filename of the input file
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename)
+{
+
+    std::cout << " read from " << filename << "this function is not implemented yet" << std::endl;
+    // for (auto &i : seismo) {
+    //      i.readFromFileRaw(filename, NULL, NULL);
+    //  }
 }
 
 /*! \brief Method to reset the Seismogram data
