@@ -1,7 +1,11 @@
 #include "Seismogram.hpp"
 using namespace scai;
 
-//! \brief Copy constructor
+//! \brief copy constructor
+/*!
+ *
+ \param rhs seismogram to copy
+ */
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
@@ -13,6 +17,24 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
+}
+//! \brief swap function
+/*!
+ *
+ * swaps all members from rhs and lhs
+ \param rhs seismogram to swap with
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+{
+    std::swap(numSamples, rhs.numSamples);
+    std::swap(numTracesGlobal, rhs.numTracesGlobal);
+    std::swap(numTracesLocal, rhs.numTracesLocal);
+    std::swap(DT, rhs.DT);
+    std::swap(type, rhs.type);
+    std::swap(coordinates, rhs.coordinates);
+    std::swap(sourceCoordinate, rhs.sourceCoordinate);
+    data.swap(rhs.data);
 }
 
 //! \brief Adding ending to the seismogram-filename-string
@@ -63,13 +85,12 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config) const
 {
-
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        writeToFileRaw(config.get<std::string>("SeismogramFilename")+".mtx");
+        writeToFileRaw(config.get<std::string>("SeismogramFilename") + ".mtx");
         break;
     case 2:
-        writeToFileSU(config.get<std::string>("SeismogramFilename")+".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        writeToFileSU(config.get<std::string>("SeismogramFilename") + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
@@ -266,7 +287,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 {
     dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(numSamples));
-
     dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(numTracesGlobal));
 
     redistribute(no_dist_Traces, no_dist_numSamples);
@@ -343,7 +363,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     data.readFromFile(filename);
-
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
@@ -649,37 +668,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
     }
 }
 
-/*! \brief Overloading * Operation
- *
- \param rhs Scalar factor with which the vectors are multiplied.
- */
-template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*(scai::lama::Scalar rhs)
-{
-    KITGPI::Acquisition::Seismogram<ValueType> result;
-    result.data = this->data * rhs;
-    return result;
-}
-
-/*! \brief free function to multiply
- *
- \param lhs Scalar factor with which the vectors are multiplied.
- \param rhs Vector
- */
-template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Acquisition::Seismogram<ValueType> rhs)
-{
-    return rhs * lhs;
-}
-
 /*! \brief Overloading *= Operation
  *
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar &rhs)
 {
-    return rhs * *this;
+    data *= rhs;
+
+    return *this;
 }
 
 /*! \brief Overloading + Operation
@@ -687,10 +685,11 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    KITGPI::Acquisition::Seismogram<ValueType> result;
-    result.data = this->data + rhs.data;
+    KITGPI::Acquisition::Seismogram<ValueType> result(*this);
+    result += rhs;
+
     return result;
 }
 
@@ -699,9 +698,11 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    return *this + rhs;
+    data += rhs.data;
+
+    return *this;
 }
 
 /*! \brief Overloading - Operation
@@ -709,10 +710,11 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    KITGPI::Acquisition::Seismogram<ValueType> result;
-    result.data = this->data - rhs.data;
+    KITGPI::Acquisition::Seismogram<ValueType> result(*this);
+    result -= rhs;
+
     return result;
 }
 
@@ -721,9 +723,11 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    return *this - rhs;
+    data -= rhs.data;
+
+    return *this;
 }
 
 /*! \brief Overloading copy assignment operation
@@ -731,20 +735,14 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is copied.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs)
+KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
-    KITGPI::Acquisition::Seismogram<ValueType> result;
+    //copy rhs with copy constructor to tmp seismogram
+    KITGPI::Acquisition::Seismogram<ValueType> tmp(rhs);
+    //swap tmp with *this (lhs)
+    swap(tmp);
 
-    result.numSamples = rhs.numSamples;
-    result.numTracesGlobal = rhs.numTracesGlobal;
-    result.numTracesLocal = rhs.numTracesLocal;
-    result.DT = rhs.DT;
-    result.type = rhs.type;
-    result.coordinates = rhs.coordinates;
-    result.sourceCoordinate = rhs.sourceCoordinate;
-    result.data = rhs.data;
-
-    return result;
+    return *this;
 }
 
 template class KITGPI::Acquisition::Seismogram<double>;
