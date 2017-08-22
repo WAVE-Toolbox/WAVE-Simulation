@@ -141,8 +141,10 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         break;
     }
 
+    utilskernel::LArray<ValueType> localsignal = signalVector.getLocalValues();
+
     lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
-    signalsMatrix.setRow(signalVector, SourceLocal, scai::common::binary::BinaryOp::COPY);
+    signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::binary::BinaryOp::COPY);
 }
 
 template <typename ValueType>
