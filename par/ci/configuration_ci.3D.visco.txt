@@ -48,6 +48,8 @@ tauS=0.2         # Tau value for S-waves
 # Acquisition
 SourceFilename=ci/sources_ci.3D.mtx
 ReceiverFilename=ci/receiver_ci.3D.mtx
-SeismogramFilename=ci/seismogram.3D.visco.ci.mtx
+SeismogramFilename=ci/seismogram.3D.visco.ci
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+runSimultaneousShots=1                         # 1=All sources specified in SourceFilename are triggerd simultaneously
+

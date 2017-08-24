@@ -123,7 +123,10 @@ int main(int argc, char *argv[])
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
         receivers.getSeismogramHandler().normalize();
+	if (!config.get<bool>("runSimultaneousShots"))
         receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+	
+	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
     }
 
     return 0;
