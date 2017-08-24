@@ -9,10 +9,10 @@ using namespace scai;
  \param config Configuration class, which will be used to determine filename and header information
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config) const
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
 {
     for (auto const &i : seismo) {
-        i.write(config);
+        i.write(config, filename);
     }
 }
 

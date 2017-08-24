@@ -83,14 +83,14 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
  \param config Configuration class which is used to determine the filename and header information
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config) const
+void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
 {
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        writeToFileRaw(config.get<std::string>("SeismogramFilename") + ".mtx");
+        writeToFileRaw(filename + ".mtx");
         break;
     case 2:
-        writeToFileSU(config.get<std::string>("SeismogramFilename") + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        writeToFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
