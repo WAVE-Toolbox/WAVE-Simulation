@@ -122,6 +122,7 @@ namespace KITGPI
             virtual scai::lama::Vector const &getTauSAverageYZ();
             virtual scai::lama::Vector const &getTauSAverageYZ() const;
 
+	    
           protected:
             bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
             bool dirtyFlagModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date

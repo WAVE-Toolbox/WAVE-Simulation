@@ -461,20 +461,9 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(scai::lama::Scalar rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density * rhs;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus * rhs;
-        result.sWaveModulus = this->sWaveModulus * rhs;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP * rhs;
-        result.velocityS = this->velocityS * rhs;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result *= rhs;
+    return result;   
 }
 
 /*! \brief free function to multiply
@@ -493,9 +482,21 @@ KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar const &rhs)
 {
-    return *this * rhs;
+    density *= rhs;
+    if (parametrisation == 0) {
+        pWaveModulus *= rhs;
+	sWaveModulus *= rhs;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP *= rhs;
+	velocityS *= rhs;
+        return *this;
+    } else { 
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
 }
 
 /*! \brief Overloading + Operation
@@ -503,22 +504,11 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density + rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus + rhs.pWaveModulus;
-        result.sWaveModulus = this->sWaveModulus + rhs.sWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP + rhs.velocityP;
-        result.velocityS = this->velocityS + rhs.velocityS;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result += rhs;
+    return result;   
 }
 
 /*! \brief Overloading += Operation
@@ -526,9 +516,21 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    return *this + rhs;
+    density += rhs.density;
+    if (parametrisation == 0) {
+        pWaveModulus += rhs.pWaveModulus;
+	sWaveModulus += rhs.sWaveModulus;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP += rhs.velocityP;
+	velocityS += rhs.velocityS;
+        return *this;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
 }
 
 /*! \brief Overloading - Operation
@@ -536,22 +538,11 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density - rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus - rhs.pWaveModulus;
-        result.sWaveModulus = this->sWaveModulus - rhs.sWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP - rhs.velocityP;
-        result.velocityS = this->velocityS - rhs.velocityS;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result -= rhs;
+    return result; 
 }
 
 /*! \brief Overloading -= Operation
@@ -559,9 +550,41 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    return *this - rhs;
+    density = density -= rhs.density;
+    if (parametrisation == 0) {
+        pWaveModulus -= rhs.pWaveModulus;
+	sWaveModulus -= rhs.sWaveModulus;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP -= rhs.velocityP;
+	velocityS -= rhs.velocityS;
+        return *this;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.pWaveModulus;
+    sWaveModulus = rhs.sWaveModulus;
+    velocityP = rhs.velocityP;
+    velocityS = rhs.velocityS;
+    density = rhs.density;
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
+    dirtyFlagModulus = rhs.dirtyFlagModulus;
+    dirtyFlagVelocity = rhs.dirtyFlagVelocity;
+    parametrisation = rhs.parametrisation;
+    inverseDensity = rhs.inverseDensity;
+    return *this;
 }
 
 template class KITGPI::Modelparameter::Elastic<float>;

@@ -296,7 +296,6 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
     SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
-
     std::string filenameP;
     std::string filenamedensity = filename + ".density.mtx";
 
@@ -480,21 +479,12 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAv
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator*(scai::lama::Scalar rhs)
 {
-    KITGPI::Modelparameter::Acoustic<ValueType> result;
-    result.density = this->density * rhs;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus * rhs;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP * rhs;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
+    result *= rhs;
+    return result;   
 }
 
-/*! \brief free function to multiply
+/*! \brief non-member function to multiply (scalar as left operand)
  *
  \param lhs Scalar factor with which the vectors are multiplied.
  \param rhs Vector
@@ -510,9 +500,19 @@ KITGPI::Modelparameter::Acoustic<ValueType> operator*(scai::lama::Scalar lhs, KI
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator*=(scai::lama::Scalar const &rhs)
 {
-    return rhs * *this;
+    density *= rhs;
+    if (parametrisation == 0) {
+        pWaveModulus *= rhs;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP *= rhs;
+        return *this;
+    } else { 
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
 }
 
 /*! \brief Overloading + Operation
@@ -520,20 +520,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator+(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator+(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Acoustic<ValueType> result;
-    result.density = this->density + rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus + rhs.pWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP + rhs.velocityP;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
+    result += rhs;
+    return result;    
 }
 
 /*! \brief Overloading += Operation
@@ -541,9 +532,19 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator+=(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator+=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    return *this + rhs;
+    density += rhs.density;
+    if (parametrisation == 0) {
+        pWaveModulus += rhs.pWaveModulus;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP += rhs.velocityP;
+        return *this;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
 }
 
 /*! \brief Overloading - Operation
@@ -551,20 +552,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator-(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator-(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Acoustic<ValueType> result;
-    result.density = this->density - rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus - rhs.pWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP - rhs.velocityP;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
+    result -= rhs;
+    return result; 
 }
 
 /*! \brief Overloading -= Operation
@@ -572,9 +564,37 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<ValueType>::operator-=(KITGPI::Modelparameter::Acoustic<ValueType> rhs)
+KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator-=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    return *this - rhs;
+    density = density -= rhs.density;
+    if (parametrisation == 0) {
+        pWaveModulus -= rhs.pWaveModulus;
+        return *this;
+    }
+    if (parametrisation == 1) {
+        velocityP -= rhs.velocityP;
+        return *this;
+    } else {
+        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
+    }
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.pWaveModulus;
+    velocityP = rhs.velocityP;
+    inverseDensity = rhs.inverseDensity;
+    density = rhs.density;
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
+    dirtyFlagModulus = rhs.dirtyFlagModulus;
+    dirtyFlagVelocity = rhs.dirtyFlagVelocity;
+    parametrisation = rhs.parametrisation;
+    return *this;
 }
 
 template class KITGPI::Modelparameter::Acoustic<double>;

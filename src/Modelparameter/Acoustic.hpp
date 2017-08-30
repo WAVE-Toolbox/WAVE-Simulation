@@ -86,12 +86,13 @@ namespace KITGPI
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> operator+(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> operator+=(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> operator-=(KITGPI::Modelparameter::Acoustic<ValueType> rhs);
-
+            KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator+(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> &operator+=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> &operator-=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Acoustic<ValueType> &operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+	    
           private:
             void refreshModule() override;
             void refreshVelocity() override;
