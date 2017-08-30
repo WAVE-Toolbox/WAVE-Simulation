@@ -26,7 +26,7 @@ namespace KITGPI
 
             void readFromFileRaw(std::string const &filename);
             void writeToFileRaw(std::string const &filename) const;
-            void write(Configuration::Configuration const &config) const;
+            void write(Configuration::Configuration const &config, std::string const &filename) const;
             void normalize();
             void integrate();
             void resetData();

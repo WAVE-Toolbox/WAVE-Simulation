@@ -104,21 +104,30 @@ int main(int argc, char *argv[])
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
 
-    HOST_PRINT(comm, "Start time stepping\n"
-                         << "Total Number of time steps: " << getNT << "\n");
-    start_t = common::Walltime::get();
+    for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
+        /* Update Source */
+        if (!config.get<bool>("runSimultaneousShots"))
+            sources.init(config, ctx, dist, shotNumber);
 
-    /* Start and end counter for time stepping */
-    IndexType tStart = 0;
-    IndexType tEnd = getNT;
+        HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
+                                                         << "Total Number of time steps: " << getNT << "\n");
+        start_t = common::Walltime::get();
 
-    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
+        /* Start and end counter for time stepping */
+        IndexType tStart = 0;
+        IndexType tEnd = getNT;
 
-    end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
 
-    receivers.getSeismogramHandler().normalize();
-    receivers.getSeismogramHandler().write(config);
+        end_t = common::Walltime::get();
+        HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+
+        receivers.getSeismogramHandler().normalize();
+	if (!config.get<bool>("runSimultaneousShots"))
+        receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+	
+	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+    }
 
     return 0;
 }

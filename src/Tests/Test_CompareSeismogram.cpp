@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
 
     seismo_ref.readFromFile(filenameRef);
     seismo_syn.readFromFile(filenameSyn);
-    seismo_syn.assignTranspose(seismo_syn);
 
     seismo_residual = (seismo_ref - seismo_syn);
     L2_scalar = seismo_residual.l2Norm();
