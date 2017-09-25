@@ -45,7 +45,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagModulus(true), dirtyFlagAveraging(true), dirtyFlagVelocity(true), parametrisation(0), numRelaxationMechanisms(0){};
+            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true),dirtyFlagSWaveModulus(true),parametrisation(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~Modelparameter(){};
@@ -100,6 +100,16 @@ namespace KITGPI
             virtual IndexType getNumRelaxationMechanisms() const;
             virtual ValueType getRelaxationFrequency() const;
 
+            virtual void setDensity(scai::lama::Vector const &setDensity);
+            virtual void setVelocityP(scai::lama::Vector const &setVelocityP);
+            virtual void setVelocityS(scai::lama::Vector const &setVelocityS);
+
+            virtual void setTauP(scai::lama::Vector const &setTauP);
+            virtual void setTauS(scai::lama::Vector const &setTauS);
+
+            virtual void setNumRelaxationMechanisms(IndexType const setNumRelaxationMechanisms);
+            virtual void setRelaxationFrequency(ValueType const setRelaxationFrequency);
+
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
 
@@ -125,13 +135,16 @@ namespace KITGPI
 	    
           protected:
             bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
-            bool dirtyFlagModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
-            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date
-            bool dirtyFlagVelocity;       //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
+            bool dirtyFlagPWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagSWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+
+            
+           
             IndexType parametrisation;    //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
 
-            IndexType PartitionedIn;  //!< ==1 If Module is read from partitioned fileblock; ==0 if module is in single files
-            IndexType PartitionedOut; //!< ==1 If Module is written to partitioned fileblock; ==0 if module is written to single files
+            IndexType PartitionedIn;  //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
+            IndexType PartitionedOut; //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
 
             scai::lama::DenseVector<ValueType> pWaveModulus;   //!< Vector storing P-wave modulus.
             scai::lama::DenseVector<ValueType> sWaveModulus;   //!< Vector storing S-wave modulus.
@@ -164,20 +177,9 @@ namespace KITGPI
 
             void writeModelparameter(scai::lama::Vector const &vector, std::string filename, IndexType partitionedOut) const;
 
-            void calcModuleFromVelocity(scai::lama::Vector &vecVelocity, scai::lama::Vector &vecDensity, scai::lama::Vector &vectorModule);
+            void calcModulusFromVelocity(scai::lama::Vector &vecVelocity, scai::lama::Vector &vecDensity, scai::lama::Vector &vectorModulus);
 
-            void calcVelocityFromModule(scai::lama::Vector &vectorModule, scai::lama::Vector &vecV, scai::lama::Vector &vecDensity);
-
-            /*! \brief Switch parameterization to velocity */
-            virtual void switch2velocity() = 0;
-            /*! \brief Switch parameterization to modulus */
-            virtual void switch2modulus() = 0;
-
-            /*! \brief Refresh module if they are dirty */
-            virtual void refreshModule() = 0;
-
-            /*! \brief Refresh velocities if they are dirty */
-            virtual void refreshVelocity() = 0;
+            void calcVelocityFromModulus(scai::lama::Vector &vectorModulus, scai::lama::Vector &vecV, scai::lama::Vector &vecDensity);
 
             /*! \brief Calculate Averaging if they are required */
             virtual void calculateAveraging() = 0;
