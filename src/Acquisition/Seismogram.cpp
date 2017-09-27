@@ -137,19 +137,13 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
     SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
 
     scai::lama::DenseVector<ValueType> tempRow;
-    scai::lama::Scalar integral;
-    scai::lama::DenseVector<ValueType> integralVector;
-    integralVector.allocate(numTracesGlobal);
-    integralVector.assign(0.0);
-
     for (IndexType i = 0; i < numTracesGlobal; i++) {
-        integral = 0.0;
-        tempRow.assign(0.0);
-        data.getRow(tempRow, i);
-        integral = tempRow.sum();
-        integral = integral * DT;
-        integralVector.setValue(i, integral);
-        std::cout << "integral of " << i << ". trace is: " << integral << std::endl;
+	tempRow.assign(0.0);
+	data.getRow(tempRow, i);
+	for (IndexType j = 0; j <tempRow.size()-1; j++) {
+	      tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
+	}
+	data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
     }
 }
 
