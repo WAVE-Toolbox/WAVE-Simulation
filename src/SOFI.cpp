@@ -23,6 +23,8 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
+#include "CheckParameter/CheckParameter.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
     if (comm->getRank() == MASTERGPI) {
         config.print();
     }
-
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -95,7 +97,9 @@ int main(int argc, char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
-
+    
+    CheckParameter::CheckParameter<ValueType> ParameterCheck(config, *model, comm); 
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
