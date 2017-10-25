@@ -48,6 +48,7 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
     if (input.good() != true) {
         COMMON_THROWEXCEPTION("Configuration file " << filename << " was not found " << std::endl)
     }
+    bool flag2D=false;
     while (std::getline(input, line)) {
         size_t lineEnd = line.size();
         std::string::size_type commentPos1 = line.find_first_of("#", 0);
@@ -60,7 +61,7 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
                 lineEnd = commentPos1;
             }
         }
-
+	
         std::string::size_type equalPos = line.find_first_of("=", 0);
 
         if (std::string::npos != equalPos) {
@@ -69,8 +70,14 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
             size_t len = lineEnd - (equalPos + 1);
             std::string val = line.substr(equalPos + 1, len);
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-
-            add2map(name, val, overwrite);
+	    
+	    if (name=="dimension" && val=="2D              ") {
+	      flag2D=true;
+	    }
+	    if (name=="nz" && flag2D==true) {
+	      val="1";
+	    }
+	    add2map(name, val, overwrite);    
         }
     }
     input.close();
