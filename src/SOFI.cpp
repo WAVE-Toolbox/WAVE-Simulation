@@ -88,9 +88,10 @@ int main(int argc, char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
     Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
-
+    
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
@@ -98,7 +99,7 @@ int main(int argc, char *argv[])
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
     
-    CheckParameter::CheckParameter<ValueType> ParameterCheck(config, *model, comm); 
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType,IndexType>(config, *model,comm);
     
     /* --------------------------------------- */
     /* Forward solver                          */
@@ -135,3 +136,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+

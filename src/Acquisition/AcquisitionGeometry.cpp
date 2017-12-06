@@ -137,7 +137,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
 
         Coordinates<ValueType> coord;
 
-        /* 2. Calculate 1-D coordinates form 3-D coordinates */
+        /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
         for (IndexType i = 0; i < numTracesGlobal; i++) {
 

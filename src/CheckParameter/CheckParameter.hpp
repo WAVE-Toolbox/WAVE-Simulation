@@ -9,27 +9,14 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-        //! \brief Class to check different parameters.
-        /*!
-         * This class checks the stability criterion, numerical dispersion criterion with the parameters specified in the configuration file.
-         * It also checks if the input and output files are readable and writeable. 
-         */
-	template <typename ValueType>
-        class CheckParameter
-        {
-          public:
-            //! Default destructor
-            ~CheckParameter(){};
-
-            //! Default constructor
-	    CheckParameter() = delete; 
-	    CheckParameter(Configuration::Configuration const &config, Modelparameter::Modelparameter<ValueType> &model,scai::dmemo::CommunicatorPtr comm);
-										       
-	    void checkStabilityCriterion(ValueType dt, ValueType dh, ValueType vpMax, std::string dimension, IndexType FDorder );
-	    void checkNumericalDispersion(ValueType dh, ValueType vsMin, ValueType fc, IndexType spFDo);
-	    
-          private:
-
-        };
+	template<typename ValueType, typename IndexType> void checkNumericalArtefeactsAndInstabilities(Configuration::Configuration const &config, Modelparameter::Modelparameter<ValueType> &model,scai::dmemo::CommunicatorPtr comm); ;
+	template<typename ValueType, typename IndexType> void checkStabilityCriterion(ValueType dt, ValueType dh, ValueType vpMax, std::string dimension, IndexType FDorder, scai::dmemo::CommunicatorPtr comm);
+	template<typename ValueType, typename IndexType> void checkNumericalDispersion(ValueType dh, ValueType vsMin, ValueType fc, IndexType spFDo, scai::dmemo::CommunicatorPtr comm);
+	
+	template<typename ValueType, typename IndexType> void checkAcquisitionGeometry(Configuration::Configuration const &config,scai::dmemo::CommunicatorPtr comm);
+	template<typename ValueType, typename IndexType> void checkSources(IndexType NX, IndexType NY, IndexType NZ, std::string sourcefile, scai::dmemo::CommunicatorPtr comm);
+	template<typename ValueType, typename IndexType> void checkReceivers(IndexType NX, IndexType NY, IndexType NZ, std::string receiverfile, scai::dmemo::CommunicatorPtr comm);
     }
 }
+
+# include "./CheckParameter.tpp"
