@@ -71,7 +71,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
         alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
         b_temp = exp(-(d / k_temp + alpha_prime) * DT);
         /* avoid division by zero outside the PML */
-        if (abs(d) > 1.0e-6) {
+        if (std::abs(d) > 1.0e-6) {
             a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
         } else
             a_temp = 0.0;
@@ -88,7 +88,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
         alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
         b_temp = exp(-(d / k_temp + alpha_prime) * DT);
         /* avoid division by zero outside the PML */
-        if (abs(d) > 1.0e-6) {
+        if (std::abs(d) > 1.0e-6) {
             a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
         } else
             a_temp = 0.0;
@@ -104,7 +104,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
     alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
     b_temp = exp(-(d / k_temp + alpha_prime) * DT);
     /* avoid division by zero outside the PML */
-    if (abs(d) > 1.0e-6) {
+    if (std::abs(d) > 1.0e-6) {
         a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
     } else
         a_temp = 0.0;

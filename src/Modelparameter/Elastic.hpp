@@ -49,7 +49,6 @@ namespace KITGPI
 
             explicit Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
             explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho);
-            explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
             explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
             //! Copy Constructor.
@@ -58,11 +57,8 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus, scai::lama::Scalar sWaveModulus, scai::lama::Scalar rho);
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
 
-            void initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
-            void write(std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut) const;
             void write(std::string filename, IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
@@ -74,29 +70,24 @@ namespace KITGPI
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
-            void switch2velocity() override;
-            void switch2modulus() override;
-
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator+(KITGPI::Modelparameter::Elastic<ValueType> rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator+=(KITGPI::Modelparameter::Elastic<ValueType> rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator-=(KITGPI::Modelparameter::Elastic<ValueType> rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator+(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> &operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> &operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Elastic<ValueType> &operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
 
           private:
-            void refreshModule() override;
-            void refreshVelocity() override;
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
+	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::dirtyFlagVelocity;
-            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;

@@ -24,6 +24,8 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
+#include "CheckParameter/CheckParameter.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -73,7 +75,7 @@ int main(int argc, const char *argv[])
     if (comm->getRank() == MASTERGPI) {
         config.print();
     }
-
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -92,16 +94,19 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
     Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
-
+    
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
-
+    
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType,IndexType>(config, *model,comm);
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
@@ -110,21 +115,31 @@ int main(int argc, const char *argv[])
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
 
-    HOST_PRINT(comm, "Start time stepping\n"
-                         << "Total Number of time steps: " << getNT << "\n");
-    start_t = common::Walltime::get();
+    for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
+        /* Update Source */
+        if (!config.get<bool>("runSimultaneousShots"))
+            sources.init(config, ctx, dist, shotNumber);
 
-    /* Start and end counter for time stepping */
-    IndexType tStart = 0;
-    IndexType tEnd = getNT;
+        HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
+                                                         << "Total Number of time steps: " << getNT << "\n");
+        start_t = common::Walltime::get();
 
-    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
+        /* Start and end counter for time stepping */
+        IndexType tStart = 0;
+        IndexType tEnd = getNT;
 
-    end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
 
-    receivers.getSeismogramHandler().normalize();
-    receivers.getSeismogramHandler().write(config);
+        end_t = common::Walltime::get();
+        HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+
+        receivers.getSeismogramHandler().normalize();
+	if (!config.get<bool>("runSimultaneousShots"))
+        receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+	
+	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+    }
 
     return 0;
 }
+

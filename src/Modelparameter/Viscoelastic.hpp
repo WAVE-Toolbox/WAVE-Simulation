@@ -54,39 +54,36 @@ namespace KITGPI
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityP_const, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
 
             void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
-            void initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
             void write(std::string filename, IndexType partitionedOut) const override;
 
+            scai::lama::Vector const &getPWaveModulus() override;
+            scai::lama::Vector const &getSWaveModulus() override;
+	    
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-
-            void switch2velocity() override;
-            void switch2modulus() override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+=(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator+=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Viscoelastic<ValueType> &operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
 
           private:
-            void refreshModule() override;
-            void refreshVelocity() override;
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
+	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::dirtyFlagVelocity;
-            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;

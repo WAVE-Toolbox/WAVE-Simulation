@@ -35,15 +35,20 @@ namespace KITGPI
             Sources(){};
 
             explicit Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber);
 
             //! \brief Default destructor
             ~Sources(){};
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber);
 
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
             void writeSignalsToFileRaw(std::string const &filename) const;
 
             void generateSignals(IndexType NT, ValueType DT, scai::hmemo::ContextPtr ctx);
+
+            IndexType getNumShots();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals
@@ -56,6 +61,8 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> wavelet_fc;     //!< Center frequency of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_amp;    //!< Amplitude of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
+
+            IndexType numShots; //!< number of shots =1 for simultaneous execution =Number of Sources for serial execution
 
             void initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, scai::lama::DenseMatrix<ValueType> acquisition, scai::dmemo::DistributionPtr dist_wavefield_traces, scai::hmemo::ContextPtr ctx) override;
             void checkRequiredNumParameter(IndexType numParameterCheck) override;
