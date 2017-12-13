@@ -53,7 +53,7 @@ KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     : seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
 // seismo(4) initializes 4 Seismogram objects by calling the default constructor of the Class Seismogram. Other constructors can be called by e.g. seismo(4,Seismogram<ValueType>(a,b...))
 {
-    seismo.shrink_to_fit();
+    // seismo.shrink_to_fit();
     setTraceType();
 }
 

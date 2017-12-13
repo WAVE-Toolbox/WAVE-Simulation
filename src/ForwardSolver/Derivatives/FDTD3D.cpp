@@ -1,4 +1,6 @@
 #include "FDTD3D.hpp"
+#include <scai/common/Settings.hpp>
+
 using namespace scai;
 
 //! \brief Constructor to support Configuration
@@ -88,6 +90,26 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dzb.setContextPtr(ctx);
     Dyf.setContextPtr(ctx);
     Dyb.setContextPtr(ctx);
+
+    lama::Matrix::SyncKind syncKind = lama::Matrix::SYNCHRONOUS;
+  
+    // by default do matrix-vector operations synchronously, but can be set via environment
+    bool isSet;
+
+    if ( common::Settings::getEnvironment( isSet, "SCAI_ASYNCHRONOUS" ) )
+    {
+        if ( isSet )
+        {
+            syncKind = scai::lama::Matrix::ASYNCHRONOUS;
+        }
+    }
+
+    Dxf.setCommunicationKind(syncKind);
+    Dzf.setCommunicationKind(syncKind);
+    Dxb.setCommunicationKind(syncKind);
+    Dzb.setCommunicationKind(syncKind);
+    Dyf.setCommunicationKind(syncKind);
+    Dyb.setCommunicationKind(syncKind);
 
     Dxb.assignTranspose(Dxf);
     Dxb.scale(-1.0);
