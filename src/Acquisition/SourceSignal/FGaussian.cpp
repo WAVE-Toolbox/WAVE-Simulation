@@ -38,7 +38,8 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(scai::lama::D
      *  tau=pi*FC*(t-1.2/FC);
      *  signal=AMP*2*tau.*exp(-tau*tau);
      */
-    lama::DenseVector<ValueType> t(NT, ValueType(0), DT);
+    lama::DenseVector<ValueType> t;
+    t.setRange(NT, ValueType(0), DT);
     lama::DenseVector<ValueType> help(t.size(), 1.2 / FC + Tshift);
     lama::DenseVector<ValueType> tau(t - help);
     tau *= M_PI * FC;

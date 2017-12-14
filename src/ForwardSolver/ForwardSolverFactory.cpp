@@ -35,7 +35,7 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return ForwardSolverPtr();
 };
 
 template class KITGPI::ForwardSolver::Factory<double>;

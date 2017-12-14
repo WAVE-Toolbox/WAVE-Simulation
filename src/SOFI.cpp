@@ -2,6 +2,7 @@
 
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
+#include <scai/dmemo/GridDistribution.hpp>
 
 #include <iostream>
 
@@ -23,11 +24,18 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
+#include "CheckParameter/CheckParameter.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
+    // parse command line arguments to be set as environment variables, e.g.
+    // --SCAI_CONTEXT=CUDA
+ 
+    common::Settings::parseArgs( argc, argv );
+ 
     typedef double ValueType;
     double start_t, end_t; /* For timing */
 
@@ -53,21 +61,21 @@ int main(int argc, char *argv[])
     common::Settings::setRank(comm->getNodeRank());
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    /* inter node distribution */
-    // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
-    IndexType getN = config.get<IndexType>("NZ") * config.get<IndexType>("NX") * config.get<IndexType>("NY");
-    dmemo::DistributionPtr dist(new dmemo::BlockDistribution(getN, comm));
 
-    if (config.get<IndexType>("UseCubePartitioning")) {
-        Partitioning::PartitioningCubes<ValueType> partitioning(config, comm);
-        dist = partitioning.getDist();
-    }
+    // inter node distribution 
+    // define the grid topology by sizes NX, NY, and NZ from configuration
+    // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+
+    common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX") );
+    common::Grid3D procGrid(config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNX") );
+    // distribute the grid onto available processors, topology can be set by environment variable
+    dmemo::DistributionPtr dist(new dmemo::GridDistribution( grid, comm, procGrid));
 
     HOST_PRINT(comm, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
     if (comm->getRank() == MASTERGPI) {
         config.print();
     }
-
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -86,16 +94,19 @@ int main(int argc, char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
     Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
-
+    
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
-
+    
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType,IndexType>(config, *model,comm);
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
@@ -131,3 +142,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
