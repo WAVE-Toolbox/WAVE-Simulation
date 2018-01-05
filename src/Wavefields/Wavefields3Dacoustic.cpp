@@ -226,5 +226,44 @@ KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<Val
     return rhs * *this;
 }
 
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = rhs.getVX();
+    VY = rhs.getVY();
+    VZ = rhs.getVZ();
+    P = rhs.getP();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX -= rhs.getVX();
+    VY -= rhs.getVY();
+    VZ -= rhs.getVZ();
+    P -= rhs.getP();
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstarct model which is subtractet.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX += rhs.getVX();
+    VY += rhs.getVY();
+    VZ += rhs.getVZ();
+    P += rhs.getP();
+}
+
 template class KITGPI::Wavefields::FD3Dacoustic<float>;
 template class KITGPI::Wavefields::FD3Dacoustic<double>;

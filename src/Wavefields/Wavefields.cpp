@@ -37,7 +37,7 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t)
 {
-    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(static_cast<long long>( t ) ) + ".mtx";
+    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
     std::cout << "snapshot for Timestep " << t << "has been written to: " << fileName;
 
     vector.writeToFile(fileName);
@@ -153,6 +153,39 @@ template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRxy()
 {
     return (Rxy);
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    assign(rhs);
+    return *this;
+}
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    minusAssign(rhs);
+    return *this;
+}
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    plusAssign(rhs);
+    return *this;
 }
 
 template class KITGPI::Wavefields::Wavefields<float>;

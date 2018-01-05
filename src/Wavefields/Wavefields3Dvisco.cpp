@@ -183,5 +183,77 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
     return rhs * *this;
 }
 
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = rhs.getVX();
+    VY = rhs.getVY();
+    VZ = rhs.getVZ();
+    Sxx = rhs.getSxx();
+    Syy = rhs.getSyy();
+    Szz = rhs.getSzz();
+    Sxy = rhs.getSxy();
+    Sxz = rhs.getSxz();
+    Syz = rhs.getSyz();
+    Rxx = rhs.getRxx();
+    Ryy = rhs.getRyy();
+    Rzz = rhs.getRzz();
+    Rxy = rhs.getRxy();
+    Rxz = rhs.getRxz();
+    Ryz = rhs.getRyz();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX -= rhs.getVX();
+    VY -= rhs.getVY();
+    VZ -= rhs.getVZ();
+    Sxx -= rhs.getSxx();
+    Syy -= rhs.getSyy();
+    Szz -= rhs.getSzz();
+    Sxy -= rhs.getSxy();
+    Sxz -= rhs.getSxz();
+    Syz -= rhs.getSyz();
+    Rxx -= rhs.getRxx();
+    Ryy -= rhs.getRyy();
+    Rzz -= rhs.getRzz();
+    Rxy -= rhs.getRxy();
+    Rxz -= rhs.getRxz();
+    Ryz -= rhs.getRyz();
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstarct model which is subtractet.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX += rhs.getVX();
+    VY += rhs.getVY();
+    VZ += rhs.getVZ();
+    Sxx += rhs.getSxx();
+    Syy += rhs.getSyy();
+    Szz += rhs.getSzz();
+    Sxy += rhs.getSxy();
+    Sxz += rhs.getSxz();
+    Syz += rhs.getSyz();
+    Rxx += rhs.getRxx();
+    Ryy += rhs.getRyy();
+    Rzz += rhs.getRzz();
+    Rxy += rhs.getRxy();
+    Rxz += rhs.getRxz();
+    Ryz += rhs.getRyz();
+}
+
 template class KITGPI::Wavefields::FD3Dvisco<float>;
 template class KITGPI::Wavefields::FD3Dvisco<double>;
