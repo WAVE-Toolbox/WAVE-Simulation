@@ -10,7 +10,7 @@ NZ=100 # horizontal 2
 # define Partitioning
 UseCubePartitioning=0
 ProcNX=2
-ProcNY=1
+ProcNY=2
 ProcNZ=1
 
 # define distance between two grid points in meter
