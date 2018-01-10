@@ -34,7 +34,7 @@ namespace KITGPI
             void reset() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
-            scai::lama::DenseVector<ValueType> &getP() override;
+            scai::lama::DenseVector<ValueType> &getRefP() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
 

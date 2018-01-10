@@ -71,7 +71,7 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::reset()
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSxx()
 {
     COMMON_THROWEXCEPTION("There is no Sxx wavefield in the 3D acoustic case.")
     return (Sxx);
@@ -79,7 +79,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSyy()
 {
     COMMON_THROWEXCEPTION("There is no Syy wavefield in the 3D acoustic case.")
     return (Syy);
@@ -87,7 +87,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSzz()
 {
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 3D acoustic case.")
     return (Szz);
@@ -95,7 +95,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSyz()
 {
     COMMON_THROWEXCEPTION("There is no Syz wavefield in the 3D acoustic case.")
     return (Syz);
@@ -103,7 +103,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSxz()
 {
     COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 3D acoustic case.")
     return (Sxz);
@@ -111,7 +111,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getSxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefSxy()
 {
     COMMON_THROWEXCEPTION("There is no Syx wavefield in the 3D acoustic case.")
     return (Sxy);
@@ -119,7 +119,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D acoustic case.")
     return (Rxx);
@@ -127,7 +127,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D acoustic case.")
     return (Ryy);
@@ -135,7 +135,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D acoustic case.")
     return (Rzz);
@@ -143,7 +143,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D acoustic case.")
     return (Ryz);
@@ -151,7 +151,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D acoustic case.")
     return (Rxz);
@@ -159,7 +159,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
 
 //! \brief Not valid in the 3D acoustic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D acoustic case.")
     return (Rxy);
@@ -233,10 +233,10 @@ KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<Val
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dacoustic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX = rhs.getVX();
-    VY = rhs.getVY();
-    VZ = rhs.getVZ();
-    P = rhs.getP();
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    VZ = rhs.getRefVZ();
+    P = rhs.getRefP();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -246,10 +246,10 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::assign(KITGPI::Wavefields::Wav
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dacoustic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX -= rhs.getVX();
-    VY -= rhs.getVY();
-    VZ -= rhs.getVZ();
-    P -= rhs.getP();
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    VZ -= rhs.getRefVZ();
+    P -= rhs.getRefP();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -259,10 +259,10 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::minusAssign(KITGPI::Wavefields
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX += rhs.getVX();
-    VY += rhs.getVY();
-    VZ += rhs.getVZ();
-    P += rhs.getP();
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    VZ += rhs.getRefVZ();
+    P += rhs.getRefP();
 }
 
 template class KITGPI::Wavefields::FD3Dacoustic<float>;

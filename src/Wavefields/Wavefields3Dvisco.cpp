@@ -104,7 +104,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::reset()
 
 //! \brief Not valid in the 3D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D visco-elastic case.")
     return (P);
@@ -190,21 +190,21 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX = rhs.getVX();
-    VY = rhs.getVY();
-    VZ = rhs.getVZ();
-    Sxx = rhs.getSxx();
-    Syy = rhs.getSyy();
-    Szz = rhs.getSzz();
-    Sxy = rhs.getSxy();
-    Sxz = rhs.getSxz();
-    Syz = rhs.getSyz();
-    Rxx = rhs.getRxx();
-    Ryy = rhs.getRyy();
-    Rzz = rhs.getRzz();
-    Rxy = rhs.getRxy();
-    Rxz = rhs.getRxz();
-    Ryz = rhs.getRyz();
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    VZ = rhs.getRefVZ();
+    Sxx = rhs.getRefSxx();
+    Syy = rhs.getRefSyy();
+    Szz = rhs.getRefSzz();
+    Sxy = rhs.getRefSxy();
+    Sxz = rhs.getRefSxz();
+    Syz = rhs.getRefSyz();
+    Rxx = rhs.getRefRxx();
+    Ryy = rhs.getRefRyy();
+    Rzz = rhs.getRefRzz();
+    Rxy = rhs.getRefRxy();
+    Rxz = rhs.getRefRxz();
+    Ryz = rhs.getRefRyz();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -214,21 +214,21 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefi
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX -= rhs.getVX();
-    VY -= rhs.getVY();
-    VZ -= rhs.getVZ();
-    Sxx -= rhs.getSxx();
-    Syy -= rhs.getSyy();
-    Szz -= rhs.getSzz();
-    Sxy -= rhs.getSxy();
-    Sxz -= rhs.getSxz();
-    Syz -= rhs.getSyz();
-    Rxx -= rhs.getRxx();
-    Ryy -= rhs.getRyy();
-    Rzz -= rhs.getRzz();
-    Rxy -= rhs.getRxy();
-    Rxz -= rhs.getRxz();
-    Ryz -= rhs.getRyz();
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    VZ -= rhs.getRefVZ();
+    Sxx -= rhs.getRefSxx();
+    Syy -= rhs.getRefSyy();
+    Szz -= rhs.getRefSzz();
+    Sxy -= rhs.getRefSxy();
+    Sxz -= rhs.getRefSxz();
+    Syz -= rhs.getRefSyz();
+    Rxx -= rhs.getRefRxx();
+    Ryy -= rhs.getRefRyy();
+    Rzz -= rhs.getRefRzz();
+    Rxy -= rhs.getRefRxy();
+    Rxz -= rhs.getRefRxz();
+    Ryz -= rhs.getRefRyz();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -238,21 +238,21 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::W
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX += rhs.getVX();
-    VY += rhs.getVY();
-    VZ += rhs.getVZ();
-    Sxx += rhs.getSxx();
-    Syy += rhs.getSyy();
-    Szz += rhs.getSzz();
-    Sxy += rhs.getSxy();
-    Sxz += rhs.getSxz();
-    Syz += rhs.getSyz();
-    Rxx += rhs.getRxx();
-    Ryy += rhs.getRyy();
-    Rzz += rhs.getRzz();
-    Rxy += rhs.getRxy();
-    Rxz += rhs.getRxz();
-    Ryz += rhs.getRyz();
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    VZ += rhs.getRefVZ();
+    Sxx += rhs.getRefSxx();
+    Syy += rhs.getRefSyy();
+    Szz += rhs.getRefSzz();
+    Sxy += rhs.getRefSxy();
+    Sxz += rhs.getRefSxz();
+    Syz += rhs.getRefSyz();
+    Rxx += rhs.getRefRxx();
+    Ryy += rhs.getRefRyy();
+    Rzz += rhs.getRefRzz();
+    Rxy += rhs.getRefRxy();
+    Rxz += rhs.getRefRxz();
+    Ryz += rhs.getRefRyz();
 }
 
 template class KITGPI::Wavefields::FD3Dvisco<float>;

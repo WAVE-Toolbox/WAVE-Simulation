@@ -65,17 +65,17 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Vector const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
-    lama::Vector &vZ = wavefield.getVZ();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector &vZ = wavefield.getRefVZ();
 
-    lama::Vector &Sxx = wavefield.getSxx();
-    lama::Vector &Syy = wavefield.getSyy();
-    lama::Vector &Szz = wavefield.getSzz();
+    lama::Vector &Sxx = wavefield.getRefSxx();
+    lama::Vector &Syy = wavefield.getRefSyy();
+    lama::Vector &Szz = wavefield.getRefSzz();
 
-    lama::Vector &Syz = wavefield.getSyz();
-    lama::Vector &Sxz = wavefield.getSxz();
-    lama::Vector &Sxy = wavefield.getSxy();
+    lama::Vector &Syz = wavefield.getRefSyz();
+    lama::Vector &Sxz = wavefield.getRefSxz();
+    lama::Vector &Sxy = wavefield.getRefSxy();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();

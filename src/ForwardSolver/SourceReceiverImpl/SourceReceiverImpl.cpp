@@ -58,7 +58,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVX(), gatherSeismogram_samplesVX, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVX(), gatherSeismogram_samplesVX, t);
 }
 
 /*! \brief Gether vy seismogram.
@@ -70,7 +70,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVY(), gatherSeismogram_samplesVY, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVY(), gatherSeismogram_samplesVY, t);
 }
 
 /*! \brief Gether vz seismogram.
@@ -82,7 +82,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVZ(), gatherSeismogram_samplesVZ, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVZ(), gatherSeismogram_samplesVZ, t);
 }
 
 /*! \brief Gether single seismogram.
@@ -132,7 +132,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVX(), applySource_samplesVX, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVX(), applySource_samplesVX, t);
 }
 
 /*! \brief Applying vy source.
@@ -144,7 +144,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVY(), applySource_samplesVY, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVY(), applySource_samplesVY, t);
 }
 
 /*! \brief Applying vz source.
@@ -156,7 +156,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVZ(), applySource_samplesVZ, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVZ(), applySource_samplesVZ, t);
 }
 
 /*! \brief Applying single source.

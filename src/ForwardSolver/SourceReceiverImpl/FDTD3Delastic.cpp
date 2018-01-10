@@ -12,9 +12,9 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, IndexType t)
 {
     /* Get reference to wavefields */
-    lama::DenseVector<ValueType> &Sxx = wavefield.getSxx();
-    lama::DenseVector<ValueType> &Syy = wavefield.getSyy();
-    lama::DenseVector<ValueType> &Szz = wavefield.getSzz();
+    lama::DenseVector<ValueType> &Sxx = wavefield.getRefSxx();
+    lama::DenseVector<ValueType> &Syy = wavefield.getRefSyy();
+    lama::DenseVector<ValueType> &Szz = wavefield.getRefSzz();
 
     /* Gather seismogram for the pressure traces */
     lama::DenseMatrix<ValueType> &seismogramDataPressure = seismo.getData();
@@ -37,9 +37,9 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, IndexType t)
 {
     /* Get reference to wavefields */
-    lama::DenseVector<ValueType> &Sxx = wavefield.getSxx();
-    lama::DenseVector<ValueType> &Syy = wavefield.getSyy();
-    lama::DenseVector<ValueType> &Szz = wavefield.getSzz();
+    lama::DenseVector<ValueType> &Sxx = wavefield.getRefSxx();
+    lama::DenseVector<ValueType> &Syy = wavefield.getRefSyy();
+    lama::DenseVector<ValueType> &Szz = wavefield.getRefSzz();
 
     /* Get reference to sourcesignal storing seismogram */
     const lama::DenseMatrix<ValueType> &sourcesSignalsPressure = seismo.getData();
