@@ -222,10 +222,20 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveM
     return (sWaveModulus);
 }
 
+/*! \brief Get reference to S-wave modulus
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulus() const
+{
+    COMMON_THROWEXCEPTION("S-wave modulus is not set for acoustic modelling")
+    return (sWaveModulus);
+}
+
 /*! \brief Get reference to S-wave velocity
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS()
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS() const
 {
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return (velocityS);
@@ -235,7 +245,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getVeloci
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauP()
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -244,7 +254,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS()
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS() const 
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -275,10 +285,28 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveM
     return (sWaveModulusAverageXY);
 }
 
+/*! \brief Get reference to S-wave modulus in xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXY() const
+{
+    COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
+    return (sWaveModulusAverageXY);
+}
+
 /*! \brief Get reference to S-wave modulus in xz-plane
  */
 template <typename ValueType>
 scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ()
+{
+    COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
+    return (sWaveModulusAverageXZ);
+}
+
+/*! \brief Get reference to S-wave modulus in xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageXZ() const
 {
     COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
     return (sWaveModulusAverageXZ);
@@ -293,10 +321,28 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveM
     return (sWaveModulusAverageYZ);
 }
 
+/*! \brief Get reference to S-wave modulus in yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getSWaveModulusAverageYZ() const
+{
+    COMMON_THROWEXCEPTION("The averaged S-wave modulus is not set for acoustic modelling")
+    return (sWaveModulusAverageYZ);
+}
+
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
 scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXY);
+}
+
+/*! \brief Get reference to tauS xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXY);
@@ -311,10 +357,28 @@ scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAv
     return (tauSAverageXZ);
 }
 
+/*! \brief Get reference to tauS xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXZ);
+}
+
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
 scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageYZ);
+}
+
+/*! \brief Get reference to tauS yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
