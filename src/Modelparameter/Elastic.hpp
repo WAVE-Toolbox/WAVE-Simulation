@@ -62,11 +62,14 @@ namespace KITGPI
             void write(std::string filename, IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
-            scai::lama::Vector const &getTauP() override;
-            scai::lama::Vector const &getTauS() override;
+            scai::lama::Vector const &getTauP() const override;
+            scai::lama::Vector const &getTauS() const override;
             scai::lama::Vector const &getTauSAverageXY() override;
+	    scai::lama::Vector const &getTauSAverageXY() const override;
             scai::lama::Vector const &getTauSAverageXZ() override;
+	    scai::lama::Vector const &getTauSAverageXZ() const override;
             scai::lama::Vector const &getTauSAverageYZ() override;
+	    scai::lama::Vector const &getTauSAverageYZ() const override;
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 

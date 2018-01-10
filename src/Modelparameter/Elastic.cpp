@@ -233,7 +233,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -242,7 +242,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -273,6 +273,15 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
     return (tauSAverageXY);
 }
 
+/*! \brief Get reference to tauS xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXY);
+}
+
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
@@ -282,10 +291,28 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
     return (tauSAverageXZ);
 }
 
+/*! \brief Get reference to tauS xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXZ);
+}
+
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
 scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageYZ);
+}
+
+/*! \brief Get reference to tauS yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);

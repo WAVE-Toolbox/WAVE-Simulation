@@ -62,15 +62,22 @@ namespace KITGPI
 
             /* Getter methods for not requiered parameters */
             scai::lama::Vector const &getSWaveModulus() override;
-            scai::lama::Vector const &getVelocityS() override;
-            scai::lama::Vector const &getTauP() override;
-            scai::lama::Vector const &getTauS() override;
+	    scai::lama::Vector const &getSWaveModulus() const override;
+            scai::lama::Vector const &getVelocityS() const override;
+            scai::lama::Vector const &getTauP() const override;
+            scai::lama::Vector const &getTauS() const override;
             scai::lama::Vector const &getSWaveModulusAverageXY() override;
+	    scai::lama::Vector const &getSWaveModulusAverageXY() const override;
             scai::lama::Vector const &getSWaveModulusAverageXZ() override;
+	    scai::lama::Vector const &getSWaveModulusAverageXZ() const override;
             scai::lama::Vector const &getSWaveModulusAverageYZ() override;
+	    scai::lama::Vector const &getSWaveModulusAverageYZ() const override;
             scai::lama::Vector const &getTauSAverageXY() override;
+	    scai::lama::Vector const &getTauSAverageXY() const override;
             scai::lama::Vector const &getTauSAverageXZ() override;
+	    scai::lama::Vector const &getTauSAverageXZ() const override;
             scai::lama::Vector const &getTauSAverageYZ() override;
+	    scai::lama::Vector const &getTauSAverageYZ() const override;
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
