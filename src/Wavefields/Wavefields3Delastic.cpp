@@ -213,5 +213,59 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
     return rhs * *this;
 }
 
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = rhs.getVX();
+    VY = rhs.getVY();
+    VZ = rhs.getVZ();
+    Sxx = rhs.getSxx();
+    Syy = rhs.getSyy();
+    Szz = rhs.getSzz();
+    Sxy = rhs.getSxy();
+    Sxz = rhs.getSxz();
+    Syz = rhs.getSyz();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX -= rhs.getVX();
+    VY -= rhs.getVY();
+    VZ -= rhs.getVZ();
+    Sxx -= rhs.getSxx();
+    Syy -= rhs.getSyy();
+    Szz -= rhs.getSzz();
+    Sxy -= rhs.getSxy();
+    Sxz -= rhs.getSxz();
+    Syz -= rhs.getSyz();
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstarct model which is subtractet.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX += rhs.getVX();
+    VY += rhs.getVY();
+    VZ += rhs.getVZ();
+    Sxx += rhs.getSxx();
+    Syy += rhs.getSyy();
+    Szz += rhs.getSzz();
+    Sxy += rhs.getSxy();
+    Sxz += rhs.getSxz();
+    Syz += rhs.getSyz();
+}
+
 template class KITGPI::Wavefields::FD3Delastic<float>;
 template class KITGPI::Wavefields::FD3Delastic<double>;

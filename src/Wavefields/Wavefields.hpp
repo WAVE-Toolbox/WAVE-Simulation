@@ -62,6 +62,15 @@ namespace KITGPI
 
             virtual void write(std::string type, IndexType t) = 0;
 
+            //! Operator overloading
+            virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+
+            KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);

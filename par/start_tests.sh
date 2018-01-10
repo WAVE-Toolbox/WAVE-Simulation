@@ -2,7 +2,7 @@
 
 # Setup test environment
 export OMP_NUM_THREADS=2
-export NUM_MPI_PROCESSES=2
+export NUM_MPI_PROCESSES=4
 export SCAI_UNSUPPORTED=IGNORE
 
 # Run unit tests

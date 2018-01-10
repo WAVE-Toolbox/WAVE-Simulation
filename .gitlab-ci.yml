@@ -41,7 +41,7 @@ acoustic2D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.acoustic.txt"
 
 acoustic3D-gcc:
@@ -54,7 +54,7 @@ acoustic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.3D.acoustic.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.acoustic.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.acoustic.txt"
 
 
@@ -68,7 +68,7 @@ elastic2D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.2D.elastic.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.elastic.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.elastic.txt"
 
 elastic3D-gcc:
@@ -81,7 +81,7 @@ elastic3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.3D.elastic.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.elastic.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.elastic.txt"
 
 
@@ -95,7 +95,7 @@ visco2D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.2D.visco.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.visco.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.visco.txt"
 
 visco3D-gcc:
@@ -108,6 +108,6 @@ visco3D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 2 ./../bin/SOFI "ci/configuration_ci.3D.visco.txt"
+    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.3D.visco.txt"
     - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.3D.visco.txt"
 
