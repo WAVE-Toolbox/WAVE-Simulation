@@ -449,7 +449,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     dirtyFlagInverseDensity=true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
-        return *this;
+    return *this;
 }
 
 /*! \brief Overloading - Operation
@@ -471,13 +471,13 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator-=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    density = density -= rhs.density;
+    density -= rhs.density;
     velocityP -= rhs.velocityP;
     
-        dirtyFlagInverseDensity=true;
+    dirtyFlagInverseDensity=true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
-        return *this;
+    return *this;
 }
 
 /*! \brief Overloading = Operation
@@ -493,8 +493,54 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     density = rhs.density;
     dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
     dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
+    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
     return *this;
 }
+
+/*! \brief function for overloading = Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.getPWaveModulus();
+    velocityP = rhs.getVelocityP();
+    inverseDensity = rhs.getInverseDensity();
+    density = rhs.getDensity();
+    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
+    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
+    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP -= rhs.getVelocityP();
+    density -= rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstract model which is added.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP += rhs.getVelocityP();
+    density += rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
 
 template class KITGPI::Modelparameter::Acoustic<double>;
 template class KITGPI::Modelparameter::Acoustic<float>;

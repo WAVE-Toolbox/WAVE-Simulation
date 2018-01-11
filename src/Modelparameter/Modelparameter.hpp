@@ -126,18 +126,28 @@ namespace KITGPI
             virtual scai::lama::Vector const &getTauSAverageXZ() const;
             virtual scai::lama::Vector const &getTauSAverageYZ();
             virtual scai::lama::Vector const &getTauSAverageYZ() const;
+	    
+	    virtual bool getDirtyFlagPWaveModulus() const;
+	    virtual bool getDirtyFlagSWaveModulus() const;
+	    virtual bool getDirtyFlagInverseDensity() const;
+	    virtual bool getDirtyFlagAveraging() const;
+	    
+	    virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
+            virtual void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
+            virtual void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
 
+	    /* Operator overloading */
+            KITGPI::Modelparameter::Modelparameter<ValueType> &operator=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
 	    
           protected:
-            bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
-            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
+            bool dirtyFlagInverseDensity; 	//!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
+            bool dirtyFlagAveraging;      	//!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
             bool dirtyFlagPWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             bool dirtyFlagSWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
-
-            
-           
+        
             IndexType parametrisation;    //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
-
             IndexType PartitionedIn;  //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
             IndexType PartitionedOut; //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
 

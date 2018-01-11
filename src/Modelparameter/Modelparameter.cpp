@@ -1302,5 +1302,69 @@ scai::lama::Vector const &KITGPI::Modelparameter::Modelparameter<ValueType>::get
     return (tauSAverageYZ);
 }
 
+/*! \brief Getter method for dirtyFlagPWaveModulus */
+template <typename ValueType>
+bool KITGPI::Modelparameter::Modelparameter<ValueType>::getDirtyFlagPWaveModulus() const
+{
+    return (dirtyFlagPWaveModulus);
+}
+
+/*! \brief Getter method for dirtyFlagSWaveModulus */
+template <typename ValueType>
+bool KITGPI::Modelparameter::Modelparameter<ValueType>::getDirtyFlagSWaveModulus() const
+{
+    return (dirtyFlagSWaveModulus);
+}
+
+/*! \brief Getter method for dirtyFlagInverseDensity */
+template <typename ValueType>
+bool KITGPI::Modelparameter::Modelparameter<ValueType>::getDirtyFlagInverseDensity() const
+{
+    return (dirtyFlagInverseDensity);
+}
+
+/*! \brief Getter method for dirtyFlagAveraging */
+template <typename ValueType>
+bool KITGPI::Modelparameter::Modelparameter<ValueType>::getDirtyFlagAveraging() const
+{
+    return (dirtyFlagAveraging);
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Modelparameter<ValueType> &KITGPI::Modelparameter::Modelparameter<ValueType>::operator=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    assign(rhs);
+    return *this;
+}
+
+
+
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is added.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Modelparameter<ValueType> &KITGPI::Modelparameter::Modelparameter<ValueType>::operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    plusAssign(rhs);
+    return *this;
+}
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is substracted.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Modelparameter<ValueType> &KITGPI::Modelparameter::Modelparameter<ValueType>::operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    minusAssign(rhs);
+    return *this;
+}
+
 template class KITGPI::Modelparameter::Modelparameter<float>;
 template class KITGPI::Modelparameter::Modelparameter<double>;

@@ -82,7 +82,11 @@ namespace KITGPI
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-
+	    
+	    void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+	    
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(scai::lama::Scalar rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(scai::lama::Scalar const &rhs);
