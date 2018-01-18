@@ -34,17 +34,17 @@ namespace KITGPI
             void reset() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
-            scai::lama::DenseVector<ValueType> &getP() override;
-            scai::lama::DenseVector<ValueType> &getRxx() override;
-            scai::lama::DenseVector<ValueType> &getRyy() override;
-            scai::lama::DenseVector<ValueType> &getRzz() override;
-            scai::lama::DenseVector<ValueType> &getRyz() override;
-            scai::lama::DenseVector<ValueType> &getRxz() override;
-            scai::lama::DenseVector<ValueType> &getRxy() override;
-            scai::lama::DenseVector<ValueType> &getVZ() override;
-            scai::lama::DenseVector<ValueType> &getSzz() override;
-            scai::lama::DenseVector<ValueType> &getSyz() override;
-            scai::lama::DenseVector<ValueType> &getSxz() override;
+            scai::lama::DenseVector<ValueType> &getRefP() override;
+            scai::lama::DenseVector<ValueType> &getRefRxx() override;
+            scai::lama::DenseVector<ValueType> &getRefRyy() override;
+            scai::lama::DenseVector<ValueType> &getRefRzz() override;
+            scai::lama::DenseVector<ValueType> &getRefRyz() override;
+            scai::lama::DenseVector<ValueType> &getRefRxz() override;
+            scai::lama::DenseVector<ValueType> &getRefRxy() override;
+            scai::lama::DenseVector<ValueType> &getRefVZ() override;
+            scai::lama::DenseVector<ValueType> &getRefSzz() override;
+            scai::lama::DenseVector<ValueType> &getRefSyz() override;
+            scai::lama::DenseVector<ValueType> &getRefSxz() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
 

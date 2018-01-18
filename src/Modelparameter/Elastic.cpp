@@ -233,7 +233,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -242,7 +242,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS()
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -273,6 +273,15 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
     return (tauSAverageXY);
 }
 
+/*! \brief Get reference to tauS xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXY);
+}
+
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
@@ -282,10 +291,28 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
     return (tauSAverageXZ);
 }
 
+/*! \brief Get reference to tauS xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXZ);
+}
+
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
 scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageYZ);
+}
+
+/*! \brief Get reference to tauS yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
@@ -321,15 +348,15 @@ KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar const &rhs)
 {
-        density *= rhs;
-        velocityP *= rhs;
-	velocityS *= rhs;
-	
-	dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus= true;
-	dirtyFlagSWaveModulus= true;
-	dirtyFlagAveraging= true;
-        return *this;
+    density *= rhs;
+    velocityP *= rhs;
+    velocityS *= rhs;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
 }
 
 /*! \brief Overloading + Operation
@@ -352,14 +379,14 @@ template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
     density += rhs.density;
-        velocityP += rhs.velocityP;
-	velocityS += rhs.velocityS;
-	
-		dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus= true;
-	dirtyFlagSWaveModulus= true;
-	dirtyFlagAveraging= true;
-        return *this;
+    velocityP += rhs.velocityP;
+    velocityS += rhs.velocityS;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
 }
 
 /*! \brief Overloading - Operation
@@ -382,14 +409,14 @@ template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
     density = density -= rhs.density;
-        velocityP -= rhs.velocityP;
-	velocityS -= rhs.velocityS;
-	
-		dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus= true;
-	dirtyFlagSWaveModulus= true;
-	dirtyFlagAveraging= true;
-        return *this;
+    velocityP -= rhs.velocityP;
+    velocityS -= rhs.velocityS;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
 }
 
 /*! \brief Overloading = Operation
@@ -404,11 +431,63 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     velocityP = rhs.velocityP;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-	dirtyFlagPWaveModulus= true;
-	dirtyFlagSWaveModulus= true;
     inverseDensity = rhs.inverseDensity;
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
+    dirtyFlagPWaveModulus= rhs.dirtyFlagPWaveModulus;
+    dirtyFlagSWaveModulus= rhs.dirtyFlagSWaveModulus;
+    dirtyFlagAveraging= rhs.dirtyFlagAveraging;
     return *this;
+}
+
+/*! \brief function for overloading = Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.getPWaveModulus();
+    sWaveModulus = rhs.getSWaveModulus();
+    velocityP = rhs.getVelocityP();
+    velocityS = rhs.getVelocityS();
+    inverseDensity = rhs.getInverseDensity();
+    density = rhs.getDensity();
+    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
+    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
+    dirtyFlagSWaveModulus= rhs.getDirtyFlagSWaveModulus();
+    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP -= rhs.getVelocityP();
+    velocityS -= rhs.getVelocityS();
+    density -= rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstract model which is added.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP += rhs.getVelocityP();
+    velocityS += rhs.getVelocityS();
+    density += rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 template class KITGPI::Modelparameter::Elastic<float>;

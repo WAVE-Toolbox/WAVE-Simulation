@@ -83,7 +83,7 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::reset()
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D visco-elastic case.")
     return (Rzz);
@@ -91,7 +91,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D visco-elastic case.")
     return (Ryz);
@@ -99,7 +99,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D visco-elastic case.")
     return (Rxz);
@@ -107,7 +107,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefSzz()
 {
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D visco-elastic case.")
     return (Szz);
@@ -115,7 +115,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getSyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefSyz()
 {
     COMMON_THROWEXCEPTION("There is no Syz wavefield in the 2D visco-elastic case.")
     return (Syz);
@@ -123,7 +123,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getSxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefSxz()
 {
     COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 2D visco-elastic case.")
     return (Sxz);
@@ -131,7 +131,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getVZ()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefVZ()
 {
     COMMON_THROWEXCEPTION("There is no VZ wavefield in the 2D visco-elastic case.")
     return (VZ);
@@ -139,7 +139,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 
 //! \brief Not valid in the 2D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 2D visco-elastic case.")
     return (P);
@@ -217,14 +217,14 @@ KITGPI::Wavefields::FD2Dvisco<ValueType> KITGPI::Wavefields::FD2Dvisco<ValueType
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX = rhs.getVX();
-    VY = rhs.getVY();
-    Sxx = rhs.getSxx();
-    Syy = rhs.getSyy();
-    Sxy = rhs.getSxy();
-    Rxx = rhs.getRxx();
-    Ryy = rhs.getRyy();
-    Rxy = rhs.getRxy();
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    Sxx = rhs.getRefSxx();
+    Syy = rhs.getRefSyy();
+    Sxy = rhs.getRefSxy();
+    Rxx = rhs.getRefRxx();
+    Ryy = rhs.getRefRyy();
+    Rxy = rhs.getRefRxy();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -234,14 +234,14 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefi
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX -= rhs.getVX();
-    VY -= rhs.getVY();
-    Sxx -= rhs.getSxx();
-    Syy -= rhs.getSyy();
-    Sxy -= rhs.getSxy();
-    Rxx -= rhs.getRxx();
-    Ryy -= rhs.getRyy();
-    Rxy -= rhs.getRxy();
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    Sxx -= rhs.getRefSxx();
+    Syy -= rhs.getRefSyy();
+    Sxy -= rhs.getRefSxy();
+    Rxx -= rhs.getRefRxx();
+    Ryy -= rhs.getRefRyy();
+    Rxy -= rhs.getRefRxy();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -251,14 +251,14 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::W
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX += rhs.getVX();
-    VY += rhs.getVY();
-    Sxx += rhs.getSxx();
-    Syy += rhs.getSyy();
-    Sxy += rhs.getSxy();
-    Rxx += rhs.getRxx();
-    Ryy += rhs.getRyy();
-    Rxy += rhs.getRxy();
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    Sxx += rhs.getRefSxx();
+    Syy += rhs.getRefSyy();
+    Sxy += rhs.getRefSxy();
+    Rxx += rhs.getRefRxx();
+    Ryy += rhs.getRefRyy();
+    Rxy += rhs.getRefRxy();
 }
 
 template class KITGPI::Wavefields::FD2Dvisco<double>;

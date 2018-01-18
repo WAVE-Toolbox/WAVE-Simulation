@@ -74,7 +74,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::reset()
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefSxz()
 {
     COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 2D elastic case.")
     return (Sxz);
@@ -82,7 +82,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefSyz()
 {
     COMMON_THROWEXCEPTION("There is no Syz wavefield in the 2D elastic case.")
     return (Syz);
@@ -90,7 +90,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefSzz()
 {
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D elastic case.")
     return (Szz);
@@ -98,7 +98,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getVZ()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefVZ()
 {
     COMMON_THROWEXCEPTION("There is no VZ wavefield in the 2D elastic case.")
     return (VZ);
@@ -106,7 +106,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 2D elastic case.")
     return (P);
@@ -114,7 +114,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 2D elastic case.")
     return (Rxx);
@@ -122,7 +122,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 2D elastic case.")
     return (Ryy);
@@ -130,7 +130,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D elastic case.")
     return (Rzz);
@@ -138,7 +138,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D elastic case.")
     return (Ryz);
@@ -146,7 +146,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D elastic case.")
     return (Rxz);
@@ -154,7 +154,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D elastic case.")
     return (Rxy);
@@ -232,11 +232,11 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX = rhs.getVX();
-    VY = rhs.getVY();
-    Sxx = rhs.getSxx();
-    Syy = rhs.getSyy();
-    Sxy = rhs.getSxy();
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    Sxx = rhs.getRefSxx();
+    Syy = rhs.getRefSyy();
+    Sxy = rhs.getRefSxy();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -246,11 +246,11 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::assign(KITGPI::Wavefields::Wave
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX -= rhs.getVX();
-    VY -= rhs.getVY();
-    Sxx -= rhs.getSxx();
-    Syy -= rhs.getSyy();
-    Sxy -= rhs.getSxy();
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    Sxx -= rhs.getRefSxx();
+    Syy -= rhs.getRefSyy();
+    Sxy -= rhs.getRefSxy();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -260,11 +260,11 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::minusAssign(KITGPI::Wavefields:
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX += rhs.getVX();
-    VY += rhs.getVY();
-    Sxx += rhs.getSxx();
-    Syy += rhs.getSyy();
-    Sxy += rhs.getSxy();
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    Sxx += rhs.getRefSxx();
+    Syy += rhs.getRefSyy();
+    Sxy += rhs.getRefSxy();
 }
 
 template class KITGPI::Wavefields::FD2Delastic<float>;

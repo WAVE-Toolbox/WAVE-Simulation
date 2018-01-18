@@ -79,7 +79,6 @@ namespace KITGPI
              */
             virtual void write(std::string filename, IndexType partitionedOut) const = 0;
 
-            virtual scai::lama::Vector const &getDensity();
             virtual scai::lama::Vector const &getDensity() const;
             virtual scai::lama::Vector const &getInverseDensity();
             virtual scai::lama::Vector const &getInverseDensity() const;
@@ -87,14 +86,10 @@ namespace KITGPI
             virtual scai::lama::Vector const &getPWaveModulus() const;
             virtual scai::lama::Vector const &getSWaveModulus();
             virtual scai::lama::Vector const &getSWaveModulus() const;
-            virtual scai::lama::Vector const &getVelocityP();
             virtual scai::lama::Vector const &getVelocityP() const;
-            virtual scai::lama::Vector const &getVelocityS();
             virtual scai::lama::Vector const &getVelocityS() const;
 
-            virtual scai::lama::Vector const &getTauP();
             virtual scai::lama::Vector const &getTauP() const;
-            virtual scai::lama::Vector const &getTauS();
             virtual scai::lama::Vector const &getTauS() const;
 
             virtual IndexType getNumRelaxationMechanisms() const;
@@ -131,18 +126,28 @@ namespace KITGPI
             virtual scai::lama::Vector const &getTauSAverageXZ() const;
             virtual scai::lama::Vector const &getTauSAverageYZ();
             virtual scai::lama::Vector const &getTauSAverageYZ() const;
+	    
+	    virtual bool getDirtyFlagPWaveModulus() const;
+	    virtual bool getDirtyFlagSWaveModulus() const;
+	    virtual bool getDirtyFlagInverseDensity() const;
+	    virtual bool getDirtyFlagAveraging() const;
+	    
+	    virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
+            virtual void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
+            virtual void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
 
+	    /* Operator overloading */
+            KITGPI::Modelparameter::Modelparameter<ValueType> &operator=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
 	    
           protected:
-            bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
-            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
+            bool dirtyFlagInverseDensity; 	//!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
+            bool dirtyFlagAveraging;      	//!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
             bool dirtyFlagPWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             bool dirtyFlagSWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
-
-            
-           
+        
             IndexType parametrisation;    //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
-
             IndexType PartitionedIn;  //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
             IndexType PartitionedOut; //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
 
@@ -229,20 +234,6 @@ namespace KITGPI
             typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(IndexType, IndexType &, IndexType &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<ValueType> &, IndexType, IndexType, IndexType); //!< Pointer to set elements functions
 
             typedef IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(IndexType, IndexType, IndexType, IndexType); //!< Pointer to counting elements functions
-
-            //! \brief Getter method for averaging density matrix in x-direction
-            virtual scai::lama::Matrix &getDensityAverageMatrixX();
-            //! \brief Getter method for averaging density matrix in y-direction
-            virtual scai::lama::Matrix &getDensityAverageMatrixY();
-            //! \brief Getter method for averaging density matrix in z-direction
-            virtual scai::lama::Matrix &getDensityAverageMatrixZ();
-
-            //! \brief Getter method for averaging S-Wave modulus xy-plane
-            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixXY();
-            //! \brief Getter method for averaging S-Wave modulus xz-plane
-            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixXZ();
-            //! \brief Getter method for averaging S-Wave modulus yz-plane
-            virtual scai::lama::Matrix &getSWaveModulusAverageMatrixYZ();
 
             void calcAverageMatrix(scai::lama::Matrix &Av, calcNumberRowElements_AvPtr calcNumberRowElements, setRowElements_AvPtr setRowElements, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
 

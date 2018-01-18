@@ -35,24 +35,24 @@ namespace KITGPI
             //! Reset wavefields
             virtual void reset() = 0;
 
-            virtual scai::lama::DenseVector<ValueType> &getVX();
-            virtual scai::lama::DenseVector<ValueType> &getVY();
-            virtual scai::lama::DenseVector<ValueType> &getVZ();
-            virtual scai::lama::DenseVector<ValueType> &getP();
+            virtual scai::lama::DenseVector<ValueType> &getRefVX();
+            virtual scai::lama::DenseVector<ValueType> &getRefVY();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZ();
+            virtual scai::lama::DenseVector<ValueType> &getRefP();
 
-            virtual scai::lama::DenseVector<ValueType> &getSxx();
-            virtual scai::lama::DenseVector<ValueType> &getSyy();
-            virtual scai::lama::DenseVector<ValueType> &getSzz();
-            virtual scai::lama::DenseVector<ValueType> &getSyz();
-            virtual scai::lama::DenseVector<ValueType> &getSxz();
-            virtual scai::lama::DenseVector<ValueType> &getSxy();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefSzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxy();
 
-            virtual scai::lama::DenseVector<ValueType> &getRxx();
-            virtual scai::lama::DenseVector<ValueType> &getRyy();
-            virtual scai::lama::DenseVector<ValueType> &getRzz();
-            virtual scai::lama::DenseVector<ValueType> &getRyz();
-            virtual scai::lama::DenseVector<ValueType> &getRxz();
-            virtual scai::lama::DenseVector<ValueType> &getRxy();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefRzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxy();
 
             //! Declare getter variable for context pointer
             virtual scai::hmemo::ContextPtr getContextPtr() = 0;

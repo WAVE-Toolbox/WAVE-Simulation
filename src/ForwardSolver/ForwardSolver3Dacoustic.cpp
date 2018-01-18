@@ -62,10 +62,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Vector const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
-    lama::Vector &vZ = wavefield.getVZ();
-    lama::Vector &p = wavefield.getP();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector &vZ = wavefield.getRefVZ();
+    lama::Vector &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();

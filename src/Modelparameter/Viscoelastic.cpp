@@ -374,14 +374,14 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     density *= rhs;
     tauS *= rhs;
     tauP *= rhs;
-        velocityP *= rhs;
-	velocityS *= rhs;
-	
-	dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus = true;
-	dirtyFlagSWaveModulus = true;
-	dirtyFlagAveraging=true;
-        return *this;
+    velocityP *= rhs;
+    velocityS *= rhs;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging=true;
+    return *this;
 }
 
 /*! \brief Overloading + Operation
@@ -409,12 +409,12 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     velocityP += rhs.velocityP;
     velocityS += rhs.velocityS;
 	
-	dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus = true;
-	dirtyFlagSWaveModulus = true;
-	dirtyFlagAveraging=true;
-	
-        return *this;
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging=true;
+    
+    return *this;
 }
 
 /*! \brief Overloading - Operation
@@ -439,14 +439,14 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     density = density -= rhs.density;
     tauS -= rhs.tauS;
     tauP -= rhs.tauP;
-        velocityP -= rhs.velocityP;
-	velocityS -= rhs.velocityS;
-	
-	dirtyFlagInverseDensity=true;
-	dirtyFlagPWaveModulus = true;
-	dirtyFlagSWaveModulus = true;
-	dirtyFlagAveraging=true;
-        return *this;
+    velocityP -= rhs.velocityP;
+    velocityS -= rhs.velocityS;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging=true;
+    return *this;
 }
 
 /*! \brief Overloading = Operation
@@ -461,6 +461,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     velocityP = rhs.velocityP;
     velocityS = rhs.velocityS;
     density = rhs.density;
+    inverseDensity = rhs.inverseDensity;
     tauS = rhs.tauS;
     tauP = rhs.tauP;
     relaxationFrequency = rhs.relaxationFrequency;
@@ -468,8 +469,68 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;    
     dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
     dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    inverseDensity = rhs.inverseDensity;
+    dirtyFlagAveraging= rhs.dirtyFlagAveraging;
     return *this;
 }
+
+/*! \brief function for overloading = Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.getPWaveModulus();
+    sWaveModulus = rhs.getSWaveModulus();
+    velocityP = rhs.getVelocityP();
+    velocityS = rhs.getVelocityS();
+    inverseDensity = rhs.getInverseDensity();
+    density = rhs.getDensity();
+    tauS = rhs.getTauS();
+    tauP = rhs.getTauP();
+    relaxationFrequency = rhs.getRelaxationFrequency();
+    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
+    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
+    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
+    dirtyFlagSWaveModulus= rhs.getDirtyFlagSWaveModulus();
+    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP -= rhs.getVelocityP();
+    velocityS -= rhs.getVelocityS();
+    density -= rhs.getDensity();
+    tauS -= rhs.getTauS();
+    tauP -= rhs.getTauP();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstract model which is added.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP += rhs.getVelocityP();
+    velocityS += rhs.getVelocityS();
+    density += rhs.getDensity();
+    tauS += rhs.getTauS();
+    tauP += rhs.getTauP();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
 template class KITGPI::Modelparameter::Viscoelastic<float>;
 template class KITGPI::Modelparameter::Viscoelastic<double>;

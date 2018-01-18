@@ -86,7 +86,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D elastic case.")
     return (P);
@@ -94,7 +94,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D elastic case.")
     return (Rxx);
@@ -102,7 +102,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D elastic case.")
     return (Ryy);
@@ -110,7 +110,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D elastic case.")
     return (Rzz);
@@ -118,7 +118,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D elastic case.")
     return (Ryz);
@@ -126,7 +126,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D elastic case.")
     return (Rxz);
@@ -134,7 +134,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
     return (Rxy);
@@ -220,15 +220,15 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX = rhs.getVX();
-    VY = rhs.getVY();
-    VZ = rhs.getVZ();
-    Sxx = rhs.getSxx();
-    Syy = rhs.getSyy();
-    Szz = rhs.getSzz();
-    Sxy = rhs.getSxy();
-    Sxz = rhs.getSxz();
-    Syz = rhs.getSyz();
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    VZ = rhs.getRefVZ();
+    Sxx = rhs.getRefSxx();
+    Syy = rhs.getRefSyy();
+    Szz = rhs.getRefSzz();
+    Sxy = rhs.getRefSxy();
+    Sxz = rhs.getRefSxz();
+    Syz = rhs.getRefSyz();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -238,15 +238,15 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wave
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX -= rhs.getVX();
-    VY -= rhs.getVY();
-    VZ -= rhs.getVZ();
-    Sxx -= rhs.getSxx();
-    Syy -= rhs.getSyy();
-    Szz -= rhs.getSzz();
-    Sxy -= rhs.getSxy();
-    Sxz -= rhs.getSxz();
-    Syz -= rhs.getSyz();
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    VZ -= rhs.getRefVZ();
+    Sxx -= rhs.getRefSxx();
+    Syy -= rhs.getRefSyy();
+    Szz -= rhs.getRefSzz();
+    Sxy -= rhs.getRefSxy();
+    Sxz -= rhs.getRefSxz();
+    Syz -= rhs.getRefSyz();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -256,15 +256,15 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields:
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
-    VX += rhs.getVX();
-    VY += rhs.getVY();
-    VZ += rhs.getVZ();
-    Sxx += rhs.getSxx();
-    Syy += rhs.getSyy();
-    Szz += rhs.getSzz();
-    Sxy += rhs.getSxy();
-    Sxz += rhs.getSxz();
-    Syz += rhs.getSyz();
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    VZ += rhs.getRefVZ();
+    Sxx += rhs.getRefSxx();
+    Syy += rhs.getRefSyy();
+    Szz += rhs.getRefSzz();
+    Sxy += rhs.getRefSxy();
+    Sxz += rhs.getRefSxz();
+    Syz += rhs.getRefSyz();
 }
 
 template class KITGPI::Wavefields::FD3Delastic<float>;
