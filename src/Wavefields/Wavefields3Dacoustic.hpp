@@ -17,8 +17,6 @@ namespace KITGPI
 
         /*! \brief The class FD3Dacoustic holds the wavefields for 3D acoustic simulation
          *
-         * Wavefields implements some methods, which are requiered by all derived classes.
-         * As this class is an abstract class, all methods are protected.
          */
         template <typename ValueType>
         class FD3Dacoustic : public Wavefields<ValueType>
