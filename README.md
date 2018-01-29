@@ -8,13 +8,13 @@ Get started:
 - See `README.md` in `par/`
 
 Documentation:
-- Type `make` in `doc/`
+- Type `make doc` in `build/`
 
 Contributing:
 - See the contributing guidelines provided in `CONTRIBUTING.md`
 
 Requirement:
-- Framework [LAMA](https://www.libama.org) Version >= 2.1
+- Framework [LAMA](https://www.libama.org) Version >= 2.2.0
 - Compiler with C++11 support
 
 Tested with:

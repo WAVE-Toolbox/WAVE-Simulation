@@ -111,7 +111,7 @@ AR       := ar
 ARFLAGS  := cr
 RM       := rm -f --preserve-root
 
-.PHONY: help all doc clean distclean vinfo html pdf utest itest lib prog
+.PHONY: help all doc clean distclean vinfo doxygen theory utest itest lib prog
 
 help:
 	@echo
@@ -122,7 +122,7 @@ help:
 	@echo "   all       :: equivalent to \"$(MAKE) lib prog doc utest itest\""
 	@echo "   lib       :: build archive lib$(wave.lib).a"
 	@echo "   prog      :: build executable $(wave.exe) (and, implicitly, lib)"
-	@echo "   doc       :: build html and pdf (theory) documentation"
+	@echo "   doc       :: build html (make doxygen) and pdf (make theory) documentation"
 	@echo "   utest     :: build unit tests"
 	@echo "   itest     :: build integration tests"
 	@echo "   clean     :: remove object files"
@@ -182,9 +182,9 @@ distclean: clean
 vinfo: prog
 	$(Q)strings $(wave.bindir)/$(wave.exe) | grep _KITGPI_LINK_
 
-doc: html pdf
-html: $(wave.docdir)/doxygen/html/index.html
-pdf: $(wave.docdir)/theory/WAVE_guide_EN.pdf
+doc: doxygen theory
+doxygen: $(wave.docdir)/doxygen/html/index.html
+theory: $(wave.docdir)/theory/WAVE_guide_EN.pdf
 
 $(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.liballsrc)
 	@echo "   [DOC]   $@"
