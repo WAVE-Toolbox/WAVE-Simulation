@@ -8,7 +8,7 @@ gcc:
   stage: build
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`
   script:
     - echo "g++ Version:" && g++ --version
     - cd src/ && make all CC=g++ CFLAGS="-std=c++11 -fopenmp -Wall -Wextra -Werror"
@@ -25,7 +25,7 @@ unittest-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`        
+#   - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`        
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}:${LD_LIBRARY_PATH}
@@ -39,7 +39,7 @@ acoustic2D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
@@ -54,7 +54,7 @@ acoustic3D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
@@ -70,7 +70,7 @@ elastic2D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
@@ -85,7 +85,7 @@ elastic3D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
@@ -101,7 +101,7 @@ visco2D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
@@ -116,7 +116,7 @@ visco3D-gcc:
     - gcc
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
-    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
+#    - echo "LAMA Version:" && expr `git --git-dir=${SCAI_ROOT}/../.git/ log -1 --pretty=%h`    
   script:
     - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
