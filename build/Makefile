@@ -129,7 +129,7 @@ RMFLAGS  := -f --preserve-root
 CPY      := cp
 CPYFLAGS := -p 
 
-.PHONY: help all doc clean distclean vinfo doxygen theory utest itest lib prog copyhpp
+.PHONY: help all doc clean distclean vinfo doxygen guide utest itest lib prog copyhpp
 
 help:
 	@echo
@@ -140,7 +140,7 @@ help:
 	@echo "   all       :: equivalent to \"$(MAKE) lib prog doc utest itest copyhpp\""
 	@echo "   lib       :: build archive lib$(wave.lib).a and copy headers"
 	@echo "   prog      :: build executable $(wave.exe) (and, implicitly, lib)"
-	@echo "   doc       :: build html (make doxygen) and pdf (make theory) documentation"
+	@echo "   doc       :: build html (make doxygen) and pdf (make guide) documentation"
 	@echo "   utest     :: build unit tests"
 	@echo "   itest     :: build integration tests"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
@@ -210,9 +210,9 @@ distclean: clean
 vinfo: prog
 	$(Q)strings $(wave.bindir)/$(wave.exe) | grep _KITGPI_LINK_
 
-doc: doxygen theory
+doc: doxygen guide
 doxygen: $(wave.docdir)/doxygen/html/index.html
-theory: $(wave.docdir)/theory/WAVE_guide_EN.pdf
+guide: $(wave.docdir)/guide/WAVE_guide_EN.pdf
 
 $(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.liballsrc)
 	@echo "   [DOC]   $@"
@@ -222,14 +222,14 @@ $(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.
 	doxygen Doxyfile &> log 
 	@echo "   [DOC]   doxygen log file: $(wave.docdir)/doxygen/log"
 
-$(wave.docdir)/theory/WAVE_guide_EN.pdf: $(wave.dir)/doc/theory/WAVE_guide_EN.tex
+$(wave.docdir)/guide/WAVE_guide_EN.pdf: $(wave.dir)/doc/guide/WAVE_guide_EN.tex
 	@echo "   [DOC]   $@"
-	$(Q)mkdir -p $(wave.docdir)/theory && cd  $(wave.docdir)/theory && \
-	sed -e '/\\author{}/ a\\\graphicspath{{$(wave.dir)/doc/theory/}}' $< \
-	    -e 's#\\bibliography{WAVE_theory}#\\bibliography{$(wave.dir)/doc/theory/WAVE_theory}#g' > WAVE_guide_EN.tex && \
+	$(Q)mkdir -p $(wave.docdir)/guide && cd  $(wave.docdir)/guide && \
+	sed -e '/\\author{}/ a\\\graphicspath{{$(wave.dir)/doc/guide/}}' $< \
+	    -e 's#\\bibliography{WAVE_guide}#\\bibliography{$(wave.dir)/doc/guide/WAVE_guide}#g' > WAVE_guide_EN.tex && \
 	pdflatex WAVE_guide_EN > /dev/null && bibtex WAVE_guide_EN > /dev/null && \
 	pdflatex WAVE_guide_EN > /dev/null && pdflatex WAVE_guide_EN > log
-	@echo "   [DOC]   pdflatex log file: $(wave.docdir)/theory/log"
+	@echo "   [DOC]   pdflatex log file: $(wave.docdir)/guide/log"
 
 $(wave.objdir)/%.o: $(wave.srcdir)/%.cpp
 	$(call cmd,compile_cxx)
