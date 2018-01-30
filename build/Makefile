@@ -3,6 +3,8 @@
 #
 # v1.0a, Jan 2018, Thomas Hertweck: Initial version.
 # v1.0b, Jan 2018, Tilman Steinweg: GTEST_DIR PATH update.
+# v1.0c, Jan 2018, Thomas Hertweck: Update to reflect hpp directory structure.
+#                                   Use Makefile rule templates.
 ################################################################################
 
 SRCTREE  := ../
@@ -29,9 +31,11 @@ wave.exe  := $(strip $(EXENAME))
 wave.lib  := $(strip $(LIBNAME))
 wave.utst := $(strip $(UTSTNAME))
 wave.itst := $(strip $(ITSTNAME))
-gtest     := $(strip $(shell gtester --version 2>/dev/null))
+gtest     := $(strip $(shell gtest-config --version 2>/dev/null))
 
-ifeq ($(realpath $(PWD)),$(wave.dir)/src)
+wave.blddir := $(realpath $(PWD))
+
+ifeq ($(wave.blddir),$(wave.dir)/src)
   $(error You are trying to build software in the source tree; please use a separate build directory)
 endif
 
@@ -61,20 +65,22 @@ endif
 endif
 
 ifndef SCAI_ROOT
-  SCAI_ROOT := $(SCAI_ROOT_DEFAULT)
-  $(warning SCAI_ROOT environment variable undefined, now set to $(SCAI_ROOT))
+  SCAI_ROOT := $(strip $(SCAI_ROOT_DEFAULT))
+  $(warning SCAI: SCAI_ROOT environment variable undefined, now set to $(SCAI_ROOT))
 endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(GTEST_DIR_DEFAULT)
-    $(warning no local installation found, GTEST_DIR environment variable undefined, now set to $(GTEST_DIR))
+    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
+    $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
   endif
 endif
-wave.libdir := ./lib
-wave.bindir := ./bin
-wave.objdir := ./obj
-wave.docdir := ./doc
+
+wave.libdir := $(strip ./lib)
+wave.bindir := $(strip ./bin)
+wave.objdir := $(strip ./obj)
+wave.docdir := $(strip ./doc)
+wave.incdir := $(strip ./include)
 dummy := $(shell mkdir -p $(wave.libdir) $(wave.bindir) $(wave.objdir) $(wave.docdir))
 
 wave.deps := $(wildcard .dep*)
@@ -88,9 +94,18 @@ endif
 wave.srcsubdirs := $(dir $(wildcard $(wave.srcdir)/*/.))
 wave.liballsrc  := $(wildcard $(addsuffix */*.cpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.cpp,$(wave.srcsubdirs)))
 wave.unitsrc    := $(wildcard $(addsuffix */*UnitTest.cpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *UnitTest.cpp,$(wave.srcsubdirs)))
-wave.integsrc   :=  $(wildcard $(addsuffix *Test_CompareSeismogram.cpp,$(wave.srcsubdirs)))
+wave.integsrc   := $(wildcard $(addsuffix *Test_CompareSeismogram.cpp,$(wave.srcsubdirs)))
 wave.libsrc     := $(filter-out $(wave.unitsrc) $(wave.integsrc),$(wave.liballsrc))
+wave.libsrcdirs := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballsrc))))
 wave.mainsrc    := $(wave.srcdir)/SOFI.cpp
+
+wave.liballhpp  := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.hpp,$(wave.srcsubdirs)))
+wave.liballinc  := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
+wave.incdirs    := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
+ifeq ($(wave.incdirs),)
+  wave.incdirs  := . # to avoid error in dummy mkdir command
+endif
+dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 wave.libobj   := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.libsrc))))
 wave.mainobj  := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.mainsrc))))
@@ -109,9 +124,12 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lscai_tracing -lscai_logging -lscai_common 
 AR       := ar
 ARFLAGS  := cr
-RM       := rm -f --preserve-root
+RM       := rm
+RMFLAGS  := -f --preserve-root
+CPY      := cp
+CPYFLAGS := -p 
 
-.PHONY: help all doc clean distclean vinfo doxygen theory utest itest lib prog
+.PHONY: help all doc clean distclean vinfo doxygen theory utest itest lib prog copyhpp
 
 help:
 	@echo
@@ -119,12 +137,13 @@ help:
 	@echo "   $(MAKE) [V=0|1] <target>"
 	@echo
 	@echo "Targets:"
-	@echo "   all       :: equivalent to \"$(MAKE) lib prog doc utest itest\""
-	@echo "   lib       :: build archive lib$(wave.lib).a"
+	@echo "   all       :: equivalent to \"$(MAKE) lib prog doc utest itest copyhpp\""
+	@echo "   lib       :: build archive lib$(wave.lib).a and copy headers"
 	@echo "   prog      :: build executable $(wave.exe) (and, implicitly, lib)"
 	@echo "   doc       :: build html (make doxygen) and pdf (make theory) documentation"
 	@echo "   utest     :: build unit tests"
 	@echo "   itest     :: build integration tests"
+	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
 	@echo "   vinfo     :: print version information stored in executable"
@@ -143,15 +162,23 @@ ifeq "$(origin GTEST_DIR)" 'environment'
 endif
 	@echo
 
-all: lib prog doc utest itest
+all: lib prog doc utest itest copyhpp
 
 prog: $(wave.bindir)/$(wave.exe)
 
-lib: $(wave.libdir)/lib$(wave.lib).a
+lib: $(wave.libdir)/lib$(wave.lib).a copyhpp
+
+copyhpp: $(wave.liballinc)
 
 utest: $(wave.bindir)/$(wave.utst)
 
 itest: $(wave.bindir)/$(wave.itst)
+
+define copy_rule
+$(wave.incdir)/$(1)%.hpp: $(wave.srcdir)/$(1)%.hpp
+	$$(call cmd,cphpp,$$<)
+endef
+$(foreach dir,$(wave.incdirs),$(eval $(call copy_rule,$(dir))))
 
 $(wave.bindir)/$(wave.exe): $(wave.mainobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
@@ -173,11 +200,12 @@ clean:
 
 distclean: clean
 	@echo -e "   \e[31m[RM]\e[0m    .dep-* files"
-	-$(Q)find . -iname ".dep-*" | xargs $(RM)
-	-$(Q)$(RM) *~
+	-$(Q)find . -iname ".dep-*" | xargs $(RM) $(RMFLAGS)
+	-$(Q)$(RM) $(RMFLAGS) *~
 	$(call cmd,rmdir,$(wave.libdir))
 	$(call cmd,rmdir,$(wave.bindir))
 	$(call cmd,rmdir,$(wave.docdir))
+	$(call cmd,rmdir,$(wave.incdir))
 
 vinfo: prog
 	$(Q)strings $(wave.bindir)/$(wave.exe) | grep _KITGPI_LINK_
@@ -206,11 +234,11 @@ $(wave.docdir)/theory/WAVE_guide_EN.pdf: $(wave.dir)/doc/theory/WAVE_guide_EN.te
 $(wave.objdir)/%.o: $(wave.srcdir)/%.cpp
 	$(call cmd,compile_cxx)
 
-$(wave.objdir)/%.o: $(wave.srcdir)/*/%.cpp
-	$(call cmd,compile_cxx)
-
-$(wave.objdir)/%.o: $(wave.srcdir)/*/*/%.cpp
-	$(call cmd,compile_cxx)
+define compile_rule
+$(wave.objdir)/%.o: $(wave.srcdir)/$(1)/%.cpp
+	$$(call cmd,compile_cxx)
+endef
+$(foreach dir,$(wave.libsrcdirs),$(eval $(call compile_rule,$(dir))))
 
 quiet_cmd_compile_cxx = \e[32m[CXX]\e[0m   $@
       cmd_compile_cxx = $(CXX) -o$@ $(CDEPEND) $(CXXFLAGS.$@) $(CPPFLAGS) $(INCDIRS) $(CXXFLAGS) -c $<
@@ -220,6 +248,9 @@ quiet_cmd_ar = \e[93m[AR]\e[0m    $@
 
 quiet_cmd_rmdir = \e[31m[RM]\e[0m    $(1)
       cmd_rmdir = $(RM) -rf $(1)
+
+quiet_cmd_cphpp = \e[37m[CP]\e[0m    $@
+      cmd_cphpp = $(CPY) $(CPYFLAGS) $(1) $@
 
 lnkbase = $(wave.objdir)/wave_link_$(notdir $@)
 lnkh    = $(addsuffix .hpp,$(lnkbase))
@@ -231,7 +262,7 @@ cpp.string     := $(subst \,,$(CPPFLAGS))
 ldflags.string  = $(subst \,,$(LDFLAGS))
 
 quiet_cmd_link = \e[94m[LD]\e[0m    $@
-      cmd_link = $(RM) $(lnkh) $(lnkcxx) $(lnko) ; \
+      cmd_link = $(RM) $(RMFLAGS) $(lnkh) $(lnkcxx) $(lnko) ; \
 		 echo "\#ifndef _KITGPI_LINK_H" > $(lnkh) ; \
 		 echo "\#define _KITGPI_LINK_H" >> $(lnkh) ; \
 		 echo "char KITGPI_DAT_HOST[] = \"_KITGPI_LINK_HOST $(HOSTNAME)\";" >> $(lnkh) ; \
@@ -256,7 +287,7 @@ quiet_cmd_link = \e[94m[LD]\e[0m    $@
 		 $(CXX) -I$(wave.objdir) $(CXXFLAGS) -c -o$(lnko) $(lnkcxx) && \
 		 $(LD) $(CXXFLAGS) -o$@ $(filter-out $(abspath $(wave.libdir)/lib$(wave.lib).a),$(abspath $^)) \
 		       $(lnko) $(LDFLAGS.$@) $(LDFLAGS) ; ret=$$? ; \
-		 $(RM) $(lnkh) $(lnkcxx) $(lnko) ; exit $$ret
+		 $(RM) $(RMFLAGS) $(lnkh) $(lnkcxx) $(lnko) ; exit $$ret
 
 cmd = @$(if $($(quiet)cmd_$(1)),echo -e '   $(call $(quiet)cmd_$(1),$(2))' &&) $(call cmd_$(1),$(2))
 

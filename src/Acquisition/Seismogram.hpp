@@ -8,7 +8,7 @@
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
 #include "math.h"
-#include "segy.h"
+#include "segy.hpp"
 
 namespace KITGPI
 {
