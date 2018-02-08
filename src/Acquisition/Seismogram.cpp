@@ -667,7 +667,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar const &rhs)
 {
     data *= rhs;
 
@@ -679,7 +679,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
 {
     KITGPI::Acquisition::Seismogram<ValueType> result(*this);
     result += rhs;
@@ -692,7 +692,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
     data += rhs.data;
 
@@ -704,7 +704,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
 {
     KITGPI::Acquisition::Seismogram<ValueType> result(*this);
     result -= rhs;
@@ -717,7 +717,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
     data -= rhs.data;
 
