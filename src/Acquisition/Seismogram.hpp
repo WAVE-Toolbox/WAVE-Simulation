@@ -71,11 +71,11 @@ namespace KITGPI
             void setNormalizeTraces(IndexType normalizeTrace);
 
             /* Overloading Operators */
-            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar &rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
