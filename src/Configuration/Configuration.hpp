@@ -27,7 +27,9 @@ namespace KITGPI
           public:
             //! Default destructor
             ~Configuration(){};
-
+            //! Default constructor
+	    Configuration(){};
+	    
             explicit Configuration(std::string const &filename);
 
             void readFromFile(std::string const &filename, bool overwrite = false);
@@ -36,7 +38,8 @@ namespace KITGPI
 
             template <typename ReturnType>
             ReturnType get(std::string const &parameterName) const;
-
+            void add2config(std::string const &KEY, std::string const &VALUE);
+            
           private:
             void add2map(std::string const &KEY, std::string const &VALUE, bool overwrite = false);
 

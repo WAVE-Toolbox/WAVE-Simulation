@@ -4,6 +4,25 @@
  *
  * This function adds `KEY=VALUE` pairs to the configuration class.
  *
+ \param KEY which correspondents to the VALUE
+ \param VALUE for the KEY to add
+ */
+void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, std::string const &VALUE)
+{
+    std::string tempName = KEY;
+    std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
+
+    if (configMap.find(tempName) == configMap.end()) {
+        add2map(tempName, VALUE, 1);
+    } else {
+        COMMON_THROWEXCEPTION("Parameter <" << tempName << "> already exists, overwriting parameters is not allowed! " << std::endl)
+    }
+}
+
+/*! \brief Add `KEY=VALUE` pairs to the configuration
+ *
+ * This function adds `KEY=VALUE` pairs to the configuration class.
+ *
  * If a `KEY` is already set in the configuration, the `VALUE` of this `KEY` will not be overwritten by the new `VALUE`.
  * However, this behavior can be changed by the bool `overwrite`. If `overwrite` is set to `true` existing `VALUE`s will be overwritten.
  * The default value for `overwrite` is `false`.
@@ -48,7 +67,7 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
     if (input.good() != true) {
         COMMON_THROWEXCEPTION("Configuration file " << filename << " was not found " << std::endl)
     }
-    bool flag2D=false;
+    bool flag2D = false;
     while (std::getline(input, line)) {
         size_t lineEnd = line.size();
         std::string::size_type commentPos1 = line.find_first_of("#", 0);
@@ -61,7 +80,7 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
                 lineEnd = commentPos1;
             }
         }
-	
+
         std::string::size_type equalPos = line.find_first_of("=", 0);
 
         if (std::string::npos != equalPos) {
@@ -70,14 +89,14 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
             size_t len = lineEnd - (equalPos + 1);
             std::string val = line.substr(equalPos + 1, len);
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-	    
-	    if (name=="dimension" && val=="2D              ") {
-	      flag2D=true;
-	    }
-	    if (name=="nz" && flag2D==true) {
-	      val="1";
-	    }
-	    add2map(name, val, overwrite);    
+
+            if (name == "dimension" && val == "2D              ") {
+                flag2D = true;
+            }
+            if (name == "nz" && flag2D == true) {
+                val = "1";
+            }
+            add2map(name, val, overwrite);
         }
     }
     input.close();
@@ -122,7 +141,8 @@ ReturnType KITGPI::Configuration::Configuration::get(std::string const &paramete
     ReturnType temp;
     try {
         std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
-        std::istringstream input(configMap.at(tempName)); input >> temp;
+        std::istringstream input(configMap.at(tempName));
+        input >> temp;
     } catch (...) {
         COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
     }
