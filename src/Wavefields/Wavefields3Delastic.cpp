@@ -14,8 +14,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
  *
  * Initialisation of 3D elastic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -40,8 +40,8 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string type, IndexType t)
@@ -60,7 +60,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string type, IndexTy
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(IndexType t)
