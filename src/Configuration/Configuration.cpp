@@ -8,7 +8,7 @@
  \param VALUE for the KEY to add
  */
 template <typename InputType>
-void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, InputType &VALUE)
+void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, InputType const &VALUE)
 {
     std::string tempName = KEY;  
     std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
@@ -170,11 +170,11 @@ void KITGPI::Configuration::Configuration::print() const
 }
 
 
-template void KITGPI::Configuration::Configuration::add2config<double>(std::string const &KEY, double &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<float>(std::string const &KEY, float &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<int>(std::string const &KEY, int &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<bool>(std::string const &KEY, bool &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<std::string>(std::string const &KEY, std::string &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<double>(std::string const &KEY, double const &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<float>(std::string const &KEY, float const &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<int>(std::string const &KEY, int const &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<bool>(std::string const &KEY, bool const &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<std::string>(std::string const &KEY, std::string const &VALUE);
 
 
 template float KITGPI::Configuration::Configuration::get<float>(std::string const &parameterName) const;
