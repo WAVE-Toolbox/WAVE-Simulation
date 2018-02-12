@@ -7,13 +7,19 @@
  \param KEY which correspondents to the VALUE
  \param VALUE for the KEY to add
  */
-void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, std::string const &VALUE)
+template <typename InputType>
+void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, InputType &VALUE)
 {
-    std::string tempName = KEY;
+    std::string tempName = KEY;  
     std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
 
+    std::ostringstream sstream;
+    sstream << VALUE;
+    std::string tempValue = sstream.str();
+    
+
     if (configMap.find(tempName) == configMap.end()) {
-        add2map(tempName, VALUE, 1);
+        add2map(tempName, tempValue);
     } else {
         COMMON_THROWEXCEPTION("Parameter <" << tempName << "> already exists, overwriting parameters is not allowed! " << std::endl)
     }
@@ -162,6 +168,14 @@ void KITGPI::Configuration::Configuration::print() const
         std::cout << "\t" << iter->first << " = " << iter->second << std::endl;
     std::cout << std::endl;
 }
+
+
+template void KITGPI::Configuration::Configuration::add2config<double>(std::string const &KEY, double &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<float>(std::string const &KEY, float &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<int>(std::string const &KEY, int &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<bool>(std::string const &KEY, bool &VALUE);
+template void KITGPI::Configuration::Configuration::add2config<std::string>(std::string const &KEY, std::string &VALUE);
+
 
 template float KITGPI::Configuration::Configuration::get<float>(std::string const &parameterName) const;
 template double KITGPI::Configuration::Configuration::get<double>(std::string const &parameterName) const;

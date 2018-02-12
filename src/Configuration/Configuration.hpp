@@ -38,7 +38,9 @@ namespace KITGPI
 
             template <typename ReturnType>
             ReturnType get(std::string const &parameterName) const;
-            void add2config(std::string const &KEY, std::string const &VALUE);
+	    
+	    template <typename InputType>
+            void add2config(std::string const &KEY,  InputType &VALUE);
             
           private:
             void add2map(std::string const &KEY, std::string const &VALUE, bool overwrite = false);
