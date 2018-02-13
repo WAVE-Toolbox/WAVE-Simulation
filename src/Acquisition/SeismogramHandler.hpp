@@ -24,7 +24,7 @@ namespace KITGPI
             //! \brief Default destructor
             ~SeismogramHandler(){};
 
-            void readFromFileRaw(std::string const &filename);
+            void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
             void writeToFileRaw(std::string const &filename) const;
             void write(Configuration::Configuration const &config, std::string const &filename) const;
             void normalize();

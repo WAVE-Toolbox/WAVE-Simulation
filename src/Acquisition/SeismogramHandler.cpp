@@ -98,13 +98,12 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::stri
  \param filename Filename of the input file
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-
-    std::cout << " read from " << filename << "this function is not implemented yet" << std::endl;
-    // for (auto &i : seismo) {
-    //      i.readFromFileRaw(filename, NULL, NULL);
-    //  }
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.readFromFileRaw(filename, distTraces, distSamples);
+    }
 }
 
 /*! \brief Method to reset the Seismogram data
