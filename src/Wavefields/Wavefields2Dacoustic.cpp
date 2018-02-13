@@ -22,8 +22,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextP
  *
  * Initialisation of 2D acoustic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -34,8 +34,8 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPt
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string type, IndexType t)
@@ -48,7 +48,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string type, IndexT
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(IndexType t)

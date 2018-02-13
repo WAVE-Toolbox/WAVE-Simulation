@@ -14,8 +14,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dvisco<ValueType>::getContextPtr(
  *
  * Initialisation of 2D viscoelastic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dvisco<ValueType>::FD2Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -39,8 +39,8 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string type, IndexType t)
@@ -58,7 +58,7 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string type, IndexType
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::writeSnapshot(IndexType t)
