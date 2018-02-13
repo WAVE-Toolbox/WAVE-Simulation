@@ -1,29 +1,7 @@
 #include "Configuration.hpp"
 
-/*! \brief Add `KEY=VALUE` pairs to the configuration
- *
- * This function adds `KEY=VALUE` pairs to the configuration class.
- *
- \param KEY which correspondents to the VALUE
- \param VALUE for the KEY to add
- */
-template <typename InputType>
-void KITGPI::Configuration::Configuration::add2config(std::string const &KEY, InputType const &VALUE)
-{
-    std::string tempName = KEY;  
-    std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
 
-    std::ostringstream sstream;
-    sstream << VALUE;
-    std::string tempValue = sstream.str();
-    
 
-    if (configMap.find(tempName) == configMap.end()) {
-        add2map(tempName, tempValue);
-    } else {
-        COMMON_THROWEXCEPTION("Parameter <" << tempName << "> already exists, overwriting parameters is not allowed! " << std::endl)
-    }
-}
 
 /*! \brief Add `KEY=VALUE` pairs to the configuration
  *
@@ -121,39 +99,7 @@ KITGPI::Configuration::Configuration::Configuration(std::string const &filename)
     readFromFile(filename, true);
 }
 
-/*! \brief Get the value of a parameter from the read-in configuration
- *
- * This method returns the value of a specific parameter from the configuration.
- * If the specified value is not found in the configuration, e.g. it was not included in the
- * configuration file, the function will throw an exception. The exception message will contain the missing parameter. \n
- * This getter function is tested with the following data types: int (IndexType), float, double (ValueType) and std::string.
- *
- * **Known limitations:**\n
- * The conversation to bool fails if strings are used as `VALUE`.\n
- * This will fail: `Test1=true` -> `config.get<bool>("Test1") == true;`\n
- * However, this will work:`Test1=1` -> `config.get<bool>("Test1") == true;`
- *
- * **Usage:**\n
- * `int test = config.get<int>("test"); // For an int` \n
- * `std::string filename = config.get<std::string>("filename"); // for a std::string` \n
- * `ReturnType VALUE = config.get<ReturnType>("KEY"); // general`
- \param parameterName name of the wanted parameter
- \return The value of "parameterName"
- */
-template <typename ReturnType>
-ReturnType KITGPI::Configuration::Configuration::get(std::string const &parameterName) const
-{
-    std::string tempName = parameterName;
-    ReturnType temp;
-    try {
-        std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
-        std::istringstream input(configMap.at(tempName));
-        input >> temp;
-    } catch (...) {
-        COMMON_THROWEXCEPTION("Parameter " << parameterName << ": Not found in Configuration file! " << std::endl)
-    }
-    return (temp);
-}
+
 
 /*! \brief Print configuration to stdout
  *
@@ -170,15 +116,3 @@ void KITGPI::Configuration::Configuration::print() const
 }
 
 
-template void KITGPI::Configuration::Configuration::add2config<double>(std::string const &KEY, double const &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<float>(std::string const &KEY, float const &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<int>(std::string const &KEY, int const &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<bool>(std::string const &KEY, bool const &VALUE);
-template void KITGPI::Configuration::Configuration::add2config<std::string>(std::string const &KEY, std::string const &VALUE);
-
-
-template float KITGPI::Configuration::Configuration::get<float>(std::string const &parameterName) const;
-template double KITGPI::Configuration::Configuration::get<double>(std::string const &parameterName) const;
-template int KITGPI::Configuration::Configuration::get<int>(std::string const &parameterName) const;
-template std::string KITGPI::Configuration::Configuration::get<std::string>(std::string const &parameterName) const;
-template bool KITGPI::Configuration::Configuration::get<bool>(std::string const &parameterName) const;
