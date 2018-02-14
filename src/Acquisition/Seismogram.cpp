@@ -350,13 +350,45 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 /*!
  *
  \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
+{
+    scai::dmemo::DistributionPtr distTraces;
+    scai::dmemo::DistributionPtr distSamples;
+    
+    if (copyDist == 1){
+        distTraces = data.getRowDistributionPtr();
+        distSamples = data.getColDistributionPtr();
+    }
+        
+    data.readFromFile(addSeismogramTypeToName(filename));
+    IndexType nrow_temp = data.getNumRows();
+    IndexType ncolumn_temp = data.getNumColumns();
+
+    numSamples = ncolumn_temp;
+    numTracesGlobal = nrow_temp;
+
+    if (copyDist == 0) {
+        replicate();
+    } else if (copyDist == 1) {
+        redistribute(distTraces, distSamples);
+    }
+}
+
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
  \param distTraces Distribution of traces
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    data.readFromFile(filename);
+    data.readFromFile(addSeismogramTypeToName(filename));
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
