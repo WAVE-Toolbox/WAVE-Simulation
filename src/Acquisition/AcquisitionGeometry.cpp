@@ -177,7 +177,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
 }
 
-/*! \brief Getter methode for Distribution.
+/*! \brief Getter method for distribution of local traces 
  *
  \param coordinates coordiantes
  \param dist_wavefield Distribution of the wavefields

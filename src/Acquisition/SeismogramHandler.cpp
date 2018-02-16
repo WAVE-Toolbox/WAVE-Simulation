@@ -94,7 +94,22 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::stri
 //! \brief Read all handled Seismogram from a raw-file.
 /*!
  *
- * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticly.
+ * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticaly.
+ \param filename Filename of the input file
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.readFromFileRaw(filename, copyDist);
+    }
+}
+
+//! \brief Read all handled Seismogram from a raw-file.
+/*!
+ *
+ * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticaly.
  \param filename Filename of the input file
  */
 template <typename ValueType>

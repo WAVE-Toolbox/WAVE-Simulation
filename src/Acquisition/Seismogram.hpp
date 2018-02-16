@@ -39,6 +39,7 @@ namespace KITGPI
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
 
+            void readFromFileRaw(std::string const &filename, bool copyDist = 0);
             void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, IndexType NT);
