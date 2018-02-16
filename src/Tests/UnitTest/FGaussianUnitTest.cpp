@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "FGaussian.hpp"
+#include "SourceSignal/FGaussian.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;

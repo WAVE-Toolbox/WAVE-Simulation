@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "IntgSinThree.hpp"
+#include "SourceSignal/IntgSinThree.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;

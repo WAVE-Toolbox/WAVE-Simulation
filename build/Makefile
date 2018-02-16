@@ -5,16 +5,23 @@
 # v1.0b, Jan 2018, Tilman Steinweg: GTEST_DIR PATH update.
 # v1.0c, Jan 2018, Thomas Hertweck: Update to reflect hpp directory structure.
 #                                   Use Makefile rule templates.
+# v1.1,  Feb 2018  Tilman Steinweg: Added make model rule
+#                                   Reorganized code no filter-out of .cpp but 
+#                                   directories (Tests,Tools) for libsrcdirs
 ################################################################################
 
 SRCTREE  := ../
 EXENAME  := SOFI
 LIBNAME  := SOFI
 UTSTNAME := Test_unit
-ITSTNAME := Test_CompareSeismogram
+ITSTNAME := Test_integration
 
 SCAI_ROOT_DEFAULT := /data14/software/scai_lama/build_dev
 GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
+
+CXX      := g++
+CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror
 
 ################################################################################
 # Usually, there is no need to change anything below this line
@@ -78,43 +85,63 @@ endif
 
 wave.libdir := $(strip ./lib)
 wave.bindir := $(strip ./bin)
+wave.bintoolsdir := $(strip $(wave.bindir)/tools)
 wave.objdir := $(strip ./obj)
 wave.docdir := $(strip ./doc)
 wave.incdir := $(strip ./include)
-dummy := $(shell mkdir -p $(wave.libdir) $(wave.bindir) $(wave.objdir) $(wave.docdir))
+dummy := $(shell mkdir -p $(wave.libdir) $(wave.bindir) $(wave.objdir) $(wave.docdir) $(wave.bintoolsdir))
 
 wave.deps := $(wildcard .dep*)
 
-wave.srcdir := $(addsuffix /src,$(wave.dir))
 wave.commit := $(strip $(shell cd $(wave.dir) && git log --pretty=short --format="%H" 2>/dev/null | head -n1))
 ifeq ($(wave.commit),)
   wave.commit := -1
 endif
 
-wave.srcsubdirs := $(dir $(wildcard $(wave.srcdir)/*/.))
-wave.liballsrc  := $(wildcard $(addsuffix */*.cpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.cpp,$(wave.srcsubdirs)))
-wave.unitsrc    := $(wildcard $(addsuffix */*UnitTest.cpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *UnitTest.cpp,$(wave.srcsubdirs)))
-wave.integsrc   := $(wildcard $(addsuffix *Test_CompareSeismogram.cpp,$(wave.srcsubdirs)))
-wave.libsrc     := $(filter-out $(wave.unitsrc) $(wave.integsrc),$(wave.liballsrc))
-wave.libsrcdirs := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballsrc))))
-wave.mainsrc    := $(wave.srcdir)/SOFI.cpp
+#--------All Source-------#
+wave.srcdir      := $(addsuffix /src,$(wave.dir))
+wave.srcsubdirs  := $(dir $(wildcard $(wave.srcdir)/*/.))
+wave.allsrc      := $(wildcard $(addsuffix */*.cpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.cpp,$(wave.srcsubdirs)))
+wave.srcdirs     := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.allsrc))))
 
-wave.liballhpp  := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.hpp,$(wave.srcsubdirs)))
-wave.liballinc  := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
-wave.incdirs    := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
+# -------Main Source------#
+wave.mainsrc    := $(wave.srcdir)/SOFI.cpp
+wave.mainobj    := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.mainsrc))))
+
+# ---------Tests----------#
+wave.srctstdir  := $(addsuffix /Tests/,$(wave.srcdir))
+
+wave.unitsrc    := $(wildcard $(addsuffix *.cpp,$(wave.srctstdir)/UnitTest/))
+wave.unitobj    := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.unitsrc))))
+
+wave.integsrc   := $(wildcard $(addsuffix *.cpp,$(wave.srctstdir)/IntegrationTest/))
+wave.integobj   := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.integsrc))))
+
+# ---------Tools----------#
+wave.srctoolsdir    := $(addsuffix /Tools/,$(wave.srcdir))
+wave.srcmoddir    := $(addsuffix CreateModel/,$(wave.srctoolsdir))
+wave.allmodsrc      := $(wildcard $(addsuffix *.cpp,$(wave.srcmoddir)))
+wave.allmodexe      := $(notdir $(patsubst %.cpp,% ,$(wave.allmodsrc)))
+
+
+# ---------Library--------#
+wave.libsrcsubdirs  := $(filter-out $(wave.srctstdir) $(wave.srctoolsdir),$(wave.srcsubdirs))
+wave.libsrc         := $(wildcard $(addsuffix */*.cpp,$(wave.libsrcsubdirs))) $(wildcard $(addsuffix *.cpp,$(wave.libsrcsubdirs)))
+wave.libsrcdirs     := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.libsrc))))
+wave.libobj         := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.libsrc))))
+
+wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wildcard $(addsuffix *.hpp,$(wave.srcsubdirs)))
+wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
+wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
+
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
 endif
 dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
-wave.libobj   := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.libsrc))))
-wave.mainobj  := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.mainsrc))))
-wave.unitobj  := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.unitsrc))))
-wave.integobj := $(addprefix $(wave.objdir)/,$(notdir $(patsubst %.cpp,%.o,$(wave.integsrc))))
 
-CXX      := g++
-CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror
+
+
 INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs))
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
@@ -129,7 +156,7 @@ RMFLAGS  := -f --preserve-root
 CPY      := cp
 CPYFLAGS := -p 
 
-.PHONY: help all doc clean distclean vinfo doxygen guide utest itest lib prog copyhpp
+.PHONY: help all doc clean distclean vinfo doxygen guide utest itest lib prog copyhpp model
 
 help:
 	@echo
@@ -143,6 +170,7 @@ help:
 	@echo "   doc       :: build html (make doxygen) and pdf (make guide) documentation"
 	@echo "   utest     :: build unit tests"
 	@echo "   itest     :: build integration tests"
+	@echo "   model     :: creates models from source in src/Tools/CreateModel"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
@@ -174,11 +202,24 @@ utest: $(wave.bindir)/$(wave.utst)
 
 itest: $(wave.bindir)/$(wave.itst)
 
+model: $(addprefix $(wave.bintoolsdir)/,$(wave.allmodexe))
+
+
+define model_rules
+$(wave.bintoolsdir)/$(1): $(addprefix $(wave.objdir),/$(1).o) $(wave.libdir)/lib$(wave.lib).a
+	$$(call cmd,link)
+$(addprefix $(wave.objdir),/$(1).o): $(wave.srcmoddir)/$(1).cpp
+	$$(call cmd,compile_cxx)
+endef	
+$(foreach exe,$(wave.allmodexe),$(eval $(call model_rules,$(exe))))
+
+
 define copy_rule
 $(wave.incdir)/$(1)%.hpp: $(wave.srcdir)/$(1)%.hpp
 	$$(call cmd,cphpp,$$<)
 endef
 $(foreach dir,$(wave.incdirs),$(eval $(call copy_rule,$(dir))))
+
 
 $(wave.bindir)/$(wave.exe): $(wave.mainobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
@@ -214,7 +255,7 @@ doc: doxygen guide
 doxygen: $(wave.docdir)/doxygen/html/index.html
 guide: $(wave.docdir)/guide/WAVE_guide_EN.pdf
 
-$(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.liballsrc)
+$(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.libsrc)
 	@echo "   [DOC]   $@"
 	$(Q)mkdir -p $(wave.docdir)/doxygen && cd  $(wave.docdir)/doxygen && \
 	sed -e 's#\(^INPUT[[:space:]]*=\).*$$#\1 $(wave.srcdir) $(wave.dir)/README.md#g' \
@@ -238,7 +279,9 @@ define compile_rule
 $(wave.objdir)/%.o: $(wave.srcdir)/$(1)/%.cpp
 	$$(call cmd,compile_cxx)
 endef
-$(foreach dir,$(wave.libsrcdirs),$(eval $(call compile_rule,$(dir))))
+$(foreach dir,$(wave.srcdirs),$(eval $(call compile_rule,$(dir))))
+
+
 
 quiet_cmd_compile_cxx = \e[32m[CXX]\e[0m   $@
       cmd_compile_cxx = $(CXX) -o$@ $(CDEPEND) $(CXXFLAGS.$@) $(CPPFLAGS) $(INCDIRS) $(CXXFLAGS) -c $<

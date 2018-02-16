@@ -1,8 +1,8 @@
 #include <iostream>
 #include <scai/lama.hpp>
 
-#include "../Common/HostPrint.hpp"
-#include "../Configuration/Configuration.hpp"
+#include "HostPrint.hpp"
+#include "Configuration.hpp"
 
 int main(int argc, char *argv[])
 {

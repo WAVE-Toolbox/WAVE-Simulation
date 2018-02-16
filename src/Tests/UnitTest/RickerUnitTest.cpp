@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "Ricker.hpp"
+#include "SourceSignal/Ricker.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;

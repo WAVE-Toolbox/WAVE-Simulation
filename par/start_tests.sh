@@ -7,7 +7,7 @@ export SCAI_UNSUPPORTED=IGNORE
 
 SOFI_EXE="./../build/bin/SOFI"
 UNITTEST_EXE="./../build/bin/Test_unit"
-INTEGRATIONTEST_EXE="./../build/bin/Test_CompareSeismogram"
+INTEGRATIONTEST_EXE="./../build/bin/Test_integration"
 
 # Run unit tests
 ${UNITTEST_EXE}
