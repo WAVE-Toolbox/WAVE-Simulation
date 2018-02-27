@@ -185,7 +185,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -209,7 +209,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefi
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -233,7 +233,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::W
 
 /*! \brief function for overloading += Operation (called in base class)
  *
- \param rhs Abstarct model which is subtractet.
+ \param rhs Abstarct wavefield which is added.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -253,6 +253,30 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wa
     Rxy += rhs.getRefRxy();
     Rxz += rhs.getRefRxz();
     Ryz += rhs.getRefRyz();
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dvisco<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    VZ *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Szz *= rhs;
+    Sxy *= rhs;
+    Sxz *= rhs;
+    Syz *= rhs;
+    Rxx *= rhs;
+    Ryy *= rhs;
+    Rzz *= rhs;
+    Rxy *= rhs;
+    Rxz *= rhs;
+    Ryz *= rhs;
 }
 
 template class KITGPI::Wavefields::FD3Dvisco<float>;

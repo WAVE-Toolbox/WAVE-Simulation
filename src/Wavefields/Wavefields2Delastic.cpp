@@ -227,7 +227,7 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -241,7 +241,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::assign(KITGPI::Wavefields::Wave
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -255,7 +255,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::minusAssign(KITGPI::Wavefields:
 
 /*! \brief function for overloading += Operation (called in base class)
  *
- \param rhs Abstarct model which is subtractet.
+ \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -267,5 +267,18 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::plusAssign(KITGPI::Wavefields::
     Sxy += rhs.getRefSxy();
 }
 
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Delastic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Sxy *= rhs;
+}
 template class KITGPI::Wavefields::FD2Delastic<float>;
 template class KITGPI::Wavefields::FD2Delastic<double>;
