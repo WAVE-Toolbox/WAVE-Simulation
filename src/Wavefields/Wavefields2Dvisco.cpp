@@ -212,7 +212,7 @@ KITGPI::Wavefields::FD2Dvisco<ValueType> KITGPI::Wavefields::FD2Dvisco<ValueType
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -229,7 +229,7 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefi
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -246,7 +246,7 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::W
 
 /*! \brief function for overloading += Operation (called in base class)
  *
- \param rhs Abstarct model which is subtractet.
+ \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -259,6 +259,23 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wa
     Rxx += rhs.getRefRxx();
     Ryy += rhs.getRefRyy();
     Rxy += rhs.getRefRxy();
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Sxy *= rhs;
+    Rxx *= rhs;
+    Ryy *= rhs;
+    Rxy *= rhs;
 }
 
 template class KITGPI::Wavefields::FD2Dvisco<double>;

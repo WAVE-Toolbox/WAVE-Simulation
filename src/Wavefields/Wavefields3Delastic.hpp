@@ -58,6 +58,7 @@ namespace KITGPI
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+	    void timesAssign(ValueType rhs);
 	    
           private:
             /* required wavefields */

@@ -172,7 +172,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::g
 
 /*! \brief Overloading = Operation
  *
- \param rhs Model which is copied.
+ \param rhs Wavefield which is copied.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -183,7 +183,7 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
 
 /*! \brief Overloading -= Operation
  *
- \param rhs Model which is subtractet.
+ \param rhs Wavefield which is subtractet.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -194,12 +194,23 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
 
 /*! \brief Overloading += Operation
  *
- \param rhs Model which is subtractet.
+ \param rhs Wavefield which is added.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     plusAssign(rhs);
+    return *this;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator*=(ValueType rhs)
+{
+    timesAssign(rhs);
     return *this;
 }
 
