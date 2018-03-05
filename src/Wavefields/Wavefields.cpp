@@ -35,12 +35,27 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
  \param t Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t)
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t, IndexType partitionedOut)
 {
     std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
-    std::cout << "snapshot for Timestep " << t << "has been written to: " << fileName;
+    
+    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
 
-    vector.writeToFile(fileName);
+    switch (partitionedOut) {
+    case false:
+        vector.writeToFile(fileName);
+	HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << fileName << "\n");
+        break;
+
+    case true:
+        partitionOut.writeToDistributedFiles(vector, fileName);
+        break;
+
+    default:
+        COMMON_THROWEXCEPTION("Unexpected output option!")
+        break;
+    }
+
 }
 
 //! \brief Getter routine for vX wavefield

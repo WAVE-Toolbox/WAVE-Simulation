@@ -131,7 +131,7 @@ namespace KITGPI
 	    virtual bool getDirtyFlagSWaveModulus() const;
 	    virtual bool getDirtyFlagInverseDensity() const;
 	    virtual bool getDirtyFlagAveraging() const;
-	    
+
 	    virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
             virtual void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
             virtual void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;

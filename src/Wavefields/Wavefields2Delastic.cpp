@@ -40,13 +40,13 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::write(std::string type, IndexType t)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::write(std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t);
-    this->writeWavefield(VY, "VY", type, t);
-    this->writeWavefield(Sxx, "Sxx", type, t);
-    this->writeWavefield(Syy, "Syy", type, t);
-    this->writeWavefield(Sxy, "Sxy", type, t);
+    this->writeWavefield(VX, "VX", type, t, partitionedOut);
+    this->writeWavefield(VY, "VY", type, t, partitionedOut);
+    this->writeWavefield(Sxx, "Sxx", type, t, partitionedOut);
+    this->writeWavefield(Syy, "Syy", type, t, partitionedOut);
+    this->writeWavefield(Sxy, "Sxy", type, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
@@ -55,15 +55,15 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::write(std::string type, IndexTy
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::writeSnapshot(IndexType t)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::writeSnapshot(IndexType t, IndexType partitionedOut)
 {
-    write(type, t);
+    write(type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::reset()
+void KITGPI::Wavefields::FD2Delastic<ValueType>::resetWavefields()
 {
     this->resetWavefield(VX);
     this->resetWavefield(VY);

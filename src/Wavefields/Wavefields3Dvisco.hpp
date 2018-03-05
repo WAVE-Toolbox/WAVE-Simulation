@@ -31,7 +31,7 @@ namespace KITGPI
 
             explicit FD3Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void reset() override;
+            void resetWavefields() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefP() override;
@@ -46,8 +46,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
 
-            void write(std::string type, IndexType t) override;
-            void writeSnapshot(IndexType t);
+            void write(std::string type, IndexType t, IndexType partitionedOut) override;
+            void writeSnapshot(IndexType t, IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

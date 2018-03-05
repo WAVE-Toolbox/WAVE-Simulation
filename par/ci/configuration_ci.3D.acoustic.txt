@@ -17,8 +17,9 @@ ProcNZ=1
 DH=50
 
 # define temporal sampling
-DT=2.0e-03 # temporal sampling in seconds
-T=2      # total simulation time
+DT=2.0e-03                   # temporal sampling in seconds
+T=2                          # total simulation time in seconds
+timeStepsBetweenSnapshots=10 # number of time steps between wavefield snapshots
 
 # define order spatial FD operators
 spatialFDorder=2

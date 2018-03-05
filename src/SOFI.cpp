@@ -52,6 +52,10 @@ int main(int argc, const char *argv[])
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
+    IndexType timeStepsBetweenSnapshots = static_cast<IndexType>(config.get<ValueType>("timeStepsBetweenSnapshots"));
+    IndexType tEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    IndexType t = 0;
+    IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -110,7 +114,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-    IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    
 
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
@@ -121,15 +125,20 @@ int main(int argc, const char *argv[])
             sources.init(config, ctx, dist, shotNumber);
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
-                                                         << "Total Number of time steps: " << getNT << "\n");
-        start_t = common::Walltime::get();
+                                                         << "Total Number of time steps: " << tEnd << "\n");
+        wavefields->resetWavefields();
+	
+	start_t = common::Walltime::get();
+	
+	for (t = 0; t < tEnd; t++) {
 
-        /* Start and end counter for time stepping */
-        IndexType tStart = 0;
-        IndexType tEnd = getNT;
+	  solver->run(receivers, sources, *model, *wavefields, *derivatives, t, t+1, config.get<ValueType>("DT"));
+	  
+	  if (t % timeStepsBetweenSnapshots == 0) {
+	    wavefields->writeSnapshot(t,partitionedOut);
+	  }
 
-        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
-
+	}
         end_t = common::Walltime::get();
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 

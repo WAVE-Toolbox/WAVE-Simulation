@@ -21,8 +21,9 @@ ProcNZ=1                  # Number of processes in Z direction
 DH=50                     # in meter
 
 # define temporal sampling
-DT=2.0e-03                # temporal sampling in seconds
-T=2                       # total simulation time in seconds 
+DT=2.0e-03                   # temporal sampling in seconds
+T=2                          # total simulation time in seconds
+timeStepsBetweenSnapshots=10 # number of time steps between wavefield snapshots
 
 # define order of spatial FD operator
 spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12

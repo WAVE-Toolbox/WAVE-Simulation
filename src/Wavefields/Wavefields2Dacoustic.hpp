@@ -31,7 +31,7 @@ namespace KITGPI
 
             explicit FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void reset() override;
+            void resetWavefields() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefVZ() override;
@@ -58,8 +58,8 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
-            void write(std::string type, IndexType t) override;
-            void writeSnapshot(IndexType t);
+            void write(std::string type, IndexType t, IndexType partitionedOut) override;
+            void writeSnapshot(IndexType t, IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
