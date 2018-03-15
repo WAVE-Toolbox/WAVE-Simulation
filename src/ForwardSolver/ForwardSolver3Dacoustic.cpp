@@ -1,6 +1,37 @@
 #include "ForwardSolver3Dacoustic.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr()==model.getDensity().getDistributionPtr(),"Distributions of wavefields and models are not the same");
+    
+    /* Get distribibution of the wavefields */
+    dmemo::DistributionPtr dist;
+    lama::Vector &vX = wavefield.getRefVX();
+    dist=vX.getDistributionPtr();
+    
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") && config.get<IndexType>("DampingBoundaryType")) {
+	this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+    
+    /* Initialisation of auxiliary vectors*/
+    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
+    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
+    update_tempPtr=std::move(tmp2); 	
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -47,7 +78,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd)
 {
 
     SCAI_REGION("timestep")
@@ -76,12 +107,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Matrix const &Dyf = derivatives.getDyfVelocity();
 
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
-
-    common::unique_ptr<lama::Vector> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
-
-    common::unique_ptr<lama::Vector> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    
+    /* Get reference to auxiliary vector */
+    lama::Vector &update = *updatePtr;                  
+    lama::Vector &update_temp = *update_tempPtr;        
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 

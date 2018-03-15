@@ -1,6 +1,56 @@
 #include "ForwardSolver3Dvisco.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, const Modelparameter::Modelparameter<ValueType> &model, scai::hmemo::ContextPtr ctx, ValueType DT)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr()==model.getDensity().getDistributionPtr(),"Distributions of wavefields and models are not the same");
+    
+    /* Get distribibution */
+    dmemo::DistributionPtr dist;
+    lama::Vector &vX = wavefield.getRefVX();
+    dist=vX.getDistributionPtr();
+    
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") && config.get<IndexType>("DampingBoundaryType")) {
+	this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+    
+    /* Initialisation of auxiliary vectors and scalars*/
+    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
+    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
+    update_tempPtr=std::move(tmp2); 	
+    common::unique_ptr<lama::Vector> tmp3(vX.newVector());
+    vxxPtr=std::move(tmp3); 
+    common::unique_ptr<lama::Vector> tmp4(vX.newVector());
+    vyyPtr=std::move(tmp4);
+    common::unique_ptr<lama::Vector> tmp5(vX.newVector());
+    vyyPtr=std::move(tmp5);
+    scai::common::unique_ptr<scai::lama::Vector> tmp6(vX.newVector());
+    update2Ptr=std::move(tmp6);
+    scai::common::unique_ptr<scai::lama::Vector> tmp7(vX.newVector());
+    onePlusLtauPPtr=std::move(tmp7);
+    scai::common::unique_ptr<scai::lama::Vector> tmp8(vX.newVector());
+    onePlusLtauSPtr=std::move(tmp8);
+    
+    numRelaxationMechanisms = model.getNumRelaxationMechanisms();         
+    relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
+    inverseRelaxationTime = 1.0 / relaxationTime;                         
+    viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));                    
+    viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));              
+    DThalf = DT / 2.0;                                                    
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -47,7 +97,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType DT)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd)
 {
 
     SCAI_REGION("timestep")
@@ -100,34 +150,19 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
 
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    common::unique_ptr<lama::Vector> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+/* Get references to auxiliary vectors */
     lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
-
-    common::unique_ptr<lama::Vector> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
-
-    lama::DenseVector<ValueType> update2(vX.getDistributionPtr());
-
-    common::unique_ptr<lama::Vector> vxxPtr(vX.newVector());
-    common::unique_ptr<lama::Vector> vyyPtr(vX.newVector());
-    common::unique_ptr<lama::Vector> vzzPtr(vX.newVector());
-
+    lama::Vector &update_temp = *update_tempPtr;                // get Reference of VectorPointer
     lama::Vector &vxx = *vxxPtr;
     lama::Vector &vyy = *vyyPtr;
     lama::Vector &vzz = *vzzPtr;
+    lama::Vector &update2= *update2Ptr;
+    lama::Vector &onePlusLtauP=*onePlusLtauPPtr; 
+    lama::Vector &onePlusLtauS=*onePlusLtauSPtr; 
 
+    /* Get reference to required model vectors */ 
     lama::Vector const &tauS = model.getTauS();
     lama::Vector const &tauP = model.getTauP();
-
-    IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();         // = Number of relaxation mechanisms
-    ValueType relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
-    ValueType inverseRelaxationTime = 1.0 / relaxationTime;                         // = 1 / relaxationTime
-    ValueType viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));                    // = 1 - DT / ( 2 * tau_Sigma_l )
-    ValueType viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
-    ValueType DThalf = DT / 2.0;                                                    // = DT / 2.0
-
-    lama::DenseVector<ValueType> onePlusLtauP(vX.getDistributionPtr()); // = ( 1 + L * tauP )
-    lama::DenseVector<ValueType> onePlusLtauS(vX.getDistributionPtr()); // = ( 1 + L * tauS )
 
     onePlusLtauP = 1.0;
     onePlusLtauP += numRelaxationMechanisms * tauP;

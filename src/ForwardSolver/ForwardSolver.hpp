@@ -43,7 +43,7 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType TStart, IndexType TEnd, ValueType DT) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType TStart, IndexType TEnd) = 0;
 
             /*! \brief Initialitation of the boundary conditions
              *
@@ -54,6 +54,16 @@ namespace KITGPI
              \param ctx Context
              */
             virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
+	    
+	    /*! \brief Initialitation of the ForwardSolver
+             *
+             *
+             \param config Configuration
+             \param derivatives Derivatives matrices
+             \param wavefield Wavefields for the modelling
+             \param ctx Context
+             */
+            virtual void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
             bool useFreeSurface;     //!< Bool if free surface is in use

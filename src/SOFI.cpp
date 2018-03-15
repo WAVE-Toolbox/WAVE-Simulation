@@ -113,7 +113,7 @@ int main(int argc, const char *argv[])
     IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
-    solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
+    solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
 
     for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
         /* Update Source */
@@ -128,7 +128,7 @@ int main(int argc, const char *argv[])
         IndexType tStart = 0;
         IndexType tEnd = getNT;
 
-        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
+        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd);
 
         end_t = common::Walltime::get();
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");

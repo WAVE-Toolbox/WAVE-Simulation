@@ -20,7 +20,7 @@ namespace KITGPI
     namespace ForwardSolver
     {
 
-        //! \brief 3-D elastic forward solver
+        //! \brief 2-D elastic forward solver
         template <typename ValueType>
         class FD2Delastic : public ForwardSolver<ValueType>
         {
@@ -32,10 +32,12 @@ namespace KITGPI
             //! Default destructor
             ~FD2Delastic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd, ValueType) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
-
+	    
+	    void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
+	    
           private:
             /* Boundary Conditions */
             BoundaryCondition::FreeSurface2Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
@@ -46,6 +48,12 @@ namespace KITGPI
 
             BoundaryCondition::CPML2D<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
+	    
+	    /* Auxiliary Vectors */
+	    scai::common::unique_ptr<scai::lama::Vector> updatePtr;
+	    scai::common::unique_ptr<scai::lama::Vector> update_tempPtr;
+	    scai::common::unique_ptr<scai::lama::Vector> vxxPtr;
+	    scai::common::unique_ptr<scai::lama::Vector> vyyPtr;	
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

@@ -32,10 +32,11 @@ namespace KITGPI
             //! Default destructor
             ~FD3Delastic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd, ValueType) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 
+	    void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
           private:
             /* Boundary Conditions */
             BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
@@ -46,6 +47,13 @@ namespace KITGPI
 
             BoundaryCondition::CPML3D<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
+	    
+	    /* Auxiliary Vectors */
+	    scai::common::unique_ptr<scai::lama::Vector> updatePtr;
+	    scai::common::unique_ptr<scai::lama::Vector> update_tempPtr;
+	    scai::common::unique_ptr<scai::lama::Vector> vxxPtr;
+	    scai::common::unique_ptr<scai::lama::Vector> vyyPtr;
+	    scai::common::unique_ptr<scai::lama::Vector> vzzPtr;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */
