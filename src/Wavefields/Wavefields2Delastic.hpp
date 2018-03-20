@@ -56,8 +56,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD2Delastic<ValueType> operator*(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
             KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
 
-            void write(std::string type, IndexType t, IndexType partitionedOut) override;
-            void writeSnapshot(IndexType t, IndexType partitionedOut);
+            void write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut);
 	    
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

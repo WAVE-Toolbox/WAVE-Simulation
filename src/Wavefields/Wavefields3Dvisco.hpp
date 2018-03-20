@@ -46,8 +46,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
 
-            void write(std::string type, IndexType t, IndexType partitionedOut) override;
-            void writeSnapshot(IndexType t, IndexType partitionedOut);
+            void write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

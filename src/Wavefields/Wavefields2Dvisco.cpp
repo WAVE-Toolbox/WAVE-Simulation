@@ -43,16 +43,14 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t, partitionedOut);
-    this->writeWavefield(VY, "VY", type, t, partitionedOut);
-    this->writeWavefield(Sxx, "Sxx", type, t, partitionedOut);
-    this->writeWavefield(Syy, "Syy", type, t, partitionedOut);
-    this->writeWavefield(Sxy, "Sxy", type, t, partitionedOut);
-    this->writeWavefield(Rxx, "Rxx", type, t, partitionedOut);
-    this->writeWavefield(Ryy, "Ryy", type, t, partitionedOut);
-    this->writeWavefield(Rxy, "Rxy", type, t, partitionedOut);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
@@ -61,9 +59,9 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string type, IndexType
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::writeSnapshot(IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
 {
-    write(type, t, partitionedOut);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
