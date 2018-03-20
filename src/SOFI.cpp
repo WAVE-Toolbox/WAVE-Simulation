@@ -52,9 +52,16 @@ int main(int argc, const char *argv[])
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
-    IndexType timeStepsBetweenSnapshots = static_cast<IndexType>(config.get<ValueType>("timeStepsBetweenSnapshots"));
-    IndexType tEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
-    IndexType t = 0;
+    // following lines should be in a extra function in check parameter class
+    IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    
+    IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0 ;
+    if (config.get<bool>("saveSnapshots")==1){
+    firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
+    lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
+    incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
+    }
+    
     IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
     /* --------------------------------------- */
@@ -125,17 +132,17 @@ int main(int argc, const char *argv[])
             sources.init(config, ctx, dist, shotNumber);
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
-                                                         << "Total Number of time steps: " << tEnd << "\n");
+                                                         << "Total Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 	
 	start_t = common::Walltime::get();
 	
-	for (t = 0; t < tEnd; t++) {
+	for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-	  solver->run(receivers, sources, *model, *wavefields, *derivatives, t, t+1, config.get<ValueType>("DT"));
+	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
 	  
-	  if (t % timeStepsBetweenSnapshots == 0) {
-	    wavefields->writeSnapshot(t,partitionedOut);
+	  if (config.get<bool>("saveSnapshots") == 1 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+	    wavefields->writeSnapshot(tStep,partitionedOut);
 	  }
 
 	}

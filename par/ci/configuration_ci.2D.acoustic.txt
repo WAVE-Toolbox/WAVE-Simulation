@@ -57,3 +57,9 @@ SeismogramFilename=ci/seismogram.2D.acoustic.ci
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 runSimultaneousShots=1 # 1=All sources specified in SourceFilename are triggerd simultaneously
+
+# wavefield snapshots
+saveSnapshots=0         # 1=Yes, 0=No
+tFirstSnapshot=0        # Time of first snapshot in seconds
+tLastSnapshot=2         # Time of last snapshot in seconds
+tIncSnapshot=1          # Time increment between snapshot in seconds
