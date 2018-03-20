@@ -25,17 +25,17 @@ KITGPI::Acquisition::Receivers<ValueType>::Receivers(Configuration::Configuratio
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
-    IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
+    this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(IndexType numParameterCheck)
+void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::IndexType numParameterCheck)
 {
     /* Check if number of parameters is supported */
     if (numParameterCheck != 4) {

@@ -20,8 +20,6 @@ int main(int argc, char *argv[])
     scai::lama::DenseMatrix<ValueType> seismo_ref;
     scai::lama::DenseMatrix<ValueType> seismo_syn;
     scai::lama::DenseMatrix<ValueType> seismo_residual;
-    scai::lama::Scalar L2_scalar = 0.0;
-    ValueType L2 = 0.0;
 
     std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::size_t pos = filenameRef.find(".ci.mtx");
@@ -36,8 +34,7 @@ int main(int argc, char *argv[])
     seismo_syn.readFromFile(filenameSyn);
 
     seismo_residual = (seismo_ref - seismo_syn);
-    L2_scalar = seismo_residual.l2Norm();
-    L2 = L2_scalar.getValue<ValueType>();
+    auto L2 = seismo_residual.l2Norm();
 
     std::cout << "\n\nL2: " << L2 << std::endl;
 

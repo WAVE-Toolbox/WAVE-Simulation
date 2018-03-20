@@ -86,24 +86,24 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     Dyf.setContextPtr(ctx);
     Dyb.setContextPtr(ctx);
 
-    Dxb.assignTranspose(Dxf);
+    Dxb = transpose(Dxf);
     Dxb.scale(-1.0);
-    Dyb.assignTranspose(Dyf);
+    Dyb = transpose(Dyf);
     Dyb.scale(-1.0);
 
     HOST_PRINT(comm, "Matrix Dxb and Dyb finished.\n");
 
-    Dxf.scale(lama::Scalar(DT / DH));
-    Dxb.scale(lama::Scalar(DT / DH));
-    Dyf.scale(lama::Scalar(DT / DH));
-    Dyb.scale(lama::Scalar(DT / DH));
+    Dxf *= DT / DH;
+    Dxb *= DT / DH;
+    Dyf *= DT / DH;
+    Dyb *= DT / DH;
 
     HOST_PRINT(comm, "Finished with initialization of the matrices!\n");
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template <typename ValueType>
-lama::Matrix const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzb() const
+lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzb() const
 {
     COMMON_THROWEXCEPTION("There is no Dzb derivative matrix in the 2D elastic case.")
     return (Dzb);
@@ -111,7 +111,7 @@ lama::Matrix const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDz
 
 //! \brief Getter method for derivative matrix Dzf
 template <typename ValueType>
-lama::Matrix const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzf() const
+lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getDzf() const
 {
     COMMON_THROWEXCEPTION("There is no Dzf derivative matrix in the 2D elastic case.")
     return (Dzf);

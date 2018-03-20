@@ -13,32 +13,26 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector &onePlusLtauP, scai::lama::Vector &onePlusLtauS)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS)
 {
 
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector const &tauS = model.getTauS();
-    lama::Vector const &tauP = model.getTauP();
-
-    lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
-    lama::DenseVector<ValueType> temp2(sWaveModulus.getDistributionPtr());
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &tauS = model.getTauS();
+    lama::Vector<ValueType> const &tauP = model.getTauP();
 
     /* --------------------------------------- */
     /* Apply scaling for update of Sxx and Szz */
     /* --------------------------------------- */
 
-    temp = 2 * sWaveModulus;
-    temp *= onePlusLtauS;
-
-    temp2 = -1.0 * pWaveModulus;
-    temp2 *= onePlusLtauP;
+    auto temp = lama::eval<lama::DenseVector<ValueType>>( 2 * sWaveModulus * onePlusLtauS );
+    auto temp2 = lama::eval<lama::DenseVector<ValueType>>( - pWaveModulus * onePlusLtauP );
 
     temp += temp2; // = ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) );
 
     scaleStressHorizontalUpdate = pWaveModulus;
     scaleStressHorizontalUpdate *= onePlusLtauP;           // = ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
+    scaleStressHorizontalUpdate = 1 / scaleStressHorizontalUpdate;                  // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
     scaleStressHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) ) ) / ( ( P-wave Modul * ( 1 + L * tauP) )
     scaleStressHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 
@@ -46,17 +40,14 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     /* Apply scaling for update of Rxx and Rzz */
     /* --------------------------------------- */
 
-    temp = 2 * sWaveModulus;
-    temp *= tauS;
-
-    temp2 = -1.0 * pWaveModulus;
-    temp2 *= tauP;
+    temp = 2 * sWaveModulus * tauS;
+    temp2 = - pWaveModulus * tauP;
 
     temp += temp2; // = ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP );
 
     scaleRelaxationHorizontalUpdate = pWaveModulus;
     scaleRelaxationHorizontalUpdate *= tauP;                   // = ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * tauP )
+    scaleRelaxationHorizontalUpdate = 1 / scaleRelaxationHorizontalUpdate;                  // = 1 / ( P-wave Modul * tauP )
     scaleRelaxationHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP ) ) / ( ( P-wave Modul tauP) )
     scaleRelaxationHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 }
@@ -85,18 +76,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
     derivatives.calcDybPressure(NX, NY, NZ, dist);
     derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure *= lama::Scalar(DT / DH);
-    derivatives.DybVelocity *= lama::Scalar(DT / DH);
-    derivatives.DyfPressure *= lama::Scalar(DT / DH);
-    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
+    derivatives.DybPressure *= DT / DH;
+    derivatives.DybVelocity *= DT / DH;
+    derivatives.DyfPressure *= DT / DH;
+    derivatives.DyfVelocity *= DT / DH;
     derivatives.Dyb.purge();
     derivatives.Dyf.purge();
 
-    selectHorizontalUpdate.allocate(dist);
-    selectHorizontalUpdate = 0.0;
-
-    setSurfaceZero.allocate(dist);
-    setSurfaceZero = 1.0;
+    selectHorizontalUpdate.setSameValue(dist, 0.0);
+    setSurfaceZero.setSameValue(dist, 1.0);
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -105,14 +93,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
 
     /* Get write access to local part of scaleHorizontalUpdate */
-    utilskernel::LArray<ValueType> *selectHorizontalUpdate_LA = &selectHorizontalUpdate.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
+    auto write_selectHorizontalUpdate = hmemo::hostWriteAccess(selectHorizontalUpdate.getLocalValues());
 
     /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *setSurfaceZero_LA = &setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
+    auto write_setSurfaceZero = hmemo::hostWriteAccess(setSurfaceZero.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation;
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -132,9 +118,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
             write_setSurfaceZero[rowLocal] = 0.0;
         }
     }
-    read_localIndices.release();
-    write_selectHorizontalUpdate.release();
-    write_setSurfaceZero.release();
+
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
 }
 

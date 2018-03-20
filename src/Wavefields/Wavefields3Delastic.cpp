@@ -145,7 +145,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD3Delastic<ValueType> result;
     result.VX = this->VX * rhs;
@@ -167,7 +167,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD3Delastic<ValueType> rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Delastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -177,7 +177,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }

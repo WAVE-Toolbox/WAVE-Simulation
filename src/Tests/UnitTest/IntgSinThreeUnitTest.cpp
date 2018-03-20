@@ -43,7 +43,7 @@ TEST(IntgSinThreeTest, TestConstructor)
     zero = zero / FC;
     zero = zero / M_PI;
     zero = zero / 0.75;
-    sampleResult = lama::Scalar(AMP) * zero;
+    sampleResult = AMP * zero;
 
     //Testing
     lama::DenseVector<double> testResult1;

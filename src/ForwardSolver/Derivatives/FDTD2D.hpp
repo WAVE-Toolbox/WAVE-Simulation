@@ -28,17 +28,17 @@ namespace KITGPI
                 //! Default destructor
                 ~FDTD2D(){};
 
-                FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm);
+                FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm);
                 FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm) override;
 
                 /* non-requiered matrixes */
-                scai::lama::Matrix const &getDzf() const override;
-                scai::lama::Matrix const &getDzb() const override;
+                scai::lama::Matrix<ValueType> const &getDzf() const override;
+                scai::lama::Matrix<ValueType> const &getDzb() const override;
 
               private:
-                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
+                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
 
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;

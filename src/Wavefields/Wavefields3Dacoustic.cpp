@@ -170,7 +170,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dacoustic<ValueType>:
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD3Dacoustic<ValueType> result;
     result.VX = this->VX * rhs;
@@ -186,7 +186,7 @@ KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<Val
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs)
+KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -196,7 +196,7 @@ KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(scai::lama::Scalar lhs, KI
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Dacoustic<ValueType> KITGPI::Wavefields::FD3Dacoustic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }

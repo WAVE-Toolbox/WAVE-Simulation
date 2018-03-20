@@ -64,7 +64,7 @@ void KITGPI::Acquisition::SourceSignal::SinW<ValueType>::calc(scai::lama::DenseV
     zero = zero / 2.0;
     help = help - zero;
 
-    signal = lama::Scalar(AMP) * help;
+    signal = AMP * help;
 }
 
 template class KITGPI::Acquisition::SourceSignal::SinW<float>;

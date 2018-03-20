@@ -39,7 +39,7 @@ TEST(SinWTest, TestConstructor)
     }
     zero = zero / 2.0;
     help = help - zero;
-    sampleResult = lama::Scalar(AMP) * help;
+    sampleResult = AMP * help;
 
     //Testing
     lama::DenseVector<double> testResult1;

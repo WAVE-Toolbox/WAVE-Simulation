@@ -18,7 +18,6 @@
 #include <scai/tracing.hpp>
 
 #include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
 #include <scai/logging.hpp>
 
 #include <iostream>
@@ -48,37 +47,37 @@ namespace KITGPI
             ~Acoustic(){};
 
             explicit Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar rho_const);
-            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
+            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
+            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
 
             //! Copy Constructor.
             Acoustic(const Acoustic &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar rho_const);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
 
-            void write(std::string filename, IndexType partitionedOut) const override;
+            void write(std::string filename, scai::IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
-            scai::lama::Vector const &getSWaveModulus() override;
-	    scai::lama::Vector const &getSWaveModulus() const override;
-            scai::lama::Vector const &getVelocityS() const override;
-            scai::lama::Vector const &getTauP() const override;
-            scai::lama::Vector const &getTauS() const override;
-            scai::lama::Vector const &getSWaveModulusAverageXY() override;
-	    scai::lama::Vector const &getSWaveModulusAverageXY() const override;
-            scai::lama::Vector const &getSWaveModulusAverageXZ() override;
-	    scai::lama::Vector const &getSWaveModulusAverageXZ() const override;
-            scai::lama::Vector const &getSWaveModulusAverageYZ() override;
-	    scai::lama::Vector const &getSWaveModulusAverageYZ() const override;
-            scai::lama::Vector const &getTauSAverageXY() override;
-	    scai::lama::Vector const &getTauSAverageXY() const override;
-            scai::lama::Vector const &getTauSAverageXZ() override;
-	    scai::lama::Vector const &getTauSAverageXZ() const override;
-            scai::lama::Vector const &getTauSAverageYZ() override;
-	    scai::lama::Vector const &getTauSAverageYZ() const override;
-            IndexType getNumRelaxationMechanisms() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulus() override;
+	    scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            scai::lama::Vector<ValueType> const &getVelocityS() const override;
+            scai::lama::Vector<ValueType> const &getTauP() const override;
+            scai::lama::Vector<ValueType> const &getTauS() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() override;
+	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageXZ() override;
+	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageXZ() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageYZ() override;
+	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageYZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
+	    scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
+	    scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
+	    scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
+            scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
@@ -88,8 +87,8 @@ namespace KITGPI
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
 	    
             /* Overloading Operators */
-            KITGPI::Modelparameter::Acoustic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(ValueType const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> operator+(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator+=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
@@ -107,7 +106,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
 
-            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
+            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm);
 

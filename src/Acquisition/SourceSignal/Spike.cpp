@@ -35,7 +35,7 @@ void KITGPI::Acquisition::SourceSignal::Spike<ValueType>::calc(scai::lama::Dense
     /*
      *  Spike;
      */
-    scai::lama::Scalar temp_spike;
+    ValueType temp_spike;
     IndexType time_index;
     lama::DenseVector<ValueType> help(NT, 0.0);
 
@@ -44,7 +44,7 @@ void KITGPI::Acquisition::SourceSignal::Spike<ValueType>::calc(scai::lama::Dense
     time_index = floor(Tshift / DT);
     help.setValue(time_index, temp_spike);
 
-    signal = lama::Scalar(AMP) * help;
+    signal = AMP * help;
 }
 
 template class KITGPI::Acquisition::SourceSignal::Spike<double>;
