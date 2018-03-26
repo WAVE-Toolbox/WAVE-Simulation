@@ -19,7 +19,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::a
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Set the elements on the surface to zero */
-    p.scale(setSurfaceZero);
+    p *= setSurfaceZero;
 }
 
 /*! \brief Initialitation of the free surface
@@ -42,7 +42,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     derivatives.useFreeSurface = true;
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.DyfVelocity.scale(lama::Scalar(DT / DH));
+    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
     derivatives.Dyf.purge();
 
     /* Distributed vectors */

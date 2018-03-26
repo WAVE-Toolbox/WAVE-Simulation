@@ -1,6 +1,42 @@
 #include "Seismogram.hpp"
 using namespace scai;
 
+//! \brief copy constructor
+/*!
+ *
+ \param rhs seismogram to copy
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
+{
+    numSamples = rhs.numSamples;
+    numTracesGlobal = rhs.numTracesGlobal;
+    numTracesLocal = rhs.numTracesLocal;
+    DT = rhs.DT;
+    type = rhs.type;
+    coordinates = rhs.coordinates;
+    sourceCoordinate = rhs.sourceCoordinate;
+    data = rhs.data;
+}
+//! \brief swap function
+/*!
+ *
+ * swaps all members from rhs and lhs
+ \param rhs seismogram to swap with
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+{
+    std::swap(numSamples, rhs.numSamples);
+    std::swap(numTracesGlobal, rhs.numTracesGlobal);
+    std::swap(numTracesLocal, rhs.numTracesLocal);
+    std::swap(DT, rhs.DT);
+    std::swap(type, rhs.type);
+    std::swap(coordinates, rhs.coordinates);
+    std::swap(sourceCoordinate, rhs.sourceCoordinate);
+    data.swap(rhs.data);
+}
+
 //! \brief Adding ending to the seismogram-filename-string
 /*!
  *
@@ -47,19 +83,67 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
  \param config Configuration class which is used to determine the filename and header information
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config) const
+void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
 {
-
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        writeToFileRaw(config.get<std::string>("SeismogramFilename"));
+        writeToFileRaw(filename + ".mtx");
         break;
     case 2:
-        writeToFileSU(config.get<std::string>("SeismogramFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        writeToFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
         break;
+    }
+}
+
+//! \brief Normalize the seismogram-traces
+/*!
+ *
+ * This methode normalized the traces of the seismogram after the time stepping.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
+{
+    if (normalizeTraces == 1) {
+
+        SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+
+        scai::lama::DenseVector<ValueType> tempRow;
+        scai::lama::Scalar tempMax;
+        scai::lama::Scalar tempInverseMax;
+
+        for (IndexType i = 0; i < numTracesGlobal; i++) {
+            tempMax = 0.0;
+            tempRow.assign(0.0);
+            data.getRow(tempRow, i);
+            tempMax = tempRow.max();
+            tempInverseMax = 1 / tempMax;
+            tempRow *= tempInverseMax;
+            data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
+        }
+    }
+}
+
+//! \brief Integrate the seismogram-traces
+/*!
+ *
+ * This methode integrate the traces of the seismogram.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
+{
+    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+
+    scai::lama::DenseVector<ValueType> tempRow;
+    for (IndexType i = 0; i < numTracesGlobal; i++) {
+	tempRow.assign(0.0);
+	data.getRow(tempRow, i);
+	for (IndexType j = 0; j <tempRow.size()-1; j++) {
+	      tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
+	}
+	data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
     }
 }
 
@@ -114,6 +198,19 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::Dens
     SCAI_ASSERT_ERROR(coord.size() == numTracesGlobal, "Given traceType vector has wrong format");
     coordinates = coord;
 };
+
+//! \brief Setter methode to set Index for trace-normalization.
+/*!
+ *
+ * This method sets the index for trace-normalization.
+ \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalize)
+{
+    SCAI_ASSERT(normalize >= 0 && normalize <= 1, " Index has to be 1 or 0 ");
+    normalizeTraces = normalize;
+}
 
 //! \brief Getter method for #SeismogramType
 /*!
@@ -184,7 +281,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 {
     dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(numSamples));
-
     dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(numTracesGlobal));
 
     redistribute(no_dist_Traces, no_dist_numSamples);
@@ -254,14 +350,45 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 /*!
  *
  \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
+{
+    scai::dmemo::DistributionPtr distTraces;
+    scai::dmemo::DistributionPtr distSamples;
+    
+    if (copyDist == 1){
+        distTraces = data.getRowDistributionPtr();
+        distSamples = data.getColDistributionPtr();
+    }
+        
+    data.readFromFile(addSeismogramTypeToName(filename));
+    IndexType nrow_temp = data.getNumRows();
+    IndexType ncolumn_temp = data.getNumColumns();
+
+    numSamples = ncolumn_temp;
+    numTracesGlobal = nrow_temp;
+
+    if (copyDist == 0) {
+        replicate();
+    } else if (copyDist == 1) {
+        redistribute(distTraces, distSamples);
+    }
+}
+
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
  \param distTraces Distribution of traces
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    data.readFromFile(filename);
-
+    data.readFromFile(addSeismogramTypeToName(filename));
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
@@ -286,6 +413,17 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
     if (data.getNumValues() > 0) {
         data.writeToFile(addSeismogramTypeToName(filename));
     }
+}
+
+/*! \brief Getter method for reference normalization index
+ *
+ *
+ \return NormalizeTraces Index 
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
+{
+    return (normalizeTraces);
 }
 
 /*! \brief Getter method for the temporal sampling
@@ -554,6 +692,83 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         }
         fclose(pFile);
     }
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar const &rhs)
+{
+    data *= rhs;
+
+    return *this;
+}
+
+/*! \brief Overloading + Operation
+ *
+ \param rhs Model which is added.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result(*this);
+    result += rhs;
+
+    return result;
+}
+
+/*! \brief Overloading += Operation
+ *
+ \param rhs Model which is added.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
+{
+    data += rhs.data;
+
+    return *this;
+}
+
+/*! \brief Overloading - Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
+{
+    KITGPI::Acquisition::Seismogram<ValueType> result(*this);
+    result -= rhs;
+
+    return result;
+}
+
+/*! \brief Overloading -= Operation
+ *
+ \param rhs Model which is subtractet.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
+{
+    data -= rhs.data;
+
+    return *this;
+}
+
+/*! \brief Overloading copy assignment operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
+{
+    //copy rhs with copy constructor to tmp seismogram
+    KITGPI::Acquisition::Seismogram<ValueType> tmp(rhs);
+    //swap tmp with *this (lhs)
+    swap(tmp);
+
+    return *this;
 }
 
 template class KITGPI::Acquisition::Seismogram<double>;

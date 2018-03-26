@@ -7,9 +7,8 @@
 #include "../Configuration/Configuration.hpp"
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
-
 #include "math.h"
-#include "segy.h"
+#include "segy.hpp"
 
 namespace KITGPI
 {
@@ -27,28 +26,37 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), normalizeTraces(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
 
             //! Default destructor
             ~Seismogram(){};
 
-            void write(Configuration::Configuration const &config) const;
+            //! Copy Constructor.
+            Seismogram(const Seismogram &rhs);
+
+            void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
+            void write(Configuration::Configuration const &config, std::string const &filename) const;
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
 
+            void readFromFileRaw(std::string const &filename, bool copyDist = 0);
             void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, IndexType NT);
 
-            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = NULL);
+            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = scai::dmemo::DistributionPtr());
             void replicate();
 
             void resetData();
+
+            void normalizeTrace();
+            void integrateTraces();
 
             /* Getter functions */
             IndexType getNumTracesGlobal() const;
             IndexType getNumTracesLocal() const;
             IndexType getNumSamples() const;
+            IndexType getNormalizeTraces() const;
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
@@ -61,6 +69,15 @@ namespace KITGPI
             void setSourceCoordinate(IndexType sourceCoord);
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<IndexType> const &coord);
+            void setNormalizeTraces(IndexType normalizeTrace);
+
+            /* Overloading Operators */
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;
@@ -68,6 +85,8 @@ namespace KITGPI
             IndexType numSamples;      //!< Number of samples of one trace
             IndexType numTracesGlobal; //!< Number of global traces
             IndexType numTracesLocal;  //!< Number of local traces
+            IndexType normalizeTraces; //!< L2 Norm of seismogram is calculated
+            scai::lama::DenseVector<ValueType> integralVector;
 
             /* header information */
             ValueType DT;                                   //!< Temporal sampling interval in seconds

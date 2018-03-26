@@ -1,8 +1,11 @@
 #include "Sources.hpp"
+
 using namespace scai;
 
-/*! \brief Constructor based on the configuration class and the distribution of the wavefields
+/*! \brief Constructor based on the configuration class and the distribution of the wavefields. This constructor will call an initialisation function
  *
+ * If runSimultaneousShots is true all sources are initialized. 
+ * 
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -10,10 +13,36 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
-    this->init(config, ctx, dist_wavefield);
+
+    if (config.get<bool>("runSimultaneousShots")) {
+        init(config, ctx, dist_wavefield);
+        numShots = 1;
+    } else {
+        scai::lama::DenseMatrix<ValueType> acquisition_temp;
+        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+        numShots = acquisition_temp.getNumRows();
+    }
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields
+/*! \brief Init based on the configuration class and the distribution of the wavefields. This Init will read the acquistion of a single source from the Sourcefile
+ *
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ \param shotNumber Number of the source in the Source File
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber)
+{
+    /* Read shotNumber row ofacquisition matrix */
+    scai::lama::DenseStorage<ValueType> test;
+    test.readFromFile(config.get<std::string>("SourceFilename"), shotNumber, 1);
+    scai::lama::DenseMatrix<ValueType> acquisition_temp(test);
+
+    this->init(acquisition_temp, config, ctx, dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields. This function will read the acquistion from the Sourcefile
  *
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
@@ -22,18 +51,51 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
+    /* Read acquisition matrix */
+    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+
+    this->init(acquisition_temp, config, ctx, dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ * acquistion matrix:
+ * |           | X | Y | Z | SOURCE_TYPE | WAVELET_TYPE | WAVELET_SHAPE | FC | AMP | TShift |
+ * | ----------| --| --| --| ----------- | -------------| --------------| ---| ----| ------ |
+ * | 1. source |   |   |   |             |              |               |    |     |        |
+ *
+ * 
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+{
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
-    this->readAcquisitionFromFile(config.get<std::string>("SourceFilename"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_matrix, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
+    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
     generateSignals(NT, config.get<ValueType>("DT"), ctx);
     copySignalsToSeismogramHandler();
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Sources<ValueType>::getNumShots()
+{
+    return numShots;
 }
 
 /*! \brief Generation of the source signals
@@ -136,8 +198,10 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         break;
     }
 
+    utilskernel::LArray<ValueType> localsignal = signalVector.getLocalValues();
+
     lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
-    signalsMatrix.setRow(signalVector, SourceLocal, utilskernel::binary::BinaryOp::COPY);
+    signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::binary::BinaryOp::COPY);
 }
 
 template <typename ValueType>
@@ -203,7 +267,7 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
 
         signals.getData().getRow(temp, i);
 
-        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], utilskernel::binary::BinaryOp::COPY);
+        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::binary::BinaryOp::COPY);
 
         ++count[tempIndexType];
     }

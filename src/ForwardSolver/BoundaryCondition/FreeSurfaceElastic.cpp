@@ -23,8 +23,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
 
     scaleHorizontalUpdate = pWaveModulus;
     scaleHorizontalUpdate.invert();
-    scaleHorizontalUpdate.scale(temp);
-    scaleHorizontalUpdate.scale(selectHorizontalUpdate);
+    scaleHorizontalUpdate *= temp;
+    scaleHorizontalUpdate *= selectHorizontalUpdate;
 }
 
 /*! \brief Apply free surface condition during time stepping for 2D simulations
@@ -43,11 +43,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative.scale(scaleHorizontalUpdate);
+    sumHorizonalDerivative *= scaleHorizontalUpdate;
 
     Sxx += sumHorizonalDerivative;
 
-    Syy.scale(setSurfaceZero);
+    Syy *= setSurfaceZero;
 }
 
 /*! \brief Apply free surface condition during time stepping for 3D simulations
@@ -65,12 +65,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
 {
 
     /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative.scale(scaleHorizontalUpdate);
+    sumHorizonalDerivative *= scaleHorizontalUpdate;
 
     Sxx += sumHorizonalDerivative;
     Szz += sumHorizonalDerivative;
 
-    Syy.scale(setSurfaceZero);
+    Syy *= setSurfaceZero;
 }
 
 /*! \brief Initialitation of the free surface
@@ -97,10 +97,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
     derivatives.calcDybPressure(NX, NY, NZ, dist);
     derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure.scale(lama::Scalar(DT / DH));
-    derivatives.DybVelocity.scale(lama::Scalar(DT / DH));
-    derivatives.DyfPressure.scale(lama::Scalar(DT / DH));
-    derivatives.DyfVelocity.scale(lama::Scalar(DT / DH));
+    derivatives.DybPressure *= lama::Scalar(DT / DH);
+    derivatives.DybVelocity *= lama::Scalar(DT / DH);
+    derivatives.DyfPressure *= lama::Scalar(DT / DH);
+    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
     derivatives.Dyb.purge();
     derivatives.Dyf.purge();
 

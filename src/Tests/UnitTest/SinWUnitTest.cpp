@@ -2,13 +2,13 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "SinW.hpp"
+#include "SourceSignal/SinW.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;
 using namespace KITGPI;
 
-TEST(SpikeTest, TestConstructor)
+TEST(SinWTest, TestConstructor)
 {
     int NT = 4;
     double DT = 1;
@@ -20,12 +20,25 @@ TEST(SpikeTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    scai::lama::Scalar temp_spike;
-    IndexType time_index;
+    lama::DenseVector<double> zero(NT, 0.0);
     lama::DenseVector<double> help(NT, 0.0);
-    temp_spike = 1.0;
-    time_index = floor(Tshift / DT);
-    help.setValue(time_index, temp_spike);
+    lama::DenseVector<double> half(NT, 0.5);
+    double temp, temp2;
+    int time_index1, time_index2, i, count;
+    time_index1 = floor(Tshift / DT);
+    time_index2 = time_index1 + floor(1.0 / FC / DT);
+    count = 0;
+    for (i = time_index1; i <= time_index2; i++) {
+        temp = 2.0 * count * DT * M_PI * FC;
+        temp2 = sin(temp);
+        help.setValue(i, temp2);
+        temp = 2.0 * temp;
+        temp2 = sin(temp);
+        zero.setValue(i, temp2);
+        count++;
+    }
+    zero = zero / 2.0;
+    help = help - zero;
     sampleResult = lama::Scalar(AMP) * help;
 
     //Testing
@@ -40,7 +53,7 @@ TEST(SpikeTest, TestConstructor)
     ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
-TEST(SpikeTest, TestAsserts)
+TEST(SinWTest, TestAsserts)
 {
     int NT = 4;
     double DT = 10;

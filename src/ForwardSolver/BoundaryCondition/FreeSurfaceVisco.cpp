@@ -29,36 +29,36 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     /* --------------------------------------- */
 
     temp = 2 * sWaveModulus;
-    temp.scale(onePlusLtauS);
+    temp *= onePlusLtauS;
 
     temp2 = -1.0 * pWaveModulus;
-    temp2.scale(onePlusLtauP);
+    temp2 *= onePlusLtauP;
 
     temp += temp2; // = ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) );
 
     scaleStressHorizontalUpdate = pWaveModulus;
-    scaleStressHorizontalUpdate.scale(onePlusLtauP);           // = ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.invert();                      // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.scale(temp);                   // = ( ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) ) ) / ( ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.scale(selectHorizontalUpdate); // set to zero everywhere besides the surface
+    scaleStressHorizontalUpdate *= onePlusLtauP;           // = ( P-wave Modul * ( 1 + L * tauP) )
+    scaleStressHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
+    scaleStressHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) ) ) / ( ( P-wave Modul * ( 1 + L * tauP) )
+    scaleStressHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 
     /* --------------------------------------- */
     /* Apply scaling for update of Rxx and Rzz */
     /* --------------------------------------- */
 
     temp = 2 * sWaveModulus;
-    temp.scale(tauS);
+    temp *= tauS;
 
     temp2 = -1.0 * pWaveModulus;
-    temp2.scale(tauP);
+    temp2 *= tauP;
 
     temp += temp2; // = ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP );
 
     scaleRelaxationHorizontalUpdate = pWaveModulus;
-    scaleRelaxationHorizontalUpdate.scale(tauP);                   // = ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate.invert();                      // = 1 / ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate.scale(temp);                   // = ( ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP ) ) / ( ( P-wave Modul tauP) )
-    scaleRelaxationHorizontalUpdate.scale(selectHorizontalUpdate); // set to zero everywhere besides the surface
+    scaleRelaxationHorizontalUpdate *= tauP;                   // = ( P-wave Modul * tauP )
+    scaleRelaxationHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * tauP )
+    scaleRelaxationHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP ) ) / ( ( P-wave Modul tauP) )
+    scaleRelaxationHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
 }
 
 /*! \brief Initialitation of the free surface
@@ -85,10 +85,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
     derivatives.calcDybPressure(NX, NY, NZ, dist);
     derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure.scale(lama::Scalar(DT / DH));
-    derivatives.DybVelocity.scale(lama::Scalar(DT / DH));
-    derivatives.DyfPressure.scale(lama::Scalar(DT / DH));
-    derivatives.DyfVelocity.scale(lama::Scalar(DT / DH));
+    derivatives.DybPressure *= lama::Scalar(DT / DH);
+    derivatives.DybVelocity *= lama::Scalar(DT / DH);
+    derivatives.DyfPressure *= lama::Scalar(DT / DH);
+    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
     derivatives.Dyb.purge();
     derivatives.Dyf.purge();
 

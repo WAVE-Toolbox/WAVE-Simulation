@@ -31,7 +31,7 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
 
-                void reset();
+                void resetCPML();
 
                 void apply_vxx(scai::lama::Vector &vxx);
                 void apply_vyy(scai::lama::Vector &vyy);

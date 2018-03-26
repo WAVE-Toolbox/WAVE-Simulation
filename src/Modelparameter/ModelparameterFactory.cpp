@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "ModelparameterFactory.hpp"
 
 template <typename ValueType>
 typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KITGPI::Modelparameter::Factory<ValueType>::Create(std::string type)
@@ -21,7 +21,7 @@ typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KI
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return ModelparameterPtr();
 }
 
 template class KITGPI::Modelparameter::Factory<float>;

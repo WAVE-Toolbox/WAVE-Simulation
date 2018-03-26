@@ -38,7 +38,8 @@ void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(scai::lama::Dens
      *  tau=pi*FC*(t-1.5/FC);
      *  signal=AMP*(1-2*tau.^2).*exp(-tau.^2);
      */
-    lama::DenseVector<ValueType> t(NT, ValueType(0), DT);
+    lama::DenseVector<ValueType> t;
+    t.setRange(NT, ValueType(0), DT);
     lama::DenseVector<ValueType> help(t.size(), 1.5 / FC + Tshift);
     lama::DenseVector<ValueType> tau(t - help);
     tau *= M_PI * FC;

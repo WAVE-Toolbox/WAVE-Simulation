@@ -17,8 +17,6 @@ namespace KITGPI
 
         /*! \brief The class FD3Dacoustic holds the wavefields for 3D acoustic simulation
          *
-         * Wavefields implements some methods, which are requiered by all derived classes.
-         * As this class is an abstract class, all methods are protected.
          */
         template <typename ValueType>
         class FD3Dacoustic : public Wavefields<ValueType>
@@ -33,26 +31,40 @@ namespace KITGPI
 
             explicit FD3Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void reset() override;
+            void resetWavefields() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
-            scai::lama::DenseVector<ValueType> &getSxx() override;
-            scai::lama::DenseVector<ValueType> &getSyy() override;
-            scai::lama::DenseVector<ValueType> &getSzz() override;
-            scai::lama::DenseVector<ValueType> &getSyz() override;
-            scai::lama::DenseVector<ValueType> &getSxz() override;
-            scai::lama::DenseVector<ValueType> &getSxy() override;
-            scai::lama::DenseVector<ValueType> &getRxx() override;
-            scai::lama::DenseVector<ValueType> &getRyy() override;
-            scai::lama::DenseVector<ValueType> &getRzz() override;
-            scai::lama::DenseVector<ValueType> &getRyz() override;
-            scai::lama::DenseVector<ValueType> &getRxz() override;
-            scai::lama::DenseVector<ValueType> &getRxy() override;
+            scai::lama::DenseVector<ValueType> &getRefSxx() override;
+            scai::lama::DenseVector<ValueType> &getRefSyy() override;
+            scai::lama::DenseVector<ValueType> &getRefSzz() override;
+            scai::lama::DenseVector<ValueType> &getRefSyz() override;
+            scai::lama::DenseVector<ValueType> &getRefSxz() override;
+            scai::lama::DenseVector<ValueType> &getRefSxy() override;
+            scai::lama::DenseVector<ValueType> &getRefRxx() override;
+            scai::lama::DenseVector<ValueType> &getRefRyy() override;
+            scai::lama::DenseVector<ValueType> &getRefRzz() override;
+            scai::lama::DenseVector<ValueType> &getRefRyz() override;
+            scai::lama::DenseVector<ValueType> &getRefRxz() override;
+            scai::lama::DenseVector<ValueType> &getRefRxy() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
+            /* Overloading Operators */
+            KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
+            KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*=(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
+
+            void write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut);
+
+	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+            void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+    	    void timesAssign(ValueType rhs);
+	    
           private:
             /* required wavefields */
             using Wavefields<ValueType>::VX;
@@ -73,6 +85,8 @@ namespace KITGPI
             using Wavefields<ValueType>::Ryz;
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
+
+            std::string type = "Acoustic3D";
         };
     }
 }

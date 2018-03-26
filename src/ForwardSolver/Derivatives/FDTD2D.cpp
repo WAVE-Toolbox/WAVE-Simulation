@@ -68,7 +68,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "Initialization of the matrices Dxf, Dyf, Dxb and Dyb…\n");
+    HOST_PRINT(comm, "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;

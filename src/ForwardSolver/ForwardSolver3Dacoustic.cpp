@@ -42,16 +42,17 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param NT Total number of time steps
+ \param tStart Counter start in for loop over time steps
+ \param tEnd Counter end  in for loop over time steps
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
 {
 
     SCAI_REGION("timestep")
 
-    SCAI_ASSERT_ERROR(NT > 0, " Number of time steps has to be greater than zero. ");
+    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
     lama::Vector const &inverseDensity = model.getInverseDensity();
@@ -61,10 +62,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Vector const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
-    lama::Vector &vZ = wavefield.getVZ();
-    lama::Vector &p = wavefield.getP();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector &vZ = wavefield.getRefVZ();
+    lama::Vector &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();
@@ -88,12 +89,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     /* Start runtime critical part             */
     /* --------------------------------------- */
 
-    HOST_PRINT(comm, "Start time stepping\n");
-    ValueType start_t = common::Walltime::get();
-    for (IndexType t = 0; t < NT; t++) {
+    for (IndexType t = tStart; t < tEnd; t++) {
 
         if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << " from " << NT << "\n");
+            HOST_PRINT(comm, "Calculating time step " << t << "\n");
         }
 
         /* update velocity */
@@ -101,19 +100,22 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         if (useConvPML) {
             ConvPML.apply_p_x(update);
         }
-        vX += update.scale(inverseDensityAverageX);
+        update *= inverseDensityAverageX;
+        vX += update;
 
         update = Dyf * p;
         if (useConvPML) {
             ConvPML.apply_p_y(update);
         }
-        vY += update.scale(inverseDensityAverageY);
+        update *= inverseDensityAverageY;
+        vY += update;
 
         update = Dzf * p;
         if (useConvPML) {
             ConvPML.apply_p_z(update);
         }
-        vZ += update.scale(inverseDensityAverageZ);
+        update *= inverseDensityAverageZ;
+        vZ += update;
 
         /* pressure update */
         update = Dxb * vX;
@@ -133,7 +135,8 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         }
         update += update_temp;
 
-        p += update.scale(pWaveModulus);
+        update *= pWaveModulus;
+        p += update;
 
         /* Apply free surface to pressure update */
         if (useFreeSurface) {
@@ -149,8 +152,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
     }
-    ValueType end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Stop runtime critical part             */

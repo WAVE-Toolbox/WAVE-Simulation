@@ -41,16 +41,17 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param NT Total number of time steps
+ \param tStart Counter start in for loop over time steps
+ \param tEnd Counter end  in for loop over time steps
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType NT, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
 {
 
     SCAI_REGION("timestep")
 
-    SCAI_ASSERT_ERROR(NT > 0, " Number of time steps has to be greater than zero. ");
+    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
     lama::Vector const &inverseDensity = model.getInverseDensity();
@@ -61,13 +62,13 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Vector const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
 
-    lama::Vector &Sxx = wavefield.getSxx();
-    lama::Vector &Syy = wavefield.getSyy();
+    lama::Vector &Sxx = wavefield.getRefSxx();
+    lama::Vector &Syy = wavefield.getRefSyy();
 
-    lama::Vector &Sxy = wavefield.getSxy();
+    lama::Vector &Sxy = wavefield.getRefSxy();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();
@@ -102,12 +103,10 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Start runtime critical part             */
     /* --------------------------------------- */
 
-    HOST_PRINT(comm, "Start time stepping\n");
-    ValueType start_t = common::Walltime::get();
-    for (IndexType t = 0; t < NT; t++) {
+    for (IndexType t = tStart; t < tEnd; t++) {
 
         if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << " from " << NT << "\n");
+            HOST_PRINT(comm, "Calculating time step " << t << "\n");
         }
 
         /* ----------------*/
@@ -124,7 +123,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        vX += update.scale(inverseDensityAverageX);
+        update *= inverseDensityAverageX;
+        vX += update;
 
         update = Dxb * Sxy;
         if (useConvPML) {
@@ -136,7 +136,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        vY += update.scale(inverseDensityAverageY);
+        update *= inverseDensityAverageY;
+        vY += update;
 
         /* ----------------*/
         /* pressure update */
@@ -150,13 +151,15 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
         update = vxx;
         update += vyy;
-        update.scale(pWaveModulus);
+        update *= pWaveModulus;
 
         Sxx += update;
         Syy += update;
 
-        Sxx -= 2.0 * vyy.scale(sWaveModulus);
-        Syy -= 2.0 * vxx.scale(sWaveModulus);
+        vyy *= sWaveModulus;
+        Sxx -= 2.0 * vyy;
+        vxx *= sWaveModulus;
+        Syy -= 2.0 * vxx;
 
         update = DyfPressure * vX;
         if (useConvPML) {
@@ -169,7 +172,8 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         }
         update += update_temp;
 
-        Sxy += update.scale(sWaveModulusAverageXY);
+        update *= sWaveModulusAverageXY;
+        Sxy += update;
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {
@@ -185,8 +189,6 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
     }
-    ValueType end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Stop runtime critical part             */

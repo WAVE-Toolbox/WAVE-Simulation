@@ -6,6 +6,8 @@
 
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
+#include "../Common/HostPrint.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
 
 namespace KITGPI
 {
@@ -33,26 +35,26 @@ namespace KITGPI
             typedef std::shared_ptr<Wavefields<ValueType>> WavefieldPtr;
 
             //! Reset wavefields
-            virtual void reset() = 0;
+            virtual void resetWavefields() = 0;
 
-            virtual scai::lama::DenseVector<ValueType> &getVX();
-            virtual scai::lama::DenseVector<ValueType> &getVY();
-            virtual scai::lama::DenseVector<ValueType> &getVZ();
-            virtual scai::lama::DenseVector<ValueType> &getP();
+            virtual scai::lama::DenseVector<ValueType> &getRefVX();
+            virtual scai::lama::DenseVector<ValueType> &getRefVY();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZ();
+            virtual scai::lama::DenseVector<ValueType> &getRefP();
 
-            virtual scai::lama::DenseVector<ValueType> &getSxx();
-            virtual scai::lama::DenseVector<ValueType> &getSyy();
-            virtual scai::lama::DenseVector<ValueType> &getSzz();
-            virtual scai::lama::DenseVector<ValueType> &getSyz();
-            virtual scai::lama::DenseVector<ValueType> &getSxz();
-            virtual scai::lama::DenseVector<ValueType> &getSxy();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefSzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxy();
 
-            virtual scai::lama::DenseVector<ValueType> &getRxx();
-            virtual scai::lama::DenseVector<ValueType> &getRyy();
-            virtual scai::lama::DenseVector<ValueType> &getRzz();
-            virtual scai::lama::DenseVector<ValueType> &getRyz();
-            virtual scai::lama::DenseVector<ValueType> &getRxz();
-            virtual scai::lama::DenseVector<ValueType> &getRxy();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefRzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxy();
 
             //! Declare getter variable for context pointer
             virtual scai::hmemo::ContextPtr getContextPtr() = 0;
@@ -60,9 +62,24 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
+            virtual void write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut) = 0;
+	    virtual void writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut) = 0;
+
+            //! Operator overloading
+            virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+	    virtual void timesAssign(ValueType rhs) = 0;
+
+            KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator*=(ValueType rhs);
+	    
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            void writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut);
 
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y

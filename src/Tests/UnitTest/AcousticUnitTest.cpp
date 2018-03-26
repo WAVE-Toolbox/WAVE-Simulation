@@ -2,8 +2,8 @@
 //#define private public
 
 #include "Acoustic.hpp"
-#include "Modelparameter.hpp"
-#include "Factory.hpp"
+#include "ModelparameterFactory.hpp"
+//#include "Factory.hpp"
 #include "gtest/gtest.h"
 
 using namespace KITGPI;

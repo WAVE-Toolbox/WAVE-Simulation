@@ -1,8 +1,8 @@
 #include <iostream>
 #include <scai/lama.hpp>
 
-#include "../Common/HostPrint.hpp"
-#include "../Configuration/Configuration.hpp"
+#include "HostPrint.hpp"
+#include "Configuration.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     scai::lama::Scalar L2_scalar = 0.0;
     ValueType L2 = 0.0;
 
-    std::string filenameRef = config.get<std::string>("SeismogramFilename");
+    std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::size_t pos = filenameRef.find(".ci.mtx");
     std::string filenameSyn = filenameRef.substr(0, pos) + ".ref.mtx";
 
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
 
     seismo_ref.readFromFile(filenameRef);
     seismo_syn.readFromFile(filenameSyn);
-    seismo_syn.assignTranspose(seismo_syn);
 
     seismo_residual = (seismo_ref - seismo_syn);
     L2_scalar = seismo_residual.l2Norm();

@@ -1,7 +1,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "ABS2D.hpp"
+#include "BoundaryCondition/ABS2D.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;

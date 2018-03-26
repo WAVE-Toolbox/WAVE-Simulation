@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "FGaussian.hpp"
+#include "SourceSignal/FGaussian.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;
@@ -20,7 +20,8 @@ TEST(FGaussianTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    lama::DenseVector<double> sampleT(NT, double(0), DT);
+    lama::DenseVector<double> sampleT;
+    sampleT.setRange(NT, double(0), DT);
     lama::DenseVector<double> sampleHelp(sampleT.size(), 1.2 / FC + Tshift);
     lama::DenseVector<double> sampleTau(sampleT - sampleHelp);
     sampleTau *= M_PI * FC;

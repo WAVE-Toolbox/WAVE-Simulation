@@ -1,4 +1,5 @@
 #include "AcquisitionGeometry.hpp"
+
 using namespace scai;
 
 template <typename ValueType>
@@ -71,16 +72,12 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFile(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NZ > 0, "NX<=0");
-
-    /* Read acquisition matrix */
-    lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(filename);
 
     IndexType nrow_temp = acquisition_temp.getNumRows();
     IndexType ncolumn_temp = acquisition_temp.getNumColumns();
@@ -140,7 +137,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFil
 
         Coordinates<ValueType> coord;
 
-        /* 2. Calculate 1-D coordinates form 3-D coordinates */
+        /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
         for (IndexType i = 0; i < numTracesGlobal; i++) {
 
@@ -180,7 +177,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::readAcquisitionFromFil
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
 }
 
-/*! \brief Getter methode for Distribution.
+/*! \brief Getter method for distribution of local traces 
  *
  \param coordinates coordiantes
  \param dist_wavefield Distribution of the wavefields

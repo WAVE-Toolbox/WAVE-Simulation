@@ -3,7 +3,7 @@ using namespace scai;
 
 //! \brief resetting the CPML memory variables
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::reset()
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::resetCPML()
 {
     this->resetVector(psi_vxx);
     this->resetVector(psi_vyy);

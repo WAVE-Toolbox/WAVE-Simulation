@@ -33,6 +33,8 @@
 \usepackage{subcaption}
 \usepackage{lscape}		%For use of \begin{landscape} \end{landscape} Zur Darstellung einzelner Seiten im Querformat
 \usepackage{adjustbox}
+\usepackage{nicefrac}
+\usepackage{physics}
 \KOMAoptions{twoside}
 \setcounter{MaxMatrixCols}{50}
 
@@ -246,7 +248,16 @@ The authors of FDSimulation\_LAMA are listed in file \lstinline{AUTHORS}.
 %\markboth{}{Introduction}
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
+In order to extract information about the structure and composition of the crust from seismic observations, it is necessary to be able to predict how seismic wavefields are affected by complex structures. 
+Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. 
+The explicit time-domain finite-difference (FD) modeling program FDSimulation\_LAMA, that is described in this guide, is based on the FD approach described by \cite{virieux:86} and \cite{levander:88}. 
+To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. 
+To parallelise the problem is rewritten in matrix-vector formulation explicit time-domain solving the wave equations. 
+By using matrix-vector formulation the parallelisation problem can be outsources using a HPC-framework. In our case FDSimulation\_LAMA uses the open source framework LAMA allows which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs
 
+FDSimulation\_LAMA features explicit time-domain FD method solving the acoustic, elastic and viscoelastic wave equation in 2D and 3D. 
+The current version of FDSimulation\_LAMA also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh (\cite{komatitsch:07}).
+In the following sections, we give a short description of the  theoretical background, the different modelling parameters and options and how the program is used and executed.
 
 
 
@@ -587,6 +598,20 @@ To simulate the wavefields in space and time all discretised equations for stres
 	}		
 }
 \end{algorithm}
+
+\section{Boundary Conditions}
+To find to a unique solution of the problem, boundary conditions have to be defined. 
+To avoid wavefield reflections at the boundaries of the model grid, an absorbing boundary condition can be applied. A commonly used implementation is described in \cite{cerjan:85}: The numerical grid is enlarged by grid points (if damping boundary is used, boundary width $FW$  is 10 gridpoints by default) in each direction. The values of the stress and particle velocity in this boundary frame are multiplied by a damping factor $damp$.
+\begin{equation}
+	damp= e^{\left(-a^2+x^2\right)} \qquad \text{with} \qquad a= \sqrt{\frac{-log(amp)}{FW}}
+\end{equation}
+where $amp$ is calculated from the damping coeffitient $amp= 1-{DampingCoefficient}/{100}$. With a damping coefficient of \SI{8.0}{}, $amp=$ \SI{0.92}{}. The seismic waves are damped inside the boundary frame and cannot be reflected back into the model. This type of absorbing boundary is not able to damp the reflected waves from the boundary completely.
+
+A more effective way to damp the waves near the boundaries are the Perfectly Matched Layers (PMLs). This can be achieved by a coordinate stretch of the wave equations in the frequency domain \cite{komatitsch:07}. The coordinate stretch creates exponentially decaying plane wave solutions in the absorbing boundary frame. The PMLs are only reflectionless if the exact wave equation is solved. As soon as the problem is discretized (for example using finite differences) you are solving an approximate wave equation and the analytical perfection of the PML is no longer valid. To overcome this shortcoming the wavefield is damped by the damping function 
+\begin{equation}
+	c=-V_{pml} \cdot \frac{log(\alpha)}{L}
+\end{equation}
+where $V_{pml}$ denotes the typical P-wave velocity of the medium in the absorbing boundary frame, $\alpha=8 \cdot 10^{-4}$is the absorbing coefficient and L is the thickness of the absorbing boundary layer.
 
 \cleardoublepage
 \chapter{Matrix-Vektor Formalism of Finite Differences}
@@ -981,6 +1006,12 @@ LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.o
 										& debugging																& \\										
 	Python				& Models can be generated using Python 		& \url{https://www.python.org}\\
 	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\										
+	
+	
+	Seismic Un*x	& 	Seismic processing package, to generate a  	& \url{http://www.cwp.mines.edu/cwpcodes}\\ 
+											&  Seismogram from SU-data  															& \\
+	
+	
 	Sphinx				& 	A Python documentation generator 							& \url{http://www.sphinx-doc.org}\\
 	doxygen			& 	Generation of documentation from annotated				& \url{http://www.doxygen.org}\\
 										& \CC-code 															& \\
@@ -1006,15 +1037,15 @@ As preparatory steps environment variables have to be linked to LAMA. Add the fo
 \\\shellcmdline{ `export OMP\_NUM\_THREADS=1`}\\
 You can also find the instructions in \shellcmd{FDSimulation\_LAMA/par/README.md}. 
 
-Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/src/}
+Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/build/}
 
-You can compile the source code by simply entering: \\\shellcmdline{make SOFI}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CC=<yourCompiler> SOFI}
+You can compile the source code by simply entering: \\\shellcmdline{make prog}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CXX=<yourCompiler> sofi}
 
 To compile the program on more than one CPU add \shellcmd{-j <numberCPUs>} to the \shellcmd{make} command.
 
 The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
 
-To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{FDSimulation\_LAMA/doc/} and run the command \shellcmd{make}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{doc/html/} and \shellcmd{doc/latex/}.
+To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{FDSimulation\_LAMA/build/} and run the command \shellcmd{make doc}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{build/doc/doxygen/} and \shellcmd{build/doc/guide/}.
 
 \subsection{Example}
 
@@ -1064,6 +1095,7 @@ As a first test, run the default example by following the commands to obtain the
 	 ReceiverFilename	 & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever.mtx}\end{tabular}  \\
 	 SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram.mtx}\end{tabular}  \\
 	 SeismogramFormat & Seismogram format & int & \num{1}\\
+	 NormalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
 	\midrule
 	 velocityP& P-wave velocity $v_p$ & double & \SI{3500}{m\per s} \\
 	 velocityS& S-wave velocity $v_s$ & double  &  \SI{0}{m\per s}\\
@@ -1073,11 +1105,26 @@ As a first test, run the default example by following the commands to obtain the
 	 numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
 	 relaxationFrequency& Relaxation frequency for first & double & \SI{0}{Hz}\\
 	 & relaxation mechanism& & \\
+	  \bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}	
+	 \begin{table}[h!]
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	  Variable & Short description & Type &Example value\;\;\;\\
 	\midrule
 	 FreeSurface& Use the free surface & int & \num{0}\\
 	 DampingBoundary& Use the Damping Boundary & int & \num{0}\\
+	 DampingBoundaryType& Type of damping boundary & int & \num{1}\\
 	 BoundaryWidth& Width of damping boundary & int & \num{10}\\
 	 DampingCoeff& Damping coefficient & double & \num{8.0}\\
+	 VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
+	 CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
+	 NPower& Degree of the damping profile & int &\num{4}\\
+	 KMaxCPML&  & double &\num{1.0}\\
     \bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1111,13 +1158,58 @@ The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \she
 The last two parameters of the table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
 The fist part of the last table-section handles and the boundary conditions. Free surface can used by setting (\textit{FreeSurface} $=1$). If the parameter is set to 0, free surface is not used. 
-The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$). Again, if the parameter is set to 0, it is not used. 
+The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
+If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
 
 
 To verify the models stability  the courant can be calculated: 
 \begin{equation*}
 	v_{max} \cdot \frac{DT}{DH} \leq 0.43
 \end{equation*}
+
+\subsection{Source Signal}
+By default a synthetic source signal is used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal and a spike signal. The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
+\begin{figure}[h!]
+\centering
+	\includegraphics[width=.7\textwidth]{images/Signal_Plot.png}
+	\caption[Plot of the different source wavelets.]{Plot of the different source wavelets (equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}). All signals have an amplitude of $1$, a center frequency of $f_c = $\SI{50}{Hz} and a time-shift of $T_s=\nicefrac{1}{f_c}=$\SI{50}{ms}}\label{fig:Signal}
+\end{figure}
+
+\begin{itemize}
+\item Ricker wavelet:
+\begin{align}
+	f(t) &= A \cdot \left(1 - 2\cdot\tau^2\right)\cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.5}{f_c}\right)\\
+\intertext{\item Fuchs-M\"uller signal, which is a combination of different sinus signals:}
+	f(t)&= 
+	\begin{cases}
+		 \quad A\cdot\left(sin(\tau) - \frac{1}{2}sin(2\cdot\tau)\right)  & \qquad \text{if } \quad T_s\leq t\leq\left(T_s+\frac{1}{f_c}\right)\\
+	\quad 0 & \qquad \text{otherwise}
+	\end{cases}
+\intertext{\item $sin^3$ signal:}
+	f(t)&= 
+	\begin{cases}
+		 \quad A\cdot sin^3(\tau)  & \qquad \text{if } \quad T_s\leq t\leq\left(T_s+\frac{1}{f_c}\right)\\
+	\quad 0 & \qquad \text{otherwise}
+	\end{cases}
+\intertext{\item Signal given by the first derivative of the Gaussian:}
+	f(t) &=-A \cdot 2 \cdot \tau \cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.2}{f_c}\right) \label{eqn:SignalStart}\\
+\intertext{\item Spike signal:}
+	f(t)&= 
+	\begin{cases}
+		 \quad 1  & \qquad \text{if } \quad t = T_s \\
+	\quad 0 & \qquad \text{otherwise}
+	\end{cases}
+\intertext{\item Wavelet given by the integral of $sin^3$: with $ \tau=\pi\cdot f_c\cdot\left(t - \frac{T_s}{2}\right)$}
+	f(t)&= \label{eqn:SignalEnd}
+	\begin{cases}
+		 \quad \dfrac{A \cdot \left(\frac{1}{2} - \frac{3}{4}\cdot cos(\tau) + \frac{1}{4} \cdot cos^3(\tau)\right)}
+	{f_c\cdot \pi \frac{3}{4}}  & \qquad \text{if } \quad T_s\leq t\leq\left(T_s+\frac{1}{f_c}\right)\\
+	\quad 0 & \qquad \text{otherwise}
+	\end{cases}
+\end{align}
+\end{itemize}
+
+To create different source signals the \shellcmd{source.mtx} file can be generated with either the \shellcmd{createSource.m} or the \shellcmd{createSource.py} script. The scripts give the options to change the source type, the wavelet type, the wavelet shape ($1=$ Ricker, $2=$ Fuchs-M\"uller, $3=sin^3$, $4=$ FGaussian, $5=$ Spike, $6=$ Integral of $sin^3$), the center frequency in Hz, the Amplitude and the timeshift in s. 
 
 \clearpage
 \section{Pre- and Post-Processing}\label{sec:process}
@@ -1142,22 +1234,26 @@ As preparatory steps environment variables have to be linked to googletest. Add 
 \\\shellcmdline{ `export LD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{LD\_LIBRARY\_PATH\}`}
 \\\shellcmdline{ `export DYLD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{DYLD\_LIBRARY\_PATH\}}
 
-To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/src/} \\ and compile the tests by simply entering:\\\shellcmdline{make tests}
+To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/build/} \\ and compile the tests by simply entering:\\\shellcmdline{make utest} and \shellcmdline{make itest}
 
 The executable file is located in the directory:
-\\\shellcmdline{FDSimulation\_LAMA/bin/Tests/}\\
+\\\shellcmdline{FDSimulation\_LAMA/build/bin}\\
 To execute the unit-tests change to the \shellcmd{/par} folder and run the \shellcmd{Test\_unit} file by entering:
-\\\shellcmdline{./../bin/Tests/Test\_unit}\\ 
+\\\shellcmdline{./../build/bin/Test\_unit}\\ 
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}
 
 \cleardoublepage
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \listoffigures 
-\addcontentsline{toc}{chapter}{\listfigurename}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+\addcontentsline{toc}{chapter}{List of Figures}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \listoftables
-\addcontentsline{toc}{chapter}{\listtablename}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+\addcontentsline{toc}{chapter}{List of Tables}
 \cleardoublepage
-\bibliography{WAVE_theory}
+\bibliography{WAVE_guide}
 \bibliographystyle{apalike}
 \end{document}

@@ -1,4 +1,4 @@
-#include "Factory.hpp"
+#include "DerivativesFactory.hpp"
 using namespace scai;
 
 template <typename ValueType>
@@ -19,7 +19,7 @@ typename KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::Derivatives
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return DerivativesPtr();
 }
 
 template class KITGPI::ForwardSolver::Derivatives::Factory<float>;

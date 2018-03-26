@@ -17,10 +17,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lam
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
 
-    v1.scale(damping);
-    v2.scale(damping);
-    v3.scale(damping);
-    v4.scale(damping);
+    v1 *= damping;
+    v2 *= damping;
+    v3 *= damping;
+    v4 *= damping;
 }
 
 /*! \brief Application of the damping boundary
@@ -44,15 +44,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lam
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
 
-    v1.scale(damping);
-    v2.scale(damping);
-    v3.scale(damping);
-    v4.scale(damping);
-    v5.scale(damping);
-    v6.scale(damping);
-    v7.scale(damping);
-    v8.scale(damping);
-    v9.scale(damping);
+    v1 *= damping;
+    v2 *= damping;
+    v3 *= damping;
+    v4 *= damping;
+    v5 *= damping;
+    v6 *= damping;
+    v7 *= damping;
+    v8 *= damping;
+    v9 *= damping;
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix
