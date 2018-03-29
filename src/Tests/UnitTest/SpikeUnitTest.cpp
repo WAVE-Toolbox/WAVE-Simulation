@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "SinW.hpp"
+#include "SourceSignal/SinW.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;

@@ -7,9 +7,8 @@
 #include "../Configuration/Configuration.hpp"
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
-
 #include "math.h"
-#include "segy.h"
+#include "segy.hpp"
 
 namespace KITGPI
 {
@@ -35,15 +34,17 @@ namespace KITGPI
             //! Copy Constructor.
             Seismogram(const Seismogram &rhs);
 
-            void write(Configuration::Configuration const &config) const;
+            void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
+            void write(Configuration::Configuration const &config, std::string const &filename) const;
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const;
 
+            void readFromFileRaw(std::string const &filename, bool copyDist = 0);
             void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, IndexType NT);
 
-            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = NULL);
+            void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = scai::dmemo::DistributionPtr());
             void replicate();
 
             void resetData();
@@ -71,13 +72,12 @@ namespace KITGPI
             void setNormalizeTraces(IndexType normalizeTrace);
 
             /* Overloading Operators */
-            KITGPI::Acquisition::Seismogram<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> rhs);
-            KITGPI::Acquisition::Seismogram<ValueType> operator=(const KITGPI::Acquisition::Seismogram<ValueType> rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
+            KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;

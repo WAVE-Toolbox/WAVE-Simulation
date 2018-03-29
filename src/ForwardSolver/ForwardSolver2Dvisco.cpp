@@ -63,16 +63,16 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     lama::Vector const &tauSAverageXY = model.getTauSAverageXY();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
 
-    lama::Vector &Sxx = wavefield.getSxx();
-    lama::Vector &Syy = wavefield.getSyy();
-    lama::Vector &Sxy = wavefield.getSxy();
+    lama::Vector &Sxx = wavefield.getRefSxx();
+    lama::Vector &Syy = wavefield.getRefSyy();
+    lama::Vector &Sxy = wavefield.getRefSxy();
 
-    lama::Vector &Rxx = wavefield.getRxx();
-    lama::Vector &Ryy = wavefield.getRyy();
-    lama::Vector &Rxy = wavefield.getRxy();
+    lama::Vector &Rxx = wavefield.getRefRxx();
+    lama::Vector &Ryy = wavefield.getRefRyy();
+    lama::Vector &Rxy = wavefield.getRefRxy();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();

@@ -17,7 +17,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configu
     if (config.get<IndexType>("FreeSurface")) {
         useFreeSurface = true;
         SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
-        //        FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
+           //    FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
@@ -56,20 +56,21 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     /* Get references to required modelparameter */
     lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
+    lama::Vector const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vZ = wavefield.getVZ();
-
-    lama::Vector &Sxz = wavefield.getSxz();
-    lama::Vector &Syz = wavefield.getSyz();
+    lama::Vector &vZ = wavefield.getRefVZ();
+    lama::Vector &Sxz = wavefield.getRefSxz();
+    lama::Vector &Syz = wavefield.getRefSyz();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();
     lama::Matrix const &Dxb = derivatives.getDxb();
-
     lama::Matrix const &Dyb = derivatives.getDyb();
-
+    lama::Matrix const &Dyf = derivatives.getDyf();
+ //   lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
+    
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     common::unique_ptr<lama::Vector> updatePtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
@@ -78,15 +79,10 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     common::unique_ptr<lama::Vector> update_tempPtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
     lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
 
-    common::unique_ptr<lama::Vector> vxzPtr(vZ.newVector());
-    common::unique_ptr<lama::Vector> vyzPtr(vZ.newVector());
-
-    lama::Vector &vxz = *vxzPtr;
-    lama::Vector &vyz = *vyzPtr;
 
     if (useFreeSurface) {
         SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
-        //        FreeSurface.setModelparameter(model);
+   //         FreeSurface.setModelparameter(model);
     }
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
@@ -94,7 +90,6 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /* --------------------------------------- */
     /* Start runtime critical part             */
     /* --------------------------------------- */
-
     for (IndexType t = tStart; t < tEnd; t++) {
 
         if (t % 100 == 0 && t != 0) {
@@ -104,15 +99,15 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
         /* ----------------*/
         /* update velocity */
         /* ----------------*/
-        update = Dxf * Sxz;
-        if (useConvPML) {
-            ConvPML.apply_sxz_x(update);
-        }
 
+        update = Dxb * Sxz;
         update_temp = Dyb * Syz;
+	
         if (useConvPML) {
-            ConvPML.apply_syz_y(update_temp);
+	    ConvPML.apply_vxx(update);
+            ConvPML.apply_vyy(update_temp);
         }
+        
         update += update_temp;
 
         update *= inverseDensity;
@@ -121,30 +116,28 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
         /* ----------------*/
         /* pressure update */
         /* ----------------*/
-        vxz = Dxb * vZ;
-        if (useConvPML) {
-            ConvPML.apply_vxz(vxz);
-        }
 
-        update = vxz;
-        update *= sWaveModulus;
+        update = Dxf*vZ;
+        if (useConvPML) {
+            ConvPML.apply_sxx_x(update);
+        }
+	
+        update *= sWaveModulusAverageXZ;
 
         Sxz += update;
 
-        vyz = Dyb * vZ;
+        update = Dyf*vZ;
         if (useConvPML) {
-            ConvPML.apply_vyz(vyz);
+            ConvPML.apply_syy_y(update);
         }
-
-        update = vyz;
-        update *= sWaveModulus;
+        update *= sWaveModulusAverageYZ;
 
         Syz += update;
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {
             SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
-            //            FreeSurface.apply(vxx, Sxx, Syy);
+                //       FreeSurface.apply(vZ, Sxz, Syz);
         }
 
         /* Apply the damping boundary */

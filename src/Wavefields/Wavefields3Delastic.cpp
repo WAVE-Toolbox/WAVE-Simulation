@@ -14,8 +14,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
  *
  * Initialisation of 3D elastic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -40,38 +40,39 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string type, IndexType t)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t);
-    this->writeWavefield(VY, "VY", type, t);
-    this->writeWavefield(VZ, "VZ", type, t);
-    this->writeWavefield(Sxx, "Sxx", type, t);
-    this->writeWavefield(Syy, "Syy", type, t);
-    this->writeWavefield(Szz, "Szz", type, t);
-    this->writeWavefield(Sxy, "Sxy", type, t);
-    this->writeWavefield(Sxz, "Sxz", type, t);
-    this->writeWavefield(Syz, "Syz", type, t);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Szz, "Szz", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(IndexType t)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
 {
-    write(type, t);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
+void KITGPI::Wavefields::FD3Delastic<ValueType>::resetWavefields()
 {
     this->resetWavefield(VX);
     this->resetWavefield(VY);
@@ -86,7 +87,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D elastic case.")
     return (P);
@@ -94,7 +95,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 3D elastic case.")
     return (Rxx);
@@ -102,7 +103,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 3D elastic case.")
     return (Ryy);
@@ -110,7 +111,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 3D elastic case.")
     return (Rzz);
@@ -118,7 +119,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 3D elastic case.")
     return (Ryz);
@@ -126,7 +127,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 3D elastic case.")
     return (Rxz);
@@ -134,7 +135,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
 
 //! \brief Not valid in the 3D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
     return (Rxy);
@@ -213,5 +214,76 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
     return rhs * *this;
 }
 
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract wavefield which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = rhs.getRefVX();
+    VY = rhs.getRefVY();
+    VZ = rhs.getRefVZ();
+    Sxx = rhs.getRefSxx();
+    Syy = rhs.getRefSyy();
+    Szz = rhs.getRefSzz();
+    Sxy = rhs.getRefSxy();
+    Sxz = rhs.getRefSxz();
+    Syz = rhs.getRefSyz();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract wavefield which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX -= rhs.getRefVX();
+    VY -= rhs.getRefVY();
+    VZ -= rhs.getRefVZ();
+    Sxx -= rhs.getRefSxx();
+    Syy -= rhs.getRefSyy();
+    Szz -= rhs.getRefSzz();
+    Sxy -= rhs.getRefSxy();
+    Sxz -= rhs.getRefSxz();
+    Syz -= rhs.getRefSyz();
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstarct wavefield which is added.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX += rhs.getRefVX();
+    VY += rhs.getRefVY();
+    VZ += rhs.getRefVZ();
+    Sxx += rhs.getRefSxx();
+    Syy += rhs.getRefSyy();
+    Szz += rhs.getRefSzz();
+    Sxy += rhs.getRefSxy();
+    Sxz += rhs.getRefSxz();
+    Syz += rhs.getRefSyz();
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    VZ *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Szz *= rhs;
+    Sxy *= rhs;
+    Sxz *= rhs;
+    Syz *= rhs;
+}
 template class KITGPI::Wavefields::FD3Delastic<float>;
 template class KITGPI::Wavefields::FD3Delastic<double>;

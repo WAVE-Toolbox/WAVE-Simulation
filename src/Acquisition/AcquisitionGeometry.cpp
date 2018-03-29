@@ -137,7 +137,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
 
         Coordinates<ValueType> coord;
 
-        /* 2. Calculate 1-D coordinates form 3-D coordinates */
+        /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
         for (IndexType i = 0; i < numTracesGlobal; i++) {
 
@@ -177,7 +177,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
 }
 
-/*! \brief Getter methode for Distribution.
+/*! \brief Getter method for distribution of local traces 
  *
  \param coordinates coordiantes
  \param dist_wavefield Distribution of the wavefields

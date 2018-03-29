@@ -2,7 +2,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "Ricker.hpp"
+#include "SourceSignal/Ricker.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;
@@ -20,7 +20,8 @@ TEST(RickerTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    lama::DenseVector<double> t(NT, double(0), DT);
+    lama::DenseVector<double> t;
+    t.setRange(NT, double(0), DT);
     lama::DenseVector<double> help(t.size(), 1.5 / FC + Tshift);
     lama::DenseVector<double> tau(t - help);
     tau *= M_PI * FC;

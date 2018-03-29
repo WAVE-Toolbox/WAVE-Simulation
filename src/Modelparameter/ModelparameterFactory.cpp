@@ -24,7 +24,7 @@ typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KI
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return ModelparameterPtr();
 }
 
 template class KITGPI::Modelparameter::Factory<float>;

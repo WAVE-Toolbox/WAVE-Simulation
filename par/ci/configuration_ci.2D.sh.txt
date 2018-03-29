@@ -10,7 +10,7 @@ NZ=1 # horizontal 2
 # define Partitioning
 UseCubePartitioning=0
 ProcNX=2
-ProcNY=1
+ProcNY=2
 ProcNZ=1
 
 # define distance between two grid points in meter
@@ -52,3 +52,9 @@ SeismogramFilename=ci/seismogram.2D.sh.ci.mtx
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 
+saveSnapshots=0
+
+PartitionedIn=0
+PartitionedOut=0
+
+runSimultaneousShots=0

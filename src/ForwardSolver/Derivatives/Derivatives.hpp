@@ -1,6 +1,8 @@
 #pragma once
 #include "../../Configuration/Configuration.hpp"
 #include <scai/lama.hpp>
+#include <scai/common/Stencil.hpp>
+#include <scai/lama/matrix/StencilMatrix.hpp>
 
 /* Forward declaration for friendship */
 namespace KITGPI
@@ -135,12 +137,12 @@ namespace KITGPI
                 void calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
 
                 typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
-                SparseFormat Dxf;                                            //!< Derivative matrix Dxf
-                SparseFormat Dyf;                                            //!< Derivative matrix Dyf
-                SparseFormat Dzf;                                            //!< Derivative matrix Dzf
-                SparseFormat Dxb;                                            //!< Derivative matrix Dxb
-                SparseFormat Dyb;                                            //!< Derivative matrix Dyb
-                SparseFormat Dzb;                                            //!< Derivative matrix Dzb
+                scai::lama::StencilMatrix<ValueType> Dxf;                    //!< Derivative matrix Dxf
+                scai::lama::StencilMatrix<ValueType> Dyf;                    //!< Derivative matrix Dyf
+                scai::lama::StencilMatrix<ValueType> Dzf;                    //!< Derivative matrix Dzf
+                scai::lama::StencilMatrix<ValueType> Dxb;                    //!< Derivative matrix Dxb
+                scai::lama::StencilMatrix<ValueType> Dyb;                    //!< Derivative matrix Dyb
+                scai::lama::StencilMatrix<ValueType> Dzb;                    //!< Derivative matrix Dzb
                 SparseFormat DyfVelocity;                                    //!< Derivative matrix DyfVelocity
                 SparseFormat DyfPressure;                                    //!< Derivative matrix DyfPressure
                 SparseFormat DybVelocity;                                    //!< Derivative matrix DybVelocity
@@ -152,6 +154,8 @@ namespace KITGPI
 
                 scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
                 scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
+
+                scai::common::Stencil1D<ValueType> stencilFD;  // FD-stencil
 
               private:
                 typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(IndexType, IndexType &, IndexType &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<ValueType> &, IndexType, IndexType, IndexType); //!< Pointer to set elements functions

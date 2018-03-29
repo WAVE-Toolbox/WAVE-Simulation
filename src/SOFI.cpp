@@ -2,6 +2,7 @@
 
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
+#include <scai/dmemo/GridDistribution.hpp>
 
 #include <iostream>
 
@@ -23,11 +24,18 @@
 #include "Common/HostPrint.hpp"
 #include "Partitioning/PartitioningCubes.hpp"
 
+#include "CheckParameter/CheckParameter.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
+    // parse command line arguments to be set as environment variables, e.g.
+    // --SCAI_CONTEXT=CUDA
+ 
+    common::Settings::parseArgs( argc, argv );
+ 
     typedef double ValueType;
     double start_t, end_t; /* For timing */
 
@@ -44,6 +52,17 @@ int main(int argc, char *argv[])
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
+    // following lines should be in a extra function in check parameter class
+    IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    
+    IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0 ;
+    if (config.get<bool>("saveSnapshots")==1){
+    firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
+    lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
+    incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
+    }
+    
+    IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -53,21 +72,21 @@ int main(int argc, char *argv[])
     common::Settings::setRank(comm->getNodeRank());
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    /* inter node distribution */
-    // block distribution: i-st processor gets lines [i * N/num_processes] to [(i+1) * N/num_processes - 1] of the matrix
-    IndexType getN = config.get<IndexType>("NZ") * config.get<IndexType>("NX") * config.get<IndexType>("NY");
-    dmemo::DistributionPtr dist(new dmemo::BlockDistribution(getN, comm));
 
-    if (config.get<IndexType>("UseCubePartitioning")) {
-        Partitioning::PartitioningCubes<ValueType> partitioning(config, comm);
-        dist = partitioning.getDist();
-    }
+    // inter node distribution 
+    // define the grid topology by sizes NX, NY, and NZ from configuration
+    // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+
+    common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX") );
+    common::Grid3D procGrid(config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNX") );
+    // distribute the grid onto available processors, topology can be set by environment variable
+    dmemo::DistributionPtr dist(new dmemo::GridDistribution( grid, comm, procGrid));
 
     HOST_PRINT(comm, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
     if (comm->getRank() == MASTERGPI) {
         config.print();
     }
-
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -86,39 +105,56 @@ int main(int argc, char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
     Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
-
+    
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
-
+    
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType,IndexType>(config, *model,comm);
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-    IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    
 
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
 
-    HOST_PRINT(comm, "Start time stepping\n"
-                         << "Total Number of time steps: " << getNT << "\n");
-    start_t = common::Walltime::get();
+    for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
+        /* Update Source */
+        if (!config.get<bool>("runSimultaneousShots"))
+            sources.init(config, ctx, dist, shotNumber);
 
-    /* Start and end counter for time stepping */
-    IndexType tStart = 0;
-    IndexType tEnd = getNT;
+        HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
+                                                         << "Total Number of time steps: " << tStepEnd << "\n");
+        wavefields->resetWavefields();
+	
+	start_t = common::Walltime::get();
+	
+	for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd, config.get<ValueType>("DT"));
+	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
+	  
+	  if (config.get<bool>("saveSnapshots") == 1 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+	    wavefields->writeSnapshot(config.get<std::string>("WavefieldFileName"),tStep,partitionedOut);
+	  }
 
-    end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+	}
+        end_t = common::Walltime::get();
+        HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
-    receivers.getSeismogramHandler().normalize();
-    receivers.getSeismogramHandler().write(config);
-
+        receivers.getSeismogramHandler().normalize();
+	if (!config.get<bool>("runSimultaneousShots"))
+        receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+	
+	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+    }
     return 0;
 }
+

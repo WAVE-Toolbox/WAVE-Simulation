@@ -38,11 +38,12 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  /param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string type, IndexType t)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VZ, "VZ", type, t);
-    this->writeWavefield(Sxz, "Sxz", type, t);
-    this->writeWavefield(Syz, "Syz", type, t);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
@@ -51,15 +52,15 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string type, IndexType t)
  /param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::writeSnapshot(IndexType t)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
 {
-    write(type, t);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::reset()
+void KITGPI::Wavefields::FD2Dsh<ValueType>::resetWavefields()
 {
     this->resetWavefield(VZ);
     this->resetWavefield(Sxz);
@@ -68,7 +69,7 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::reset()
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefSxx()
 {
     COMMON_THROWEXCEPTION("There is no Sxx wavefield in the 2D sh case.")
     return (Sxx);
@@ -76,7 +77,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSx
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefSyy()
 {
     COMMON_THROWEXCEPTION("There is no Syy wavefield in the 2D sh case.")
     return (Syy);
@@ -84,7 +85,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSy
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefSzz()
 {
     COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D sh case.")
     return (Szz);
@@ -92,7 +93,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSz
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefSxy()
 {
     COMMON_THROWEXCEPTION("There is no Sxy wavefield in the 2D sh case.")
     return (Sxy);
@@ -100,14 +101,14 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getSx
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getVX()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefVX()
 {
     COMMON_THROWEXCEPTION("There is no VX wavefield in the 2D sh case.")
     return (VX);
 }
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getVY()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefVY()
 {
     COMMON_THROWEXCEPTION("There is no VY wavefield in the 2D sh case.")
     return (VY);
@@ -115,7 +116,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getVY
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 2D sh case.")
     return (P);
@@ -123,7 +124,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getP(
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRxx()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 2D sh case.")
     return (Rxx);
@@ -131,7 +132,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRx
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRyy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 2D sh case.")
     return (Ryy);
@@ -139,7 +140,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRy
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRzz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D sh case.")
     return (Rzz);
@@ -147,7 +148,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRz
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRyz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D sh case.")
     return (Ryz);
@@ -155,7 +156,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRy
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRxz()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D sh case.")
     return (Rxz);
@@ -163,11 +164,12 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRx
 
 //! \brief Not valid in the 2D sh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRxy()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D sh case.")
     return (Rxy);
 }
+
 
 /*! \brief Overloading * Operation
  *
@@ -226,6 +228,54 @@ template <typename ValueType>
 KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::operator*=(KITGPI::Wavefields::FD2Dsh<ValueType> rhs)
 {
     return rhs * *this;
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract wavefield which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dsh<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VZ = rhs.getRefVZ();
+    Syz = rhs.getRefSyz();
+    Sxz = rhs.getRefSxz();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract wavefield which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dsh<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VZ -= rhs.getRefVZ();
+    Syz -= rhs.getRefSyz();
+    Sxz -= rhs.getRefSxz();
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstract wavefield which is added.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dsh<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VZ += rhs.getRefVZ();
+    Syz += rhs.getRefSyz();
+    Sxz += rhs.getRefSxz();
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dsh<ValueType>::timesAssign(ValueType rhs)
+{
+    VZ *= rhs;
+    Syz *= rhs;
+    Sxz *= rhs;
 }
 
 template class KITGPI::Wavefields::FD2Dsh<float>;

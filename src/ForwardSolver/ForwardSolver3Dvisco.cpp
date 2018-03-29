@@ -69,23 +69,23 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     lama::Vector const &tauSAverageYZ = model.getTauSAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getVX();
-    lama::Vector &vY = wavefield.getVY();
-    lama::Vector &vZ = wavefield.getVZ();
+    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector &vZ = wavefield.getRefVZ();
 
-    lama::Vector &Sxx = wavefield.getSxx();
-    lama::Vector &Syy = wavefield.getSyy();
-    lama::Vector &Szz = wavefield.getSzz();
-    lama::Vector &Syz = wavefield.getSyz();
-    lama::Vector &Sxz = wavefield.getSxz();
-    lama::Vector &Sxy = wavefield.getSxy();
+    lama::Vector &Sxx = wavefield.getRefSxx();
+    lama::Vector &Syy = wavefield.getRefSyy();
+    lama::Vector &Szz = wavefield.getRefSzz();
+    lama::Vector &Syz = wavefield.getRefSyz();
+    lama::Vector &Sxz = wavefield.getRefSxz();
+    lama::Vector &Sxy = wavefield.getRefSxy();
 
-    lama::Vector &Rxx = wavefield.getRxx();
-    lama::Vector &Ryy = wavefield.getRyy();
-    lama::Vector &Rzz = wavefield.getRzz();
-    lama::Vector &Ryz = wavefield.getRyz();
-    lama::Vector &Rxz = wavefield.getRxz();
-    lama::Vector &Rxy = wavefield.getRxy();
+    lama::Vector &Rxx = wavefield.getRefRxx();
+    lama::Vector &Ryy = wavefield.getRefRyy();
+    lama::Vector &Rzz = wavefield.getRefRzz();
+    lama::Vector &Ryz = wavefield.getRefRyz();
+    lama::Vector &Rxz = wavefield.getRefRxz();
+    lama::Vector &Rxy = wavefield.getRefRxy();
 
     /* Get references to required derivatives matrixes */
     lama::Matrix const &Dxf = derivatives.getDxf();

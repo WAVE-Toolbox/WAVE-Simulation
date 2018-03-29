@@ -48,58 +48,51 @@ namespace KITGPI
             ~SH(){};
 
             explicit SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho);
-            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho);
             explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
 
             //! Copy Constructor.
             SH(const SH &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar sWaveModulus, scai::lama::Scalar rho);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const);
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn);
 
-            void initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
-
-            void write(std::string filenameSWaveModulus, std::string filenamedensity, IndexType partitionedOut) const;
             void write(std::string filename, IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
 
-            scai::lama::Vector const &getVelocityP() override;
-            scai::lama::Vector const &getPWaveModulus() override;
-            scai::lama::Vector const &getTauP() override;
-            scai::lama::Vector const &getTauS() override;
+            scai::lama::Vector const &getVelocityP() const override;
+            scai::lama::Vector const &getPWaveModulus() const override;
+            scai::lama::Vector const &getTauP() const override;
+            scai::lama::Vector const &getTauS() const override;
             scai::lama::Vector const &getTauSAverageXY() override;
             scai::lama::Vector const &getTauSAverageXZ() override;
             scai::lama::Vector const &getTauSAverageYZ() override;
             IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
-            void switch2velocity() override;
-            void switch2modulus() override;
-
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+    
             /* Overloading Operators */
             KITGPI::Modelparameter::SH<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::SH<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::SH<ValueType> operator+(KITGPI::Modelparameter::SH<ValueType> rhs);
-            KITGPI::Modelparameter::SH<ValueType> operator+=(KITGPI::Modelparameter::SH<ValueType> rhs);
-            KITGPI::Modelparameter::SH<ValueType> operator-(KITGPI::Modelparameter::SH<ValueType> rhs);
-            KITGPI::Modelparameter::SH<ValueType> operator-=(KITGPI::Modelparameter::SH<ValueType> rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator+(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator+=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator-(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator-=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+	    KITGPI::Modelparameter::SH<ValueType> &operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
 
           private:
-            void refreshModule() override;
-            void refreshVelocity() override;
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagModulus;
+	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::dirtyFlagVelocity;
-            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
