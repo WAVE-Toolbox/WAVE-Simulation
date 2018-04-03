@@ -53,8 +53,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD2Dvisco<ValueType> operator*(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
             KITGPI::Wavefields::FD2Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
 
-            void write(std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
-            void writeSnapshot(scai::IndexType t, scai::IndexType partitionedOut);
+            void write(std::string baseName,std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

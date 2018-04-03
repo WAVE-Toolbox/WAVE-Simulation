@@ -58,8 +58,8 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
-            void write(std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
-            void writeSnapshot(scai::IndexType t, scai::IndexType partitionedOut);
+            void write(std::string baseName,std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

@@ -68,3 +68,10 @@ SeismogramFilename=seismograms/seismogram      # target location of seismogram
 SeismogramFormat=1                             # 1=MTX, 2=SU
 NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
+
+# wavefield snapshots
+saveSnapshots=1                               # 1=Yes, 0=No
+WavefieldFileName=wavefields/wavefield        # location of wavefields
+tFirstSnapshot=0       			      # Time of first snapshot in seconds
+tLastSnapshot=2         		      # Time of last snapshot in seconds
+tIncSnapshot=0.5          # Time increment between snapshot in seconds

@@ -38,11 +38,12 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPt
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t, partitionedOut);
-    this->writeWavefield(VY, "VY", type, t, partitionedOut);
-    this->writeWavefield(P, "P", type, t, partitionedOut);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+    this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
@@ -51,9 +52,9 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string type, IndexT
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut)
 {
-    write(type, t, partitionedOut);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.

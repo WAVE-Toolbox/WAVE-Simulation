@@ -57,8 +57,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*=(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
 
-            void write(std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
-            void writeSnapshot(scai::IndexType t, scai::IndexType partitionedOut);
+            void write(std::string baseName,std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
