@@ -40,7 +40,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     
@@ -56,18 +56,16 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::
 	break;
       case 3:
       {
-	common::unique_ptr<scai::lama::Vector> curl_Ptr(VX.newVector()); 
-	scai::lama::Vector &curl = *curl_Ptr;
-	common::unique_ptr<scai::lama::Vector> div_Ptr(VX.newVector()); 
-	scai::lama::Vector &div = *div_Ptr;
+	std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector()); 
+	scai::lama::Vector<ValueType> &curl = *curl_Ptr;
+	std::unique_ptr<lama::Vector<ValueType>> div_Ptr(VX.newVector()); 
+	scai::lama::Vector<ValueType> &div = *div_Ptr;
 	
 	this->getCurl(derivatives,curl,SWaveModulus);
 	this->getDiv(derivatives,div,PWaveModulus);
 	
-	scai::lama::DenseVector<ValueType>curlDense(curl);
-	scai::lama::DenseVector<ValueType>divDense(div);
-	this->writeWavefield(curlDense, "CURL", fileBaseName, t, partitionedOut);
-	this->writeWavefield(divDense, "DIV", fileBaseName, t, partitionedOut);
+	this->writeWavefield(curl, "CURL", fileBaseName, t, partitionedOut);
+	this->writeWavefield(div, "DIV", fileBaseName, t, partitionedOut);
 	break;
       }
       default:
@@ -81,7 +79,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
 {
     write(snapType, baseName, type, t, derivatives, SWaveModulus, PWaveModulus, partitionedOut);
 }
@@ -187,35 +185,35 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &curl, scai::lama::Vector const &SWaveModulus)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus)
 {
-    scai::lama::Matrix const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix const &Dyb = derivatives.getDzb();
+    scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDzb();
     
-    common::unique_ptr<scai::lama::Vector> update_tmpPtr(VX.newVector()); 
-    scai::lama::Vector &update_tmp = *update_tmpPtr;  
+    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VX.newVector()); 
+    scai::lama::Vector<ValueType> &update_tmp = *update_tmpPtr;  
     
     curl = Dxb * VY;
     update_tmp = Dyb * VX;
     curl -= update_tmp;
     
-    curl.powExp(2.0);
+    curl = scai::lama::pow(curl,2.0);
     curl *= SWaveModulus;
-    curl.sqrt();
+    curl = scai::lama::sqrt(curl);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &div, lama::Vector const &PWaveModulus)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, lama::Vector<ValueType>const &PWaveModulus)
 {
-    scai::lama::Matrix const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix const &Dyb = derivatives.getDzb();
+    scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDzb();
     
     div = Dxb * VX;
     div += Dyb * VY;
     
-    div.powExp(2.0);
+    div = scai::lama::pow(div,2.0);
     div *= PWaveModulus;
-    div.sqrt();
+    div = scai::lama::sqrt(div);
 }
 
 /*! \brief Overloading * Operation

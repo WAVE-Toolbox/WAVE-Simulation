@@ -53,13 +53,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Delastic<ValueType> operator*(KITGPI::Wavefields::FD3Delastic<ValueType> rhs);
             KITGPI::Wavefields::FD3Delastic<ValueType> operator*=(KITGPI::Wavefields::FD3Delastic<ValueType> rhs);
 
-<<<<<<< HEAD
-            void write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut) override;
-            void writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut);
-=======
-            void write(std::string baseName,std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
-            void writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut);
->>>>>>> develop
+            void write(scai::IndexType snapType, std::string baseName,std::string type, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut) override;
+            void writeSnapshot(scai::IndexType snapType, std::string baseName,scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
@@ -67,8 +62,8 @@ namespace KITGPI
 	    void timesAssign(ValueType rhs);
 	    
           private:
-	    void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &curl, scai::lama::Vector const &SWaveModulus);
-	    void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &div, scai::lama::Vector const &PWaveModulus);
+	    void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
+	    void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, scai::lama::Vector<ValueType> const &PWaveModulus);
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;
