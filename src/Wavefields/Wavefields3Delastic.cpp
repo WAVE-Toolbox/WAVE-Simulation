@@ -44,18 +44,43 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-    this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Szz, "Szz", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
+    
+    switch(snapType){ 
+      case 1:
+	this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+	this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+	this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+	break;
+      case 2:
+	this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Szz, "Szz", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
+	break;
+      case 3:
+      {
+	common::unique_ptr<scai::lama::Vector> curl_Ptr(VX.newVector()); 
+	scai::lama::Vector &curl = *curl_Ptr;
+	common::unique_ptr<scai::lama::Vector> div_Ptr(VX.newVector()); 
+	scai::lama::Vector &div = *div_Ptr;
+	
+	this->getCurl(derivatives,curl,SWaveModulus);
+	this->getDiv(derivatives,div,PWaveModulus);
+	
+	scai::lama::DenseVector<ValueType>curlDense(curl);
+	scai::lama::DenseVector<ValueType>divDense(div);
+	this->writeWavefield(curlDense, "CURL", fileBaseName, t, partitionedOut);
+	this->writeWavefield(divDense, "DIV", fileBaseName, t, partitionedOut);
+      }
+	break;
+      default:
+	COMMON_THROWEXCEPTION("Invalid snapType.")
+    } 
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
@@ -64,9 +89,9 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string baseName,std:
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut)
 {
-    write(baseName, type, t, partitionedOut);
+    write(snapType, baseName, type, t, derivatives, SWaveModulus, PWaveModulus, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
@@ -140,6 +165,64 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 3D elastic case.")
     return (Rxy);
 }
+
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &curl, scai::lama::Vector const &SWaveModulus) 
+{
+    scai::lama::Matrix const &Dxb = derivatives.getDxb();
+    scai::lama::Matrix const &Dyb = derivatives.getDzb();
+    scai::lama::Matrix const &Dzb = derivatives.getDyb();
+    
+    common::unique_ptr<scai::lama::Vector> update_tmp1Ptr(VZ.newVector()); 
+    scai::lama::Vector &update_tmp1 = *update_tmp1Ptr;  
+    common::unique_ptr<scai::lama::Vector> update_tmp2Ptr(VZ.newVector()); 
+    scai::lama::Vector &update_tmp2 = *update_tmp2Ptr;  
+    
+    common::unique_ptr<scai::lama::Vector> update_xPtr(VX.newVector()); 
+    scai::lama::Vector &update_x = *update_xPtr;
+    common::unique_ptr<scai::lama::Vector> update_yPtr(VY.newVector()); 
+    scai::lama::Vector &update_y = *update_yPtr;   
+    common::unique_ptr<scai::lama::Vector> update_zPtr(VZ.newVector()); 
+    scai::lama::Vector &update_z = *update_zPtr;   
+    
+    //squared curl of velocity field
+    update_tmp1 = Dyb * VZ;
+    update_tmp2 = Dzb * VY;
+    update_x = update_tmp1 - update_tmp2;
+    update_x.powExp(2.0);
+    curl = update_x;
+    update_tmp1 = Dzb * VX;
+    update_tmp2 = Dxb * VZ;
+    update_y = update_tmp1 - update_tmp2;
+    update_y.powExp(2.0);
+    curl += update_y;
+    update_tmp1 = Dxb * VY;
+    update_tmp2 = Dyb * VX;
+    update_z = update_tmp1 - update_tmp2;
+    update_z.powExp(2.0);
+    curl += update_z;
+    
+    // conversion to energy according to Dougherty and Stephen (PAGEOPH, 1988)
+    curl *= SWaveModulus;
+    curl.sqrt();
+}
+
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &div, lama::Vector const &PWaveModulus)
+{
+    scai::lama::Matrix const &Dxb = derivatives.getDxb();
+    scai::lama::Matrix const &Dyb = derivatives.getDzb();
+    scai::lama::Matrix const &Dzb = derivatives.getDyb();
+    
+    div = Dxb * VX;
+    div += Dyb * VY;
+    div += Dzb * VZ;
+    
+    div.powExp(2.0);
+    div *= PWaveModulus;
+    div.sqrt();
+}
+
 
 /*! \brief Overloading * Operation
  *

@@ -8,6 +8,7 @@
 #include <scai/hmemo/HArray.hpp>
 
 #include "Wavefields.hpp"
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 namespace KITGPI
 {
@@ -46,8 +47,8 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
 
-            void write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut) override;
-            void writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut);
+            void write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut) override;
+            void writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut);
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
@@ -55,6 +56,8 @@ namespace KITGPI
 	    void timesAssign(ValueType rhs);
 	    
           private:
+	    void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &curl, scai::lama::Vector const &SWaveModulus);
+	    void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector &div, scai::lama::Vector const &SWaveModulus);
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;

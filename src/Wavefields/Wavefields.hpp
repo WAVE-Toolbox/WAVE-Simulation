@@ -8,6 +8,7 @@
 #include <scai/hmemo/HArray.hpp>
 #include "../Common/HostPrint.hpp"
 #include "../PartitionedInOut/PartitionedInOut.hpp"
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 namespace KITGPI
 {
@@ -62,8 +63,8 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
-            virtual void write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut) = 0;
-	    virtual void writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut) = 0;
+            virtual void write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut) = 0;
+	    virtual void writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector const &SWaveModulus, scai::lama::Vector const &PWaveModulus, IndexType partitionedOut) = 0;
 
             //! Operator overloading
             virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
