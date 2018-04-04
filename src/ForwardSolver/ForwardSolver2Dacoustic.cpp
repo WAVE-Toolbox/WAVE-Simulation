@@ -55,29 +55,29 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getRefVX();
-    lama::Vector &vY = wavefield.getRefVY();
-    lama::Vector &p = wavefield.getRefP();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vY = wavefield.getRefVY();
+    lama::Vector<ValueType> &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
-    lama::Matrix const &Dyb = derivatives.getDyb();
-    lama::Matrix const &Dyf = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyfVelocity();
 
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    common::unique_ptr<lama::Vector> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
 
-    common::unique_ptr<lama::Vector> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 

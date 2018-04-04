@@ -25,7 +25,7 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface2Delastic(){};
 
-                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy);
+                void apply(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Syy);
 
               private:
                 using FreeSurfaceElastic<ValueType>::setSurfaceZero;

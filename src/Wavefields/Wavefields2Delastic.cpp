@@ -223,7 +223,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::getDiv(KITGPI::ForwardSolver::D
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD2Delastic<ValueType> result;
     result.VX = this->VX * rhs;
@@ -241,7 +241,7 @@ KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Delastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD2Delastic<ValueType> rhs)
+KITGPI::Wavefields::FD2Delastic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD2Delastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -251,7 +251,7 @@ KITGPI::Wavefields::FD2Delastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Delastic<ValueType> KITGPI::Wavefields::FD2Delastic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }

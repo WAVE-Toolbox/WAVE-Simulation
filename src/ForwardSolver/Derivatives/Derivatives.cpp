@@ -393,7 +393,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(scai::lama::Matrix &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(scai::lama::Matrix<ValueType> &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
 
     /* Get local "global" indices */
@@ -458,9 +458,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeM
     write_valuesLocal.release();
 
     /* Create local CSR storage of Matrix D, than create distributed CSR matrix D */
-    lama::CSRStorage<ValueType> D_LocalCSR(numLocalIndices, N, numLocalValues, csrIALocal, csrJALocal, valuesLocal);
+    lama::CSRStorage<ValueType> D_LocalCSR(numLocalIndices, N, csrIALocal, csrJALocal, valuesLocal);
     D_LocalCSR.compress();
-    D.assign(D_LocalCSR, dist, dist);
+    D.assignDistribute(D_LocalCSR, dist, dist);
 }
 
 //! \brief Function to set elements of a single row of Dzf matrix
@@ -757,7 +757,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatri
 
 //! \brief Getter method for derivative matrix DybPressure
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure() const
 {
     if (useFreeSurface) {
         return (DybPressure);
@@ -767,7 +767,7 @@ scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueT
 }
 //! \brief Getter method for derivative matrix DybVelocity
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity() const
 {
     if (useFreeSurface) {
         return (DybVelocity);
@@ -778,7 +778,7 @@ scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueT
 
 //! \brief Getter method for derivative matrix DyfPressure
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure() const
 {
     if (useFreeSurface) {
         return (DyfPressure);
@@ -788,7 +788,7 @@ scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueT
 }
 //! \brief Getter method for derivative matrix DyfVelocity
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity() const
 {
     if (useFreeSurface) {
         return (DyfVelocity);
@@ -799,42 +799,42 @@ scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueT
 
 //! \brief Getter method for derivative matrix Dxf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
 {
     return (Dxf);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
 {
     return (Dyf);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
 {
     return (Dzf);
 }
 
 //! \brief Getter method for derivative matrix Dxb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
 {
     return (Dxb);
 }
 
 //! \brief Getter method for derivative matrix Dyb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
 {
     return (Dyb);
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
 {
     return (Dzb);
 }

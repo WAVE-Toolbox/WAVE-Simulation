@@ -13,7 +13,7 @@ TEST(CoordinateTest, TestLocatedOnSurface)
     int NY = 10;
     int NZ = 15;
 
-    Acquisition::Coordinates<double> test;
+    Acquisition::Coordinates test;
 
     int coord1 = 2;
     EXPECT_TRUE(test.locatedOnSurface(coord1, NX, NY, NZ));
@@ -44,7 +44,7 @@ TEST(CoordinateTest, TestIndex2coordinate)
     Acquisition::coordinate3D sampleSolution;
     Acquisition::coordinate3D result;
 
-    Acquisition::Coordinates<double> test;
+    Acquisition::Coordinates test;
 
     result = test.index2coordinate(testCoord, NX, NY, NZ);
 
@@ -74,7 +74,7 @@ TEST(CoordinateTest, TestCoordinate2index)
     int sampleCordinate2index = 119;
 
     // Test first interface
-    Acquisition::Coordinates<double> test1;
+    Acquisition::Coordinates test1;
     EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testX, testY, testZ, NX, NY, NZ));
 
     // Test second interface
@@ -117,7 +117,7 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     testCoord.y = testY;
     testCoord.z = testZ;
 
-    Acquisition::Coordinates<double> test;
+    Acquisition::Coordinates test;
     Acquisition::coordinate3D result;
     result = test.edgeDistance(testCoord, NX, NY, NZ);
 

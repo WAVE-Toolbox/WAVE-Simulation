@@ -29,9 +29,9 @@ namespace KITGPI
                 //! Default destructor
                 virtual ~FreeSurfaceVisco() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
 
-                void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector &onePlusLtauP, scai::lama::Vector &onePlusLtauS);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS);
 
               protected:
                 using FreeSurface<ValueType>::active;

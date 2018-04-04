@@ -33,7 +33,7 @@ TEST(SinThreeTest, TestConstructor)
         zero.setValue(i, temp);
         count++;
     }
-    sampleResult = lama::Scalar(AMP) * zero;
+    sampleResult = AMP * zero;
 
     //Testing
     lama::DenseVector<double> testResult1;

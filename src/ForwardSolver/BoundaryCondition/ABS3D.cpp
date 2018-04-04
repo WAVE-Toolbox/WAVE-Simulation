@@ -12,7 +12,7 @@ using namespace scai;
  \param v4 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3, scai::lama::Vector &v4)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3, lama::Vector<ValueType> &v4)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -39,7 +39,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lam
  \param v9 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3, scai::lama::Vector &v4, scai::lama::Vector &v5, scai::lama::Vector &v6, scai::lama::Vector &v7, scai::lama::Vector &v8, scai::lama::Vector &v9)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
+    lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3, 
+    lama::Vector<ValueType> &v4, lama::Vector<ValueType> &v5, lama::Vector<ValueType> &v6, 
+    lama::Vector<ValueType> &v7, lama::Vector<ValueType> &v8, lama::Vector<ValueType> &v9)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -68,7 +71,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(scai::lam
  \param useFreeSurface Bool if free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n");
@@ -91,7 +94,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(scai::dmem
     damping = 1.0;
 
     /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *damping_LA = &damping.getLocalValues();
+    hmemo::HArray<ValueType> *damping_LA = &damping.getLocalValues();
     hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
 
     // calculate damping function
@@ -106,7 +109,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(scai::dmem
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
-    Acquisition::Coordinates<ValueType> coordTransform;
+    Acquisition::Coordinates coordTransform;
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")
