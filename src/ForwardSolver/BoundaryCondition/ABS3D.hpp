@@ -4,6 +4,9 @@
 #include "../../Common/HostPrint.hpp"
 
 #include "ABS.hpp"
+#include "../../Acquisition/Coordinates.hpp"
+
+using namespace scai;
 
 namespace KITGPI
 {

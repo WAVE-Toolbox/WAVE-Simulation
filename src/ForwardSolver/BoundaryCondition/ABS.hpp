@@ -4,6 +4,8 @@
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
 

@@ -245,6 +245,7 @@ FDSimulation\_LAMA is distributed in the hope that it will be useful, but WITHOU
 The authors of FDSimulation\_LAMA are listed in file \lstinline{AUTHORS}.
 
 \cleardoublepage
+%\markboth{}{Introduction}
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
 In order to extract information about the structure and composition of the crust from seismic observations, it is necessary to be able to predict how seismic wavefields are affected by complex structures. 
@@ -1004,7 +1005,7 @@ LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.o
 		boost					& Implementation of the boost-library	for  				& \url{https://www.boost.org}		\\
 										& debugging																& \\										
 	Python				& Models can be generated using Python 		& \url{https://www.python.org}\\
-	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\	
+	Matlab				& Models can be generated using Matlab		& \url{http://www.mathworks.com}\\										
 	
 	
 	Seismic Un*x	& 	Seismic processing package, to generate a  	& \url{http://www.cwp.mines.edu/cwpcodes}\\ 
@@ -1039,6 +1040,8 @@ You can also find the instructions in \shellcmd{FDSimulation\_LAMA/par/README.md
 Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/build/}
 
 You can compile the source code by simply entering: \\\shellcmdline{make prog}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CXX=<yourCompiler> sofi}
+
+To compile the program on more than one CPU add \shellcmd{-j <numberCPUs>} to the \shellcmd{make} command.
 
 The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
 
@@ -1121,7 +1124,7 @@ As a first test, run the default example by following the commands to obtain the
 	 VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
 	 CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
 	 NPower& Degree of the damping profile & int &\num{4}\\
-	 KMaxCPML& ?????? & double &\num{1.0}\\
+	 KMaxCPML&  & double &\num{1.0}\\
     \bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1231,19 +1234,19 @@ As preparatory steps environment variables have to be linked to googletest. Add 
 \\\shellcmdline{ `export LD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{LD\_LIBRARY\_PATH\}`}
 \\\shellcmdline{ `export DYLD\_LIBRARY\_PATH=\$\{GTEST\_DIR\}:\$\{DYLD\_LIBRARY\_PATH\}}
 
-To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/src/} \\ and compile the tests by simply entering:\\\shellcmdline{make utest} and \shellcmdline{make itest}
+To compile all tests, change the directory: \\\shellcmdline{FDSimulation\_LAMA/build/} \\ and compile the tests by simply entering:\\\shellcmdline{make utest} and \shellcmdline{make itest}
 
 The executable file is located in the directory:
 \\\shellcmdline{FDSimulation\_LAMA/build/bin}\\
 To execute the unit-tests change to the \shellcmd{/par} folder and run the \shellcmd{Test\_unit} file by entering:
-\\\shellcmdline{./../bin/Tests/Test\_unit}\\ 
+\\\shellcmdline{./../build/bin/Test\_unit}\\ 
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}
 
 \cleardoublepage
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
-\listoffigures
+\listoffigures 
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
 \addcontentsline{toc}{chapter}{List of Figures}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
