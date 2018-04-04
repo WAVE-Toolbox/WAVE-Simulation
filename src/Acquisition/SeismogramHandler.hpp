@@ -32,16 +32,16 @@ namespace KITGPI
             void integrate();
             void resetData();
 
-            void setSourceCoordinate(IndexType sourceCoord);
+            void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);
-            void setNormalizeTraces(IndexType normalize);
+            void setNormalizeTraces(scai::IndexType normalize);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);
-            IndexType getNumTracesGlobal(SeismogramType type) const;
-            IndexType getNumTracesTotal() const;
-            IndexType getNumSamples(SeismogramType type) const;
+            scai::IndexType getNumTracesGlobal(SeismogramType type) const;
+            scai::IndexType getNumTracesTotal() const;
+            scai::IndexType getNumSamples(SeismogramType type) const;
 
           private:
             void setTraceType();

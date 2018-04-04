@@ -31,6 +31,6 @@ namespace KITGPI
             {VY, "vy"},
             {VZ, "vz"}};
 
-        constexpr IndexType NUM_ELEMENTS_SEISMOGRAMTYPE = 4; //!< Number of seismogram types, which are implemented.
+        constexpr scai::IndexType NUM_ELEMENTS_SEISMOGRAMTYPE = 4; //!< Number of seismogram types, which are implemented.
     }
 }

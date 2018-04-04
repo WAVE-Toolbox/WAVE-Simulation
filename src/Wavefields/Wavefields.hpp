@@ -62,8 +62,8 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
-            virtual void write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut) = 0;
-	    virtual void writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut) = 0;
+            virtual void write(std::string baseName, std::string type, scai::IndexType t, scai::IndexType partitionedOut) = 0;
+	    virtual void writeSnapshot(std::string baseName, scai::IndexType t, scai::IndexType partitionedOut) = 0;
 
             //! Operator overloading
             virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
@@ -79,7 +79,7 @@ namespace KITGPI
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            void writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut);
+            void writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
 
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y

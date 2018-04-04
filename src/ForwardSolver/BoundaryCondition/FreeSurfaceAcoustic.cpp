@@ -13,7 +13,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  \param p p wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(scai::lama::Vector &p)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(scai::lama::Vector<ValueType> &p)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
@@ -42,7 +42,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     derivatives.useFreeSurface = true;
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
+    derivatives.DyfVelocity *= DT / DH;
     derivatives.Dyf.purge();
 
     /* Distributed vectors */
@@ -53,13 +53,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     hmemo::HArray<IndexType> localIndices;
     dist->getOwnedIndexes(localIndices);                          /* get local indices based on used distribution */
     IndexType numLocalIndices = localIndices.size();              // Number of local indices
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    
+    auto read_localIndices = hostReadAccess(localIndices); // Get read access to localIndices
 
     /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *setSurfaceZero_LA = &setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
+    auto write_setSurfaceZero = hostWriteAccess( setSurfaceZero.getLocalValues() );
 
-    KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation;
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -76,8 +76,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
             write_setSurfaceZero[rowLocal] = 0.0;
         }
     }
-    read_localIndices.release();
-    write_setSurfaceZero.release();
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
 }

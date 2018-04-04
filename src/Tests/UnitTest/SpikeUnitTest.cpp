@@ -20,13 +20,12 @@ TEST(SpikeTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    scai::lama::Scalar temp_spike;
     IndexType time_index;
     lama::DenseVector<double> help(NT, 0.0);
-    temp_spike = 1.0;
+    double temp_spike = 1.0;
     time_index = floor(Tshift / DT);
     help.setValue(time_index, temp_spike);
-    sampleResult = lama::Scalar(AMP) * help;
+    sampleResult = AMP * help;
 
     //Testing
     lama::DenseVector<double> testResult1;

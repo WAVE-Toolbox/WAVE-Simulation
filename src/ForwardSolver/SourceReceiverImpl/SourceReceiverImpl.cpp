@@ -16,8 +16,8 @@ KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::Source
     if (sources.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
-        lama::Scalar temp = sourceConfig.getCoordinates().getValue(0);
-        receivers.setSourceCoordinate(temp.getValue<IndexType>());
+        IndexType temp = sourceConfig.getCoordinates().getValue(0);
+        receivers.setSourceCoordinate(temp);
     } else {
         /* If more than one source is injected at the same time, the source coordinate is
         set to zero, due to the choice of one coordinate would be subjective */
@@ -93,13 +93,13 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
 {
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
     lama::DenseMatrix<ValueType> &seismogramData = seismo.getData();
 
-    temp.gather(wavefieldSingle, coordinates, scai::common::binary::BinaryOp::COPY);
-    seismogramData.setColumn(temp, t, scai::common::binary::BinaryOp::COPY);
+    temp.gather(wavefieldSingle, coordinates, common::BinaryOp::COPY);
+    seismogramData.setColumn(temp, t, common::BinaryOp::COPY);
 }
 
 /*! \brief Applying source.
@@ -167,14 +167,14 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
 {
     /* Get reference to sourcesignal storing seismogram */
     const lama::DenseMatrix<ValueType> &sourcesSignals = seismo.getData();
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
 
     sourcesSignals.getColumn(temp, t);
-    wavefieldSingle.scatter(coordinates, temp, scai::common::binary::BinaryOp::ADD);
+    wavefieldSingle.scatter(coordinates, temp, common::BinaryOp::ADD);
 }
 
 /*! \brief Setting context pointer to temporary source and seismogram.
@@ -182,7 +182,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::setContextPtrToTemporary(scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::setContextPtrToTemporary(hmemo::ContextPtr ctx)
 {
     applySource_samplesVX.setContextPtr(ctx);
     applySource_samplesVY.setContextPtr(ctx);

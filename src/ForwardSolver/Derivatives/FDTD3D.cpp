@@ -91,7 +91,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyf.setContextPtr(ctx);
     Dyb.setContextPtr(ctx);
 
-    lama::Matrix::SyncKind syncKind = lama::Matrix::SYNCHRONOUS;
+    lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
   
     // by default do matrix-vector operations synchronously, but can be set via environment
     bool isSet;
@@ -100,7 +100,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     {
         if ( isSet )
         {
-            syncKind = scai::lama::Matrix::ASYNCHRONOUS;
+            syncKind = lama::SyncKind::ASYNC_COMM;
         }
     }
 
@@ -112,20 +112,20 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyb.setCommunicationKind(syncKind);
 
     Dxb.assignTranspose(Dxf);
-    Dxb.scale(-1.0);
+    Dxb *= -1.0;
     Dzb.assignTranspose(Dzf);
-    Dzb.scale(-1.0);
+    Dzb *= -1.0;
     Dyb.assignTranspose(Dyf);
-    Dyb.scale(-1.0);
+    Dyb *= -1.0;
 
     HOST_PRINT(comm, "Matrix Dxb, Dyb and Dzb finished.\n");
 
-    Dxf.scale(lama::Scalar(DT / DH));
-    Dzf.scale(lama::Scalar(DT / DH));
-    Dxb.scale(lama::Scalar(DT / DH));
-    Dzb.scale(lama::Scalar(DT / DH));
-    Dyf.scale(lama::Scalar(DT / DH));
-    Dyb.scale(lama::Scalar(DT / DH));
+    Dxf.scale(DT / DH);
+    Dzf.scale(DT / DH);
+    Dxb.scale(DT / DH);
+    Dzb.scale(DT / DH);
+    Dyf.scale(DT / DH);
+    Dyb.scale(DT / DH);
 
     HOST_PRINT(comm, "Finished with initialization of the matrices!\n");
 }

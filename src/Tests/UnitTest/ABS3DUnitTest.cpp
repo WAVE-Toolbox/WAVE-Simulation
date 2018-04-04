@@ -13,7 +13,7 @@ TEST(ABS3DTest, TestApplyThrows)
     double testValue = 123.0;
     lama::DenseVector<double> testVector;
     testVector.allocate(N);
-    testVector.assign(testValue);
+    testVector=testValue;
     
     ForwardSolver::BoundaryCondition::ABS3D<double> test;
     

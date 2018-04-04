@@ -54,44 +54,44 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    lama::Vector<ValueType> const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getRefVX();
-    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vY = wavefield.getRefVY();
 
-    lama::Vector &Sxx = wavefield.getRefSxx();
-    lama::Vector &Syy = wavefield.getRefSyy();
+    lama::Vector<ValueType> &Sxx = wavefield.getRefSxx();
+    lama::Vector<ValueType> &Syy = wavefield.getRefSyy();
 
-    lama::Vector &Sxy = wavefield.getRefSxy();
+    lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
 
-    lama::Matrix const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &DybPressure = derivatives.getDybPressure();
+    lama::Matrix<ValueType> const &DybVelocity = derivatives.getDybVelocity();
+    lama::Matrix<ValueType> const &DyfPressure = derivatives.getDyfPressure();
+    lama::Matrix<ValueType> const &DyfVelocity = derivatives.getDyfVelocity();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    common::unique_ptr<lama::Vector> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
 
-    common::unique_ptr<lama::Vector> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
 
-    common::unique_ptr<lama::Vector> vxxPtr(vX.newVector());
-    common::unique_ptr<lama::Vector> vyyPtr(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
 
-    lama::Vector &vxx = *vxxPtr;
-    lama::Vector &vyy = *vyyPtr;
+    lama::Vector<ValueType> &vxx = *vxxPtr;
+    lama::Vector<ValueType> &vyy = *vyyPtr;
 
     if (useFreeSurface) {
         FreeSurface.setModelparameter(model);

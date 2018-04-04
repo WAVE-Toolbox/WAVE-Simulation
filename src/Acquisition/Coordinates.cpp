@@ -14,8 +14,7 @@ using namespace scai;
  \param NZ Number of grid points in Z
  *
  */
-template <typename ValueType>
-bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
+bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
     coordinate3D result;
     result = map3Dindex2coordinate(coordinate, NX, NY);
@@ -33,8 +32,7 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coo
  \param NY Number of grid points in Y
  *
  */
-template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::map3Dindex2coordinate(IndexType coordinate, IndexType NX, IndexType NY)
 {
     coordinate3D result;
 
@@ -60,8 +58,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
  \param NZ Number of grid points in Z
  *
  */
-template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::index2coordinate(IndexType coordinate, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
     return (map3Dindex2coordinate(coordinate, NX, NY));
 }
@@ -75,8 +72,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::i
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
 
     SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
@@ -105,8 +101,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
  \param NZ Total number of grid points in Z
  \return 1-D coordinate
  */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
     return (map3Dcoordinate2index(X, Y, Z, NX, NY, NZ));
 }
@@ -120,8 +115,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexTyp
  \param NZ Total number of grid points in Z (Horizontal 2)
  \return 1-D coordinate
  */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
+IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
 {
     return (map3Dcoordinate2index(coordinate.x, coordinate.y, coordinate.z, NX, NY, NZ));
 }
@@ -135,20 +129,17 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param localIndices DenseVector with local coordinates
  \param dist Distribution of global grid
  */
-template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(scai::lama::Vector const &coordinatesglobal, scai::hmemo::HArray<IndexType> &localIndices, scai::dmemo::DistributionPtr dist) const
+void KITGPI::Acquisition::Coordinates::Global2Local(scai::lama::Vector<IndexType> const &coordinatesglobal, scai::hmemo::HArray<IndexType> &localIndices, scai::dmemo::DistributionPtr dist) const
 {
 
     IndexType n_global = coordinatesglobal.size(); // Number of global entries
 
     IndexType coordinatetemp_int;
-    scai::lama::Scalar coordinatetemp_scalar = 0;
 
     IndexType i = 0;
     for (IndexType n = 0; n < n_global; n++) {
 
-        coordinatetemp_scalar = coordinatesglobal.getValue(n);
-        coordinatetemp_int = coordinatetemp_scalar.getValue<IndexType>();
+        coordinatetemp_int = coordinatesglobal.getValue(n);
 
         if (dist->isLocal(coordinatetemp_int)) {
             i++;
@@ -161,8 +152,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(scai::lama::Vecto
     i = 0;
     for (IndexType n = 0; n < n_global; n++) {
 
-        coordinatetemp_scalar = coordinatesglobal.getValue(n);
-        coordinatetemp_int = coordinatetemp_scalar.getValue<IndexType>();
+        coordinatetemp_int = coordinatesglobal.getValue(n);
         if (dist->isLocal(coordinatetemp_int)) {
             write_localIndices[i] = n;
             i++;
@@ -180,8 +170,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::Global2Local(scai::lama::Vecto
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z, IndexType NX, IndexType NY, IndexType NZ)
 {
 
     SCAI_ASSERT(Z < NZ, "No valid argument!");
@@ -208,11 +197,8 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::edgeDistance(coordinate3D coordinate, IndexType NX, IndexType NY, IndexType NZ)
 {
     return (estimateDistanceToEdges3D(coordinate.x, coordinate.y, coordinate.z, NX, NY, NZ));
 }
 
-template class KITGPI::Acquisition::Coordinates<double>;
-template class KITGPI::Acquisition::Coordinates<float>;

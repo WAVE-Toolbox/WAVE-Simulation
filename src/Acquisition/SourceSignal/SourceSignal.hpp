@@ -36,7 +36,7 @@ namespace KITGPI
                  \param AMP Amplitude
                  \param Tshift Time to shift wavelet
                  */
-                virtual void calc(scai::lama::DenseVector<ValueType> &signal, IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) = 0;
+                virtual void calc(scai::lama::DenseVector<ValueType> &signal, scai::IndexType NT, ValueType DT, ValueType FC, ValueType AMP, ValueType Tshift) = 0;
             };
         }
     }
