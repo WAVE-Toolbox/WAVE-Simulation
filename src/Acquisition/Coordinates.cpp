@@ -83,6 +83,7 @@ IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, I
     SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
 
     return ((X) + (Y)*NX + (Z)*NX * NY);
+    
 }
 
 /* ---------- */
