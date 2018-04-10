@@ -150,7 +150,7 @@ int main(int argc, const char *argv[])
 	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
 	  
 	  if (config.get<IndexType>("saveSnapshots") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
-	    wavefields->writeSnapshot(config.get<IndexType>("saveSnapshots"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
+	    wavefields->write(config.get<IndexType>("saveSnapshots"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
 	  }
 
 	}

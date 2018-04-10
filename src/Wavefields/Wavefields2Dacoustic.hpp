@@ -59,8 +59,7 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
-            void write(scai::IndexType snapType, std::string baseName,std::string type, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut) override;
-            void writeSnapshot(scai::IndexType snapType, std::string baseName,scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut);
+            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut) override;
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

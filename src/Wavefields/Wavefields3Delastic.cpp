@@ -44,7 +44,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     
@@ -79,17 +79,6 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::
       default:
 	COMMON_THROWEXCEPTION("Invalid snapType.")
     } 
-}
-
-/*! \brief Wrapper Function to Write Snapshot of the Wavefield
- *
- *
- \param t Current Timestep
- */
-template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
-{
-    write(snapType, baseName, type, t, derivatives, SWaveModulus, PWaveModulus, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
@@ -169,36 +158,24 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::getCurl(KITGPI::ForwardSolver::
 {
     scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
     scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDzb();
-    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDyb();  
     
-    std::unique_ptr<lama::Vector<ValueType>> update_tmp1Ptr(VZ.newVector()); 
-    scai::lama::Vector<ValueType> &update_tmp1 = *update_tmp1Ptr;  
-    std::unique_ptr<lama::Vector<ValueType>> update_tmp2Ptr(VZ.newVector()); 
-    scai::lama::Vector<ValueType> &update_tmp2 = *update_tmp2Ptr;  
-    
-    std::unique_ptr<lama::Vector<ValueType>> update_xPtr(VX.newVector()); 
-    scai::lama::Vector<ValueType> &update_x = *update_xPtr;
-    std::unique_ptr<lama::Vector<ValueType>> update_yPtr(VY.newVector()); 
-    scai::lama::Vector<ValueType> &update_y = *update_yPtr;   
-    std::unique_ptr<lama::Vector<ValueType>> update_zPtr(VZ.newVector()); 
-    scai::lama::Vector<ValueType> &update_z = *update_zPtr;   
+    std::unique_ptr<lama::Vector<ValueType>> update_Ptr(VX.newVector()); 
+    scai::lama::Vector<ValueType> &update = *update_Ptr;
     
     //squared curl of velocity field
-    update_tmp1 = Dyb * VZ;
-    update_tmp2 = Dzb * VY;
-    update_x = update_tmp1 - update_tmp2;
-    update_x = scai::lama::pow(update_x,2.0);
-    curl = update_x;
-    update_tmp1 = Dzb * VX;
-    update_tmp2 = Dxb * VZ;
-    update_y = update_tmp1 - update_tmp2;
-    update_y = scai::lama::pow(update_y,2.0);
-    curl += update_y;
-    update_tmp1 = Dxb * VY;
-    update_tmp2 = Dyb * VX;
-    update_z = update_tmp1 - update_tmp2;
-    update_z = scai::lama::pow(update_z,2.0);
-    curl += update_z;
+    update = Dyb * VZ;
+    update -= Dzb * VY;
+    update = scai::lama::pow(update,2.0);
+    curl = update;
+    update = Dzb * VX;
+    update -= Dxb * VZ;
+    update = scai::lama::pow(update,2.0);
+    curl += update;
+    update = Dxb * VY;
+    update -= Dyb * VX;
+    update = scai::lama::pow(update,2.0);
+    curl += update;
     
     // conversion to energy according to Dougherty and Stephen (PAGEOPH, 1988)
     curl *= SWaveModulus;

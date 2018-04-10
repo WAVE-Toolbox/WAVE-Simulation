@@ -43,7 +43,7 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::string baseName,std::string type, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     
@@ -75,17 +75,6 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::st
 	COMMON_THROWEXCEPTION("Invalid snapType.")
     }
     
-}
-
-/*! \brief Wrapper Function to Write Snapshot of the Wavefield
- *
- *
- \param t Current Timestep
- */
-template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::writeSnapshot(IndexType snapType, std::string baseName,IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
-{
-    write(snapType, baseName, type, t, derivatives, SWaveModulus, PWaveModulus, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
