@@ -233,11 +233,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
                 csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
             }
 
-            /* Zeroing elements located at the feee surface */
-            if (coeffPosEffective < NX) {
-                csrvaluesLocal[countJA] = 0.0;
-            }
-
             countJA++;
         }
     }
