@@ -112,7 +112,7 @@ void KITGPI::CheckParameter::checkNumericalDispersion(ValueType dh, ValueType vM
 	  SCAI_ASSERT_ERROR(false,"Unknown spatial FD order")
       }
       
-      if(dh>vMin/(2*fcMax*N)){
+      if(dh>vMin/(2*fcMax*N) && vMin > 400){
 	std::cerr<<"\nCriterion to avoid numerical dispersion is not met! \ndh is "<<dh<<" but should be less than vMin/(2*fcMax*N)="<<vMin/(2*fcMax*N)<<"\n\n";
       }
     }

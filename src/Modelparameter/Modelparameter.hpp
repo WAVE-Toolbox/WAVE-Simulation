@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "../Common/HostPrint.hpp"
+#include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../PartitionedInOut/PartitionedInOut.hpp"
 
@@ -221,8 +222,8 @@ namespace KITGPI
             SparseFormat sWaveModulusAverageMatrixXZ;                    //!< Average S-wave Modulus in xz-plane
             SparseFormat sWaveModulusAverageMatrixYZ;                    //!< Average S-wave Modulus in yz-plane
 
-            void calculateInverseAveragedDensity(scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
-            void calculateAveragedSWaveModulus(scai::lama::Vector<ValueType> &vecSWaveModulus, scai::lama::Vector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);
+            void calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
+            void calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);
             void calculateAveragedTauS(scai::lama::Vector<ValueType> &vecTauS, scai::lama::Vector<ValueType> &vecAvTauS, scai::lama::Matrix<ValueType> &avTauSMatrix);
 
           private:

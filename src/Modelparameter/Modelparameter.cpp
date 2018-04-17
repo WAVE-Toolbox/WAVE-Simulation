@@ -1075,10 +1075,14 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
  \param avDensityMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
+    Common::searchAndReplace<ValueType,IndexType>(vecDensity,0.5,0.001,1); // find vacuum grid points
+    
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
+    
+    Common::searchAndReplace<ValueType,IndexType>(vecInverseAvDensity,999,0.0,2); // restore vacuum for IVF
 }
 
 /*! \brief calculate averaged s-wave modulus
@@ -1088,11 +1092,15 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::Vector<ValueType> &vecSWaveModulus, scai::lama::Vector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
+    Common::searchAndReplace<ValueType,IndexType>(vecSWaveModulus,1.0,1.0,1); // avoid division by zero in air/vacuum
+    
     vecAvSWaveModulus = 1 / vecSWaveModulus;
     vecAvSWaveModulus = avSWaveModulusMatrix * vecAvSWaveModulus;
     vecAvSWaveModulus = 1 / vecAvSWaveModulus;
+    
+    Common::searchAndReplace<ValueType,IndexType>(vecAvSWaveModulus,4.0,0.0,1); // restore zeros for IVF
 }
 
 /*! \brief calculate averaged tauS
