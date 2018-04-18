@@ -69,15 +69,16 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
     lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfVelocity();
 
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
+    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
 
     std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 
@@ -99,7 +100,13 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         update *= inverseDensityAverageX;
         vX += update;
 
-        update = Dyf * p;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update = DyfFreeSurface * p;
+        } else {
+            update = Dyf * p;
+        }
+
         if (useConvPML) {
             ConvPML.apply_p_y(update);
         }
@@ -120,11 +127,6 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
         update *= pWaveModulus;
         p += update;
-
-        /* Apply free surface to pressure update */
-        if (useFreeSurface) {
-            FreeSurface.apply(p);
-        }
 
         /* Apply the damping boundary */
         if (useDampingBoundary) {

@@ -5,23 +5,6 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeSurfaceAcoustic(){};
 
-/*! \brief Apply free surface condition during time stepping
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param p p wavefield
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::apply(scai::lama::Vector<ValueType> &p)
-{
-
-    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
-
-    /* Set the elements on the surface to zero */
-    p *= setSurfaceZero;
-}
-
 /*! \brief Initialitation of the free surface
  *
  \param dist Distribution of wavefields
@@ -51,13 +34,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);                          /* get local indices based on used distribution */
-    IndexType numLocalIndices = localIndices.size();              // Number of local indices
-    
+    dist->getOwnedIndexes(localIndices);             /* get local indices based on used distribution */
+    IndexType numLocalIndices = localIndices.size(); // Number of local indices
+
     auto read_localIndices = hostReadAccess(localIndices); // Get read access to localIndices
 
     /* Get write access to local part of setSurfaceZero */
-    auto write_setSurfaceZero = hostWriteAccess( setSurfaceZero.getLocalValues() );
+    auto write_setSurfaceZero = hostWriteAccess(setSurfaceZero.getLocalValues());
 
     KITGPI::Acquisition::Coordinates coordinateTransformation;
 
