@@ -113,8 +113,8 @@ template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus) 
 {
     scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDzb();
-    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
     
     std::unique_ptr<lama::Vector<ValueType>> update_Ptr(VX.newVector()); 
     scai::lama::Vector<ValueType> &update = *update_Ptr;
@@ -146,8 +146,8 @@ template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, lama::Vector<ValueType>const &PWaveModulus)
 {
     scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDzb();
-    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
     
     div = Dxb * VX;
     div += Dyb * VY;

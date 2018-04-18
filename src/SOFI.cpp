@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
     IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
     
     IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0 ;
-    if (config.get<bool>("saveSnapshots")==1){
+    if (config.get<IndexType>("snapType") > 0){
         firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
         lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
         incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
@@ -149,8 +149,8 @@ int main(int argc, const char *argv[])
 
 	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
 	  
-	  if (config.get<IndexType>("saveSnapshots") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
-	    wavefields->write(config.get<IndexType>("saveSnapshots"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
+	  if (config.get<IndexType>("snapType") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+	    wavefields->write(config.get<IndexType>("snapType"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
 	  }
 
 	}
