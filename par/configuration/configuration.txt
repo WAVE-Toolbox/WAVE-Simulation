@@ -23,7 +23,6 @@ DH=50                     # in meter
 # define temporal sampling
 DT=2.0e-03                   # temporal sampling in seconds
 T=2                          # total simulation time in seconds
-timeStepsBetweenSnapshots=10 # number of time steps between wavefield snapshots
 
 # define order of spatial FD operator
 spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
@@ -70,7 +69,7 @@ NormalizeTraces=0                              # 1=Normalize Traces of the Seism
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
 
 # wavefield snapshots
-saveSnapshots=1                               # 1=Yes, 0=No
+snapType=1                               # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			      # Time of first snapshot in seconds
 tLastSnapshot=2         		      # Time of last snapshot in seconds
