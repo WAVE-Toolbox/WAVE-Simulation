@@ -69,8 +69,8 @@ NormalizeTraces=0                              # 1=Normalize Traces of the Seism
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
 
 # wavefield snapshots
-snapType=1                               # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
-tFirstSnapshot=0       			      # Time of first snapshot in seconds
-tLastSnapshot=2         		      # Time of last snapshot in seconds
+tFirstSnapshot=0       			              # Time of first snapshot in seconds
+tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.5          # Time increment between snapshot in seconds
