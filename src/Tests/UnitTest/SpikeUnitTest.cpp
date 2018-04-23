@@ -30,13 +30,13 @@ TEST(SpikeTest, TestConstructor)
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    EXPECT_NO_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, FC, AMP, Tshift));
+    ASSERT_NO_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, FC, AMP, Tshift));
 
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
     Acquisition::SourceSignal::SinW<double>(testResult2, NT, DT, FC, AMP, Tshift);
 
-    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
+    ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
 TEST(SpikeTest, TestAsserts)
@@ -49,7 +49,7 @@ TEST(SpikeTest, TestAsserts)
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
 
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, -NT, DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, -DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, -FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, -NT, DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, -DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, -FC, AMP, Tshift));
 }
