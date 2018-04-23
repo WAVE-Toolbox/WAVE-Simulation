@@ -24,8 +24,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.DyfVelocity *= DT / DH;
+    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
+    derivatives.DyfFreeSurface *= DT / DH;
     derivatives.Dyf.purge();
 
     /* Distributed vectors */

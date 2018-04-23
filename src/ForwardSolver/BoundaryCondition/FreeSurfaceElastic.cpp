@@ -14,7 +14,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSu
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model)
 {
-    /*This function sets scaling factors fot (vxx+vzz) and vyy for the calculation of the horizontal updates without vertical derivatives 
+    /*This function sets scaling factors for (vxx+vzz) and vyy for the calculation of the horizontal updates without vertical derivatives 
     * On the free surface the verical velocity derivarive can be expressed by 
     * vyy = (2mu / pi ) -1  where mu = sWaveModulus and pi = pWaveModulus
     * The original update,
@@ -22,8 +22,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
     * will be exchanged with 
     * sxx_new = 2mu * (2 - 2mu / pi )*vxx
     * The final update will be (last update has to be undone):
-    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*vxx) - (pi-2mu)*vyy
-    *                      = scaleHorizontalUpdate*vxx  - scaleVerticalUpdate*Vyy */
+    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
+    *                      = scaleHorizontalUpdate*(vxx +vzz)  - scaleVerticalUpdate*Vyy */
 
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
@@ -62,11 +62,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.calcDybVelocity(NX, NY, NZ, dist);
+    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
+    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
 
-    derivatives.DybVelocity *= DT / DH;
-    derivatives.DyfVelocity *= DT / DH;
+    derivatives.DybFreeSurface *= DT / DH;
+    derivatives.DyfFreeSurface *= DT / DH;
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;

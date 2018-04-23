@@ -79,9 +79,9 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
 
     lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybVelocity();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
     lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 

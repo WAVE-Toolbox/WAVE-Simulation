@@ -51,10 +51,8 @@ namespace KITGPI
                 using Derivatives<ValueType>::Dzf;
                 using Derivatives<ValueType>::Dzb;
 
-                using Derivatives<ValueType>::DyfPressure;
-                using Derivatives<ValueType>::DyfVelocity;
-                using Derivatives<ValueType>::DybPressure;
-                using Derivatives<ValueType>::DybVelocity;
+                using Derivatives<ValueType>::DyfFreeSurface;
+                using Derivatives<ValueType>::DybFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::spatialFDorder;

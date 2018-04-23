@@ -111,10 +111,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybVelocity *= DT / DH;
-    derivatives.DyfVelocity *= DT / DH;
+    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
+    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
+    derivatives.DybFreeSurface *= DT / DH;
+    derivatives.DyfFreeSurface *= DT / DH;
 
     selectHorizontalUpdate.setSameValue(dist, 0.0);
     setSurfaceZero.setSameValue(dist, 1.0);
