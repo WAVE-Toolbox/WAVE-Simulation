@@ -78,20 +78,20 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
 
-    lama::Matrix<ValueType> const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix<ValueType> const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix<ValueType> const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix<ValueType> const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybVelocity();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfVelocity();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
+    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
 
     std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
 
-    lama::DenseVector<ValueType> update2; 
+    lama::DenseVector<ValueType> update2;
 
     std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
     std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
@@ -113,7 +113,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     auto onePlusLtauS = lama::eval<lama::DenseVector<ValueType>>(1.0 + numRelaxationMechanisms * tauS); // = ( 1 + L * tauS )
 
     if (useFreeSurface) {
-        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS);
+        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
     }
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
@@ -136,7 +136,12 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxx_x(update);
         }
 
-        update_temp = DybVelocity * Sxy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
         if (useConvPML) {
             ConvPML.apply_sxy_y(update_temp);
         }
@@ -149,7 +154,12 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxy_x(update);
         }
 
-        update_temp = DyfVelocity * Syy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
         if (useConvPML) {
             ConvPML.apply_syy_y(update_temp);
         }
@@ -163,7 +173,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         /* ----------------*/
 
         vxx = Dxb * vX;
-        vyy = DybPressure * vY;
+        vyy = Dyb * vY;
         if (useConvPML) {
             ConvPML.apply_vxx(vxx);
             ConvPML.apply_vyy(vyy);
@@ -189,28 +199,30 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         Syy += update;
 
         /* Update Sxx and Rxx */
-        vyy *= sWaveModulus;
-        vyy *= 2.0;
+        update = vyy;
+        update *= sWaveModulus;
+        update *= 2.0;
 
-        update2 = inverseRelaxationTime * vyy;
+        update2 = inverseRelaxationTime * update;
 
         update2 *= tauS;
         Rxx += update2;
-        vyy *= onePlusLtauS;
-        Sxx -= vyy;
+        update *= onePlusLtauS;
+        Sxx -= update;
 
         Rxx *= viscoCoeff2;
         Sxx += DThalf * Rxx;
 
         /* Update Syy and Ryy */
-        vxx *= sWaveModulus;
-        vxx *= 2.0;
+        update = vxx;
+        update *= sWaveModulus;
+        update *= 2.0;
 
-        update2 = inverseRelaxationTime * vxx;
+        update2 = inverseRelaxationTime * update;
         update2 *= tauS;
         Ryy += update2;
-        vxx *= onePlusLtauS;
-        Syy -= vxx;
+        update *= onePlusLtauS;
+        Syy -= update;
 
         Ryy *= viscoCoeff2;
         Syy += DThalf * Ryy;
@@ -219,7 +231,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         Sxy += DThalf * Rxy;
         Rxy *= viscoCoeff1;
 
-        update = DyfPressure * vX;
+        update = Dyf * vX;
         if (useConvPML) {
             ConvPML.apply_vxy(update);
         }
@@ -243,7 +255,8 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {
-            FreeSurface.apply(vxx, update2, Sxx, Syy, Rxx, Ryy);
+            FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx, Rxx, DThalf);
+            FreeSurface.setMemoryVariableToZero(Ryy);
         }
 
         /* Apply the damping boundary */
