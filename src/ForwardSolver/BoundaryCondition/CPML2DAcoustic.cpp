@@ -3,7 +3,7 @@ using namespace scai;
 
 //! \brief resetting the CPML memory variables
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::reset()
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::resetCPML()
 {
     this->resetVector(psi_vxx);
     this->resetVector(psi_vyy);
@@ -14,28 +14,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::reset(
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vxx(scai::lama::Vector &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vxx(scai::lama::Vector<ValueType> &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vyy(scai::lama::Vector &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_vyy(scai::lama::Vector<ValueType> &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y, k_y);
 }
 
 //! \brief application of cpml on the derivation of p in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_x(scai::lama::Vector &p_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_x(scai::lama::Vector<ValueType> &p_x)
 {
     this->applyCPML(p_x, psi_p_x, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of p in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_y(scai::lama::Vector &p_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_p_y(scai::lama::Vector<ValueType> &p_y)
 {
     this->applyCPML(p_y, psi_p_y, a_y_half, b_y_half, k_y_half);
 }
@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
     k_x_half = 1.0;
     k_y_half = 1.0;
 
-    Acquisition::Coordinates<ValueType> coordTransform;
+    Acquisition::Coordinates coordTransform;
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 

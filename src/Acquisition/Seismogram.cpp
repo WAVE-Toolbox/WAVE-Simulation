@@ -9,6 +9,7 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
+    std::cout<< "copy seismogram" << std::endl;
     numSamples = rhs.numSamples;
     numTracesGlobal = rhs.numTracesGlobal;
     numTracesLocal = rhs.numTracesLocal;
@@ -17,6 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
+    std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
 /*!
@@ -111,17 +113,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
         SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
 
         scai::lama::DenseVector<ValueType> tempRow;
-        scai::lama::Scalar tempMax;
-        scai::lama::Scalar tempInverseMax;
+        ValueType tempMax;
+        ValueType tempInverseMax;
 
         for (IndexType i = 0; i < numTracesGlobal; i++) {
             tempMax = 0.0;
-            tempRow.assign(0.0);
             data.getRow(tempRow, i);
             tempMax = tempRow.max();
             tempInverseMax = 1 / tempMax;
             tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
+            data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
     }
 }
@@ -134,16 +135,18 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
+    std::cout << "integrate traces, data = " << data << std::endl;
+
     SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
 
     scai::lama::DenseVector<ValueType> tempRow;
+
     for (IndexType i = 0; i < numTracesGlobal; i++) {
-	tempRow.assign(0.0);
-	data.getRow(tempRow, i);
-	for (IndexType j = 0; j <tempRow.size()-1; j++) {
-	      tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
-	}
-	data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
+	    data.getRow(tempRow, i);
+	    for (IndexType j = 0; j <tempRow.size()-1; j++) {
+	          tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
+	    }
+	    data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -299,6 +302,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
+    std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
 
@@ -350,13 +355,45 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 /*!
  *
  \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
+{
+    scai::dmemo::DistributionPtr distTraces;
+    scai::dmemo::DistributionPtr distSamples;
+    
+    if (copyDist == 1){
+        distTraces = data.getRowDistributionPtr();
+        distSamples = data.getColDistributionPtr();
+    }
+        
+    data.readFromFile(addSeismogramTypeToName(filename));
+    IndexType nrow_temp = data.getNumRows();
+    IndexType ncolumn_temp = data.getNumColumns();
+
+    numSamples = ncolumn_temp;
+    numTracesGlobal = nrow_temp;
+
+    if (copyDist == 0) {
+        replicate();
+    } else if (copyDist == 1) {
+        redistribute(distTraces, distSamples);
+    }
+}
+
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
  \param distTraces Distribution of traces
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    data.readFromFile(filename);
+    data.readFromFile(addSeismogramTypeToName(filename));
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
@@ -576,7 +613,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         tr.mark = 0;
 
         int tracl1;
-        lama::Scalar temp;
         double temp3;
         IndexType temp2;
         float xr, yr, zr, x, y, z;
@@ -593,7 +629,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         pFile = fopen(filetemp, "wb");
         lama::DenseVector<ValueType> tempdata;
 
-        Coordinates<ValueType> coordTransform;
+        Coordinates coordTransform;
         coordinate3D coord3Dsrc;
         coordinate3D coord3Drec;
         coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate, NX, NY, NZ);
@@ -609,8 +645,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         ZS = ZS * DH;
 
         for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-            temp = coordinates.getValue(tracl1);
-            temp3 = float(temp.getValue<ValueType>());
+            temp3 = float(coordinates.getValue(tracl1));
             temp2 = floor(temp3);
             coord3Drec = coordTransform.index2coordinate(temp2, NX, NY, NZ);
             xr = coord3Drec.x;
@@ -649,10 +684,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
             tr.d1 = (float)tr.dt * 1.0e-6;       /* sample spacing for non-seismic data */
 
             data.getRow(tempdata, tracl1);
-            scai::lama::Scalar tempScalar;
             for (IndexType sample = 0; sample < tempdata.size(); sample++) {
-                tempScalar = tempdata.getValue(sample);
-                tr.data[sample] = float(tempScalar.getValue<ValueType>());
+                tr.data[sample] = float(tempdata.getValue(sample));
             }
 
             fwrite(&tr, 240, 1, pFile);
@@ -667,7 +700,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(ValueType const &rhs)
 {
     data *= rhs;
 
@@ -679,7 +712,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
 {
     KITGPI::Acquisition::Seismogram<ValueType> result(*this);
     result += rhs;
@@ -692,7 +725,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
     data += rhs.data;
 
@@ -704,7 +737,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const
 {
     KITGPI::Acquisition::Seismogram<ValueType> result(*this);
     result -= rhs;
@@ -717,7 +750,7 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
     data -= rhs.data;
 

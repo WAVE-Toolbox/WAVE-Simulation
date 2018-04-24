@@ -2,13 +2,13 @@
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 
-#include "IntgSinThree.hpp"
+#include "SourceSignal/SinThree.hpp"
 #include "gtest/gtest.h"
 
 using namespace scai;
 using namespace KITGPI;
 
-TEST(IntgSinThreeTest, TestConstructor)
+TEST(SinThreeTest, TestConstructor)
 {
     int NT = 4;
     double DT = 1;
@@ -21,8 +21,6 @@ TEST(IntgSinThreeTest, TestConstructor)
 
     //calculate sample result
     lama::DenseVector<double> zero(NT, 0.0);
-    lama::DenseVector<double> help(NT, 0.0);
-    lama::DenseVector<double> half(NT, 0.5);
     double temp;
     int time_index1, time_index2, i, count;
     time_index1 = floor(Tshift / DT);
@@ -30,34 +28,26 @@ TEST(IntgSinThreeTest, TestConstructor)
     count = 0;
     for (i = time_index1; i <= time_index2; i++) {
         temp = count * DT * M_PI * FC;
-        temp = cos(temp);
-        help.setValue(i, temp);
+        temp = sin(temp);
         temp = pow(temp, 3);
         zero.setValue(i, temp);
         count++;
     }
-    help = 0.75 * help;
-    zero = 0.25 * zero;
-    zero = zero - help;
-    zero = half + zero;
-    zero = zero / FC;
-    zero = zero / M_PI;
-    zero = zero / 0.75;
-    sampleResult = lama::Scalar(AMP) * zero;
+    sampleResult = AMP * zero;
 
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    EXPECT_NO_THROW(Acquisition::SourceSignal::IntgSinThree<double>(testResult1, NT, DT, FC, AMP, Tshift));
+    ASSERT_NO_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, FC, AMP, Tshift));
 
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
-    Acquisition::SourceSignal::IntgSinThree<double>(testResult2, NT, DT, FC, AMP, Tshift);
+    Acquisition::SourceSignal::SinThree<double>(testResult2, NT, DT, FC, AMP, Tshift);
 
-    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
+    ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
-TEST(IntgSinThreeTest, TestAsserts)
+TEST(SinThreeTest, TestAsserts)
 {
     int NT = 4;
     double DT = 10;
@@ -67,7 +57,7 @@ TEST(IntgSinThreeTest, TestAsserts)
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
 
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::IntgSinThree<double>(testResult1, -NT, DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::IntgSinThree<double>(testResult1, NT, -DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::IntgSinThree<double>(testResult1, NT, DT, -FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, -NT, DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, -DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, -FC, AMP, Tshift));
 }

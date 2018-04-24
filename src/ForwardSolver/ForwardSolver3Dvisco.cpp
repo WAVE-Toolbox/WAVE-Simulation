@@ -17,7 +17,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuratio
     
     /* Get distribibution */
     dmemo::DistributionPtr dist;
-    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
     dist=vX.getDistributionPtr();
     
     /* Initialisation of Boundary Conditions */
@@ -26,21 +26,21 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuratio
     }
     
     /* Initialisation of auxiliary vectors and scalars*/
-    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    std::unique_ptr<lama::Vector<ValueType>> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
     updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
-    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
+    std::unique_ptr<lama::Vector<ValueType>> tmp2(vX.newVector()); 
     update_tempPtr=std::move(tmp2); 	
-    common::unique_ptr<lama::Vector> tmp3(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> tmp3(vX.newVector());
     vxxPtr=std::move(tmp3); 
-    common::unique_ptr<lama::Vector> tmp4(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> tmp4(vX.newVector());
     vyyPtr=std::move(tmp4);
-    common::unique_ptr<lama::Vector> tmp5(vX.newVector());
-    vyyPtr=std::move(tmp5);
-    scai::common::unique_ptr<scai::lama::Vector> tmp6(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> tmp5(vX.newVector());
+    vzzPtr=std::move(tmp5);
+    std::unique_ptr<scai::lama::Vector<ValueType>> tmp6(vX.newVector());
     update2Ptr=std::move(tmp6);
-    scai::common::unique_ptr<scai::lama::Vector> tmp7(vX.newVector());
+    std::unique_ptr<scai::lama::Vector<ValueType>> tmp7(vX.newVector());
     onePlusLtauPPtr=std::move(tmp7);
-    scai::common::unique_ptr<scai::lama::Vector> tmp8(vX.newVector());
+    std::unique_ptr<scai::lama::Vector<ValueType>> tmp8(vX.newVector());
     onePlusLtauSPtr=std::move(tmp8);
     
     numRelaxationMechanisms = model.getNumRelaxationMechanisms();         
@@ -97,7 +97,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType DT)
 {
 
     SCAI_REGION("timestep")
@@ -105,64 +105,64 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
-    lama::Vector const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
-    lama::Vector const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
-    lama::Vector const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
-    lama::Vector const &tauSAverageXY = model.getTauSAverageXY();
-    lama::Vector const &tauSAverageXZ = model.getTauSAverageXZ();
-    lama::Vector const &tauSAverageYZ = model.getTauSAverageYZ();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    lama::Vector<ValueType> const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
+    lama::Vector<ValueType> const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
+    lama::Vector<ValueType> const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
+    lama::Vector<ValueType> const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
+    lama::Vector<ValueType> const &tauSAverageXY = model.getTauSAverageXY();
+    lama::Vector<ValueType> const &tauSAverageXZ = model.getTauSAverageXZ();
+    lama::Vector<ValueType> const &tauSAverageYZ = model.getTauSAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getRefVX();
-    lama::Vector &vY = wavefield.getRefVY();
-    lama::Vector &vZ = wavefield.getRefVZ();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vY = wavefield.getRefVY();
+    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
 
-    lama::Vector &Sxx = wavefield.getRefSxx();
-    lama::Vector &Syy = wavefield.getRefSyy();
-    lama::Vector &Szz = wavefield.getRefSzz();
-    lama::Vector &Syz = wavefield.getRefSyz();
-    lama::Vector &Sxz = wavefield.getRefSxz();
-    lama::Vector &Sxy = wavefield.getRefSxy();
+    lama::Vector<ValueType> &Sxx = wavefield.getRefSxx();
+    lama::Vector<ValueType> &Syy = wavefield.getRefSyy();
+    lama::Vector<ValueType> &Szz = wavefield.getRefSzz();
+    lama::Vector<ValueType> &Syz = wavefield.getRefSyz();
+    lama::Vector<ValueType> &Sxz = wavefield.getRefSxz();
+    lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
 
-    lama::Vector &Rxx = wavefield.getRefRxx();
-    lama::Vector &Ryy = wavefield.getRefRyy();
-    lama::Vector &Rzz = wavefield.getRefRzz();
-    lama::Vector &Ryz = wavefield.getRefRyz();
-    lama::Vector &Rxz = wavefield.getRefRxz();
-    lama::Vector &Rxy = wavefield.getRefRxy();
+    lama::Vector<ValueType> &Rxx = wavefield.getRefRxx();
+    lama::Vector<ValueType> &Ryy = wavefield.getRefRyy();
+    lama::Vector<ValueType> &Rzz = wavefield.getRefRzz();
+    lama::Vector<ValueType> &Ryz = wavefield.getRefRyz();
+    lama::Vector<ValueType> &Rxz = wavefield.getRefRxz();
+    lama::Vector<ValueType> &Rxy = wavefield.getRefRxy();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dzf = derivatives.getDzf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
-    lama::Matrix const &Dzb = derivatives.getDzb();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dzf = derivatives.getDzf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
 
-    lama::Matrix const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
 /* Get references to auxiliary vectors */
-    lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
-    lama::Vector &update_temp = *update_tempPtr;                // get Reference of VectorPointer
-    lama::Vector &vxx = *vxxPtr;
-    lama::Vector &vyy = *vyyPtr;
-    lama::Vector &vzz = *vzzPtr;
-    lama::Vector &update2= *update2Ptr;
-    lama::Vector &onePlusLtauP=*onePlusLtauPPtr; 
-    lama::Vector &onePlusLtauS=*onePlusLtauSPtr; 
+    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                // get Reference of VectorPointer
+    lama::Vector<ValueType> &vxx = *vxxPtr;
+    lama::Vector<ValueType> &vyy = *vyyPtr;
+    lama::Vector<ValueType> &vzz = *vzzPtr;
+    lama::Vector<ValueType> &update2= *update2Ptr;
+    lama::Vector<ValueType> &onePlusLtauP=*onePlusLtauPPtr; 
+    lama::Vector<ValueType> &onePlusLtauS=*onePlusLtauSPtr; 
 
     /* Get reference to required model vectors */ 
-    lama::Vector const &tauS = model.getTauS();
-    lama::Vector const &tauP = model.getTauP();
+    lama::Vector<ValueType> const &tauS = model.getTauS();
+    lama::Vector<ValueType> const &tauP = model.getTauP();
 
     onePlusLtauP = 1.0;
     onePlusLtauP += numRelaxationMechanisms * tauP;
@@ -171,7 +171,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     onePlusLtauS += numRelaxationMechanisms * tauS;
 
     if (useFreeSurface) {
-        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS);
+        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
     }
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
@@ -194,7 +194,13 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxx_x(update);
         }
 
-        update_temp = DybVelocity * Sxy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_sxy_y(update_temp);
         }
@@ -214,7 +220,13 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxy_x(update);
         }
 
-        update_temp = DyfVelocity * Syy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_syy_y(update_temp);
         }
@@ -234,7 +246,13 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxz_x(update);
         }
 
-        update_temp = DybVelocity * Syz;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Syz;
+        } else {
+            update_temp = Dyb * Syz;
+        }
+
         if (useConvPML) {
             ConvPML.apply_syz_y(update_temp);
         }
@@ -254,7 +272,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         /* ----------------*/
 
         vxx = Dxb * vX;
-        vyy = DybPressure * vY;
+        vyy = Dyb * vY;
         vzz = Dzb * vZ;
         if (useConvPML) {
             ConvPML.apply_vxx(vxx);
@@ -333,7 +351,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         Sxy += DThalf * Rxy;
         Rxy *= viscoCoeff1;
 
-        update = DyfPressure * vX;
+        update = Dyf * vX;
         if (useConvPML) {
             ConvPML.apply_vxy(update);
         }
@@ -389,7 +407,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_vyz(update);
         }
 
-        update_temp = DyfPressure * vZ;
+        update_temp = Dyf * vZ;
         if (useConvPML) {
             ConvPML.apply_vzy(update_temp);
         }
@@ -408,7 +426,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         /* Apply free surface to stress update */
         if (useFreeSurface) {
             update = vxx + vzz;
-            FreeSurface.apply(update, update2, Sxx, Syy, Szz, Rxx, Ryy, Rzz);
+            FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
+            FreeSurface.setMemoryVariableToZero(Ryy);
         }
 
         /* Apply the damping boundary */

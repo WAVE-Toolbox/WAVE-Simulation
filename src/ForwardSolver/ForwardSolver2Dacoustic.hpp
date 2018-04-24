@@ -24,6 +24,7 @@ namespace KITGPI
         template <typename ValueType>
         class FD2Dacoustic : public ForwardSolver<ValueType>
         {
+
           public:
             //! Default constructor
             FD2Dacoustic(){};
@@ -31,7 +32,7 @@ namespace KITGPI
             //! Default destructor
             ~FD2Dacoustic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType TStart, IndexType TEnd) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 	    
@@ -49,8 +50,8 @@ namespace KITGPI
             using ForwardSolver<ValueType>::useConvPML;
 	    
 	    /* Auxiliary Vectors */
-	    scai::common::unique_ptr<scai::lama::Vector> updatePtr;
-	    scai::common::unique_ptr<scai::lama::Vector> update_tempPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> updatePtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> update_tempPtr;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

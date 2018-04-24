@@ -28,5 +28,5 @@ TEST(AcquisitionTest, TestArrayLength)
 {
 
     int nSeismogramType = sizeof(Acquisition::SeismogramType);
-    EXPECT_EQ(nSeismogramType, static_cast<int>(Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE));
+    ASSERT_EQ(nSeismogramType, static_cast<int>(Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE));
 }

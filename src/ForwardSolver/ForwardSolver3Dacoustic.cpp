@@ -17,7 +17,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::initForwardSolver(Configura
     
     /* Get distribibution of the wavefields */
     dmemo::DistributionPtr dist;
-    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
     dist=vX.getDistributionPtr();
     
     /* Initialisation of Boundary Conditions */
@@ -26,9 +26,9 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::initForwardSolver(Configura
     }
     
     /* Initialisation of auxiliary vectors*/
-    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    std::unique_ptr<lama::Vector<ValueType>> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
     updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
-    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
+    std::unique_ptr<lama::Vector<ValueType>> tmp2(vX.newVector()); 
     update_tempPtr=std::move(tmp2); 	
 }
 
@@ -78,7 +78,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd)
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType)
 {
 
     SCAI_REGION("timestep")
@@ -86,31 +86,34 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    lama::Vector<ValueType> const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getRefVX();
-    lama::Vector &vY = wavefield.getRefVY();
-    lama::Vector &vZ = wavefield.getRefVZ();
-    lama::Vector &p = wavefield.getRefP();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vY = wavefield.getRefVY();
+    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
+    lama::Vector<ValueType> &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dzf = derivatives.getDzf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
-    lama::Matrix const &Dzb = derivatives.getDzb();
-    lama::Matrix const &Dyb = derivatives.getDyb();
-    lama::Matrix const &Dyf = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dzf = derivatives.getDzf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
-    
-    /* Get reference to auxiliary vector */
-    lama::Vector &update = *updatePtr;                  
-    lama::Vector &update_temp = *update_tempPtr;        
+
+    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
+
+    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
 
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
 
@@ -132,7 +135,13 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         update *= inverseDensityAverageX;
         vX += update;
 
-        update = Dyf * p;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update = DyfFreeSurface * p;
+        } else {
+            update = Dyf * p;
+        }
+
         if (useConvPML) {
             ConvPML.apply_p_y(update);
         }
@@ -166,11 +175,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
         update *= pWaveModulus;
         p += update;
-
-        /* Apply free surface to pressure update */
-        if (useFreeSurface) {
-            FreeSurface.apply(p);
-        }
 
         /* Apply the damping boundary */
         if (useDampingBoundary) {

@@ -5,7 +5,8 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSurfaceElastic(){};
 
-/*! \brief Scale horizontal update with model parameter
+/*! \brief Scale horizontal  and vertical updates with model parameter
+ * this will be used to exchange vertical with horizontal derivatives for the horizontal updates on the free surface 
  *
  *
  \param model which is used during forward modelling
@@ -13,64 +14,32 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSu
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model)
 {
+    /*This function sets scaling factors for (vxx+vzz) and vyy for the calculation of the horizontal updates without vertical derivatives 
+    * On the free surface the verical velocity derivarive can be expressed by 
+    * vyy = (2mu / pi ) -1  where mu = sWaveModulus and pi = pWaveModulus
+    * The original update,
+    * sxx = pi * ( vxx+vyy ) - 2mu *vyy 
+    * will be exchanged with 
+    * sxx_new = 2mu * (2 - 2mu / pi )*vxx
+    * The final update will be (last update has to be undone):
+    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
+    *                      = scaleHorizontalUpdate*(vxx +vzz)  - scaleVerticalUpdate*Vyy */
 
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
 
-    lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
+    auto temp = lama::eval<lama::DenseVector<ValueType>>(pWaveModulus - 2 * sWaveModulus);
 
-    temp = 2 * sWaveModulus - pWaveModulus;
+    scaleVerticalUpdate = selectHorizontalUpdate;
+    scaleVerticalUpdate *= temp;
 
-    scaleHorizontalUpdate = pWaveModulus;
-    scaleHorizontalUpdate.invert();
+    temp *= temp;
+    temp /= pWaveModulus;
+    temp *= -1;
+
+    scaleHorizontalUpdate = selectHorizontalUpdate;
+
     scaleHorizontalUpdate *= temp;
-    scaleHorizontalUpdate *= selectHorizontalUpdate;
-}
-
-/*! \brief Apply free surface condition during time stepping for 2D simulations
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param sumHorizonalDerivative Sum of horizontal velocity updates
- \param Sxx Sxx wavefield
- \param Syy Syy wavefield
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy)
-{
-
-    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
-
-    /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative *= scaleHorizontalUpdate;
-
-    Sxx += sumHorizonalDerivative;
-
-    Syy *= setSurfaceZero;
-}
-
-/*! \brief Apply free surface condition during time stepping for 3D simulations
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param sumHorizonalDerivative Sum of horizontal velocity updates
- \param Sxx Sxx wavefield
- \param Syy Syy wavefield
- \param Szz Szz wavefield
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz)
-{
-
-    /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative *= scaleHorizontalUpdate;
-
-    Sxx += sumHorizonalDerivative;
-    Szz += sumHorizonalDerivative;
-
-    Syy *= setSurfaceZero;
 }
 
 /*! \brief Initialitation of the free surface
@@ -93,22 +62,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfPressure(NX, NY, NZ, dist);
-    derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.calcDybPressure(NX, NY, NZ, dist);
-    derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure *= lama::Scalar(DT / DH);
-    derivatives.DybVelocity *= lama::Scalar(DT / DH);
-    derivatives.DyfPressure *= lama::Scalar(DT / DH);
-    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
-    derivatives.Dyb.purge();
-    derivatives.Dyf.purge();
+    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
+    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
 
-    selectHorizontalUpdate.allocate(dist);
-    selectHorizontalUpdate = 0.0;
-
-    setSurfaceZero.allocate(dist);
-    setSurfaceZero = 1.0;
+    derivatives.DybFreeSurface *= DT / DH;
+    derivatives.DyfFreeSurface *= DT / DH;
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -116,15 +74,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     IndexType numLocalIndices = localIndices.size();              // Number of local indices
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
 
+    lama::DenseVector<ValueType> temp(dist, 0.0);
     /* Get write access to local part of scaleHorizontalUpdate */
-    utilskernel::LArray<ValueType> *selectHorizontalUpdate_LA = &selectHorizontalUpdate.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
+    auto write_selectHorizontalUpdate = hostWriteAccess(temp.getLocalValues());
 
-    /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *setSurfaceZero_LA = &setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
-
-    KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation;
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -139,14 +93,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
 
             /* Set horizontal update to 1 at the surface and leave it zero else */
             write_selectHorizontalUpdate[rowLocal] = 1.0;
-
-            /* Set vector at surface to zero  */
-            write_setSurfaceZero[rowLocal] = 0.0;
         }
     }
-    read_localIndices.release();
     write_selectHorizontalUpdate.release();
-    write_setSurfaceZero.release();
+    selectHorizontalUpdate = temp;
+
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
 }
 

@@ -22,8 +22,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextP
  *
  * Initialisation of 2D acoustic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -34,32 +34,33 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPt
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string type, IndexType t)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t);
-    this->writeWavefield(VY, "VY", type, t);
-    this->writeWavefield(P, "P", type, t);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+    this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(IndexType t)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut)
 {
-    write(type, t);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::reset()
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::resetWavefields()
 {
     this->resetWavefield(VX);
     this->resetWavefield(VY);
@@ -175,7 +176,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dacoustic<ValueType>:
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD2Dacoustic<ValueType> result;
     result.VX = this->VX * rhs;
@@ -190,7 +191,7 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<Val
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD2Dacoustic<ValueType> rhs)
+KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD2Dacoustic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -200,7 +201,7 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType> operator*(scai::lama::Scalar lhs, KI
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }
@@ -231,7 +232,7 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType> KITGPI::Wavefields::FD2Dacoustic<Val
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -243,7 +244,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::assign(KITGPI::Wavefields::Wav
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -255,7 +256,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::minusAssign(KITGPI::Wavefields
 
 /*! \brief function for overloading += Operation (called in base class)
  *
- \param rhs Abstarct model which is subtractet.
+ \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -263,6 +264,18 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields:
     VX += rhs.getRefVX();
     VY += rhs.getRefVY();
     P += rhs.getRefP();
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    P *= rhs;
 }
 
 template class KITGPI::Wavefields::FD2Dacoustic<double>;

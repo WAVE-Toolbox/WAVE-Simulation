@@ -32,7 +32,7 @@ namespace KITGPI
             //! Default destructor
             ~FD2Delastic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 	    
@@ -50,10 +50,10 @@ namespace KITGPI
             using ForwardSolver<ValueType>::useConvPML;
 	    
 	    /* Auxiliary Vectors */
-	    scai::common::unique_ptr<scai::lama::Vector> updatePtr;
-	    scai::common::unique_ptr<scai::lama::Vector> update_tempPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> vxxPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> vyyPtr;	
+	    std::unique_ptr<scai::lama::Vector<ValueType>> updatePtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> update_tempPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> vxxPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> vyyPtr;	
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

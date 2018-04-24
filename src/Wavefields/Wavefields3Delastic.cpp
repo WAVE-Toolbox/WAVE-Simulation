@@ -14,8 +14,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Delastic<ValueType>::getContextPtr()
  *
  * Initialisation of 3D elastic wavefields
  *
- /param ctx Context
- /param dist Distribution
+ \param ctx Context
+ \param dist Distribution
  */
 template <typename ValueType>
 KITGPI::Wavefields::FD3Delastic<ValueType>::FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
@@ -40,38 +40,39 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string type, IndexType t)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut)
 {
-    this->writeWavefield(VX, "VX", type, t);
-    this->writeWavefield(VY, "VY", type, t);
-    this->writeWavefield(VZ, "VZ", type, t);
-    this->writeWavefield(Sxx, "Sxx", type, t);
-    this->writeWavefield(Syy, "Syy", type, t);
-    this->writeWavefield(Szz, "Szz", type, t);
-    this->writeWavefield(Sxy, "Sxy", type, t);
-    this->writeWavefield(Sxz, "Sxz", type, t);
-    this->writeWavefield(Syz, "Syz", type, t);
+    std::string fileBaseName = baseName + type;
+    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+    this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Szz, "Szz", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
+    this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
 }
 
 /*! \brief Wrapper Function to Write Snapshot of the Wavefield
  *
  *
- /param t Current Timestep
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(IndexType t)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
 {
-    write(type, t);
+    write(baseName, type, t, partitionedOut);
 }
 
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::reset()
+void KITGPI::Wavefields::FD3Delastic<ValueType>::resetWavefields()
 {
     this->resetWavefield(VX);
     this->resetWavefield(VY);
@@ -145,7 +146,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Delastic<ValueType>::
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD3Delastic<ValueType> result;
     result.VX = this->VX * rhs;
@@ -167,7 +168,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD3Delastic<ValueType> rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Delastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -177,7 +178,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }
@@ -215,7 +216,7 @@ KITGPI::Wavefields::FD3Delastic<ValueType> KITGPI::Wavefields::FD3Delastic<Value
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -233,7 +234,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::assign(KITGPI::Wavefields::Wave
 
 /*! \brief function for overloading -= Operation (called in base class)
  *
- \param rhs Abstract model which is assigned.
+ \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -251,7 +252,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::minusAssign(KITGPI::Wavefields:
 
 /*! \brief function for overloading += Operation (called in base class)
  *
- \param rhs Abstarct model which is subtractet.
+ \param rhs Abstarct wavefield which is added.
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Delastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -267,5 +268,22 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::plusAssign(KITGPI::Wavefields::
     Syz += rhs.getRefSyz();
 }
 
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Delastic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    VZ *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Szz *= rhs;
+    Sxy *= rhs;
+    Sxz *= rhs;
+    Syz *= rhs;
+}
 template class KITGPI::Wavefields::FD3Delastic<float>;
 template class KITGPI::Wavefields::FD3Delastic<double>;

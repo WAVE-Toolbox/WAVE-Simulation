@@ -52,6 +52,18 @@ int main(int argc, const char *argv[])
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
+    
+    // following lines should be in a extra function in check parameter class
+    IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    
+    IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0 ;
+    if (config.get<bool>("saveSnapshots")==1){
+        firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
+        lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
+        incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
+    }
+    
+    IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -62,6 +74,13 @@ int main(int argc, const char *argv[])
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
+    // following lines should be part of checkParameter.tpp
+    if (comm->getSize()!=config.get<IndexType>("ProcNX")*config.get<IndexType>("ProcNY")*config.get<IndexType>("ProcNZ"))
+    {
+        HOST_PRINT(comm, "\n Error: Number of MPI processes (" << comm->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNX*ProcNY*ProcNZ=" << config.get<IndexType>("ProcNX")*config.get<IndexType>("ProcNY")*config.get<IndexType>("ProcNZ") << "\n")
+        return(2);	    
+    }
+    
     // inter node distribution 
     // define the grid topology by sizes NX, NY, and NZ from configuration
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
@@ -110,8 +129,8 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-    IndexType getNT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
-
+    
+    
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
 
@@ -121,15 +140,20 @@ int main(int argc, const char *argv[])
             sources.init(config, ctx, dist, shotNumber);
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
-                                                         << "Total Number of time steps: " << getNT << "\n");
-        start_t = common::Walltime::get();
+                                                         << "Total Number of time steps: " << tStepEnd << "\n");
+        wavefields->resetWavefields();
+	
+	start_t = common::Walltime::get();
+	
+	for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-        /* Start and end counter for time stepping */
-        IndexType tStart = 0;
-        IndexType tEnd = getNT;
+	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
+	  
+	  if (config.get<bool>("saveSnapshots") == 1 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+	    wavefields->writeSnapshot(config.get<std::string>("WavefieldFileName"),tStep,partitionedOut);
+	  }
 
-        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStart, tEnd);
-
+	}
         end_t = common::Walltime::get();
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 

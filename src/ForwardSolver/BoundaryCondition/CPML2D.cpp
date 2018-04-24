@@ -3,7 +3,7 @@ using namespace scai;
 
 //! \brief resetting the CPML memory variables
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::reset()
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::resetCPML()
 {
     this->resetVector(psi_vxx);
     this->resetVector(psi_vyx);
@@ -18,56 +18,56 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::reset()
 
 //! \brief application of cpml on the derivation of sxx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(scai::lama::Vector &sxx_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(scai::lama::Vector<ValueType> &sxx_x)
 {
     this->applyCPML(sxx_x, psi_sxx_x, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(scai::lama::Vector &sxy_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(scai::lama::Vector<ValueType> &sxy_x)
 {
     this->applyCPML(sxy_x, psi_sxy_x, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::Vector &sxy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::Vector<ValueType> &sxy_y)
 {
     this->applyCPML(sxy_y, psi_sxy_y, a_y, b_y, k_y);
 }
 
 //! \brief application of cpml on the derivation of syy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::Vector &syy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::Vector<ValueType> &syy_y)
 {
     this->applyCPML(syy_y, psi_syy_y, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(scai::lama::Vector &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(scai::lama::Vector<ValueType> &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of vy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai::lama::Vector &vyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai::lama::Vector<ValueType> &vyx)
 {
     this->applyCPML(vyx, psi_vyx, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of vx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::Vector &vxy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::Vector<ValueType> &vxy)
 {
     this->applyCPML(vxy, psi_vxy, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::Vector &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::Vector<ValueType> &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y, k_y);
 }
@@ -145,7 +145,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     k_x_half = 1.0;
     k_y_half = 1.0;
 
-    Acquisition::Coordinates<ValueType> coordTransform;
+    Acquisition::Coordinates coordTransform;
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 

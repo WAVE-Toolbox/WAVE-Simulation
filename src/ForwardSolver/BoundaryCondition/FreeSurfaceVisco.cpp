@@ -13,52 +13,82 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector &onePlusLtauP, scai::lama::Vector &onePlusLtauS)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT)
 {
+    /*This function sets scaling factors for (vxx+vzz) and vyy for the calculation of the horizontal updates without vertical derivatives */
 
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector const &tauS = model.getTauS();
-    lama::Vector const &tauP = model.getTauP();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &tauS = model.getTauS();
+    lama::Vector<ValueType> const &tauP = model.getTauP();
 
-    lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
-    lama::DenseVector<ValueType> temp2(sWaveModulus.getDistributionPtr());
+    /* On the free surface the verical velocity derivarive can be expressed by 
+    * vyy = (2mu / pi ) -1  where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
+    * The original update,
+    * sxx = pi * ( vxx+vyy ) - 2mu *vyy 
+    * will be exchanged with 
+    * sxx_new = 2mu * (2 - 2mu / pi )*vxx
+    * The final update will be (last update has to be undone):
+    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
+    *                      = scaleHorizontalUpdate*(vxx+vzz)  - scaleVerticalUpdate*Vyy 
+    * the szz calculation is done analogous */
 
     /* --------------------------------------- */
     /* Apply scaling for update of Sxx and Szz */
     /* --------------------------------------- */
 
-    temp = 2 * sWaveModulus;
-    temp *= onePlusLtauS;
+    auto temp = lama::eval<lama::DenseVector<ValueType>>(-2 * sWaveModulus * onePlusLtauS);
+    auto temp2 = lama::eval<lama::DenseVector<ValueType>>((pWaveModulus * onePlusLtauP));
+    temp += temp2;
+    temp2 = 1 / temp2;
 
-    temp2 = -1.0 * pWaveModulus;
-    temp2 *= onePlusLtauP;
+    scaleStressVerticalUpdate = selectHorizontalUpdate;
+    scaleStressVerticalUpdate *= temp;
 
-    temp += temp2; // = ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) );
-
-    scaleStressHorizontalUpdate = pWaveModulus;
-    scaleStressHorizontalUpdate *= onePlusLtauP;           // = ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * ( 1 + L * tauS) ) -  ( P-wave Modul * ( 1 + L * tauP) ) ) / ( ( P-wave Modul * ( 1 + L * tauP) )
-    scaleStressHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
+    scaleStressHorizontalUpdate = -1 * selectHorizontalUpdate;
+    scaleStressHorizontalUpdate *= temp;
+    scaleStressHorizontalUpdate *= temp;
+    scaleStressHorizontalUpdate *= temp2;
 
     /* --------------------------------------- */
     /* Apply scaling for update of Rxx and Rzz */
     /* --------------------------------------- */
 
+    ValueType relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
+    ValueType viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1 todo DT
+
+    /* On the free surface the verical velocity derivarive can be expressed by 
+    * vyy = (2mu / pi ) -1  where mu = sWaveModulus and pi = pWaveModulus 
+    * tau = relaxationTime
+    * The original update,
+    * Rxx = (1/(1+1/(2*tau)))*(Rxx*(1-1/(2*tau))- pi*(tauP/tau)*(vxx+vyy+vzz)+mu*(tauS/tau)*(vyy+vzz))
+    * will be exchanged with 
+    * Rxx_new = (1/(1+1/(2*tau)))*(Rxx*(1-1/(2*tau))- pi*(tauP/tau)*(vxx+(2mu / pi ) -1 + vzz)+mu*(tauS/tau)*((2mu / pi ) -1 + vzz))
+    * The final update will be (last update has to be undone):
+    * Rxx += Rxx_new - Rxx = (1/(tau+0.5))*((2mu*tauS-pi*tauP)*((2mu(1+L*tauS)/pi(1+L*tauP))-1)*(vxx+vzz) - (2mu*tauS-pi*tauP)*vyy)
+    *                      = scaleRelaxationHorizontalUpdate*(vxx+vzz)  - scaleRelaxationVerticalUpdate*Vyy 
+    * the Rzz calculation is done analogous */
+
     temp = 2 * sWaveModulus;
-    temp *= tauS;
+    temp2 = pWaveModulus;
+    auto temp3 = lama::eval<lama::DenseVector<ValueType>>(temp * tauS);
+    temp3 -= lama::eval<lama::DenseVector<ValueType>>(temp2 * tauP);
 
-    temp2 = -1.0 * pWaveModulus;
-    temp2 *= tauP;
+    scaleRelaxationVerticalUpdate = selectHorizontalUpdate;
+    scaleRelaxationVerticalUpdate *= temp3;
+    scaleRelaxationVerticalUpdate *= viscoCoeff2;
+    scaleRelaxationVerticalUpdate /= relaxationTime;
 
-    temp += temp2; // = ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP );
+    temp *= onePlusLtauS;
+    temp2 *= onePlusLtauP;
+    temp /= temp2;
+    temp -= 1;
 
-    scaleRelaxationHorizontalUpdate = pWaveModulus;
-    scaleRelaxationHorizontalUpdate *= tauP;                   // = ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate.invert();                  // = 1 / ( P-wave Modul * tauP )
-    scaleRelaxationHorizontalUpdate *= temp;                   // = ( ( 2 * S-wave Modul * tauS ) -  ( P-wave Modul * tauP ) ) / ( ( P-wave Modul tauP) )
-    scaleRelaxationHorizontalUpdate *= selectHorizontalUpdate; // set to zero everywhere besides the surface
+    scaleRelaxationHorizontalUpdate = selectHorizontalUpdate; // set to zero everywhere besides the surface
+    scaleRelaxationHorizontalUpdate *= temp3;
+    scaleRelaxationHorizontalUpdate *= temp;
+    scaleRelaxationHorizontalUpdate *= viscoCoeff2;
+    scaleRelaxationHorizontalUpdate /= relaxationTime;
 }
 
 /*! \brief Initialitation of the free surface
@@ -81,22 +111,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfPressure(NX, NY, NZ, dist);
-    derivatives.calcDyfVelocity(NX, NY, NZ, dist);
-    derivatives.calcDybPressure(NX, NY, NZ, dist);
-    derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure *= lama::Scalar(DT / DH);
-    derivatives.DybVelocity *= lama::Scalar(DT / DH);
-    derivatives.DyfPressure *= lama::Scalar(DT / DH);
-    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
-    derivatives.Dyb.purge();
-    derivatives.Dyf.purge();
+    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
+    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
+    derivatives.DybFreeSurface *= DT / DH;
+    derivatives.DyfFreeSurface *= DT / DH;
 
-    selectHorizontalUpdate.allocate(dist);
-    selectHorizontalUpdate = 0.0;
-
-    setSurfaceZero.allocate(dist);
-    setSurfaceZero = 1.0;
+    selectHorizontalUpdate.setSameValue(dist, 0.0);
+    setSurfaceZero.setSameValue(dist, 1.0);
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -104,15 +125,16 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     IndexType numLocalIndices = localIndices.size();              // Number of local indices
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
 
-    /* Get write access to local part of scaleHorizontalUpdate */
-    utilskernel::LArray<ValueType> *selectHorizontalUpdate_LA = &selectHorizontalUpdate.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
+    scai::lama::DenseVector<ValueType> temp2(dist, 0.0);
+    /* Get write access to local part of temp2 */
+    auto write_selectHorizontalUpdate = hmemo::hostWriteAccess(temp2.getLocalValues());
 
-    /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *setSurfaceZero_LA = &setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
+    scai::lama::DenseVector<ValueType> temp(dist, 1.0);
 
-    KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
+    /* Get write access to local part of temp */
+    auto write_setSurfaceZero = hmemo::hostWriteAccess(temp.getLocalValues());
+
+    KITGPI::Acquisition::Coordinates coordinateTransformation;
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -132,10 +154,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
             write_setSurfaceZero[rowLocal] = 0.0;
         }
     }
-    read_localIndices.release();
-    write_selectHorizontalUpdate.release();
     write_setSurfaceZero.release();
+    write_selectHorizontalUpdate.release();
+    setSurfaceZero = temp;
+    selectHorizontalUpdate = temp2;
+
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
+}
+
+/*! \brief Set Ryy at the free surface to zero
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param Ryy Ryy wavefield (relaxation)
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setMemoryVariableToZero(scai::lama::Vector<ValueType> &Ryy)
+{
+
+    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
+
+    Ryy *= setSurfaceZero; // Set at the free surface to zero
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<float>;

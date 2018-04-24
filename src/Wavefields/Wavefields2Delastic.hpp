@@ -31,7 +31,7 @@ namespace KITGPI
 
             explicit FD2Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void reset() override;
+            void resetWavefields() override;
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefP() override;
@@ -51,18 +51,19 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
             /* Overloading Operators */
-            KITGPI::Wavefields::FD2Delastic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(scai::lama::Scalar rhs);
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*(ValueType rhs);
+            KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(ValueType rhs);
             KITGPI::Wavefields::FD2Delastic<ValueType> operator*(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
             KITGPI::Wavefields::FD2Delastic<ValueType> operator*=(KITGPI::Wavefields::FD2Delastic<ValueType> rhs);
 
-            void write(std::string type, IndexType t) override;
-            void writeSnapshot(IndexType t);
+            void write(std::string baseName,std::string type, scai::IndexType t, scai::IndexType partitionedOut) override;
+            void writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut);
 	    
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
-
+            void timesAssign(ValueType rhs);
+	    
           private:
             /* required wavefields */
             using Wavefields<ValueType>::VX;

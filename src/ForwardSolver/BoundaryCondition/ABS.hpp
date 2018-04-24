@@ -4,6 +4,8 @@
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
 
@@ -39,7 +41,7 @@ namespace KITGPI
                  \param DampingCoeff Damping coefficient
                  \param useFreeSurface Bool if free surface is in use
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) = 0;
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

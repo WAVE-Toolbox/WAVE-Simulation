@@ -27,20 +27,18 @@ namespace KITGPI
 
                 virtual ~FreeSurfaceElastic() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model);
-
-                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz);
-                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy);
 
               protected:
                 using FreeSurface<ValueType>::active;
 
-                scai::lama::DenseVector<ValueType> setSurfaceZero;         //!< Vector, which sets the wavefields at the surface to zero
-                scai::lama::DenseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
-
-                scai::lama::DenseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter
+                //  scai::lama::DenseVector<ValueType> setSurfaceZero;         //!< Vector, which sets the wavefields at the surface to zero
+                scai::lama::SparseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
+                scai::lama::SparseVector<ValueType> temp;
+                scai::lama::SparseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which scales the horizontal update on the free surface in order to exchange the horizontal main stresses.
+                scai::lama::SparseVector<ValueType> scaleVerticalUpdate;   //!< Vector, which scales the vertical updateon the free surface in order to exchange the horizontal main stresses.
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

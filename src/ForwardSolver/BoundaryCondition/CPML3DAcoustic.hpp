@@ -29,16 +29,16 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3DAcoustic(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
 
-                void reset();
+                void resetCPML();
 
-                void apply_vxx(scai::lama::Vector &vxx);
-                void apply_vyy(scai::lama::Vector &vyy);
-                void apply_vzz(scai::lama::Vector &vzz);
-                void apply_p_x(scai::lama::Vector &p_x);
-                void apply_p_y(scai::lama::Vector &p_y);
-                void apply_p_z(scai::lama::Vector &p_z);
+                void apply_vxx(scai::lama::Vector<ValueType> &vxx);
+                void apply_vyy(scai::lama::Vector<ValueType> &vyy);
+                void apply_vzz(scai::lama::Vector<ValueType> &vzz);
+                void apply_p_x(scai::lama::Vector<ValueType> &p_x);
+                void apply_p_y(scai::lama::Vector<ValueType> &p_y);
+                void apply_p_z(scai::lama::Vector<ValueType> &p_z);
 
               private:
                 using CPML<ValueType>::psi_vxx;

@@ -17,7 +17,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configurat
   
     /* Get distribibution of the wavefields */
     dmemo::DistributionPtr dist;
-    lama::Vector &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
     dist=vX.getDistributionPtr();
     
     /* Initialisation of Boundary Conditions */
@@ -26,13 +26,13 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configurat
     }
     
     /* Initialisation of auxiliary vectors*/
-    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    std::unique_ptr<lama::Vector<ValueType>> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
     updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
-    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
+    std::unique_ptr<lama::Vector<ValueType>> tmp2(vX.newVector()); 
     update_tempPtr=std::move(tmp2); 	
-    common::unique_ptr<lama::Vector> tmp3(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> tmp3(vX.newVector());
     vxxPtr=std::move(tmp3); 
-    common::unique_ptr<lama::Vector> tmp4(vX.newVector());
+    std::unique_ptr<lama::Vector<ValueType>> tmp4(vX.newVector());
     vyyPtr=std::move(tmp4);
 }
 
@@ -81,7 +81,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd)
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType)
 {
 
     SCAI_REGION("timestep")
@@ -89,38 +89,38 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    lama::Vector<ValueType> const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
 
     /* Get references to required wavefields */
-    lama::Vector &vX = wavefield.getRefVX();
-    lama::Vector &vY = wavefield.getRefVY();
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    lama::Vector<ValueType> &vY = wavefield.getRefVY();
 
-    lama::Vector &Sxx = wavefield.getRefSxx();
-    lama::Vector &Syy = wavefield.getRefSyy();
+    lama::Vector<ValueType> &Sxx = wavefield.getRefSxx();
+    lama::Vector<ValueType> &Syy = wavefield.getRefSyy();
 
-    lama::Vector &Sxy = wavefield.getRefSxy();
+    lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
 
-    lama::Matrix const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* Get references to auxiliary vectors */
-    lama::Vector &update = *updatePtr;                          
-    lama::Vector &update_temp = *update_tempPtr;                     
-    lama::Vector &vxx = *vxxPtr;
-    lama::Vector &vyy = *vyyPtr;
+    lama::Vector<ValueType> &update = *updatePtr;                          
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     
+    lama::Vector<ValueType> &vxx = *vxxPtr;
+    lama::Vector<ValueType> &vyy = *vyyPtr;
 
     if (useFreeSurface) {
         FreeSurface.setModelparameter(model);
@@ -146,7 +146,13 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxx_x(update);
         }
 
-        update_temp = DybVelocity * Sxy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_sxy_y(update_temp);
         }
@@ -159,7 +165,14 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         if (useConvPML) {
             ConvPML.apply_sxy_x(update);
         }
-        update_temp = DyfVelocity * Syy;
+
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_syy_y(update_temp);
         }
@@ -172,7 +185,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-        vyy = DybPressure * vY;
+        vyy = Dyb * vY;
         if (useConvPML) {
             ConvPML.apply_vxx(vxx);
             ConvPML.apply_vyy(vyy);
@@ -185,12 +198,14 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         Sxx += update;
         Syy += update;
 
-        vyy *= sWaveModulus;
-        Sxx -= 2.0 * vyy;
-        vxx *= sWaveModulus;
-        Syy -= 2.0 * vxx;
+        update = vyy;
+        update *= sWaveModulus;
+        Sxx -= 2.0 * update;
+        update = vxx;
+        update *= sWaveModulus;
+        Syy -= 2.0 * update;
 
-        update = DyfPressure * vX;
+        update = Dyf * vX;
         if (useConvPML) {
             ConvPML.apply_vxy(update);
         }
@@ -204,9 +219,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         update *= sWaveModulusAverageXY;
         Sxy += update;
 
-        /* Apply free surface to stress update */
+        /* Apply free surface to horizontal stress update */
         if (useFreeSurface) {
-            FreeSurface.apply(vxx, Sxx, Syy);
+            FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
         }
 
         /* Apply the damping boundary */

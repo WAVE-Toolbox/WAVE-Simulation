@@ -7,23 +7,29 @@ using namespace scai;
  * DO NOT WASTE RUNTIME HERE
  *
  \param sumHorizonalDerivative Sum of horizontal velocity updates
- \param Sxx Sxx wavefield
- \param Syy Syy wavefield
+ \param vyy vertical velocity update
+ \param Scc Sxx wavefield
  \param Szz Szz wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<ValueType>::exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonalDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Szz)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Apply horizontal update, which replaces the vertical one */
-    sumHorizonalDerivative *= scaleHorizontalUpdate;
+    /* The previous Sxx update on the free surface will be undone */
+    temp = scaleHorizontalUpdate;
+    temp *= sumHorizonalDerivative;
 
-    Sxx += sumHorizonalDerivative;
-    Szz += sumHorizonalDerivative;
+    Sxx += temp;
+    Szz += temp;
 
-    Syy *= setSurfaceZero;
+    temp = scaleVerticalUpdate;
+    temp *= vyy;
+
+    Sxx -= temp;
+    Szz -= temp;
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Delastic<float>;

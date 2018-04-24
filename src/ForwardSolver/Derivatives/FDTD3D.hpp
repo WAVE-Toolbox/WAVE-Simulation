@@ -28,13 +28,13 @@ namespace KITGPI
                 //! Default destructor
                 ~FDTD3D(){};
 
-                FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm);
+                FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm);
                 FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm) override;
 
               private:
-                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
+                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
 
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
@@ -45,10 +45,8 @@ namespace KITGPI
                 using Derivatives<ValueType>::Dyb;
                 using Derivatives<ValueType>::Dzb;
 
-                using Derivatives<ValueType>::DyfPressure;
-                using Derivatives<ValueType>::DyfVelocity;
-                using Derivatives<ValueType>::DybPressure;
-                using Derivatives<ValueType>::DybVelocity;
+                using Derivatives<ValueType>::DyfFreeSurface;
+                using Derivatives<ValueType>::DybFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::spatialFDorder;

@@ -32,7 +32,7 @@ namespace KITGPI
             //! Default destructor
             ~FD2Dvisco(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, IndexType TStart, IndexType TEnd) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType DT) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 
@@ -50,13 +50,13 @@ namespace KITGPI
             using ForwardSolver<ValueType>::useConvPML;
 	    
 	    /* Auxiliary vectors and scalars */
-	    scai::common::unique_ptr<scai::lama::Vector> updatePtr;
-	    scai::common::unique_ptr<scai::lama::Vector> update_tempPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> vxxPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> vyyPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> update2Ptr;
-	    scai::common::unique_ptr<scai::lama::Vector> onePlusLtauPPtr;
-	    scai::common::unique_ptr<scai::lama::Vector> onePlusLtauSPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> updatePtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> update_tempPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> vxxPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> vyyPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> update2Ptr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> onePlusLtauPPtr;
+	    std::unique_ptr<scai::lama::Vector<ValueType>> onePlusLtauSPtr;
 	    
 	    IndexType numRelaxationMechanisms;          // = Number of relaxation mechanisms
 	    ValueType relaxationTime; 			// = 1 / ( 2 * Pi * f_relax )

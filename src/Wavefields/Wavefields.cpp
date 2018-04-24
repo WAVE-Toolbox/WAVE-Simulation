@@ -8,7 +8,7 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(scai::lama::DenseVector<ValueType> &vector)
 {
-    vector.assign(0.0);
+    vector = 0;
 }
 
 /*! \brief Intitialisation of a single wavefield vector.
@@ -35,12 +35,27 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
  \param t Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string vectorName, std::string type, IndexType t)
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
 {
-    std::string fileName = "wavefields/wavefield" + type + "." + vectorName + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
-    std::cout << "snapshot for Timestep " << t << "has been written to: " << fileName;
+    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
+    
+    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
 
-    vector.writeToFile(fileName);
+    switch (partitionedOut) {
+    case false:
+        vector.writeToFile(fileName);
+	HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << fileName << "\n");
+        break;
+
+    case true:
+        partitionOut.writeToDistributedFiles(vector, fileName);
+        break;
+
+    default:
+        COMMON_THROWEXCEPTION("Unexpected output option!")
+        break;
+    }
+
 }
 
 //! \brief Getter routine for vX wavefield
@@ -157,7 +172,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::g
 
 /*! \brief Overloading = Operation
  *
- \param rhs Model which is copied.
+ \param rhs Wavefield which is copied.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -168,7 +183,7 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
 
 /*! \brief Overloading -= Operation
  *
- \param rhs Model which is subtractet.
+ \param rhs Wavefield which is subtractet.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
@@ -179,12 +194,23 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
 
 /*! \brief Overloading += Operation
  *
- \param rhs Model which is subtractet.
+ \param rhs Wavefield which is added.
  */
 template <typename ValueType>
 KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     plusAssign(rhs);
+    return *this;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator*=(ValueType rhs)
+{
+    timesAssign(rhs);
     return *this;
 }
 

@@ -38,18 +38,17 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(scai::lama::D
      *  tau=pi*FC*(t-1.2/FC);
      *  signal=AMP*2*tau.*exp(-tau*tau);
      */
-    lama::DenseVector<ValueType> t;
-    t.setRange(NT, ValueType(0), DT);
-    lama::DenseVector<ValueType> help(t.size(), 1.2 / FC + Tshift);
-    lama::DenseVector<ValueType> tau(t - help);
+    auto t = lama::linearDenseVector<ValueType>(NT, 0, DT);
+    auto help = lama::fill<lama::DenseVector<ValueType>>(t.size(), 1.2 / FC + Tshift);
+    auto tau = lama::eval<lama::DenseVector<ValueType>>(t - help);
     tau *= M_PI * FC;
 
     /* this is for source[i] = AMP * (-2) * tau[i].*exp(-tau[i] * tau[i]); */
 
     help = -2.0 * tau;
     tau = -1.0 * tau * tau;
-    tau.exp();
-    signal = lama::Scalar(AMP) * help * tau;
+    tau = exp( tau );
+    signal = AMP * help * tau;
 }
 
 template class KITGPI::Acquisition::SourceSignal::FGaussian<float>;

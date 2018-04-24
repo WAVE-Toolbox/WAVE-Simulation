@@ -19,12 +19,10 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
     dmemo::DistributionPtr dist[NUM_ELEMENTS_SEISMOGRAMTYPE];
 
     /* Count elements for each source type */
-    lama::Scalar tempScalar;
     IndexType tempIndexType;
     for (IndexType i = 0; i < numTracesGlobal; ++i) {
-        tempScalar = seismogramTypes.getValue(i);
-        tempIndexType = tempScalar.getValue<IndexType>() - 1;
-        SCAI_ASSERT_DEBUG(tempIndexType >= 0 && tempIndexType <= 3, "Unkown Source Type");
+        tempIndexType = seismogramTypes[i] - 1;
+        SCAI_ASSERT_VALID_INDEX_DEBUG(tempIndexType,NUM_ELEMENTS_SEISMOGRAMTYPE, "Unknown Source Type");
 
         ++count[tempIndexType];
     }
@@ -38,21 +36,19 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
     /* Sort coordinates */
     for (IndexType i = 0; i < numTracesGlobal; ++i) {
 
-        tempScalar = seismogramTypes.getValue(i);
-        tempIndexType = tempScalar.getValue<IndexType>() - 1;
+        tempIndexType = seismogramTypes[i] - 1;
 
         coord[tempIndexType].setValue(count[tempIndexType], this->getCoordinates().getValue(i));
         ++count[tempIndexType];
     }
 
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(0) == SeismogramType::P, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(1) == SeismogramType::VX, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(2) == SeismogramType::VY, "Cast went wrong");
-    SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(3) == SeismogramType::VZ, "Cast went wrong");
+    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(0), SeismogramType::P, "Cast went wrong");
+    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(1), SeismogramType::VX, "Cast went wrong");
+    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(2), SeismogramType::VY, "Cast went wrong");
+    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(3), SeismogramType::VZ, "Cast went wrong");
 
     /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
     for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; ++i) {
-
         if (coord[i].size() > 0) {
             dist[i] = calcDistribution(coord[i], dist_wavefield);
             seismograms.getSeismogram(static_cast<SeismogramType>(i)).allocate(ctx, dist[i], NT);
@@ -106,14 +102,9 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     if (dist_wavefield->getCommunicator().getRank() == 0) {
 
         /* Get WriteAccess to local data of acquisition */
-        lama::DenseStorage<ValueType> *acquisition_DS = &acquisition.getLocalStorage();
-        hmemo::HArray<ValueType> *acquisition_HA = &acquisition_DS->getData();
-        hmemo::WriteAccess<ValueType> write_acquisition_HA(*acquisition_HA);
-
+        auto write_acquisition_HA = hostWriteAccess(acquisition.getLocalStorage().getData());
         /* Get Readaccess to local data of acquisition_temp */
-        lama::DenseStorage<ValueType> *acquisition_temp_DS = &acquisition_temp.getLocalStorage();
-        hmemo::HArray<ValueType> *acquisition_temp_HA = &acquisition_temp_DS->getData();
-        hmemo::ReadAccess<ValueType> read_acquisition_temp_HA(*acquisition_temp_HA);
+        auto read_acquisition_temp_HA = hostReadAccess(acquisition_temp.getLocalStorage().getData());
 
         /* Transpose local data */
         for (IndexType row = 0; row < nrow_temp; row++) {
@@ -127,15 +118,11 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
         read_acquisition_temp_HA.release();
 
         /* Get readAccess to acquisition matrix (local) */
-        acquisition_DS = &acquisition.getLocalStorage();
-        acquisition_HA = &acquisition_DS->getData();
-        hmemo::ReadAccess<ValueType> read_acquisition_HA(*acquisition_HA);
-
+        auto read_acquisition_HA = hostReadAccess(acquisition.getLocalStorage().getData());
         /* Get writeAccess to coordinates vector (local) */
-        utilskernel::LArray<IndexType> *coordinates_LA = &coordinates.getLocalValues();
-        hmemo::WriteAccess<IndexType> write_coordinates_LA(*coordinates_LA);
+        auto write_coordinates_LA = hostWriteAccess(coordinates.getLocalValues());
 
-        Coordinates<ValueType> coord;
+        Coordinates coord;
 
         /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
@@ -147,10 +134,6 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
 
             write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z, NX, NY, NZ);
         }
-
-        /* Release write and read access to local data */
-        read_acquisition_HA.release();
-        write_coordinates_LA.release();
     }
 
     /* Replicate coordinates on all processes */
@@ -165,8 +148,9 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     /* Replicate acquisition on all processes */
     acquisition.redistribute(no_dist_numParameter, no_dist_numTracesGlobal);
 
-    seismogramTypes.allocate(numTracesGlobal);
-    acquisition.getRow(seismogramTypes, 3);
+    lama::DenseVector<ValueType> seismogramTypesTmp;  // temp vector needed due to type conversion
+    acquisition.getRow(seismogramTypesTmp, 3);
+    seismogramTypes = lama::cast<IndexType>( seismogramTypesTmp );
 
     coordinates.redistribute(dist_wavefield_traces);
     seismogramTypes.redistribute(dist_wavefield_traces);
@@ -177,7 +161,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
 }
 
-/*! \brief Getter methode for Distribution.
+/*! \brief Getter method for distribution of local traces 
  *
  \param coordinates coordiantes
  \param dist_wavefield Distribution of the wavefields
@@ -189,7 +173,7 @@ dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calc
 
     hmemo::HArray<IndexType> localIndices;
 
-    Coordinates<ValueType> coord;
+    Coordinates coord;
     coord.Global2Local(coordinates, localIndices, dist_wavefield);
 
     dmemo::DistributionPtr dist_temp(new dmemo::GeneralDistribution(coordinates.size(), localIndices, dist_wavefield->getCommunicatorPtr()));

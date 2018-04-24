@@ -1,7 +1,7 @@
 #include "Derivatives.hpp"
 using namespace scai;
 
-//! \brief Function to set elements of a single row of DybVelocity matrix
+//! \brief Function to set elements of a single row of DybFreeSurface matrix
 /*!
  *
  \param rowNumber Number of current row
@@ -17,112 +17,52 @@ using namespace scai;
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DybVelocity(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DybFreeSurface(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
 
     IndexType NXNY = NX * NY;
     IndexType rowEffective = rowNumber % NXNY;
+    /* yIndex is equal to the vertical distance to the free surface */
+    IndexType yIndex = IndexType(rowEffective / NX);
     IndexType coeffPosEffective;
-    IndexType coeffPosEffectiveImag;
+    IndexType imageIndex;
 
-    //Check if grid point (j/2-1) steps backward is available
+    //loop over spatialFDorder/2 points backward of the target row
     for (IndexType j = spatialFDorder; j >= 2; j -= 2) {
 
         coeffPosEffective = (rowEffective - (j / 2) * NX);
 
         if (coeffPosEffective >= 0) {
 
+            /* set (normal) FD coefficients */
             csrJALocal[countJA] = rowNumber - (j / 2) * NX;
             csrvaluesLocal[countJA] = read_FDCoeff_b[(j / 2 - 1)];
 
-            /* Check for stencil outside matrix for imaging */
-            coeffPosEffectiveImag = (rowEffective - ((j + 2) / 2) * NX);
-            if (j + 2 <= spatialFDorder && coeffPosEffectiveImag < 0) {
-                csrvaluesLocal[countJA] -= read_FDCoeff_b[(((j + 2) / 2) - 1)];
+            /* Vary FD coefficients at gridpoints if they have an image point */
+            imageIndex = 2 * yIndex - j / 2;
+            if (imageIndex >= 0 && imageIndex < spatialFDorder / 2) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
             }
 
             countJA++;
         }
     }
 
-    //Check if grid point j/2 steps forward is available
+    //loop over spatialFDorder/2 points forward starting at the target row
     for (IndexType j = 2; j <= spatialFDorder; j += 2) {
 
         coeffPosEffective = rowEffective + NX * (j / 2 - 1);
 
         if (coeffPosEffective < NXNY) {
 
+            /* set (normal) FD coefficients */
             csrJALocal[countJA] = rowNumber + (j / 2 - 1) * NX;
             csrvaluesLocal[countJA] = read_FDCoeff_f[j / 2 - 1];
 
-            /* Check for stencil outside matrix for imaging */
-            coeffPosEffectiveImag = (rowEffective - ((j) / 2) * NX);
-            if (j <= spatialFDorder && coeffPosEffectiveImag < 0) {
-                csrvaluesLocal[countJA] -= read_FDCoeff_b[(((j) / 2) - 1)];
-            }
-
-            countJA++;
-        }
-    }
-    csrIALocal[countIA] = countJA;
-    countIA++;
-}
-
-//! \brief Function to set elements of a single row of DybPressure matrix
-/*!
- *
- \param rowNumber Number of current row
- \param countJA Counter for JA Elements
- \param countIA Counter for IA Elements
- \param read_FDCoeff_f FD-coefficients for reading
- \param read_FDCoeff_b FD-coefficients for reading
- \param csrJALocal Local values of JA
- \param csrIALocal Local values of IA
- \param csrvaluesLocal Local values of the matrix content
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DybPressure(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
-{
-
-    IndexType NXNY = NX * NY;
-    IndexType rowEffective = rowNumber % NXNY;
-    IndexType coeffPosEffective;
-
-    //Check if grid point (j/2-1) steps backward is available
-    for (IndexType j = spatialFDorder; j >= 2; j -= 2) {
-
-        coeffPosEffective = (rowEffective - (j / 2) * NX);
-
-        if (coeffPosEffective >= 0) {
-
-            csrJALocal[countJA] = rowNumber - (j / 2) * NX;
-            csrvaluesLocal[countJA] = read_FDCoeff_b[(j / 2 - 1)];
-
-            /* Zeroing elements located at the feee surface */
-            if (rowEffective < NX) {
-                csrvaluesLocal[countJA] = 0.0;
-            }
-
-            countJA++;
-        }
-    }
-
-    //Check if grid point j/2 steps forward is available
-    for (IndexType j = 2; j <= spatialFDorder; j += 2) {
-
-        coeffPosEffective = rowEffective + NX * (j / 2 - 1);
-
-        if (coeffPosEffective < NXNY) {
-
-            csrJALocal[countJA] = rowNumber + (j / 2 - 1) * NX;
-            csrvaluesLocal[countJA] = read_FDCoeff_f[j / 2 - 1];
-
-            /* Zeroing elements located at the feee surface */
-            if (rowEffective < NX) {
-                csrvaluesLocal[countJA] = 0.0;
+            /* Vary FD coefficients at gridpoints if they have an image point */
+            imageIndex = 2 * yIndex + j / 2 - 1;
+            if (imageIndex >= 0 && imageIndex < spatialFDorder / 2) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
             }
 
             countJA++;
@@ -186,7 +126,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
     countIA++;
 }
 
-//! \brief Function to set elements of a single row of DzfVelocity matrix
+//! \brief Function to set elements of a single row of DzfFreeSurface matrix
 /*!
  *
  \param rowNumber Number of current row
@@ -202,53 +142,52 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  \param NZ Number of grid points in Z-direction
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DyfVelocity(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_DyfFreeSurface(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType /*NZ*/)
 {
 
     IndexType NXNY = NX * NY;
     IndexType rowEffective = rowNumber % NXNY;
+    /* (yIndex + 1/2)  is equal to the vertical distance to the free surface */
+    IndexType yIndex = IndexType(rowEffective / NX);
     IndexType coeffPosEffective;
-    IndexType coeffPosEffectiveImag;
+    IndexType imageIndex;
 
-    //Check if grid point (j/2-1) steps backward is available
+    //loop over spatialFDorder/2 points backward starting at the target row
     for (IndexType j = spatialFDorder; j >= 2; j -= 2) {
 
         coeffPosEffective = (rowEffective - (j / 2 - 1) * NX);
 
         if (coeffPosEffective >= 0) {
 
+            /* set (normal) FD coefficients */
             csrJALocal[countJA] = rowNumber - (j / 2 - 1) * NX;
             csrvaluesLocal[countJA] = read_FDCoeff_b[(j / 2 - 1)];
 
-            /* Check for stencil outside matrix for imaging */
-            coeffPosEffectiveImag = (rowEffective - ((j + 4) / 2 - 1) * NX);
-            if (j + 4 <= spatialFDorder && coeffPosEffectiveImag < 0) {
-                csrvaluesLocal[countJA] -= read_FDCoeff_b[(((j + 4) / 2) - 1)];
-            }
-
-            /* Zeroing elements located at the feee surface */
-            if (coeffPosEffective < NX) {
-                csrvaluesLocal[countJA] = 0.0;
+            /* Vary FD coefficients at gridpoints if they have an image point */
+            imageIndex = 2 * yIndex - j / 2 + 1;
+            if (imageIndex >= 0 && imageIndex < spatialFDorder / 2) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
             }
 
             countJA++;
         }
     }
 
-    //Check if grid point j/2 steps forward is available
+    //loop over spatialFDorder/2 points forward of the target row
     for (IndexType j = 2; j <= spatialFDorder; j += 2) {
 
         coeffPosEffective = rowEffective + NX * (j / 2);
 
         if (coeffPosEffective < NXNY) {
 
+            /* set (normal) FD coefficients */
             csrJALocal[countJA] = rowNumber + (j / 2) * NX;
             csrvaluesLocal[countJA] = read_FDCoeff_f[j / 2 - 1];
 
-            /* Check for stencil outside matrix for imaging */
-            coeffPosEffectiveImag = (rowEffective - ((j + 2) / 2) * NX);
-            if (j + 2 <= spatialFDorder && coeffPosEffectiveImag < 0) {
-                csrvaluesLocal[countJA] -= read_FDCoeff_b[(((j + 2) / 2) - 1)];
+            /* Vary FD coefficients at gridpoints if they have an image point */
+            imageIndex = 2 * yIndex + j / 2;
+            if (imageIndex >= 0 && imageIndex < spatialFDorder / 2) {
+                csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
             }
 
             countJA++;
@@ -267,14 +206,14 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist )
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
 {
     // Attention: keep in mind topology NZ x NY x NX
 
-    common::Stencil1D<ValueType> stencilId( 1 );
-    common::Stencil3D<ValueType> stencil( stencilId, stencilId, stencilFD );
+    common::Stencil1D<ValueType> stencilId(1);
+    common::Stencil3D<ValueType> stencil(stencilId, stencilId, stencilFD);
     // use dist for distribution
-    Dxf.define( dist, stencil );
+    Dxf.define(dist, stencil);
 }
 
 //! \brief Calculate Dyf matrix
@@ -288,10 +227,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexTy
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
 {
-    common::Stencil1D<ValueType> stencilId( 1 );
-    common::Stencil3D<ValueType> stencil( stencilId, stencilFD, stencilId );
+    common::Stencil1D<ValueType> stencilId(1);
+    common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
     // use dist for distribution
-    Dyf.define( dist, stencil );
+    Dyf.define(dist, stencil);
 }
 
 //! \brief Calculate Dzf matrix
@@ -305,13 +244,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexTy
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
 {
-    common::Stencil1D<ValueType> stencilId( 1 );
-    common::Stencil3D<ValueType> stencil( stencilFD, stencilId, stencilId );
+    common::Stencil1D<ValueType> stencilId(1);
+    common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
     // use dist for distribution
-    Dzf.define( dist, stencil );
+    Dzf.define(dist, stencil);
 }
 
-//! \brief Calculate DyfPressure matrix
+//! \brief Calculate DybFreeSurface matrix
 /*!
  *
  \param NX Number of grid points in X-direction
@@ -320,37 +259,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexTy
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfPressure(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurface(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
-    calcDerivativeMatrix(DyfPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_Dyf, NX, NY, NZ, dist);
-}
-
-//! \brief Calculate DybVelocity matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
-{
-    calcDerivativeMatrix(DybVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_DybVelocity, NX, NY, NZ, dist);
-}
-
-//! \brief Calculate DybPressure matrix
-/*!
- *
- \param NX Number of grid points in X-direction
- \param NY Number of grid points in Y-direction
- \param NZ Number of grid points in Z-direction
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
-{
-    calcDerivativeMatrix(DybPressure, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_DybPressure, NX, NY, NZ, dist);
+    calcDerivativeMatrix(DybFreeSurface, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_DybFreeSurface, NX, NY, NZ, dist);
 }
 
 //! \brief Calculate Dyb matrix
@@ -367,7 +278,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexTy
     calcDerivativeMatrix(Dyb, &Derivatives<ValueType>::calcNumberRowElements_Dyb, &Derivatives<ValueType>::setRowElements_Dyb, NX, NY, NZ, dist);
 }
 
-//! \brief Calculate DyfVelocity matrix
+//! \brief Calculate DyfFreeSurface matrix
 /*!
  *
  \param NX Number of grid points in X-direction
@@ -376,9 +287,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(IndexTy
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurface(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
-    calcDerivativeMatrix(DyfVelocity, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfVelocity, NX, NY, NZ, dist);
+    calcDerivativeMatrix(DyfFreeSurface, &Derivatives<ValueType>::calcNumberRowElements_Dyf, &Derivatives<ValueType>::setRowElements_DyfFreeSurface, NX, NY, NZ, dist);
 }
 
 //! \brief Calculate of derivative matrix
@@ -393,7 +304,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfVelocity
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(scai::lama::Matrix &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeMatrix(scai::lama::Matrix<ValueType> &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist)
 {
 
     /* Get local "global" indices */
@@ -458,9 +369,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDerivativeM
     write_valuesLocal.release();
 
     /* Create local CSR storage of Matrix D, than create distributed CSR matrix D */
-    lama::CSRStorage<ValueType> D_LocalCSR(numLocalIndices, N, numLocalValues, csrIALocal, csrJALocal, valuesLocal);
+    lama::CSRStorage<ValueType> D_LocalCSR(numLocalIndices, N, csrIALocal, csrJALocal, valuesLocal);
     D_LocalCSR.compress();
-    D.assign(D_LocalCSR, dist, dist);
+    D.assignDistribute(D_LocalCSR, dist, dist);
 }
 
 //! \brief Function to set elements of a single row of Dzf matrix
@@ -755,86 +666,58 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatri
     initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
-//! \brief Getter method for derivative matrix DybPressure
+//! \brief Getter method for derivative matrix DybFreeSurface
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybPressure() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() const
 {
-    if (useFreeSurface) {
-        return (DybPressure);
-    } else {
-        return (Dyb);
-    }
-}
-//! \brief Getter method for derivative matrix DybVelocity
-template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybVelocity() const
-{
-    if (useFreeSurface) {
-        return (DybVelocity);
-    } else {
-        return (Dyb);
-    }
+    return (DybFreeSurface);
 }
 
-//! \brief Getter method for derivative matrix DyfPressure
+//! \brief Getter method for derivative matrix DyfFreeSurface
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfPressure() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() const
 {
-    if (useFreeSurface) {
-        return (DyfPressure);
-    } else {
-        return (Dyf);
-    }
-}
-//! \brief Getter method for derivative matrix DyfVelocity
-template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfVelocity() const
-{
-    if (useFreeSurface) {
-        return (DyfVelocity);
-    } else {
-        return (Dyf);
-    }
+    return (DyfFreeSurface);
 }
 
 //! \brief Getter method for derivative matrix Dxf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
 {
     return (Dxf);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
 {
     return (Dyf);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
 {
     return (Dzf);
 }
 
 //! \brief Getter method for derivative matrix Dxb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
 {
     return (Dxb);
 }
 
 //! \brief Getter method for derivative matrix Dyb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
 {
     return (Dyb);
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template <typename ValueType>
-scai::lama::Matrix const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
+scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
 {
     return (Dzb);
 }
@@ -852,52 +735,52 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
     scai::hmemo::WriteAccess<ValueType> write_FDCoef_f(FDCoef_f);
     scai::hmemo::WriteAccess<ValueType> write_FDCoef_b(FDCoef_b);
 
-    const ValueType FD2[] = { -1.0, 1.0 };
+    const ValueType FD2[] = {-1.0, 1.0};
 
-    const ValueType FD4[] = { 1.0 / 24.0, -9.0 / 8.0, 9.0 / 8.0, -1.0 / 24.0 };
+    const ValueType FD4[] = {1.0 / 24.0, -9.0 / 8.0, 9.0 / 8.0, -1.0 / 24.0};
 
-    const ValueType FD6[] = { -3.0 / 640.0, 25.0 / 384.0, -75.0 / 64.0,
-                              75.0 / 64.0, -25.0 / 384.0, 3.0 / 640.0 };
+    const ValueType FD6[] = {-3.0 / 640.0, 25.0 / 384.0, -75.0 / 64.0,
+                             75.0 / 64.0, -25.0 / 384.0, 3.0 / 640.0};
 
-    const ValueType FD8[] = { 5.0 / 7168.0, -49.0 / 5120.0, 245.0 / 3072.0, -1225.0 / 1024.0,
-                              1225.0 / 1024.0, -245.0 / 3072.0, 49.0 / 5120.0, -5.0 / 7168.0  };
+    const ValueType FD8[] = {5.0 / 7168.0, -49.0 / 5120.0, 245.0 / 3072.0, -1225.0 / 1024.0,
+                             1225.0 / 1024.0, -245.0 / 3072.0, 49.0 / 5120.0, -5.0 / 7168.0};
 
-    const ValueType FD10[] = { -8756999275442633.0 / 73786976294838206464.0,
-                               8142668969129685.0 / 4611686018427387904.0,
-                               -567.0 / 40960.0,
-                               735.0 / 8192.0,
-                               -19845.0 / 16384.0,
-                               19845.0 / 16384.0,
-                               -735.0 / 8192.0,
-                               567.0 / 40960.0,
-                               -8142668969129685.0 / 4611686018427387904.0,
-                               8756999275442633.0 / 73786976294838206464.0 };
+    const ValueType FD10[] = {-8756999275442633.0 / 73786976294838206464.0,
+                              8142668969129685.0 / 4611686018427387904.0,
+                              -567.0 / 40960.0,
+                              735.0 / 8192.0,
+                              -19845.0 / 16384.0,
+                              19845.0 / 16384.0,
+                              -735.0 / 8192.0,
+                              567.0 / 40960.0,
+                              -8142668969129685.0 / 4611686018427387904.0,
+                              8756999275442633.0 / 73786976294838206464.0};
 
-    const ValueType FD12[] = {  6448335830095439.0 / 295147905179352825856.0,
-                                -1655620175512543.0 / 4611686018427387904.0,
-                                6842103786556949.0 / 2305843009213693952.0,
-                                -628618285389933.0 / 36028797018963968.0,
-                                436540475965291.0 / 4503599627370496.0,
-                                -2750204998582123.0 / 2251799813685248.0,
-                                2750204998582123.0 / 2251799813685248.0,
-                                -436540475965291.0 / 4503599627370496.0,
-                                628618285389933.0 / 36028797018963968.0,
-                                -6842103786556949.0 / 2305843009213693952.0,
-                                1655620175512543.0 / 4611686018427387904.0,
-                                -6448335830095439.0 / 295147905179352825856.0 };
+    const ValueType FD12[] = {6448335830095439.0 / 295147905179352825856.0,
+                              -1655620175512543.0 / 4611686018427387904.0,
+                              6842103786556949.0 / 2305843009213693952.0,
+                              -628618285389933.0 / 36028797018963968.0,
+                              436540475965291.0 / 4503599627370496.0,
+                              -2750204998582123.0 / 2251799813685248.0,
+                              2750204998582123.0 / 2251799813685248.0,
+                              -436540475965291.0 / 4503599627370496.0,
+                              628618285389933.0 / 36028797018963968.0,
+                              -6842103786556949.0 / 2305843009213693952.0,
+                              1655620175512543.0 / 4611686018427387904.0,
+                              -6448335830095439.0 / 295147905179352825856.0};
 
     switch (spFDo) {
     case 2:
         write_FDCoef_f[0] = 1.0;
         write_FDCoef_b[0] = -1.0;
-        stencilFD = common::Stencil1D<ValueType>( 2, FD2 );
+        stencilFD = common::Stencil1D<ValueType>(2, FD2);
         break;
     case 4:
         write_FDCoef_f[1] = -1.0 / 24.0;
         write_FDCoef_f[0] = 9.0 / 8.0;
         write_FDCoef_b[0] = -9.0 / 8.0;
         write_FDCoef_b[1] = 1.0 / 24.0;
-        stencilFD = common::Stencil1D<ValueType>( 4, FD4 );
+        stencilFD = common::Stencil1D<ValueType>(4, FD4);
         break;
     case 6:
         write_FDCoef_f[2] = 3.0 / 640.0;
@@ -906,7 +789,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[0] = -75.0 / 64.0;
         write_FDCoef_b[1] = 25.0 / 384.0;
         write_FDCoef_b[2] = -3.0 / 640.0;
-        stencilFD = common::Stencil1D<ValueType>( 6, FD6 );
+        stencilFD = common::Stencil1D<ValueType>(6, FD6);
         break;
     case 8:
         write_FDCoef_f[3] = -5.0 / 7168.0;
@@ -917,7 +800,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[1] = 245.0 / 3072.0;
         write_FDCoef_b[2] = -49.0 / 5120.0;
         write_FDCoef_b[3] = 5.0 / 7168.0;
-        stencilFD = common::Stencil1D<ValueType>( 8, FD8 );
+        stencilFD = common::Stencil1D<ValueType>(8, FD8);
         break;
     case 10:
         write_FDCoef_f[4] = 8756999275442633.0 / 73786976294838206464.0;
@@ -930,7 +813,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[2] = -567.0 / 40960.0;
         write_FDCoef_b[3] = 8142668969129685.0 / 4611686018427387904.0;
         write_FDCoef_b[4] = -8756999275442633.0 / 73786976294838206464.0;
-        stencilFD = common::Stencil1D<ValueType>( 10, FD10 );
+        stencilFD = common::Stencil1D<ValueType>(10, FD10);
         break;
     case 12:
         write_FDCoef_f[5] = -6448335830095439.0 / 295147905179352825856.0;
@@ -945,7 +828,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[3] = 6842103786556949.0 / 2305843009213693952.0;
         write_FDCoef_b[4] = -1655620175512543.0 / 4611686018427387904.0;
         write_FDCoef_b[5] = 6448335830095439.0 / 295147905179352825856.0;
-        stencilFD = common::Stencil1D<ValueType>( 12, FD12 );
+        stencilFD = common::Stencil1D<ValueType>(12, FD12);
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.");

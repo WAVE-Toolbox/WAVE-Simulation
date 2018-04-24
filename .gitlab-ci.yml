@@ -28,8 +28,8 @@ unittest-gcc:
     - echo "LAMA Version:" && file ${SCAI_ROOT}/lib/libscai_lama.so | sed 's/.*libscai_lama\.so\.\([0-9]*\.[0-9]*\.[0.9]*\).*/\1/g'
       
   script:
-    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}:${DYLD_LIBRARY_PATH}
-    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}:${LD_LIBRARY_PATH}
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${GTEST_DIR}/lib:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${GTEST_DIR}/lib:${LD_LIBRARY_PATH}
     - cd par/
     - ./../build/bin/Test_unit
 
@@ -47,7 +47,7 @@ acoustic2D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.2D.acoustic.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.txt"
 
 acoustic3D-gcc:
   stage: simulation
@@ -62,7 +62,7 @@ acoustic3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.acoustic.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.3D.acoustic.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.3D.acoustic.txt"
 
 
 elastic2D-gcc:
@@ -78,7 +78,7 @@ elastic2D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.elastic.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.2D.elastic.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.elastic.txt"
 
 elastic3D-gcc:
   stage: simulation
@@ -93,7 +93,7 @@ elastic3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.elastic.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.3D.elastic.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.3D.elastic.txt"
 
 
 visco2D-gcc:
@@ -109,7 +109,7 @@ visco2D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.visco.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.2D.visco.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.visco.txt"
 
 visco3D-gcc:
   stage: simulation
@@ -124,5 +124,5 @@ visco3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.visco.txt"
-    - ./../build/bin/Test_CompareSeismogram "ci/configuration_ci.3D.visco.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.3D.visco.txt"
 

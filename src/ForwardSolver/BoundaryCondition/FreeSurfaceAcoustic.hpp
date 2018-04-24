@@ -27,9 +27,7 @@ namespace KITGPI
 
                 virtual ~FreeSurfaceAcoustic() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH) override;
-
-                void apply(scai::lama::Vector &p);
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
 
               protected:
                 using FreeSurface<ValueType>::active;
