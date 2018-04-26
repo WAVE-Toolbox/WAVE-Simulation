@@ -55,7 +55,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lam
  \param NZ Total number of grid points in Z
  \param BoundaryWidth Width of damping boundary
  \param DampingCoeff Damping coefficient
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)

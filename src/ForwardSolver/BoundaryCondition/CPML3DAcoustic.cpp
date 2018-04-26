@@ -67,7 +67,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::apply_
  \param DT Time sampling
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
  \param KMaxCPML
  \param CenterFrequencyCPML Center frequency inside the boundaries

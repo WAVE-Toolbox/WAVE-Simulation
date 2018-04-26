@@ -39,7 +39,7 @@ namespace KITGPI
                  \param NZ Total number of grid points in Z
                  \param BoundaryWidth Width of damping boundary
                  \param DampingCoeff Damping coefficient
-                 \param useFreeSurface Bool if free surface is in use
+                 \param useFreeSurface Indicator which free surface is in use
                  */
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
             };

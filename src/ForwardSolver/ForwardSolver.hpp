@@ -56,7 +56,7 @@ namespace KITGPI
             virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
 
           protected:
-            scai::IndexType useFreeSurface;     //!< Bool if free surface is in use
+            scai::IndexType useFreeSurface;     //!< Indicator which free surface is in use
             bool useDampingBoundary; //!< Bool if damping boundary is in use
             bool useConvPML;         //!< Bool if CPML is in use
         };
