@@ -71,7 +71,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
  \param useFreeSurface Bool if free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n");
@@ -133,7 +133,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
             write_damping[i] = coeff[coordinateMin];
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface > 0) {
             coordinatexzMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
             if (coordinate.y < BoundaryWidth) {
                 write_damping[i] = 1.0;

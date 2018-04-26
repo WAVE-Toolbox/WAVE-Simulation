@@ -93,7 +93,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Vector<ValueType> &vxx = *vxxPtr;
     lama::Vector<ValueType> &vyy = *vyyPtr;
 
-    if (useFreeSurface) {
+    if (useFreeSurface == 1) {
         FreeSurface.setModelparameter(model);
     }
 
@@ -117,7 +117,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxx_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Sxy;
         } else {
@@ -137,7 +137,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxy_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DyfFreeSurface * Syy;
         } else {
@@ -191,7 +191,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         Sxy += update;
 
         /* Apply free surface to horizontal stress update */
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
         }
 

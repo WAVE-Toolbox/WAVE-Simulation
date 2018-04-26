@@ -104,7 +104,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         update *= inverseDensityAverageX;
         vX += update;
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update = DyfFreeSurface * p;
         } else {

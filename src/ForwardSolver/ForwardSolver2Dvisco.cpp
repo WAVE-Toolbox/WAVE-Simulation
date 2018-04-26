@@ -112,7 +112,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     auto onePlusLtauP = lama::eval<lama::DenseVector<ValueType>>(1.0 + numRelaxationMechanisms * tauP); // = ( 1 + L * tauP )
     auto onePlusLtauS = lama::eval<lama::DenseVector<ValueType>>(1.0 + numRelaxationMechanisms * tauS); // = ( 1 + L * tauS )
 
-    if (useFreeSurface) {
+    if (useFreeSurface == 1) {
         FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
     }
 
@@ -136,7 +136,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxx_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Sxy;
         } else {
@@ -154,7 +154,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxy_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DyfFreeSurface * Syy;
         } else {
@@ -254,7 +254,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         Sxy += DThalf * Rxy;
 
         /* Apply free surface to stress update */
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx, Rxx, DThalf);
             FreeSurface.setMemoryVariableToZero(Ryy);
         }

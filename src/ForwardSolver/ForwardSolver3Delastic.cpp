@@ -104,7 +104,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Vector<ValueType> &vyy = *vyyPtr;
     lama::Vector<ValueType> &vzz = *vzzPtr;
 
-    if (useFreeSurface) {
+    if (useFreeSurface == 1) {
         FreeSurface.setModelparameter(model);
     }
 
@@ -128,7 +128,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxx_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Sxy;
         } else {
@@ -153,7 +153,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxy_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DyfFreeSurface * Syy;
         } else {
@@ -179,7 +179,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxz_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Syz;
         } else {
@@ -269,7 +269,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         Syz += update;
 
         /* Apply free surface to stress update */
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             update = vxx + vzz;
             FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz);
         }
