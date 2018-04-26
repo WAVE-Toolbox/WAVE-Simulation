@@ -31,16 +31,20 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
 
-                void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT);
+
+                void setMemoryVariableToZero(scai::lama::Vector<ValueType> &Ryy);
 
               protected:
                 using FreeSurface<ValueType>::active;
 
-                scai::lama::DenseVector<ValueType> setSurfaceZero;         //!< Vector, which sets the wavefields at the surface to zero
-                scai::lama::DenseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
-
-                scai::lama::DenseVector<ValueType> scaleStressHorizontalUpdate;     //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the stress update
-                scai::lama::DenseVector<ValueType> scaleRelaxationHorizontalUpdate; //!< Vector, which sets the wavefields at the surface to zero which is scaled with the model parameter for the update of the relaxation mechanism
+                scai::lama::SparseVector<ValueType> setSurfaceZero;                  //!< Vector, which sets the wavefields at the surface to zero
+                scai::lama::SparseVector<ValueType> selectHorizontalUpdate;          //!< Vector, which sets everything besides the free surface to zero
+                scai::lama::SparseVector<ValueType> scaleStressVerticalUpdate;       //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
+                scai::lama::SparseVector<ValueType> scaleStressHorizontalUpdate;     //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
+                scai::lama::SparseVector<ValueType> scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
+                scai::lama::SparseVector<ValueType> scaleRelaxationHorizontalUpdate; //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivativesrelaxation mechanism
+                scai::lama::SparseVector<ValueType> temp;                            //!< temporary Sparse Vector (lives as long as the forward solver)
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */
