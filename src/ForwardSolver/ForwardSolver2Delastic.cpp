@@ -73,19 +73,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Get references to required derivatives matrixes */
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
 
-    lama::Matrix<ValueType> const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix<ValueType> const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix<ValueType> const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix<ValueType> const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
+    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
 
     std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
 
     std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
     std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
@@ -117,7 +117,13 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxx_x(update);
         }
 
-        update_temp = DybVelocity * Sxy;
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_sxy_y(update_temp);
         }
@@ -130,7 +136,14 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         if (useConvPML) {
             ConvPML.apply_sxy_x(update);
         }
-        update_temp = DyfVelocity * Syy;
+
+        if (useFreeSurface) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
+
         if (useConvPML) {
             ConvPML.apply_syy_y(update_temp);
         }
@@ -143,7 +156,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         /* pressure update */
         /* ----------------*/
         vxx = Dxb * vX;
-        vyy = DybPressure * vY;
+        vyy = Dyb * vY;
         if (useConvPML) {
             ConvPML.apply_vxx(vxx);
             ConvPML.apply_vyy(vyy);
@@ -156,12 +169,14 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         Sxx += update;
         Syy += update;
 
-        vyy *= sWaveModulus;
-        Sxx -= 2.0 * vyy;
-        vxx *= sWaveModulus;
-        Syy -= 2.0 * vxx;
+        update = vyy;
+        update *= sWaveModulus;
+        Sxx -= 2.0 * update;
+        update = vxx;
+        update *= sWaveModulus;
+        Syy -= 2.0 * update;
 
-        update = DyfPressure * vX;
+        update = Dyf * vX;
         if (useConvPML) {
             ConvPML.apply_vxy(update);
         }
@@ -175,9 +190,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
         update *= sWaveModulusAverageXY;
         Sxy += update;
 
-        /* Apply free surface to stress update */
+        /* Apply free surface to horizontal stress update */
         if (useFreeSurface) {
-            FreeSurface.apply(vxx, Sxx, Syy);
+            FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
         }
 
         /* Apply the damping boundary */

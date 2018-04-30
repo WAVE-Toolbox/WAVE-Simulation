@@ -1,8 +1,14 @@
 #include <iostream>
+#include <scai/common/Settings.hpp>
 #include <scai/lama.hpp>
 
-#include "HostPrint.hpp"
+#include "Acquisition.hpp"
 #include "Configuration.hpp"
+#include "HostPrint.hpp"
+#include "Receivers.hpp"
+
+using namespace KITGPI;
+using namespace scai;
 
 int main(int argc, char *argv[])
 {
@@ -17,28 +23,41 @@ int main(int argc, char *argv[])
     // read configuration parameter from file
     KITGPI::Configuration::Configuration config(argv[1]);
 
-    scai::lama::DenseMatrix<ValueType> seismo_ref;
-    scai::lama::DenseMatrix<ValueType> seismo_syn;
-    scai::lama::DenseMatrix<ValueType> seismo_residual;
+    /* --------------------------------------- */
+    /* Context and Distribution                */
+    /* --------------------------------------- */
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
+    dmemo::DistributionPtr dist(new scai::dmemo::NoDistribution(config.get<IndexType>("NX") * config.get<IndexType>("NY") * config.get<IndexType>("NZ")));
 
+    KITGPI::Acquisition::Seismogram<ValueType> seismogramTest;
+    KITGPI::Acquisition::Seismogram<ValueType> seismogramRef;
+    KITGPI::Acquisition::Seismogram<ValueType> seismogramDiff;
+
+    Acquisition::Receivers<ValueType> receiversTest(config, ctx, dist);
+    Acquisition::Receivers<ValueType> receiversRef(config, ctx, dist);
+
+    std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::size_t pos = filenameRef.find(".ci.mtx");
-    std::string filenameSyn = filenameRef.substr(0, pos) + ".ref.mtx";
+    filenameRef = filenameRef.substr(0, pos) + ".ref.mtx";
 
-    std::size_t found = filenameRef.find_last_of(".");
-    std::string beforeEnding = filenameRef.substr(0, found);
-    std::string afterEnding = filenameRef.substr(found);
-    filenameRef = beforeEnding + ".p" + afterEnding;
+    receiversTest.getSeismogramHandler().readFromFileRaw(filenameTest, 1);
+    receiversRef.getSeismogramHandler().readFromFileRaw(filenameRef, 1);
 
-    seismo_ref.readFromFile(filenameRef);
-    seismo_syn.readFromFile(filenameSyn);
+    ValueType misfit = 0, misfitSum = 0;
 
-    seismo_residual = (seismo_ref - seismo_syn);
-    auto L2 = seismo_residual.l2Norm();
+    for (int i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
+        seismogramTest = receiversTest.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
+        seismogramRef = receiversRef.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
 
-    std::cout << "\n\nL2: " << L2 << std::endl;
+        seismogramDiff = seismogramTest - seismogramRef;
+        misfit = seismogramDiff.getData().l2Norm();
+        misfitSum += misfit;
+    }
 
-    if (L2 > 0.01) {
+    std::cout << "\n\nL2: " << misfitSum << std::endl;
+
+    if (misfitSum > 0.01) {
         std::cout << "Seismogram does not match reference solution.\n\n"
                   << std::endl;
         return (1);

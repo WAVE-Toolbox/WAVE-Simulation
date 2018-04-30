@@ -29,8 +29,6 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
 
-                void apply(scai::lama::Vector<ValueType> &p);
-
               protected:
                 using FreeSurface<ValueType>::active;
 

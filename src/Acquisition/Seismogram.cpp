@@ -9,7 +9,7 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
-    std::cout<< "copy seismogram" << std::endl;
+ //   std::cout<< "copy seismogram" << std::endl;
     numSamples = rhs.numSamples;
     numTracesGlobal = rhs.numTracesGlobal;
     numTracesLocal = rhs.numTracesLocal;
@@ -18,7 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
-    std::cout<< "copy seismogram data " << data << std::endl;
+ //   std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
 /*!
@@ -302,7 +302,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
-    std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+ //   std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
