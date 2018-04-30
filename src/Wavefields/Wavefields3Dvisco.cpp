@@ -112,30 +112,26 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::resetWavefields()
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus) 
 {
-    scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    scai::lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
+    scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    scai::lama::Matrix<ValueType> const &Dzf = derivatives.getDzf();  
     
     std::unique_ptr<lama::Vector<ValueType>> update_Ptr(VX.newVector()); 
     scai::lama::Vector<ValueType> &update = *update_Ptr;
     
     //squared curl of velocity field
-    update = Dyb * VZ;
-    update -= Dzb * VY;
+    update = Dyf * VZ;
+    update -= Dzf * VY;
     update = scai::lama::pow(update,2.0);
     curl = update;
-    update = Dzb * VX;
-    update -= Dxb * VZ;
+    update = Dzf * VX;
+    update -= Dxf * VZ;
     update = scai::lama::pow(update,2.0);
     curl += update;
-    update = Dxb * VY;
-    update -= Dyb * VX;
+    update = Dxf * VY;
+    update -= Dyf * VX;
     update = scai::lama::pow(update,2.0);
     curl += update;
-    
-    // conversion to energy according to Dougherty and Stephen (PAGEOPH, 1988)
-    curl *= SWaveModulus;
-    curl = scai::lama::sqrt(curl);
     
     // conversion to energy according to Dougherty and Stephen (PAGEOPH, 1988)
     curl *= SWaveModulus;

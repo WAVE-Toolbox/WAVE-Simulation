@@ -176,19 +176,18 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus)
 {
-    scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
     
-    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VX.newVector()); 
+    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VY.newVector()); 
     scai::lama::Vector<ValueType> &update_tmp = *update_tmpPtr;  
     
-    curl = Dxb * VY;
-    update_tmp = Dyb * VX;
+    curl = Dyf * VX;
+    update_tmp = Dxf * VY;
     curl -= update_tmp;
     
-    curl = scai::lama::pow(curl,2.0);
-    curl *= SWaveModulus;
-    curl = scai::lama::sqrt(curl);
+    update_tmp = scai::lama::sqrt(SWaveModulus);
+    curl *= update_tmp;
 }
 
 template <typename ValueType>
@@ -197,12 +196,14 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::getDiv(KITGPI::ForwardSolver::D
     scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
     scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
     
+    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VY.newVector()); 
+    scai::lama::Vector<ValueType> &update_tmp = *update_tmpPtr;  
+    
     div = Dxb * VX;
     div += Dyb * VY;
     
-    div = scai::lama::pow(div,2.0);
-    div *= PWaveModulus;
-    div = scai::lama::sqrt(div);
+    update_tmp = scai::lama::sqrt(PWaveModulus);
+    div *= update_tmp;
 }
 
 /*! \brief Overloading * Operation
