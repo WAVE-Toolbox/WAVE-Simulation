@@ -43,47 +43,34 @@ namespace KITGPI
                 void apply_vyy(scai::lama::Vector<ValueType> &vyy);
 
               private:
-                using CPML<ValueType>::psi_vxx;
-                using CPML<ValueType>::psi_vyx;
-                using CPML<ValueType>::psi_vxy;
-                using CPML<ValueType>::psi_vyy;
+                // For the CPML Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
 
-                using CPML<ValueType>::psi_sxx_x;
-                using CPML<ValueType>::psi_sxy_x;
-                using CPML<ValueType>::psi_sxy_y;
-                using CPML<ValueType>::psi_syy_y;
+                typedef typename CPML<ValueType>::VectorType VectorType;
 
-                using CPML<ValueType>::k_x;
-                using CPML<ValueType>::b_x;
-                using CPML<ValueType>::a_x;
-                using CPML<ValueType>::k_y;
-                using CPML<ValueType>::b_y;
-                using CPML<ValueType>::a_y;
+                VectorType psi_vxx; //!< CPML memory Variable
+                VectorType psi_vyx; //!< CPML memory Variable
+                VectorType psi_vxy; //!< CPML memory Variable
+                VectorType psi_vyy; //!< CPML memory Variable
 
-                using CPML<ValueType>::k_x_half;
-                using CPML<ValueType>::b_x_half;
-                using CPML<ValueType>::a_x_half;
-                using CPML<ValueType>::k_y_half;
-                using CPML<ValueType>::b_y_half;
-                using CPML<ValueType>::a_y_half;
+                VectorType psi_sxx_x; //!< CPML memory Variable
+                VectorType psi_sxy_x; //!< CPML memory Variable
+                VectorType psi_sxy_y; //!< CPML memory Variable
+                VectorType psi_syy_y; //!< CPML memory Variable
 
-                /* non-required variables */
-                using CPML<ValueType>::psi_vzx;
-                using CPML<ValueType>::psi_vzy;
-                using CPML<ValueType>::psi_vxz;
-                using CPML<ValueType>::psi_vyz;
-                using CPML<ValueType>::psi_vzz;
-                using CPML<ValueType>::psi_sxz_x;
-                using CPML<ValueType>::psi_syz_y;
-                using CPML<ValueType>::psi_sxz_z;
-                using CPML<ValueType>::psi_syz_z;
-                using CPML<ValueType>::psi_szz_z;
-                using CPML<ValueType>::k_z;
-                using CPML<ValueType>::b_z;
-                using CPML<ValueType>::a_z;
-                using CPML<ValueType>::k_z_half;
-                using CPML<ValueType>::b_z_half;
-                using CPML<ValueType>::a_z_half;
+                VectorType k_x;      //!< CPML coefficient
+                VectorType k_y;      //!< CPML coefficient
+                VectorType k_x_half; //!< CPML coefficient for staggered gridpoints
+                VectorType k_y_half; //!< CPML coefficient for staggered gridpoints
+
+                VectorType a_x;      //!< CPML coefficient
+                VectorType a_y;      //!< CPML coefficient
+                VectorType a_x_half; //!< CPML coefficient for staggered gridpoints
+                VectorType a_y_half; //!< CPML coefficient for staggered gridpoints
+
+                VectorType b_x;      //!< CPML coefficient
+                VectorType b_y;      //!< CPML coefficient
+                VectorType b_x_half; //!< CPML coefficient for staggered gridpoint
+                VectorType b_y_half; //!< CPML coefficient for staggered gridpoints
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */
