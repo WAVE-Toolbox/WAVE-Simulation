@@ -1,8 +1,10 @@
 #pragma once
 #include <scai/lama.hpp>
+#include <scai/lama/DenseVector.hpp>
 #include <scai/common/UnaryOp.hpp>
 #include <scai/lama/fft.hpp>
 #include <scai/common/Complex.hpp>
+#include "../Common/HostPrint.hpp"
 
 #include <algorithm>
 #include <string> 
@@ -26,14 +28,15 @@ namespace KITGPI
             
             void init(ValueType dt, scai::IndexType nt);
             void calc(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order);
-            void apply(scai::lama::Vector<ValueType> &signal);
+            void apply(scai::lama::DenseVector<ValueType> &signal);
         private:
             scai::IndexType zeroPadding;
-            scai::lama::Vector<ValueType> transFcn;
+            scai::lama::DenseVector<ValueType> transFcn;
             ValueType df;
-            ValueType fNy;
+            ValueType fNyquist;
             
             scai::IndexType calcZeroPadding(scai::IndexType nt);
+            void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector);
             
             void calcButterworthFilt(std::string filterType, ValueType fc, scai::IndexType order);
             
