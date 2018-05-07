@@ -41,6 +41,8 @@ namespace KITGPI
                 void apply_p_z(scai::lama::Vector<ValueType> &p_z);
 
               private:
+		      
+		using CPML<ValueType>::active;
                 typedef typename CPML<ValueType>::VectorType VectorType;
 
                 VectorType psi_vxx; //!< CPML memory Variable

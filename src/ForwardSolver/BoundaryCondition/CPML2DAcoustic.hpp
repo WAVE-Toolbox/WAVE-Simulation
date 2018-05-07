@@ -39,8 +39,8 @@ namespace KITGPI
                 void apply_p_y(scai::lama::Vector<ValueType> &p_y);
 
               private:
-                // For the CPML Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
-
+              
+	        using CPML<ValueType>::active;
                 typedef typename CPML<ValueType>::VectorType VectorType;
 
                 VectorType psi_vxx; //!< CPML memory Variable

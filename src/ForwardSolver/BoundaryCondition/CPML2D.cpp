@@ -94,6 +94,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+    
+    active = true;
 
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 

@@ -62,6 +62,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+    
+    active = true;
 
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
