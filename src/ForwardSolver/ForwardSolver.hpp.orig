@@ -58,8 +58,8 @@ namespace KITGPI
              \param ctx Context
              */
             virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
-	    
-	    /*! \brief Initialitation of the ForwardSolver
+
+            /*! \brief Initialitation of the ForwardSolver
              *
              *
              \param config Configuration

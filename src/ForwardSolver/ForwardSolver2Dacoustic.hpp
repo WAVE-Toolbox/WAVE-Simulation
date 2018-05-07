@@ -32,11 +32,15 @@ namespace KITGPI
             //! Default destructor
             ~FD2Dacoustic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
-	    
-	    void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
+
+            void resetCPML() override;
+
+            void prepareForModelling(Modelparameter::Modelparameter<ValueType> const & /*model*/, ValueType /*DT*/) override{/*Nothing todo in acoustic modelling*/};
+
+            void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
 
           private:
             /* Boundary Conditions */
@@ -48,10 +52,10 @@ namespace KITGPI
 
             BoundaryCondition::CPML2DAcoustic<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
-	    
-	    /* Auxiliary Vectors */
-	    std::unique_ptr<scai::lama::Vector<ValueType>> updatePtr;
-	    std::unique_ptr<scai::lama::Vector<ValueType>> update_tempPtr;
+
+            /* Auxiliary Vectors */
+            scai::lama::DenseVector<ValueType> update;
+            scai::lama::DenseVector<ValueType> update_temp;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

@@ -45,23 +45,23 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr()==model.getDensity().getDistributionPtr(),"Distributions of wavefields and models are not the same");
-    
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
     /* Get distribibution of the wavefields */
     dmemo::DistributionPtr dist;
     lama::Vector &vX = wavefield.getRefVX();
-    dist=vX.getDistributionPtr();
-    
+    dist = vX.getDistributionPtr();
+
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") && config.get<IndexType>("DampingBoundaryType")) {
-	this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
     }
-    
+
     /* Initialisation of auxiliary vectors*/
-    common::unique_ptr<lama::Vector> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
-    updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
-    common::unique_ptr<lama::Vector> tmp2(vX.newVector()); 
-    update_tempPtr=std::move(tmp2); 	
+    common::unique_ptr<lama::Vector> tmp1(vX.newVector()); // create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
+    updatePtr = std::move(tmp1);                           // assign tmp1 to updatePtr
+    common::unique_ptr<lama::Vector> tmp2(vX.newVector());
+    update_tempPtr = std::move(tmp2);
 }
 
 /*! \brief Running the 2-D acoustic foward solver
@@ -102,11 +102,11 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Matrix const &Dxb = derivatives.getDxb();
     lama::Matrix const &Dyb = derivatives.getDyb();
     lama::Matrix const &Dyf = derivatives.getDyfVelocity();
-    
+
     /* Get reference to auxiliary vector */
-    scai::lama::Vector &update=*updatePtr;
-    scai::lama::Vector &update_temp=*update_tempPtr;
-    
+    scai::lama::Vector &update = *updatePtr;
+    scai::lama::Vector &update_temp = *update_tempPtr;
+
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
 =======
@@ -122,7 +122,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
 
     std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
+    lama::Vector<ValueType> &update_temp = *update_tempPtr; // get Reference of VectorPointer
 
 >>>>>>> develop
     dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();

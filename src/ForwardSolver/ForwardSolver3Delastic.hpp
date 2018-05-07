@@ -32,11 +32,16 @@ namespace KITGPI
             //! Default destructor
             ~FD3Delastic(){};
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType t) override;
+
+            void resetCPML() override;
+
+            void prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/) override;
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 
-	    void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
+            void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
+
           private:
             /* Boundary Conditions */
             BoundaryCondition::FreeSurface3Delastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
@@ -47,13 +52,13 @@ namespace KITGPI
 
             BoundaryCondition::CPML3D<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
-	    
-	    /* Auxiliary Vectors */
-	    std::unique_ptr<scai::lama::Vector<ValueType>> updatePtr;
-	    std::unique_ptr<scai::lama::Vector<ValueType>> update_tempPtr;
-	    std::unique_ptr<scai::lama::Vector<ValueType>> vxxPtr;
-	    std::unique_ptr<scai::lama::Vector<ValueType>> vyyPtr;
-	    std::unique_ptr<scai::lama::Vector<ValueType>> vzzPtr;
+
+            /* Auxiliary Vectors */
+            scai::lama::DenseVector<ValueType> update;
+            scai::lama::DenseVector<ValueType> update_temp;
+            scai::lama::DenseVector<ValueType> vxx;
+            scai::lama::DenseVector<ValueType> vyy;
+            scai::lama::DenseVector<ValueType> vzz;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

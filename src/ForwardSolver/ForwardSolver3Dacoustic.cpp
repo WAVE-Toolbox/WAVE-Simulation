@@ -13,23 +13,33 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr()==model.getDensity().getDistributionPtr(),"Distributions of wavefields and models are not the same");
-    
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
     /* Get distribibution of the wavefields */
-    dmemo::DistributionPtr dist;
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    dist=vX.getDistributionPtr();
-    
+    auto dist = wavefield.getRefVX().getDistributionPtr();
+    ;
+
     /* Initialisation of Boundary Conditions */
-    if (config.get<IndexType>("FreeSurface") && config.get<IndexType>("DampingBoundaryType")) {
-	this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
     }
-    
+
     /* Initialisation of auxiliary vectors*/
-    std::unique_ptr<lama::Vector<ValueType>> tmp1(vX.newVector());  	// create new Vector(Pointer) with same configuration as vX (goes out of scope at functions end)
-    updatePtr=std::move(tmp1); 					// assign tmp1 to updatePtr
-    std::unique_ptr<lama::Vector<ValueType>> tmp2(vX.newVector()); 
-    update_tempPtr=std::move(tmp2); 	
+    update.allocate(dist);
+    update_temp.allocate(dist);
+    update.setContextPtr(ctx);
+    update_temp.setContextPtr(ctx);
+}
+
+/*! \brief resets PML (use after each modelling!)
+ *
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::resetCPML()
+{
+    if (useConvPML) {
+        ConvPML.resetCPML();
+    }
 }
 
 /*! \brief Initialitation of the boundary conditions
@@ -78,15 +88,12 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType)
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
 
-    SCAI_REGION("timestep")
-
-    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
+    SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
     lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
@@ -109,86 +116,63 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
+    /* update velocity */
+    update = Dxf * p;
+    if (useConvPML) {
+        ConvPML.apply_p_x(update);
+    }
+    update *= inverseDensityAverageX;
+    vX += update;
 
-    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
-
-    dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
-
-    /* --------------------------------------- */
-    /* Start runtime critical part             */
-    /* --------------------------------------- */
-
-    for (IndexType t = tStart; t < tEnd; t++) {
-
-        if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << "\n");
-        }
-
-        /* update velocity */
-        update = Dxf * p;
-        if (useConvPML) {
-            ConvPML.apply_p_x(update);
-        }
-        update *= inverseDensityAverageX;
-        vX += update;
-
-        if (useFreeSurface) {
-            /* Apply image method */
-            update = DyfFreeSurface * p;
-        } else {
-            update = Dyf * p;
-        }
-
-        if (useConvPML) {
-            ConvPML.apply_p_y(update);
-        }
-        update *= inverseDensityAverageY;
-        vY += update;
-
-        update = Dzf * p;
-        if (useConvPML) {
-            ConvPML.apply_p_z(update);
-        }
-        update *= inverseDensityAverageZ;
-        vZ += update;
-
-        /* pressure update */
-        update = Dxb * vX;
-        if (useConvPML) {
-            ConvPML.apply_vxx(update);
-        }
-
-        update_temp = Dyb * vY;
-        if (useConvPML) {
-            ConvPML.apply_vyy(update_temp);
-        }
-        update += update_temp;
-
-        update_temp = Dzb * vZ;
-        if (useConvPML) {
-            ConvPML.apply_vzz(update_temp);
-        }
-        update += update_temp;
-
-        update *= pWaveModulus;
-        p += update;
-
-        /* Apply the damping boundary */
-        if (useDampingBoundary) {
-            DampingBoundary.apply(p, vX, vY, vZ);
-        }
-
-        /* Apply source and save seismogram */
-        SourceReceiver.applySource(t);
-        SourceReceiver.gatherSeismogram(t);
+    if (useFreeSurface) {
+        /* Apply image method */
+        update = DyfFreeSurface * p;
+    } else {
+        update = Dyf * p;
     }
 
-    /* --------------------------------------- */
-    /* Stop runtime critical part             */
-    /* --------------------------------------- */
+    if (useConvPML) {
+        ConvPML.apply_p_y(update);
+    }
+    update *= inverseDensityAverageY;
+    vY += update;
+
+    update = Dzf * p;
+    if (useConvPML) {
+        ConvPML.apply_p_z(update);
+    }
+    update *= inverseDensityAverageZ;
+    vZ += update;
+
+    /* pressure update */
+    update = Dxb * vX;
+    if (useConvPML) {
+        ConvPML.apply_vxx(update);
+    }
+
+    update_temp = Dyb * vY;
+    if (useConvPML) {
+        ConvPML.apply_vyy(update_temp);
+    }
+    update += update_temp;
+
+    update_temp = Dzb * vZ;
+    if (useConvPML) {
+        ConvPML.apply_vzz(update_temp);
+    }
+    update += update_temp;
+
+    update *= pWaveModulus;
+    p += update;
+
+    /* Apply the damping boundary */
+    if (useDampingBoundary) {
+        DampingBoundary.apply(p, vX, vY, vZ);
+    }
+
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Dacoustic<float>;
