@@ -36,7 +36,7 @@ int main(int argc, const char *argv[])
  
     common::Settings::parseArgs( argc, argv );
  
-    typedef double ValueType;
+    typedef float ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {
@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
     IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
     
     IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0 ;
-    if (config.get<bool>("saveSnapshots")==1){
+    if (config.get<IndexType>("snapType") > 0){
         firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
         lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
         incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
@@ -75,8 +75,7 @@ int main(int argc, const char *argv[])
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
     // following lines should be part of checkParameter.tpp
-    if (comm->getSize()!=config.get<IndexType>("ProcNX")*config.get<IndexType>("ProcNY")*config.get<IndexType>("ProcNZ"))
-    {
+    if (comm->getSize() != config.get<IndexType>("ProcNX") * config.get<IndexType>("ProcNY") * config.get<IndexType>("ProcNZ")) {
         HOST_PRINT(comm, "\n Error: Number of MPI processes (" << comm->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNX*ProcNY*ProcNZ=" << config.get<IndexType>("ProcNX")*config.get<IndexType>("ProcNY")*config.get<IndexType>("ProcNZ") << "\n")
         return(2);	    
     }
@@ -132,7 +131,8 @@ int main(int argc, const char *argv[])
     
     
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
-    solver->prepareBoundaryConditions(config, *derivatives, dist, ctx);
+    solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
+    solver->prepareForModelling(*model, config.get<ValueType>("DT"));
 
     for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
         /* Update Source */
@@ -147,10 +147,14 @@ int main(int argc, const char *argv[])
 	
 	for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-	  solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, tStep+1, config.get<ValueType>("DT"));
+            if (tStep % 100 == 0 && tStep != 0) {
+                HOST_PRINT(comm, "Calculating time step " << tStep << "\n");
+            }
+            
+            solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 	  
-	  if (config.get<bool>("saveSnapshots") == 1 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
-	    wavefields->writeSnapshot(config.get<std::string>("WavefieldFileName"),tStep,partitionedOut);
+	  if (config.get<IndexType>("snapType") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+	    wavefields->write(config.get<IndexType>("snapType"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
 	  }
 
 	}
@@ -158,10 +162,12 @@ int main(int argc, const char *argv[])
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
         receivers.getSeismogramHandler().normalize();
-	if (!config.get<bool>("runSimultaneousShots"))
+        if (!config.get<bool>("runSimultaneousShots")) {
         receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
-	
+        } else {
 	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+        }
+        solver->resetCPML();
     }
 
     return 0;

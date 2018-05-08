@@ -1097,8 +1097,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
     Common::searchAndReplace<ValueType,IndexType>(vecSWaveModulus,1.0,1.0,1); // avoid division by zero in air/vacuum
     
     vecAvSWaveModulus = 1 / vecSWaveModulus;
-    vecAvSWaveModulus = avSWaveModulusMatrix * vecAvSWaveModulus;
-    vecAvSWaveModulus = 1 / vecAvSWaveModulus;
+    auto temp = lama::eval<lama::DenseVector<ValueType>>(avSWaveModulusMatrix * vecAvSWaveModulus);
+    vecAvSWaveModulus = 1 / temp;
     
     Common::searchAndReplace<ValueType,IndexType>(vecAvSWaveModulus,4.0,0.0,1); // restore zeros for IVF
 }

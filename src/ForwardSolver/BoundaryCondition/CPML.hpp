@@ -28,9 +28,9 @@ namespace KITGPI
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface) = 0;
 
               protected:
-                void resetVector(scai::lama::DenseVector<ValueType> &vector);
+                void resetVector(scai::lama::Vector<ValueType> &vector);
 
-                void initVector(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+                void initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
                 void SetCoeffCPML(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv, scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half, scai::IndexType coord,
                                   scai::IndexType gdist, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType i, ValueType DT, ValueType DH);
@@ -39,53 +39,13 @@ namespace KITGPI
                                            scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half,
                                            scai::IndexType i);
 
-                /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::DenseVector<ValueType> &Psi, scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv);
+                /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::Vector<ValueType> &Psi, scai::lama::Vector<ValueType> &a, scai::lama::Vector<ValueType> &b, scai::lama::Vector<ValueType> &kInv);
 
-                scai::lama::DenseVector<ValueType> psi_vxx; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vyx; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vzx; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vxy; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vyy; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vzy; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vxz; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vyz; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_vzz; //!< CPML memory Variable
+                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
-                scai::lama::DenseVector<ValueType> psi_sxx_x; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_sxy_x; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_sxz_x; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_sxy_y; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_syy_y; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_syz_y; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_sxz_z; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_syz_z; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_szz_z; //!< CPML memory Variable
-
-                scai::lama::DenseVector<ValueType> psi_p_x; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_p_y; //!< CPML memory Variable
-                scai::lama::DenseVector<ValueType> psi_p_z; //!< CPML memory Variable
-
-                scai::lama::DenseVector<ValueType> k_x; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> b_x; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> a_x; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> k_y; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> b_y; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> a_y; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> k_z; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> b_z; //!< CPML coefficient
-                scai::lama::DenseVector<ValueType> a_z; //!< CPML coefficient
-
-                scai::lama::DenseVector<ValueType> k_x_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> b_x_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> a_x_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> k_y_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> b_y_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> a_y_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> k_z_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> b_z_half; //!< CPML coefficient for staggered gridpoints
-                scai::lama::DenseVector<ValueType> a_z_half; //!< CPML coefficient for staggered gridpoints
-
-                scai::lama::DenseVector<ValueType> update_PmlTemp; //!< temporary vector for pml application
+                VectorType temp; //!< temporary vector for pml application
+                
+                bool active; //!< Bool if CPML is active
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

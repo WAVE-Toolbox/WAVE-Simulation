@@ -23,11 +23,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     lama::Vector<ValueType> const &tauP = model.getTauP();
 
     /* On the free surface the verical velocity derivarive can be expressed by 
-    * vyy = (2mu / pi ) -1  where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
+    * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
     * The original update,
-    * sxx = pi * ( vxx+vyy ) - 2mu *vyy 
+    * sxx = pi * ( vxx+vyy + vzz) - 2mu *vyy 
     * will be exchanged with 
-    * sxx_new = 2mu * (2 - 2mu / pi )*vxx
+    * sxx_new = 2mu * (2 - 2mu / pi )* (vxx + vzz)
     * The final update will be (last update has to be undone):
     * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
     *                      = scaleHorizontalUpdate*(vxx+vzz)  - scaleVerticalUpdate*Vyy 
@@ -58,12 +58,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     ValueType viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1 todo DT
 
     /* On the free surface the verical velocity derivarive can be expressed by 
-    * vyy = (2mu / pi ) -1  where mu = sWaveModulus and pi = pWaveModulus 
+    * vyy = ((2mu / pi ) -1)*(vxx+vzz)  where mu = sWaveModulus and pi = pWaveModulus 
     * tau = relaxationTime
     * The original update,
     * Rxx = (1/(1+1/(2*tau)))*(Rxx*(1-1/(2*tau))- pi*(tauP/tau)*(vxx+vyy+vzz)+mu*(tauS/tau)*(vyy+vzz))
     * will be exchanged with 
-    * Rxx_new = (1/(1+1/(2*tau)))*(Rxx*(1-1/(2*tau))- pi*(tauP/tau)*(vxx+(2mu / pi ) -1 + vzz)+mu*(tauS/tau)*((2mu / pi ) -1 + vzz))
+    * Rxx_new = (1/(1+1/(2*tau)))*(Rxx*(1-1/(2*tau))- pi*(tauP/tau)*(vxx+((2mu / pi ) -1)*(vxx+vzz) + vzz)+mu*(tauS/tau)*(((2mu / pi ) -1)*(vxx+vzz) + vzz))
     * The final update will be (last update has to be undone):
     * Rxx += Rxx_new - Rxx = (1/(tau+0.5))*((2mu*tauS-pi*tauP)*((2mu(1+L*tauS)/pi(1+L*tauP))-1)*(vxx+vzz) - (2mu*tauS-pi*tauP)*vyy)
     *                      = scaleRelaxationHorizontalUpdate*(vxx+vzz)  - scaleRelaxationVerticalUpdate*Vyy 

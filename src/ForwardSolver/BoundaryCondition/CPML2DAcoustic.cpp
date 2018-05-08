@@ -62,6 +62,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+    
+    active = true;
 
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -79,31 +81,32 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 
     /* Distributed vectors */
 
-    /* Distributed vectors */
     this->initVector(psi_vxx, ctx, dist);
     this->initVector(psi_vyy, ctx, dist);
 
     this->initVector(psi_p_x, ctx, dist);
     this->initVector(psi_p_y, ctx, dist);
 
-    this->initVector(k_x, ctx, dist);
-    this->initVector(k_y, ctx, dist);
-    this->initVector(b_x, ctx, dist);
-    this->initVector(b_y, ctx, dist);
-    this->initVector(a_x, ctx, dist);
-    this->initVector(a_y, ctx, dist);
+    /* Distributed vectors */
+    k_x.setSameValue(dist, 1.0);
+    k_y.setSameValue(dist, 1.0);
+    k_x_half.setSameValue(dist, 1.0);
+    k_y_half.setSameValue(dist, 1.0);
 
-    this->initVector(k_x_half, ctx, dist);
-    this->initVector(k_y_half, ctx, dist);
-    this->initVector(b_x_half, ctx, dist);
-    this->initVector(b_y_half, ctx, dist);
-    this->initVector(a_x_half, ctx, dist);
-    this->initVector(a_y_half, ctx, dist);
+    lama::DenseVector<ValueType> k_x_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_x_half_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_half_temp(dist, 1.0, ctx);
 
-    k_x = 1.0;
-    k_y = 1.0;
-    k_x_half = 1.0;
-    k_y_half = 1.0;
+    lama::DenseVector<ValueType> a_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_half_temp(dist, 0.0, ctx);
+
+    lama::DenseVector<ValueType> b_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
 
     Acquisition::Coordinates coordTransform;
     Acquisition::coordinate3D coordinate;
@@ -118,19 +121,31 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {
-                this->SetCoeffCPML(a_x, b_x, k_x, a_x_half, b_x_half, k_x_half, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
             }
             if (gdist.y < BoundaryWidth) {
-                this->SetCoeffCPML(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
                 if (useFreeSurface > 0) {
                     if (coordinate.y < BoundaryWidth) {
-                        this->ResetCoeffFreeSurface(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, i);
+                        this->ResetCoeffFreeSurface(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, i);
                     }
                 }
             }
         }
     }
     //
+    k_x = k_x_temp;
+    k_y = k_y_temp;
+    k_x_half = k_x_half_temp;
+    k_y_half = k_y_half_temp;
+    a_x = a_x_temp;
+    a_y = a_y_temp;
+    a_x_half = a_x_half_temp;
+    a_y_half = a_y_half_temp;
+    b_x = b_x_temp;
+    b_y = b_y_temp;
+    b_x_half = b_x_half_temp;
+    b_y_half = b_y_half_temp;
 
     //     /* Release all read and write access */
     read_localIndices.release();

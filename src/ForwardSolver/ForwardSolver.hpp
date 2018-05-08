@@ -43,7 +43,19 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType TStart, scai::IndexType TEnd, ValueType DT) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+
+            /*! \brief Reset PML memory variables if PML is used 
+            *
+            */
+            virtual void resetCPML() = 0;
+
+            /*! \brief Sets Scaling facrors for horizontal updates at the Free Surface
+            *
+            *
+            \param model model parameter object
+            */
+            virtual void prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT) = 0;
 
             /*! \brief Initialitation of the boundary conditions
              *
@@ -54,6 +66,16 @@ namespace KITGPI
              \param ctx Context
              */
             virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
+
+            /*! \brief Initialitation of the ForwardSolver
+             *
+             *
+             \param config Configuration
+             \param derivatives Derivatives matrices
+             \param wavefield Wavefields for the modelling
+             \param ctx Context
+             */
+            virtual void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
             scai::IndexType useFreeSurface;     //!< Indicator which free surface is in use
