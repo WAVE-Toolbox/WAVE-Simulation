@@ -210,7 +210,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxz_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface==1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Syz;
         } else {
