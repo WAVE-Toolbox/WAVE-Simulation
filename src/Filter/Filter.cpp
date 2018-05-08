@@ -9,8 +9,6 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
 {
     zeroPadding = calcZeroPadding(nt);
     scai::IndexType filterLength = zeroPadding+nt;
-    scai::dmemo::CommunicatorPtr comm = scai::dmemo::Communicator::getCommunicatorPtr();
-    HOST_PRINT(comm,filterLength)
     transFcn = scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0);
     df = 1/(filterLength*dt);
     fNyquist = 1/(2*dt);

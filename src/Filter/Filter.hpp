@@ -4,7 +4,6 @@
 #include <scai/common/UnaryOp.hpp>
 #include <scai/lama/fft.hpp>
 #include <scai/common/Complex.hpp>
-#include "../Common/HostPrint.hpp"
 
 #include <algorithm>
 #include <string> 
