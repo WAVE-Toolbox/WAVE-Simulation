@@ -1089,8 +1089,8 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::Vector<ValueType> &vecSWaveModulus, scai::lama::Vector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
     vecAvSWaveModulus = 1 / vecSWaveModulus;
-    vecAvSWaveModulus = avSWaveModulusMatrix * vecAvSWaveModulus;
-    vecAvSWaveModulus = 1 / vecAvSWaveModulus;
+    auto temp = lama::eval<lama::DenseVector<ValueType>>(avSWaveModulusMatrix * vecAvSWaveModulus);
+    vecAvSWaveModulus = 1 / temp;
 }
 
 /*! \brief calculate averaged tauS

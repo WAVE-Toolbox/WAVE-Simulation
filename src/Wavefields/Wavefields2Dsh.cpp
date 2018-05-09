@@ -31,31 +31,35 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     this->initWavefield(Syz, ctx, dist);
 }
 
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- /param type Type of the Seismogram
- /param t Current Timestep
+ \param type Type of the Seismogram
+ \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string baseName, std::string type, scai::IndexType t, scai::IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, scai::lama::Vector<ValueType> const &/*SWaveModulus*/, scai::lama::Vector<ValueType> const &/*PWaveModulus*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxz, "Sxz", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Syz, "Syz", fileBaseName, t, partitionedOut);
+    
+    switch(snapType){ 
+      case 1:
+	this->writeWavefield(VX, "VZ", fileBaseName, t, partitionedOut);
+	break;
+      case 2:
+	this->writeWavefield(Syy, "Syz", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Sxy, "Sxz", fileBaseName, t, partitionedOut);
+	break;
+      case 3:
+      {
+          COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dsh.");
+      }
+      default:
+	COMMON_THROWEXCEPTION("Invalid snapType.");
+    }
 }
 
-/*! \brief Wrapper Function to Write Snapshot of the Wavefield
- *
- *
- /param t Current Timestep
- */
-template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut)
-{
-    write(baseName, type, t, partitionedOut);
-}
 
 /*! \brief Set all wavefields to zero.
  */

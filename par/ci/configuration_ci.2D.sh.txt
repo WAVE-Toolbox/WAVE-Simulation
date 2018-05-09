@@ -52,8 +52,9 @@ SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 
 saveSnapshots=0
+snapType=0
 
 PartitionedIn=0
 PartitionedOut=0
 
-runSimultaneousShots=0
+runSimultaneousShots=1

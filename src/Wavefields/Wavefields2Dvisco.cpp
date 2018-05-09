@@ -43,25 +43,38 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(std::string baseName,std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
-    this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
-}
-
-/*! \brief Wrapper Function to Write Snapshot of the Wavefield
- *
- *
- \param t Current Timestep
- */
-template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
-{
-    write(baseName, type, t, partitionedOut);
+    
+    switch(snapType){ 
+      case 1:
+	this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+	this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+	break;
+      case 2:
+	this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
+	this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
+	break;
+      case 3:
+      {
+	std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector()); 
+	scai::lama::Vector<ValueType> &curl = *curl_Ptr;
+	std::unique_ptr<lama::Vector<ValueType>> div_Ptr(VX.newVector()); 
+	scai::lama::Vector<ValueType> &div = *div_Ptr;
+	
+	this->getCurl(derivatives,curl,SWaveModulus);
+	this->getDiv(derivatives,div,PWaveModulus);
+	
+	this->writeWavefield(curl, "CURL", fileBaseName, t, partitionedOut);
+	this->writeWavefield(div, "DIV", fileBaseName, t, partitionedOut);
+	break;
+      }
+      default:
+	COMMON_THROWEXCEPTION("Invalid snapType.")
+    }
+    
 }
 
 /*! \brief Set all wavefields to zero.
@@ -141,6 +154,39 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dvisco<ValueType>::ge
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 2D visco-elastic case.")
     return (P);
+}
+
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus)
+{
+    scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    
+    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VY.newVector()); 
+    scai::lama::Vector<ValueType> &update_tmp = *update_tmpPtr;  
+    
+    curl = Dyf * VX;
+    update_tmp = Dxf * VY;
+    curl -= update_tmp;
+    
+    update_tmp = scai::lama::sqrt(SWaveModulus);
+    curl *= update_tmp;
+}
+
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, lama::Vector<ValueType>const &PWaveModulus)
+{
+    scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    
+    std::unique_ptr<lama::Vector<ValueType>> update_tmpPtr(VY.newVector()); 
+    scai::lama::Vector<ValueType> &update_tmp = *update_tmpPtr;  
+    
+    div = Dxb * VX;
+    div += Dyb * VY;
+    
+    update_tmp = scai::lama::sqrt(PWaveModulus);
+    div *= update_tmp;
 }
 
 /*! \brief Overloading * Operation

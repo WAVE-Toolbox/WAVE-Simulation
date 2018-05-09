@@ -9,6 +9,7 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
+ //   std::cout<< "copy seismogram" << std::endl;
     numSamples = rhs.numSamples;
     numTracesGlobal = rhs.numTracesGlobal;
     numTracesLocal = rhs.numTracesLocal;
@@ -17,6 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
+ //   std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
 /*!
@@ -140,10 +142,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
     scai::lama::DenseVector<ValueType> tempRow;
 
     for (IndexType i = 0; i < numTracesGlobal; i++) {
-	data.getRow(tempRow, i);
-	for (IndexType j = 0; j <tempRow.size()-1; j++) {
-	      tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
-	}
+	    data.getRow(tempRow, i);
+	    for (IndexType j = 0; j <tempRow.size()-1; j++) {
+	          tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
+	    }
 	    data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
@@ -300,6 +302,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
+ //   std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
 

@@ -1,6 +1,42 @@
 #include "ForwardSolver2Delastic.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
+    /* Get distribibution of the wavefields */
+    dmemo::DistributionPtr dist;
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    dist = vX.getDistributionPtr();
+
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+
+    /* aalocation of auxiliary vectors*/
+    update.allocate(dist);
+    update_temp.allocate(dist);
+    vxx.allocate(dist);
+    vyy.allocate(dist);
+
+    update.setContextPtr(ctx);
+    update_temp.setContextPtr(ctx);
+    vxx.setContextPtr(ctx);
+    vyy.setContextPtr(ctx);
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -32,6 +68,32 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
     }
 }
 
+/*! \brief resets PML (use after each modelling!)
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::resetCPML()
+{
+    if (useConvPML) {
+        ConvPML.resetCPML();
+    }
+}
+
+/*! \brief Preparations before each modelling
+ *
+ *
+ \param model model parameter object
+
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
+{
+    if (useFreeSurface) {
+        FreeSurface.setModelparameter(model);
+    }
+}
+
 /*! \brief Running the 2-D elastic foward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
@@ -46,15 +108,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Co
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
 
-    SCAI_REGION("timestep")
-
-    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
+    SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
     lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
@@ -73,126 +132,108 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Get references to required derivatives matrixes */
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
 
-    lama::Matrix<ValueType> const &DybPressure = derivatives.getDybPressure();
-    lama::Matrix<ValueType> const &DybVelocity = derivatives.getDybVelocity();
-    lama::Matrix<ValueType> const &DyfPressure = derivatives.getDyfPressure();
-    lama::Matrix<ValueType> const &DyfVelocity = derivatives.getDyfVelocity();
+    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
-    std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
-
-    lama::Vector<ValueType> &vxx = *vxxPtr;
-    lama::Vector<ValueType> &vyy = *vyyPtr;
+    /* ----------------*/
+    /* update velocity */
+    /* ----------------*/
+    update = Dxf * Sxx;
+    if (useConvPML) {
+        ConvPML.apply_sxx_x(update);
+    }
 
     if (useFreeSurface) {
-        FreeSurface.setModelparameter(model);
+        /* Apply image method */
+        update_temp = DybFreeSurface * Sxy;
+    } else {
+        update_temp = Dyb * Sxy;
     }
 
-    dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
+    if (useConvPML) {
+        ConvPML.apply_sxy_y(update_temp);
+    }
+    update += update_temp;
 
-    /* --------------------------------------- */
-    /* Start runtime critical part             */
-    /* --------------------------------------- */
+    update *= inverseDensityAverageX;
+    vX += update;
 
-    for (IndexType t = tStart; t < tEnd; t++) {
-
-        if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << "\n");
-        }
-
-        /* ----------------*/
-        /* update velocity */
-        /* ----------------*/
-        update = Dxf * Sxx;
-        if (useConvPML) {
-            ConvPML.apply_sxx_x(update);
-        }
-
-        update_temp = DybVelocity * Sxy;
-        if (useConvPML) {
-            ConvPML.apply_sxy_y(update_temp);
-        }
-        update += update_temp;
-
-        update *= inverseDensityAverageX;
-        vX += update;
-
-        update = Dxb * Sxy;
-        if (useConvPML) {
-            ConvPML.apply_sxy_x(update);
-        }
-        update_temp = DyfVelocity * Syy;
-        if (useConvPML) {
-            ConvPML.apply_syy_y(update_temp);
-        }
-        update += update_temp;
-
-        update *= inverseDensityAverageY;
-        vY += update;
-
-        /* ----------------*/
-        /* pressure update */
-        /* ----------------*/
-        vxx = Dxb * vX;
-        vyy = DybPressure * vY;
-        if (useConvPML) {
-            ConvPML.apply_vxx(vxx);
-            ConvPML.apply_vyy(vyy);
-        }
-
-        update = vxx;
-        update += vyy;
-        update *= pWaveModulus;
-
-        Sxx += update;
-        Syy += update;
-
-        vyy *= sWaveModulus;
-        Sxx -= 2.0 * vyy;
-        vxx *= sWaveModulus;
-        Syy -= 2.0 * vxx;
-
-        update = DyfPressure * vX;
-        if (useConvPML) {
-            ConvPML.apply_vxy(update);
-        }
-
-        update_temp = Dxf * vY;
-        if (useConvPML) {
-            ConvPML.apply_vyx(update_temp);
-        }
-        update += update_temp;
-
-        update *= sWaveModulusAverageXY;
-        Sxy += update;
-
-        /* Apply free surface to stress update */
-        if (useFreeSurface) {
-            FreeSurface.apply(vxx, Sxx, Syy);
-        }
-
-        /* Apply the damping boundary */
-        if (useDampingBoundary) {
-            DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
-        }
-
-        /* Apply source and save seismogram */
-        SourceReceiver.applySource(t);
-        SourceReceiver.gatherSeismogram(t);
+    update = Dxb * Sxy;
+    if (useConvPML) {
+        ConvPML.apply_sxy_x(update);
     }
 
-    /* --------------------------------------- */
-    /* Stop runtime critical part             */
-    /* --------------------------------------- */
+    if (useFreeSurface) {
+        /* Apply image method */
+        update_temp = DyfFreeSurface * Syy;
+    } else {
+        update_temp = Dyf * Syy;
+    }
+
+    if (useConvPML) {
+        ConvPML.apply_syy_y(update_temp);
+    }
+    update += update_temp;
+
+    update *= inverseDensityAverageY;
+    vY += update;
+
+    /* ----------------*/
+    /* pressure update */
+    /* ----------------*/
+    vxx = Dxb * vX;
+    vyy = Dyb * vY;
+    if (useConvPML) {
+        ConvPML.apply_vxx(vxx);
+        ConvPML.apply_vyy(vyy);
+    }
+
+    update = vxx;
+    update += vyy;
+    update *= pWaveModulus;
+
+    Sxx += update;
+    Syy += update;
+
+    update = vyy;
+    update *= sWaveModulus;
+    Sxx -= 2.0 * update;
+    update = vxx;
+    update *= sWaveModulus;
+    Syy -= 2.0 * update;
+
+    update = Dyf * vX;
+    if (useConvPML) {
+        ConvPML.apply_vxy(update);
+    }
+
+    update_temp = Dxf * vY;
+    if (useConvPML) {
+        ConvPML.apply_vyx(update_temp);
+    }
+    update += update_temp;
+
+    update *= sWaveModulusAverageXY;
+    Sxy += update;
+
+    /* Apply free surface to horizontal stress update */
+    if (useFreeSurface) {
+        FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
+    }
+
+    /* Apply the damping boundary */
+    if (useDampingBoundary) {
+        DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
+    }
+
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Delastic<float>;

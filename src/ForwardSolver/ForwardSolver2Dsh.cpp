@@ -1,6 +1,38 @@
 #include "ForwardSolver2Dsh.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVZ().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
+    /* Get distribibution of the wavefields */
+    dmemo::DistributionPtr dist;
+    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
+    dist = vZ.getDistributionPtr();
+
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+
+    /* aalocation of auxiliary vectors*/
+    update.allocate(dist);
+    update_temp.allocate(dist);
+
+    update.setContextPtr(ctx);
+    update_temp.setContextPtr(ctx);
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -13,10 +45,12 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> & /*derivatives*/, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
 
+      useFreeSurface = config.get<IndexType>("FreeSurface");
+  
     /* Prepare Free Surface */
-    if (config.get<IndexType>("FreeSurface")) {
+    if (useFreeSurface==1) {
         useFreeSurface = true;
-        SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
+        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
            //    FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
@@ -33,6 +67,33 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configu
     }
 }
 
+/*! \brief resets PML (use after each modelling!)
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::resetCPML()
+{
+    if (useConvPML) {
+        ConvPML.resetCPML();
+    }
+}
+
+/*! \brief Preparations before each modelling
+ *
+ *
+ \param model model parameter object
+
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &/*model*/, ValueType /*DT*/)
+{
+    if (useFreeSurface==1) {
+              SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+    //    FreeSurface.setModelparameter(model);
+    }
+}
+
 /*! \brief Running the 2-D sh foward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
@@ -42,17 +103,14 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configu
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param tStart Counter start in for loop over time steps
- \param tEnd Counter end  in for loop over time steps
- \param DT Temporal Sampling intervall in seconds
+ \param t current timestep
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
 
     SCAI_REGION("timestep")
 
-    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
     lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
@@ -73,28 +131,11 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
-
 
     if (useFreeSurface) {
-        SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
+        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
    //         FreeSurface.setModelparameter(model);
     }
-
-    dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
-
-    /* --------------------------------------- */
-    /* Start runtime critical part             */
-    /* --------------------------------------- */
-    for (IndexType t = tStart; t < tEnd; t++) {
-
-        if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << "\n");
-        }
 
         /* ----------------*/
         /* update velocity */
@@ -136,7 +177,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
         /* Apply free surface to stress update */
         if (useFreeSurface) {
-            SCAI_ASSERT(useFreeSurface != true, " FreeSurface is not implemented for Love-Waves ");
+            SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
                 //       FreeSurface.apply(vZ, Sxz, Syz);
         }
 
@@ -148,11 +189,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
         /* Apply source and save seismogram */
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
-    }
 
-    /* --------------------------------------- */
-    /* Stop runtime critical part             */
-    /* --------------------------------------- */
 }
 
 template class KITGPI::ForwardSolver::FD2Dsh<float>;
