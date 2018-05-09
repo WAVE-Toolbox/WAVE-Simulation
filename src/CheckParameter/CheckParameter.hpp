@@ -3,6 +3,7 @@
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Acquisition/Sources.hpp"
+#include "../Common/Common.hpp"
 
 namespace KITGPI
 {

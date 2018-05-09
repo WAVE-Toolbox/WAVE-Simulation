@@ -37,7 +37,7 @@ PartitionedIn=0           # 1=Read files parallel, 0=serial
 PartitionedOut=0          # 1=Write files parallel, 0=serial
 
 # Apply the free surface condition
-FreeSurface=0             # 1=ON, 0=OFF
+FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
 
 # Damping Boundary
 DampingBoundary=0         # 1=ON, 0=OFF

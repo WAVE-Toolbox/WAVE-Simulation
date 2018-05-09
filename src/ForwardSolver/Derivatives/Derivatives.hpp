@@ -142,7 +142,7 @@ namespace KITGPI
 
                 scai::IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
 
-                bool useFreeSurface; //!< Switch to use free surface or not
+                scai::IndexType useFreeSurface; //!< Switch to use free surface or not
 
                 scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
                 scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward

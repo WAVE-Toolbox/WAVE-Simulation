@@ -599,6 +599,29 @@ To simulate the wavefields in space and time all discretised equations for stres
 }
 \end{algorithm}
 
+\section{Free Surface}
+To account for the behaviour waves have at a free surface special treatment has to be applied at this interface. There are two common implementations of such a free surface. The first one is the Mirror Method and the second one is the Improved Vacuum Formulation.
+\subsection{Mirror Method}
+
+\subsection{Improved Vacuum Formulation}
+This method works by allowing the discretization of media without density and shear modulus inside the model. In the standard formulation this is not possible because of harmonic averaging that has to be done to calculate the model parameters on half gridpoints (see \ref{sec:Introducing_Averaging_Matrices}). This introduces a condition for the averaging proposed by \cite{Zeng:12}. The condition for averaging of the inverse density $b$ in $i$-direction is:
+\begin{align}
+ b_i = \begin{cases}
+        0 & \text{if }\rho_i\text{ and }\rho_{i+1}=0\\
+        \frac{2}{\rho_i+\rho_{i+1}} & \text{otherwise}
+       \end{cases}
+\end{align}
+The condition for the averaging of the first Lam\'e parameter $\mu$ in the $ij$-plane is:
+\begin{align}
+ \mu_{ij} = \begin{cases}
+        \left[\frac{1}{4}\left(\frac{1}{\mu_{i,j}}+\frac{1}{\mu_{i+1,j}}+\frac{1}{\mu_{i,j+1}}+\frac{1}{\mu_{i+1,j+1}}\right)\right]^{-1} & \text{if }\mu_{i,j},\;\mu_{i+1,j},\;\mu_{i,j+1},\;\mu_{i+1,j+1},\;\neq 0\\
+        0 & \text{otherwise}
+       \end{cases}
+\end{align}
+
+
+
+
 \section{Boundary Conditions}
 To find to a unique solution of the problem, boundary conditions have to be defined. 
 To avoid wavefield reflections at the boundaries of the model grid, an absorbing boundary condition can be applied. A commonly used implementation is described in \cite{cerjan:85}: The numerical grid is enlarged by grid points (if damping boundary is used, boundary width $FW$  is 10 gridpoints by default) in each direction. The values of the stress and particle velocity in this boundary frame are multiplied by a damping factor $damp$.
@@ -935,7 +958,7 @@ All discrete components of the elastic wavefield in matrix-vector notation are:
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
 
-\subsection{Introducing Averaging Matrices}
+\subsection{Introducing Averaging Matrices} \label{sec:Introducing_Averaging_Matrices}
 As mentioned in section \ref{fig:StagGrid}, to calculate the elastic and viscoelastic wave equations in time propagation, density $\rho_{k,l,m}$ and the first Lam\'{e} parameter $\mu_{k,l,m}$ have to be averaged. $\rho_{k,l,m}$ can be written in matrix-vector formalism as:
 \begin{equation*}
 \vec{\rho}_{i}=\frac{1}{2}\cdot\underline{A}^{\text{a}}_{i} \cdot\vec{\rho}	
@@ -1157,8 +1180,7 @@ The S-wave ($M$) and P-wave ($\mu$) modules can be calculated by:
 The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \shellcmd{createHomoge- neousModel.py} in \shellcmd{model/} are examples how to generate external models in both mentioned parametrisation. 
 The last two parameters of the table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
-The fist part of the last table-section handles and the boundary conditions. Free surface can used by setting (\textit{FreeSurface} $=1$). If the parameter is set to 0, free surface is not used. 
-The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
+The fist part of the last table-section handles and the boundary conditions. Free surface can turned off by setting (\textit{FreeSurface} $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\textit{FreeSurface} $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\textit{FreeSurface} $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardles of your choise of \textit{FreeSurface} but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\textit{FreeSurface} $=0$) and (\textit{FreeSurface} $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\textit{FreeSurface} $=0$) and introduce additional grid points equal to the thickness of your boundary. The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
 If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
 
 

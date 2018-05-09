@@ -78,7 +78,7 @@ namespace KITGPI
             virtual void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
-            bool useFreeSurface;     //!< Bool if free surface is in use
+            scai::IndexType useFreeSurface;     //!< Indicator which free surface is in use
             bool useDampingBoundary; //!< Bool if damping boundary is in use
             bool useConvPML;         //!< Bool if CPML is in use
         };

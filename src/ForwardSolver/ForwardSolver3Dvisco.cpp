@@ -64,23 +64,22 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
 
+    useFreeSurface = config.get<IndexType>("FreeSurface");
+
     /* Prepare Free Surface */
-    if (config.get<IndexType>("FreeSurface")) {
-        useFreeSurface = true;
+    if (useFreeSurface==1) {
         FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
     if (config.get<IndexType>("DampingBoundary") == 1) {
-        if (config.get<IndexType>("DampingBoundaryType") == 1) {
-            useDampingBoundary = true;
-            DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-        }
+        useDampingBoundary = true;
+        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+    }
 
-        if (config.get<IndexType>("DampingBoundaryType") == 2) {
-            useConvPML = true;
-            ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-        }
+    if (config.get<IndexType>("DampingBoundary") == 2) {
+        useConvPML = true;
+        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
 
@@ -115,7 +114,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareForModelling(Modelparam
     onePlusLtauS = 1.0;
     onePlusLtauS += numRelaxationMechanisms * tauS;
 
-    if (useFreeSurface) {
+    if (useFreeSurface==1) {
         FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
     }
 }
@@ -188,258 +187,258 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     lama::Vector<ValueType> const &tauS = model.getTauS();
     lama::Vector<ValueType> const &tauP = model.getTauP();
 
-    /* ----------------*/
-    /* update velocity */
-    /* ----------------*/
-    update = Dxf * Sxx;
-    if (useConvPML) {
-        ConvPML.apply_sxx_x(update);
-    }
+        /* ----------------*/
+        /* update velocity */
+        /* ----------------*/
+        update = Dxf * Sxx;
+        if (useConvPML) {
+            ConvPML.apply_sxx_x(update);
+        }
 
-    if (useFreeSurface) {
-        /* Apply image method */
-        update_temp = DybFreeSurface * Sxy;
-    } else {
-        update_temp = Dyb * Sxy;
-    }
+        if (useFreeSurface == 1) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
 
-    if (useConvPML) {
-        ConvPML.apply_sxy_y(update_temp);
-    }
-    update += update_temp;
+        if (useConvPML) {
+            ConvPML.apply_sxy_y(update_temp);
+        }
+        update += update_temp;
 
-    update_temp = Dzb * Sxz;
-    if (useConvPML) {
-        ConvPML.apply_sxz_z(update_temp);
-    }
-    update += update_temp;
+        update_temp = Dzb * Sxz;
+        if (useConvPML) {
+            ConvPML.apply_sxz_z(update_temp);
+        }
+        update += update_temp;
 
-    update *= inverseDensityAverageX;
-    vX += update;
+        update *= inverseDensityAverageX;
+        vX += update;
 
-    update = Dxb * Sxy;
-    if (useConvPML) {
-        ConvPML.apply_sxy_x(update);
-    }
+        update = Dxb * Sxy;
+        if (useConvPML) {
+            ConvPML.apply_sxy_x(update);
+        }
 
-    if (useFreeSurface) {
-        /* Apply image method */
-        update_temp = DyfFreeSurface * Syy;
-    } else {
-        update_temp = Dyf * Syy;
-    }
+        if (useFreeSurface == 1) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
 
-    if (useConvPML) {
-        ConvPML.apply_syy_y(update_temp);
-    }
-    update += update_temp;
+        if (useConvPML) {
+            ConvPML.apply_syy_y(update_temp);
+        }
+        update += update_temp;
 
-    update_temp = Dzb * Syz;
-    if (useConvPML) {
-        ConvPML.apply_syz_z(update_temp);
-    }
-    update += update_temp;
+        update_temp = Dzb * Syz;
+        if (useConvPML) {
+            ConvPML.apply_syz_z(update_temp);
+        }
+        update += update_temp;
 
-    update *= inverseDensityAverageY;
-    vY += update;
+        update *= inverseDensityAverageY;
+        vY += update;
 
-    update = Dxb * Sxz;
-    if (useConvPML) {
-        ConvPML.apply_sxz_x(update);
-    }
+        update = Dxb * Sxz;
+        if (useConvPML) {
+            ConvPML.apply_sxz_x(update);
+        }
 
-    if (useFreeSurface) {
-        /* Apply image method */
-        update_temp = DybFreeSurface * Syz;
-    } else {
-        update_temp = Dyb * Syz;
-    }
+        if (useFreeSurface == 1) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Syz;
+        } else {
+            update_temp = Dyb * Syz;
+        }
 
-    if (useConvPML) {
-        ConvPML.apply_syz_y(update_temp);
-    }
-    update += update_temp;
+        if (useConvPML) {
+            ConvPML.apply_syz_y(update_temp);
+        }
+        update += update_temp;
 
-    update_temp = Dzf * Szz;
-    if (useConvPML) {
-        ConvPML.apply_szz_z(update_temp);
-    }
-    update += update_temp;
+        update_temp = Dzf * Szz;
+        if (useConvPML) {
+            ConvPML.apply_szz_z(update_temp);
+        }
+        update += update_temp;
 
-    update *= inverseDensityAverageZ;
-    vZ += update;
+        update *= inverseDensityAverageZ;
+        vZ += update;
 
-    /* ----------------*/
-    /* pressure update */
-    /* ----------------*/
+        /* ----------------*/
+        /* pressure update */
+        /* ----------------*/
 
-    vxx = Dxb * vX;
-    vyy = Dyb * vY;
-    vzz = Dzb * vZ;
-    if (useConvPML) {
-        ConvPML.apply_vxx(vxx);
-        ConvPML.apply_vyy(vyy);
-        ConvPML.apply_vzz(vzz);
-    }
+        vxx = Dxb * vX;
+        vyy = Dyb * vY;
+        vzz = Dzb * vZ;
+        if (useConvPML) {
+            ConvPML.apply_vxx(vxx);
+            ConvPML.apply_vyy(vyy);
+            ConvPML.apply_vzz(vzz);
+        }
 
-    update = vxx;
-    update += vyy;
-    update += vzz;
-    update *= pWaveModulus;
+        update = vxx;
+        update += vyy;
+        update += vzz;
+        update *= pWaveModulus;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauP;
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauP;
 
-    Sxx += DThalf * Rxx;
-    Rxx *= viscoCoeff1;
-    Rxx -= update2;
+        Sxx += DThalf * Rxx;
+        Rxx *= viscoCoeff1;
+        Rxx -= update2;
 
-    Syy += DThalf * Ryy;
-    Ryy *= viscoCoeff1;
-    Ryy -= update2;
+        Syy += DThalf * Ryy;
+        Ryy *= viscoCoeff1;
+        Ryy -= update2;
 
-    Szz += DThalf * Rzz;
-    Rzz *= viscoCoeff1;
-    Rzz -= update2;
+        Szz += DThalf * Rzz;
+        Rzz *= viscoCoeff1;
+        Rzz -= update2;
 
-    update *= onePlusLtauP;
-    Sxx += update;
-    Syy += update;
-    Szz += update;
+        update *= onePlusLtauP;
+        Sxx += update;
+        Syy += update;
+        Szz += update;
 
-    /* Update Sxx and Rxx */
-    update = vyy + vzz;
-    update *= sWaveModulus;
-    update *= 2.0;
+        /* Update Sxx and Rxx */
+        update = vyy + vzz;
+        update *= sWaveModulus;
+        update *= 2.0;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Rxx += update2;
-    update *= onePlusLtauS;
-    Sxx -= update;
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauS;
+        Rxx += update2;
+        update *= onePlusLtauS;
+        Sxx -= update;
 
-    Rxx *= viscoCoeff2;
-    Sxx += DThalf * Rxx;
+        Rxx *= viscoCoeff2;
+        Sxx += DThalf * Rxx;
 
-    /* Update Syy and Ryy */
-    update = vxx + vzz;
-    update *= sWaveModulus;
-    update *= 2.0;
-
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Ryy += update2;
-    update *= onePlusLtauS;
-    Syy -= update;
-
-    Ryy *= viscoCoeff2;
-    Syy += DThalf * Ryy;
-
-    /* Update Szz and Szz */
-    update = vxx + vyy;
-    update *= sWaveModulus;
-    update *= 2.0;
-
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Rzz += update2;
-    update *= onePlusLtauS;
-    Szz -= update;
-
-    Rzz *= viscoCoeff2;
-    Szz += DThalf * Rzz;
-
-    /* Update Sxy and Rxy*/
-    Sxy += DThalf * Rxy;
-    Rxy *= viscoCoeff1;
-
-    update = Dyf * vX;
-    if (useConvPML) {
-        ConvPML.apply_vxy(update);
-    }
-    update_temp = Dxf * vY;
-    if (useConvPML) {
-        ConvPML.apply_vyx(update_temp);
-    }
-    update += update_temp;
-
-    update *= sWaveModulusAverageXY;
-
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageXY;
-    Rxy -= update2;
-    update *= onePlusLtauS;
-    Sxy += update;
-
-    Rxy *= viscoCoeff2;
-    Sxy += DThalf * Rxy;
-
-    /* Update Sxz and Rxz */
-    Sxz += DThalf * Rxz;
-    Rxz *= viscoCoeff1;
-
-    update = Dzf * vX;
-    if (useConvPML) {
-        ConvPML.apply_vxz(update);
-    }
-
-    update_temp = Dxf * vZ;
-    if (useConvPML) {
-        ConvPML.apply_vzx(update_temp);
-    }
-    update += update_temp;
-
-    update *= sWaveModulusAverageXZ;
-
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageXZ;
-    Rxz -= update2;
-    update *= onePlusLtauS;
-    Sxz += update;
-
-    Rxz *= viscoCoeff2;
-    Sxz += DThalf * Rxz;
-
-    /* Update Syz and Syz */
-    Syz += DThalf * Ryz;
-    Ryz *= viscoCoeff1;
-
-    update = Dzf * vY;
-    if (useConvPML) {
-        ConvPML.apply_vyz(update);
-    }
-
-    update_temp = Dyf * vZ;
-    if (useConvPML) {
-        ConvPML.apply_vzy(update_temp);
-    }
-    update += update_temp;
-    update *= sWaveModulusAverageYZ;
-
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageYZ;
-    Ryz -= update2;
-    update *= onePlusLtauS;
-    Syz += update;
-
-    Ryz *= viscoCoeff2;
-    Syz += DThalf * Ryz;
-
-    /* Apply free surface to stress update */
-    if (useFreeSurface) {
+        /* Update Syy and Ryy */
         update = vxx + vzz;
-        FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
-        FreeSurface.setMemoryVariableToZero(Ryy);
-    }
+        update *= sWaveModulus;
+        update *= 2.0;
 
-    /* Apply the damping boundary */
-    if (useDampingBoundary) {
-        DampingBoundary.apply(Sxx, Syy, Szz, Sxy, Sxz, Syz, vX, vY, vZ);
-    }
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauS;
+        Ryy += update2;
+        update *= onePlusLtauS;
+        Syy -= update;
 
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
+        Ryy *= viscoCoeff2;
+        Syy += DThalf * Ryy;
+
+        /* Update Szz and Szz */
+        update = vxx + vyy;
+        update *= sWaveModulus;
+        update *= 2.0;
+
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauS;
+        Rzz += update2;
+        update *= onePlusLtauS;
+        Szz -= update;
+
+        Rzz *= viscoCoeff2;
+        Szz += DThalf * Rzz;
+
+        /* Update Sxy and Rxy*/
+        Sxy += DThalf * Rxy;
+        Rxy *= viscoCoeff1;
+
+        update = Dyf * vX;
+        if (useConvPML) {
+            ConvPML.apply_vxy(update);
+        }
+        update_temp = Dxf * vY;
+        if (useConvPML) {
+            ConvPML.apply_vyx(update_temp);
+        }
+        update += update_temp;
+
+        update *= sWaveModulusAverageXY;
+
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauSAverageXY;
+        Rxy -= update2;
+        update *= onePlusLtauS;
+        Sxy += update;
+
+        Rxy *= viscoCoeff2;
+        Sxy += DThalf * Rxy;
+
+        /* Update Sxz and Rxz */
+        Sxz += DThalf * Rxz;
+        Rxz *= viscoCoeff1;
+
+        update = Dzf * vX;
+        if (useConvPML) {
+            ConvPML.apply_vxz(update);
+        }
+
+        update_temp = Dxf * vZ;
+        if (useConvPML) {
+            ConvPML.apply_vzx(update_temp);
+        }
+        update += update_temp;
+
+        update *= sWaveModulusAverageXZ;
+
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauSAverageXZ;
+        Rxz -= update2;
+        update *= onePlusLtauS;
+        Sxz += update;
+
+        Rxz *= viscoCoeff2;
+        Sxz += DThalf * Rxz;
+
+        /* Update Syz and Syz */
+        Syz += DThalf * Ryz;
+        Ryz *= viscoCoeff1;
+
+        update = Dzf * vY;
+        if (useConvPML) {
+            ConvPML.apply_vyz(update);
+        }
+
+        update_temp = Dyf * vZ;
+        if (useConvPML) {
+            ConvPML.apply_vzy(update_temp);
+        }
+        update += update_temp;
+        update *= sWaveModulusAverageYZ;
+
+        update2 = inverseRelaxationTime * update;
+        update2 *= tauSAverageYZ;
+        Ryz -= update2;
+        update *= onePlusLtauS;
+        Syz += update;
+
+        Ryz *= viscoCoeff2;
+        Syz += DThalf * Ryz;
+
+        /* Apply free surface to stress update */
+        if (useFreeSurface == 1) {
+            update = vxx + vzz;
+            FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
+            FreeSurface.setMemoryVariableToZero(Ryy);
+        }
+
+        /* Apply the damping boundary */
+        if (useDampingBoundary) {
+            DampingBoundary.apply(Sxx, Syy, Szz, Sxy, Sxz, Syz, vX, vY, vZ);
+        }
+
+        /* Apply source and save seismogram */
+        SourceReceiver.applySource(t);
+        SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Dvisco<float>;

@@ -49,24 +49,25 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
 
+    useFreeSurface = config.get<IndexType>("FreeSurface");
+
     /* Prepare Free Surface */
-    if (config.get<IndexType>("FreeSurface")) {
-        useFreeSurface = true;
+    if (useFreeSurface==1) {
         FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
+    
     if (config.get<IndexType>("DampingBoundary") == 1) {
-        if (config.get<IndexType>("DampingBoundaryType") == 1) {
-            useDampingBoundary = true;
-            DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-        }
-        if (config.get<IndexType>("DampingBoundaryType") == 2) {
-            useConvPML = true;
-            ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-        }
+        useDampingBoundary = true;
+        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+    }
+    if (config.get<IndexType>("DampingBoundary") == 2) {
+        useConvPML = true;
+        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
+
 
 /*! \brief resets PML (use after each modelling!)
  *
@@ -89,7 +90,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
 {
-    if (useFreeSurface) {
+    if (useFreeSurface==1) {
         FreeSurface.setModelparameter(model);
     }
 }
@@ -140,100 +141,100 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    /* ----------------*/
-    /* update velocity */
-    /* ----------------*/
-    update = Dxf * Sxx;
-    if (useConvPML) {
-        ConvPML.apply_sxx_x(update);
-    }
+        /* ----------------*/
+        /* update velocity */
+        /* ----------------*/
+        update = Dxf * Sxx;
+        if (useConvPML) {
+            ConvPML.apply_sxx_x(update);
+        }
 
-    if (useFreeSurface) {
-        /* Apply image method */
-        update_temp = DybFreeSurface * Sxy;
-    } else {
-        update_temp = Dyb * Sxy;
-    }
+        if (useFreeSurface == 1) {
+            /* Apply image method */
+            update_temp = DybFreeSurface * Sxy;
+        } else {
+            update_temp = Dyb * Sxy;
+        }
 
-    if (useConvPML) {
-        ConvPML.apply_sxy_y(update_temp);
-    }
-    update += update_temp;
+        if (useConvPML) {
+            ConvPML.apply_sxy_y(update_temp);
+        }
+        update += update_temp;
 
-    update *= inverseDensityAverageX;
-    vX += update;
+        update *= inverseDensityAverageX;
+        vX += update;
 
-    update = Dxb * Sxy;
-    if (useConvPML) {
-        ConvPML.apply_sxy_x(update);
-    }
+        update = Dxb * Sxy;
+        if (useConvPML) {
+            ConvPML.apply_sxy_x(update);
+        }
 
-    if (useFreeSurface) {
-        /* Apply image method */
-        update_temp = DyfFreeSurface * Syy;
-    } else {
-        update_temp = Dyf * Syy;
-    }
+        if (useFreeSurface == 1) {
+            /* Apply image method */
+            update_temp = DyfFreeSurface * Syy;
+        } else {
+            update_temp = Dyf * Syy;
+        }
 
-    if (useConvPML) {
-        ConvPML.apply_syy_y(update_temp);
-    }
-    update += update_temp;
+        if (useConvPML) {
+            ConvPML.apply_syy_y(update_temp);
+        }
+        update += update_temp;
 
-    update *= inverseDensityAverageY;
-    vY += update;
+        update *= inverseDensityAverageY;
+        vY += update;
 
-    /* ----------------*/
-    /* pressure update */
-    /* ----------------*/
-    vxx = Dxb * vX;
-    vyy = Dyb * vY;
-    if (useConvPML) {
-        ConvPML.apply_vxx(vxx);
-        ConvPML.apply_vyy(vyy);
-    }
+        /* ----------------*/
+        /* pressure update */
+        /* ----------------*/
+        vxx = Dxb * vX;
+        vyy = Dyb * vY;
+        if (useConvPML) {
+            ConvPML.apply_vxx(vxx);
+            ConvPML.apply_vyy(vyy);
+        }
 
-    update = vxx;
-    update += vyy;
-    update *= pWaveModulus;
+        update = vxx;
+        update += vyy;
+        update *= pWaveModulus;
 
-    Sxx += update;
-    Syy += update;
+        Sxx += update;
+        Syy += update;
 
-    update = vyy;
-    update *= sWaveModulus;
-    Sxx -= 2.0 * update;
-    update = vxx;
-    update *= sWaveModulus;
-    Syy -= 2.0 * update;
+        update = vyy;
+        update *= sWaveModulus;
+        Sxx -= 2.0 * update;
+        update = vxx;
+        update *= sWaveModulus;
+        Syy -= 2.0 * update;
 
-    update = Dyf * vX;
-    if (useConvPML) {
-        ConvPML.apply_vxy(update);
-    }
+        update = Dyf * vX;
+        if (useConvPML) {
+            ConvPML.apply_vxy(update);
+        }
 
-    update_temp = Dxf * vY;
-    if (useConvPML) {
-        ConvPML.apply_vyx(update_temp);
-    }
-    update += update_temp;
+        update_temp = Dxf * vY;
+        if (useConvPML) {
+            ConvPML.apply_vyx(update_temp);
+        }
+        update += update_temp;
 
-    update *= sWaveModulusAverageXY;
-    Sxy += update;
+        update *= sWaveModulusAverageXY;
+        Sxy += update;
 
-    /* Apply free surface to horizontal stress update */
-    if (useFreeSurface) {
-        FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
-    }
+        /* Apply free surface to horizontal stress update */
+        if (useFreeSurface == 1) {
+            FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
+        }
 
-    /* Apply the damping boundary */
-    if (useDampingBoundary) {
-        DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
-    }
+        /* Apply the damping boundary */
+        if (useDampingBoundary) {
+            DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
+        }
 
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
+        /* Apply source and save seismogram */
+        SourceReceiver.applySource(t);
+        SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Delastic<float>;
