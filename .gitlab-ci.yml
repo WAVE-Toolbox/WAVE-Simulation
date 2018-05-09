@@ -141,6 +141,6 @@ sh2D-gcc:
     - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../bin/SOFI "ci/configuration_ci.2D.sh.txt"
-    - ./../bin/Tests/Test_CompareSeismogram "ci/configuration_ci.2D.sh.txt"
+    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.sh.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.sh.txt"
 
