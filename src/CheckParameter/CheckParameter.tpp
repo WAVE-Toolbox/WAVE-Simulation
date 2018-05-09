@@ -11,7 +11,14 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
   else {
       vMinTmp = model.getVelocityS().min();
   } 
-  ValueType vMaxTmp = model.getVelocityP().max();
+  
+ ValueType vMaxTmp;
+ if (config.get<std::string>("equationType").compare("sh") == 0) {
+      vMaxTmp = model.getVelocityS().max();
+  }
+  else {
+      vMaxTmp = model.getVelocityP().max();
+  }
   scai::lama::DenseMatrix<ValueType> acquisition_temp;
   scai::lama::DenseVector<ValueType> wavelet_fc; 
   acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));

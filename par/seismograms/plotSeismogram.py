@@ -13,7 +13,11 @@ filling = False
 
 for i in range(numcol):
     yi = data[:,i]
-    normalized_yi = yi / yi.max(axis=0) +i+1
+    if yi.max(axis=0) == 0:
+        normalized_yi = yi +i+1
+    else:
+        normalized_yi = yi / abs(yi).max(axis=0) +i+1
+
     if filling:
         plt.fill_between(x, i+1, normalized_yi, facecolor='black')
         plt.plot(x,normalized_yi, c='k', linewidth=.5)
@@ -28,5 +32,4 @@ plt.xlim([0,numrow+1])
 plt.ylim([0,numcol])
 
 plt.show()
-
 
