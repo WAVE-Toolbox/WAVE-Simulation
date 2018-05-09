@@ -169,7 +169,6 @@ int main(int argc, const char *argv[])
         }
         solver->resetCPML();
     }
-
     return 0;
 }
 

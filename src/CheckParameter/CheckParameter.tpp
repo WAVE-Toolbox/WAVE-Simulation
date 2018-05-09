@@ -4,7 +4,13 @@
 template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration& config, Modelparameter::Modelparameter<ValueType>& model, scai::dmemo::CommunicatorPtr comm)
 {
-  ValueType vMaxTmp = model.getVelocityP().max();
+    ValueType vMaxTmp;
+ if (config.get<std::string>("equationType").compare("sh") == 0) {
+      vMaxTmp = model.getVelocityS().max();
+  }
+  else {
+      vMaxTmp = model.getVelocityP().max();
+  }
   ValueType vMinTmp;
   if (config.get<std::string>("equationType").compare("acoustic") == 0) {
       vMinTmp = model.getVelocityP().min();
@@ -15,7 +21,7 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
       KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityS,0,vMaxTmp,5);
       vMinTmp = velocityS.min();
   } 
-  
+
   scai::lama::DenseMatrix<ValueType> acquisition_temp;
   scai::lama::DenseVector<ValueType> wavelet_fc; 
   acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
@@ -116,7 +122,7 @@ void KITGPI::CheckParameter::checkNumericalDispersion(ValueType dh, ValueType vM
 	  SCAI_ASSERT_ERROR(false,"Unknown spatial FD order")
       }
       
-      if(dh>vMin/(2*fcMax*N) && vMin > 400){
+      if(dh>vMin/(2*fcMax*N)){
 	std::cerr<<"\nCriterion to avoid numerical dispersion is not met! \ndh is "<<dh<<" but should be less than vMin/(2*fcMax*N)="<<vMin/(2*fcMax*N)<<"\n\n";
       }
     }

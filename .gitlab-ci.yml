@@ -131,3 +131,16 @@ visco3D-gcc:
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.visco.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.3D.visco.txt"
 
+sh2D-gcc:
+  stage: simulation
+  dependencies:
+    - gcc
+  script:
+    - SCAI_ROOT=/data14/AG-users/tmetz/scai_lama_dev/build
+    - DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib/:${DYLD_LIBRARY_PATH}
+    - LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.sh.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.sh.txt"
+

@@ -31,7 +31,7 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 /*! \brief Methode to Write Wavefield for timestep t
  *
  \param vector Vector written to file
- \param type Wavefield-type (acoustic, elastic, viscoelastic)
+ \param type Wavefield-type (acoustic, elastic, viscoelastic, sh)
  \param t Timestep
  */
 template <typename ValueType>
