@@ -55,29 +55,29 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
 
     /* Get references to required modelparameter */
-    lama::Vector const &inverseDensity = model.getInverseDensity();
-    lama::Vector const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
-    lama::Vector const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
+    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
+    lama::Vector<ValueType> const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
+    lama::Vector<ValueType> const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector &vZ = wavefield.getRefVZ();
-    lama::Vector &Sxz = wavefield.getRefSxz();
-    lama::Vector &Syz = wavefield.getRefSyz();
+    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
+    lama::Vector<ValueType> &Sxz = wavefield.getRefSxz();
+    lama::Vector<ValueType> &Syz = wavefield.getRefSyz();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix const &Dxf = derivatives.getDxf();
-    lama::Matrix const &Dxb = derivatives.getDxb();
-    lama::Matrix const &Dyb = derivatives.getDyb();
-    lama::Matrix const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
+    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
  //   lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
     
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    common::unique_ptr<lama::Vector> updatePtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update = *updatePtr;                          // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update = *updatePtr;                          // get Reference of VectorPointer
 
-    common::unique_ptr<lama::Vector> update_tempPtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
+    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vZ.newVector()); // create new Vector(Pointer) with same configuration as vZ
+    lama::Vector<ValueType> &update_temp = *update_tempPtr;                     // get Reference of VectorPointer
 
 
     if (useFreeSurface) {

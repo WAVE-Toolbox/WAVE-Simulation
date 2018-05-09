@@ -38,7 +38,7 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  /param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string baseName, std::string type, scai::IndexType t, scai::IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
@@ -52,7 +52,7 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::write(std::string baseName, std::str
  /param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::writeSnapshot(std::string baseName,IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::writeSnapshot(std::string baseName,scai::IndexType t, scai::IndexType partitionedOut)
 {
     write(baseName, type, t, partitionedOut);
 }
@@ -176,7 +176,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRe
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD2Dsh<ValueType> result;
     result.VZ = this->VZ * rhs;
@@ -191,7 +191,7 @@ KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::ope
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dsh<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD2Dsh<ValueType> rhs)
+KITGPI::Wavefields::FD2Dsh<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD2Dsh<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -201,7 +201,7 @@ KITGPI::Wavefields::FD2Dsh<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD2Dsh<ValueType> KITGPI::Wavefields::FD2Dsh<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }

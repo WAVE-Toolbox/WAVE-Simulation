@@ -20,24 +20,34 @@ int main(int argc, char *argv[])
     scai::lama::DenseMatrix<ValueType> seismo_ref;
     scai::lama::DenseMatrix<ValueType> seismo_syn;
     scai::lama::DenseMatrix<ValueType> seismo_residual;
-    scai::lama::Scalar L2_scalar = 0.0;
-    ValueType L2 = 0.0;
 
-    std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
-    std::size_t pos = filenameRef.find(".ci.mtx");
-    std::string filenameSyn = filenameRef.substr(0, pos) + ".ref.mtx";
+//     std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
+//     std::size_t pos = filenameRef.find(".ci.mtx");
+//     std::string filenameSyn = filenameRef.substr(0, pos) + ".ref.mtx";
+// 
+//     std::size_t found = filenameRef.find_last_of(".");
+//     std::string beforeEnding = filenameRef.substr(0, found);
+//     std::string afterEnding = filenameRef.substr(found);
+//     filenameRef = beforeEnding + ".p" + afterEnding;
 
-    std::size_t found = filenameRef.find_last_of(".");
-    std::string beforeEnding = filenameRef.substr(0, found);
-    std::string afterEnding = filenameRef.substr(found);
-    filenameRef = beforeEnding + ".p" + afterEnding;
+    std::string filenameSyn = config.get<std::string>("SeismogramFilename") + ".mtx";
+    std::size_t pos = filenameSyn.find(".ci.mtx");
+    std::string filenameRef = filenameSyn.substr(0, pos) + ".ref.mtx";
 
+    std::size_t found = filenameSyn.find_last_of(".");
+    std::string beforeEnding = filenameSyn.substr(0, found);
+    std::string afterEnding = filenameSyn.substr(found);
+    
+    if (config.get<std::string>("equationType").compare("sh"))
+    filenameSyn = beforeEnding + ".p" + afterEnding;
+    else
+    filenameSyn = beforeEnding + ".vz" + afterEnding;
+    
     seismo_ref.readFromFile(filenameRef);
     seismo_syn.readFromFile(filenameSyn);
 
     seismo_residual = (seismo_ref - seismo_syn);
-    L2_scalar = seismo_residual.l2Norm();
-    L2 = L2_scalar.getValue<ValueType>();
+    auto L2 = seismo_residual.l2Norm();
 
     std::cout << "\n\nL2: " << L2 << std::endl;
 

@@ -33,18 +33,18 @@ TEST(SinThreeTest, TestConstructor)
         zero.setValue(i, temp);
         count++;
     }
-    sampleResult = lama::Scalar(AMP) * zero;
+    sampleResult = AMP * zero;
 
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    EXPECT_NO_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, FC, AMP, Tshift));
+    ASSERT_NO_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, FC, AMP, Tshift));
 
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
     Acquisition::SourceSignal::SinThree<double>(testResult2, NT, DT, FC, AMP, Tshift);
 
-    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
+    ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
 TEST(SinThreeTest, TestAsserts)
@@ -57,7 +57,7 @@ TEST(SinThreeTest, TestAsserts)
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
 
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, -NT, DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, -DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, -FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, -NT, DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, -DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinThree<double>(testResult1, NT, DT, -FC, AMP, Tshift));
 }

@@ -29,28 +29,28 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
 
                 void resetCPML();
 
-                void apply_sxx_x(scai::lama::Vector &sxx_x);
-                void apply_sxy_x(scai::lama::Vector &sxy_x);
-                void apply_sxz_x(scai::lama::Vector &sxz_x);
-                void apply_sxy_y(scai::lama::Vector &sxy_y);
-                void apply_syy_y(scai::lama::Vector &syy_y);
-                void apply_syz_y(scai::lama::Vector &syz_y);
-                void apply_sxz_z(scai::lama::Vector &sxz_z);
-                void apply_syz_z(scai::lama::Vector &syz_z);
-                void apply_szz_z(scai::lama::Vector &szz_z);
-                void apply_vxx(scai::lama::Vector &vxx);
-                void apply_vyx(scai::lama::Vector &vyx);
-                void apply_vzx(scai::lama::Vector &vzx);
-                void apply_vxy(scai::lama::Vector &vxy);
-                void apply_vyy(scai::lama::Vector &vyy);
-                void apply_vzy(scai::lama::Vector &vzy);
-                void apply_vxz(scai::lama::Vector &vxz);
-                void apply_vyz(scai::lama::Vector &vyz);
-                void apply_vzz(scai::lama::Vector &vzz);
+                void apply_sxx_x(scai::lama::Vector<ValueType> &sxx_x);
+                void apply_sxy_x(scai::lama::Vector<ValueType> &sxy_x);
+                void apply_sxz_x(scai::lama::Vector<ValueType> &sxz_x);
+                void apply_sxy_y(scai::lama::Vector<ValueType> &sxy_y);
+                void apply_syy_y(scai::lama::Vector<ValueType> &syy_y);
+                void apply_syz_y(scai::lama::Vector<ValueType> &syz_y);
+                void apply_sxz_z(scai::lama::Vector<ValueType> &sxz_z);
+                void apply_syz_z(scai::lama::Vector<ValueType> &syz_z);
+                void apply_szz_z(scai::lama::Vector<ValueType> &szz_z);
+                void apply_vxx(scai::lama::Vector<ValueType> &vxx);
+                void apply_vyx(scai::lama::Vector<ValueType> &vyx);
+                void apply_vzx(scai::lama::Vector<ValueType> &vzx);
+                void apply_vxy(scai::lama::Vector<ValueType> &vxy);
+                void apply_vyy(scai::lama::Vector<ValueType> &vyy);
+                void apply_vzy(scai::lama::Vector<ValueType> &vzy);
+                void apply_vxz(scai::lama::Vector<ValueType> &vxz);
+                void apply_vyz(scai::lama::Vector<ValueType> &vyz);
+                void apply_vzz(scai::lama::Vector<ValueType> &vzz);
 
               private:
                 using CPML<ValueType>::psi_vxx;

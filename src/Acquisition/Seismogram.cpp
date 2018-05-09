@@ -111,17 +111,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
         SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
 
         scai::lama::DenseVector<ValueType> tempRow;
-        scai::lama::Scalar tempMax;
-        scai::lama::Scalar tempInverseMax;
+        ValueType tempMax;
+        ValueType tempInverseMax;
 
         for (IndexType i = 0; i < numTracesGlobal; i++) {
             tempMax = 0.0;
-            tempRow.assign(0.0);
             data.getRow(tempRow, i);
             tempMax = tempRow.max();
             tempInverseMax = 1 / tempMax;
             tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
+            data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
     }
 }
@@ -134,16 +133,18 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
+    std::cout << "integrate traces, data = " << data << std::endl;
+
     SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
 
     scai::lama::DenseVector<ValueType> tempRow;
+
     for (IndexType i = 0; i < numTracesGlobal; i++) {
-        tempRow.assign(0.0);
-        data.getRow(tempRow, i);
+	data.getRow(tempRow, i);
 	for (IndexType j = 0; j <tempRow.size()-1; j++) {
 	      tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
 	}
-	data.setRow(tempRow, i, scai::common::binary::BinaryOp::COPY);
+	    data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -608,7 +609,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         tr.mark = 0;
 
         int tracl1;
-        lama::Scalar temp;
         double temp3;
         IndexType temp2;
         float xr, yr, zr, x, y, z;
@@ -625,7 +625,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         pFile = fopen(filetemp, "wb");
         lama::DenseVector<ValueType> tempdata;
 
-        Coordinates<ValueType> coordTransform;
+        Coordinates coordTransform;
         coordinate3D coord3Dsrc;
         coordinate3D coord3Drec;
         coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate, NX, NY, NZ);
@@ -641,8 +641,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         ZS = ZS * DH;
 
         for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-            temp = coordinates.getValue(tracl1);
-            temp3 = float(temp.getValue<ValueType>());
+            temp3 = float(coordinates.getValue(tracl1));
             temp2 = floor(temp3);
             coord3Drec = coordTransform.index2coordinate(temp2, NX, NY, NZ);
             xr = coord3Drec.x;
@@ -681,10 +680,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
             tr.d1 = (float)tr.dt * 1.0e-6;       /* sample spacing for non-seismic data */
 
             data.getRow(tempdata, tracl1);
-            scai::lama::Scalar tempScalar;
             for (IndexType sample = 0; sample < tempdata.size(); sample++) {
-                tempScalar = tempdata.getValue(sample);
-                tr.data[sample] = float(tempScalar.getValue<ValueType>());
+                tr.data[sample] = float(tempdata.getValue(sample));
             }
 
             fwrite(&tr, 240, 1, pFile);
@@ -699,7 +696,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::Scalar const &rhs)
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(ValueType const &rhs)
 {
     data *= rhs;
 

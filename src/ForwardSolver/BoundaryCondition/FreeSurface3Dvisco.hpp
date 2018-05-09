@@ -25,7 +25,7 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface3Dvisco(){};
 
-                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &temp, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz, scai::lama::Vector &Rxx, scai::lama::Vector &Ryy, scai::lama::Vector &Rzz);
+                void apply(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &temp, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Syy, scai::lama::Vector<ValueType> &Szz, scai::lama::Vector<ValueType> &Rxx, scai::lama::Vector<ValueType> &Ryy, scai::lama::Vector<ValueType> &Rzz);
 
               private:
                 using FreeSurfaceVisco<ValueType>::setSurfaceZero;                  //!< Vector, which sets the wavefields at the surface to zero

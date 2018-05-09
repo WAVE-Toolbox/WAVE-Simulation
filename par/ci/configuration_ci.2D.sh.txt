@@ -27,7 +27,6 @@ spatialFDorder=2
 ModelRead=0
 ModelWrite=0
 ModelFilename=model/model
-ModelParametrisation=2    # 1=Lame, 2=Velocity
 
 # Viscoelastic modelling
 numRelaxationMechanisms=0;
@@ -46,9 +45,9 @@ tauP=0.0         # Tau value for P-waves
 tauS=0.0         # Tau value for S-waves
 
 # Acquisition
-SourceFilename=ci/sources_ci.2D.mtx
-ReceiverFilename=ci/receiver_ci.2D.mtx
-SeismogramFilename=ci/seismogram.2D.sh.ci.mtx
+SourceFilename=ci/sources_ci.2D.sh.mtx
+ReceiverFilename=ci/receiver_ci.2D.sh.mtx
+SeismogramFilename=ci/seismogram.2D.sh.ci
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 

@@ -18,7 +18,6 @@
 #include <scai/tracing.hpp>
 
 #include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
 #include <scai/logging.hpp>
 
 #include <iostream>
@@ -48,28 +47,28 @@ namespace KITGPI
             ~SH(){};
 
             explicit SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho);
-            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
 
             //! Copy Constructor.
             SH(const SH &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const);
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
-            void write(std::string filename, IndexType partitionedOut) const override;
+            void write(std::string filename, scai::IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
 
-            scai::lama::Vector const &getVelocityP() const override;
-            scai::lama::Vector const &getPWaveModulus() const override;
-            scai::lama::Vector const &getTauP() const override;
-            scai::lama::Vector const &getTauS() const override;
-            scai::lama::Vector const &getTauSAverageXY() override;
-            scai::lama::Vector const &getTauSAverageXZ() override;
-            scai::lama::Vector const &getTauSAverageYZ() override;
-            IndexType getNumRelaxationMechanisms() const override;
+            scai::lama::Vector<ValueType> const &getVelocityP() const override;
+            scai::lama::Vector<ValueType>  const &getPWaveModulus() const override;
+            scai::lama::Vector<ValueType>  const &getTauP() const override;
+            scai::lama::Vector<ValueType>  const &getTauS() const override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageXY() override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageXZ() override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageYZ() override;
+            scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
@@ -79,8 +78,8 @@ namespace KITGPI
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
     
             /* Overloading Operators */
-            KITGPI::Modelparameter::SH<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::SH<ValueType> &operator*=(scai::lama::Scalar const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator*=(ValueType const &rhs);
             KITGPI::Modelparameter::SH<ValueType> operator+(KITGPI::Modelparameter::SH<ValueType> const &rhs);
             KITGPI::Modelparameter::SH<ValueType> &operator+=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
             KITGPI::Modelparameter::SH<ValueType> operator-(KITGPI::Modelparameter::SH<ValueType> const &rhs);
@@ -98,7 +97,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityS;
 
-            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
+            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm);
 

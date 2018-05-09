@@ -20,28 +20,27 @@ TEST(RickerTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    lama::DenseVector<double> t;
-    t.setRange(NT, double(0), DT);
-    lama::DenseVector<double> help(t.size(), 1.5 / FC + Tshift);
-    lama::DenseVector<double> tau(t - help);
+    auto t = lama::linearDenseVector<double>(NT, 0.0, DT);
+    auto help = lama::fill<lama::DenseVector<double>>(t.size(), 1.5 / FC + Tshift);
+    auto tau = lama::eval<lama::DenseVector<double>>(t - help);
     tau *= M_PI * FC;
     lama::DenseVector<double> one(sampleResult.size(), 1.0);
     help = tau * tau;
     tau = -1.0 * help;
-    tau.exp();
+    tau = lama::exp( tau );
     help = one - 2.0 * help;
-    sampleResult = lama::Scalar(AMP) * help * tau;
+    sampleResult = AMP * help * tau;
 
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    EXPECT_NO_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, DT, FC, AMP, Tshift));
+    ASSERT_NO_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, DT, FC, AMP, Tshift));
 
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
     Acquisition::SourceSignal::Ricker<double>(testResult2, NT, DT, FC, AMP, Tshift);
 
-    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
+    ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
 TEST(RickerTest, TestAsserts)
@@ -54,7 +53,7 @@ TEST(RickerTest, TestAsserts)
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
 
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, -NT, DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, -DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, DT, -FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, -NT, DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, -DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::Ricker<double>(testResult1, NT, DT, -FC, AMP, Tshift));
 }

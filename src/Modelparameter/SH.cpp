@@ -64,28 +64,28 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
 
 /*! \brief Constructor that is generating a homogeneous model
  *
- *  Generates a homogeneous model, which will be initialized by the two given scalar values.
+ *  Generates a homogeneous model, which will be initialized by the two given values.
  \param ctx Context
  \param dist Distribution
- \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho Density given as Scalar
+ \param sWaveModulus_const S-wave modulus given as 
+ \param rho Density given as ValueType
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho)
+KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho)
 {
     init(ctx, dist, velocityS_const, rho);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
  *
- *  Generates a homogeneous model, which will be initialized by the two given scalar values.
+ *  Generates a homogeneous model, which will be initialized by the two given values.
  \param ctx Context
  \param dist Distribution
- \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho Density given as Scalar
+ \param sWaveModulus_const S-wave modulus given as ValueType
+ \param rho Density given as ValueType
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const)
+void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const)
 {
     this->initModelparameter(velocityS, ctx, dist, velocityS_const);
     this->initModelparameter(density, ctx, dist, rho_const);
@@ -210,7 +210,7 @@ void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getVelocityP() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getVelocityP() const
 {
     COMMON_THROWEXCEPTION("There is no velocityP parameter in an sh modelling")
     return (velocityP);
@@ -220,7 +220,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getVelocityP() 
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getPWaveModulus() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getPWaveModulus() const
 {
     COMMON_THROWEXCEPTION("There is no pWaveModulus parameter in an sh modelling")
     return (pWaveModulus);
@@ -230,7 +230,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getPWaveModulus
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauP() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an sh modelling")
     return (tauP);
@@ -239,7 +239,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauP() const
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauS() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an sh modelling")
     return (tauS);
@@ -264,7 +264,7 @@ IndexType KITGPI::Modelparameter::SH<ValueType>::getNumRelaxationMechanisms() co
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXY()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
     return (tauSAverageXY);
@@ -273,7 +273,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageX
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
     return (tauSAverageXZ);
@@ -282,7 +282,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageX
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageYZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageYZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
     return (tauSAverageYZ);
@@ -290,10 +290,10 @@ scai::lama::Vector const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageY
 
 /*! \brief Overloading * Operation
  *
- \param rhs Scalar factor with which the vectors are multiplied.
+ \param rhs ValueType factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType> KITGPI::Modelparameter::SH<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::SH<ValueType> KITGPI::Modelparameter::SH<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Modelparameter::SH<ValueType> result(*this);
     result *= rhs;
@@ -302,21 +302,21 @@ KITGPI::Modelparameter::SH<ValueType> KITGPI::Modelparameter::SH<ValueType>::ope
 
 /*! \brief free function to multiply
  *
- \param lhs Scalar factor with which the vectors are multiplied.
+ \param lhs ValueType factor with which the vectors are multiplied.
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::SH<ValueType> const &rhs)
+KITGPI::Modelparameter::SH<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::SH<ValueType> const &rhs)
 {
     return rhs * lhs;
 }
 
 /*! \brief Overloading *= Operation
  *
- \param rhs Scalar factor with which the vectors are multiplied.
+ \param rhs valueType factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator*=(scai::lama::Scalar const &rhs)
+KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator*=(ValueType const &rhs)
 {
     density *= rhs;
     velocityS *= rhs;

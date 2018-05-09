@@ -72,7 +72,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho)
 {
     init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho);
 }
@@ -87,7 +87,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityP_const, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho)
 {
     this->initModelparameter(velocityP, ctx, dist, velocityP_const);
     this->initModelparameter(velocityS, ctx, dist, velocityS_const);
@@ -233,7 +233,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -242,7 +242,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() 
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -267,7 +267,7 @@ IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXY);
@@ -276,7 +276,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXY);
@@ -285,7 +285,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXZ);
@@ -294,7 +294,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXZ);
@@ -303,7 +303,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
@@ -312,7 +312,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
@@ -323,7 +323,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Modelparameter::Elastic<ValueType> result(*this);
     result *= rhs;
@@ -336,7 +336,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -346,7 +346,7 @@ KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar const &rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator*=(ValueType const &rhs)
 {
     density *= rhs;
     velocityP *= rhs;

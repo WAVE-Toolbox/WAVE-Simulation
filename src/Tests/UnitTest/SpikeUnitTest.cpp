@@ -20,24 +20,23 @@ TEST(SpikeTest, TestConstructor)
     sampleResult.allocate(NT);
 
     //calculate sample result
-    scai::lama::Scalar temp_spike;
     IndexType time_index;
     lama::DenseVector<double> help(NT, 0.0);
-    temp_spike = 1.0;
+    double temp_spike = 1.0;
     time_index = floor(Tshift / DT);
     help.setValue(time_index, temp_spike);
-    sampleResult = lama::Scalar(AMP) * help;
+    sampleResult = AMP * help;
 
     //Testing
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
-    EXPECT_NO_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, FC, AMP, Tshift));
+    ASSERT_NO_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, FC, AMP, Tshift));
 
     lama::DenseVector<double> testResult2;
     testResult2.allocate(NT);
     Acquisition::SourceSignal::SinW<double>(testResult2, NT, DT, FC, AMP, Tshift);
 
-    EXPECT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
+    ASSERT_EQ(sampleResult.getValue(3), testResult2.getValue(3));
 }
 
 TEST(SpikeTest, TestAsserts)
@@ -50,7 +49,7 @@ TEST(SpikeTest, TestAsserts)
     lama::DenseVector<double> testResult1;
     testResult1.allocate(NT);
 
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, -NT, DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, -DT, FC, AMP, Tshift));
-    EXPECT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, -FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, -NT, DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, -DT, FC, AMP, Tshift));
+    ASSERT_ANY_THROW(Acquisition::SourceSignal::SinW<double>(testResult1, NT, DT, -FC, AMP, Tshift));
 }

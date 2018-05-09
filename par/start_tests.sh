@@ -21,7 +21,6 @@ rm -rf ci/*.ci.*
 
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.sh.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.sh.txt
-exit
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
 	return

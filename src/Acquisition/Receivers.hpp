@@ -37,7 +37,7 @@ namespace KITGPI
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
 
           private:
-            void checkRequiredNumParameter(IndexType numParameterCheck) override;
+            void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
         };
     }
 }

@@ -68,7 +68,7 @@ void KITGPI::Acquisition::SourceSignal::IntgSinThree<ValueType>::calc(scai::lama
     zero = zero / M_PI;
     zero = zero / 0.75;
 
-    signal = lama::Scalar(AMP) * zero;
+    signal = AMP * zero;
 }
 
 template class KITGPI::Acquisition::SourceSignal::IntgSinThree<float>;

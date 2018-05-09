@@ -14,15 +14,12 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model)
 {
 
-    lama::Vector const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector const &sWaveModulus = model.getSWaveModulus();
+    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
+    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
 
-    lama::DenseVector<ValueType> temp(sWaveModulus.getDistributionPtr());
+    auto temp = lama::eval<lama::DenseVector<ValueType>>( 2 * sWaveModulus - pWaveModulus );
 
-    temp = 2 * sWaveModulus - pWaveModulus;
-
-    scaleHorizontalUpdate = pWaveModulus;
-    scaleHorizontalUpdate.invert();
+    scaleHorizontalUpdate = 1.0 / pWaveModulus;
     scaleHorizontalUpdate *= temp;
     scaleHorizontalUpdate *= selectHorizontalUpdate;
 }
@@ -37,7 +34,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
  \param Syy Syy wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector<ValueType> &sumHorizonalDerivative, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Syy)
 {
 
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
@@ -61,7 +58,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::ap
  \param Szz Szz wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector &sumHorizonalDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::apply(scai::lama::Vector<ValueType> &sumHorizonalDerivative, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Syy, scai::lama::Vector<ValueType> &Szz)
 {
 
     /* Apply horizontal update, which replaces the vertical one */
@@ -97,18 +94,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     derivatives.calcDyfVelocity(NX, NY, NZ, dist);
     derivatives.calcDybPressure(NX, NY, NZ, dist);
     derivatives.calcDybVelocity(NX, NY, NZ, dist);
-    derivatives.DybPressure *= lama::Scalar(DT / DH);
-    derivatives.DybVelocity *= lama::Scalar(DT / DH);
-    derivatives.DyfPressure *= lama::Scalar(DT / DH);
-    derivatives.DyfVelocity *= lama::Scalar(DT / DH);
+    derivatives.DybPressure *= DT / DH;
+    derivatives.DybVelocity *= DT / DH;
+    derivatives.DyfPressure *= DT / DH;
+    derivatives.DyfVelocity *= DT / DH;
     derivatives.Dyb.purge();
     derivatives.Dyf.purge();
 
-    selectHorizontalUpdate.allocate(dist);
-    selectHorizontalUpdate = 0.0;
-
-    setSurfaceZero.allocate(dist);
-    setSurfaceZero = 1.0;
+    selectHorizontalUpdate.setSameValue(dist, 0.0);
+    setSurfaceZero.setSameValue(dist, 1.0);
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -117,14 +111,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
 
     /* Get write access to local part of scaleHorizontalUpdate */
-    utilskernel::LArray<ValueType> *selectHorizontalUpdate_LA = &selectHorizontalUpdate.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_selectHorizontalUpdate(*selectHorizontalUpdate_LA);
+    auto write_selectHorizontalUpdate = hostWriteAccess(selectHorizontalUpdate.getLocalValues());
 
     /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *setSurfaceZero_LA = &setSurfaceZero.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_setSurfaceZero(*setSurfaceZero_LA);
+    auto write_setSurfaceZero = hostWriteAccess(setSurfaceZero.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates<ValueType> coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation;
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -144,9 +136,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
             write_setSurfaceZero[rowLocal] = 0.0;
         }
     }
-    read_localIndices.release();
-    write_selectHorizontalUpdate.release();
-    write_setSurfaceZero.release();
+
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
 }
 

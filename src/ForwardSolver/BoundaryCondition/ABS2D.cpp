@@ -11,7 +11,7 @@ using namespace scai;
  \param v3 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lam
  \param v5 DenseVector to apply damping boundary
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3, scai::lama::Vector &v4, scai::lama::Vector &v5)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3, scai::lama::Vector<ValueType> &v4, scai::lama::Vector<ValueType> &v5)
 {
 
     SCAI_ASSERT_DEBUG(active, " ABS is not active ");
@@ -81,7 +81,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
     damping = 1.0;
 
     /* Get write access to local part of setSurfaceZero */
-    utilskernel::LArray<ValueType> *damping_LA = &damping.getLocalValues();
+    hmemo::HArray<ValueType> *damping_LA = &damping.getLocalValues();
     hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
 
     // calculate damping function
@@ -96,7 +96,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
-    Acquisition::Coordinates<ValueType> coordTransform;
+    Acquisition::Coordinates coordTransform;
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")

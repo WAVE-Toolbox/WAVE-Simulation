@@ -79,7 +79,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityP_const, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
     init(ctx, dist, velocityP_const, velocityS_const, rho_const, tauP_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
@@ -99,7 +99,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar velocityP_const, scai::lama::Scalar velocityS_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
     this->initModelparameter(velocityP, ctx, dist, velocityP_const);
@@ -285,7 +285,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(I
  * if P-Wave Modulus is dirty (eg. because of changes in velocityP, the P-Wave modulus will be recalculated
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPWaveModulus()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPWaveModulus()
 {
         // If the modulus is dirty, than recalculate
     if (dirtyFlagPWaveModulus) {	   
@@ -297,14 +297,11 @@ scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPW
 	
 	ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
 
-	lama::DenseVector<ValueType> temp(tauP.getDistributionPtr());
-
 	/* Scaling the P-wave Modulus */
-	temp = 1.0;
-	temp += sum * tauP;
-	temp.invert();
-	pWaveModulus *= temp;
-        dirtyFlagPWaveModulus = false;
+
+	auto temp = lama::eval<lama::DenseVector<ValueType>>( 1.0 + sum * tauP );
+	pWaveModulus = pWaveModulus / temp;
+    dirtyFlagPWaveModulus = false;
     }
     
     return (pWaveModulus);
@@ -315,7 +312,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPW
  * if S-Wave Modulus is dirty (eg. because of changes in velocityS, the S-Wave modulus will be recalculated
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus()
 {
         // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {	   
@@ -327,13 +324,9 @@ scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSW
 	
 	ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
 
-	lama::DenseVector<ValueType> temp(tauS.getDistributionPtr());
-
 	/* Scaling the S-wave Modulus */
-	temp = 1.0;
-	temp += sum* tauS;
-	temp.invert();
-	sWaveModulus *= temp;
+	auto temp = lama::eval<lama::DenseVector<ValueType>>( 1.0 + sum * tauS );
+	sWaveModulus = sWaveModulus / temp;
         dirtyFlagSWaveModulus = false;
     }
     
@@ -346,7 +339,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSW
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Modelparameter::Viscoelastic<ValueType> result(*this);
     result *= rhs;
@@ -359,7 +352,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::Viscoelastic<ValueType> rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::Viscoelastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -369,7 +362,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(scai::lama::Scalar lhs
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*=(scai::lama::Scalar const &rhs)
+KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoelastic<ValueType>::operator*=(ValueType const &rhs)
 {
     density *= rhs;
     tauS *= rhs;

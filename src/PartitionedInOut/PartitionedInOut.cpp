@@ -10,7 +10,7 @@ using namespace KITGPI;
  \param dist Distribution of the vector
  */
 template <typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedFiles(scai::lama::Vector &vec, std::string const &filename, scai::dmemo::DistributionPtr dist)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedFiles(scai::lama::Vector<ValueType> &vec, std::string const &filename, scai::dmemo::DistributionPtr dist)
 {
     std::string fileNameBlockIn = filename.substr(0, filename.size() - 4) + ".%r.mtx";
     vec.readFromFile(fileNameBlockIn);
@@ -24,7 +24,7 @@ void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromDistributedF
  \param dist Distribution of the vector
  */
 template <typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(scai::lama::Vector &vec, std::string const &filename, scai::dmemo::DistributionPtr dist)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(scai::lama::Vector<ValueType> &vec, std::string const &filename, scai::dmemo::DistributionPtr dist)
 {
     vec.readFromFile(filename, "BLOCK");
     vec.redistribute(dist);
@@ -36,10 +36,10 @@ void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::readFromOneFile(scai
  \param filename Name of the file
  */
 template <typename ValueType>
-void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::writeToDistributedFiles(scai::lama::Vector const &vec, std::string const &filename)
+void KITGPI::PartitionedInOut::PartitionedInOut<ValueType>::writeToDistributedFiles(scai::lama::Vector<ValueType> const &vec, std::string const &filename)
 {
-    common::unique_ptr<lama::Vector> updatePtr(vec.newVector());
-    lama::Vector &tempVector = *updatePtr;
+    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vec.newVector());
+    lama::Vector<ValueType> &tempVector = *updatePtr;
     tempVector = vec;
     std::string distFileName = filename.substr(0, filename.size() - 4) + ".dist.mtx";
     std::string fileNameBlockOut = filename.substr(0, filename.size() - 4) + ".%r.mtx";

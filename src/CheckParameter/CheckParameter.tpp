@@ -4,7 +4,7 @@
 template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration& config, Modelparameter::Modelparameter<ValueType>& model, scai::dmemo::CommunicatorPtr comm)
 {
-  scai::lama::Scalar vMinTmp;
+  ValueType vMinTmp;
   if (config.get<std::string>("equationType").compare("acoustic") == 0) {
       vMinTmp = model.getVelocityP().min();
   }  
@@ -12,7 +12,7 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
       vMinTmp = model.getVelocityS().min();
   } 
   
- scai::lama::Scalar vMaxTmp;
+ ValueType vMaxTmp;
  if (config.get<std::string>("equationType").compare("sh") == 0) {
       vMaxTmp = model.getVelocityS().max();
   }
@@ -21,13 +21,12 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
   }
   scai::lama::DenseMatrix<ValueType> acquisition_temp;
   scai::lama::DenseVector<ValueType> wavelet_fc; 
-  scai::lama::Scalar fcMax;
   acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
   acquisition_temp.getColumn(wavelet_fc,7);
-  fcMax=wavelet_fc.max();
+  ValueType fcMax=wavelet_fc.max();
     
-  KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp.getValue<ValueType>(),config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
-  KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp.getValue<ValueType>(), fcMax.getValue<ValueType>(), config.get<IndexType>("spatialFDorder"), comm);
+  KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
+  KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<IndexType>("spatialFDorder"), comm);
  
 }
 
@@ -148,9 +147,9 @@ void KITGPI::CheckParameter::checkSources(IndexType NX, IndexType NY, IndexType 
     acquisition_temp.readFromFile(sourcefile);
     IndexType numRows = acquisition_temp.getNumRows();
     scai::lama::DenseVector<ValueType> row_temp;
-    scai::lama::Scalar X_temp;
-    scai::lama::Scalar Y_temp;
-    scai::lama::Scalar Z_temp;
+    IndexType X_temp;
+    IndexType Y_temp;
+    IndexType Z_temp;
     
     for (IndexType row_ind = 0; row_ind < numRows; row_ind++) {
 	acquisition_temp.getRow(row_temp,row_ind);
@@ -158,12 +157,12 @@ void KITGPI::CheckParameter::checkSources(IndexType NX, IndexType NY, IndexType 
 	Y_temp=row_temp.getValue(1);
 	Z_temp=row_temp.getValue(2);
 	if (comm->getRank() == MASTERGPI) {
-	  SCAI_ASSERT_ERROR(X_temp.getValue<IndexType>()>=0,"X coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(Y_temp.getValue<IndexType>()>=0,"Y coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(Z_temp.getValue<IndexType>()>=0,"Z coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(X_temp.getValue<IndexType>()<NX,"X coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NX!")
-	  SCAI_ASSERT_ERROR(Y_temp.getValue<IndexType>()<NY,"Y coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NY!")
-	  SCAI_ASSERT_ERROR(Z_temp.getValue<IndexType>()<NZ,"Z coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NZ!")
+	  SCAI_ASSERT_ERROR(X_temp>=0,"X coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(Y_temp>=0,"Y coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(Z_temp>=0,"Z coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(X_temp<NX,"X coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NX!")
+	  SCAI_ASSERT_ERROR(Y_temp<NY,"Y coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NY!")
+	  SCAI_ASSERT_ERROR(Z_temp<NZ,"Z coordinate (defined as gridpoint) of source #"<<row_ind+1<<" must be smaller than NZ!")
 	}
     }  
 }
@@ -183,9 +182,9 @@ void KITGPI::CheckParameter::checkReceivers(IndexType NX, IndexType NY, IndexTyp
     acquisition_temp.readFromFile(receiverfile);
     IndexType numRows = acquisition_temp.getNumRows();
     scai::lama::DenseVector<ValueType> row_temp;
-    scai::lama::Scalar X_temp;
-    scai::lama::Scalar Y_temp;
-    scai::lama::Scalar Z_temp;
+    IndexType X_temp;
+    IndexType Y_temp;
+    IndexType Z_temp;
     
     for (IndexType row_ind = 0; row_ind < numRows; row_ind++) {
 	acquisition_temp.getRow(row_temp,row_ind);
@@ -193,12 +192,12 @@ void KITGPI::CheckParameter::checkReceivers(IndexType NX, IndexType NY, IndexTyp
 	Y_temp=row_temp.getValue(1);
 	Z_temp=row_temp.getValue(2);
 	if (comm->getRank() == MASTERGPI) {
-	  SCAI_ASSERT_ERROR(X_temp.getValue<IndexType>()>=0,"X coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(Y_temp.getValue<IndexType>()>=0,"Y coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(Z_temp.getValue<IndexType>()>=0,"Z coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
-	  SCAI_ASSERT_ERROR(X_temp.getValue<IndexType>()<NX,"X coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NX!")
-	  SCAI_ASSERT_ERROR(Y_temp.getValue<IndexType>()<NY,"Y coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NY!")
-	  SCAI_ASSERT_ERROR(Z_temp.getValue<IndexType>()<NZ,"Z coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NZ!")
+	  SCAI_ASSERT_ERROR(X_temp>=0,"X coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(Y_temp>=0,"Y coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(Z_temp>=0,"Z coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be positive!")
+	  SCAI_ASSERT_ERROR(X_temp<NX,"X coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NX!")
+	  SCAI_ASSERT_ERROR(Y_temp<NY,"Y coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NY!")
+	  SCAI_ASSERT_ERROR(Z_temp<NZ,"Z coordinate (defined as gridpoint) of receiver #"<<row_ind+1<<" must be smaller than NZ!")
 	}
     }  
 }

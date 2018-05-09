@@ -110,7 +110,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::ge
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(ValueType rhs)
 {
     KITGPI::Wavefields::FD3Dvisco<ValueType> result;
     result.VX = this->VX * rhs;
@@ -132,7 +132,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -142,7 +142,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(scai::lama::Scalar lhs, KITGP
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }

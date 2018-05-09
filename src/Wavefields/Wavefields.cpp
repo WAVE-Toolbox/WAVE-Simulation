@@ -8,7 +8,7 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(scai::lama::DenseVector<ValueType> &vector)
 {
-    vector.assign(0.0);
+    vector = 0;
 }
 
 /*! \brief Intitialisation of a single wavefield vector.
