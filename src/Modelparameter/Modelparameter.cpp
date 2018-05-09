@@ -1077,7 +1077,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
-    Common::searchAndReplace<ValueType,IndexType>(vecDensity,0.5,0.001,1); // find vacuum grid points
+    Common::searchAndReplace<ValueType,IndexType>(vecDensity,0.001,0.001,1); // find vacuum grid points
     
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
