@@ -84,6 +84,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
     
     transFcn = scai::lama::pow<ValueType>(transFcn,2.0*order);
     transFcn += 1;
+    transFcn = scai::lama::sqrt<ValueType>(transFcn);
     transFcn.unaryOp(transFcn,scai::common::UnaryOp::RECIPROCAL);
 }
 
