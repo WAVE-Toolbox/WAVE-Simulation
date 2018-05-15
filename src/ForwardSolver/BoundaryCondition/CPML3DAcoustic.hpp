@@ -29,7 +29,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3DAcoustic(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 
@@ -41,6 +41,8 @@ namespace KITGPI
                 void apply_p_z(scai::lama::Vector<ValueType> &p_z);
 
               private:
+		      
+		using CPML<ValueType>::active;
                 typedef typename CPML<ValueType>::VectorType VectorType;
 
                 VectorType psi_vxx; //!< CPML memory Variable

@@ -1,6 +1,91 @@
 #include "ForwardSolver2Dvisco.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, const Modelparameter::Modelparameter<ValueType> &model, scai::hmemo::ContextPtr ctx, ValueType DT)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
+    /* Get distribibution */
+    dmemo::DistributionPtr dist;
+    lama::Vector<ValueType> &vX = wavefield.getRefVX();
+    dist = vX.getDistributionPtr();
+
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+
+    /* aalocation of auxiliary vectors*/
+    update.allocate(dist);
+    update_temp.allocate(dist);
+    vxx.allocate(dist);
+    vyy.allocate(dist);
+    update2.allocate(dist);
+    onePlusLtauP.allocate(dist);
+    onePlusLtauS.allocate(dist);
+
+    update.setContextPtr(ctx);
+    update_temp.setContextPtr(ctx);
+    vxx.setContextPtr(ctx);
+    vyy.setContextPtr(ctx);
+    update2.setContextPtr(ctx);
+    onePlusLtauP.setContextPtr(ctx);
+    onePlusLtauS.setContextPtr(ctx);
+
+    numRelaxationMechanisms = model.getNumRelaxationMechanisms();
+    relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
+    inverseRelaxationTime = 1.0 / relaxationTime;
+    viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));
+    viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));
+    DThalf = DT / 2.0;
+}
+
+/*! \brief resets PML (use after each modelling!)
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::resetCPML()
+{
+    if (useConvPML) {
+        ConvPML.resetCPML();
+    }
+}
+
+/*! \brief Preparations before each modelling
+ *
+ *
+ \param model model parameter object
+
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT)
+{
+    /* Get reference to required model vectors */
+    lama::Vector<ValueType> const &tauS = model.getTauS();
+    lama::Vector<ValueType> const &tauP = model.getTauP();
+
+    onePlusLtauP = 1.0;
+    onePlusLtauP += numRelaxationMechanisms * tauP;
+
+    onePlusLtauS = 1.0;
+    onePlusLtauS += numRelaxationMechanisms * tauS;
+
+    if (useFreeSurface==1) {
+        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
+    }
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -13,22 +98,21 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
 
+    useFreeSurface = config.get<IndexType>("FreeSurface");
+
     /* Prepare Free Surface */
-    if (config.get<IndexType>("FreeSurface")) {
-        useFreeSurface = true;
+    if (useFreeSurface==1) {
         FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
     if (config.get<IndexType>("DampingBoundary") == 1) {
-        if (config.get<IndexType>("DampingBoundaryType") == 1) {
-            useDampingBoundary = true;
-            DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-        }
-        if (config.get<IndexType>("DampingBoundaryType") == 2) {
-            useConvPML = true;
-            ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-        }
+        useDampingBoundary = true;
+        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+    }
+    if (config.get<IndexType>("DampingBoundary") == 2) {
+        useConvPML = true;
+        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
 
@@ -46,15 +130,12 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType DT)
+void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
 
-    SCAI_REGION("timestep")
-
-    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
+    SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
     lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
@@ -85,48 +166,9 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
-
-    lama::DenseVector<ValueType> update2;
-
-    std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
-    std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
-
-    lama::Vector<ValueType> &vxx = *vxxPtr;
-    lama::Vector<ValueType> &vyy = *vyyPtr;
-
+    /* Get reference to required model vectors */
     lama::Vector<ValueType> const &tauS = model.getTauS();
     lama::Vector<ValueType> const &tauP = model.getTauP();
-
-    IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();         // = Number of relaxation mechanisms
-    ValueType relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency()); // = 1 / ( 2 * Pi * f_relax )
-    ValueType inverseRelaxationTime = 1.0 / relaxationTime;                         // = 1 / relaxationTime
-    ValueType viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));                    // = 1 - DT / ( 2 * tau_Sigma_l )
-    ValueType viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
-    ValueType DThalf = DT / 2.0;                                                    // = DT / 2.0
-
-    auto onePlusLtauP = lama::eval<lama::DenseVector<ValueType>>(1.0 + numRelaxationMechanisms * tauP); // = ( 1 + L * tauP )
-    auto onePlusLtauS = lama::eval<lama::DenseVector<ValueType>>(1.0 + numRelaxationMechanisms * tauS); // = ( 1 + L * tauS )
-
-    if (useFreeSurface) {
-        FreeSurface.setModelparameter(model, onePlusLtauP, onePlusLtauS, DT);
-    }
-
-    dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
-
-    /* --------------------------------------- */
-    /* Start runtime critical part             */
-    /* --------------------------------------- */
-
-    for (IndexType t = tStart; t < tEnd; t++) {
-
-        if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << "\n");
-        }
 
         /* ----------------*/
         /* update velocity */
@@ -136,7 +178,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxx_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Sxy;
         } else {
@@ -154,7 +196,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
             ConvPML.apply_sxy_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DyfFreeSurface * Syy;
         } else {
@@ -267,11 +309,6 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
         /* Apply source and save seismogram */
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
-    }
-
-    /* --------------------------------------- */
-    /* Stop runtime critical part             */
-    /* --------------------------------------- */
 }
 
 template class KITGPI::ForwardSolver::FD2Dvisco<float>;

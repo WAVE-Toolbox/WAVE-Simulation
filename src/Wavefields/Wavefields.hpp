@@ -3,11 +3,13 @@
 #pragma once
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
+#include <scai/lama/Vector.hpp>
 
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 #include "../Common/HostPrint.hpp"
 #include "../PartitionedInOut/PartitionedInOut.hpp"
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 namespace KITGPI
 {
@@ -62,8 +64,7 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
-            virtual void write(std::string baseName, std::string type, scai::IndexType t, scai::IndexType partitionedOut) = 0;
-	    virtual void writeSnapshot(std::string baseName, scai::IndexType t, scai::IndexType partitionedOut) = 0;
+            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut) = 0;
 
             //! Operator overloading
             virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
@@ -79,7 +80,7 @@ namespace KITGPI
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            void writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
+            void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
 
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y

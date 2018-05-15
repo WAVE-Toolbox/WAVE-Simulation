@@ -29,7 +29,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 
@@ -53,7 +53,8 @@ namespace KITGPI
                 void apply_vzz(scai::lama::Vector<ValueType> &vzz);
 
               private:
-                // For the CPML Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
+		      
+                using CPML<ValueType>::active;
 
                 typedef typename CPML<ValueType>::VectorType VectorType;
 

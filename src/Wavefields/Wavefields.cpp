@@ -31,11 +31,11 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 /*! \brief Methode to Write Wavefield for timestep t
  *
  \param vector Vector written to file
- \param type Wavefield-type (acoustic, elastic, viscoelastic)
+ \param type Wavefield-type (acoustic, elastic, viscoelastic, sh)
  \param t Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::DenseVector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
 {
     std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
     

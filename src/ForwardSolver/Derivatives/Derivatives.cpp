@@ -206,14 +206,14 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist )
 {
     // Attention: keep in mind topology NZ x NY x NX
 
-    common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilId, stencilId, stencilFD);
+    common::Stencil1D<ValueType> stencilId( 1 );
+    common::Stencil3D<ValueType> stencil( stencilId, stencilId, stencilFD );
     // use dist for distribution
-    Dxf.define(dist, stencil);
+    Dxf.define( dist, stencil );
 }
 
 //! \brief Calculate Dyf matrix
@@ -227,10 +227,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexTy
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
 {
-    common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
+    common::Stencil1D<ValueType> stencilId( 1 );
+    common::Stencil3D<ValueType> stencil( stencilId, stencilFD, stencilId );
     // use dist for distribution
-    Dyf.define(dist, stencil);
+    Dyf.define( dist, stencil );
 }
 
 //! \brief Calculate Dzf matrix
@@ -244,10 +244,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexTy
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
 {
-    common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
+    common::Stencil1D<ValueType> stencilId( 1 );
+    common::Stencil3D<ValueType> stencil( stencilFD, stencilId, stencilId );
     // use dist for distribution
-    Dzf.define(dist, stencil);
+    Dzf.define( dist, stencil );
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -735,52 +735,52 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
     scai::hmemo::WriteAccess<ValueType> write_FDCoef_f(FDCoef_f);
     scai::hmemo::WriteAccess<ValueType> write_FDCoef_b(FDCoef_b);
 
-    const ValueType FD2[] = {-1.0, 1.0};
+    const ValueType FD2[] = { -1.0, 1.0 };
 
-    const ValueType FD4[] = {1.0 / 24.0, -9.0 / 8.0, 9.0 / 8.0, -1.0 / 24.0};
+    const ValueType FD4[] = { 1.0 / 24.0, -9.0 / 8.0, 9.0 / 8.0, -1.0 / 24.0 };
 
-    const ValueType FD6[] = {-3.0 / 640.0, 25.0 / 384.0, -75.0 / 64.0,
-                             75.0 / 64.0, -25.0 / 384.0, 3.0 / 640.0};
+    const ValueType FD6[] = { -3.0 / 640.0, 25.0 / 384.0, -75.0 / 64.0,
+                              75.0 / 64.0, -25.0 / 384.0, 3.0 / 640.0 };
 
-    const ValueType FD8[] = {5.0 / 7168.0, -49.0 / 5120.0, 245.0 / 3072.0, -1225.0 / 1024.0,
-                             1225.0 / 1024.0, -245.0 / 3072.0, 49.0 / 5120.0, -5.0 / 7168.0};
+    const ValueType FD8[] = { 5.0 / 7168.0, -49.0 / 5120.0, 245.0 / 3072.0, -1225.0 / 1024.0,
+                              1225.0 / 1024.0, -245.0 / 3072.0, 49.0 / 5120.0, -5.0 / 7168.0  };
 
-    const ValueType FD10[] = {-8756999275442633.0 / 73786976294838206464.0,
-                              8142668969129685.0 / 4611686018427387904.0,
-                              -567.0 / 40960.0,
-                              735.0 / 8192.0,
-                              -19845.0 / 16384.0,
-                              19845.0 / 16384.0,
-                              -735.0 / 8192.0,
-                              567.0 / 40960.0,
-                              -8142668969129685.0 / 4611686018427387904.0,
-                              8756999275442633.0 / 73786976294838206464.0};
+    const ValueType FD10[] = { -8756999275442633.0 / 73786976294838206464.0,
+                               8142668969129685.0 / 4611686018427387904.0,
+                               -567.0 / 40960.0,
+                               735.0 / 8192.0,
+                               -19845.0 / 16384.0,
+                               19845.0 / 16384.0,
+                               -735.0 / 8192.0,
+                               567.0 / 40960.0,
+                               -8142668969129685.0 / 4611686018427387904.0,
+                               8756999275442633.0 / 73786976294838206464.0 };
 
-    const ValueType FD12[] = {6448335830095439.0 / 295147905179352825856.0,
-                              -1655620175512543.0 / 4611686018427387904.0,
-                              6842103786556949.0 / 2305843009213693952.0,
-                              -628618285389933.0 / 36028797018963968.0,
-                              436540475965291.0 / 4503599627370496.0,
-                              -2750204998582123.0 / 2251799813685248.0,
-                              2750204998582123.0 / 2251799813685248.0,
-                              -436540475965291.0 / 4503599627370496.0,
-                              628618285389933.0 / 36028797018963968.0,
-                              -6842103786556949.0 / 2305843009213693952.0,
-                              1655620175512543.0 / 4611686018427387904.0,
-                              -6448335830095439.0 / 295147905179352825856.0};
+    const ValueType FD12[] = {  6448335830095439.0 / 295147905179352825856.0,
+                                -1655620175512543.0 / 4611686018427387904.0,
+                                6842103786556949.0 / 2305843009213693952.0,
+                                -628618285389933.0 / 36028797018963968.0,
+                                436540475965291.0 / 4503599627370496.0,
+                                -2750204998582123.0 / 2251799813685248.0,
+                                2750204998582123.0 / 2251799813685248.0,
+                                -436540475965291.0 / 4503599627370496.0,
+                                628618285389933.0 / 36028797018963968.0,
+                                -6842103786556949.0 / 2305843009213693952.0,
+                                1655620175512543.0 / 4611686018427387904.0,
+                                -6448335830095439.0 / 295147905179352825856.0 };
 
     switch (spFDo) {
     case 2:
         write_FDCoef_f[0] = 1.0;
         write_FDCoef_b[0] = -1.0;
-        stencilFD = common::Stencil1D<ValueType>(2, FD2);
+        stencilFD = common::Stencil1D<ValueType>( 2, FD2 );
         break;
     case 4:
         write_FDCoef_f[1] = -1.0 / 24.0;
         write_FDCoef_f[0] = 9.0 / 8.0;
         write_FDCoef_b[0] = -9.0 / 8.0;
         write_FDCoef_b[1] = 1.0 / 24.0;
-        stencilFD = common::Stencil1D<ValueType>(4, FD4);
+        stencilFD = common::Stencil1D<ValueType>( 4, FD4 );
         break;
     case 6:
         write_FDCoef_f[2] = 3.0 / 640.0;
@@ -789,7 +789,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[0] = -75.0 / 64.0;
         write_FDCoef_b[1] = 25.0 / 384.0;
         write_FDCoef_b[2] = -3.0 / 640.0;
-        stencilFD = common::Stencil1D<ValueType>(6, FD6);
+        stencilFD = common::Stencil1D<ValueType>( 6, FD6 );
         break;
     case 8:
         write_FDCoef_f[3] = -5.0 / 7168.0;
@@ -800,7 +800,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[1] = 245.0 / 3072.0;
         write_FDCoef_b[2] = -49.0 / 5120.0;
         write_FDCoef_b[3] = 5.0 / 7168.0;
-        stencilFD = common::Stencil1D<ValueType>(8, FD8);
+        stencilFD = common::Stencil1D<ValueType>( 8, FD8 );
         break;
     case 10:
         write_FDCoef_f[4] = 8756999275442633.0 / 73786976294838206464.0;
@@ -813,7 +813,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[2] = -567.0 / 40960.0;
         write_FDCoef_b[3] = 8142668969129685.0 / 4611686018427387904.0;
         write_FDCoef_b[4] = -8756999275442633.0 / 73786976294838206464.0;
-        stencilFD = common::Stencil1D<ValueType>(10, FD10);
+        stencilFD = common::Stencil1D<ValueType>( 10, FD10 );
         break;
     case 12:
         write_FDCoef_f[5] = -6448335830095439.0 / 295147905179352825856.0;
@@ -828,7 +828,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
         write_FDCoef_b[3] = 6842103786556949.0 / 2305843009213693952.0;
         write_FDCoef_b[4] = -1655620175512543.0 / 4611686018427387904.0;
         write_FDCoef_b[5] = 6448335830095439.0 / 295147905179352825856.0;
-        stencilFD = common::Stencil1D<ValueType>(12, FD12);
+        stencilFD = common::Stencil1D<ValueType>( 12, FD12 );
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.");

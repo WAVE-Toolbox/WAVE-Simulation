@@ -25,7 +25,7 @@ namespace KITGPI
                 ~CPML(){};
 
                 //! init CPML coefficient vectors and CPML memory variables
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface) = 0;
 
               protected:
                 void resetVector(scai::lama::Vector<ValueType> &vector);
@@ -44,6 +44,8 @@ namespace KITGPI
                 typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 VectorType temp; //!< temporary vector for pml application
+                
+                bool active; //!< Bool if CPML is active
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

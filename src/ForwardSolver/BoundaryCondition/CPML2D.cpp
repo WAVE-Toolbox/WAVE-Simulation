@@ -83,17 +83,19 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai
  \param DT Time sampling
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
  \param KMaxCPML 
  \param CenterFrequencyCPML Center frequency inside the boundaries
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+    
+    active = true;
 
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -122,7 +124,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     this->initVector(psi_sxy_y, ctx, dist);
     this->initVector(psi_syy_y, ctx, dist);
 
-    std::cout << psi_syy_y << std::endl;
 
     /* Distributed vectors */
     k_x.setSameValue(dist, 1.0);
