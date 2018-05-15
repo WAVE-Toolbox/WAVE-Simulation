@@ -4,14 +4,24 @@
 template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration& config, Modelparameter::Modelparameter<ValueType>& model, scai::dmemo::CommunicatorPtr comm)
 {
+    ValueType vMaxTmp;
+ if (config.get<std::string>("equationType").compare("sh") == 0) {
+      vMaxTmp = model.getVelocityS().max();
+  }
+  else {
+      vMaxTmp = model.getVelocityP().max();
+  }
   ValueType vMinTmp;
   if (config.get<std::string>("equationType").compare("acoustic") == 0) {
       vMinTmp = model.getVelocityP().min();
   }  
   else {
-      vMinTmp = model.getVelocityS().min();
+      scai::lama::DenseVector<ValueType> velocityS;
+      velocityS = model.getVelocityS();
+      KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityS,0,vMaxTmp,5);
+      vMinTmp = velocityS.min();
   } 
-  ValueType vMaxTmp = model.getVelocityP().max();
+
   scai::lama::DenseMatrix<ValueType> acquisition_temp;
   scai::lama::DenseVector<ValueType> wavelet_fc; 
   acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));

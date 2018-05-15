@@ -22,6 +22,13 @@ fi
 # Run simulation tests
 rm -rf ci/*.ci.*
 
+mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.sh.txt
+${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.sh.txt
+if [ "$?" != "0" ]; then
+	echo "Test failed ! "
+	exit
+fi
+
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.acoustic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.acoustic.txt
 if [ "$?" != "0" ]; then
@@ -29,7 +36,7 @@ if [ "$?" != "0" ]; then
 	exit
 fi
 
-${MODEL_EXE} ci/configuration_ci.3D.acoustic.txt || (echo "Model creation failed !"; exit)
+${MODEL_EXE} ci/configuration_ci.3D.acoustic.txt || { echo "Model creation failed !" ; exit 1; } 
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.acoustic.txt
 if [ "$?" != "0" ]; then
@@ -37,7 +44,7 @@ if [ "$?" != "0" ]; then
 	exit
 fi
 
-${MODEL_EXE} ci/configuration_ci.2D.elastic.txt || (echo "Model creation failed !"; exit)
+${MODEL_EXE} ci/configuration_ci.2D.elastic.txt || { echo "Model creation failed !"; exit 1; }
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.elastic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.elastic.txt
 if [ "$?" != "0" ]; then
@@ -45,7 +52,7 @@ if [ "$?" != "0" ]; then
 	exit
 fi
 
-${MODEL_EXE} ci/configuration_ci.3D.elastic.txt || (echo "Model creation failed !"; exit)
+${MODEL_EXE} ci/configuration_ci.3D.elastic.txt || { echo "Model creation failed !"; exit 1; }
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.elastic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.elastic.txt
 if [ "$?" != "0" ]; then
@@ -53,7 +60,7 @@ if [ "$?" != "0" ]; then
 	exit
 fi
 
-${MODEL_EXE} ci/configuration_ci.2D.visco.txt || (echo "Model creation failed !"; exit)
+${MODEL_EXE} ci/configuration_ci.2D.visco.txt || { echo "Model creation failed !"; exit 1; }
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.visco.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.visco.txt
 if [ "$?" != "0" ]; then
@@ -62,7 +69,7 @@ if [ "$?" != "0" ]; then
 fi
 
 
-${MODEL_EXE} ci/configuration_ci.3D.visco.txt || (echo "Model creation failed !"; exit)
+${MODEL_EXE} ci/configuration_ci.3D.visco.txt || { echo "Model creation failed !"; exit 1; }
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.visco.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.visco.txt
 if [ "$?" != "0" ]; then

@@ -1,6 +1,43 @@
 #include "ForwardSolver3Delastic.hpp"
 using namespace scai;
 
+/*! \brief Initialitation of the ForwardSolver
+ *
+ *
+ \param config Configuration
+ \param derivatives Derivatives matrices
+ \param wavefield Wavefields for the modelling
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+{
+    /* Check if distributions of wavefields and models are the same */
+    SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+
+    /* Get distribibution of the wavefields */
+    auto dist = wavefield.getRefVX().getDistributionPtr();
+    ;
+
+    /* Initialisation of Boundary Conditions */
+    if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
+        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+    }
+
+    /* aalocation of auxiliary vectors*/
+    update.allocate(dist);
+    update_temp.allocate(dist);
+    vxx.allocate(dist);
+    vyy.allocate(dist);
+    vzz.allocate(dist);
+
+    update.setContextPtr(ctx);
+    update_temp.setContextPtr(ctx);
+    vxx.setContextPtr(ctx);
+    vyy.setContextPtr(ctx);
+    vzz.setContextPtr(ctx);
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -13,22 +50,47 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
 
+    useFreeSurface = config.get<IndexType>("FreeSurface");
+
     /* Prepare Free Surface */
-    if (config.get<IndexType>("FreeSurface")) {
-        useFreeSurface = true;
+    if (useFreeSurface==1) {
         FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
     if (config.get<IndexType>("DampingBoundary") == 1) {
-        if (config.get<IndexType>("DampingBoundaryType") == 1) {
-            useDampingBoundary = true;
-            DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-        }
-        if (config.get<IndexType>("DampingBoundaryType") == 2) {
-            useConvPML = true;
-            ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-        }
+        useDampingBoundary = true;
+        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+    }
+    if (config.get<IndexType>("DampingBoundary") == 2) {
+        useConvPML = true;
+        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
+    }
+}
+
+/*! \brief resets PML (use after each modelling!)
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::resetCPML()
+{
+    if (useConvPML) {
+        ConvPML.resetCPML();
+    }
+}
+
+/*! \brief Preparations before each modelling
+ *
+ *
+ \param model model parameter object
+
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
+{
+    if (useFreeSurface==1) {
+        FreeSurface.setModelparameter(model);
     }
 }
 
@@ -46,15 +108,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Co
  \param DT Temporal Sampling intervall in seconds
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType tStart, IndexType tEnd, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
 
-    SCAI_REGION("timestep")
-
-    SCAI_ASSERT_ERROR((tEnd - tStart) >= 1, " Number of time steps has to be greater than zero. ");
+    SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
     lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
@@ -90,36 +149,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    std::unique_ptr<lama::Vector<ValueType>> updatePtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update = *updatePtr;                       // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> update_tempPtr(vX.newVector()); // create new Vector(Pointer) with same configuration as vZ
-    lama::Vector<ValueType> &update_temp = *update_tempPtr;                  // get Reference of VectorPointer
-
-    std::unique_ptr<lama::Vector<ValueType>> vxxPtr(vX.newVector());
-    std::unique_ptr<lama::Vector<ValueType>> vyyPtr(vX.newVector());
-    std::unique_ptr<lama::Vector<ValueType>> vzzPtr(vX.newVector());
-
-    lama::Vector<ValueType> &vxx = *vxxPtr;
-    lama::Vector<ValueType> &vyy = *vyyPtr;
-    lama::Vector<ValueType> &vzz = *vzzPtr;
-
-    if (useFreeSurface) {
-        FreeSurface.setModelparameter(model);
-    }
-
-    dmemo::CommunicatorPtr comm = inverseDensity.getDistributionPtr()->getCommunicatorPtr();
-
-    /* --------------------------------------- */
-    /* Start runtime critical part             */
-    /* --------------------------------------- */
-
-    for (IndexType t = tStart; t < tEnd; t++) {
-
-        if (t % 100 == 0 && t != 0) {
-            HOST_PRINT(comm, "Calculating time step " << t << "\n");
-        }
-
         /* ----------------*/
         /* update velocity */
         /* ----------------*/
@@ -128,7 +157,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxx_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Sxy;
         } else {
@@ -153,7 +182,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxy_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             /* Apply image method */
             update_temp = DyfFreeSurface * Syy;
         } else {
@@ -179,7 +208,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
             ConvPML.apply_sxz_x(update);
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface==1) {
             /* Apply image method */
             update_temp = DybFreeSurface * Syz;
         } else {
@@ -269,7 +298,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         Syz += update;
 
         /* Apply free surface to stress update */
-        if (useFreeSurface) {
+        if (useFreeSurface == 1) {
             update = vxx + vzz;
             FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz);
         }
@@ -282,11 +311,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         /* Apply source and save seismogram */
         SourceReceiver.applySource(t);
         SourceReceiver.gatherSeismogram(t);
-    }
-
-    /* --------------------------------------- */
-    /* Stop runtime critical part             */
-    /* --------------------------------------- */
 }
 
 template class KITGPI::ForwardSolver::FD3Delastic<float>;

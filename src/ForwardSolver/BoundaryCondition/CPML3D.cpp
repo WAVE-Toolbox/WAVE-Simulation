@@ -170,10 +170,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzz(scai
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+
+    active = true;
 
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -212,32 +214,34 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dme
     this->initVector(psi_syz_z, ctx, dist);
     this->initVector(psi_szz_z, ctx, dist);
 
-    this->initVector(k_x, ctx, dist);
-    this->initVector(k_y, ctx, dist);
-    this->initVector(k_z, ctx, dist);
-    this->initVector(b_x, ctx, dist);
-    this->initVector(b_y, ctx, dist);
-    this->initVector(b_z, ctx, dist);
-    this->initVector(a_x, ctx, dist);
-    this->initVector(a_y, ctx, dist);
-    this->initVector(a_z, ctx, dist);
+    /* Distributed vectors */
+    k_x.setSameValue(dist, 1.0);
+    k_x_half.setSameValue(dist, 1.0);
+    k_y.setSameValue(dist, 1.0);
+    k_y_half.setSameValue(dist, 1.0);
+    k_z.setSameValue(dist, 1.0);
+    k_z_half.setSameValue(dist, 1.0);
 
-    this->initVector(k_x_half, ctx, dist);
-    this->initVector(k_y_half, ctx, dist);
-    this->initVector(k_z_half, ctx, dist);
-    this->initVector(b_x_half, ctx, dist);
-    this->initVector(b_y_half, ctx, dist);
-    this->initVector(b_z_half, ctx, dist);
-    this->initVector(a_x_half, ctx, dist);
-    this->initVector(a_y_half, ctx, dist);
-    this->initVector(a_z_half, ctx, dist);
+    lama::DenseVector<ValueType> k_x_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_x_half_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_half_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_z_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_z_half_temp(dist, 1.0, ctx);
 
-    k_x = 1.0;
-    k_y = 1.0;
-    k_z = 1.0;
-    k_x_half = 1.0;
-    k_y_half = 1.0;
-    k_z_half = 1.0;
+    lama::DenseVector<ValueType> a_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_z_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_z_half_temp(dist, 0.0, ctx);
+
+    lama::DenseVector<ValueType> b_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_z_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_z_half_temp(dist, 0.0, ctx);
 
     Acquisition::Coordinates coordTransform;
     Acquisition::coordinate3D coordinate;
@@ -252,22 +256,42 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dme
 
         if (gdist.min() < BoundaryWidth) {
             if (gdist.x < BoundaryWidth) {
-                this->SetCoeffCPML(a_x, b_x, k_x, a_x_half, b_x_half, k_x_half, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
             }
             if (gdist.y < BoundaryWidth) {
-                this->SetCoeffCPML(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
-                if (useFreeSurface) {
+                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                if (useFreeSurface > 0) {
                     if (coordinate.y < BoundaryWidth) {
-                        this->ResetCoeffFreeSurface(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, i);
+                        this->ResetCoeffFreeSurface(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, i);
                     }
                 }
             }
             if (gdist.z < BoundaryWidth) {
-                this->SetCoeffCPML(a_z, b_z, k_z, a_z_half, b_z_half, k_z_half, coordinate.z, gdist.z, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_z_temp, b_z_temp, k_z_temp, a_z_half_temp, b_z_half_temp, k_z_half_temp, coordinate.z, gdist.z, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
             }
         }
     }
-    //
+
+    k_x = k_x_temp;
+    k_x_half = k_x_half_temp;
+    k_y = k_y_temp;
+    k_y_half = k_y_half_temp;
+    k_z = k_z_temp;
+    k_z_half = k_z_half_temp;
+
+    a_x = a_x_temp;
+    a_x_half = a_x_half_temp;
+    a_y = a_y_temp;
+    a_y_half = a_y_half_temp;
+    a_z = a_z_temp;
+    a_z_half = a_z_half_temp;
+
+    b_x = b_x_temp;
+    b_x_half = b_x_half_temp;
+    b_y = b_y_temp;
+    b_y_half = b_y_half_temp;
+    b_z = b_z_temp;
+    b_z_half = b_z_half_temp;
 
     //     /* Release all read and write access */
     read_localIndices.release();

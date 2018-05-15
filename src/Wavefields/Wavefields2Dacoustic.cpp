@@ -38,23 +38,24 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPt
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(std::string baseName, std::string type, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, scai::lama::Vector<ValueType> const &/*SWaveModulus*/, scai::lama::Vector<ValueType> const &/*PWaveModulus*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-    this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-    this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
-}
-
-/*! \brief Wrapper Function to Write Snapshot of the Wavefield
- *
- *
- \param t Current Timestep
- */
-template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::writeSnapshot(std::string baseName, IndexType t, IndexType partitionedOut)
-{
-    write(baseName, type, t, partitionedOut);
+    
+    switch(snapType){ 
+      case 1:
+	this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+	this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+	break;
+      case 2:
+	this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
+	break;
+      case 3:
+	COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 2D acoustic case.")
+	break;
+      default:
+	COMMON_THROWEXCEPTION("Invalid snapType.")
+    }
 }
 
 /*! \brief Set all wavefields to zero.

@@ -40,8 +40,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Vec
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
-    lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3, 
-    lama::Vector<ValueType> &v4, lama::Vector<ValueType> &v5, lama::Vector<ValueType> &v6, 
+    lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3,
+    lama::Vector<ValueType> &v4, lama::Vector<ValueType> &v5, lama::Vector<ValueType> &v6,
     lama::Vector<ValueType> &v7, lama::Vector<ValueType> &v8, lama::Vector<ValueType> &v9)
 {
 
@@ -68,10 +68,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
  \param NZ Total number of grid points in Z
  \param BoundaryWidth Width of damping boundary
  \param DampingCoeff Damping coefficient
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n");
@@ -90,11 +90,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     IndexType read_localIndices_temp;                             // Temporary storage, so we do not have to access the array
 
     /* Distributed vectors */
-    damping.allocate(dist); // Vector to set elements on surface to zero
-    damping = 1.0;
+    damping.setSameValue(dist, 1.0); // sparse vector damping gets zero element 1.0
+    lama::DenseVector<ValueType> damping_temp(dist, 1.0);
 
-    /* Get write access to local part of setSurfaceZero */
-    hmemo::HArray<ValueType> *damping_LA = &damping.getLocalValues();
+    /* Get write access to local part of damping_temp */
+    hmemo::HArray<ValueType> *damping_LA = &damping_temp.getLocalValues();
     hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
 
     // calculate damping function
@@ -133,7 +133,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
             write_damping[i] = coeff[coordinateMin];
         }
 
-        if (useFreeSurface) {
+        if (useFreeSurface > 0) {
             coordinatexzMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
             if (coordinate.y < BoundaryWidth) {
                 write_damping[i] = 1.0;
@@ -150,6 +150,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     write_damping.release();
 
     damping.setContextPtr(ctx);
+    damping = damping_temp;
 
     HOST_PRINT(dist->getCommunicatorPtr(), "Finished with initialization of the Damping Boundary!\n\n");
 }
