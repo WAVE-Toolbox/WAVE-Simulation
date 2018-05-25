@@ -44,7 +44,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     
@@ -69,8 +69,8 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::write(IndexType snapType, std::
 	std::unique_ptr<lama::Vector<ValueType>> div_Ptr(VX.newVector()); 
 	scai::lama::Vector<ValueType> &div = *div_Ptr;
 	
-	this->getCurl(derivatives,curl,SWaveModulus);
-	this->getDiv(derivatives,div,PWaveModulus);
+	this->getCurl(derivatives,curl,model.getSWaveModulus());
+	this->getDiv(derivatives,div,model.getPWaveModulus());
 	
 	this->writeWavefield(curl, "CURL", fileBaseName, t, partitionedOut);
 	this->writeWavefield(div, "DIV", fileBaseName, t, partitionedOut);
