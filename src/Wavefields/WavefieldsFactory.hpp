@@ -3,6 +3,7 @@
 #include "Wavefields.hpp"
 #include "Wavefields2Dacoustic.hpp"
 #include "Wavefields2Delastic.hpp"
+#include "Wavefields2Dsh.hpp"
 #include "Wavefields2Dvisco.hpp"
 #include "Wavefields3Dacoustic.hpp"
 #include "Wavefields3Delastic.hpp"
@@ -31,7 +32,7 @@ namespace KITGPI
             /*! \brief Create the right simmulation with factory methode.
              *
              \param dimension Dimension of the model (2D, 3D)
-             \param type Simmulation type (acoustic, elsstic, viscoelastic)
+             \param type Simmulation type (acoustic, elsstic, viscoelastic, sh)
              */
             static WavefieldPtr Create(std::string dimension, std::string type);
         };

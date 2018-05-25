@@ -31,73 +31,69 @@ namespace KITGPI
     namespace Modelparameter
     {
 
-        //! Class for Modelparameter for elastic simulations (Subsurface properties)
+        //! Class for Modelparameter for sh simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the elastic finite-difference simulation.
+         This class handels the modelparameter for the sh finite-difference simulation.
          */
         template <typename ValueType>
-        class Elastic : public Modelparameter<ValueType>
+        class SH : public Modelparameter<ValueType>
         {
           public:
             //! Default constructor.
-            Elastic(){};
+            SH(){};
 
             //! Destructor, releases all allocated resources.
-            ~Elastic(){};
+            ~SH(){};
 
-            explicit Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho);
-            explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
+            explicit SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
 
             //! Copy Constructor.
-            Elastic(const Elastic &rhs);
+            SH(const SH &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus, ValueType sWaveModulus, ValueType rho);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const);
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
             /* Getter methods for not requiered parameters */
-            scai::lama::Vector<ValueType> const &getTauP() const override;
-            scai::lama::Vector<ValueType> const &getTauS() const override;
-            scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
-            scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
-            scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
+
+            scai::lama::Vector<ValueType> const &getVelocityP() const override;
+            scai::lama::Vector<ValueType>  const &getPWaveModulus() const override;
+            scai::lama::Vector<ValueType>  const &getTauP() const override;
+            scai::lama::Vector<ValueType>  const &getTauS() const override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageXY() override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageXZ() override;
+            scai::lama::Vector<ValueType>  const &getTauSAverageYZ() override;
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-	    
-	    void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-
+    
             /* Overloading Operators */
-            KITGPI::Modelparameter::Elastic<ValueType> operator*(ValueType rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator*=(ValueType const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator+(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Elastic<ValueType> &operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator*=(ValueType const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator+(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator+=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> operator-(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator-=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+	    KITGPI::Modelparameter::SH<ValueType> &operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
 
           private:
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
 	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
-            using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
@@ -119,6 +115,8 @@ namespace KITGPI
             using Modelparameter<ValueType>::sWaveModulusAverageYZ;
 
             /* Not requiered parameters */
+            using Modelparameter<ValueType>::pWaveModulus;
+            using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;

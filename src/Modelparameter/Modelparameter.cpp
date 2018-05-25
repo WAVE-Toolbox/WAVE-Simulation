@@ -262,8 +262,6 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
     return (pWaveModulus);
 }
 
-
-
 /*! \brief Get const reference to second Lame Parameter sWaveModulus
  *
  * If S-Wave modulus is dirty eg. because the S-Wave Velocity was modified, S-Wave modulus will be calculated from density and S-Wave velocity.

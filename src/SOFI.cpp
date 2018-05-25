@@ -143,33 +143,37 @@ int main(int argc, const char *argv[])
                                                          << "Total Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 	
-	start_t = common::Walltime::get();
+        start_t = common::Walltime::get();
 	
-	for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
+        for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
+            
             if (tStep % 100 == 0 && tStep != 0) {
                 HOST_PRINT(comm, "Calculating time step " << tStep << "\n");
             }
             
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-	  
-	  if (config.get<IndexType>("snapType") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
-	    wavefields->write(config.get<IndexType>("snapType"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
-	  }
-
-	}
+            
+            if (config.get<IndexType>("snapType") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep-firstSnapshot)%incSnapshot == 0) {
+                
+                wavefields->write(config.get<IndexType>("snapType"),config.get<std::string>("WavefieldFileName"),tStep, *derivatives, model->getSWaveModulus(), model->getPWaveModulus(), partitionedOut);
+                
+            }
+            
+        }
+        
         end_t = common::Walltime::get();
         HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
 
         receivers.getSeismogramHandler().normalize();
+        
         if (!config.get<bool>("runSimultaneousShots")) {
         receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
         } else {
-	receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+            receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
         }
+        
         solver->resetCPML();
     }
-
     return 0;
 }
 
