@@ -115,5 +115,46 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     signal = scai::lama::real(signalTemp2);
 }
 
+/*! \brief Application of stored filter on the desired signal.
+ \param signal Signal that should be filtered
+ */
+// template <typename ValueType>
+// void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal)
+// {
+//         scai::IndexType nTraces = signal.getNumRows();
+//         scai::lama::DenseVector<ValueType> thisTrace;
+//         for (scai::IndexType iTrace = 0; iTrace<nTraces; ++iTrace) {
+//             signal.getRow(thisTrace,iTrace);
+//             this->apply(thisTrace);
+//             signal.setRow(thisTrace,iTrace,scai::common::BinaryOp::COPY);
+//         }
+// }
+// THIS VERSION OF APPLY SHOULD BE USED WHEN LAMA ALLOWS PADDING IN THE FFT FOR MATRICES
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal) 
+{
+    scai::IndexType len = 2*fNyquist/df;
+    SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
+    
+    scai::lama::DenseMatrix<scai::common::Complex<scai::RealType<ValueType>>> signalTemp1;
+    scai::lama::DenseMatrix<scai::common::Complex<scai::RealType<ValueType>>> signalTemp2;
+    
+    scai::dmemo::DistributionPtr no_dist_numTracesGlobal(new scai::dmemo::NoDistribution(signal.getNumColumns()));
+    scai::dmemo::DistributionPtr no_dist_numParameter(new scai::dmemo::NoDistribution(signal.getNumRows()));
+    signal.redistribute(no_dist_numParameter, no_dist_numTracesGlobal);
+
+    scai::lama::fft<ValueType>(signalTemp1,signal,0,len);
+
+//     scai::lama::DenseVector<scai::common::Complex<scai::RealType<ValueType>>> complexTransfere;
+//     complexTransfere.buildComplex(transFcn, scai::lama::fill<scai::lama::DenseVector<ValueType>>(transFcn.size(), 0.0));
+//   
+//     signalTemp1.scaleRows(complexTransfere);
+//     signalTemp1 *= (2/len); // proper fft normalization
+
+    scai::lama::ifft<scai::common::Complex<scai::RealType<ValueType>>>(signalTemp2,signalTemp1,0,len-zeroPadding);
+    
+    signal = scai::lama::real(signalTemp2);
+}
+
 template class KITGPI::Filter::Filter<double>;
 template class KITGPI::Filter::Filter<float>;

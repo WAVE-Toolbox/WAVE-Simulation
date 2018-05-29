@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <string> 
 
+#include "../Common/HostPrint.hpp"
+
 namespace KITGPI
 {
 
@@ -28,6 +30,7 @@ namespace KITGPI
             void init(ValueType dt, scai::IndexType nt);
             void calc(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order);
             void apply(scai::lama::DenseVector<ValueType> &signal);
+            void apply(scai::lama::DenseMatrix<ValueType> &signal);
         private:
             scai::IndexType zeroPadding;
             scai::lama::DenseVector<ValueType> transFcn;
