@@ -7,6 +7,8 @@
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
 {
+    SCAI_ASSERT_ERROR(dt != 0.0, "Can't initialize filter with dt = 0.0")
+    SCAI_ASSERT_ERROR(nt != 0, "Can't initialize filter with nt = 0")
     zeroPadding = calcZeroPadding(nt);
     scai::IndexType filterLength = zeroPadding+nt;
     transFcn = scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0);
@@ -66,6 +68,7 @@ void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::stri
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterType, ValueType fc, scai::IndexType order)
 {
+    SCAI_ASSERT_ERROR(fc > 0, "Corner frequency of filter has to be greater than zero.")
     std::transform(filterType.begin(), filterType.end(), filterType.begin(), ::tolower);
     
     scai::lama::DenseVector<ValueType> f;

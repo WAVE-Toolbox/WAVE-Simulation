@@ -162,10 +162,12 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order)
 {
-    Filter::Filter<ValueType> freqFilter;
-    freqFilter.init(DT, numSamples);
-    freqFilter.calc(transFcnFmly, filterType, fc, order);
-    freqFilter.apply(data);
+    if (this->getNumSamples() != 0) {
+        Filter::Filter<ValueType> freqFilter;
+        freqFilter.init(this->getDT(), this->getNumSamples());
+        freqFilter.calc(transFcnFmly, filterType, fc, order);
+        freqFilter.apply(data);
+    }     
 }
 
 //! \brief Setter method for the temporal sampling DT
