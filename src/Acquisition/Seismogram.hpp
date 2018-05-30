@@ -9,6 +9,7 @@
 #include "Coordinates.hpp"
 #include "math.h"
 #include "segy.hpp"
+#include "../Filter/Filter.hpp"
 
 namespace KITGPI
 {
@@ -51,6 +52,7 @@ namespace KITGPI
 
             void normalizeTrace();
             void integrateTraces();
+            void filterTraces(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order);
 
             /* Getter functions */
             scai::IndexType getNumTracesGlobal() const;

@@ -118,18 +118,6 @@ int main(int argc, const char *argv[])
     Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
     
-    
-    receivers.getSeismogramHandler().readFromFileRaw("/home/dkrieger/Masterarbeit/Saves/FD_Order/seismogram94_6.shot_0.vy.mtx", 1);
-    Acquisition::Seismogram<ValueType> testSeis;
-    testSeis = receivers.getSeismogramHandler().getSeismogram(Acquisition::SeismogramType::VY);
-    scai::lama::DenseMatrix<ValueType> test(testSeis.getData());
-    Filter::Filter<ValueType> filter;
-    filter.init(0.001,2200);
-    filter.calc("butterworth","lp",3.0,4);
-    filter.apply(test);
-    test.writeToFile("/home/dkrieger/Masterarbeit/test2.mtx");
-    COMMON_THROWEXCEPTION("file written")
-    
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
