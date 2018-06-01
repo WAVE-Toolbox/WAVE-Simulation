@@ -80,7 +80,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
         calcButterworthLp(transFcn, freqVec, order, fc1);
     }
     else if (filterType == "hp") {
-        calcButterworthLp(transFcn, freqVec, order, fc1);
+        calcButterworthHp(transFcn, freqVec, order, fc1);
     }
     else if (filterType == "bp") {
         calcButterworthBp(transFcn, freqVec, order, fc1, fc2);

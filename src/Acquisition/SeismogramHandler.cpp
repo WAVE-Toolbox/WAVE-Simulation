@@ -49,10 +49,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
  \param order Filter order
 */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::filter(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::filter(scai::IndexType order, ValueType fc1, ValueType fc2)
 {
     for (auto &i : seismo) {
-        i.filterTraces(transFcnFmly, filterType, order, fc1, fc2);
+        i.filterTraces(order, fc1, fc2);
     }
 }
 

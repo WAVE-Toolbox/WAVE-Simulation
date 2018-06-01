@@ -52,7 +52,7 @@ namespace KITGPI
 
             void normalizeTrace();
             void integrateTraces();
-            void filterTraces(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2);
+            void filterTraces(scai::IndexType order, ValueType fc1, ValueType fc2);
 
             /* Getter functions */
             scai::IndexType getNumTracesGlobal() const;
