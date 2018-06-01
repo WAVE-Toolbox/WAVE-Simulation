@@ -31,7 +31,7 @@ namespace KITGPI
             void normalize();
             void integrate();
             void resetData();
-            void filter(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order);
+            void filter(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2);
 
             void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);

@@ -28,7 +28,7 @@ namespace KITGPI
             ~Filter(){};
             
             void init(ValueType dt, scai::IndexType nt);
-            void calc(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order);
+            void calc(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2 = 0.0);
             void apply(scai::lama::DenseVector<ValueType> &signal);
             void apply(scai::lama::DenseMatrix<ValueType> &signal);
         private:
@@ -40,7 +40,10 @@ namespace KITGPI
             scai::IndexType calcZeroPadding(scai::IndexType nt);
             void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector);
             
-            void calcButterworthFilt(std::string filterType, ValueType fc, scai::IndexType order);
+            void calcButterworthFilt(std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2 = 0.0);
+            void calcButterworthHp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
+            void calcButterworthLp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
+            void calcButterworthBp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2);
             
         };
     }

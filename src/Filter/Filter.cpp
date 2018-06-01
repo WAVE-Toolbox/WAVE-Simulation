@@ -37,22 +37,23 @@ void KITGPI::Filter::Filter<ValueType>::calcFrequencyVector(scai::lama::DenseVec
 {
     scai::IndexType nFreq = fNyquist/df;
     scai::lama::DenseVector<ValueType> fPos = scai::lama::linearDenseVector<ValueType>(nFreq+1,0.0,df);
-    scai::lama::DenseVector<ValueType> fNeg = scai::lama::linearDenseVector<ValueType>(nFreq-1,-(nFreq-1)*df,-df);
+    scai::lama::DenseVector<ValueType> fNeg = scai::lama::linearDenseVector<ValueType>(nFreq-1,-(nFreq-1)*df,df);
     frequencyVector.cat(fPos,fNeg);
 }
 
 /*! \brief Calculate the transfere function of a Butterworth filter.
  \param transFcnFmly Specifies which transfere function type should be used (currently only "butterworth" is possible)
  \param filterType Type of filter: "lp" = low pass, "hp" = high pass
- \param fc Corner frequency in Hz
+ \param fc1 Lower corner frequency in Hz
+ \param fc2 Upper corner frequency in Hz
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order) 
+void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2) 
 {
     std::transform(transFcnFmly.begin(), transFcnFmly.end(), transFcnFmly.begin(), ::tolower);
     if (transFcnFmly == "butterworth") {
-        calcButterworthFilt(filterType, fc, order);
+        calcButterworthFilt(filterType, order, fc1, fc2);
     }
     else
     {
@@ -62,33 +63,81 @@ void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::stri
 
 /*! \brief Calculate the transfere function of a Butterworth filter.
  \param filterType Type of filter: "lp" = low pass, "hp" = high pass
- \param fc Corner frequency in Hz
+ \param fc1 Lower corner frequency in Hz
+ \param fc2 Upper corner frequency in Hz
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterType, ValueType fc, scai::IndexType order)
+void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2)
 {
-    SCAI_ASSERT_ERROR(fc > 0, "Corner frequency of filter has to be greater than zero.")
+    SCAI_ASSERT_ERROR(fc1 > 0, "Lower corner frequency of filter has to be greater than zero.")
     std::transform(filterType.begin(), filterType.end(), filterType.begin(), ::tolower);
     
-    scai::lama::DenseVector<ValueType> f;
-    calcFrequencyVector(f);
+    scai::lama::DenseVector<ValueType> freqVec;
+    calcFrequencyVector(freqVec);
     
     if (filterType == "lp") {
-        transFcn = f/fc;
+        calcButterworthLp(transFcn, freqVec, order, fc1);
     }
     else if (filterType == "hp") {
-        transFcn.unaryOp(transFcn,scai::common::UnaryOp::RECIPROCAL);
-        transFcn *= fc;
+        calcButterworthLp(transFcn, freqVec, order, fc1);
+    }
+    else if (filterType == "bp") {
+        calcButterworthBp(transFcn, freqVec, order, fc1, fc2);
     }
     else {
         COMMON_THROWEXCEPTION("Invalid filter type.");
     }
-    
-    transFcn = scai::lama::pow<ValueType>(transFcn,2.0*order);
-    transFcn += 1;
-    transFcn = scai::lama::sqrt<ValueType>(transFcn);
-    transFcn.unaryOp(transFcn,scai::common::UnaryOp::RECIPROCAL);
+}
+
+/*! \brief Calculate the transfere function of a Butterworth low-pass filter.
+ \param transFcnTmp Vector where the transfere function gets stored
+ \param freqVec Frequency vector
+ \param fc Corner frequency in Hz
+ \param order Filter order
+ */
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
+{
+    transFcnTmp = freqVec/fc;
+    transFcnTmp = scai::lama::pow<ValueType>(transFcnTmp,2.0*order);
+    transFcnTmp += 1;
+    transFcnTmp = scai::lama::sqrt<ValueType>(transFcnTmp);
+    transFcnTmp.unaryOp(transFcnTmp,scai::common::UnaryOp::RECIPROCAL);
+}
+
+/*! \brief Calculate the transfere function of a Butterworth high-pass filter.
+ \param transFcnTmp Vector where the transfere function gets stored
+ \param freqVec Frequency vector
+ \param fc Corner frequency in Hz
+ \param order Filter order
+ */
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
+{
+    transFcnTmp = fc/freqVec;
+    transFcnTmp = scai::lama::pow<ValueType>(transFcnTmp,2.0*order);
+    transFcnTmp += 1;
+    transFcnTmp = scai::lama::sqrt<ValueType>(transFcnTmp);
+    transFcnTmp.unaryOp(transFcnTmp,scai::common::UnaryOp::RECIPROCAL);
+    transFcnTmp[0] = 0;
+}
+
+/*! \brief Calculate the transfere function of a Butterworth band-pass filter.
+ \param transFcnTmp Vector where the transfere function gets stored
+ \param freqVec Frequency vector
+ \param fc1 Lower corner frequency in Hz
+ \param fc2 Upper corner frequency in Hz
+ \param order Filter order
+ */
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2)
+{
+    SCAI_ASSERT_ERROR(fc2 != 0.0, "Upper corner frequency of band-pass filter can't be zero")
+    calcButterworthLp(transFcnTmp, freqVec, order, fc2);
+    scai::lama::DenseVector<ValueType> transFcnHp(transFcnTmp);
+    calcButterworthHp(transFcnHp, freqVec, order, fc1);
+    transFcnTmp *= transFcnHp;
 }
 
 /*! \brief Application of stored filter on the desired signal.
@@ -111,7 +160,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     complexTransfere.buildComplex(transFcn, scai::lama::fill<scai::lama::DenseVector<ValueType>>(transFcn.size(), 0.0));
     signalTemp1 *= complexTransfere;
     signalTemp1 /= (len/2); // proper fft normalization
-
+    
     signalTemp2.replicate();
     scai::lama::ifft<scai::common::Complex<scai::RealType<ValueType>>>(signalTemp2,signalTemp1,len-zeroPadding);
     
@@ -131,6 +180,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
             this->apply(thisTrace);
             signal.setRow(thisTrace,iTrace,scai::common::BinaryOp::COPY);
         }
+        transFcn.writeToFile("/home/dkrieger/Masterarbeit/transFcn.mtx");
 }
 // THIS VERSION OF APPLY SHOULD BE USED WHEN LAMA ALLOWS TRUNCATION IN THE FFT FOR MATRICES
 // template <typename ValueType>

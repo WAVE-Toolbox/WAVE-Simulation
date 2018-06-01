@@ -160,12 +160,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(std::string transFcnFmly, std::string filterType, ValueType fc, scai::IndexType order)
+void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2)
 {
     if (this->getNumSamples() != 0) {
         Filter::Filter<ValueType> freqFilter;
         freqFilter.init(this->getDT(), this->getNumSamples());
-        freqFilter.calc(transFcnFmly, filterType, fc, order);
+        if (filterType == "bp")
+            freqFilter.calc(transFcnFmly, filterType, order, fc1, fc2);
+        else
+            freqFilter.calc(transFcnFmly, filterType, order, fc1);
         freqFilter.apply(data);
     }     
 }
