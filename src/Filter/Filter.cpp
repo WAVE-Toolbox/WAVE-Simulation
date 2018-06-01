@@ -180,7 +180,6 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
             this->apply(thisTrace);
             signal.setRow(thisTrace,iTrace,scai::common::BinaryOp::COPY);
         }
-        transFcn.writeToFile("/home/dkrieger/Masterarbeit/transFcn.mtx");
 }
 // THIS VERSION OF APPLY SHOULD BE USED WHEN LAMA ALLOWS TRUNCATION IN THE FFT FOR MATRICES
 // template <typename ValueType>
