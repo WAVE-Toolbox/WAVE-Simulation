@@ -5,35 +5,22 @@ template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration& config, Modelparameter::Modelparameter<ValueType>& model, scai::dmemo::CommunicatorPtr comm)
 {
     ValueType vMaxTmp;
- if (config.get<std::string>("equationType").compare("sh") == 0) {
-      vMaxTmp = model.getVelocityS().max();
-  }
-  else {
-      vMaxTmp = model.getVelocityP().max();
-  }
-  ValueType vMinTmp;
-  if (config.get<std::string>("equationType").compare("acoustic") == 0) {
-      scai::lama::DenseVector<ValueType> velocityP;
-      velocityP = model.getVelocityP();
-      KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityP,0,vMaxTmp,5);
-      vMinTmp = velocityP.min();
-  }  
-  else {
-      scai::lama::DenseVector<ValueType> velocityS;
-      velocityS = model.getVelocityS();
-      KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityS,0,vMaxTmp,5);
-      vMinTmp = velocityS.min();
-  } 
+    vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS().max() : model.getVelocityP().max();
+  
+    ValueType vMinTmp;
+    scai::lama::DenseVector<ValueType> velocityTmp;
+    velocityTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ?  model.getVelocityP() : model.getVelocityS();
+    KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityTmp,0,vMaxTmp,5);
+    vMinTmp = velocityTmp.min();
 
-  scai::lama::DenseMatrix<ValueType> acquisition_temp;
-  scai::lama::DenseVector<ValueType> wavelet_fc; 
-  acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
-  acquisition_temp.getColumn(wavelet_fc,7);
-  ValueType fcMax=wavelet_fc.max();
-    
-  KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
-  KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<IndexType>("spatialFDorder"), comm);
- 
+    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    scai::lama::DenseVector<ValueType> wavelet_fc; 
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+    acquisition_temp.getColumn(wavelet_fc,7);
+    ValueType fcMax=wavelet_fc.max();
+
+    KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
+    KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<IndexType>("spatialFDorder"), comm);
 }
 
 
