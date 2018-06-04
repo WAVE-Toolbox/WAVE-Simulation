@@ -13,7 +13,10 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
   }
   ValueType vMinTmp;
   if (config.get<std::string>("equationType").compare("acoustic") == 0) {
-      vMinTmp = model.getVelocityP().min();
+      scai::lama::DenseVector<ValueType> velocityP;
+      velocityP = model.getVelocityP();
+      KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityP,0,vMaxTmp,5);
+      vMinTmp = velocityP.min();
   }  
   else {
       scai::lama::DenseVector<ValueType> velocityS;
