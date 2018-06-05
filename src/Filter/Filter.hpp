@@ -41,7 +41,9 @@ namespace KITGPI
             
             scai::IndexType calcZeroPadding(scai::IndexType nt);
             void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector);
-            void calcFrequencyMat(std::string filterType, ValueType fc, scai::lama::DenseVector<ValueType> &frequencyVector, scai::lama::DenseMatrix<ComplexValueType> &frequencyMat);
+            void calcFrequencyMat(std::string filterType, scai::IndexType order, ValueType fc, scai::lama::DenseVector<ValueType> &frequencyVector, scai::lama::DenseMatrix<ComplexValueType> &frequencyMat);
+            
+            void calcEvenButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> poly);
             
             void calcButterworthFilt(std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2 = 0.0);
             void calcButterworthHp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
