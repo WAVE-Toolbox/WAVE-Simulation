@@ -47,7 +47,7 @@ namespace KITGPI
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs);
 
-            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> const &SWaveModulus, scai::lama::Vector<ValueType> const &PWaveModulus, scai::IndexType partitionedOut) override;
+            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
 	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);

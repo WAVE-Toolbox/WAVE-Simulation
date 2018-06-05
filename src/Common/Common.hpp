@@ -4,6 +4,8 @@
 #include <scai/hmemo/HArray.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
 
+#include <cmath>
+
 namespace KITGPI
 {
     //! \brief Common namespace
@@ -76,6 +78,22 @@ namespace KITGPI
             }
             
             write_searchVector.release();
+        }
+        
+        template<typename ValueType, typename IndexType> 
+        void replaceInvalid(scai::lama::DenseVector<ValueType> &searchVector, ValueType replaceValue) {
+            
+            // needs rework with new LAMA features
+            scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
+            scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
+            
+            for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason 
+                    write_searchVector[i] = replaceValue; 
+                }     
+            }
+            
+            write_searchVector.release();                 
         }
 
 

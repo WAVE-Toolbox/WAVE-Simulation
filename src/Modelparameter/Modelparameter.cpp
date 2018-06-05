@@ -1075,12 +1075,11 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
-    Common::searchAndReplace<ValueType,IndexType>(vecDensity,0.001,0.001,1); // find vacuum grid points
     
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
     
-    Common::searchAndReplace<ValueType,IndexType>(vecInverseAvDensity,999,0.0,2); // restore vacuum for IVF
+    Common::replaceInvalid<ValueType,IndexType>(vecInverseAvDensity,0.0);
 }
 
 /*! \brief calculate averaged s-wave modulus
@@ -1092,13 +1091,14 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
-    Common::searchAndReplace<ValueType,IndexType>(vecSWaveModulus,1.0,1.0,1); // avoid division by zero in air/vacuum
+    Common::searchAndReplace<ValueType,IndexType>(vecSWaveModulus,1.0,1.0,1);
     
     vecAvSWaveModulus = 1 / vecSWaveModulus;
     auto temp = lama::eval<lama::DenseVector<ValueType>>(avSWaveModulusMatrix * vecAvSWaveModulus);
     vecAvSWaveModulus = 1 / temp;
     
-    Common::searchAndReplace<ValueType,IndexType>(vecAvSWaveModulus,4.0,0.0,1); // restore zeros for IVF
+    Common::searchAndReplace<ValueType,IndexType>(vecAvSWaveModulus,4.0,0.0,1);
+    
 }
 
 /*! \brief calculate averaged tauS

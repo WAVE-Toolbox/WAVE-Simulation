@@ -39,7 +39,7 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, scai::lama::Vector<ValueType> const &/*SWaveModulus*/, scai::lama::Vector<ValueType> const &/*PWaveModulus*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, Modelparameter::Modelparameter<ValueType> const &/*model*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
     
