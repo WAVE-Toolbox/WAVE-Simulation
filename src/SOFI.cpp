@@ -136,8 +136,10 @@ int main(int argc, const char *argv[])
 
     for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
         /* Update Source */
-        if (!config.get<bool>("runSimultaneousShots"))
+        if (!config.get<bool>("runSimultaneousShots")) {
             sources.init(config, ctx, dist, shotNumber);
+            sources.getSeismogramHandler().filter(4, 2.0, 0.0);
+        }
         
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
