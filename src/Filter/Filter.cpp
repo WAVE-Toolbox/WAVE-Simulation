@@ -11,7 +11,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
     SCAI_ASSERT_ERROR(nt != 0, "Can't initialize filter with nt = 0")
     zeroPadding = calcZeroPadding(nt);
     scai::IndexType filterLength = zeroPadding + nt;
-    transFcn = scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0);
+    transFcn.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
     df = 1 / (filterLength * dt);
     fNyquist = 1 / (2 * dt);
 }
@@ -75,28 +75,37 @@ void KITGPI::Filter::Filter<ValueType>::calcFrequencyMat(std::string filterType,
  \param poly Result where the coefficients are stored
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcEvenButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> poly) {
-    SCAI_ASSERT(order % 2 == 0, "Order is not even.");
+void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly) {
     
     poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0);
-    poly[order/2] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
+    poly[0] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
     scai::lama::DenseVector<ComplexValueType> fPoly;
     scai::IndexType zeroPadPoly = calcZeroPadding(order+1);
     scai::IndexType fPolyLen = order + 1 + zeroPadPoly;
     scai::lama::fft<ValueType>(fPoly, poly, fPolyLen);
     
     scai::lama::DenseVector<ValueType> polyTemp = scai::lama::fill<scai::lama::DenseVector<ValueType>>(fPolyLen, 0.0); // Single factor of Butterworth polynomial
-    polyTemp[order] = 1.0;
-    polyTemp[order-2] = 1.0;
+    polyTemp[0] = 1.0;
+    polyTemp[2] = 1.0;
     scai::lama::DenseVector<ComplexValueType> fPolyTemp;
     
     for (scai::IndexType iOrder = 1; iOrder <= order/2; ++iOrder) {
-        polyTemp[order-1] = -2.0 * scai::common::Math::cos((2.0 * iOrder + order - 1.0) / (2.0 * order) * M_PI);
+        polyTemp[1] = -2.0 * scai::common::Math::cos((2.0 * iOrder + order - 1.0) / (2.0 * order) * M_PI);
         scai::lama::fft<ValueType>(fPolyTemp, polyTemp, fPolyLen);
         fPoly *= fPolyTemp; // convolution of polynomial factors is multiplication in frequency domain
     }
-    scai::lama::ifft<ComplexValueType>(fPolyTemp, fPoly, order+1);
+    
+    if (order%2 != 0) {
+        polyTemp[1] = 1.0;
+        polyTemp[2] = 0.0;
+        scai::lama::fft<ValueType>(fPolyTemp, polyTemp, fPolyLen);
+        fPoly *= fPolyTemp;
+    }
+
+    fPoly /= fPolyLen;
+    scai::lama::ifft<ComplexValueType>(fPolyTemp, fPoly, fPolyLen);
     poly = scai::lama::real(fPolyTemp);
+    Common::truncateVec<ValueType>(poly, order+1);
 }
 
 /*! \brief Calculate the transfere function of a Butterworth filter.
@@ -132,9 +141,6 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
     scai::lama::DenseVector<ValueType> freqVec;
     calcFrequencyVector(freqVec);
     
-    scai::lama::DenseMatrix<ComplexValueType> freqMat;
-    calcFrequencyMat(filterType, order, fc1, freqVec, freqMat);
-    
     if (filterType == "lp") {
         calcButterworthLp(transFcn, freqVec, order, fc1);
     } else if (filterType == "hp") {
@@ -153,13 +159,20 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
+void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
 {
-    transFcnTmp = freqVec / fc;
-    transFcnTmp = scai::lama::pow<ValueType>(transFcnTmp, 2.0 * order);
-    transFcnTmp += 1;
-    transFcnTmp = scai::lama::sqrt<ValueType>(transFcnTmp);
+    scai::lama::DenseMatrix<ComplexValueType> freqMat;
+    calcFrequencyMat("lp", order, fc, freqVec, freqMat);
+    
+    scai::lama::DenseVector<ValueType> poly;
+    calcButterPoly(order, poly);
+    
+    scai::lama::DenseVector<ComplexValueType> cPoly;
+    cPoly.buildComplex(poly, scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0));
+    
+    transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
+    transFcnTmp.setValue(0, ComplexValueType(1.0, 0.0));
 }
 
 /*! \brief Calculate the transfere function of a Butterworth high-pass filter.
@@ -169,14 +182,20 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVecto
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
+void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc)
 {
-    transFcnTmp = fc / freqVec;
-    transFcnTmp = scai::lama::pow<ValueType>(transFcnTmp, 2.0 * order);
-    transFcnTmp += 1;
-    transFcnTmp = scai::lama::sqrt<ValueType>(transFcnTmp);
+    scai::lama::DenseMatrix<ComplexValueType> freqMat;
+    calcFrequencyMat("hp", order, fc, freqVec, freqMat);
+    
+    scai::lama::DenseVector<ValueType> poly;
+    calcButterPoly(order, poly);
+    
+    scai::lama::DenseVector<ComplexValueType> cPoly;
+    cPoly.buildComplex(poly, scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0));
+    
+    transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
-    transFcnTmp[0] = 0;
+    transFcnTmp.setValue(0, ComplexValueType(0.0, 0.0));
 }
 
 /*! \brief Calculate the transfere function of a Butterworth band-pass filter.
@@ -187,11 +206,11 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVecto
  \param order Filter order
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2)
+void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2)
 {
     SCAI_ASSERT_ERROR(fc2 != 0.0, "Upper corner frequency of band-pass filter can't be zero")
     calcButterworthLp(transFcnTmp, freqVec, order, fc2);
-    scai::lama::DenseVector<ValueType> transFcnHp(transFcnTmp);
+    scai::lama::DenseVector<ComplexValueType> transFcnHp(transFcnTmp);
     calcButterworthHp(transFcnHp, freqVec, order, fc1);
     transFcnTmp *= transFcnHp;
 }
@@ -212,15 +231,14 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     signalTemp1.replicate();
     scai::lama::fft<ValueType>(signalTemp1, signal, len);
 
-    scai::lama::DenseVector<ComplexValueType> complexTransfere;
-    complexTransfere.buildComplex(transFcn, scai::lama::fill<scai::lama::DenseVector<ValueType>>(transFcn.size(), 0.0));
-    signalTemp1 *= complexTransfere;
+    signalTemp1 *= transFcn;
     signalTemp1 /= (len / 2); // proper fft normalization
 
     signalTemp2.replicate();
-    scai::lama::ifft<ComplexValueType>(signalTemp2, signalTemp1, len - zeroPadding);
+    scai::lama::ifft<ComplexValueType>(signalTemp2, signalTemp1, len);
 
     signal = scai::lama::real(signalTemp2);
+    Common::truncateVec<ValueType>(signal, len-zeroPadding);
 }
 
 /*! \brief Application of stored filter on the desired signal.

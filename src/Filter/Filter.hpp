@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <string> 
 
-#include "../Common/HostPrint.hpp"
+#include "../Common/Common.hpp"
 
 namespace KITGPI
 {
@@ -35,7 +35,7 @@ namespace KITGPI
             void apply(scai::lama::DenseMatrix<ValueType> &signal);
         private:
             scai::IndexType zeroPadding;
-            scai::lama::DenseVector<ValueType> transFcn;
+            scai::lama::DenseVector<ComplexValueType> transFcn;
             ValueType df;
             ValueType fNyquist;
             
@@ -43,12 +43,12 @@ namespace KITGPI
             void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector);
             void calcFrequencyMat(std::string filterType, scai::IndexType order, ValueType fc, scai::lama::DenseVector<ValueType> &frequencyVector, scai::lama::DenseMatrix<ComplexValueType> &frequencyMat);
             
-            void calcEvenButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> poly);
+            void calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly);
             
             void calcButterworthFilt(std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2 = 0.0);
-            void calcButterworthHp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
-            void calcButterworthLp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
-            void calcButterworthBp(scai::lama::DenseVector<ValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2);
+            void calcButterworthHp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
+            void calcButterworthLp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
+            void calcButterworthBp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2);
             
         };
     }
