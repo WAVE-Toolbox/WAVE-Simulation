@@ -18,7 +18,7 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
   else {
       scai::lama::DenseVector<ValueType> velocityS;
       velocityS = model.getVelocityS();
-      KITGPI::Common::searchAndReplace<ValueType,IndexType>(velocityS,0,vMaxTmp,5);
+      KITGPI::Common::searchAndReplace<ValueType>(velocityS,0,vMaxTmp,5);
       vMinTmp = velocityS.min();
   } 
 
