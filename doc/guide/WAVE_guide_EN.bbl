@@ -1,0 +1,44 @@
+\begin{thebibliography}{}
+
+\bibitem[Cerjan et~al., 1985]{cerjan:85}
+Cerjan, C., Kosloff, D., Kosloff, R., and Reshef, M. (1985).
+\newblock A nonreflecting boundary condition for discrete acoustic and elastic
+  wave equations.
+\newblock 50:705--708.
+
+\bibitem[Komatitsch and Martin, 2007]{komatitsch:07}
+Komatitsch, D. and Martin, R. (2007).
+\newblock An unsplit convolutional perfectly matched layer improved at grazing
+  incidence for the seismic wave equation.
+\newblock 72(5):155--167.
+
+\bibitem[Landau and Lifschitz, 1997]{landau:97}
+Landau, L. and Lifschitz, E. (1997).
+\newblock {\em Lehrbuch der theoretischen Physik}.
+\newblock Harri Deutsch.
+
+\bibitem[Levander, 1988]{levander:88}
+Levander, A. (1988).
+\newblock Fourth-order finite-difference {P-SV} seismograms.
+\newblock {\em Geophysics}, 53(11):1425--1436.
+
+\bibitem[SCAI, 2016]{lama:16}
+SCAI (2016).
+\newblock {LAMA}.
+\newblock
+  \url{https://www.scai.fraunhofer.de/de/geschaeftsfelder/high-performance-computing/produkte/lama.html}
+  and \url{https://www.libama.org}.
+
+\bibitem[Virieux, 1986]{virieux:86}
+Virieux, J. (1986).
+\newblock {P-SV} wave propagation in heterogeneous media: velocity-stress
+  finite-difference method.
+\newblock {\em Geophysics}, 51(4):889--901.
+
+\bibitem[Zeng et~al., 2012]{Zeng:12}
+Zeng, C., Xia, J., Miller, R., and Tsoflias, G. (2012).
+\newblock An improved vacuum formulation for finite-difference modeling of
+  rayleigh waves including surface topography and internal discontinuity.
+\newblock 77.
+
+\end{thebibliography}

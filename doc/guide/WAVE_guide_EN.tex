@@ -998,6 +998,53 @@ To illustrate the the matrices, as in section \ref{sec:Mat}, again example for a
 Mark, that in case a border plane is reached, the averaging can only be calculated from two other grid-points. In this case the matrix elements contain the factor $(\frac{1}{2})$ instead of $(\frac{1}{4})$. This principle can also be used to obtain the averaging matrices $\underline{A}^{h}_{yz}$ and $\underline{A}^{h}_{xz}$ in the $yz$- and $xz$-planes. 
 \cleardoublepage
 
+\chapter{Frequency Filters}
+FDSimulation\_LAMA also includes a frequency filter for seismograms. For this Butterworth filters are very popular since they are maximally flat in the passband. As described in many literature (e.g. \cite{bianchi:07}) the transfere function $H(s)$ of a low-pass Butterworth filter can be described by its poles $s_k$ with:
+\begin{align}
+ H(s)=\frac{1}{\prod_{k=1}^n (s-s_k)/\omega_c} \label{eq:transButter}
+\end{align}
+The parameter $n$ describes the order of the filter and $\omega_c$ is its corner frequency. 
+The poles are located in the complex plane at:
+\begin{align}
+ s_k = \omega_c e^{\frac{i(2k+n-1)\pi}{2n}}\qquad k = 1,2,3,\ldots, n
+\end{align}
+The polynomial in the denominator of equation \ref{eq:transButter} can be written in a real form by multiplying complex conjugate pairs of poles. By setting $\omega_c = \SI{1}{\per\second}$ this yields:
+\begin{align}
+  B_n(s)=\prod_{k=1}^{\frac{n}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{even} \\
+  B_n(s)=(s+1)\prod_{k=1}^{\frac{n-1}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{odd}
+\end{align}
+So the transfere function is:
+\begin{align}
+H(s) = \frac{1}{B_n(a)} \label{eq:transPoly}
+\end{align}
+Where $a= s/\omega_c = i \omega / \omega_c$. A high-pass is designed with $a= \omega_c/s = -i \omega_c / \omega$. Multiplication of low- and high-pass transfere functions yields the transfere function of a band-pass filter.\\ The final step is to find a matrix vector representation of expression \ref{eq:transPoly}. Since time is treated as discrete values in a finite interval $s$ can be represented by a vector $\vec{s}$:
+\begin{align}
+ \vec{H}(\vec{s}) = \left[ F \vec{c} \right]^{-1}
+\end{align}
+The vector $\vec{c}$ consists of the coefficients of $B_n(s)$. Expansion of $B_n(s)$ gives a $n$th order polynomial with coefficients $c_0$ to $c_n$. The coefficients can be calculated by convolving the coefficients of each factor in $B_n(s)$. This way $F$ has to be a matrix where each column consists of one power of $\vec{s}$:
+\begin{align*}
+ F = \begin{pmatrix}
+      \vec{s}^0 & \vec{s}^1 & \dots & \vec{s}^n
+     \end{pmatrix}
+\end{align*}
+E.g. $B_4(s)$, the polynomial of a 4th order Butterworth filter is hence:
+\begin{align*}
+  B_4(s) &= (s^2+0.7654s+1)(s^2+1.8478s+1)
+\end{align*}
+The desired form is:
+\begin{align*}
+ B_4(s) = c_4 s^4 + c_3 s^3 + c_2 s^2 +c_1 s^1 +c_0 s^0
+\end{align*}
+The coefficients $c_0$ to $c_4$ are calculated by convolution:
+\begin{align*}
+\begin{pmatrix} c_4 \\ c_3 \\ c_2 \\ c_1 \\ c_0 \end{pmatrix}  = \begin{pmatrix}1 \\ 0.7654 \\ 1 \end{pmatrix} * \begin{pmatrix}1 \\ 1.8478 \\ 1\end{pmatrix} = \begin{pmatrix} 1 \\ 2.6131 \\ 3.4142 \\ 2.6131 \\ 1 \end{pmatrix}
+\end{align*}
+This convolution can be done efficiently by multiplication in the frequency domain. The transfere function in this case is then:
+\begin{align*}
+ H(\vec{s}) = \left[ \begin{pmatrix} \vec{a}^0 & \vec{a}^1 &  \vec{a}^2 &  \vec{a}^3 & \vec{a}^4 \end{pmatrix} \begin{pmatrix} 1 \\ 2.6131 \\ 3.4142 \\ 2.6131 \\ 1 \end{pmatrix} \right]^{-1}
+\end{align*}
+
+
 
 
 \part{Software Guide to FDSimulation\_LAMA}
