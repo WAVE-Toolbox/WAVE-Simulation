@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Acoustic(){};
+            Acoustic(){equationType = "acoustic";};
 
             //! Destructor, releases all allocated resources.
             ~Acoustic(){};
@@ -57,34 +57,36 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
+            
+            std::string getEquationType() const;
 
             /* Getter methods for not requiered parameters */
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
-	    scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getVelocityS() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() override;
-	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulusAverageXZ() override;
-	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageXZ() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulusAverageYZ() override;
-	    scai::lama::Vector<ValueType> const &getSWaveModulusAverageYZ() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulusAverageYZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-	    
-	    void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+    
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-	    
+    
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(ValueType rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(ValueType const &rhs);
@@ -92,13 +94,15 @@ namespace KITGPI
             KITGPI::Modelparameter::Acoustic<ValueType> &operator+=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator-=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Acoustic<ValueType> &operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
-	    
+            KITGPI::Modelparameter::Acoustic<ValueType> &operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
+    
           private:
             void calculateAveraging() override;
+            
+            using Modelparameter<ValueType>::equationType;  
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-	    using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
+            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::density;
