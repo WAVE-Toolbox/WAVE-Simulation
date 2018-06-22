@@ -101,31 +101,6 @@ namespace KITGPI
             
             write_searchVector.release();                 
         }
-        
-        /*! \brief Truncates a vector to a given size
-        *
-        \param vec Input vector
-        \param size Size the vector is truncated to
-        */
-        template<typename ValueType> 
-        void truncateVec(scai::lama::DenseVector<ValueType> &vec, scai::IndexType size) {
-            SCAI_ASSERT_ERROR(size <= vec.size(), "Truncation size is smaller than size of vector.")
-            
-            scai::lama::DenseVector<ValueType> vecTmp(size, 0);
-            
-            scai::hmemo::HArray<ValueType> *vecTmp_Ptr = &vecTmp.getLocalValues();
-            scai::hmemo::WriteAccess<ValueType> write_vecTmp(*vecTmp_Ptr);
-            scai::hmemo::HArray<ValueType> *vec_Ptr = &vec.getLocalValues();
-            scai::hmemo::ReadAccess<ValueType> read_vec(*vec_Ptr);
-            
-            for (scai::IndexType i = 0; i < size; ++i)
-                write_vecTmp[i] = read_vec[i];
-            write_vecTmp.release();
-            read_vec.release();
-            
-            vec = vecTmp;
-        }
-
 
     }
 }

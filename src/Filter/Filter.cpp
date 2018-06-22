@@ -79,33 +79,45 @@ void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, sc
     
     poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0);
     poly[0] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
-    scai::lama::DenseVector<ComplexValueType> fPoly;
+    
     scai::IndexType zeroPadPoly = calcZeroPadding(order+1);
     scai::IndexType fPolyLen = order + 1 + zeroPadPoly;
-    scai::lama::fft<ValueType>(fPoly, poly, fPolyLen);
+    
+    auto fPolyDist = std::make_shared<scai::dmemo::NoDistribution>(fPolyLen);
+    auto polyDist = poly.getDistributionPtr();
+    
+    scai::lama::DenseVector<ComplexValueType> fPoly;
+    fPoly = scai::lama::cast<ComplexValueType>(poly);
+    fPoly.resize(fPolyDist);
+    scai::lama::fft<ComplexValueType>(fPoly);
     
     scai::lama::DenseVector<ValueType> polyTemp = scai::lama::fill<scai::lama::DenseVector<ValueType>>(fPolyLen, 0.0); // Single factor of Butterworth polynomial
     polyTemp[0] = 1.0;
     polyTemp[2] = 1.0;
+    
     scai::lama::DenseVector<ComplexValueType> fPolyTemp;
     
     for (scai::IndexType iOrder = 1; iOrder <= order/2; ++iOrder) {
         polyTemp[1] = -2.0 * scai::common::Math::cos((2.0 * iOrder + order - 1.0) / (2.0 * order) * M_PI);
-        scai::lama::fft<ValueType>(fPolyTemp, polyTemp, fPolyLen);
+        fPolyTemp = scai::lama::cast<ComplexValueType>(polyTemp);
+        fPolyTemp.resize(fPolyDist);
+        scai::lama::fft<ComplexValueType>(fPolyTemp);
         fPoly *= fPolyTemp; // convolution of polynomial factors is multiplication in frequency domain
     }
     
     if (order%2 != 0) {
         polyTemp[1] = 1.0;
         polyTemp[2] = 0.0;
-        scai::lama::fft<ValueType>(fPolyTemp, polyTemp, fPolyLen);
+        fPolyTemp = scai::lama::cast<ComplexValueType>(polyTemp);
+        fPolyTemp.resize(fPolyDist);
+        scai::lama::fft<ComplexValueType>(fPolyTemp);
         fPoly *= fPolyTemp;
     }
 
     fPoly /= fPolyLen;
-    scai::lama::ifft<ComplexValueType>(fPolyTemp, fPoly, fPolyLen);
-    poly = scai::lama::real(fPolyTemp);
-    Common::truncateVec<ValueType>(poly, order+1);
+    scai::lama::ifft<ComplexValueType>(fPoly);
+    fPoly.resize(polyDist);
+    poly = scai::lama::real(fPoly);
 }
 
 /*! \brief Calculate the transfere function of a Butterworth filter.
@@ -224,21 +236,22 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     scai::IndexType len = 2 * fNyquist / df;
     SCAI_ASSERT_ERROR(signal.size() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
-    scai::lama::DenseVector<ComplexValueType> signalTemp1;
-    scai::lama::DenseVector<ComplexValueType> signalTemp2;
+    scai::lama::DenseVector<ComplexValueType> fSignal;
 
-    signal.replicate();
-    signalTemp1.replicate();
-    scai::lama::fft<ValueType>(signalTemp1, signal, len);
+    auto fDist = std::make_shared<scai::dmemo::NoDistribution>(len);
+    auto tDist = signal.getDistributionPtr();
+    
+    fSignal = scai::lama::cast<ComplexValueType>(signal);
+    fSignal.resize(fDist);
+    scai::lama::fft<ComplexValueType>(fSignal);
 
-    signalTemp1 *= transFcn;
-    signalTemp1 /= (len / 2); // proper fft normalization
+    fSignal *= transFcn;
+    fSignal /= len; // proper fft normalization
+    
+    scai::lama::ifft<ComplexValueType>(fSignal);
+    fSignal.resize(tDist);
 
-    signalTemp2.replicate();
-    scai::lama::ifft<ComplexValueType>(signalTemp2, signalTemp1, len);
-
-    signal = scai::lama::real(signalTemp2);
-    Common::truncateVec<ValueType>(signal, len-zeroPadding);
+    signal = scai::lama::real(fSignal);
 }
 
 /*! \brief Application of stored filter on the desired signal.
