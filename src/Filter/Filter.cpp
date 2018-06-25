@@ -180,7 +180,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVecto
     calcButterPoly(order, poly);
     
     scai::lama::DenseVector<ComplexValueType> cPoly;
-    cPoly.buildComplex(poly, scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0));
+    cPoly = scai::lama::cast<ComplexValueType>(poly);
     
     transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
@@ -203,7 +203,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVecto
     calcButterPoly(order, poly);
     
     scai::lama::DenseVector<ComplexValueType> cPoly;
-    cPoly.buildComplex(poly, scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0));
+    cPoly = scai::lama::cast<ComplexValueType>(poly);
     
     transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
@@ -268,31 +268,33 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
         signal.setRow(thisTrace, iTrace, scai::common::BinaryOp::COPY);
     }
 }
-// THIS VERSION OF APPLY SHOULD BE USED WHEN LAMA ALLOWS TRUNCATION IN THE FFT FOR MATRICES
 // template <typename ValueType>
 // void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal)
 // {
 //     scai::IndexType len = 2*fNyquist/df;
 //     SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
-//
-//     scai::lama::DenseMatrix<ComplexValueType> signalTemp1;
-//     scai::lama::DenseMatrix<ComplexValueType> signalTemp2;
-//
-//     scai::dmemo::DistributionPtr no_dist_numTracesGlobal(new scai::dmemo::NoDistribution(signal.getNumColumns()));
-//     scai::dmemo::DistributionPtr no_dist_numParameter(new scai::dmemo::NoDistribution(signal.getNumRows()));
-//     signal.redistribute(no_dist_numParameter, no_dist_numTracesGlobal);
-//
-//     scai::lama::fft<ValueType>(signalTemp1,signal,0,len);
-//
-//     scai::lama::DenseVector<ComplexValueType> complexTransfere;
-//     complexTransfere.buildComplex(transFcn, scai::lama::fill<scai::lama::DenseVector<ValueType>>(transFcn.size(), 0.0));
-//
-//     signalTemp1.scaleRows(complexTransfere);
-//     signalTemp1 *= (2/len); // proper fft normalization
-//
-//     scai::lama::ifft<ComplexValueType>(signalTemp2,signalTemp1,0,len-zeroPadding);
-//
-//     signal = scai::lama::real(signalTemp2);
+// 
+//     scai::lama::DenseMatrix<ComplexValueType> fSignal;
+//     
+//     auto colDist = signal.getColDistributionPtr();
+//     auto rowDist = signal.getRowDistributionPtr();
+//     auto fColDist = std::make_shared<scai::dmemo::NoDistribution>(len);
+// 
+//     fSignal = scai::lama::cast<ComplexValueType>(signal);
+//     fSignal.resize(rowDist,fColDist);
+// 
+//     scai::lama::DenseMatrix<ComplexValueType> transDiag();
+//     transDiag.assignDiagonal(transFcn);
+//     fSignal = fSignal*transDiag;
+//     
+//     scai::lama::fft<ComplexValueType>(fSignal,1);
+// 
+//     fSignal.scaleRows(transFcn);
+//     fSignal *= (1.0 / ValueType(len)); // proper fft normalization
+// 
+//     scai::lama::ifft<ComplexValueType>(fSignal);
+//     fSignal.resize(rowDist,colDist);
+//     signal = scai::lama::real(fSignal);
 // }
 
 template class KITGPI::Filter::Filter<double>;
