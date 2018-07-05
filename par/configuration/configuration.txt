@@ -3,8 +3,8 @@
 # Use the hashtag "#" for comments
 
 # Type of forward simulation
-dimension=2D              # Dimension: 2D or 3D
-equationType=sh    # Type of wave equation: acoustic, elastic, visco
+dimension=3D              # Dimension: 2D or 3D
+equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 NX=100                    # horizontal 1
@@ -14,7 +14,7 @@ NZ=100                    # horizontal 2
 # define Partitioning
 UseCubePartitioning=0     # 1=ON, 0=OFF
 ProcNX=2                  # Number of processes in X direction
-ProcNY=1                  # Number of processes in Y direction
+ProcNY=2                  # Number of processes in Y direction
 ProcNZ=1                  # Number of processes in Z direction
 
 # distance between two grid points

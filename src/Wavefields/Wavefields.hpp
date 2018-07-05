@@ -41,6 +41,9 @@ namespace KITGPI
             //! Reset wavefields
             virtual void resetWavefields() = 0;
 
+            virtual int getNumDimension() const = 0;
+            virtual std::string getEquationType() const = 0;
+            
             virtual scai::lama::DenseVector<ValueType> &getRefVX();
             virtual scai::lama::DenseVector<ValueType> &getRefVY();
             virtual scai::lama::DenseVector<ValueType> &getRefVZ();
@@ -72,7 +75,7 @@ namespace KITGPI
             virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
-	    virtual void timesAssign(ValueType rhs) = 0;
+            virtual void timesAssign(ValueType rhs) = 0;
 
             KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
@@ -84,6 +87,9 @@ namespace KITGPI
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
             void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
 
+            int numDimension;
+            std::string equationType; 
+            
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y
             scai::lama::DenseVector<ValueType> VZ;  //!< Wavefield for velocity in z

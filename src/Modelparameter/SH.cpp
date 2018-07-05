@@ -33,6 +33,7 @@ void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Configuration::C
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType = "sh";
     init(config, ctx, dist);
 }
 
@@ -73,6 +74,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho)
 {
+    equationType = "sh";
     init(ctx, dist, velocityS_const, rho);
 }
 
@@ -102,6 +104,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
+    equationType = "sh";
     init(ctx, dist, filename, partitionedIn);
 }
 
@@ -127,6 +130,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 {
+    equationType = rhs.equationType;
     sWaveModulus = rhs.sWaveModulus;
     velocityS = rhs.velocityS;
     density = rhs.density;
@@ -204,6 +208,14 @@ void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, DensityAverageMatrixY);
     dirtyFlagAveraging = false;
     }
+}
+
+/*! \brief Get equationType (sh)
+ */
+template <typename ValueType>
+std::string KITGPI::Modelparameter::SH<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 /*! \brief Get reference to tauP

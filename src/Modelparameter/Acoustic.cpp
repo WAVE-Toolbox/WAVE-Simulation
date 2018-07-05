@@ -36,6 +36,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configurat
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType = "acoustic";
     init(config, ctx, dist);
 }
 
@@ -76,6 +77,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const)
 {
+    equationType = "acoustic";
     init(ctx, dist, pWaveModulus_const, rho_const);
 }
 
@@ -105,6 +107,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
+    equationType = "acoustic";
     init(ctx, dist, filename, partitionedIn);
 }
 
@@ -131,6 +134,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 {
+    equationType = rhs.equationType;
     pWaveModulus = rhs.pWaveModulus;
     velocityP = rhs.velocityP;
     inverseDensity = rhs.inverseDensity;
@@ -210,6 +214,14 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging()
     this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
     dirtyFlagAveraging = false;
     }
+}
+
+/*! \brief Get equationType (acoustic)
+ */
+template <typename ValueType>
+std::string KITGPI::Modelparameter::Acoustic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 /*! \brief Get reference to S-wave modulus
