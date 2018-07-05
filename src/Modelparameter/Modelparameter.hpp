@@ -78,6 +78,8 @@ namespace KITGPI
              */
             virtual void write(std::string filename, scai::IndexType partitionedOut) const = 0;
 
+            virtual std::string getEquationType() const = 0;
+            
             virtual scai::lama::Vector<ValueType> const &getDensity() const;
             virtual scai::lama::Vector<ValueType> const &getInverseDensity();
             virtual scai::lama::Vector<ValueType> const &getInverseDensity() const;
@@ -125,21 +127,21 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getTauSAverageXZ() const;
             virtual scai::lama::Vector<ValueType> const &getTauSAverageYZ();
             virtual scai::lama::Vector<ValueType> const &getTauSAverageYZ() const;
-	    
-	    virtual bool getDirtyFlagPWaveModulus() const;
-	    virtual bool getDirtyFlagSWaveModulus() const;
-	    virtual bool getDirtyFlagInverseDensity() const;
-	    virtual bool getDirtyFlagAveraging() const;
 
-	    virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
+            virtual bool getDirtyFlagPWaveModulus() const;
+            virtual bool getDirtyFlagSWaveModulus() const;
+            virtual bool getDirtyFlagInverseDensity() const;
+            virtual bool getDirtyFlagAveraging() const;
+
+            virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
             virtual void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
             virtual void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
 
-	    /* Operator overloading */
+            /* Operator overloading */
             KITGPI::Modelparameter::Modelparameter<ValueType> &operator=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Modelparameter<ValueType> &operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-	    
+            KITGPI::Modelparameter::Modelparameter<ValueType> &operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            KITGPI::Modelparameter::Modelparameter<ValueType> &operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            
           protected:
             bool dirtyFlagInverseDensity; 	//!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
             bool dirtyFlagAveraging;      	//!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
@@ -150,6 +152,8 @@ namespace KITGPI
             scai::IndexType PartitionedIn;  //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
             scai::IndexType PartitionedOut; //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
 
+            std::string equationType;  
+            
             scai::lama::DenseVector<ValueType> pWaveModulus;   //!< Vector storing P-wave modulus.
             scai::lama::DenseVector<ValueType> sWaveModulus;   //!< Vector storing S-wave modulus.
             scai::lama::DenseVector<ValueType> density;        //!< Vector storing Density.

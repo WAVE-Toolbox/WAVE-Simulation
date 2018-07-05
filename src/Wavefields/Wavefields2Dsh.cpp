@@ -20,6 +20,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Dsh<ValueType>::getContextPtr()
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dsh<ValueType>::FD2Dsh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType="sh"; 
+    numDimension=2;
     init(ctx, dist);
 }
 
@@ -69,6 +71,22 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::resetWavefields()
     this->resetWavefield(VZ);
     this->resetWavefield(Sxz);
     this->resetWavefield(Syz);
+}
+
+/*! \brief Get numDimension (2)
+ */
+template <typename ValueType>
+int KITGPI::Wavefields::FD2Dsh<ValueType>::getNumDimension() const
+{
+    return (numDimension);
+}
+
+/*! \brief Get equationType (sh)
+ */
+template <typename ValueType>
+std::string KITGPI::Wavefields::FD2Dsh<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 //! \brief Not valid in the 2D sh case

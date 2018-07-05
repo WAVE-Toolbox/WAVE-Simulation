@@ -28,6 +28,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextP
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType="acoustic"; 
+    numDimension=2;
     init(ctx, dist);
 }
 
@@ -66,6 +68,22 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::resetWavefields()
     this->resetWavefield(VX);
     this->resetWavefield(VY);
     this->resetWavefield(P);
+}
+
+/*! \brief Get numDimension (2)
+ */
+template <typename ValueType>
+int KITGPI::Wavefields::FD2Dacoustic<ValueType>::getNumDimension() const
+{
+    return (numDimension);
+}
+
+/*! \brief Get equationType (acoustic)
+ */
+template <typename ValueType>
+std::string KITGPI::Wavefields::FD2Dacoustic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 //! \brief Not valid in the 2D acoustic case
