@@ -40,8 +40,7 @@ PartitionedOut=0          # 1=Write files parallel, 0=serial
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
 
 # Damping Boundary
-DampingBoundary=0         # 1=ON, 0=OFF
-DampingBoundaryType=1     # Type of damping boundary: 1=ABS 2=CPML
+DampingBoundary=0         # Type of damping boundary: 0=OFF 1=ABS 2=CPML
 BoundaryWidth=10          # Width of damping boundary in grid points
 DampingCoeff=8.0          # Damping coefficient 
 VMaxCPML=3500.0           # Maximum velocity of the CPML
