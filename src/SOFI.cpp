@@ -113,7 +113,9 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
-    Acquisition::Receivers<ValueType> receivers(config, ctx, dist);
+    Acquisition::Receivers<ValueType> receivers;
+    if (!config.get<bool>("useReceiversPerShot"))
+        receivers.init(config, ctx, dist);
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
     
     /* --------------------------------------- */
@@ -138,6 +140,8 @@ int main(int argc, const char *argv[])
         /* Update Source */
         if (!config.get<bool>("runSimultaneousShots"))
             sources.init(config, ctx, dist, shotNumber);
+        if (config.get<bool>("useReceiversPerShot"))
+            receivers.init(config, ctx, dist, shotNumber);
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
                                                          << "Total Number of time steps: " << tStepEnd << "\n");

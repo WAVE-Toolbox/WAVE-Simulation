@@ -18,7 +18,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
         numShots = 1;
     } else {
         scai::lama::DenseMatrix<ValueType> acquisition_temp;
-        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
         numShots = acquisition_temp.getNumRows();
     }
 }
