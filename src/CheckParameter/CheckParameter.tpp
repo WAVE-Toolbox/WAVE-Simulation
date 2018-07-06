@@ -15,7 +15,7 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
 
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
     scai::lama::DenseVector<ValueType> wavelet_fc; 
-    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename")+".mtx");
     acquisition_temp.getColumn(wavelet_fc,7);
     ValueType fcMax=wavelet_fc.max();
 
@@ -122,8 +122,8 @@ void KITGPI::CheckParameter::checkNumericalDispersion(ValueType dh, ValueType vM
 template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkAcquisitionGeometry(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
-    KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("ReceiverFilename"),comm);
-    KITGPI::CheckParameter::checkSources<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("SourceFilename"),comm);
+    KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("ReceiverFilename")+".mtx",comm);
+    KITGPI::CheckParameter::checkSources<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("SourceFilename")+".mtx",comm);
 }
 
 /*! \brief check if sources are located within the grid
