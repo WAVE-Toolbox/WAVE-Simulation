@@ -1,7 +1,7 @@
 #include "FDTD2Delastic.hpp"
 using namespace scai;
 
-/*! \brief Gether the seismogram pressure.
+/*! \brief Gather the seismogram pressure.
  *
  *
  \param seismo Seismogram
