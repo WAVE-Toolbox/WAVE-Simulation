@@ -599,7 +599,7 @@ To simulate the wavefields in space and time all discretised equations for stres
 }
 \end{algorithm}
 
-\section{Free Surface}
+\section{Free Surface}\label{sec:FreeSurface}
 To account for the behaviour waves have at a free surface special treatment has to be applied at this interface. There are two common implementations of such a free surface. The first one is the Mirror Method and the second one is the Improved Vacuum Formulation.
 \subsection{Mirror Method}
 
@@ -1265,6 +1265,57 @@ To execute the unit-tests change to the \shellcmd{/par} folder and run the \shel
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}
+
+\subsection{Free surface}
+
+As mentioned in \ref{sec:FreeSurface} there are two implementations of the free surface in FDSimulation\_LAMA. To ensure their proper functionality they are tested against an analytic solution. This solution is for a homogeneous halfspace with a free surface. Tests are done in 2D for the acoustic and the elastic case. Relevant parameters used are listed in table \ref{tab:freeSurfaceBenchmark}. In the acoustic case the shear wave velocity for the analytic solution is set to \SI{1}{\meter\per\second} for a stable result. The results are shown in figure \ref{fig:IVFvsAnalytic} for IVF and in figure \ref{fig:MirrorvsAnalytic} for mirror method. Since there are no surface waves in the acoustic case only the P-phase is visible. The combination of high amplitude surface waves and trace normalization make the P-phase almost disappear in the elastic case. Both results show, that the methods used are able to produce accurate solutions even at larger offsets.
+
+\begin{table}[]
+\centering
+\caption{Relevant parameters used for benchmarking the free surface.}
+\label{tab:freeSurfaceBenchmark}
+\begin{tabular}{@{}cc@{}}
+\toprule
+Parameter        & Value  \\ \midrule
+dh               & \SI{7.5}{\meter}    \\
+dt               & \SI{0.5}{\milli\second} \\
+spatial FD order & 6      \\
+$v_p$               & \SI{3845}{\meter\per\second}   \\
+$v_s$               & \SI{2200}{\meter\per\second}   \\
+$\rho$              & \SI{3000}{\kilogram\per\cubic\meter}   \\ \bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_acoustic_IVF.pdf}
+    \caption{Acoustic case. Lower plots show the P-phase at different offsets.}
+  \end{subfigure} \\
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_elastic_IVF.pdf}
+    \caption{Elastic case. Lower plots show the Rayleigh wave at different offsets.}
+  \end{subfigure} \\
+  \caption{Comparison of IVF with the analytic solution. Traces are normalized. The analytic solution shows some numerical instabilities. Sources and receivers are \SI{7.5}{\meter} below the surface.}\label{fig:IVFvsAnalytic}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_acoustic_mirror.pdf}
+    \caption{Acoustic case. Lower plots show the P-phase at different offsets.}
+  \end{subfigure} \\
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_elastic_mirror.pdf}
+    \caption{Elastic case. Lower plots show the Rayleigh wave at different offsets.}
+  \end{subfigure} \\
+  \caption{Comparison of mirror method with the analytic solution. Traces are normalized. The analytic solution shows some numerical instabilities. Sources and receivers are \SI{3.75}{\meter} below the surface.}\label{fig:MirrorvsAnalytic}
+\end{figure}
 
 \cleardoublepage
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
