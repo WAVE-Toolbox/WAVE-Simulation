@@ -1,0 +1,66 @@
+# define spatial sampling: number of grid points in direction
+
+dimension=3D
+equationType=acoustic
+
+NX=100 # horizontal 1
+NY=100 # depth
+NZ=100 # horizontal 2
+
+# define Partitioning
+UseCubePartitioning=0
+ProcNX=2
+ProcNY=2
+ProcNZ=1
+
+# define distance between two grid points in meter
+DH=50
+
+# define temporal sampling
+DT=2.0e-03                   # temporal sampling in seconds
+T=2                          # total simulation time in seconds
+
+# define order spatial FD operators
+spatialFDorder=4
+
+# define material parameter
+ModelRead=1
+ModelWrite=0
+ModelFilename=model/model
+
+# parallel input-output
+PartitionedIn=0           # 1=Read files parallel, 0=serial 
+PartitionedOut=0          # 1=Write files parallel, 0=serial
+
+# Apply the free surface condition
+FreeSurface=0
+DampingBoundary=1
+DampingBoundaryType=1
+BoundaryWidth=9
+DampingCoeff=8.0
+
+# Viscoelastic modelling
+numRelaxationMechanisms=0;
+relaxationFrequency=0.0
+
+velocityP=3500 # P-wave velocity in meter per seconds
+velocityS=0 # S-wave velocity in meter per seconds
+rho=2000      # P-wave velocity in meter per seconds
+tauP=0.0         # Tau value for P-waves
+tauS=0.0         # Tau value for S-waves
+
+# Acquisition
+SourceFilename=ci/sources_ci.3D
+ReceiverFilename=ci/receiver_ci.3D
+SeismogramFilename=ci/seismogram.3D.acoustic.ci
+SeismogramFormat=1 # 1=MTX, 2=SU
+NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+useReceiversPerShot=0
+runSimultaneousShots=1                         # 1=All sources specified in SourceFilename are triggerd simultaneously
+
+# wavefield snapshots
+snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+WavefieldFileName=wavefields/wavefield        # location of wavefields
+tFirstSnapshot=0       			              # Time of first snapshot in seconds
+tLastSnapshot=2         		              # Time of last snapshot in seconds
+tIncSnapshot=0.5          # Time increment between snapshot in seconds

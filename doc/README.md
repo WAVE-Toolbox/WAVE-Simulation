@@ -1,17 +1,16 @@
 # Documentation
+Use the Makefile in build directory to build the documentation 
 
-- Complete documentation: `make all`
+- Complete documentation: `make doc`
 
-## Theory
+## Documentation for theory
 
-- Make target `make install_theory`
-- Select language by `LANGUAGE` to `DE` or `EN`
- - eg. `make install_theory LANGUAGE=EN` for english
-- Output: `theory/WAVE_theory_${LANGUAGE}.pdf`
+- Make target `make theory`
+- Output: `theory/WAVE_theory_EN.pdf`
 - Requirement: *pdflatex* and *bibtex*
 
 ## Documentation for source code
 
-- Make target `make install_doxygen`
+- Make target `make doxygen`
 - Output: `doxygen/html/index.html`
 - Requirement: *doxygen*

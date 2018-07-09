@@ -3,84 +3,110 @@
 #pragma once
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
+#include <scai/lama/Vector.hpp>
 
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
+#include "../Common/HostPrint.hpp"
+#include "../PartitionedInOut/PartitionedInOut.hpp"
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
+#include "../Modelparameter/Modelparameter.hpp"
 
 
-namespace KITGPI {
-    
+namespace KITGPI
+{
+
     //! \brief Wavefields namespace
-    namespace Wavefields {
-        
+    namespace Wavefields
+    {
+
         /*! \brief Abstract class to handle the wavefields for the forward modelling.
          *
          * Wavefields implements some methods, which are requiered by all derived classes.
          * As this class is an abstract class, all methods are protected.
          */
-        template<typename ValueType>
+        template <typename ValueType>
         class Wavefields
         {
-            
-        public:
-            
-            //! Default deconstructor
+
+          public:
+            //! Default constructor
+            Wavefields(){};
+            //! Default destructor
             ~Wavefields(){};
-            
+
+            //! \brief Declare Wavefield pointer
+            typedef std::shared_ptr<Wavefields<ValueType>> WavefieldPtr;
+
             //! Reset wavefields
-            virtual void reset()=0;
+            virtual void resetWavefields() = 0;
+
+            virtual int getNumDimension() const = 0;
+            virtual std::string getEquationType() const = 0;
             
-            //! \brief Getter routine for vX wavefield
-            virtual lama::DenseVector<ValueType>& getVX()=0;
-            //! \brief Getter routine for vY wavefield
-            virtual lama::DenseVector<ValueType>& getVY()=0;
-            //! \brief Getter routine for vZ wavefield
-            virtual lama::DenseVector<ValueType>& getVZ()=0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVX();
+            virtual scai::lama::DenseVector<ValueType> &getRefVY();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZ();
+            virtual scai::lama::DenseVector<ValueType> &getRefP();
+
+            virtual scai::lama::DenseVector<ValueType> &getRefSxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefSzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefSxy();
+
+            virtual scai::lama::DenseVector<ValueType> &getRefRxx();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyy();
+            virtual scai::lama::DenseVector<ValueType> &getRefRzz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRyz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxz();
+            virtual scai::lama::DenseVector<ValueType> &getRefRxy();
+
+            //! Declare getter variable for context pointer
+            virtual scai::hmemo::ContextPtr getContextPtr() = 0;
+
+            //! \brief Initialization
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+
+            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) = 0;
+
+            //! Operator overloading
+            virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            virtual void timesAssign(ValueType rhs) = 0;
+
+            KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator*=(ValueType rhs);
+	    
+          protected:
+            void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
+            void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
+
+            int numDimension;
+            std::string equationType; 
             
-            //! \brief Getter routine for p wavefield
-            virtual lama::DenseVector<ValueType>& getP()=0;
-            
-            //! \brief Getter routine for sxx wavefield
-            virtual lama::DenseVector<ValueType>& getSxx()=0;
-            //! \brief Getter routine for syy wavefield
-            virtual lama::DenseVector<ValueType>& getSyy()=0;
-            //! \brief Getter routine for szz wavefield
-            virtual lama::DenseVector<ValueType>& getSzz()=0;
-            
-            //! \brief Getter routine for syx wavefield
-            virtual lama::DenseVector<ValueType>& getSyz()=0;
-            //! \brief Getter routine for sxz wavefield
-            virtual lama::DenseVector<ValueType>& getSxz()=0;
-            //! \brief Getter routine for sxy wavefield
-            virtual lama::DenseVector<ValueType>& getSxy()=0;
-            
-        protected:
-            
-            void resetWavefield(lama::DenseVector<ValueType>& vector);
-            void initWavefield(lama::DenseVector<ValueType>& vector, hmemo::ContextPtr ctx, dmemo::DistributionPtr dist);
-            
+            scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
+            scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y
+            scai::lama::DenseVector<ValueType> VZ;  //!< Wavefield for velocity in z
+            scai::lama::DenseVector<ValueType> Sxx; //!< Wavefield
+            scai::lama::DenseVector<ValueType> Syy; //!< Wavefield
+            scai::lama::DenseVector<ValueType> Szz; //!< Wavefield
+            scai::lama::DenseVector<ValueType> Syz; //!< Wavefield
+            scai::lama::DenseVector<ValueType> Sxz; //!< Wavefield
+            scai::lama::DenseVector<ValueType> Sxy; //!< Wavefield
+            scai::lama::DenseVector<ValueType> P;   //!< Wavefield
+
+            scai::lama::DenseVector<ValueType> Rxx; //!< Relaxation parameter
+            scai::lama::DenseVector<ValueType> Ryy; //!< Relaxation parameter
+            scai::lama::DenseVector<ValueType> Rzz; //!< Relaxation parameter
+            scai::lama::DenseVector<ValueType> Ryz; //!< Relaxation parameter
+            scai::lama::DenseVector<ValueType> Rxz; //!< Relaxation parameter
+            scai::lama::DenseVector<ValueType> Rxy; //!< Relaxation parameter
         };
     }
 }
-
-/*! \brief Reset a single wavefield to zero.
- */
-template<typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::resetWavefield(lama::DenseVector<ValueType>& vector)
-{
-    vector.assign(0.0);
-}
-
-/*! \brief Intitialisation of a single wavefield vector.
- *
- * This method will set the context, allocate the the wavefield and set the field to zero.
- */
-template<typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(lama::DenseVector<ValueType>& vector,hmemo::ContextPtr ctx, dmemo::DistributionPtr dist)
-{
-    vector.setContextPtr(ctx);
-    vector.allocate(dist);
-    
-    resetWavefield(vector);
-}
-

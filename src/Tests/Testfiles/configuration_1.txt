@@ -1,0 +1,13 @@
+# Comment
+testvalue1=1.2124445
+testvalue2=100
+testvalue3=-1.2124445
+testvalue4=-100
+testvalue5=test123
+# Comment # comment # comment
+TESTVALUE6=capiTAL # test 1 2 3 
+testvalue7=1 # comment 
+testvalue8=0 #comment really long, reeeeaaallllyyyyyyy looooonnnnnnggggg 
+testvalue9=/file/path/test.mtx
+# Comment # comment # comment
+
