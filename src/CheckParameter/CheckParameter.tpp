@@ -120,9 +120,16 @@ void KITGPI::CheckParameter::checkNumericalDispersion(ValueType dh, ValueType vM
 
 //! \brief Wrapper Function who calls checkSources and checkReceivers
 template<typename ValueType, typename IndexType>
-void KITGPI::CheckParameter::checkAcquisitionGeometry(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::CheckParameter::checkAcquisitionGeometry(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm, IndexType numShots)
 {
-    KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("ReceiverFilename")+".mtx",comm);
+    std::string receiverName = config.get<std::string>("ReceiverFilename");
+    if (config.get<bool>("useReceiversPerShot"))
+        for (IndexType shotNumber = 0; shotNumber < numShots; shotNumber++) {
+            KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), receiverName + ".shot_" + std::to_string(shotNumber) +".mtx",comm);
+        }
+    else {
+        KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), receiverName +".mtx",comm);
+    }
     KITGPI::CheckParameter::checkSources<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("SourceFilename")+".mtx",comm);
 }
 

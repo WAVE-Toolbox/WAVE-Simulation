@@ -112,11 +112,11 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm);  
+    Acquisition::Sources<ValueType> sources(config, ctx, dist);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot"))
         receivers.init(config, ctx, dist);
-    Acquisition::Sources<ValueType> sources(config, ctx, dist);
+    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm,sources.getNumShots());  
     
     /* --------------------------------------- */
     /* Modelparameter                          */
