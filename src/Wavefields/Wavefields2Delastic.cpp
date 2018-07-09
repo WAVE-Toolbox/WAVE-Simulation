@@ -20,6 +20,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Delastic<ValueType>::getContextPtr()
 template <typename ValueType>
 KITGPI::Wavefields::FD2Delastic<ValueType>::FD2Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType="elastic"; 
+    numDimension=2;
     init(ctx, dist);
 }
 
@@ -83,6 +85,22 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::resetWavefields()
     this->resetWavefield(Sxx);
     this->resetWavefield(Syy);
     this->resetWavefield(Sxy);
+}
+
+/*! \brief Get numDimension (2)
+ */
+template <typename ValueType>
+int KITGPI::Wavefields::FD2Delastic<ValueType>::getNumDimension() const
+{
+    return (numDimension);
+}
+
+/*! \brief Get equationType (elastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Wavefields::FD2Delastic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 //! \brief Not valid in the 2D elastic case

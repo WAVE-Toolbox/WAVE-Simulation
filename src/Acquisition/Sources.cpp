@@ -18,7 +18,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
         numShots = 1;
     } else {
         scai::lama::DenseMatrix<ValueType> acquisition_temp;
-        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
         numShots = acquisition_temp.getNumRows();
     }
 }
@@ -35,7 +35,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
 {
     /* Read shotNumber row ofacquisition matrix */
     scai::lama::DenseStorage<ValueType> test;
-    test.readFromFile(config.get<std::string>("SourceFilename"), shotNumber, 1);
+    test.readFromFile(config.get<std::string>("SourceFilename")+".mtx", shotNumber, 1);
     scai::lama::DenseMatrix<ValueType> acquisition_temp(test);
 
     this->init(acquisition_temp, config, ctx, dist_wavefield);
@@ -52,7 +52,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
 {
     /* Read acquisition matrix */
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename")+".mtx");
 
     this->init(acquisition_temp, config, ctx, dist_wavefield);
 }

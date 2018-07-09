@@ -22,7 +22,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
     IndexType tempIndexType;
     for (IndexType i = 0; i < numTracesGlobal; ++i) {
         tempIndexType = seismogramTypes[i] - 1;
-        SCAI_ASSERT_VALID_INDEX_DEBUG(tempIndexType,NUM_ELEMENTS_SEISMOGRAMTYPE, "Unknown Source Type");
+        SCAI_ASSERT_VALID_INDEX_DEBUG(tempIndexType,NUM_ELEMENTS_SEISMOGRAMTYPE, "Unknown Type in trace Nr. " << i+1);
 
         ++count[tempIndexType];
     }

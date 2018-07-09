@@ -33,6 +33,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configurati
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType = "elastic";
     init(config, ctx, dist);
 }
 
@@ -74,6 +75,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho)
 {
+    equationType = "elastic";
     init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho);
 }
 
@@ -105,6 +107,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
+    equationType = "elastic";
     init(ctx, dist, filename, partitionedIn);
 }
 
@@ -133,6 +136,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 {
+    equationType = rhs.equationType;
     pWaveModulus = rhs.pWaveModulus;
     sWaveModulus = rhs.sWaveModulus;
     velocityP = rhs.velocityP;
@@ -227,6 +231,14 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
     this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
     dirtyFlagAveraging = false;
     }
+}
+
+/*! \brief Get equationType (elastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Modelparameter::Elastic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 /*! \brief Get reference to tauP

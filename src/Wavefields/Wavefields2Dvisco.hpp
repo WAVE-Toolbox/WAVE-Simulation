@@ -25,7 +25,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dvisco(){};
+            FD2Dvisco(){equationType="viscoelastic"; numDimension=2;};
 
             //! Default destructor
             ~FD2Dvisco(){};
@@ -33,6 +33,9 @@ namespace KITGPI
             explicit FD2Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             void resetWavefields() override;
+            
+            int getNumDimension() const;
+            std::string getEquationType() const;
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefP() override;
@@ -56,14 +59,18 @@ namespace KITGPI
 
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
-	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+            void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
-	    void timesAssign(ValueType rhs);
-	    
+            void timesAssign(ValueType rhs);
+    
           private:
-	    void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
-	    void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, scai::lama::Vector<ValueType> const &SWaveModulus);
+            void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
+            void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, scai::lama::Vector<ValueType> const &SWaveModulus);
+            
+            using Wavefields<ValueType>::numDimension;
+            using Wavefields<ValueType>::equationType; 
+        
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;

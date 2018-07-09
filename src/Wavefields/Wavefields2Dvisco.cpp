@@ -20,6 +20,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dvisco<ValueType>::getContextPtr(
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dvisco<ValueType>::FD2Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType="viscoelastic"; 
+    numDimension=2;
     init(ctx, dist);
 }
 
@@ -91,6 +93,22 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::resetWavefields()
     this->resetWavefield(Rxx);
     this->resetWavefield(Ryy);
     this->resetWavefield(Rxy);
+}
+
+/*! \brief Get numDimension (2)
+ */
+template <typename ValueType>
+int KITGPI::Wavefields::FD2Dvisco<ValueType>::getNumDimension() const
+{
+    return (numDimension);
+}
+
+/*! \brief Get equationType (viscoelastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Wavefields::FD2Dvisco<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 //! \brief Not valid in the 2D visco-elastic case

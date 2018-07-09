@@ -34,6 +34,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType = "viscoelastic";
     init(config, ctx, dist);
 }
 
@@ -81,6 +82,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
+    equationType = "viscoelastic";
     init(ctx, dist, velocityP_const, velocityS_const, rho_const, tauP_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
     initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
 }
@@ -120,6 +122,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
+    equationType = "viscoelastic";
     init(ctx, dist, filename, partitionedIn);
 }
 
@@ -153,6 +156,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic &rhs)
 {
+    equationType = rhs.equationType;
     pWaveModulus = rhs.pWaveModulus;
     sWaveModulus = rhs.sWaveModulus;
     velocityP = rhs.velocityP;
@@ -278,6 +282,14 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(I
     }
     numRelaxationMechanisms = numRelaxationMechanisms_in;
     relaxationFrequency = relaxationFrequency_in;
+}
+
+/*! \brief Get equationType (viscoelastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 /*! \brief Get const reference to P-wave modulus (viscoelastic case)
