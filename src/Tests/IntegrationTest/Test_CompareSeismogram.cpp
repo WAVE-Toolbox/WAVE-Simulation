@@ -33,8 +33,10 @@ int main(int argc, char *argv[])
     KITGPI::Acquisition::Seismogram<ValueType> seismogramRef;
     KITGPI::Acquisition::Seismogram<ValueType> seismogramDiff;
 
-    Acquisition::Receivers<ValueType> receiversTest(config, ctx, dist);
-    Acquisition::Receivers<ValueType> receiversRef(config, ctx, dist);
+    Acquisition::Receivers<ValueType> receiversTest;
+    receiversTest.init(config, ctx, dist);
+    Acquisition::Receivers<ValueType> receiversRef;
+    receiversRef.init(config, ctx, dist);
 
     std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".mtx";
     std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
