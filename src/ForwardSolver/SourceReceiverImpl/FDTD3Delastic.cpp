@@ -1,7 +1,7 @@
 #include "FDTD3Delastic.hpp"
 using namespace scai;
 
-/*! \brief Gether the seismogram pressure.
+/*! \brief Gather the seismogram pressure.
  *
  *
  \param seismo Seismogram
@@ -23,6 +23,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gather
     gatherSeismogram_samplesPressure.gather(Sxx, coordinates, common::BinaryOp::COPY);
     gatherSeismogram_samplesPressure.gather(Syy, coordinates, common::BinaryOp::ADD);
     gatherSeismogram_samplesPressure.gather(Szz, coordinates, common::BinaryOp::ADD);
+    gatherSeismogram_samplesPressure/=-3;
     seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure, t, common::BinaryOp::COPY);
 }
 

@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Elastic(){};
+            Elastic(){equationType = "elastic";};
 
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
@@ -56,24 +56,25 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
-
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
+            std::string getEquationType() const;
+            
             /* Getter methods for not requiered parameters */
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
-	    scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
+            scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-	    
-	    void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+    
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
 
@@ -84,14 +85,16 @@ namespace KITGPI
             KITGPI::Modelparameter::Elastic<ValueType> &operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
             KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
             KITGPI::Modelparameter::Elastic<ValueType> &operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Elastic<ValueType> &operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Elastic<ValueType> &operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
 
           private:
             void calculateAveraging() override;
 
+            using Modelparameter<ValueType>::equationType;
+            
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
-	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
+            using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;

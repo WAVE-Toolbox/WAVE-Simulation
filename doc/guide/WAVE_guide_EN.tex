@@ -252,12 +252,11 @@ In order to extract information about the structure and composition of the crust
 Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. 
 The explicit time-domain finite-difference (FD) modeling program FDSimulation\_LAMA, that is described in this guide, is based on the FD approach described by \cite{virieux:86} and \cite{levander:88}. 
 To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. 
-To parallelise the problem is rewritten in matrix-vector formulation explicit time-domain solving the wave equations. 
-By using matrix-vector formulation the parallelisation problem can be outsources using a HPC-framework. In our case FDSimulation\_LAMA uses the open source framework LAMA allows which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs
+In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. 
+By using matrix-vector formulation the parallelisation problem can be outsources using a HPC-framework. In our case FDSimulation\_LAMA uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
 
-FDSimulation\_LAMA features explicit time-domain FD method solving the acoustic, elastic and viscoelastic wave equation in 2D and 3D. 
-The current version of FDSimulation\_LAMA also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh (\cite{komatitsch:07}).
-In the following sections, we give a short description of the  theoretical background, the different modelling parameters and options and how the program is used and executed.
+FDSimulation\_LAMA features solving the acoustic, elastic and viscoelastic wave equation in 2D and 3D by utilising an explicit time-domain FD method. 
+The current version of FDSimulation\_LAMA also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh (\cite{komatitsch:07}). It also includes the image method by \cite{levander:88} and the improved vacuum formulation by \cite{zeng:12} for modelling the free surface. In the following sections, we give a short description of the  theoretical background, the different modelling parameters and options and how the program is used and executed.
 
 
 
@@ -391,7 +390,7 @@ Writing the inertial force density with $v_i = v_i (x_k,t)$:
 For elastic body waves, the gravitational force can be ignored. Only in case of low frequent natural oscillation, gravitation has an effect and should be considered.
 
 Surface forces affect an object due to its stress conditions. The derivation of surface forces is made by evaluating the force balance in all three spatial directions.
-To begin with the surface force can be written as an integration of the stress vector $\vec{s}$ over the object's surface $\partial V$.
+To begin with the surface force can be written as an integration of the stress vector $\vec{s}$ over the object's surface $\partial A$.
 \begin{equation}
 	\vec{F}_s = \int_A \vec{s} ~\mathrm{d}A
 \end{equation}
@@ -599,12 +598,12 @@ To simulate the wavefields in space and time all discretised equations for stres
 }
 \end{algorithm}
 
-\section{Free Surface}
+\section{Free Surface}\label{sec:FreeSurface}
 To account for the behaviour waves have at a free surface special treatment has to be applied at this interface. There are two common implementations of such a free surface. The first one is the Mirror Method and the second one is the Improved Vacuum Formulation.
 \subsection{Mirror Method}
 
 \subsection{Improved Vacuum Formulation}
-This method works by allowing the discretization of media without density and shear modulus inside the model. In the standard formulation this is not possible because of harmonic averaging that has to be done to calculate the model parameters on half gridpoints (see \ref{sec:Introducing_Averaging_Matrices}). This introduces a condition for the averaging proposed by \cite{Zeng:12}. The condition for averaging of the inverse density $b$ in $i$-direction is:
+This method works by allowing the discretization of media without density and shear modulus inside the model. In the standard formulation this is not possible because of harmonic averaging that has to be done to calculate the model parameters on half gridpoints (see \ref{sec:Introducing_Averaging_Matrices}). This introduces a condition for the averaging proposed by \cite{zeng:12}. The condition for averaging of the inverse density $b$ in $i$-direction is:
 \begin{align}
  b_i = \begin{cases}
         0 & \text{if }\rho_i\text{ and }\rho_{i+1}=0\\
@@ -1146,36 +1145,40 @@ As a first test, run the default example by following the commands to obtain the
 	NX & Number of grid points in $x$-direction & int & \num{100} \\
 	NY & Number of grid points in $y$-direction & int & \num{100} \\
 	NZ & Number of grid points in $z$-direction & int & \num{100} \\
-	DH & Distance between two grid points & double & \SI{50}{m}\\
-	DT & Temporal sampling & double & \SI{2.0e-3}{s}\\
-	T & Total simulation time & double & \SI{2}{s}\\
 	UseCubePartitioning & Use cubes to partition the wave fields & int & \num{0}\\
 	ProcNX & Number of cores in $x$-direction & int & \num{2}\\
 	ProcNY & Number of cores in $y$-direction & int & \num{1}\\
 	ProcNZ & Number of cores in $z$-direction & int & \num{1}\\
+	DH & Distance between two grid points & double & \SI{50}{m}\\
+	DT & Temporal sampling & double & \SI{2.0e-3}{s}\\
+	T & Total simulation time & double & \SI{2}{s}\\
 	spatialFDorder & Define order of spatial FD operator & int & \num{2}\\
 	\midrule	 
-	 ModelRead& Read model from File  & int & \num{0}\\
-	 PartitioningIn&  Read model from distributed file & int & \num{0}\\
-	 ModelWrite& Write model to file  & int & \num{0}\\
-	 PartitioningOut& Write model to distributed file-block & int & \num{0}\\
-	  ModelParametrisation & Parametrisation of read model & int & \num{2}\\
-	 ModelFilename& Filename-prefix to read model & int & \shellcmd{model/model}\\
-	 SourceFilename& Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources.mtx}\end{tabular}  \\
-	 ReceiverFilename	 & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever.mtx}\end{tabular}  \\
-	 SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram.mtx}\end{tabular}  \\
-	 SeismogramFormat & Seismogram format & int & \num{1}\\
-	 NormalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
+	ModelRead& Read model from File  & int & \num{0}\\
+	ModelWrite& Write model to file  & int & \num{0}\\
+	ModelFilename& Filename-prefix to read model & int & \shellcmd{model/model}\\
+	PartitionedIn&  Read model from distributed file & int & \num{0}\\
+	PartitionedOut& Write model to distributed file-block & int & \num{0}\\
 	\midrule
-	 velocityP& P-wave velocity $v_p$ & double & \SI{3500}{m\per s} \\
-	 velocityS& S-wave velocity $v_s$ & double  &  \SI{0}{m\per s}\\
-	 rho& Density $\rho$ & double &  \SI{2000}{kg\per\cubic\metre}\\
-	 tauP& $\tau$ value for P-waves & double & \num{0.0}\\
-	 tauS& $\tau$ value for S-waves & double & \num{0.0}\\
-	 numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
-	 relaxationFrequency& Relaxation frequency for first & double & \SI{0}{Hz}\\
-	 & relaxation mechanism& & \\
-	  \bottomrule
+	FreeSurface& Use the free surface & int & \num{0}\\
+	DampingBoundary& Use the Damping Boundary & int & \num{0}\\
+	DampingBoundaryType& Type of damping boundary & int & \num{1}\\
+	BoundaryWidth& Width of damping boundary & int & \num{10}\\
+	DampingCoeff& Damping coefficient & double & \num{8.0}\\
+	VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
+	CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
+	NPower& Degree of the damping profile & int &\num{4}\\
+	KMaxCPML&  & double &\num{1.0}\\
+	\midrule
+	numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
+	relaxationFrequency& Relaxation frequency& double & \SI{0}{Hz}\\
+	\midrule
+	velocityP& P-wave velocity $v_p$ & double & \SI{3500}{m\per s} \\
+	velocityS& S-wave velocity $v_s$ & double  &  \SI{0}{m\per s}\\
+	rho& Density $\rho$ & double &  \SI{2000}{kg\per\cubic\metre}\\
+	tauP& $\tau$ value for P-waves & double & \num{0.0}\\
+	tauS& $\tau$ value for S-waves & double & \num{0.0}\\
+	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
 \end{table}	
@@ -1184,25 +1187,29 @@ As a first test, run the default example by following the commands to obtain the
 \begin{adjustbox}{width=1\textwidth,center=\textwidth}
 	\begin{tabular}{llll}
 	\toprule
-	  Variable & Short description & Type &Example value\;\;\;\\
+	Variable & Short description & Type &Example value\;\;\;\\
 	\midrule
-	 FreeSurface& Use the free surface & int & \num{0}\\
-	 DampingBoundary& Use the Damping Boundary & int & \num{0}\\
-	 DampingBoundaryType& Type of damping boundary & int & \num{1}\\
-	 BoundaryWidth& Width of damping boundary & int & \num{10}\\
-	 DampingCoeff& Damping coefficient & double & \num{8.0}\\
-	 VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
-	 CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
-	 NPower& Degree of the damping profile & int &\num{4}\\
-	 KMaxCPML&  & double &\num{1.0}\\
-    \bottomrule
+	SourceFilename& Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources}\end{tabular}  \\
+	ReceiverFilename	 & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
+	SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram}\end{tabular}  \\
+	SeismogramFormat & Seismogram format & int & \num{1}\\
+	NormalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
+	useReceiversPerShot & Use an individual receiver file for each shot & int & \num{0} \\
+	runSimultaneousShots & Run all shots simultaneously & int & \num{0} \\
+	\midrule
+	snapType & type of wavefield snapshots to save & int & \num{1} \\
+	WavefieldFilename & Name and location where to save snapshots & string & \begin{tabular}{@{}l@{}}\shellcmd{wavefields/} \\\shellcmd{wavefield}\end{tabular}  \\
+	tFirstSnapshot & time of first snapshot in seconds & double & \num{0.1} \\
+	tLastSnapshot & time of last snapshot in seconds & double & \num{2.2} \\
+	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
+	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
 \end{table}	
 
 As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file Input variables can be added or changed. A list of all variables and config parameters that can be added and changed can be found in table \ref{tab:config}.
 
-The parameters can be divided in four main groups. The first group contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\textit{NX}, \textit{NY}, \textit{NZ} and \textit{DH}) and temporal parameters (\textit{DT} and \textit{T}). The total number of gridpoints is given by 
+The parameters can be divided in seven main groups. The first group contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\textit{NX}, \textit{NY}, \textit{NZ} and \textit{DH}) and temporal parameters (\textit{DT} and \textit{T}). The total number of gridpoints is given by 
 \begin{equation*}
 	N=NX\times NY\times NZ
 \end{equation*}
@@ -1213,31 +1220,32 @@ The total Number of time-steps can be calculated by
 The parameter \textit{UseCubePartitioning} characterises whether the model is partitioned into cubes and then distributed to the CPUs/GPUs. If \textit{UseCubePartitioning} $=1$ the model is partitioned in cubes, else it is partitioned automatically. The number of CPUs/GPUs available in each spatial direction is given by \textit{ProcNX}, \textit{ProcNY} and \textit{ProcNZ}. The product has to be equal to the total number of used CPUs/GPUs. 
 The last parameter of the first section, \textit{spatialFDorder}, defines the order of the spatial FD-operator and therefore, influences the accuracy of the simulation significantly.
 
-The second section contains all parameters to manage input and output. The first four parameters \textit{ModelRead}, \textit{ModelWrite}, \textit{PartitioningIn} and  \textit{PartitioningOut} can be set with ($1=$ yes) or (else $=$ no). The values for partitioned input and output are only needed when \textit{ModelRead} and \textit{ModelWrite} are set to 1. Make sure, that if you are using partitioning-input, the data is distributed properly. The partitioning and repartitioning of files has to be done during pre- and post-processing (section \ref{sec:process}).
-If the model is read from files, the \textit{ModelParametrisation} has to be set. If \textit{ModelParametrisation} $=1$ the data is interpreted as a wave-modulus-model-vector. Else if \textit{ModelParametrisation} $=2$ velocity-vectors are given.
-\textit{ModelFilename}, \textit{SourceFilename}, \textit{ReceiverFilename} and  \textit{SeismogramFilename} are given to determine the respective location and filename. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{morel.vp.mtx}).
-Seismograms can be written in matrix-format (\shellcmd{.MTX}-format $=1$) or in seismic-unix-format (\shellcmd{.SU}-format $=2$). 
+The second section contains all parameters to manage input and output of the model. The first four parameters \textit{ModelRead}, \textit{ModelWrite}, \textit{PartitioningIn} and  \textit{PartitioningOut} can be set with ($1=$ yes) or (else $=$ no). The values for partitioned input and output are only needed when \textit{ModelRead} and \textit{ModelWrite} are set to 1. Make sure, that if you are using partitioning-input, the data is distributed properly. The partitioning and repartitioning of files has to be done during pre- and post-processing (section \ref{sec:process}).
+\textit{ModelFilename} is given to determine the location and filename of the model. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}).
 
-In the third section all variables can be set to create a homogeneous model on-the-fly. The variable \textit{velocityP} ($v_p$) is only needed in elastic and viscoelastic calculations and  \textit{tauP} ($\tau_p$) and \textit{tauS} ($\tau_s$) are solely needed in the viscoelastic case. 
+The third part handles and the boundary conditions. Free surface can turned off by setting (\textit{FreeSurface} $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\textit{FreeSurface} $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\textit{FreeSurface} $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardles of your choise of \textit{FreeSurface} but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\textit{FreeSurface} $=0$) and (\textit{FreeSurface} $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\textit{FreeSurface} $=0$) and introduce additional grid points equal to the thickness of your boundary. The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
+If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
+
+The fourth section are the parameters relevant for viscoelastic modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
+
+In the fifth section all variables can be set to create a homogeneous model on-the-fly. The variable \textit{velocityP} ($v_p$) is only needed in elastic and viscoelastic calculations and  \textit{tauP} ($\tau_p$) and \textit{tauS} ($\tau_s$) are solely needed in the viscoelastic case. 
 The S-wave ($M$) and P-wave ($\mu$) modules can be calculated by:
 \begin{align*}
 	M&=\rho\cdot v_s^2\\
 	\mu &=\rho\cdot v_p^2\\
 \end{align*}
 The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \shellcmd{createHomoge- neousModel.py} in \shellcmd{model/} are examples how to generate external models in both mentioned parametrisation. 
-The last two parameters of the table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
-
-The fist part of the last table-section handles and the boundary conditions. Free surface can turned off by setting (\textit{FreeSurface} $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\textit{FreeSurface} $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\textit{FreeSurface} $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardles of your choise of \textit{FreeSurface} but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\textit{FreeSurface} $=0$) and (\textit{FreeSurface} $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\textit{FreeSurface} $=0$) and introduce additional grid points equal to the thickness of your boundary. The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
-If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
-
-
 To verify the models stability  the courant can be calculated: 
 \begin{equation*}
 	v_{max} \cdot \frac{DT}{DH} \leq 0.43
 \end{equation*}
 
+The sixth section handles the acquisition geometry. SourceFilename and ReceiverFilename must be set to the files where source and receiver properties are specified respectively. The ending .mtx has to be omitted in the config-file. SeismogramFilename gives the location where the modelled seismograms are stored. These seismograms can be saved in SU or mtx format depending on the value of SeismogramFormat. If useReceiversPerShot is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending .shot\_<shot number>.mtx. SourceSignalFilename specifies the location of th file where the source signals are stored in case you want to use your own. If runSimultaneousShots is set to 1, all shots are triggered simultaneously.
+
+In the last section you can set the properties of the wavefield snapshots to save. snapType sets the wavefield type that should be shaved. The snapshots are stored in the directory chosen in WavefieldFilename. Snapshots start at itme tFirstSnapshot, end at time tLastSnapshot and have an interval of tIncSnapshot.
+
 \subsection{Source Signal}
-By default a synthetic source signal is used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal and a spike signal. The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
+There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal and a spike signal. The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
 	\includegraphics[width=.7\textwidth]{images/Signal_Plot.png}
@@ -1277,8 +1285,8 @@ By default a synthetic source signal is used to calculate the wave fields. The S
 	\end{cases}
 \end{align}
 \end{itemize}
-
-To create different source signals the \shellcmd{source.mtx} file can be generated with either the \shellcmd{createSource.m} or the \shellcmd{createSource.py} script. The scripts give the options to change the source type, the wavelet type, the wavelet shape ($1=$ Ricker, $2=$ Fuchs-M\"uller, $3=sin^3$, $4=$ FGaussian, $5=$ Spike, $6=$ Integral of $sin^3$), the center frequency in Hz, the Amplitude and the timeshift in s. 
+To create different source signals the \shellcmd{source.mtx} file can be generated with either the \shellcmd{createSource.m} or the \shellcmd{createSource.py} script. The scripts give the options to change the source type, the wavelet type, the wavelet shape ($1=$ Ricker, $2=$ Fuchs-M\"uller, $3=sin^3$, $4=$ FGaussian, $5=$ Spike, $6=$ Integral of $sin^3$), the center frequency in Hz, the Amplitude and the timeshift in s. \\
+The second way of setting a source function is using your own signal. There are two possibilities to do so. The first is using the same source signal for all shots and the second is using an individual signal for each shot. In both cases the source signal is read from the lines in the file set by SourceSignalFilename. If you set the wavelet type to 2 only the first line of the source signal file is used as wavelet for all shots. If it's set to 3 the lines in this files are used successively for each shot. It's also possible to combine wavelet type 1 and 2 or 1 and 3. Only the combination 2 and 3 is prohibited. If you use your own source signal you have to take care that it has the same length and sampling as your simulation time. Also the file must have as many lines as you have sources with wavelet type 3. 
 
 \clearpage
 \section{Pre- and Post-Processing}\label{sec:process}
@@ -1312,6 +1320,57 @@ To execute the unit-tests change to the \shellcmd{/par} folder and run the \shel
 For faultless function of FDSimulation\_LAMA all tests should execute without failure.
 
 \section{Benchmark}
+
+\subsection{Free surface}
+
+As mentioned in \ref{sec:FreeSurface} there are two implementations of the free surface in FDSimulation\_LAMA. To ensure their proper functionality they are tested against an analytic solution. This solution is for a homogeneous halfspace with a free surface. Tests are done in 2D for the acoustic and the elastic case. Relevant parameters used are listed in table \ref{tab:freeSurfaceBenchmark}. In the acoustic case the shear wave velocity for the analytic solution is set to \SI{1}{\meter\per\second} for a stable result. The results are shown in figure \ref{fig:IVFvsAnalytic} for IVF and in figure \ref{fig:MirrorvsAnalytic} for mirror method. Since there are no surface waves in the acoustic case only the P-phase is visible. The combination of high amplitude surface waves and trace normalization make the P-phase almost disappear in the elastic case. Both results show, that the methods used are able to produce accurate solutions even at larger offsets.
+
+\begin{table}[]
+\centering
+\caption{Relevant parameters used for benchmarking the free surface.}
+\label{tab:freeSurfaceBenchmark}
+\begin{tabular}{@{}cc@{}}
+\toprule
+Parameter        & Value  \\ \midrule
+dh               & \SI{7.5}{\meter}    \\
+dt               & \SI{0.5}{\milli\second} \\
+spatial FD order & 6      \\
+$v_p$               & \SI{3845}{\meter\per\second}   \\
+$v_s$               & \SI{2200}{\meter\per\second}   \\
+$\rho$              & \SI{3000}{\kilogram\per\cubic\meter}   \\ \bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_acoustic_IVF.pdf}
+    \caption{Acoustic case. Lower plots show the P-phase at different offsets.}
+  \end{subfigure} \\
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_elastic_IVF.pdf}
+    \caption{Elastic case. Lower plots show the Rayleigh wave at different offsets.}
+  \end{subfigure} \\
+  \caption{Comparison of IVF with the analytic solution. Traces are normalized. The analytic solution shows some numerical instabilities. Sources and receivers are \SI{7.5}{\meter} below the surface.}\label{fig:IVFvsAnalytic}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_acoustic_mirror.pdf}
+    \caption{Acoustic case. Lower plots show the P-phase at different offsets.}
+  \end{subfigure} \\
+  \begin{subfigure}[b]{1.0\textwidth}
+    \centering
+    \includegraphics[width=0.7\textwidth,trim=2cm 7cm 2cm 7cm, clip=true]{images/fd_vs_analytic_elastic_mirror.pdf}
+    \caption{Elastic case. Lower plots show the Rayleigh wave at different offsets.}
+  \end{subfigure} \\
+  \caption{Comparison of mirror method with the analytic solution. Traces are normalized. The analytic solution shows some numerical instabilities. Sources and receivers are \SI{3.75}{\meter} below the surface.}\label{fig:MirrorvsAnalytic}
+\end{figure}
 
 \cleardoublepage
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}

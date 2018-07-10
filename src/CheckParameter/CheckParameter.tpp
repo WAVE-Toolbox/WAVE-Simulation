@@ -5,32 +5,22 @@ template<typename ValueType, typename IndexType>
 void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration& config, Modelparameter::Modelparameter<ValueType>& model, scai::dmemo::CommunicatorPtr comm)
 {
     ValueType vMaxTmp;
- if (config.get<std::string>("equationType").compare("sh") == 0) {
-      vMaxTmp = model.getVelocityS().max();
-  }
-  else {
-      vMaxTmp = model.getVelocityP().max();
-  }
-  ValueType vMinTmp;
-  if (config.get<std::string>("equationType").compare("acoustic") == 0) {
-      vMinTmp = model.getVelocityP().min();
-  }  
-  else {
-      scai::lama::DenseVector<ValueType> velocityS;
-      velocityS = model.getVelocityS();
-      KITGPI::Common::searchAndReplace<ValueType>(velocityS,0,vMaxTmp,5);
-      vMinTmp = velocityS.min();
-  } 
+    vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS().max() : model.getVelocityP().max();
+  
+    ValueType vMinTmp;
+    scai::lama::DenseVector<ValueType> velocityTmp;
+    velocityTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ?  model.getVelocityP() : model.getVelocityS();
+    KITGPI::Common::searchAndReplace<ValueType>(velocityTmp,0.0,vMaxTmp,5);
+    vMinTmp = velocityTmp.min();
 
-  scai::lama::DenseMatrix<ValueType> acquisition_temp;
-  scai::lama::DenseVector<ValueType> wavelet_fc; 
-  acquisition_temp.readFromFile(config.get<std::string>("SourceFilename"));
-  acquisition_temp.getColumn(wavelet_fc,7);
-  ValueType fcMax=wavelet_fc.max();
-    
-  KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
-  KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<IndexType>("spatialFDorder"), comm);
- 
+    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    scai::lama::DenseVector<ValueType> wavelet_fc; 
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename")+".mtx");
+    acquisition_temp.getColumn(wavelet_fc,7);
+    ValueType fcMax=wavelet_fc.max();
+
+    KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);
+    KITGPI::CheckParameter::checkNumericalDispersion<ValueType,IndexType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<IndexType>("spatialFDorder"), comm);
 }
 
 
@@ -130,10 +120,17 @@ void KITGPI::CheckParameter::checkNumericalDispersion(ValueType dh, ValueType vM
 
 //! \brief Wrapper Function who calls checkSources and checkReceivers
 template<typename ValueType, typename IndexType>
-void KITGPI::CheckParameter::checkAcquisitionGeometry(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::CheckParameter::checkAcquisitionGeometry(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm, IndexType numShots)
 {
-    KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("ReceiverFilename"),comm);
-    KITGPI::CheckParameter::checkSources<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("SourceFilename"),comm);
+    std::string receiverName = config.get<std::string>("ReceiverFilename");
+    if (config.get<bool>("useReceiversPerShot"))
+        for (IndexType shotNumber = 0; shotNumber < numShots; shotNumber++) {
+            KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), receiverName + ".shot_" + std::to_string(shotNumber) +".mtx",comm);
+        }
+    else {
+        KITGPI::CheckParameter::checkReceivers<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), receiverName +".mtx",comm);
+    }
+    KITGPI::CheckParameter::checkSources<ValueType,IndexType>(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<std::string>("SourceFilename")+".mtx",comm);
 }
 
 /*! \brief check if sources are located within the grid

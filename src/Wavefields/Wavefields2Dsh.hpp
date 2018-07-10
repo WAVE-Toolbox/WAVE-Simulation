@@ -24,7 +24,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dsh(){};
+            FD2Dsh(){equationType="sh"; numDimension=2;};
 
             //! Default destructor
             ~FD2Dsh(){};
@@ -32,6 +32,9 @@ namespace KITGPI
             explicit FD2Dsh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             void resetWavefields() override;
+            
+            int getNumDimension() const;
+            std::string getEquationType() const;
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefP() override;
@@ -67,6 +70,10 @@ namespace KITGPI
             void timesAssign(ValueType rhs);
     
           private:
+              
+            using Wavefields<ValueType>::numDimension;
+            using Wavefields<ValueType>::equationType; 
+            
             /* required wavefields */
             using Wavefields<ValueType>::VZ;
             using Wavefields<ValueType>::Sxz;

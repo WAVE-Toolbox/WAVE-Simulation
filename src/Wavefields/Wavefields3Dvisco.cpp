@@ -20,6 +20,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr(
 template <typename ValueType>
 KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType="viscoelastic";
+    numDimension=3;
     init(ctx, dist);
 }
 
@@ -107,6 +109,22 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::resetWavefields()
     this->resetWavefield(Ryz);
     this->resetWavefield(Rxz);
     this->resetWavefield(Rxy);
+}
+
+/*! \brief Get numDimension (3)
+ */
+template <typename ValueType>
+int KITGPI::Wavefields::FD3Dvisco<ValueType>::getNumDimension() const
+{
+    return (numDimension);
+}
+
+/*! \brief Get equationType (viscoelastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Wavefields::FD3Dvisco<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 template <typename ValueType>

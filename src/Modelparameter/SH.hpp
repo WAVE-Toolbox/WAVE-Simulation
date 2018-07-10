@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            SH(){};
+            SH(){equationType = "sh";};
 
             //! Destructor, releases all allocated resources.
             ~SH(){};
@@ -57,6 +57,8 @@ namespace KITGPI
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
+            
+            std::string getEquationType() const;
 
             /* Getter methods for not requiered parameters */
 
@@ -83,13 +85,15 @@ namespace KITGPI
             KITGPI::Modelparameter::SH<ValueType> &operator+=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
             KITGPI::Modelparameter::SH<ValueType> operator-(KITGPI::Modelparameter::SH<ValueType> const &rhs);
             KITGPI::Modelparameter::SH<ValueType> &operator-=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
-	    KITGPI::Modelparameter::SH<ValueType> &operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
+            KITGPI::Modelparameter::SH<ValueType> &operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
 
           private:
             void calculateAveraging() override;
+            
+            using Modelparameter<ValueType>::equationType;  
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
+            using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;

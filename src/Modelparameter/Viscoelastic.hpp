@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Viscoelastic(){};
+            Viscoelastic(){equationType = "viscoelastic";};
 
             //! Destructor, releases all allocated resources.
             ~Viscoelastic(){};
@@ -58,18 +58,19 @@ namespace KITGPI
 
             void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
-
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
+            std::string getEquationType() const;
+            
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
-	    
+    
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-	    
-	    void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+    
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-	    
+    
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(ValueType rhs);
             KITGPI::Modelparameter::Viscoelastic<ValueType> &operator*=(ValueType const &rhs);
@@ -77,14 +78,16 @@ namespace KITGPI
             KITGPI::Modelparameter::Viscoelastic<ValueType> &operator+=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator-(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
             KITGPI::Modelparameter::Viscoelastic<ValueType> &operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
-	    KITGPI::Modelparameter::Viscoelastic<ValueType> &operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
 
           private:
             void calculateAveraging() override;
+            
+            using Modelparameter<ValueType>::equationType; 
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
-	    using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
+            using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;

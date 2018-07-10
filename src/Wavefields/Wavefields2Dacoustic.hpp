@@ -25,7 +25,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dacoustic(){};
+            FD2Dacoustic(){equationType="acoustic"; numDimension=2;};
 
             //! Default destructor
             ~FD2Dacoustic(){};
@@ -34,6 +34,9 @@ namespace KITGPI
 
             void resetWavefields() override;
 
+            int getNumDimension() const;
+            std::string getEquationType() const;
+            
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefVZ() override;
             scai::lama::DenseVector<ValueType> &getRefSxx() override;
@@ -61,12 +64,16 @@ namespace KITGPI
 
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
-	    void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
             void timesAssign(ValueType rhs);
-	    
+    
           private:
+              
+            using Wavefields<ValueType>::numDimension;
+            using Wavefields<ValueType>::equationType; 
+              
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;
