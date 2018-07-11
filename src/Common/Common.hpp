@@ -94,7 +94,7 @@ namespace KITGPI
             scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
             
             for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
-                if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason 
+                if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity() || -write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason 
                     write_searchVector[i] = replaceValue; 
                 }     
             }
