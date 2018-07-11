@@ -102,6 +102,17 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
  \param t current timestep
+ *
+ * The update equations for velocity, \f$v_i\f$, and stress, \f$\sigma_{ij}\f$, are implemented as follows where \f$\mu\f$ is the S-wave modulus and \f$\rho_{inv}\f$ the inverse density. Note that the scaling with the temporal and spatial discretization is included in the derivative matrices. The velocity update is executed first followed by the stress update and finally the source term is added. If a free surface is chosen, the derivative matrices will be adapted to satisfy the free surface condition.
+ *
+ \f{eqnarray*}{
+	\vec{v}_z &+=& \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{xz} + \underline{D}_{\,y,b}^q \vec{\sigma}_{yz} \right)\\
+ \f}
+ \f{eqnarray*}{
+	\vec{\sigma}_{xz} &+=& \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{v}_z \right)\\
+	\vec{\sigma}_{yz} &+=& \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_z \right)
+ \f}
+ *
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
@@ -129,64 +140,63 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-
     if (useFreeSurface) {
         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
    //         FreeSurface.setModelparameter(model);
     }
 
-        /* ----------------*/
-        /* update velocity */
-        /* ----------------*/
+    /* ----------------*/
+    /* update velocity */
+    /* ----------------*/
 
-        update = Dxb * Sxz;
-        update_temp = Dyb * Syz;
-	
-        if (useConvPML) {
-	    ConvPML.apply_vxx(update);
-            ConvPML.apply_vyy(update_temp);
-        }
-        
-        update += update_temp;
+    update = Dxb * Sxz;
+    update_temp = Dyb * Syz;
 
-        update *= inverseDensity;
-        vZ += update;
+    if (useConvPML) {
+        ConvPML.apply_vxx(update);
+        ConvPML.apply_vyy(update_temp);
+    }
+    
+    update += update_temp;
 
-        /* ----------------*/
-        /* pressure update */
-        /* ----------------*/
+    update *= inverseDensity;
+    vZ += update;
 
-        update = Dxf*vZ;
-        if (useConvPML) {
-            ConvPML.apply_sxx_x(update);
-        }
-	
-        update *= sWaveModulusAverageXZ;
+    /* ----------------*/
+    /*  update stress  */
+    /* ----------------*/
 
-        Sxz += update;
+    update = Dxf*vZ;
+    if (useConvPML) {
+        ConvPML.apply_sxx_x(update);
+    }
 
-        update = Dyf*vZ;
-        if (useConvPML) {
-            ConvPML.apply_syy_y(update);
-        }
-        update *= sWaveModulusAverageYZ;
+    update *= sWaveModulusAverageXZ;
 
-        Syz += update;
+    Sxz += update;
 
-        /* Apply free surface to stress update */
-        if (useFreeSurface) {
-            SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-                //       FreeSurface.apply(vZ, Sxz, Syz);
-        }
+    update = Dyf*vZ;
+    if (useConvPML) {
+        ConvPML.apply_syy_y(update);
+    }
+    update *= sWaveModulusAverageYZ;
 
-        /* Apply the damping boundary */
-        if (useDampingBoundary) {
-            DampingBoundary.apply(Sxz, Syz, vZ);
-        }
+    Syz += update;
 
-        /* Apply source and save seismogram */
-        SourceReceiver.applySource(t);
-        SourceReceiver.gatherSeismogram(t);
+    /* Apply free surface to stress update */
+    if (useFreeSurface) {
+        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+            //       FreeSurface.apply(vZ, Sxz, Syz);
+    }
+
+    /* Apply the damping boundary */
+    if (useDampingBoundary) {
+        DampingBoundary.apply(Sxz, Syz, vZ);
+    }
+
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 
 }
 
