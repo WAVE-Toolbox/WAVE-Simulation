@@ -31,6 +31,7 @@ namespace KITGPI
             void normalize();
             void integrate();
             void resetData();
+            void filter(scai::IndexType order, ValueType fc1, ValueType fc2);
 
             void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);

@@ -41,6 +41,21 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
     }
 }
 
+/*! \brief Method to filter the Seismogram-traces
+ \param transFcnFmly Specifies which transfere function type should be used (currently only "butterworth" is possible)
+ \param filterType Type of filter: "lp" = low pass, "hp" = high pass
+ \param fc1 Lower corner frequency in Hz
+ \param fc2 Upper corner frequency in Hz
+ \param order Filter order
+*/
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::filter(scai::IndexType order, ValueType fc1, ValueType fc2)
+{
+    for (auto &i : seismo) {
+        i.filterTraces(order, fc1, fc2);
+    }
+}
+
 /*! \brief Constructor
  *
  * This constructor will initialize the handled Seismogram.

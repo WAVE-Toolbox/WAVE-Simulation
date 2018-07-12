@@ -130,6 +130,9 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
+//     receivers.getSeismogramHandler().readFromFileRaw("/home/dkrieger/Masterarbeit/Saves/seismogram_simple_test.shot_0.mtx",1);
+//     receivers.getSeismogramHandler().filter(4,4.0,0.0);
+//     receivers.getSeismogramHandler().writeToFileRaw("/home/dkrieger/Masterarbeit/Saves/seismogram_simple_test_filt.shot_0.vy.mtx");
     
     
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
