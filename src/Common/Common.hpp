@@ -101,6 +101,19 @@ namespace KITGPI
             
             write_searchVector.release();                 
         }
+        
+        /*! \brief Calculate the next power of two.
+        \param nt number the next power of two should be calculated for
+        */
+        template <typename ValueType>
+        scai::IndexType calcNextPowTwo(scai::IndexType nt)
+        {
+            ValueType temp = scai::common::Math::log(ValueType(nt));
+            temp /= scai::common::Math::log(2.0);
+            temp = scai::common::Math::ceil(temp);
+            temp = scai::common::Math::pow(ValueType(2.0), temp);
+            return temp;
+        }
 
     }
 }
