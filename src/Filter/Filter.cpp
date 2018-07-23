@@ -9,24 +9,11 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
 {
     SCAI_ASSERT_ERROR(dt != 0.0, "Can't initialize filter with dt = 0.0")
     SCAI_ASSERT_ERROR(nt != 0, "Can't initialize filter with nt = 0")
-    zeroPadding = calcZeroPadding(nt);
+    zeroPadding = Common::calcNextPowTwo<ValueType>(nt) - nt;
     scai::IndexType filterLength = zeroPadding + nt;
     transFcn.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
     df = 1 / (filterLength * dt);
     fNyquist = 1 / (2 * dt);
-}
-
-/*! \brief Calculate amount of zeros needed for padding to the next power of two.
- \param nt Length of the signal the filter should be applied on
- */
-template <typename ValueType>
-scai::IndexType KITGPI::Filter::Filter<ValueType>::calcZeroPadding(scai::IndexType nt)
-{
-    ValueType temp = scai::common::Math::log(ValueType(nt));
-    temp /= scai::common::Math::log(2.0);
-    temp = scai::common::Math::ceil(temp);
-    temp = scai::common::Math::pow(ValueType(2.0), temp);
-    return temp - nt;
 }
 
 /*! \brief Calculate the frequency range corresponding to the output of fft.
@@ -80,8 +67,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, sc
     poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0);
     poly[0] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
     
-    scai::IndexType zeroPadPoly = calcZeroPadding(order+1);
-    scai::IndexType fPolyLen = order + 1 + zeroPadPoly;
+    scai::IndexType fPolyLen = Common::calcNextPowTwo<ValueType>(order+1);
     
     auto fPolyDist = std::make_shared<scai::dmemo::NoDistribution>(fPolyLen);
     auto polyDist = poly.getDistributionPtr();
