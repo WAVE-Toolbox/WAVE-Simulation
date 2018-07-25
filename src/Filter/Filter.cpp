@@ -217,25 +217,22 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVecto
  \param signal Signal that should be filtered
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType> &signal)
+void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType> &signal) const
 {
     scai::IndexType len = 2 * fNyquist / df;
     SCAI_ASSERT_ERROR(signal.size() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseVector<ComplexValueType> fSignal;
-
-    auto fDist = std::make_shared<scai::dmemo::NoDistribution>(len);
-    auto tDist = signal.getDistributionPtr();
     
     fSignal = scai::lama::cast<ComplexValueType>(signal);
-    fSignal.resize(fDist);
+    fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
     scai::lama::fft<ComplexValueType>(fSignal);
 
     fSignal *= transFcn;
     fSignal /= len; // proper fft normalization
     
     scai::lama::ifft<ComplexValueType>(fSignal);
-    fSignal.resize(tDist);
+    fSignal.resize(signal.getDistributionPtr());
 
     signal = scai::lama::real(fSignal);
 }
@@ -244,7 +241,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
  \param signal Signal that should be filtered
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal)
+void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal) const
 {
     scai::IndexType len = 2*fNyquist/df;
     SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
@@ -264,6 +261,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
     fSignal.resize(signal.getRowDistributionPtr(),signal.getColDistributionPtr());
     signal = scai::lama::real(fSignal);
 }
+
 
 template class KITGPI::Filter::Filter<double>;
 template class KITGPI::Filter::Filter<float>;
