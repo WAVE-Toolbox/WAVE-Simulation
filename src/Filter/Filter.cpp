@@ -217,25 +217,22 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVecto
  \param signal Signal that should be filtered
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType> &signal)
+void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType> &signal) const
 {
     scai::IndexType len = 2 * fNyquist / df;
     SCAI_ASSERT_ERROR(signal.size() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseVector<ComplexValueType> fSignal;
-
-    auto fDist = std::make_shared<scai::dmemo::NoDistribution>(len);
-    auto tDist = signal.getDistributionPtr();
     
     fSignal = scai::lama::cast<ComplexValueType>(signal);
-    fSignal.resize(fDist);
+    fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
     scai::lama::fft<ComplexValueType>(fSignal);
 
     fSignal *= transFcn;
     fSignal /= len; // proper fft normalization
     
     scai::lama::ifft<ComplexValueType>(fSignal);
-    fSignal.resize(tDist);
+    fSignal.resize(signal.getDistributionPtr());
 
     signal = scai::lama::real(fSignal);
 }
@@ -244,43 +241,27 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
  \param signal Signal that should be filtered
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal)
+void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal) const
 {
-    scai::IndexType nTraces = signal.getNumRows();
-    scai::lama::DenseVector<ValueType> thisTrace;
-    for (scai::IndexType iTrace = 0; iTrace < nTraces; ++iTrace) {
-        signal.getRow(thisTrace, iTrace);
-        this->apply(thisTrace);
-        signal.setRow(thisTrace, iTrace, scai::common::BinaryOp::COPY);
-    }
+    scai::IndexType len = 2*fNyquist/df;
+    SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
+
+    scai::lama::DenseMatrix<ComplexValueType> fSignal;
+
+    fSignal = scai::lama::cast<ComplexValueType>(signal);
+    fSignal.resize(signal.getRowDistributionPtr(),std::make_shared<scai::dmemo::NoDistribution>(len));
+
+    scai::lama::fft<ComplexValueType>(fSignal,1);
+    
+    fSignal.scaleColumns(transFcn);
+
+    fSignal *= (1.0 / ValueType(len)); // proper fft normalization
+
+    scai::lama::ifft<ComplexValueType>(fSignal,1);
+    fSignal.resize(signal.getRowDistributionPtr(),signal.getColDistributionPtr());
+    signal = scai::lama::real(fSignal);
 }
-// template <typename ValueType>
-// void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal)
-// {
-//     scai::IndexType len = 2*fNyquist/df;
-//     SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
-// 
-//     scai::lama::DenseMatrix<ComplexValueType> fSignal;
-//     
-//     auto colDist = signal.getColDistributionPtr();
-//     auto rowDist = signal.getRowDistributionPtr();
-//     auto fColDist = std::make_shared<scai::dmemo::NoDistribution>(len);
-// 
-//     fSignal = scai::lama::cast<ComplexValueType>(signal);
-//     fSignal.resize(rowDist,fColDist);
-// 
-//     scai::lama::DenseMatrix<ComplexValueType> transDiag(fColDist, fColDist);
-//     transDiag.assignDiagonal(transFcn);
-//     fSignal = fSignal*transDiag;
-//     
-//     scai::lama::fft<ComplexValueType>(fSignal,1);
-// 
-//     fSignal *= (1.0 / ValueType(len)); // proper fft normalization
-// 
-//     scai::lama::ifft<ComplexValueType>(fSignal,1);
-//     fSignal.resize(rowDist,colDist);
-//     signal = scai::lama::real(fSignal);
-// }
+
 
 template class KITGPI::Filter::Filter<double>;
 template class KITGPI::Filter::Filter<float>;
