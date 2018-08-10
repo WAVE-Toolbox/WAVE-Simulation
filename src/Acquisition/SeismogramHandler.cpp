@@ -41,6 +41,17 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
     }
 }
 
+/*! \brief Method to filter the Seismogram-traces
+ \param freqFilter filter object
+*/
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::filter(Filter::Filter<ValueType> const &freqFilter)
+{
+    for (auto &i : seismo) {
+        i.filterTraces(freqFilter);
+    }
+}
+
 /*! \brief Constructor
  *
  * This constructor will initialize the handled Seismogram.

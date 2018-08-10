@@ -150,6 +150,20 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
     }
 }
 
+//! \brief Filter the seismogram-traces
+/*!
+ *
+ * This methode filters the traces of the seismogram.
+ \param freqFilter filter object
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<ValueType> const &freqFilter)
+{
+    if (this->getNumSamples() != 0) {
+        freqFilter.apply(data);
+    }     
+}
+
 //! \brief Setter method for the temporal sampling DT
 /*!
  *

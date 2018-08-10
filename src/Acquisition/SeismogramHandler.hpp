@@ -4,6 +4,7 @@
 #include "Acquisition.hpp"
 #include "Seismogram.hpp"
 #include <scai/hmemo.hpp>
+#include "../Filter/Filter.hpp"
 
 namespace KITGPI
 {
@@ -31,6 +32,7 @@ namespace KITGPI
             void normalize();
             void integrate();
             void resetData();
+            void filter(Filter::Filter<ValueType> const &freqFilter);
 
             void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);

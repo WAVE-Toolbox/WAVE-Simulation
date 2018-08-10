@@ -63,15 +63,13 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
 
     /* Prepare Damping Boundary */
     if (config.get<IndexType>("DampingBoundary") == 1) {
-        if (config.get<IndexType>("DampingBoundaryType") == 1) {
-            useDampingBoundary = true;
-            DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-        }
+        useDampingBoundary = true;
+        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+    }
 
-        if (config.get<IndexType>("DampingBoundaryType") == 2) {
-            useConvPML = true;
-            ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-        }
+    if (config.get<IndexType>("DampingBoundary") == 2) {
+        useConvPML = true;
+        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
 
@@ -87,6 +85,18 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param tStart Counter start in for loop over time steps
  \param tEnd Counter end  in for loop over time steps
  \param DT Temporal Sampling intervall in seconds
+ *
+ * The update equations for velocity, \f$v_i\f$, and pressure, \f$p\f$, are implemented as follows where \f$M\f$ is the P-wave modulus and \f$\rho_{inv}\f$ the inverse density. Note that the scaling with the temporal and spatial discretization is included in the derivative matrices. The velocity update is executed first followed by the pressure update and finally the source term is added. If a free surface is chosen, the derivative matrices will be adapted to satisfy the free surface condition.
+ *
+ \f{eqnarray*}
+	\vec{v}_x &+=& \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p} \right)\\
+	\vec{v}_y &+=& \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p} \right)\\
+	\vec{v}_z &+=& \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p} \right)
+ \f}
+  \f{eqnarray*}
+	\vec{p} &+=& \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{M}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x +\underline{D}_{\,y,b}^q \vec{v}_y + \underline{D}_{\,z,b}^q \vec{v}_z \right) 
+ \f}
+ *
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
@@ -117,63 +127,77 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-        /* update velocity */
-        update = Dxf * p;
-        if (useConvPML) {
-            ConvPML.apply_p_x(update);
-        }
-        update *= inverseDensityAverageX;
-        vX += update;
+    /* ----------------*/
+    /* update velocity */
+    /* ----------------*/
+    
+    /* -------- */
+    /*    vx    */
+    /* -------- */
+    update = Dxf * p;
+    if (useConvPML) {
+        ConvPML.apply_p_x(update);
+    }
+    update *= inverseDensityAverageX;
+    vX += update;
 
-        if (useFreeSurface == 1) {
-            /* Apply image method */
-            update = DyfFreeSurface * p;
-        } else {
-            update = Dyf * p;
-        }
+    /* -------- */
+    /*    vy    */
+    /* -------- */
+    if (useFreeSurface == 1) {
+        /* Apply image method */
+        update = DyfFreeSurface * p;
+    } else {
+        update = Dyf * p;
+    }
 
-        if (useConvPML) {
-            ConvPML.apply_p_y(update);
-        }
-        update *= inverseDensityAverageY;
-        vY += update;
+    if (useConvPML) {
+        ConvPML.apply_p_y(update);
+    }
+    update *= inverseDensityAverageY;
+    vY += update;
 
-        update = Dzf * p;
-        if (useConvPML) {
-            ConvPML.apply_p_z(update);
-        }
-        update *= inverseDensityAverageZ;
-        vZ += update;
+    /* -------- */
+    /*    vz    */
+    /* -------- */
+    update = Dzf * p;
+    if (useConvPML) {
+        ConvPML.apply_p_z(update);
+    }
+    update *= inverseDensityAverageZ;
+    vZ += update;
 
-        /* pressure update */
-        update = Dxb * vX;
-        if (useConvPML) {
-            ConvPML.apply_vxx(update);
-        }
+    /* --------------- */
+    /* update pressure */
+    /* --------------- */
+    update = Dxb * vX;
+    if (useConvPML) {
+        ConvPML.apply_vxx(update);
+    }
 
-        update_temp = Dyb * vY;
-        if (useConvPML) {
-            ConvPML.apply_vyy(update_temp);
-        }
-        update += update_temp;
+    update_temp = Dyb * vY;
+    if (useConvPML) {
+        ConvPML.apply_vyy(update_temp);
+    }
+    update += update_temp;
 
-        update_temp = Dzb * vZ;
-        if (useConvPML) {
-            ConvPML.apply_vzz(update_temp);
-        }
-        update += update_temp;
+    update_temp = Dzb * vZ;
+    if (useConvPML) {
+        ConvPML.apply_vzz(update_temp);
+    }
+    update += update_temp;
 
-        update *= pWaveModulus;
-        p += update;
+    update *= pWaveModulus;
+    p += update;
 
-        /* Apply the damping boundary */
-        if (useDampingBoundary) {
-            DampingBoundary.apply(p, vX, vY, vZ);
-        }
+    /* Apply the damping boundary */
+    if (useDampingBoundary) {
+        DampingBoundary.apply(p, vX, vY, vZ);
+    }
 
-        /* Apply source and save seismogram */
-        SourceReceiver.applySource(t);
-        SourceReceiver.gatherSeismogram(t);
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Dacoustic<float>;

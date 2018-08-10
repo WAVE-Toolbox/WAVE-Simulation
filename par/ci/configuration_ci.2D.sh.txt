@@ -45,11 +45,12 @@ tauP=0.0         # Tau value for P-waves
 tauS=0.0         # Tau value for S-waves
 
 # Acquisition
-SourceFilename=ci/sources_ci.2D.sh.mtx
-ReceiverFilename=ci/receiver_ci.2D.sh.mtx
+SourceFilename=ci/sources_ci.2D.sh
+ReceiverFilename=ci/receiver_ci.2D.sh
 SeismogramFilename=ci/seismogram.2D.sh.ci
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+useReceiversPerShot=0
 
 saveSnapshots=0
 snapType=0

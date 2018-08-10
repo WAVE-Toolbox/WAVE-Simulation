@@ -53,10 +53,10 @@ namespace KITGPI
                 Wavefields::Wavefields<ValueType> &wavefield; //!< Wavefields
 
                 /* source */
-                Acquisition::SeismogramHandler<ValueType> const &sources; //!< Sources
+                Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources
 
                 /* receiver */
-                Acquisition::SeismogramHandler<ValueType> &receivers; //!< recievers
+                Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec; //!< Seismogram Handler of Receivers
 
                 /* Temporary memory */
                 scai::lama::DenseVector<ValueType> applySource_samplesVX; //!< Variable to apply velocity Source-samples in x-direction

@@ -40,8 +40,7 @@ PartitionedOut=0          # 1=Write files parallel, 0=serial
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
 
 # Damping Boundary
-DampingBoundary=1         # 1=ON, 0=OFF
-DampingBoundaryType=1     # Type of damping boundary: 1=ABS 2=CPML
+DampingBoundary=0         # Type of damping boundary: 0=OFF 1=ABS 2=CPML
 BoundaryWidth=10          # Width of damping boundary in grid points
 DampingCoeff=8.0          # Damping coefficient 
 VMaxCPML=3500.0           # Maximum velocity of the CPML
@@ -61,11 +60,13 @@ tauP=0.0                  # Tau value for P-waves
 tauS=0.0                  # Tau value for S-waves
 
 # Acquisition
-SourceFilename=acquisition/sources.mtx         # location of source file
-ReceiverFilename=acquisition/receiver.mtx      # location of receiver file
+SourceFilename=acquisition/sources             # location of source file
+ReceiverFilename=acquisition/receiver          # location of receiver file
 SeismogramFilename=seismograms/seismogram      # target location of seismogram
+SourceSignalFilename=acquisition/signal        # location of the source signal file
 SeismogramFormat=1                             # 1=MTX, 2=SU
 NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
 
 # wavefield snapshots

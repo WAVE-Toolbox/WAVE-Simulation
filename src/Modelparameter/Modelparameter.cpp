@@ -1079,7 +1079,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
     
-    Common::replaceInvalid<ValueType,IndexType>(vecInverseAvDensity,0.0);
+    Common::replaceInvalid<ValueType>(vecInverseAvDensity,0.0);
 }
 
 /*! \brief calculate averaged s-wave modulus
@@ -1091,13 +1091,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
-    Common::searchAndReplace<ValueType,IndexType>(vecSWaveModulus,1.0,1.0,1);
+    Common::searchAndReplace<ValueType>(vecSWaveModulus,1.0,1.0,1);
     
     vecAvSWaveModulus = 1 / vecSWaveModulus;
     auto temp = lama::eval<lama::DenseVector<ValueType>>(avSWaveModulusMatrix * vecAvSWaveModulus);
     vecAvSWaveModulus = 1 / temp;
     
-    Common::searchAndReplace<ValueType,IndexType>(vecAvSWaveModulus,4.0,0.0,1);
+    Common::searchAndReplace<ValueType>(vecAvSWaveModulus,4.0,0.0,1);
     
 }
 

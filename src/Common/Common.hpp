@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 #include <scai/hmemo/HArray.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
@@ -19,8 +20,8 @@ namespace KITGPI
         \param replaceValue The value by which the enties found in searchVector are replaced with.
         \param compareType The relation the values in searchVector and threshold should have. Possible values are 1 := <, 2 := >, 3 := <=, 4 := >=, 5 := ==
         */
-        template<typename ValueType, typename IndexType> 
-        void searchAndReplace(scai::lama::DenseVector<ValueType> &searchVector, ValueType threshold, ValueType replaceValue, IndexType compareType) {
+        template<typename ValueType> 
+        void searchAndReplace(scai::lama::DenseVector<ValueType> &searchVector, ValueType threshold, ValueType replaceValue, scai::IndexType compareType) {
             
             // needs rework with new LAMA features
             scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
@@ -29,7 +30,7 @@ namespace KITGPI
             switch(compareType) {
                 case 1:
                 {
-                    for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
                         if (write_searchVector[i] < threshold) { 
                             write_searchVector[i] = replaceValue; 
                         }     
@@ -38,7 +39,7 @@ namespace KITGPI
                 }
                 case 2:
                 {
-                    for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
                         if (write_searchVector[i] > threshold) { 
                             write_searchVector[i] = replaceValue; 
                         }     
@@ -47,7 +48,7 @@ namespace KITGPI
                 }
                 case 3:
                 {
-                    for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
                         if (write_searchVector[i] <= threshold) { 
                             write_searchVector[i] = replaceValue; 
                         }     
@@ -56,7 +57,7 @@ namespace KITGPI
                 }
                 case 4:
                 {
-                    for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
                         if (write_searchVector[i] >= threshold) { 
                             write_searchVector[i] = replaceValue; 
                         }     
@@ -65,7 +66,7 @@ namespace KITGPI
                 }
                 case 5:
                 {
-                    for (IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
                         if (write_searchVector[i] == threshold) { 
                             write_searchVector[i] = replaceValue; 
                         }     
@@ -80,22 +81,39 @@ namespace KITGPI
             write_searchVector.release();
         }
         
-        template<typename ValueType, typename IndexType> 
+        /*! \brief Replaces NaN and Inf values in a vector by a given value
+        *
+        \param searchVector Input vector
+        \param replaceValue Value NaN and Inf are set to
+        */
+        template<typename ValueType> 
         void replaceInvalid(scai::lama::DenseVector<ValueType> &searchVector, ValueType replaceValue) {
             
             // needs rework with new LAMA features
             scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
             scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
             
-            for (IndexType i = 0; i < write_searchVector.size(); ++i) {
-                if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason 
+            for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity() || -write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason 
                     write_searchVector[i] = replaceValue; 
                 }     
             }
             
             write_searchVector.release();                 
         }
-
+        
+        /*! \brief Calculate the next power of two.
+        \param nt number the next power of two should be calculated for
+        */
+        template <typename ValueType>
+        scai::IndexType calcNextPowTwo(scai::IndexType nt)
+        {
+            ValueType temp = scai::common::Math::log(ValueType(nt));
+            temp /= scai::common::Math::log(2.0);
+            temp = scai::common::Math::ceil(temp);
+            temp = scai::common::Math::pow(ValueType(2.0), temp);
+            return temp;
+        }
 
     }
 }

@@ -29,12 +29,14 @@ namespace KITGPI
           public:
             //! \brief Default constructor
             Receivers(){};
-
-            explicit Receivers(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            
             //! \brief Default destructor
             ~Receivers(){};
 
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
           private:
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
