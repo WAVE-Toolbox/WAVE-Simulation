@@ -21,7 +21,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD2Delastic<ValueType>::gather
 
     gatherSeismogram_samplesPressure.gather(Sxx, coordinates, common::BinaryOp::COPY);
     gatherSeismogram_samplesPressure.gather(Syy, coordinates, common::BinaryOp::ADD);
-    gatherSeismogram_samplesPressure*=-0.5;
+    gatherSeismogram_samplesPressure*=0.5;
     seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure, t, common::BinaryOp::COPY);
 }
 
