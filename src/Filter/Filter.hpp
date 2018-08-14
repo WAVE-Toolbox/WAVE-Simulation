@@ -33,8 +33,7 @@ namespace KITGPI
             void calc(std::string transFcnFmly, std::string filterType, scai::IndexType order, ValueType fc1, ValueType fc2 = 0.0);
             void apply(scai::lama::DenseVector<ValueType> &signal) const;
             void apply(scai::lama::DenseMatrix<ValueType> &signal) const;
-            
-            bool getInitializationStatus();
+// 
         private:
             scai::IndexType zeroPadding;
             scai::lama::DenseVector<ComplexValueType> transFcn;
