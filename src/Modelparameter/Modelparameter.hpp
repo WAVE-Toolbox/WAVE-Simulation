@@ -108,6 +108,8 @@ namespace KITGPI
 
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
+            
+            virtual void applyThresholds(Configuration::Configuration const &config) = 0;
 
             virtual scai::lama::Vector<ValueType> const &getInverseDensityAverageX();
             virtual scai::lama::Vector<ValueType> const &getInverseDensityAverageX() const;

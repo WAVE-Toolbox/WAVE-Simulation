@@ -22,6 +22,33 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configurati
     HOST_PRINT(comm, "Model ready!\n\n");
 }
 
+/*! \brief Apply thresholds to model parameters
+ \param config Configuration class
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+    lama::DenseVector<ValueType> maskP(velocityP); //mask to restore vacuum
+    maskP.unaryOp(maskP,common::UnaryOp::SIGN);
+    maskP.unaryOp(maskP,common::UnaryOp::ABS);
+    
+    lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
+    maskS.unaryOp(maskP,common::UnaryOp::SIGN);
+    maskS.unaryOp(maskP,common::UnaryOp::ABS);
+    
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
+    
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
+     
+    velocityP *= maskP;
+    density *= maskP;
+    velocityS *= maskS;
+}
+
 
 
 /*! \brief Constructor that is using the Configuration class

@@ -25,7 +25,24 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configurat
     HOST_PRINT(comm, "Model ready!\n\n");
 }
 
-
+/*! \brief Apply thresholds to model parameters
+ \param config Configuration class
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+    lama::DenseVector<ValueType> mask(velocityP); //mask to restore vacuum
+    mask.unaryOp(mask,common::UnaryOp::SIGN);
+    mask.unaryOp(mask,common::UnaryOp::ABS);
+    
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
+     
+    velocityP *= mask;
+    density *= mask;
+}
 
 /*! \brief Constructor that is using the Configuration class
  *
