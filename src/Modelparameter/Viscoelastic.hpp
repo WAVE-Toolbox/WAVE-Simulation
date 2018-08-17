@@ -66,6 +66,8 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
     
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
+            
+            void applyThresholds(Configuration::Configuration const &config) override;
     
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
