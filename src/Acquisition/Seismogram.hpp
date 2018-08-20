@@ -5,11 +5,11 @@
 #include <scai/lama.hpp>
 
 #include "../Configuration/Configuration.hpp"
+#include "../Filter/Filter.hpp"
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
 #include "math.h"
 #include "segy.hpp"
-#include "../Filter/Filter.hpp"
 
 namespace KITGPI
 {
@@ -49,6 +49,7 @@ namespace KITGPI
             void replicate();
 
             void resetData();
+            void resetSeismogram();
 
             void normalizeTrace();
             void integrateTraces();
@@ -88,11 +89,10 @@ namespace KITGPI
             scai::IndexType numTracesGlobal; //!< Number of global traces
             scai::IndexType numTracesLocal;  //!< Number of local traces
             scai::IndexType normalizeTraces; //!< L2 Norm of seismogram is calculated
-            scai::lama::DenseVector<ValueType> integralVector;
 
             /* header information */
-            ValueType DT;                                   //!< Temporal sampling interval in seconds
-            SeismogramType type;                            //!< Type of trace as #SeismogramType
+            ValueType DT;                                         //!< Temporal sampling interval in seconds
+            SeismogramType type;                                  //!< Type of trace as #SeismogramType
             scai::lama::DenseVector<scai::IndexType> coordinates; //!< Coordinates of the traces
             scai::IndexType sourceCoordinate;                     //!< Coordinate of source point (in case a single source is used)
 

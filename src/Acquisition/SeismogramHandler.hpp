@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../Configuration/Configuration.hpp"
+#include "../Filter/Filter.hpp"
 #include "Acquisition.hpp"
 #include "Seismogram.hpp"
 #include <scai/hmemo.hpp>
-#include "../Filter/Filter.hpp"
 
 namespace KITGPI
 {
@@ -32,6 +32,7 @@ namespace KITGPI
             void normalize();
             void integrate();
             void resetData();
+            void resetSeismograms();
             void filter(Filter::Filter<ValueType> const &freqFilter);
 
             void setSourceCoordinate(scai::IndexType sourceCoord);

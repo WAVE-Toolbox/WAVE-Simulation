@@ -9,7 +9,7 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
- //   std::cout<< "copy seismogram" << std::endl;
+    //   std::cout<< "copy seismogram" << std::endl;
     numSamples = rhs.numSamples;
     numTracesGlobal = rhs.numTracesGlobal;
     numTracesLocal = rhs.numTracesLocal;
@@ -18,7 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
- //   std::cout<< "copy seismogram data " << data << std::endl;
+    //   std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
 /*!
@@ -142,11 +142,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
     scai::lama::DenseVector<ValueType> tempRow;
 
     for (IndexType i = 0; i < numTracesGlobal; i++) {
-	    data.getRow(tempRow, i);
-	    for (IndexType j = 0; j <tempRow.size()-1; j++) {
-	          tempRow[j+1]=tempRow[j+1]*DT+tempRow[j];
-	    }
-	    data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        data.getRow(tempRow, i);
+        for (IndexType j = 0; j < tempRow.size() - 1; j++) {
+            tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
+        }
+        data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -161,7 +161,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<Val
 {
     if (this->getNumSamples() != 0) {
         freqFilter.apply(data);
-    }     
+    }
 }
 
 //! \brief Setter method for the temporal sampling DT
@@ -316,7 +316,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
- //   std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+    //   std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
@@ -343,6 +343,24 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
 {
     data.scale(0.0);
+}
+
+//! \brief Reset of the seismogram
+/*!
+ * This method clears the seismogram data and coordinates and sets numTraces to zero
+ * However, the memory will stay allocated, only the content is overwriten by zeros.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
+{
+    numTracesGlobal = 0;
+    numTracesLocal = 0;
+    data.clear();
+    coordinates = lama::DenseVector<scai::IndexType>();
+    sourceCoordinate = 0;
+    numSamples = 0;
+    DT = 0.0;
+    normalizeTraces = 0;
 }
 
 //! \brief Redistribute the seismogram data
@@ -376,12 +394,12 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
 {
     scai::dmemo::DistributionPtr distTraces;
     scai::dmemo::DistributionPtr distSamples;
-    
-    if (copyDist == 1){
+
+    if (copyDist == 1) {
         distTraces = data.getRowDistributionPtr();
         distSamples = data.getColDistributionPtr();
     }
-        
+
     data.readFromFile(addSeismogramTypeToName(filename));
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
@@ -395,7 +413,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
         redistribute(distTraces, distSamples);
     }
 }
-
 
 //! \brief Read a seismogram from disk without header
 /*!

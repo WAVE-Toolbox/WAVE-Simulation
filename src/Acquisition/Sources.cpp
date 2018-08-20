@@ -33,9 +33,9 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber)
 {
-    /* Read shotNumber row ofacquisition matrix */
+    /* Read shotNumber row of acquisition matrix */
     scai::lama::DenseStorage<ValueType> test;
-    test.readFromFile(config.get<std::string>("SourceFilename")+".mtx", shotNumber, 1);
+    test.readFromFile(config.get<std::string>("SourceFilename") + ".mtx", shotNumber, 1);
     scai::lama::DenseMatrix<ValueType> acquisition_temp(test);
 
     this->init(acquisition_temp, config, ctx, dist_wavefield);
@@ -52,7 +52,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
 {
     /* Read acquisition matrix */
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename")+".mtx");
+    acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
 
     this->init(acquisition_temp, config, ctx, dist_wavefield);
 }
@@ -73,6 +73,9 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
+    /*reset seismograms. This is necessary when init will be called multiple times*/
+    this->getSeismogramHandler().resetSeismograms();
+
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
@@ -111,7 +114,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     /* Generate Signals */
     allocateSeismogram(NT, this->getSeismogramTypes().getDistributionPtr(), ctx);
     signals.setDT(DT);
-    signalMatrix.redistribute(signals.getData().getRowDistributionPtr(),signals.getData().getColDistributionPtr());
+    signalMatrix.redistribute(signals.getData().getRowDistributionPtr(), signals.getData().getColDistributionPtr());
     signals.getData() = signalMatrix;
     copySignalsToSeismogramHandler();
 }
@@ -139,7 +142,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Con
 {
     ValueType DT = config.get<ValueType>("DT");
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
-    
+
     SCAI_ASSERT(this->getNumParameter() >= 5, "Number of source parameters < 5. Cannot generate signals. ");
     SCAI_ASSERT_GT_DEBUG(NT, 0, "NT must be positive");
     SCAI_ASSERT_GT_DEBUG(DT, 0, "DT must be positive");
@@ -249,14 +252,13 @@ void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(scai::IndexType
 {
     scai::lama::DenseStorage<ValueType> signalsMatrixTmp;
     signalsMatrixTmp.readFromFile(signalFilename, numSourceRead, 1);
-    
+
     SCAI_ASSERT(signalsMatrixTmp.getNumColumns() == NT, "Source signal has invalid length");
-    
+
     hmemo::HArray<ValueType> localsignal = signalsMatrixTmp.getValues();
     lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
     signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
 }
-
 
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::checkRequiredNumParameter(IndexType numParameterCheck)
@@ -279,14 +281,14 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(I
         wavelet_tshift.allocate(numTracesGlobal);
     }
 
-    lama::DenseVector<ValueType> tmp;   // needed for conversion
+    lama::DenseVector<ValueType> tmp; // needed for conversion
 
     /* Save source configurations from acquisition matrix in vectors */
     acquisition.getRow(tmp, 4);
-    wavelet_type = lama::cast<IndexType>( tmp );
+    wavelet_type = lama::cast<IndexType>(tmp);
     if (numParameter > 5) {
         acquisition.getRow(tmp, 5);
-        wavelet_shape = lama::cast<IndexType>( tmp );
+        wavelet_shape = lama::cast<IndexType>(tmp);
         acquisition.getRow(wavelet_fc, 6);
         acquisition.getRow(wavelet_amp, 7);
         acquisition.getRow(wavelet_tshift, 8);
@@ -321,7 +323,7 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
         tempIndexType = this->getSeismogramTypes().getValue(i) - 1;
 
         signals.getData().getRow(temp, i);
-    
+
         seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
 
         ++count[tempIndexType];

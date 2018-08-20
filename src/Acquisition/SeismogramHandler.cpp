@@ -145,6 +145,17 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
     }
 }
 
+/*! \brief Method to reset all Seismogram (components)
+ *
+ * This method clears the Seismogram data 
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetSeismograms()
+{
+    for (auto &i : seismo) {
+        i.resetSeismogram();
+    }
+}
 //! \brief Getter method for the number of samples
 /*!
  * This method returns the number of temporal samples of the specified #SeismogramType.\n
