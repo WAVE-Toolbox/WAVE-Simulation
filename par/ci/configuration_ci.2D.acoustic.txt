@@ -57,6 +57,7 @@ SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0
 runSimultaneousShots=1 # 1=All sources specified in SourceFilename are triggerd simultaneously
+seismoSampleCoeff=1                            # Seismogram subsampling coefficient (setting this to e.g. 2 will only write every second time step)
 
 # wavefield snapshots
 snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
