@@ -114,6 +114,45 @@ namespace KITGPI
             temp = scai::common::Math::pow(ValueType(2.0), temp);
             return temp;
         }
+        
+        /*! \brief Calculate a matrix which resamples the columns.
+        \param rMat resampling matrix
+        \param numCols number of samples in one row
+        \param resamplingCoeff resampling coefficient
+        */
+        template <typename ValueType>
+        void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, scai::IndexType resamplingCoeff) {
+   
+            scai::IndexType numColsNew = scai::IndexType(scai::common::Math::ceil<ValueType>(ValueType(numCols)/ValueType(resamplingCoeff)));
+            
+            scai::IndexType rawIA[numCols + 1];
+            scai::IndexType rawJA[numColsNew];
+            
+            rawIA[0] = 0;
+            scai::IndexType counter = 1;
+            scai::IndexType value = 1;
+            
+            for (scai::IndexType i = 1; i < (numCols + 1); i++) {
+                rawIA[i] = value;
+                if (counter == resamplingCoeff) {
+                    value++;
+                    counter = 0;
+                }
+                counter++;
+            }
+            
+            for (scai::IndexType i = 0; i < numColsNew; i++)
+                rawJA[i] = i;
+            
+            scai::hmemo::HArray<scai::IndexType> csrIA(numCols + 1, rawIA );
+            scai::hmemo::HArray<scai::IndexType> csrJA(numColsNew, rawJA );
+            scai::hmemo::HArray<ValueType> csrValues(numColsNew,1.0);
+            
+            scai::lama::CSRStorage<ValueType> csrStorage (numCols, numColsNew, csrIA, csrJA, csrValues);
+            scai::lama::CSRSparseMatrix<ValueType> csrMatrix(csrStorage);
+            
+            rMat.swap(csrMatrix);
+        }
 
     }
 }

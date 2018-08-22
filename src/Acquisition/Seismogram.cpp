@@ -229,6 +229,18 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType no
     normalizeTraces = normalize;
 }
 
+//! \brief Setter methode to set matrix for resampling this seismogram.
+/*!
+ \param rMat Resampling matrix
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setResampleCoeff(IndexType resampleCoeff)
+{
+    SCAI_ASSERT(resampleCoeff > 0, "Resampling coefficient has to be greater than 0");
+    if (this->getNumSamples() != 0)
+        Common::calcResampleMat<ValueType>(resampleMat, numSamples, resampleCoeff);
+}
+
 //! \brief Getter method for #SeismogramType
 /*!
  *
@@ -332,6 +344,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 
     data.allocate(distTraces, no_dist_NT);
     coordinates.allocate(distTraces);
+    
+    resampleMat.setContextPtr(ctx);
+    resampleMat = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
 
 //! \brief Reset of the seismogram data
@@ -430,7 +445,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const &filename) const
 {
     if (data.getNumValues() > 0) {
-        data.writeToFile(addSeismogramTypeToName(filename));
+        scai::lama::DenseMatrix<ValueType> dataResample;
+        dataResample = data * resampleMat;
+        dataResample.writeToFile(addSeismogramTypeToName(filename));
     }
 }
 
