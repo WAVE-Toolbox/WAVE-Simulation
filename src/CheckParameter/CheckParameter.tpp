@@ -16,7 +16,7 @@ void KITGPI::CheckParameter::checkNumericalArtefeactsAndInstabilities(const KITG
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
     scai::lama::DenseVector<ValueType> wavelet_fc; 
     acquisition_temp.readFromFile(config.get<std::string>("SourceFilename")+".mtx");
-    acquisition_temp.getColumn(wavelet_fc,7);
+    acquisition_temp.getColumn(wavelet_fc,8);
     ValueType fcMax=wavelet_fc.max();
 
     KITGPI::CheckParameter::checkStabilityCriterion<ValueType,IndexType>(config.get<ValueType>("DT"),config.get<ValueType>("DH"), vMaxTmp,config.get<std::string>("dimension"), config.get<IndexType>("spatialFDorder"), comm);

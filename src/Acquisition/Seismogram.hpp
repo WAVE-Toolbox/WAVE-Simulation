@@ -73,7 +73,7 @@ namespace KITGPI
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &coord);
             void setNormalizeTraces(scai::IndexType normalizeTrace);
-            void setResampleCoeff(scai::IndexType resampleCoeff = 1);
+            void setResampleCoeff(ValueType resampleCoeff = 1.0);
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -100,7 +100,10 @@ namespace KITGPI
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
             
-            scai::lama::CSRSparseMatrix<ValueType> resampleMat;
+            /* resampling */
+            scai::lama::CSRSparseMatrix<ValueType> resampleMatLeft;
+            scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
+            scai::lama::DenseVector<ValueType> resampleVec;
         };
     }
 }

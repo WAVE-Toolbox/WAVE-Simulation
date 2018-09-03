@@ -16,7 +16,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<scai::IndexType>("seismoSampleCoeff"));
+    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -38,7 +38,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<scai::IndexType>("seismoSampleCoeff"));
+    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -60,7 +60,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<scai::IndexType>("seismoSampleCoeff"));
+    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
 }
 
 template <typename ValueType>
