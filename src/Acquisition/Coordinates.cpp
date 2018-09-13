@@ -184,7 +184,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDist
 
     distance.x = !((NX - 1 - X) < (X)) ? (X) : (NX - 1 - X);
     distance.y = !((NY - 1 - Y) < (Y)) ? (Y) : (NY - 1 - Y);
-    distance.z = !((NX - 1 - Z) < (Z)) ? (Z) : (NZ - 1 - Z);
+    distance.z = !((NZ - 1 - Z) < (Z)) ? (Z) : (NZ - 1 - Z);
 
     return (distance);
 }
