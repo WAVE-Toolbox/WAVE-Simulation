@@ -37,12 +37,16 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
     
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
     
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
+    dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
     
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
      
     velocityP *= maskP;
     density *= maskP;

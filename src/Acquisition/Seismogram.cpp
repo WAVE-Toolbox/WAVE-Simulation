@@ -18,6 +18,9 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates = rhs.coordinates;
     sourceCoordinate = rhs.sourceCoordinate;
     data = rhs.data;
+    resampleMatRight = rhs.resampleMatRight;
+    resampleMatLeft = rhs.resampleMatLeft;
+    resampleVec = rhs.resampleVec;
     //   std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
@@ -229,6 +232,22 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType no
     normalizeTraces = normalize;
 }
 
+//! \brief Setter methode to set matrix for resampling this seismogram.
+/*!
+ \param rMat Resampling matrix
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+{
+    if (this->getNumSamples() != 0) {
+        Common::calcResampleMat<ValueType>(resampleMatLeft, numSamples, resampleCoeff, 0);
+        if (scai::common::Math::floor<ValueType>(resampleCoeff) != resampleCoeff) {
+            Common::calcResampleMat<ValueType>(resampleMatRight, numSamples, resampleCoeff, 1);
+            Common::calcResampleVec<ValueType>(resampleVec, numSamples, resampleCoeff);
+        }
+    }
+}
+
 //! \brief Getter method for #SeismogramType
 /*!
  *
@@ -332,6 +351,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 
     data.allocate(distTraces, no_dist_NT);
     coordinates.allocate(distTraces);
+    
+    resampleMatLeft = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
 
 //! \brief Reset of the seismogram data
@@ -447,7 +468,17 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const &filename) const
 {
     if (data.getNumValues() > 0) {
-        data.writeToFile(addSeismogramTypeToName(filename));
+        scai::lama::DenseMatrix<ValueType> dataResample;
+        dataResample = data * resampleMatLeft;
+        
+        if (resampleMatRight.getNumColumns() > 0) {
+            scai::lama::DenseMatrix<ValueType> dataResampleInt;
+            dataResampleInt = data * resampleMatRight;
+            dataResampleInt -= dataResample;
+            dataResampleInt.scaleColumns(resampleVec);
+            dataResample += dataResampleInt;
+        }
+        dataResample.writeToFile(addSeismogramTypeToName(filename));
     }
 }
 

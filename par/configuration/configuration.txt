@@ -65,6 +65,7 @@ ReceiverFilename=acquisition/receiver          # location of receiver file
 SeismogramFilename=seismograms/seismogram      # target location of seismogram
 SourceSignalFilename=acquisition/signal        # location of the source signal file
 SeismogramFormat=1                             # 1=MTX, 2=SU
+seismoDT=2.0e-03                               # Seismogram sampling in seconds
 NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously

@@ -51,6 +51,7 @@ SeismogramFilename=ci/seismogram.2D.sh.ci
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0
+seismoDT=2.0e-03                               # Seismogram sampling in seconds
 
 saveSnapshots=0
 snapType=0

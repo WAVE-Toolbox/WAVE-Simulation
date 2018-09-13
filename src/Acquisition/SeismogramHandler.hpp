@@ -39,6 +39,7 @@ namespace KITGPI
             void setDT(ValueType newDT);
             void setNormalizeTraces(scai::IndexType normalize);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
+            void setResampleCoeff(ValueType resampleCoeff = 1.0);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);

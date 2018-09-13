@@ -287,5 +287,17 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSourceCoordinate(Inde
     }
 }
 
+//! \brief Setter methode to set matrix for resampling this seismogram.
+/*!
+ \param rMat Resampling matrix
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+{
+    for (auto &i : seismo) {
+        i.setResampleCoeff(resampleCoeff);
+    }
+}
+
 template class KITGPI::Acquisition::SeismogramHandler<double>;
 template class KITGPI::Acquisition::SeismogramHandler<float>;

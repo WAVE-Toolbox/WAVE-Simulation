@@ -36,10 +36,13 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
     
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
     
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
-     
+    dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
+    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
+    
     velocityP *= mask;
     density *= mask;
 }
