@@ -25,6 +25,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai:
 /*! \brief set CPML coefficients
  * 
  * method to set cpml coefficients for a given gridpoint
+ *  
+ \f{eqnarray*}{
+        a =& \frac{d}{k(d+k\alpha)} (b-1) \\
+        b =& e^{-\Delta t (d/k+ \alpha)} \\
+        d =& d_0 (\frac{w_b-g_d}{w_b})^N \\
+        d_0 =& \frac{-(N+1)v_{max} \ln (8\cdot 10^{-4})}{2 w_b \Delta x} \\
+        k =& 1 + (k_{max} -1) (\frac{w_b-g_d}{w_b})^N \\
+        \alpha =& \pi f_c (1-(\frac{w_b-g_d}{w_b})^N)
+ \f}
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv, scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half, IndexType coord, IndexType gdist, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, IndexType i, ValueType DT, ValueType DH)
@@ -128,8 +137,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
     write_k_half[i] = 1.0;
 }
 
-/*! \brief Application of the CPML
- *
+/*! \brief Application of the CPML. Replace FD-operators \f$\partial\f$:
+  \f{eqnarray*}{
+        \bar{\partial} = \frac{1}{k} \partial + \Psi \\
+        \Psi^n = b\Psi^{n-1} + a \partial^{n+\frac{1}{2}} 
+ \f} 
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
  *
