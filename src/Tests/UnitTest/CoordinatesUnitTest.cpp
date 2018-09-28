@@ -110,7 +110,7 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     Acquisition::coordinate3D solutionDistance;
     solutionDistance.x = 0;
     solutionDistance.y = 4;
-    solutionDistance.z = 10;
+    solutionDistance.z = 4;
 
     Acquisition::coordinate3D testCoord;
     testCoord.x = testX;
