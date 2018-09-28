@@ -17,6 +17,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
         init(config, ctx, dist_wavefield);
         numShots = 1;
     } else {
+        init(config, ctx, dist_wavefield);
         scai::lama::DenseMatrix<ValueType> acquisition_temp;
         acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
         numShots = acquisition_temp.getNumRows();
