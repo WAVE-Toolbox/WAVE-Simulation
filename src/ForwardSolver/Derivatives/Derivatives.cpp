@@ -60,9 +60,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA] = read_FDCoeff_f[j / 2 - 1];
 
             /* Vary FD coefficients at gridpoints if they have an image point */
-            if (2 * yIndex >= j / 2 - 1)
+            if (2 * yIndex + j / 2 - 1 >= 0)
             {  
-                IndexType imageIndex = 2 * yIndex - j / 2 - 1;
+                IndexType imageIndex = 2 * yIndex + j / 2 - 1;
                 if (imageIndex < spatialFDorder / 2) {
                     csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
                 }
@@ -162,7 +162,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA] = read_FDCoeff_b[(j / 2 - 1)];
 
             /* Vary FD coefficients at gridpoints if they have an image point */
-            if (2 * yIndex >= j / 2 + 1 )
+            if (2 * yIndex >= j / 2 - 1 )
             { 
                 IndexType imageIndex = 2 * yIndex - j / 2 + 1;
                 if (imageIndex < spatialFDorder / 2) {
@@ -186,9 +186,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
             csrvaluesLocal[countJA] = read_FDCoeff_f[j / 2 - 1];
 
             /* Vary FD coefficients at gridpoints if they have an image point */
-            if (2 * yIndex >= j / 2)
+            if (2 * yIndex + j / 2 >=  0)
             {
-                IndexType imageIndex = 2 * yIndex - j / 2;
+                IndexType imageIndex = 2 * yIndex + j / 2;
                 if (imageIndex < spatialFDorder / 2) {
                     csrvaluesLocal[countJA] -= read_FDCoeff_b[imageIndex];
                 }
