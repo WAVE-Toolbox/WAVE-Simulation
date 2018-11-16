@@ -58,8 +58,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
 {
+    dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the free surface...\n");
+    HOST_PRINT(comm, "Initialization of the free surface...\n");
 
     active = true;
 
@@ -100,7 +101,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     write_selectHorizontalUpdate.release();
     selectHorizontalUpdate = temp;
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
+    HOST_PRINT(comm, "Finished initializing of the free surface\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<float>;

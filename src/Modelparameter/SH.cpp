@@ -70,7 +70,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter (SH) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
