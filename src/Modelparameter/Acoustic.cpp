@@ -71,7 +71,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter (acoustic) from file...\n");
 
          init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
