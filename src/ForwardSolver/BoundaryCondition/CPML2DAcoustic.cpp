@@ -60,12 +60,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
+    dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
+    HOST_PRINT(comm, "Initialization of the PMl Coefficients...\n");
     
     active = true;
-
-    dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -150,7 +149,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
     //     /* Release all read and write access */
     read_localIndices.release();
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Finished with initialization of the CPML coefficients!\n\n");
+    HOST_PRINT(comm, "Finished with initialization of the CPML coefficients!\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<float>;
