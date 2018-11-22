@@ -1,5 +1,3 @@
-#define private public
-
 #include "Receivers.hpp"
 #include "../Configuration/Configuration.hpp"
 #include <gtest/gtest.h>
@@ -23,9 +21,3 @@ TEST(ReceiversTest, TestInit)
 }
 
 
-TEST(ReceiversTest, TestcheckRequiredNumParameter)
-{
-    Acquisition::Receivers<double> testObject;
-    ASSERT_ANY_THROW(testObject.checkRequiredNumParameter(6));
-    
-}
