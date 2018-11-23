@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
     std::size_t pos = filenameRef.find(".ci.mtx");
     filenameRef = filenameRef.substr(0, pos) + ".ref.mtx";
 
-    receiversTest.getSeismogramHandler().readFromFileRaw(filenameTest, 1);
-    receiversRef.getSeismogramHandler().readFromFileRaw(filenameRef, 1);
+    receiversTest.getSeismogramHandler().read(config,filenameTest, 1);
+    receiversRef.getSeismogramHandler().read(config,filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
 

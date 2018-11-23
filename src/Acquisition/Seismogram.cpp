@@ -77,7 +77,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
     coordinates.setContextPtr(ctx);
 }
 
-//! \brief Write the seismogram to disk
+//! \brief  Read the seismogram from disk
 /*!
  *
  * This method writes the seismogram data to disk. It uses the Configuration class to determine the filename and some requiered header information.\n
@@ -96,6 +96,58 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
         break;
     case 2:
         writeToFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        break;
+    default:
+        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        break;
+    }
+}
+
+//! \brief Read the seismogram from disk
+/*!
+ *
+ * This method writes the seismogram data to disk. It uses the Configuration class to determine the filename and some requiered header information.\n
+ * The output format is determined by the input parameter `SeismogramFormat`, which will be requested to the Configuration class. \n
+ * **Supported Formats:**\n
+ * 1. MTX: MatrixMaker format
+ * 2. SU: SeismicUnix format
+ \param config Configuration class which is used to determine the filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, bool copyDist)
+{
+    switch (config.get<IndexType>("SeismogramFormat")) {
+    case 1:
+        readFromFileRaw(filename, copyDist);
+        break;
+    case 2:
+        readFromFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), copyDist);
+        break;
+    default:
+        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        break;
+    }
+}
+
+//! \brief Write the seismogram to disk
+/*!
+ *
+ * This method writes the seismogram data to disk. It uses the Configuration class to determine the filename and some requiered header information.\n
+ * The output format is determined by the input parameter `SeismogramFormat`, which will be requested to the Configuration class. \n
+ * **Supported Formats:**\n
+ * 1. MTX: MatrixMaker format
+ * 2. SU: SeismicUnix format
+ \param config Configuration class which is used to determine the filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+{
+    switch (config.get<IndexType>("SeismogramFormat")) {
+    case 1:
+        readFromFileRaw(filename, distTraces, distSamples);
+        break;
+    case 2:
+        readFromFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), distTraces, distSamples);
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
@@ -433,6 +485,30 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
     } else if (copyDist == 1) {
         redistribute(distTraces, distSamples);
     }
+}
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &/*filename*/, scai::IndexType /*NX*/, scai::IndexType /*NY*/, scai::IndexType /*NZ*/, ValueType /*DH*/, bool /*copyDist*/)
+{
+    
+}
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &/*filename*/, scai::IndexType /*NX*/, scai::IndexType /*NY*/, scai::IndexType /*NZ*/, ValueType /*DH*/, scai::dmemo::DistributionPtr /*distTraces*/, scai::dmemo::DistributionPtr /*distSamples*/)
+{
+    
 }
 
 //! \brief Read a seismogram from disk without header

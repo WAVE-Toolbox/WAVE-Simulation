@@ -336,16 +336,6 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
 }
 
-/*! \brief Write source signals to file
- *
- \param filename Filename to write source signals
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSignalsToFileRaw(std::string const &filename) const
-{
-    signals.writeToFileRaw(filename);
-}
-
 /*! \brief Allocation of the source signals matrix
  *
  * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.

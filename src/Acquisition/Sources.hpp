@@ -45,8 +45,6 @@ namespace KITGPI
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
-            void writeSignalsToFileRaw(std::string const &filename) const;
-
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx);
 
             scai::IndexType getNumShots();
