@@ -87,10 +87,10 @@ namespace KITGPI
             void writeToFileSU(std::string const &filename, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH) const;
             
             void readFromFileRaw(std::string const &filename, bool copyDist = 0);
-            void readFromFileSU(std::string const &filename, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, bool copyDist = 0);
+            void readFromFileSU(std::string const &filename, bool copyDist = 0);
             
             void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
-            void readFromFileSU(std::string const &filename, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
+            void readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             scai::IndexType numSamples;      //!< Number of samples of one trace
             scai::IndexType numTracesGlobal; //!< Number of global traces

@@ -118,10 +118,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configurati
 {
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        readFromFileRaw(filename, copyDist);
+        readFromFileRaw(filename + ".mtx", copyDist);
         break;
     case 2:
-        readFromFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), copyDist);
+        readFromFileSU(filename + ".SU", copyDist);
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
@@ -144,10 +144,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configurati
 {
     switch (config.get<IndexType>("SeismogramFormat")) {
     case 1:
-        readFromFileRaw(filename, distTraces, distSamples);
+        readFromFileRaw(filename + ".mtx", distTraces, distSamples);
         break;
     case 2:
-        readFromFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), distTraces, distSamples);
+        readFromFileSU(filename + ".SU", distTraces, distSamples);
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
@@ -387,7 +387,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
-    //   std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+//       std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
@@ -494,21 +494,46 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &/*filename*/, scai::IndexType /*NX*/, scai::IndexType /*NY*/, scai::IndexType /*NZ*/, ValueType /*DH*/, bool /*copyDist*/)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, bool copyDist)
 {
-    
-}
+        
+    scai::dmemo::DistributionPtr distTraces;
+    scai::dmemo::DistributionPtr distSamples;
 
-//! \brief Read a seismogram from disk without header
-/*!
- *
- \param filename Filename to read seismogram
- \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &/*filename*/, scai::IndexType /*NX*/, scai::IndexType /*NY*/, scai::IndexType /*NZ*/, ValueType /*DH*/, scai::dmemo::DistributionPtr /*distTraces*/, scai::dmemo::DistributionPtr /*distSamples*/)
-{
+    if (copyDist == 1) {
+        distTraces = data.getRowDistributionPtr();
+        distSamples = data.getColDistributionPtr();
+    }
+
+    Segy tr;
     
+    std::string tempstr = addSeismogramTypeToName(filename);
+    const char *filetemp = tempstr.c_str();
+    FILE *pFile;
+    pFile = fopen(filetemp, "rb");
+    
+    int ntr = int(numTracesGlobal);
+    IndexType ns = this->getNumSamples();
+    
+    hmemo::HArray<float> dataTmp;
+    lama::DenseVector<float> traceTmp;
+    lama::DenseVector<ValueType> trace;
+    
+    for (int tracl1 = 0; tracl1 < ntr; tracl1++) {
+        fseek(pFile,240,SEEK_CUR);
+        fread(&tr.data[0], 4, ns, pFile);
+        
+        dataTmp.setRawData(ns, tr.data);
+        traceTmp.assign(dataTmp);
+        trace = lama::cast<ValueType, float>(traceTmp);
+        data.setRow(trace, tracl1, common::BinaryOp::COPY); 
+    }
+    
+    if (copyDist == 0) {
+        replicate();
+    } else if (copyDist == 1) {
+        redistribute(distTraces, distSamples);
+    }
 }
 
 //! \brief Read a seismogram from disk without header
@@ -528,6 +553,46 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
     numSamples = ncolumn_temp;
     numTracesGlobal = nrow_temp;
 
+    if (distTraces == NULL && distSamples == NULL) {
+        replicate();
+    } else {
+        redistribute(distTraces, distSamples);
+    }
+}
+
+//! \brief Read a seismogram from disk without header
+/*!
+ *
+ \param filename Filename to read seismogram
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+{
+    Segy tr;
+    
+    std::string tempstr = addSeismogramTypeToName(filename);
+    const char *filetemp = tempstr.c_str();
+    FILE *pFile;
+    pFile = fopen(filetemp, "rb");
+    
+    int ntr = int(numTracesGlobal);
+    IndexType ns = this->getNumSamples();
+    
+    hmemo::HArray<float> dataTmp;
+    lama::DenseVector<float> traceTmp;
+    lama::DenseVector<ValueType> trace;
+    
+    for (int tracl1 = 0; tracl1 < ntr; tracl1++) {
+        fseek(pFile,240,SEEK_CUR);
+        fread(&tr.data[1], 4, ns, pFile);
+        
+        dataTmp.setRawData(ns, tr.data);
+        traceTmp.assign(dataTmp);
+        trace = lama::cast<ValueType, float>(traceTmp);
+        data.setRow(trace, tracl1, common::BinaryOp::COPY); 
+    }
+    
     if (distTraces == NULL && distSamples == NULL) {
         replicate();
     } else {
@@ -827,7 +892,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
             }
 
             fwrite(&tr, 240, 1, pFile);
-            fwrite(&tr.data[1], 4, ns, pFile);
+            fwrite(&tr.data[0], 4, ns, pFile);
         }
         fclose(pFile);
     }
