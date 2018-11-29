@@ -42,7 +42,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     /* Get write access to local part of setSurfaceZero */
     auto write_setSurfaceZero = hostWriteAccess(setSurfaceZero.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation(NX,NY,NZ);
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -53,7 +53,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
         rowLocal = dist->global2local(rowGlobal);
 
         /* Determine if the current grid point is located on the surface */
-        if (coordinateTransformation.locatedOnSurface(rowGlobal, NX, NY, NZ)) {
+        if (coordinateTransformation.locatedOnSurface(rowGlobal)) {
 
             /* Set elements at the surface to zero */
             write_setSurfaceZero[rowLocal] = 0.0;

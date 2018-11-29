@@ -135,7 +135,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init(s
     lama::DenseVector<ValueType> b_z_temp(dist, 0.0, ctx);
     lama::DenseVector<ValueType> b_z_half_temp(dist, 0.0, ctx);
 
-    Acquisition::Coordinates coordTransform;
+    Acquisition::Coordinates coordTransform(NX,NY,NZ);
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 
@@ -143,8 +143,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init(s
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ);
-        gdist = coordTransform.edgeDistance(coordinate, NX, NY, NZ);
+        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
+        gdist = coordTransform.edgeDistance(coordinate);
 
         if (gdist.min() < BoundaryWidth) {
             if (gdist.x < BoundaryWidth) {

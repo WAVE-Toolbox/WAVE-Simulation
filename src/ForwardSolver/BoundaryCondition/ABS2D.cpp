@@ -97,10 +97,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
-    Acquisition::Coordinates coordTransform;
-    SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
-    SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
-    SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")
+    Acquisition::Coordinates coordTransform(NX,NY,NZ);
+//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
+//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
+//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")
 
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
@@ -113,8 +113,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ);
-        coordinatedist = coordTransform.edgeDistance(coordinate, NX, NY, NZ);
+        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
+        coordinatedist = coordTransform.edgeDistance(coordinate);
 
         temp = 0;
         if (coordinatedist.x < coordinatedist.y) {

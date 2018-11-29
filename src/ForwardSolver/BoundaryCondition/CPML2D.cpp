@@ -146,7 +146,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
     lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
 
-    Acquisition::Coordinates coordTransform;
+    Acquisition::Coordinates coordTransform(NX,NY,NZ);
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 
@@ -154,8 +154,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ);
-        gdist = coordTransform.edgeDistance(coordinate, NX, NY, NZ);
+        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
+        gdist = coordTransform.edgeDistance(coordinate);
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {
