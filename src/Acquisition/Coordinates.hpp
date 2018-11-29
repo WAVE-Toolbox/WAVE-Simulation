@@ -39,28 +39,40 @@ namespace KITGPI
         {
 
           public:
+            //! \brief Default constructor
+            Coordinates(){};
+
+            //! Destructor, releases all allocated resources.
+            ~Coordinates(){};
+            // constructor for regular grid
+            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+
             // Coordinate --> Index:
             // Interfaces 3-D
-            scai::IndexType coordinate2index(coordinate3D coordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            scai::IndexType coordinate2index(coordinate3D coordinate);
+            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
 
             // Index --> Coordinate:
-            coordinate3D index2coordinate(scai::IndexType coordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            coordinate3D index2coordinate(scai::IndexType coordinate);
 
-            coordinate3D edgeDistance(coordinate3D coordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            coordinate3D edgeDistance(coordinate3D coordinate);
 
-            bool locatedOnSurface(scai::IndexType coordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            bool locatedOnSurface(scai::IndexType coordinate);
 
             void Global2Local(scai::lama::Vector<scai::IndexType> const &coordinatesglobal, scai::hmemo::HArray<scai::IndexType> &coordinateslocal, scai::dmemo::DistributionPtr dist) const;
 
           private:
+            scai::IndexType NX;
+            scai::IndexType NY;
+            scai::IndexType NZ;
+
             // Coordinate --> Index:
-            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
 
             // Index --> Coordinate:
-            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate, scai::IndexType NX, scai::IndexType NY);
+            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate);
 
-            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
         };
     }
 }

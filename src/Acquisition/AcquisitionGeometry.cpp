@@ -122,7 +122,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
         /* Get writeAccess to coordinates vector (local) */
         auto write_coordinates_LA = hostWriteAccess(coordinates.getLocalValues());
 
-        Coordinates coord;
+        Coordinates coord(NX,NY,NZ);
 
         /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
@@ -132,7 +132,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
             Y = read_acquisition_HA[i + numTracesGlobal * 1];
             Z = read_acquisition_HA[i + numTracesGlobal * 2];
 
-            write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z, NX, NY, NZ);
+            write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z);
         }
     }
 

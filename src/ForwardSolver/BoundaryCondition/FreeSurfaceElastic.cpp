@@ -80,7 +80,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     /* Get write access to local part of scaleHorizontalUpdate */
     auto write_selectHorizontalUpdate = hostWriteAccess(temp.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates coordinateTransformation;
+    KITGPI::Acquisition::Coordinates coordinateTransformation(NX,NY,NZ);
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -91,7 +91,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
         rowLocal = dist->global2local(rowGlobal);
 
         /* Determine if the current grid point is located on the surface */
-        if (coordinateTransformation.locatedOnSurface(rowGlobal, NX, NY, NZ)) {
+        if (coordinateTransformation.locatedOnSurface(rowGlobal)) {
 
             /* Set horizontal update to 1 at the surface and leave it zero else */
             write_selectHorizontalUpdate[rowLocal] = 1.0;

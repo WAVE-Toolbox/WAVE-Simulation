@@ -691,13 +691,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         pFile = fopen(filetemp, "wb");
         lama::DenseVector<ValueType> tempdata;
 
-        Coordinates coordTransform;
+        Coordinates coordTransform(NX,NY,NZ);
         coordinate3D coord3Dsrc;
         coordinate3D coord3Drec;
-        coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate, NX, NY, NZ);
-        SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
-        SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
-        SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")
+        coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate);
+
 
         YS = coord3Dsrc.y;
         XS = coord3Dsrc.x;
@@ -709,7 +707,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
         for (tracl1 = 0; tracl1 < ntr; tracl1++) {
             temp3 = float(coordinates.getValue(tracl1));
             temp2 = floor(temp3);
-            coord3Drec = coordTransform.index2coordinate(temp2, NX, NY, NZ);
+            coord3Drec = coordTransform.index2coordinate(temp2);
             xr = coord3Drec.x;
             yr = coord3Drec.y;
             zr = coord3Drec.z;
