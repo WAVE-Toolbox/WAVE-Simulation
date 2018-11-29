@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
     Acquisition::Receivers<ValueType> receiversRef;
     receiversRef.init(config, ctx, dist);
 
-    std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".mtx";
-    std::string filenameRef = config.get<std::string>("SeismogramFilename") + ".mtx";
-    std::size_t pos = filenameRef.find(".ci.mtx");
-    filenameRef = filenameRef.substr(0, pos) + ".ref.mtx";
+    std::string filenameTest = config.get<std::string>("SeismogramFilename");
+    std::size_t pos = filenameTest.find(".ci");
+    std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
+    std::cout << pos << std::endl;
 
     receiversTest.getSeismogramHandler().read(config,filenameTest, 1);
     receiversRef.getSeismogramHandler().read(config,filenameRef, 1);
