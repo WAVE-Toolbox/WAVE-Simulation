@@ -16,7 +16,39 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
     }
 }
 
-//! \brief Method to write normalize Seismogram-traces
+//! \brief Method to read all handled Seismograms from file
+/*!
+ * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
+ * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ *
+ \param config Configuration class, which will be used to determine filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, bool copyDist)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.read(config, filename, copyDist);
+    }
+}
+
+//! \brief Method to read all handled Seismograms from file
+/*!
+ * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
+ * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ *
+ \param config Configuration class, which will be used to determine filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.read(config, filename, distTraces, distSamples);
+    }
+}
+
+//! \brief Method to normalize Seismogram-traces
 /*!
  *
  */
@@ -85,50 +117,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
     for (auto &i : seismo) {
         i.setTraceType(static_cast<SeismogramType>(count));
         ++count;
-    }
-}
-
-//! \brief Write all handled Seismogram to a raw-file.
-/*!
- *
- * This method writes all handled Seismogram to a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticly.
- \param filename Filename of the output file
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::string const &filename) const
-{
-    for (auto const &i : seismo) {
-        i.writeToFileRaw(filename);
-    }
-}
-
-//! \brief Read all handled Seismogram from a raw-file.
-/*!
- *
- * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticaly.
- \param filename Filename of the input file
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
-{
-    for (auto &i : seismo) {
-        if (i.getNumTracesGlobal() > 0)
-            i.readFromFileRaw(filename, copyDist);
-    }
-}
-
-//! \brief Read all handled Seismogram from a raw-file.
-/*!
- *
- * This method reads all handled Seismogram from a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticaly.
- \param filename Filename of the input file
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    for (auto &i : seismo) {
-        if (i.getNumTracesGlobal() > 0)
-            i.readFromFileRaw(filename, distTraces, distSamples);
     }
 }
 
