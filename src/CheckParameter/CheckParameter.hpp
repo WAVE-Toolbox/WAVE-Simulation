@@ -1,23 +1,29 @@
 #pragma once
 
+#include "../Acquisition/Receivers.hpp"
+#include "../Acquisition/Sources.hpp"
+#include "../Acquisition/suHandler.hpp"
+#include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-#include "../Acquisition/Sources.hpp"
-#include "../Common/Common.hpp"
+#include <scai/lama.hpp>
 
 namespace KITGPI
 {
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-	template<typename ValueType, typename IndexType> void checkNumericalArtefeactsAndInstabilities(Configuration::Configuration const &config, Modelparameter::Modelparameter<ValueType> &model,scai::dmemo::CommunicatorPtr comm); ;
-	template<typename ValueType, typename IndexType> void checkStabilityCriterion(ValueType dt, ValueType dh, ValueType vpMax, std::string dimension, IndexType FDorder, scai::dmemo::CommunicatorPtr comm);
-	template<typename ValueType, typename IndexType> void checkNumericalDispersion(ValueType dh, ValueType vsMin, ValueType fc, IndexType spFDo, scai::dmemo::CommunicatorPtr comm);
-	
-	template<typename ValueType, typename IndexType> void checkAcquisitionGeometry(Configuration::Configuration const &config,scai::dmemo::CommunicatorPtr comm, IndexType numShots);
-	template<typename ValueType, typename IndexType> void checkSources(IndexType NX, IndexType NY, IndexType NZ, std::string sourcefile, scai::dmemo::CommunicatorPtr comm);
-	template<typename ValueType, typename IndexType> void checkReceivers(IndexType NX, IndexType NY, IndexType NZ, std::string receiverfile, scai::dmemo::CommunicatorPtr comm);
+        template <typename ValueType>
+        void checkNumericalArtefeactsAndInstabilities(Configuration::Configuration const &config, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm);
+        template <typename ValueType>
+        void checkStabilityCriterion(ValueType dt, ValueType dh, ValueType vpMax, std::string dimension, scai::IndexType FDorder, scai::dmemo::CommunicatorPtr comm);
+        template <typename ValueType>
+        void checkNumericalDispersion(ValueType dh, ValueType vsMin, ValueType fc, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm);
+        template <typename ValueType>
+        void checkSources(Configuration::Configuration const &config, Acquisition::Sources<ValueType> const &sources, scai::dmemo::CommunicatorPtr comm);
+        template <typename ValueType>
+        void checkReceivers(Configuration::Configuration const &config, Acquisition::Receivers<ValueType> const &receiver, scai::dmemo::CommunicatorPtr comm);
     }
 }
 
-# include "./CheckParameter.tpp"
+#include "./CheckParameter.tpp"

@@ -13,6 +13,7 @@
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
+#include "Acquisition/suHandler.hpp"
 
 #include "ForwardSolver/ForwardSolver.hpp"
 
@@ -113,10 +114,12 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
+    CheckParameter::checkSources<ValueType>(config, sources, comm);
     Acquisition::Receivers<ValueType> receivers;
-    if (!config.get<bool>("useReceiversPerShot"))
+    if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, ctx, dist);
-    CheckParameter::checkAcquisitionGeometry<ValueType,IndexType>(config,comm,sources.getNumShots());  
+        CheckParameter::checkReceivers<ValueType>(config, receivers, comm);
+    }
     
     /* --------------------------------------- */
     /* Modelparameter                          */
@@ -125,7 +128,7 @@ int main(int argc, const char *argv[])
     model->init(config, ctx, dist);
     model->prepareForModelling(config, ctx, dist, comm);
     
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType,IndexType>(config, *model,comm);
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model,comm);
     
     /* --------------------------------------- */
     /* Forward solver                          */
@@ -139,8 +142,10 @@ int main(int argc, const char *argv[])
         /* Update Source */
         if (!config.get<bool>("runSimultaneousShots"))
             sources.init(config, ctx, dist, shotNumber);
-        if (config.get<bool>("useReceiversPerShot"))
+        if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, ctx, dist, shotNumber);
+            CheckParameter::checkReceivers<ValueType>(config, receivers, comm);
+        }
 
         HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
                                                          << "Total Number of time steps: " << tStepEnd << "\n");

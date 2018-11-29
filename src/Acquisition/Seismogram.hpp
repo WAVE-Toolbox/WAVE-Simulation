@@ -10,6 +10,7 @@
 #include "Coordinates.hpp"
 #include "math.h"
 #include "segy.hpp"
+#include "suHandler.hpp"
 
 namespace KITGPI
 {
@@ -21,6 +22,7 @@ namespace KITGPI
         /*!
          * This class handels a single seismogram which consists of several traces.
          */
+        
         template <typename ValueType>
         class Seismogram
         {
@@ -62,6 +64,8 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> const &getData() const;
             scai::lama::DenseVector<scai::IndexType> const &getCoordinates() const;
             SeismogramType getTraceType() const;
+            scai::IndexType getSourceCoordinate() const;
+            
 
             /* Setter functions */
             void setDT(ValueType newDT);
@@ -110,6 +114,9 @@ namespace KITGPI
             scai::lama::CSRSparseMatrix<ValueType> resampleMatLeft;
             scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
             scai::lama::DenseVector<ValueType> resampleVec;
+            
+            /* SU handler */
+            KITGPI::Acquisition::suHandler<ValueType> su;
         };
     }
 }

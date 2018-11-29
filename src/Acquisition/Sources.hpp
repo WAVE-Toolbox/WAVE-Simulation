@@ -5,6 +5,7 @@
 
 #include "AcquisitionGeometry.hpp"
 #include "SourceSignal/all.hpp"
+#include "suHandler.hpp"
 
 namespace KITGPI
 {
@@ -43,14 +44,19 @@ namespace KITGPI
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx);
+            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::IndexType shotNumber);
+            
+            void getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const;
 
             scai::IndexType getNumShots();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals
+            suHandler<ValueType> su;
 
             /* Requiered acquisition Settings */
             scai::lama::DenseVector<scai::IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic
@@ -62,7 +68,6 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
 
             scai::IndexType numShots; //!< number of shots =1 for simultaneous execution =Number of Sources for serial execution
-            scai::IndexType numSourceRead = 0; // number of sources that have been read from file
             bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
             bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used
 
@@ -73,7 +78,7 @@ namespace KITGPI
 
             void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
             void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);
-            void readSignalFromFile(scai::IndexType SourceLocal, scai::IndexType NT, std::string signalFilename, scai::IndexType numSourceRead);
+            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead);
         };
     }
 }
