@@ -508,7 +508,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
     }
 
     std::string tempstr = addSeismogramTypeToName(filename);
-    su.readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
+    readDataSU<ValueType>(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
     
     if (copyDist == 0) {
         replicate();
@@ -552,7 +552,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {  
     std::string tempstr = addSeismogramTypeToName(filename);
-    su.readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
+    readDataSU<ValueType>(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
       
     if (distTraces == NULL && distSamples == NULL) {
         replicate();
@@ -667,7 +667,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const
 {
     if (data.getNumValues() > 0) {
         std::string tempstr = addSeismogramTypeToName(filename);
-        su.writeSU(tempstr, data, coordinates, DT, sourceCoordinate, NX, NY, NZ, DH);
+        writeSU<ValueType>(tempstr, data, coordinates, DT, sourceCoordinate, NX, NY, NZ, DH);
     }
 }
 

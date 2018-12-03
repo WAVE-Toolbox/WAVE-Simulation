@@ -16,7 +16,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
     init(config, ctx, dist_wavefield);
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields. This Init will read the acquistion of a single source from the Sourcefile
+/*! \brief Init based on the configuration class and the distribution of the wavefields. This Init will read the acquistion of a single source from the Sourcefile or from SU. If the acquisition should be read from SU all sources have to be initialized from SU first.
  *
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
@@ -39,7 +39,8 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
     this->init(acquisition_temp, config, ctx, dist_wavefield);
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields. This function will read the acquistion from the Sourcefile
+/*! \brief Init of all sources based on the configuration class and the distribution of the wavefields. This function will read the acquistion from the Sourcefile or from SU.
+ * If SU is selected the following header words have to be set: sx, sy, sdepth, scalco and scalel.
  *
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
@@ -54,6 +55,8 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
     if (config.get<bool>("initSourcesFromSU")) {
         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), config.get<ValueType>("DH"));
         acquisition_temp = su.getAcquisition();
+        std::cout << acquisition_temp << std::endl;
+        acquisition_temp.writeToFile("test.mtx");
     } else
         acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
 
@@ -66,7 +69,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
     }
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields for all shots
+/*! \brief Init of all shots based on the configuration class and the distribution of the wavefields
  *
  * acquistion matrix:
  * |           | X | Y | Z | SOURCE_TYPE | WAVELET_TYPE | WAVELET_SHAPE | FC | AMP | TShift |
@@ -100,11 +103,12 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     copySignalsToSeismogramHandler();
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields for a single shot
+/*! \brief Init of a single shot based on the configuration class and the distribution of the wavefields
  \param config Configuration class, which is used to derive all requiered parameters
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
+ \param shotNumber Shot number
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
@@ -340,7 +344,7 @@ void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::
         scai::IndexType numSourceReadLocal;
 
         su.locateTrace(signalFilename, numSourceReadLocal, numSourceRead);
-        su.readSingleDataSU(signalFilename, singleSignal, numSourceReadLocal);
+        readSingleDataSU<ValueType>(signalFilename, singleSignal, numSourceReadLocal);
 
         SCAI_ASSERT(singleSignal.size() == signals.getData().getNumColumns(), "Source signal has invalid length");
 

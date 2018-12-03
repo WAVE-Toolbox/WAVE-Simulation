@@ -115,8 +115,6 @@ namespace KITGPI
             scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
             scai::lama::DenseVector<ValueType> resampleVec;
             
-            /* SU handler */
-            KITGPI::Acquisition::suHandler<ValueType> su;
         };
     }
 }
