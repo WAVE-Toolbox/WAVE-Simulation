@@ -59,8 +59,6 @@ namespace KITGPI
 
             bool locatedOnSurface(scai::IndexType coordinate);
 
-            void Global2Local(scai::lama::Vector<scai::IndexType> const &coordinatesglobal, scai::hmemo::HArray<scai::IndexType> &coordinateslocal, scai::dmemo::DistributionPtr dist) const;
-
           private:
             scai::IndexType NX;
             scai::IndexType NY;

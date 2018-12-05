@@ -133,46 +133,6 @@ IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordi
     return (map3Dcoordinate2index(coordinate.x, coordinate.y, coordinate.z));
 }
 
-/*! \brief Determination of local coordinates based on given global coordinates
- *
- * Calculate the number of coordinates within the local processing unit as well as
- * the coordinates of the local coordinates.
- *
- \param coordinatesglobal DenseVector with global coordinates
- \param localIndices DenseVector with local coordinates
- \param dist Distribution of global grid
- */
-void KITGPI::Acquisition::Coordinates::Global2Local(scai::lama::Vector<IndexType> const &coordinatesglobal, scai::hmemo::HArray<IndexType> &localIndices, scai::dmemo::DistributionPtr dist) const
-{
-
-    IndexType n_global = coordinatesglobal.size(); // Number of global entries
-
-    IndexType coordinatetemp_int;
-
-    IndexType i = 0;
-    for (IndexType n = 0; n < n_global; n++) {
-
-        coordinatetemp_int = coordinatesglobal.getValue(n);
-
-        if (dist->isLocal(coordinatetemp_int)) {
-            i++;
-        }
-    }
-
-    /* Determine coordinates of local receivers in the global coordinate vector */
-    localIndices.resize(i);
-    hmemo::WriteAccess<IndexType> write_localIndices(localIndices);
-    i = 0;
-    for (IndexType n = 0; n < n_global; n++) {
-
-        coordinatetemp_int = coordinatesglobal.getValue(n);
-        if (dist->isLocal(coordinatetemp_int)) {
-            write_localIndices[i] = n;
-            i++;
-        }
-    }
-}
-
 /*! \brief Calculation of distance to boundaries of the modelling domain
  *
  * This method calculates the distance of a given coordinate to the boundaries of the modelling domain.

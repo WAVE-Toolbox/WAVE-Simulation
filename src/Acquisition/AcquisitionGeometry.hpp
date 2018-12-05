@@ -44,11 +44,13 @@ namespace KITGPI
             scai::IndexType numTracesGlobal; //!< Number of global traces
             scai::IndexType numTracesLocal;  //!< Number of local traces
 
+            void Global2Local(scai::lama::Vector<scai::IndexType> const &coordinatesglobal, scai::hmemo::HArray<scai::IndexType> &coordinateslocal, scai::dmemo::DistributionPtr dist) const;
+
             /* SeismogramHandler to store seismic data */
             SeismogramHandler<ValueType> seismograms; //!< SeismogramHandler to handle the #Seismogram's
 
             /* Acquisition Settings */
-            scai::lama::DenseMatrix<ValueType> acquisition;     //!< Matrix that stores the acquisition
+            scai::lama::DenseMatrix<ValueType> acquisition;           //!< Matrix that stores the acquisition
             scai::IndexType numParameter;                             //!< Number of parameters given in acquisition matrix
             scai::lama::DenseVector<scai::IndexType> coordinates;     //!< Global coordinates of the traces (1-D coordinates)
             scai::lama::DenseVector<scai::IndexType> seismogramTypes; //!< #SeismogramType of the traces: 1==Pressure, 2==vX, 3==vY, 4==vZ
