@@ -54,6 +54,8 @@ tauS=0.0         # Tau value for S-waves
 SourceFilename=ci/sources_ci.3D.elastic
 ReceiverFilename=ci/receiver_ci.3D.elastic
 SeismogramFilename=ci/seismogram.3D.elastic.ci
+initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
+initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
 SeismogramFormat=1 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0

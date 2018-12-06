@@ -13,16 +13,16 @@ TEST(CoordinateTest, TestLocatedOnSurface)
     int NY = 10;
     int NZ = 15;
 
-    Acquisition::Coordinates test;
+    Acquisition::Coordinates test(NX,NY,NZ);
 
     int coord1 = 2;
-    EXPECT_TRUE(test.locatedOnSurface(coord1, NX, NY, NZ));
+    EXPECT_TRUE(test.locatedOnSurface(coord1));
 
     int coord2 = 52;
-    EXPECT_TRUE(test.locatedOnSurface(coord2, NX, NY, NZ));
+    EXPECT_TRUE(test.locatedOnSurface(coord2));
 
     int coord3 = 70;
-    EXPECT_FALSE(test.locatedOnSurface(coord3, NX, NY, NZ));
+    EXPECT_FALSE(test.locatedOnSurface(coord3));
 }
 
 TEST(CoordinateTest, TestIndex2coordinate)
@@ -44,9 +44,9 @@ TEST(CoordinateTest, TestIndex2coordinate)
     Acquisition::coordinate3D sampleSolution;
     Acquisition::coordinate3D result;
 
-    Acquisition::Coordinates test;
+    Acquisition::Coordinates test(NX,NY,NZ);
 
-    result = test.index2coordinate(testCoord, NX, NY, NZ);
+    result = test.index2coordinate(testCoord);
 
     sampleSolution.x = testX;
     sampleSolution.y = testY;
@@ -74,23 +74,23 @@ TEST(CoordinateTest, TestCoordinate2index)
     int sampleCordinate2index = 119;
 
     // Test first interface
-    Acquisition::Coordinates test1;
-    EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testX, testY, testZ, NX, NY, NZ));
+    Acquisition::Coordinates test1(NX, NY, NZ);
+    EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testX, testY, testZ));
 
     // Test second interface
     Acquisition::coordinate3D testCoord;
     testCoord.x = testX;
     testCoord.y = testY;
     testCoord.z = testZ;
-    EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testCoord, NX, NY, NZ));
+    EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testCoord));
 
     // Test if interface throws if wrong input parameters are given
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, testZ, testX, NY, NZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, testZ, NX, testY, NZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, testZ, NX, NY, testZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(-testX, testY, testZ, NX, NY, NZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, -testY, testZ, NX, NY, NZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, -testZ, NX, NY, NZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, 10*testZ));
+     EXPECT_ANY_THROW(test1.coordinate2index(testX, 4*testY, testZ));
+     EXPECT_ANY_THROW(test1.coordinate2index(2*testX, testY, testZ));
+     EXPECT_ANY_THROW(test1.coordinate2index(-testX, testY, testZ));
+     EXPECT_ANY_THROW(test1.coordinate2index(testX, -testY, testZ));
+     EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, -testZ));
 }
 
 TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
@@ -117,9 +117,9 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     testCoord.y = testY;
     testCoord.z = testZ;
 
-    Acquisition::Coordinates test;
+    Acquisition::Coordinates test(NX,NY,NZ);
     Acquisition::coordinate3D result;
-    result = test.edgeDistance(testCoord, NX, NY, NZ);
+    result = test.edgeDistance(testCoord);
 
     EXPECT_EQ(solutionDistance.x, result.x);
     EXPECT_EQ(solutionDistance.y, result.y);

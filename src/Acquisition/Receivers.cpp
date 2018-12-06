@@ -29,8 +29,13 @@ template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
-    
+
+    if (config.get<bool>("initReceiverFromSU")) {
+        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename"), config.get<ValueType>("DH"));
+        acquisition_temp = su.getAcquisition();
+    } else
+        acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
+
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
@@ -51,8 +56,12 @@ template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
 {
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
-    acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".mtx");
-    
+    if (config.get<bool>("initReceiverFromSU")) {
+        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), config.get<ValueType>("DH"));
+        acquisition_temp = su.getAcquisition();
+    } else
+        acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".mtx");
+
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
@@ -70,6 +79,22 @@ void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::
     if (numParameterCheck != 4) {
         COMMON_THROWEXCEPTION("Receivers acquisition file has an unkown format ")
     }
+}
+
+/*! \brief Gets the Acquisition Matrix
+ *
+ * Uses configuration to determine if sources are initialized by MTX or SU and then get the Acquisition Matrix
+ *
+ \param config Configuration
+ \param acqMat Acquisition Matrix
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const
+{
+    if (config.get<bool>("initSourcesFromSU"))
+        acqMat = su.getAcquisition();
+    else
+        acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
 }
 
 template class KITGPI::Acquisition::Receivers<double>;
