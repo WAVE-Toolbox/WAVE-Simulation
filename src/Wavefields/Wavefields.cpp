@@ -44,7 +44,7 @@ void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vecto
     switch (partitionedOut) {
     case false:
         vector.writeToFile(fileName);
-	HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << fileName << "\n");
+        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
     case true:

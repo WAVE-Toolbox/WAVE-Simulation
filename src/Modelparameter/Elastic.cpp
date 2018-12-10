@@ -79,7 +79,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model (elastic) parameter from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 

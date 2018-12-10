@@ -73,12 +73,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
+    dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the Damping Boundary...\n");
+    HOST_PRINT(comm, "Initialization of the Damping Boundary...\n");
 
     active = true;
-
-    dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -149,7 +148,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
     damping.setContextPtr(ctx);
     damping = damping_temp;
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Finished with initialization of the Damping Boundary!\n\n");
+    HOST_PRINT(comm, "Finished with initialization of the Damping Boundary!\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::ABS3D<float>;

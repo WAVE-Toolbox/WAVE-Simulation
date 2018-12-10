@@ -88,7 +88,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-
+    HOST_PRINT(dist->getCommunicatorPtr(), "initModelParameter from file " << filename << "\n")
     allocateModelparameter(vector, ctx, dist);
 
     readModelparameter(vector, filename, dist, partitionedIn);
@@ -272,7 +272,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 
     // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {
-	HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density and S-Wave velocity\n");    
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density and S-Wave velocity\n");    
         calcModulusFromVelocity(velocityS,density,sWaveModulus);
 	dirtyFlagSWaveModulus=false;
     }

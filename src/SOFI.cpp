@@ -3,6 +3,7 @@
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/GridDistribution.hpp>
+#include <scai/dmemo/CommunicatorStack.hpp>
 
 #include <iostream>
 
@@ -70,28 +71,51 @@ int main(int argc, const char *argv[])
     /* Context and Distribution                */
     /* --------------------------------------- */
     /* inter node communicator */
-    dmemo::CommunicatorPtr comm = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
-    common::Settings::setRank(comm->getNodeRank());
+    dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    common::Settings::setRank(commAll->getNodeRank());
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
+    IndexType npS = config.get<IndexType>("ProcNS");
+    IndexType npX = config.get<IndexType>("ProcNX");
+    IndexType npY = config.get<IndexType>("ProcNY");
+    IndexType npZ = config.get<IndexType>("ProcNZ");
+
     // following lines should be part of checkParameter.tpp
-    if (comm->getSize() != config.get<IndexType>("ProcNX") * config.get<IndexType>("ProcNY") * config.get<IndexType>("ProcNZ")) {
-        HOST_PRINT(comm, "\n Error: Number of MPI processes (" << comm->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNX*ProcNY*ProcNZ=" << config.get<IndexType>("ProcNX")*config.get<IndexType>("ProcNY")*config.get<IndexType>("ProcNZ") << "\n")
+    if (commAll->getSize() != npS * npX * npY * npZ ) {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in " << argv[1] << 
+                            ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
         return(2);	    
     }
-    
+
+    // Build subsets of processors for the shots
+
+    common::Grid2D procAllGrid( npS, npX * npY * npZ );
+    IndexType procAllGridRank[2];
+
+    procAllGrid.gridPos( procAllGridRank, commAll->getRank() );
+
+    // communicator for set of processors that solve one shot
+
+    dmemo::CommunicatorPtr commShot = commAll->split(procAllGridRank[0]);
+
+    // this communicator is used for reducing the solutions of problems
+
+    dmemo::CommunicatorPtr commInterShot = commAll->split(commShot->getRank());
+
+    SCAI_DMEMO_TASK( commShot )
+
     // inter node distribution 
     // define the grid topology by sizes NX, NY, and NZ from configuration
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
 
     common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX") );
-    common::Grid3D procGrid(config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNX") );
-    // distribute the grid onto available processors, topology can be set by environment variable
-    dmemo::DistributionPtr dist(new dmemo::GridDistribution( grid, comm, procGrid));
+    common::Grid3D procGrid(npZ, npY, npX );
+    // distribute the grid onto available processors
+    dmemo::DistributionPtr dist(new dmemo::GridDistribution( grid, commShot, procGrid));
 
-    HOST_PRINT(comm, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
-    if (comm->getRank() == MASTERGPI) {
+    HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
+    if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
     
@@ -100,9 +124,9 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     start_t = common::Walltime::get();
     ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
-    derivatives->init(dist, ctx, config, comm);
+    derivatives->init(dist, ctx, config, commShot);
     end_t = common::Walltime::get();
-    HOST_PRINT(comm, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Wavefields                              */
@@ -114,11 +138,11 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, ctx, dist);
-    CheckParameter::checkSources<ValueType>(config, sources, comm);
+    CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, ctx, dist);
-        CheckParameter::checkReceivers<ValueType>(config, receivers, comm);
+        CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
     
     /* --------------------------------------- */
@@ -126,37 +150,41 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
-    model->prepareForModelling(config, ctx, dist, comm);
-    
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model,comm);
+    model->prepareForModelling(config, ctx, dist, commShot);
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model,commShot);
+
     
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */  
     
+    HOST_PRINT(commAll, "ForwardSolver ...\n")
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
+    HOST_PRINT(commAll, "ForwardSolver prepared\n")
 
-    for (IndexType shotNumber = 0; shotNumber < sources.getNumShots(); shotNumber++) {
+    dmemo::BlockDistribution shotDist(sources.getNumShots(), commInterShot);
+
+    for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
         /* Update Source */
         if (!config.get<bool>("runSimultaneousShots"))
             sources.init(config, ctx, dist, shotNumber);
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, ctx, dist, shotNumber);
-            CheckParameter::checkReceivers<ValueType>(config, receivers, comm);
+            CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
         }
 
-        HOST_PRINT(comm, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
                                                          << "Total Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
-	
+        
         start_t = common::Walltime::get();
 	
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
             
             if (tStep % 100 == 0 && tStep != 0) {
-                HOST_PRINT(comm, "Calculating time step " << tStep << "\n");
+                HOST_PRINT(commShot, "Calculating time step " << tStep << "\n");
             }
             
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
@@ -168,12 +196,12 @@ int main(int argc, const char *argv[])
         }
         
         end_t = common::Walltime::get();
-        HOST_PRINT(comm, "Finished time stepping in " << end_t - start_t << " sec.\n\n");
+        HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << " in " << end_t - start_t << " sec.\n\n");
 
         receivers.getSeismogramHandler().normalize();
         
         if (!config.get<bool>("runSimultaneousShots")) {
-        receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+            receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
         } else {
             receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
         }

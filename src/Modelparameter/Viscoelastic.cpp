@@ -80,7 +80,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model (viscoelastic) parameter from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
