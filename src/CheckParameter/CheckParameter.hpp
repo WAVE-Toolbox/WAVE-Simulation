@@ -139,9 +139,9 @@ namespace KITGPI
         template <typename ValueType>
         void checkSources(Configuration::Configuration const &config, Acquisition::Sources<ValueType> const &sources, scai::dmemo::CommunicatorPtr comm)
         {
-            scai::IndexType NX = config.get<IndexType>("NX");
-            scai::IndexType NY = config.get<IndexType>("NY");
-            scai::IndexType NZ = config.get<IndexType>("NZ");
+            scai::IndexType NX = config.get<scai::IndexType>("NX");
+            scai::IndexType NY = config.get<scai::IndexType>("NY");
+            scai::IndexType NZ = config.get<scai::IndexType>("NZ");
 
             scai::lama::DenseMatrix<ValueType> acquisition_temp;
             sources.getAcquisitionMat(config, acquisition_temp);
@@ -177,9 +177,9 @@ namespace KITGPI
         template <typename ValueType>
         void checkReceivers(Configuration::Configuration const &config, Acquisition::Receivers<ValueType> const &receiver, scai::dmemo::CommunicatorPtr comm)
         {
-            scai::IndexType NX = config.get<IndexType>("NX");
-            scai::IndexType NY = config.get<IndexType>("NY");
-            scai::IndexType NZ = config.get<IndexType>("NZ");
+            scai::IndexType NX = config.get<scai::IndexType>("NX");
+            scai::IndexType NY = config.get<scai::IndexType>("NY");
+            scai::IndexType NZ = config.get<scai::IndexType>("NZ");
 
             scai::lama::DenseMatrix<ValueType> acquisition_temp;
             receiver.getAcquisitionMat(config, acquisition_temp);

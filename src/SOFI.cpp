@@ -178,8 +178,6 @@ int main(int argc, const char *argv[])
         HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
                                                          << "Total Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
-	
-        HOST_PRINT(commShot, "Shot comm: " << commInterShot->getRank() << "\n");
         
         start_t = common::Walltime::get();
 	
