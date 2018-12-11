@@ -9,7 +9,6 @@
 using namespace KITGPI;
 using namespace scai;
 
-
 TEST(Acoustic, TestInit)
 {
     Configuration::Configuration testConfig1("../src/Tests/Testfiles/configuration_4.txt");

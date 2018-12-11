@@ -69,3 +69,6 @@ WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.5          # Time increment between snapshot in seconds
+
+# console output
+verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

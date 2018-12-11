@@ -15,14 +15,14 @@ using namespace KITGPI;
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters\n");
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n");
 
     // refreshModulus();
     this->getPWaveModulus();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
-    HOST_PRINT(comm, "Model ready!\n\n");
+    HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
 /*! \brief Apply thresholds to model parameters
@@ -71,11 +71,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter (acoustic) from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (acoustic) from file...\n");
 
          init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("rho"));

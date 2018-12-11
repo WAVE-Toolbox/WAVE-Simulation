@@ -60,7 +60,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
-    HOST_PRINT(comm, "Initialization of the free surface...\n");
+    HOST_PRINT(comm, "", "Initialization of the free surface...\n");
 
     active = true;
 
@@ -101,7 +101,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     write_selectHorizontalUpdate.release();
     selectHorizontalUpdate = temp;
 
-    HOST_PRINT(comm, "Finished initializing of the free surface\n\n");
+    HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<float>;

@@ -31,6 +31,8 @@
 using namespace scai;
 using namespace KITGPI;
 
+bool verbose; // global variable definition
+
 int main(int argc, const char *argv[])
 {
     // parse command line arguments to be set as environment variables, e.g.
@@ -114,6 +116,7 @@ int main(int argc, const char *argv[])
     // distribute the grid onto available processors
     dmemo::DistributionPtr dist(new dmemo::GridDistribution( grid, commShot, procGrid));
 
+    verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
     if (commAll->getRank() == MASTERGPI) {
         config.print();
@@ -126,7 +129,7 @@ int main(int argc, const char *argv[])
     ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
     derivatives->init(dist, ctx, config, commShot);
     end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Wavefields                              */
@@ -158,11 +161,11 @@ int main(int argc, const char *argv[])
     /* Forward solver                          */
     /* --------------------------------------- */  
     
-    HOST_PRINT(commAll, "ForwardSolver ...\n")
+    HOST_PRINT(commAll, "", "ForwardSolver ...\n")
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
-    HOST_PRINT(commAll, "ForwardSolver prepared\n")
+    HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
 
     dmemo::BlockDistribution shotDist(sources.getNumShots(), commInterShot);
 

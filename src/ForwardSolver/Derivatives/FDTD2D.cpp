@@ -68,7 +68,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
+    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
@@ -79,7 +79,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     this->calcDxf(NX, NY, NZ, dist);
     this->calcDyf(NX, NY, NZ, dist);
 
-    HOST_PRINT(comm, "Matrix Dxf and Dyf finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
 
     Dxf.setContextPtr(ctx);
     Dxb.setContextPtr(ctx);
@@ -91,14 +91,14 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     Dyb = transpose(Dyf);
     Dyb.scale(-1.0);
 
-    HOST_PRINT(comm, "Matrix Dxb and Dyb finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
 
     Dxf *= DT / DH;
     Dxb *= DT / DH;
     Dyf *= DT / DH;
     Dyb *= DT / DH;
 
-    HOST_PRINT(comm, "Finished with initialization of the matrices!\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
 //! \brief Getter method for derivative matrix Dzb

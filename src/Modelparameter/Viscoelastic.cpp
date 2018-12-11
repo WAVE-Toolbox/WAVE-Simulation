@@ -11,7 +11,7 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters\n"); 
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n"); 
     
     //refreshModulus 
     this->getPWaveModulus();  
@@ -22,7 +22,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
     calculateAveraging();
     
 
-    HOST_PRINT(comm, "Model ready!\n\n");
+    HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
 /*! \brief Apply thresholds to model parameters
@@ -80,12 +80,12 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model (viscoelastic) parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoelastic) parameter from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauP"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));

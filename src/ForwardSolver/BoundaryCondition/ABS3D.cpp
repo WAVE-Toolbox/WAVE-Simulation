@@ -75,7 +75,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
-    HOST_PRINT(comm, "Initialization of the Damping Boundary...\n");
+    HOST_PRINT(comm, "", "Initialization of the Damping Boundary...\n");
 
     active = true;
 

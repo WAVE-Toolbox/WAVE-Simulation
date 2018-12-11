@@ -88,7 +88,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    HOST_PRINT(dist->getCommunicatorPtr(), "initModelParameter from file " << filename << "\n")
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "initModelParameter from file " << filename << "\n")
     allocateModelparameter(vector, ctx, dist);
 
     readModelparameter(vector, filename, dist, partitionedIn);
@@ -198,7 +198,7 @@ template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity()
 {
     if (dirtyFlagInverseDensity) {
-        HOST_PRINT(density.getDistributionPtr()->getCommunicatorPtr(), "Inverse density will be calculated from density\n");
+        HOST_PRINT(density.getDistributionPtr()->getCommunicatorPtr(), "", "Inverse density will be calculated from density\n");
         inverseDensity = 1 / density;
 	dirtyFlagInverseDensity = false;
     }
@@ -245,7 +245,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 
     // If the modulus is dirty, than recalculate
     if (dirtyFlagPWaveModulus) {	   
-	HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "P-Wave modulus will be calculated from density and P-Wave velocity\n");
+	HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "","P-Wave modulus will be calculated from density and P-Wave velocity\n");
         dirtyFlagPWaveModulus = false;
         calcModulusFromVelocity(velocityP,density,pWaveModulus);
     }
@@ -272,7 +272,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 
     // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {
-        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density and S-Wave velocity\n");    
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "", "S-Wave modulus will be calculated from density and S-Wave velocity\n");    
         calcModulusFromVelocity(velocityS,density,sWaveModulus);
 	dirtyFlagSWaveModulus=false;
     }

@@ -70,7 +70,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
+    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
@@ -82,7 +82,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     this->calcDzf(NX, NY, NZ, dist);
     this->calcDyf(NX, NY, NZ, dist);
 
-    HOST_PRINT(comm, "Matrix Dxf, Dyf and Dzf finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
 
     Dxf.setContextPtr(ctx);
     Dzf.setContextPtr(ctx);
@@ -118,7 +118,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyb.assignTranspose(Dyf);
     Dyb *= -1.0;
 
-    HOST_PRINT(comm, "Matrix Dxb, Dyb and Dzb finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
 
     Dxf.scale(DT / DH);
     Dzf.scale(DT / DH);
@@ -127,7 +127,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyf.scale(DT / DH);
     Dyb.scale(DT / DH);
 
-    HOST_PRINT(comm, "Finished with initialization of the matrices!\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
 template class KITGPI::ForwardSolver::Derivatives::FDTD3D<double>;

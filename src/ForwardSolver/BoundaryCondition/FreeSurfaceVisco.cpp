@@ -108,7 +108,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
 {
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the free surface...\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Initialization of the free surface...\n");
 
     active = true;
 
@@ -161,7 +161,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     setSurfaceZero = temp;
     selectHorizontalUpdate = temp2;
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Finished initializing of the free surface\n\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished initializing of the free surface\n\n");
 }
 
 /*! \brief Set Ryy at the free surface to zero

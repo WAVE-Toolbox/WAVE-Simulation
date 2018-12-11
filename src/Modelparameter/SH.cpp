@@ -14,14 +14,14 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "", "Preparation of the model parameters…\n");
     
     // refreshModulus();
     this->getSWaveModulus();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
-    HOST_PRINT(comm, "Model ready!\n\n");
+    HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
 /*! \brief Apply thresholds to model parameters
@@ -70,11 +70,11 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter (SH) from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (SH) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
        init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
