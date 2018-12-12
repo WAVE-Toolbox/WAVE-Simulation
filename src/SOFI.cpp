@@ -178,8 +178,8 @@ int main(int argc, const char *argv[])
             CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n"
-                                                         << "Total Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n",
+                                                         "Total Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
         
         start_t = common::Walltime::get();
@@ -199,7 +199,7 @@ int main(int argc, const char *argv[])
         }
         
         end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << " in " << end_t - start_t << " sec.\n\n");
+        HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << ") in " << end_t - start_t << " sec.\n");
 
         receivers.getSeismogramHandler().normalize();
         

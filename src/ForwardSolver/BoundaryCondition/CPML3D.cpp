@@ -295,7 +295,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dme
     //     /* Release all read and write access */
     read_localIndices.release();
 
-    HOST_PRINT(comm, "Finished with initialization of the CPML coefficients!\n\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the CPML coefficients!\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::CPML3D<float>;

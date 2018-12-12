@@ -187,7 +187,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init(s
     //     /* Release all read and write access */
     read_localIndices.release();
 
-    HOST_PRINT(comm, "Finished with initialization of the CPML coefficients!\n\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the CPML coefficients!\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<float>;
