@@ -148,7 +148,8 @@ LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common 
+            -lscai_tracing -lscai_logging -lscai_common \
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
@@ -190,7 +191,7 @@ ifeq "$(origin GTEST_DIR)" 'environment'
 endif
 	@echo
 
-all: lib prog doc utest itest copyhpp
+all: lib prog doc utest itest model copyhpp
 
 prog: $(wave.bindir)/$(wave.exe)
 
