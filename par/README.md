@@ -6,10 +6,8 @@ We successfully tested LAMA on different operating systems e.g. macOS (Sierra, E
 
 Before the modelling code can be started, you have to set the paths to the installation of the [LAMA framework](www.libama.org):
 - `export SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
+- or `make all SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
 
-Moreover, you have to add the LAMA framework to the compiler search paths:
-- `export DYLD_LIBRARY_PATH=${SCAI_ROOT}/lib:${DYLD_LIBRARY_PATH}`
-- `export LD_LIBRARY_PATH=${SCAI_ROOT}/lib:${LD_LIBRARY_PATH}`
 
 ## Start the simulation
 The simulation can be started by the example start file:
