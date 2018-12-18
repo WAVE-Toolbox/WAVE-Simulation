@@ -344,7 +344,7 @@ void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::
         scai::IndexType numSourceReadLocal;
 
         su.locateTrace(signalFilename, numSourceReadLocal, numSourceRead);
-        readSingleDataSU<ValueType>(signalFilename, singleSignal, numSourceReadLocal);
+        suHandler<ValueType>::readSingleDataSU(signalFilename, singleSignal, numSourceReadLocal);
 
         SCAI_ASSERT(singleSignal.size() == signals.getData().getNumColumns(), "Source signal has invalid length");
 
