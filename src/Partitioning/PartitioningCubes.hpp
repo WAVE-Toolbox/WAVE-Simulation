@@ -33,7 +33,7 @@ namespace KITGPI
             scai::dmemo::DistributionPtr getDist() const;
 
           private:
-            scai::dmemo::DistributionPtr calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::CommunicatorPtr comm);
+            scai::dmemo::DistributionPtr calculate(scai::IndexType procNX, scai::IndexType procNY, scai::IndexType procNZ, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::CommunicatorPtr comm);
 
             scai::dmemo::DistributionPtr dist_cubes; //!< Distribution
         };

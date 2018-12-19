@@ -4,7 +4,6 @@
 #include <scai/lama.hpp>
 
 #include <scai/lama/DenseVector.hpp>
-#include <scai/lama/expression/all.hpp>
 #include <scai/lama/matrix/all.hpp>
 #include <scai/lama/matutils/MatrixCreator.hpp>
 #include <scai/lama/norm/L2Norm.hpp>
@@ -18,7 +17,6 @@
 #include <scai/tracing.hpp>
 
 #include <scai/common/Walltime.hpp>
-#include <scai/common/unique_ptr.hpp>
 #include <scai/logging.hpp>
 
 #include <iostream>
@@ -42,51 +40,57 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Viscoelastic(){};
+            Viscoelastic(){equationType = "viscoelastic";};
 
             //! Destructor, releases all allocated resources.
             ~Viscoelastic(){};
 
             explicit Viscoelastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            explicit Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
-            explicit Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
+            explicit Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
 
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho_const, scai::lama::Scalar tauP_const, scai::lama::Scalar tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
 
-            void initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
-            void initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn);
+            void write(std::string filename, scai::IndexType partitionedOut) const override;
 
-            void write(std::string filename, IndexType partitionedOut) const override;
-
+            std::string getEquationType() const;
+            
+            scai::lama::Vector<ValueType> const &getPWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getSWaveModulus() override;
+    
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-
-            void switch2velocity() override;
-            void switch2modulus() override;
-
+            
+            void applyThresholds(Configuration::Configuration const &config) override;
+    
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+    
             /* Overloading Operators */
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator*=(scai::lama::Scalar rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+=(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
-            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator*=(ValueType const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> operator+(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator+=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> operator-(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
+            KITGPI::Modelparameter::Viscoelastic<ValueType> &operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs);
 
           private:
-            void refreshModule() override;
-            void refreshVelocity() override;
             void calculateAveraging() override;
+            
+            using Modelparameter<ValueType>::equationType; 
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagModulus;
+            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
+            using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::dirtyFlagVelocity;
-            using Modelparameter<ValueType>::parametrisation;
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
@@ -99,7 +103,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
 
-            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
+            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm);
 

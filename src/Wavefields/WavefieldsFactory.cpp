@@ -12,7 +12,7 @@ typename KITGPI::Wavefields::Wavefields<ValueType>::WavefieldPtr KITGPI::Wavefie
 
     // Assert correctness of input values
     SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
-    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("visco") == 0, "Unkown type");
+    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("visco") == 0 || type.compare("sh") == 0, "Unkown type");
 
     // 2D
     if (dimension.compare("2d") == 0 && type.compare("acoustic") == 0) {
@@ -23,6 +23,9 @@ typename KITGPI::Wavefields::Wavefields<ValueType>::WavefieldPtr KITGPI::Wavefie
     }
     if (dimension.compare("2d") == 0 && type.compare("visco") == 0) {
         return WavefieldPtr(new FD2Dvisco<ValueType>);
+    }
+    if (dimension.compare("2d") == 0 && type.compare("sh") == 0) {
+        return WavefieldPtr(new FD2Dsh<ValueType>);
     }
 
     // 3D
@@ -37,7 +40,7 @@ typename KITGPI::Wavefields::Wavefields<ValueType>::WavefieldPtr KITGPI::Wavefie
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");
-    return nullptr;
+    return WavefieldPtr();
 }
 
 template class KITGPI::Wavefields::Factory<double>;

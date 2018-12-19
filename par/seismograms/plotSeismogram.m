@@ -1,16 +1,21 @@
 clearvars; close all;
 
 %% Read seismogram
-filename='seismogram.p.mtx';
+filename='seismogram.shot_0.p.mtx';
 seismogram=readSeismogram(filename);
+
+DT=2e-3;
+
+
+T=1*DT:DT:size(seismogram,2)*DT;
 
 %% Plot seismogram
 figure
 for(trace=1:size(seismogram,1))
-plot(seismogram(trace,:)/max(abs(seismogram(trace,:)))+trace,'black');
+plot(T,seismogram(trace,:)/max(abs(seismogram(trace,:)))+trace,'black');
 hold on
 end
 title('Normalized traces')
-xlabel('Samples')
+xlabel('Time in seconds')
 ylabel('Traces')
-axis([0 size(seismogram,2) 0 size(seismogram,1)+1])
+axis([0 size(seismogram,2)*DT 0 size(seismogram,1)+1])

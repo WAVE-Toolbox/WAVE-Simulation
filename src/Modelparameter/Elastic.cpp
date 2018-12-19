@@ -4,85 +4,56 @@ using namespace scai;
 
 /*! \brief Prepare modellparameter for modelling
  *
- * Refreshes the module if parameterisation is in terms of velocities
+ * Refreshes the modulus, calculates inverseDensity and calculates average values on staggered grid
  *
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n");
 
-    refreshModule();
+    // refreshModulus
+    this->getPWaveModulus();
+    this->getSWaveModulus();
     initializeMatrices(dist, ctx, config, comm);
     this->getInverseDensity();
     calculateAveraging();
 
-    HOST_PRINT(comm, "Model ready!\n\n");
+    HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
-/*! \brief Switch the default parameterization of this class to modulus
- *
- * This will recalulcate the modulus vectors from the velocity vectors.
- * Moreover, the parametrisation value will be set to zero.
- *
+/*! \brief Apply thresholds to model parameters
+ \param config Configuration class
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::switch2modulus()
-{
-    if (parametrisation == 1) {
-        this->calcModuleFromVelocity(velocityP, density, pWaveModulus);
-        this->calcModuleFromVelocity(velocityS, density, sWaveModulus);
-        dirtyFlagAveraging = true;
-        dirtyFlagModulus = false;
-        dirtyFlagVelocity = false;
-        parametrisation = 0;
-    }
-};
+void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+    lama::DenseVector<ValueType> maskP(velocityP); //mask to restore vacuum
+    maskP.unaryOp(maskP,common::UnaryOp::SIGN);
+    maskP.unaryOp(maskP,common::UnaryOp::ABS);
+    
+    lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
+    maskS.unaryOp(maskP,common::UnaryOp::SIGN);
+    maskS.unaryOp(maskP,common::UnaryOp::ABS);
+    
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
+    
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
+    Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
+    dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
+    
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
+     
+    velocityP *= maskP;
+    density *= maskP;
+    velocityS *= maskS;
+}
 
-/*! \brief Switch the default parameterization of this class to velocity
- *
- * This will recalulcate the velocity vectors from the modulus vectors.
- * Moreover, the parametrisation value will be set to one.
- *
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::switch2velocity()
-{
-    if (parametrisation == 0) {
-        this->calcVelocityFromModule(pWaveModulus, density, velocityP);
-        this->calcVelocityFromModule(sWaveModulus, density, velocityS);
-        dirtyFlagModulus = false;
-        dirtyFlagVelocity = false;
-        parametrisation = 1;
-    }
-};
 
-/*! \brief Refresh the velocity vectors with the module values
- *
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::refreshVelocity()
-{
-    if (parametrisation == 0) {
-        this->calcVelocityFromModule(pWaveModulus, density, velocityP);
-        this->calcVelocityFromModule(sWaveModulus, density, velocityS);
-        dirtyFlagVelocity = false;
-    }
-};
-
-/*! \brief Refresh the module vectors with the velocity values
- *
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule()
-{
-    if (parametrisation == 1) {
-        this->calcModuleFromVelocity(velocityP, density, pWaveModulus);
-        this->calcModuleFromVelocity(velocityS, density, sWaveModulus);
-        dirtyFlagModulus = false;
-        dirtyFlagAveraging = true;
-    }
-};
 
 /*! \brief Constructor that is using the Configuration class
  *
@@ -93,6 +64,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::refreshModule()
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
+    equationType = "elastic";
     init(config, ctx, dist);
 }
 
@@ -107,26 +79,14 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 {
     if (config.get<IndexType>("ModelRead")) {
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Reading model parameter from file...\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (elastic) parameter from file...\n");
 
-        switch (config.get<IndexType>("ModelParametrisation")) {
-        case 1:
-            init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
-            break;
-        case 2:
-            initVelocities(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
-            break;
-        default:
-            COMMON_THROWEXCEPTION(" Unkown ModelParametrisation value! ")
-            break;
-        }
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
-        HOST_PRINT(dist->getCommunicatorPtr(), "Finished with reading of the model parameter!\n\n");
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
-        ValueType getPWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityP") * config.get<ValueType>("velocityP");
-        ValueType getSWaveModulus = config.get<ValueType>("rho") * config.get<ValueType>("velocityS") * config.get<ValueType>("velocityS");
-        init(ctx, dist, getPWaveModulus, getSWaveModulus, config.get<ValueType>("rho"));
+        init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
     }
 
     if (config.get<IndexType>("ModelWrite")) {
@@ -144,8 +104,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho)
 {
+    equationType = "elastic";
     init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho);
 }
 
@@ -159,47 +120,11 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  \param rho Density given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::lama::Scalar pWaveModulus_const, scai::lama::Scalar sWaveModulus_const, scai::lama::Scalar rho)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho)
 {
-    parametrisation = 0;
-    this->initModelparameter(pWaveModulus, ctx, dist, pWaveModulus_const);
-    this->initModelparameter(sWaveModulus, ctx, dist, sWaveModulus_const);
+    this->initModelparameter(velocityP, ctx, dist, velocityP_const);
+    this->initModelparameter(velocityS, ctx, dist, velocityS_const);
     this->initModelparameter(density, ctx, dist, rho);
-}
-
-/*! \brief Constructor that is reading models from external files
- *
- *  Reads a model from an external file.
- \param ctx Context
- \param dist Distribution
- \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
- \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
- \param filenamerho Name of file that will be read for the Density.
- \param partitionedIn Partitioned input
- */
-template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
-{
-    init(ctx, dist, filenamePWaveModulus, filenameSWaveModulus, filenamerho, partitionedIn);
-}
-
-/*! \brief Initialisation that is reading models from external files
- *
- *  Reads a model from an external file.
- \param ctx Context
- \param dist Distribution
- \param filenamePWaveModulus Name of file that will be read for the P-wave modulus.
- \param filenameSWaveModulus Name of file that will be read for the S-wave modulus.
- \param filenamerho Name of file that will be read for the Density.
- \param partitionedIn Partitioned input
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filenamePWaveModulus, std::string filenameSWaveModulus, std::string filenamerho, IndexType partitionedIn)
-{
-    parametrisation = 0;
-    this->initModelparameter(pWaveModulus, ctx, dist, filenamePWaveModulus, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamerho, partitionedIn);
-    this->initModelparameter(sWaveModulus, ctx, dist, filenameSWaveModulus, partitionedIn);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -213,44 +138,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
+    equationType = "elastic";
     init(ctx, dist, filename, partitionedIn);
-}
-
-/*! \brief Initialisator that is reading models from external files
- *
- *  Reads a model from an external file.
- \param ctx Context
- \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
-{
-    parametrisation = 0;
-    std::string filenamePWaveModulus = filename + ".pWaveModulus.mtx";
-    std::string filenameSWaveModulus = filename + ".sWaveModulus.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->initModelparameter(pWaveModulus, ctx, dist, filenamePWaveModulus, partitionedIn);
-    this->initModelparameter(sWaveModulus, ctx, dist, filenameSWaveModulus, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
-}
-
-//! \brief Copy constructor
-template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
-{
-    pWaveModulus = rhs.pWaveModulus;
-    sWaveModulus = rhs.sWaveModulus;
-    velocityP = rhs.velocityP;
-    velocityS = rhs.velocityS;
-    density = rhs.density;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagModulus = rhs.dirtyFlagModulus;
-    dirtyFlagVelocity = rhs.dirtyFlagVelocity;
-    parametrisation = rhs.parametrisation;
-    inverseDensity = rhs.inverseDensity;
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector
@@ -263,9 +152,8 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
-{
-    parametrisation = 1;
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+{  
     std::string filenameVelocityP = filename + ".vp.mtx";
     std::string filenameVelocityS = filename + ".vs.mtx";
     std::string filenamedensity = filename + ".density.mtx";
@@ -275,31 +163,22 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initVelocities(scai::hmemo::Con
     this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
 }
 
-/*! \brief Write model to an external file
- *
- \param filenameP Filename for P-wave modulus / P-wave velocity model
- \param filenameS Filename for S-wave modulus / S-wave velocity model
- \param filenamedensity Filename for Density model
- \param partitionedOut Partitioned output
- */
+//! \brief Copy constructor
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filenameP, std::string filenameS, std::string filenamedensity, IndexType partitionedOut) const
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 {
-    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
+    equationType = rhs.equationType;
+    pWaveModulus = rhs.pWaveModulus;
+    sWaveModulus = rhs.sWaveModulus;
+    velocityP = rhs.velocityP;
+    velocityS = rhs.velocityS;
+    density = rhs.density;
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
+    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
+    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
+    inverseDensity = rhs.inverseDensity;
+}
 
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-
-    switch (parametrisation) {
-    case 0:
-        this->writeModelparameter(pWaveModulus, filenameP, partitionedOut);
-        this->writeModelparameter(sWaveModulus, filenameS, partitionedOut);
-        break;
-    case 1:
-        this->writeModelparameter(velocityP, filenameP, partitionedOut);
-        this->writeModelparameter(velocityS, filenameS, partitionedOut);
-        break;
-    }
-};
 
 /*! \brief Write model to an external file
  *
@@ -309,24 +188,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filenameP, st
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    SCAI_ASSERT_DEBUG(parametrisation == 0 || parametrisation == 1, "Unkown parametrisation");
-
-    std::string filenameP;
-    std::string filenameS;
+    std::string filenameP = filename + ".vp.mtx";
+    std::string filenameS = filename + ".vs.mtx";
     std::string filenamedensity = filename + ".density.mtx";
 
-    switch (parametrisation) {
-    case 0:
-        filenameP = filename + ".pWaveModulus.mtx";
-        filenameS = filename + ".sWaveModulus.mtx";
-        break;
-    case 1:
-        filenameP = filename + ".vp.mtx";
-        filenameS = filename + ".vs.mtx";
-        break;
-    }
-
-    write(filenameP, filenameS, filenamedensity, partitionedOut);
+    this->writeModelparameter(density, filenamedensity, partitionedOut);
+    this->writeModelparameter(velocityP, filenameP, partitionedOut);
+    this->writeModelparameter(velocityS, filenameS, partitionedOut);
 };
 
 //! \brief Wrapper to support configuration
@@ -358,7 +226,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
-
+    if (dirtyFlagAveraging)
+    {
     SCAI_REGION("initializeMatrices")
 
     this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
@@ -374,6 +243,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
     sWaveModulusAverageMatrixXY.setContextPtr(ctx);
     sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
     sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+    }
 }
 
 /*! \brief calculate averaged vectors
@@ -382,7 +252,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
 {
-
+    if (dirtyFlagAveraging)
+    {
     this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
     this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
     this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
@@ -390,13 +261,22 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
     this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
     this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
     dirtyFlagAveraging = false;
+    }
+}
+
+/*! \brief Get equationType (elastic)
+ */
+template <typename ValueType>
+std::string KITGPI::Modelparameter::Elastic<ValueType>::getEquationType() const
+{
+    return (equationType);
 }
 
 /*! \brief Get reference to tauP
  *
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauP);
@@ -405,7 +285,7 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauP()
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -430,7 +310,16 @@ IndexType KITGPI::Modelparameter::Elastic<ValueType>::getNumRelaxationMechanisms
 /*! \brief Get reference to tauS xy-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXY);
+}
+
+/*! \brief Get reference to tauS xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXY() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXY);
@@ -439,7 +328,16 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageXZ);
+}
+
+/*! \brief Get reference to tauS xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageXZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageXZ);
@@ -448,7 +346,16 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
 /*! \brief Get reference to tauS yz-plane
  */
 template <typename ValueType>
-scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    return (tauSAverageYZ);
+}
+
+/*! \brief Get reference to tauS yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAverageYZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
     return (tauSAverageYZ);
@@ -459,22 +366,11 @@ scai::lama::Vector const &KITGPI::Modelparameter::Elastic<ValueType>::getTauSAve
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*(ValueType rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density * rhs;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus * rhs;
-        result.sWaveModulus = this->sWaveModulus * rhs;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP * rhs;
-        result.velocityS = this->velocityS * rhs;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result *= rhs;
+    return result;   
 }
 
 /*! \brief free function to multiply
@@ -483,7 +379,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> operator*(ValueType lhs, KITGPI::Modelparameter::Elastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -493,9 +389,17 @@ KITGPI::Modelparameter::Elastic<ValueType> operator*(scai::lama::Scalar lhs, KIT
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator*=(scai::lama::Scalar rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator*=(ValueType const &rhs)
 {
-    return *this * rhs;
+    density *= rhs;
+    velocityP *= rhs;
+    velocityS *= rhs;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
 }
 
 /*! \brief Overloading + Operation
@@ -503,22 +407,11 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density + rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus + rhs.pWaveModulus;
-        result.sWaveModulus = this->sWaveModulus + rhs.sWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP + rhs.velocityP;
-        result.velocityS = this->velocityS + rhs.velocityS;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result += rhs;
+    return result;   
 }
 
 /*! \brief Overloading += Operation
@@ -526,9 +419,17 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is added.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    return *this + rhs;
+    density += rhs.density;
+    velocityP += rhs.velocityP;
+    velocityS += rhs.velocityS;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
 }
 
 /*! \brief Overloading - Operation
@@ -536,22 +437,11 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    KITGPI::Modelparameter::Elastic<ValueType> result;
-    result.density = this->density - rhs.density;
-    if (parametrisation == 0) {
-        result.pWaveModulus = this->pWaveModulus - rhs.pWaveModulus;
-        result.sWaveModulus = this->sWaveModulus - rhs.sWaveModulus;
-        return result;
-    }
-    if (parametrisation == 1) {
-        result.velocityP = this->velocityP - rhs.velocityP;
-        result.velocityS = this->velocityS - rhs.velocityS;
-        return result;
-    } else {
-        COMMON_THROWEXCEPTION(" Unknown parametrisation! ");
-    }
+    KITGPI::Modelparameter::Elastic<ValueType> result(*this);
+    result -= rhs;
+    return result; 
 }
 
 /*! \brief Overloading -= Operation
@@ -559,9 +449,88 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
  \param rhs Model which is subtractet.
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> rhs)
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    return *this - rhs;
+    density = density -= rhs.density;
+    velocityP -= rhs.velocityP;
+    velocityS -= rhs.velocityS;
+    
+    dirtyFlagInverseDensity=true;
+    dirtyFlagPWaveModulus= true;
+    dirtyFlagSWaveModulus= true;
+    dirtyFlagAveraging= true;
+    return *this;
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Model which is copied.
+ */
+template <typename ValueType>
+KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.pWaveModulus;
+    sWaveModulus = rhs.sWaveModulus;
+    velocityP = rhs.velocityP;
+    velocityS = rhs.velocityS;
+    density = rhs.density;
+    inverseDensity = rhs.inverseDensity;
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
+    dirtyFlagPWaveModulus= rhs.dirtyFlagPWaveModulus;
+    dirtyFlagSWaveModulus= rhs.dirtyFlagSWaveModulus;
+    dirtyFlagAveraging= rhs.dirtyFlagAveraging;
+    return *this;
+}
+
+/*! \brief function for overloading = Operation (called in base class)
+ *
+ \param rhs Abstract model which is assigned.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    pWaveModulus = rhs.getPWaveModulus();
+    sWaveModulus = rhs.getSWaveModulus();
+    velocityP = rhs.getVelocityP();
+    velocityS = rhs.getVelocityS();
+    inverseDensity = rhs.getInverseDensity();
+    density = rhs.getDensity();
+    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
+    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
+    dirtyFlagSWaveModulus= rhs.getDirtyFlagSWaveModulus();
+    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+}
+
+/*! \brief function for overloading -= Operation (called in base class)
+ *
+ \param rhs Abstract model which is substracted.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP -= rhs.getVelocityP();
+    velocityS -= rhs.getVelocityS();
+    density -= rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
+}
+
+/*! \brief function for overloading += Operation (called in base class)
+ *
+ \param rhs Abstract model which is added.
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
+{
+    velocityP += rhs.getVelocityP();
+    velocityS += rhs.getVelocityS();
+    density += rhs.getDensity();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 template class KITGPI::Modelparameter::Elastic<float>;

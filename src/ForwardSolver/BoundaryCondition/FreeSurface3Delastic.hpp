@@ -25,11 +25,13 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface3Delastic(){};
 
-                void apply(scai::lama::Vector &sumHorizonatlDerivative, scai::lama::Vector &Sxx, scai::lama::Vector &Syy, scai::lama::Vector &Szz);
+                void exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Szz);
 
               private:
-                using FreeSurfaceElastic<ValueType>::setSurfaceZero;
+                //   using FreeSurfaceElastic<ValueType>::setSurfaceZero;
                 using FreeSurfaceElastic<ValueType>::scaleHorizontalUpdate;
+                using FreeSurfaceElastic<ValueType>::scaleVerticalUpdate;
+                using FreeSurfaceElastic<ValueType>::temp;
                 using FreeSurfaceElastic<ValueType>::active;
             };
         } /* end namespace BoundaryCondition */

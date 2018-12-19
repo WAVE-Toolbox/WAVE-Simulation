@@ -9,10 +9,78 @@ using namespace scai;
  \param config Configuration class, which will be used to determine filename and header information
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config) const
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
 {
     for (auto const &i : seismo) {
-        i.write(config);
+        i.write(config, filename);
+    }
+}
+
+//! \brief Method to read all handled Seismograms from file
+/*!
+ * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
+ * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ *
+ \param config Configuration class, which will be used to determine filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, bool copyDist)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.read(config, filename, copyDist);
+    }
+}
+
+//! \brief Method to read all handled Seismograms from file
+/*!
+ * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
+ * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ *
+ \param config Configuration class, which will be used to determine filename and header information
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0)
+            i.read(config, filename, distTraces, distSamples);
+    }
+}
+
+//! \brief Method to normalize Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
+{
+    for (auto &i : seismo) {
+        i.getNormalizeTraces();
+        i.normalizeTrace();
+    }
+}
+
+//! \brief Method to integrate the Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
+{
+    for (auto &i : seismo) {
+        i.integrateTraces();
+    }
+}
+
+/*! \brief Method to filter the Seismogram-traces
+ \param freqFilter filter object
+*/
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::filter(Filter::Filter<ValueType> const &freqFilter)
+{
+    for (auto &i : seismo) {
+        i.filterTraces(freqFilter);
     }
 }
 
@@ -26,8 +94,9 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Con
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
     : seismo(NUM_ELEMENTS_SEISMOGRAMTYPE)
+// seismo(4) initializes 4 Seismogram objects by calling the default constructor of the Class Seismogram. Other constructors can be called by e.g. seismo(4,Seismogram<ValueType>(a,b...))
 {
-    seismo.shrink_to_fit();
+    // seismo.shrink_to_fit();
     setTraceType();
 }
 
@@ -51,20 +120,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
     }
 }
 
-//! \brief Write all handled Seismogram to a raw-file.
-/*!
- *
- * This method writes all handled Seismogram to a raw-file (MTX format, without header). The #SeismogramType will be added to the filenames automaticly.
- \param filename Filename of the output file
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::writeToFileRaw(std::string const &filename) const
-{
-    for (auto const &i : seismo) {
-        i.writeToFileRaw(filename);
-    }
-}
-
 /*! \brief Method to reset the Seismogram data
  *
  * This method resets the Seismogram data (the content of the traces). The reset will set all values to zero.
@@ -78,6 +133,17 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetData()
     }
 }
 
+/*! \brief Method to reset all Seismogram (components)
+ *
+ * This method clears the Seismogram data 
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::resetSeismograms()
+{
+    for (auto &i : seismo) {
+        i.resetSeismogram();
+    }
+}
 //! \brief Getter method for the number of samples
 /*!
  * This method returns the number of temporal samples of the specified #SeismogramType.\n
@@ -182,6 +248,20 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
+//! \brief Setter methode to set Index for trace-normalization.
+/*!
+ *
+ * This method sets the index for trace-normalization.
+ \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setNormalizeTraces(IndexType normalize)
+{
+    for (auto &i : seismo) {
+        i.setNormalizeTraces(normalize);
+    }
+}
+
 //! \brief Setter methode to set source coordinate
 /*!
  * This method sets the source coordinate to all handled Seismogram.
@@ -192,6 +272,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSourceCoordinate(Inde
 {
     for (auto &i : seismo) {
         i.setSourceCoordinate(sourceCoord);
+    }
+}
+
+//! \brief Setter methode to set matrix for resampling this seismogram.
+/*!
+ \param rMat Resampling matrix
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+{
+    for (auto &i : seismo) {
+        i.setResampleCoeff(resampleCoeff);
     }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Configuration/Configuration.hpp"
+#include "../Filter/Filter.hpp"
 #include "Acquisition.hpp"
 #include "Seismogram.hpp"
 #include <scai/hmemo.hpp>
@@ -24,19 +25,26 @@ namespace KITGPI
             //! \brief Default destructor
             ~SeismogramHandler(){};
 
-            void writeToFileRaw(std::string const &filename) const;
-            void write(Configuration::Configuration const &config) const;
+            void read(Configuration::Configuration const &config, std::string const &filename, bool copyDist = 0);
+            void read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
+            void write(Configuration::Configuration const &config, std::string const &filename) const;
+            void normalize();
+            void integrate();
             void resetData();
+            void resetSeismograms();
+            void filter(Filter::Filter<ValueType> const &freqFilter);
 
-            void setSourceCoordinate(IndexType sourceCoord);
+            void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);
+            void setNormalizeTraces(scai::IndexType normalize);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
+            void setResampleCoeff(ValueType resampleCoeff = 1.0);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);
-            IndexType getNumTracesGlobal(SeismogramType type) const;
-            IndexType getNumTracesTotal() const;
-            IndexType getNumSamples(SeismogramType type) const;
+            scai::IndexType getNumTracesGlobal(SeismogramType type) const;
+            scai::IndexType getNumTracesTotal() const;
+            scai::IndexType getNumSamples(SeismogramType type) const;
 
           private:
             void setTraceType();

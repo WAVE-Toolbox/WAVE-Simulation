@@ -3,7 +3,7 @@ using namespace scai;
 
 //! \brief resetting the CPML memory variables
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::reset()
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::resetCPML()
 {
     this->resetVector(psi_vxx);
     this->resetVector(psi_vyx);
@@ -18,56 +18,56 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::reset()
 
 //! \brief application of cpml on the derivation of sxx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(scai::lama::Vector &sxx_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxx_x(scai::lama::Vector<ValueType> &sxx_x)
 {
     this->applyCPML(sxx_x, psi_sxx_x, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(scai::lama::Vector &sxy_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(scai::lama::Vector<ValueType> &sxy_x)
 {
     this->applyCPML(sxy_x, psi_sxy_x, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::Vector &sxy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::Vector<ValueType> &sxy_y)
 {
     this->applyCPML(sxy_y, psi_sxy_y, a_y, b_y, k_y);
 }
 
 //! \brief application of cpml on the derivation of syy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::Vector &syy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::Vector<ValueType> &syy_y)
 {
     this->applyCPML(syy_y, psi_syy_y, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(scai::lama::Vector &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxx(scai::lama::Vector<ValueType> &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x, k_x);
 }
 
 //! \brief application of cpml on the derivation of vy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai::lama::Vector &vyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai::lama::Vector<ValueType> &vyx)
 {
     this->applyCPML(vyx, psi_vyx, a_x_half, b_x_half, k_x_half);
 }
 
 //! \brief application of cpml on the derivation of vx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::Vector &vxy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::Vector<ValueType> &vxy)
 {
     this->applyCPML(vxy, psi_vxy, a_y_half, b_y_half, k_y_half);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::Vector &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::Vector<ValueType> &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y, k_y);
 }
@@ -83,19 +83,20 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai
  \param DT Time sampling
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
  \param KMaxCPML 
  \param CenterFrequencyCPML Center frequency inside the boundaries
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, bool useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
-
-    HOST_PRINT(dist->getCommunicatorPtr(), "Initialization of the PMl Coefficients...\n");
-
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
+
+    HOST_PRINT(comm, "", "Initialization of the PMl Coefficients...\n");
+    
+    active = true;
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
@@ -114,38 +115,37 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     /* Distributed vectors */
     this->initVector(psi_vxx, ctx, dist);
     this->initVector(psi_vyx, ctx, dist);
-    this->initVector(psi_vzx, ctx, dist);
     this->initVector(psi_vxy, ctx, dist);
     this->initVector(psi_vyy, ctx, dist);
-    this->initVector(psi_vzy, ctx, dist);
 
     this->initVector(psi_sxx_x, ctx, dist);
     this->initVector(psi_sxy_x, ctx, dist);
-    this->initVector(psi_sxz_x, ctx, dist);
     this->initVector(psi_sxy_y, ctx, dist);
     this->initVector(psi_syy_y, ctx, dist);
-    this->initVector(psi_syz_y, ctx, dist);
 
-    this->initVector(k_x, ctx, dist);
-    this->initVector(k_y, ctx, dist);
-    this->initVector(b_x, ctx, dist);
-    this->initVector(b_y, ctx, dist);
-    this->initVector(a_x, ctx, dist);
-    this->initVector(a_y, ctx, dist);
 
-    this->initVector(k_x_half, ctx, dist);
-    this->initVector(k_y_half, ctx, dist);
-    this->initVector(b_x_half, ctx, dist);
-    this->initVector(b_y_half, ctx, dist);
-    this->initVector(a_x_half, ctx, dist);
-    this->initVector(a_y_half, ctx, dist);
+    /* Distributed vectors */
+    k_x.setSameValue(dist, 1.0);
+    k_y.setSameValue(dist, 1.0);
+    k_x_half.setSameValue(dist, 1.0);
+    k_y_half.setSameValue(dist, 1.0);
 
-    k_x = 1.0;
-    k_y = 1.0;
-    k_x_half = 1.0;
-    k_y_half = 1.0;
+    lama::DenseVector<ValueType> k_x_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_x_half_temp(dist, 1.0, ctx);
+    lama::DenseVector<ValueType> k_y_half_temp(dist, 1.0, ctx);
 
-    Acquisition::Coordinates<ValueType> coordTransform;
+    lama::DenseVector<ValueType> a_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> a_y_half_temp(dist, 0.0, ctx);
+
+    lama::DenseVector<ValueType> b_x_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
+    lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
+
+    Acquisition::Coordinates coordTransform(NX,NY,NZ);
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 
@@ -153,29 +153,41 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp, NX, NY, NZ);
-        gdist = coordTransform.edgeDistance(coordinate, NX, NY, NZ);
+        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
+        gdist = coordTransform.edgeDistance(coordinate);
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {
-                this->SetCoeffCPML(a_x, b_x, k_x, a_x_half, b_x_half, k_x_half, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
             }
             if (gdist.y < BoundaryWidth) {
-                this->SetCoeffCPML(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
                 if (useFreeSurface) {
                     if (coordinate.y < BoundaryWidth) {
-                        this->ResetCoeffFreeSurface(a_y, b_y, k_y, a_y_half, b_y_half, k_y_half, i);
+                        this->ResetCoeffFreeSurface(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, i);
                     }
                 }
             }
         }
     }
     //
+    k_x = k_x_temp;
+    k_y = k_y_temp;
+    k_x_half = k_x_half_temp;
+    k_y_half = k_y_half_temp;
+    a_x = a_x_temp;
+    a_y = a_y_temp;
+    a_x_half = a_x_half_temp;
+    a_y_half = a_y_half_temp;
+    b_x = b_x_temp;
+    b_y = b_y_temp;
+    b_x_half = b_x_half_temp;
+    b_y_half = b_y_half_temp;
 
     //     /* Release all read and write access */
     read_localIndices.release();
 
-    HOST_PRINT(dist->getCommunicatorPtr(), "Finished with initialization of the CPML coefficients!\n\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the CPML coefficients!\n\n");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::CPML2D<double>;

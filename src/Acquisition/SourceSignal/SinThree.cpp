@@ -58,7 +58,7 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(scai::lama::De
         count++;
     }
 
-    signal = lama::Scalar(AMP) * zero;
+    signal = AMP * zero;
 }
 
 template class KITGPI::Acquisition::SourceSignal::SinThree<float>;

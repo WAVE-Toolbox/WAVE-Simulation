@@ -38,18 +38,18 @@ void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(scai::lama::Dens
      *  tau=pi*FC*(t-1.5/FC);
      *  signal=AMP*(1-2*tau.^2).*exp(-tau.^2);
      */
-    lama::DenseVector<ValueType> t(NT, ValueType(0), DT);
+    auto t = lama::linearDenseVector<ValueType>(NT, 0, DT);
     lama::DenseVector<ValueType> help(t.size(), 1.5 / FC + Tshift);
-    lama::DenseVector<ValueType> tau(t - help);
+    auto tau = lama::eval<lama::DenseVector<ValueType>>(t - help);
     tau *= M_PI * FC;
 
     /* this is for source[i] = AMP * ( 1.0 - 2.0 * tau[i] * tau[i] * exp( -tau[i] * tau[i] ) ); */
     lama::DenseVector<ValueType> one(signal.size(), 1.0);
     help = tau * tau;
     tau = -1.0 * help;
-    tau.exp();
+    tau = exp( tau );
     help = one - 2.0 * help;
-    signal = lama::Scalar(AMP) * help * tau;
+    signal = AMP * help * tau;
 }
 
 template class KITGPI::Acquisition::SourceSignal::Ricker<float>;

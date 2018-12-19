@@ -35,9 +35,9 @@ namespace KITGPI
             //! Default destructor
             ~PartitionedInOut(){};
 
-            void readFromDistributedFiles(scai::lama::Vector &vec, std::string const &filename, scai::dmemo::DistributionPtr dist);
-            void readFromOneFile(scai::lama::Vector &vec, std::string const &filename, scai::dmemo::DistributionPtr dist);
-            void writeToDistributedFiles(scai::lama::Vector const &vec, std::string const &filename);
+            void readFromDistributedFiles(scai::lama::Vector<ValueType> &vec, std::string const &filename, scai::dmemo::DistributionPtr dist);
+            void readFromOneFile(scai::lama::Vector<ValueType> &vec, std::string const &filename, scai::dmemo::DistributionPtr dist);
+            void writeToDistributedFiles(scai::lama::Vector<ValueType> const &vec, std::string const &filename);
         };
     }
 }

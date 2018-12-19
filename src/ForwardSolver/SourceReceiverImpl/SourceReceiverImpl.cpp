@@ -1,7 +1,7 @@
 #include "SourceReceiverImpl.hpp"
 using namespace scai;
 
-/*! \brief default methode  for Source-Reciever Implementation.
+/*! \brief default method for Source-Receiver Implementation.
  *
  \param sourceConfig Sources
  \param receiverConfig Recievers
@@ -9,47 +9,47 @@ using namespace scai;
  */
 template <typename ValueType>
 KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImpl(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN)
-    : wavefield(wavefieldIN), sources(sourceConfig.getSeismogramHandler()), receivers(receiverConfig.getSeismogramHandler())
+    : wavefield(wavefieldIN), seismogramHandlerSrc(sourceConfig.getSeismogramHandler()), seismogramHandlerRec(receiverConfig.getSeismogramHandler())
 {
 
     // Set source coordinate to receiver seismogram handler
-    if (sources.getNumTracesTotal() == 1) {
+    if (seismogramHandlerSrc.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
-        lama::Scalar temp = sourceConfig.getCoordinates().getValue(0);
-        receivers.setSourceCoordinate(temp.getValue<IndexType>());
+        IndexType temp = sourceConfig.getCoordinates().getValue(0);
+        seismogramHandlerRec.setSourceCoordinate(temp);
     } else {
         /* If more than one source is injected at the same time, the source coordinate is
         set to zero, due to the choice of one coordinate would be subjective */
-        receivers.setSourceCoordinate(0);
+        seismogramHandlerRec.setSourceCoordinate(0);
     }
 
     // Set Context of temporary variables to context of wavefields
     setContextPtrToTemporary(wavefield.getContextPtr());
 }
 
-/*! \brief Gether seismogram.
+/*! \brief Gather seismogram.
  *
  \param t Time-step
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogram(IndexType t)
 {
-    if (receivers.getNumTracesGlobal(Acquisition::SeismogramType::P) > 0) {
-        gatherSeismogramPressure(receivers.getSeismogram(Acquisition::SeismogramType::P), wavefield, t);
+    if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramType::P) > 0) {
+        gatherSeismogramPressure(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramType::P), wavefield, t);
     }
-    if (receivers.getNumTracesGlobal(Acquisition::SeismogramType::VX) > 0) {
-        gatherSeismogramVX(receivers.getSeismogram(Acquisition::SeismogramType::VX), wavefield, t);
+    if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramType::VX) > 0) {
+        gatherSeismogramVX(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramType::VX), wavefield, t);
     }
-    if (receivers.getNumTracesGlobal(Acquisition::SeismogramType::VY) > 0) {
-        gatherSeismogramVY(receivers.getSeismogram(Acquisition::SeismogramType::VY), wavefield, t);
+    if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramType::VY) > 0) {
+        gatherSeismogramVY(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramType::VY), wavefield, t);
     }
-    if (receivers.getNumTracesGlobal(Acquisition::SeismogramType::VZ) > 0) {
-        gatherSeismogramVZ(receivers.getSeismogram(Acquisition::SeismogramType::VZ), wavefield, t);
+    if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramType::VZ) > 0) {
+        gatherSeismogramVZ(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramType::VZ), wavefield, t);
     }
 }
 
-/*! \brief Gether vx seismogram.
+/*! \brief Gather vx seismogram.
  *
  \param seismo Seismogram
  \param wavefieldIN incoming wavefield
@@ -58,10 +58,10 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVX(), gatherSeismogram_samplesVX, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVX(), gatherSeismogram_samplesVX, t);
 }
 
-/*! \brief Gether vy seismogram.
+/*! \brief Gather vy seismogram.
  *
  \param seismo Seismogram
  \param wavefieldIN incoming wavefield
@@ -70,10 +70,10 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVY(), gatherSeismogram_samplesVY, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVY(), gatherSeismogram_samplesVY, t);
 }
 
-/*! \brief Gether vz seismogram.
+/*! \brief Gather vz seismogram.
  *
  \param seismo Seismogram
  \param wavefieldIN incoming wavefield
@@ -82,10 +82,10 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    gatherSeismogramSingle(seismo, wavefieldIN.getVZ(), gatherSeismogram_samplesVZ, t);
+    gatherSeismogramSingle(seismo, wavefieldIN.getRefVZ(), gatherSeismogram_samplesVZ, t);
 }
 
-/*! \brief Gether single seismogram.
+/*! \brief Gather single seismogram.
  *
  \param seismo Seismogram
  \param wavefieldSingle Wavefield-single
@@ -93,13 +93,13 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
 {
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
     lama::DenseMatrix<ValueType> &seismogramData = seismo.getData();
 
-    temp.gather(wavefieldSingle, coordinates, utilskernel::binary::BinaryOp::COPY);
-    seismogramData.setColumn(temp, t, utilskernel::binary::BinaryOp::COPY);
+    temp.gather(wavefieldSingle, coordinates, common::BinaryOp::COPY);
+    seismogramData.setColumn(temp, t, common::BinaryOp::COPY);
 }
 
 /*! \brief Applying source.
@@ -109,17 +109,17 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySource(IndexType t)
 {
-    if (sources.getNumTracesGlobal(Acquisition::SeismogramType::P) > 0) {
-        applySourcePressure(sources.getSeismogram(Acquisition::SeismogramType::P), wavefield, t);
+    if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramType::P) > 0) {
+        applySourcePressure(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramType::P), wavefield, t);
     }
-    if (sources.getNumTracesGlobal(Acquisition::SeismogramType::VX) > 0) {
-        applySourceVX(sources.getSeismogram(Acquisition::SeismogramType::VX), wavefield, t);
+    if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramType::VX) > 0) {
+        applySourceVX(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramType::VX), wavefield, t);
     }
-    if (sources.getNumTracesGlobal(Acquisition::SeismogramType::VY) > 0) {
-        applySourceVY(sources.getSeismogram(Acquisition::SeismogramType::VY), wavefield, t);
+    if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramType::VY) > 0) {
+        applySourceVY(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramType::VY), wavefield, t);
     }
-    if (sources.getNumTracesGlobal(Acquisition::SeismogramType::VZ) > 0) {
-        applySourceVZ(sources.getSeismogram(Acquisition::SeismogramType::VZ), wavefield, t);
+    if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramType::VZ) > 0) {
+        applySourceVZ(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramType::VZ), wavefield, t);
     }
 }
 
@@ -132,7 +132,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVX(), applySource_samplesVX, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVX(), applySource_samplesVX, t);
 }
 
 /*! \brief Applying vy source.
@@ -144,7 +144,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVY(), applySource_samplesVY, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVY(), applySource_samplesVY, t);
 }
 
 /*! \brief Applying vz source.
@@ -156,7 +156,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
 {
-    applySourceSingle(seismo, wavefieldIN.getVZ(), applySource_samplesVZ, t);
+    applySourceSingle(seismo, wavefieldIN.getRefVZ(), applySource_samplesVZ, t);
 }
 
 /*! \brief Applying single source.
@@ -167,14 +167,14 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
 {
     /* Get reference to sourcesignal storing seismogram */
     const lama::DenseMatrix<ValueType> &sourcesSignals = seismo.getData();
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
 
     sourcesSignals.getColumn(temp, t);
-    wavefieldSingle.scatter(coordinates, temp, utilskernel::binary::BinaryOp::ADD);
+    wavefieldSingle.scatter(coordinates, temp, common::BinaryOp::ADD);
 }
 
 /*! \brief Setting context pointer to temporary source and seismogram.
@@ -182,7 +182,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::setContextPtrToTemporary(scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::setContextPtrToTemporary(hmemo::ContextPtr ctx)
 {
     applySource_samplesVX.setContextPtr(ctx);
     applySource_samplesVY.setContextPtr(ctx);

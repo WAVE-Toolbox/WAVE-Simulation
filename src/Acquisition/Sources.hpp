@@ -5,6 +5,7 @@
 
 #include "AcquisitionGeometry.hpp"
 #include "SourceSignal/all.hpp"
+#include "suHandler.hpp"
 
 namespace KITGPI
 {
@@ -35,35 +36,49 @@ namespace KITGPI
             Sources(){};
 
             explicit Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
             //! \brief Default destructor
             ~Sources(){};
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
-            void writeSignalsToFileRaw(std::string const &filename) const;
+            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx);
+            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::IndexType shotNumber);
+            
+            void getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const;
 
-            void generateSignals(IndexType NT, ValueType DT, scai::hmemo::ContextPtr ctx);
+            scai::IndexType getNumShots();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals
+            suHandler<ValueType> su;
 
             /* Requiered acquisition Settings */
-            scai::lama::DenseVector<IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic
+            scai::lama::DenseVector<scai::IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic
 
             /* Optional acquisition Settings */
-            scai::lama::DenseVector<IndexType> wavelet_shape;  //!< Shape of wavelet: 1==Ricker,2==Sinw,3==sin^3,4==FGaussian,5==Spike,6==integral sin^3
+            scai::lama::DenseVector<scai::IndexType> wavelet_shape;  //!< Shape of wavelet: 1==Ricker,2==Sinw,3==sin^3,4==FGaussian,5==Spike,6==integral sin^3
             scai::lama::DenseVector<ValueType> wavelet_fc;     //!< Center frequency of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_amp;    //!< Amplitude of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_tshift; //!< Time shift of synthetic wavelet
 
-            void initOptionalAcquisitionParameter(IndexType numParameter, IndexType numTracesGlobal, scai::lama::DenseMatrix<ValueType> acquisition, scai::dmemo::DistributionPtr dist_wavefield_traces, scai::hmemo::ContextPtr ctx) override;
-            void checkRequiredNumParameter(IndexType numParameterCheck) override;
+            scai::IndexType numShots; //!< number of shots =1 for simultaneous execution =Number of Sources for serial execution
+            bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
+            bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used
+
+            void initOptionalAcquisitionParameter(scai::IndexType numParameter, scai::IndexType numTracesGlobal, scai::lama::DenseMatrix<ValueType> acquisition, scai::dmemo::DistributionPtr dist_wavefield_traces, scai::hmemo::ContextPtr ctx) override;
+            void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
 
             void copySignalsToSeismogramHandler();
 
-            void allocateSeismogram(IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
-            void generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT);
+            void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
+            void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);
+            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead);
         };
     }
 }

@@ -1,4 +1,6 @@
 #include "FDTD3D.hpp"
+#include <scai/common/Settings.hpp>
+
 using namespace scai;
 
 //! \brief Constructor to support Configuration
@@ -68,7 +70,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
+    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
@@ -80,7 +82,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     this->calcDzf(NX, NY, NZ, dist);
     this->calcDyf(NX, NY, NZ, dist);
 
-    HOST_PRINT(comm, "Matrix Dxf, Dyf and Dzf finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
 
     Dxf.setContextPtr(ctx);
     Dzf.setContextPtr(ctx);
@@ -89,23 +91,43 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyf.setContextPtr(ctx);
     Dyb.setContextPtr(ctx);
 
+    lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
+  
+    // by default do matrix-vector operations synchronously, but can be set via environment
+    bool isSet;
+
+    if ( common::Settings::getEnvironment( isSet, "SCAI_ASYNCHRONOUS" ) )
+    {
+        if ( isSet )
+        {
+            syncKind = lama::SyncKind::ASYNC_COMM;
+        }
+    }
+
+    Dxf.setCommunicationKind(syncKind);
+    Dzf.setCommunicationKind(syncKind);
+    Dxb.setCommunicationKind(syncKind);
+    Dzb.setCommunicationKind(syncKind);
+    Dyf.setCommunicationKind(syncKind);
+    Dyb.setCommunicationKind(syncKind);
+
     Dxb.assignTranspose(Dxf);
-    Dxb.scale(-1.0);
+    Dxb *= -1.0;
     Dzb.assignTranspose(Dzf);
-    Dzb.scale(-1.0);
+    Dzb *= -1.0;
     Dyb.assignTranspose(Dyf);
-    Dyb.scale(-1.0);
+    Dyb *= -1.0;
 
-    HOST_PRINT(comm, "Matrix Dxb, Dyb and Dzb finished.\n");
+    HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
 
-    Dxf.scale(lama::Scalar(DT / DH));
-    Dzf.scale(lama::Scalar(DT / DH));
-    Dxb.scale(lama::Scalar(DT / DH));
-    Dzb.scale(lama::Scalar(DT / DH));
-    Dyf.scale(lama::Scalar(DT / DH));
-    Dyb.scale(lama::Scalar(DT / DH));
+    Dxf.scale(DT / DH);
+    Dzf.scale(DT / DH);
+    Dxb.scale(DT / DH);
+    Dzb.scale(DT / DH);
+    Dyf.scale(DT / DH);
+    Dyb.scale(DT / DH);
 
-    HOST_PRINT(comm, "Finished with initialization of the matrices!\n");
+    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
 template class KITGPI::ForwardSolver::Derivatives::FDTD3D<double>;

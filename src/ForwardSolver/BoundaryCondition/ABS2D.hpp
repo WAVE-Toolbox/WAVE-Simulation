@@ -1,8 +1,11 @@
 #pragma once
 
 #include "../../Acquisition/Coordinates.hpp"
+#include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "ABS.hpp"
+
+using namespace scai;
 
 namespace KITGPI
 {
@@ -28,13 +31,14 @@ namespace KITGPI
                 //! Default destructor
                 ~ABS2D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) override;
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) override;
 
-                void apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3);
-                void apply(scai::lama::Vector &v1, scai::lama::Vector &v2, scai::lama::Vector &v3, scai::lama::Vector &v4, scai::lama::Vector &v5);
+                void apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3);
+                void apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3, scai::lama::Vector<ValueType> &v4, scai::lama::Vector<ValueType> &v5);
 
               private:
-                scai::lama::DenseVector<ValueType> damping; //!< Absorbing Coefficient vector
+                typedef typename ABS<ValueType>::VectorType VectorType;
+                VectorType damping; //!< Absorbing Coefficient DenseVector. damping=1.0 in the interior and  damping < 1.0 inside the boundary frame.
                 using ABS<ValueType>::active;
             };
         } /* end namespace BoundaryCondition */

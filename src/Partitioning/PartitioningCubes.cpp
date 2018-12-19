@@ -66,7 +66,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
     IndexType numGlobalGridPoints = NX * NY * NZ;
     IndexType numLocalGridPoints = (numGlobalGridPoints) / numRanks;
 
-    Acquisition::Coordinates<ValueType> coord;
+    Acquisition::Coordinates coord(NX,NY,NZ);
 
     /* Determine local indices */
     hmemo::HArray<IndexType> localIndices;
@@ -78,7 +78,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
         for (IndexType y = 0; y < NY; y++) {
             for (IndexType z = 0; z < NZ; z++) {
                 if (x >= range_x_lower && x < range_x_upper && y >= range_y_lower && y < range_y_upper && z >= range_z_lower && z < range_z_upper) {
-                    indice = coord.coordinate2index(x, y, z, NX, NY, NZ);
+                    indice = coord.coordinate2index(x, y, z);
                     write_localIndices[i] = indice;
                     i++;
                 }

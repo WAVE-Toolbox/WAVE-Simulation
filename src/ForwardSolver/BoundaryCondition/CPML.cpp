@@ -4,7 +4,7 @@ using namespace scai;
 /*! \brief Reset a single Vector to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai::lama::DenseVector<ValueType> &vector)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai::lama::Vector<ValueType> &vector)
 {
     vector = 0.0;
 }
@@ -14,7 +14,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai
 * This method will set the context, allocate the the wavefield and set the field to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
     vector.allocate(dist);
@@ -25,6 +25,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai:
 /*! \brief set CPML coefficients
  * 
  * method to set cpml coefficients for a given gridpoint
+ *  
+ \f{eqnarray*}{
+        a =& \frac{d}{k(d+k\alpha)} (b-1) \\
+        b =& e^{-\Delta t (d/k+ \alpha)} \\
+        d =& d_0 (\frac{w_b-g_d}{w_b})^N \\
+        d_0 =& \frac{-(N+1)v_{max} \ln (8\cdot 10^{-4})}{2 w_b \Delta x} \\
+        k =& 1 + (k_{max} -1) (\frac{w_b-g_d}{w_b})^N \\
+        \alpha =& \pi f_c (1-(\frac{w_b-g_d}{w_b})^N)
+ \f}
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv, scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half, IndexType coord, IndexType gdist, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, IndexType i, ValueType DT, ValueType DH)
@@ -45,23 +54,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
     ValueType alpha_prime = 0.0;
     ValueType d = 0.0;
 
-    utilskernel::LArray<ValueType> *k_LA = &kInv.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_k(*k_LA);
-
-    utilskernel::LArray<ValueType> *b_LA = &b.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_b(*b_LA);
-
-    utilskernel::LArray<ValueType> *a_LA = &a.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_a(*a_LA);
-
-    utilskernel::LArray<ValueType> *k_half_LA = &kInv_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_k_half(*k_half_LA);
-
-    utilskernel::LArray<ValueType> *b_half_LA = &b_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_b_half(*b_half_LA);
-
-    utilskernel::LArray<ValueType> *a_half_LA = &a_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_a_half(*a_half_LA);
+    auto write_k = hmemo::hostWriteAccess(kInv.getLocalValues());
+    auto write_b = hmemo::hostWriteAccess(b.getLocalValues());
+    auto write_a = hmemo::hostWriteAccess(a.getLocalValues());
+    auto write_k_half = hmemo::hostWriteAccess(kInv_half.getLocalValues());
+    auto write_b_half = hmemo::hostWriteAccess(b_half.getLocalValues());
+    auto write_a_half = hmemo::hostWriteAccess(a_half.getLocalValues());
 
     /* left boundary */
     if (coord < BoundaryWidth) {
@@ -71,7 +69,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
         alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
         b_temp = exp(-(d / k_temp + alpha_prime) * DT);
         /* avoid division by zero outside the PML */
-        if (abs(d) > 1.0e-6) {
+        if (std::abs(d) > 1.0e-6) {
             a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
         } else
             a_temp = 0.0;
@@ -88,7 +86,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
         alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
         b_temp = exp(-(d / k_temp + alpha_prime) * DT);
         /* avoid division by zero outside the PML */
-        if (abs(d) > 1.0e-6) {
+        if (std::abs(d) > 1.0e-6) {
             a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
         } else
             a_temp = 0.0;
@@ -104,20 +102,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::SetCoeffCPML(sca
     alpha_prime = alpha_max_Pml * (1.0 - PositionNorm);
     b_temp = exp(-(d / k_temp + alpha_prime) * DT);
     /* avoid division by zero outside the PML */
-    if (abs(d) > 1.0e-6) {
+    if (std::abs(d) > 1.0e-6) {
         a_temp = d * (b_temp - 1.0) / (k_temp * (d + k_temp * alpha_prime));
     } else
         a_temp = 0.0;
     write_a_half[i] = a_temp;
     write_b_half[i] = b_temp;
     write_k_half[i] = 1 / k_temp;
-
-    write_k.release();
-    write_a.release();
-    write_b.release();
-    write_k_half.release();
-    write_a_half.release();
-    write_b_half.release();
 }
 
 /*! \brief Reset CPML coefficients for free surface
@@ -130,23 +121,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
                                                                                       IndexType i)
 {
 
-    utilskernel::LArray<ValueType> *k_LA = &kInv.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_k(*k_LA);
-
-    utilskernel::LArray<ValueType> *b_LA = &b.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_b(*b_LA);
-
-    utilskernel::LArray<ValueType> *a_LA = &a.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_a(*a_LA);
-
-    utilskernel::LArray<ValueType> *k_half_LA = &kInv_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_k_half(*k_half_LA);
-
-    utilskernel::LArray<ValueType> *b_half_LA = &b_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_b_half(*b_half_LA);
-
-    utilskernel::LArray<ValueType> *a_half_LA = &a_half.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_a_half(*a_half_LA);
+    auto write_k = hmemo::hostWriteAccess(kInv.getLocalValues());
+    auto write_b = hmemo::hostWriteAccess(b.getLocalValues());
+    auto write_a = hmemo::hostWriteAccess(a.getLocalValues());
+    auto write_k_half = hmemo::hostWriteAccess(kInv_half.getLocalValues());
+    auto write_b_half = hmemo::hostWriteAccess(b_half.getLocalValues());
+    auto write_a_half = hmemo::hostWriteAccess(a_half.getLocalValues());
 
     write_a[i] = 0.0;
     write_b[i] = 0.0;
@@ -155,17 +135,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
     write_a_half[i] = 0.0;
     write_b_half[i] = 0.0;
     write_k_half[i] = 1.0;
-
-    write_k.release();
-    write_a.release();
-    write_b.release();
-    write_k_half.release();
-    write_a_half.release();
-    write_b_half.release();
 }
 
-/*! \brief Application of the CPML
- *
+/*! \brief Application of the CPML. Replace FD-operators \f$\partial\f$:
+  \f{eqnarray*}{
+        \bar{\partial} = \frac{1}{k} \partial + \Psi \\
+        \Psi^n = b\Psi^{n-1} + a \partial^{n+\frac{1}{2}} 
+ \f} 
  * THIS METHOD IS CALLED DURING TIME STEPPING
  * DO NOT WASTE RUNTIME HERE
  *
@@ -176,14 +152,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
  \param kInv reciprocal of CPML coefficient k
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector &Vec, lama::DenseVector<ValueType> &Psi, lama::DenseVector<ValueType> &a, lama::DenseVector<ValueType> &b, lama::DenseVector<ValueType> &kInv)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector<ValueType> &Vec, lama::Vector<ValueType> &Psi, lama::Vector<ValueType> &a, lama::Vector<ValueType> &b, lama::Vector<ValueType> &kInv)
 {
-
-    update_PmlTemp = Vec;
-    Psi.scale(b);
-    update_PmlTemp.scale(a);
-    Psi += update_PmlTemp;
-    Vec.scale(kInv);
+    temp = a;
+    Psi *= b;
+    temp *= Vec;
+    Psi += temp;
+    Vec *= kInv;
     Vec += Psi;
 }
 

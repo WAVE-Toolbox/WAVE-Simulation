@@ -1,6 +1,8 @@
 #pragma once
 #include "../../Configuration/Configuration.hpp"
+#include <scai/common/Stencil.hpp>
 #include <scai/lama.hpp>
+#include <scai/lama/matrix/StencilMatrix.hpp>
 
 /* Forward declaration for friendship */
 namespace KITGPI
@@ -17,6 +19,9 @@ namespace KITGPI
 
             template <typename Type>
             class FreeSurface2Dvisco;
+
+            //            template <typename Type>
+            //            class FreeSurface2Dsh;
 
             template <typename Type>
             class FreeSurfaceElastic;
@@ -54,6 +59,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
+                //                template <typename>
+                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dsh;
 
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic;
@@ -61,6 +68,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
+                //                template <typename>
+                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH;
 
                 //! \brief Default constructor
                 Derivatives() : spatialFDorder(0), useFreeSurface(false){};
@@ -69,32 +78,28 @@ namespace KITGPI
                 ~Derivatives(){};
 
                 //! \brief Getter method for derivative matrix Dxf
-                virtual scai::lama::Matrix const &getDxf() const;
+                virtual scai::lama::Matrix<ValueType> const &getDxf() const;
                 //! \brief Getter method for derivative matrix Dyf
-                virtual scai::lama::Matrix const &getDyf() const;
+                virtual scai::lama::Matrix<ValueType> const &getDyf() const;
                 //! \brief Getter method for derivative matrix Dzf
-                virtual scai::lama::Matrix const &getDzf() const;
+                virtual scai::lama::Matrix<ValueType> const &getDzf() const;
                 //! \brief Getter method for derivative matrix Dxb
-                virtual scai::lama::Matrix const &getDxb() const;
+                virtual scai::lama::Matrix<ValueType> const &getDxb() const;
                 //! \brief Getter method for derivative matrix Dyb
-                virtual scai::lama::Matrix const &getDyb() const;
+                virtual scai::lama::Matrix<ValueType> const &getDyb() const;
                 //! \brief Getter method for derivative matrix Dzb
-                virtual scai::lama::Matrix const &getDzb() const;
+                virtual scai::lama::Matrix<ValueType> const &getDzb() const;
 
-                //! \brief Getter method for derivative matrix DyfVelocity
-                virtual scai::lama::Matrix const &getDyfVelocity() const;
-                //! \brief Getter method for derivative matrix DyfPressure
-                virtual scai::lama::Matrix const &getDyfPressure() const;
-                //! \brief Getter method for derivative matrix DybVelocity
-                virtual scai::lama::Matrix const &getDybVelocity() const;
-                //! \brief Getter method for derivative matrix DybPressure
-                virtual scai::lama::Matrix const &getDybPressure() const;
+                //! \brief Getter method for derivative matrix DyfFreeSurface
+                virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
+                //! \brief Getter method for derivative matrix DybFreeSurface
+                virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
 
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm) = 0;
 
                 //! \brief Getter method for spatial FD-order
-                IndexType getSpatialFDorder() const;
+                scai::IndexType getSpatialFDorder() const;
 
               protected:
                 //! \brief Initializsation of the derivative matrices
@@ -110,63 +115,60 @@ namespace KITGPI
                  \param spatialFDorder FD-order of spatial stencils
                  \param comm Communicator
                  */
-                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorder, scai::dmemo::CommunicatorPtr comm) = 0;
+                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorder, scai::dmemo::CommunicatorPtr comm) = 0;
 
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
-                void setFDCoef(IndexType spFDo);
+                void setFDCoef(scai::IndexType spFDo);
 
-                void calcDxf(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
-                void calcDyf(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
-                void calcDzf(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDxf(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDyf(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDzf(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
 
-                void calcDyb(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDyb(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
 
-                void calcDyfVelocity(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
-                void calcDyfPressure(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
-                void calcDybPressure(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
-                void calcDybVelocity(IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDyfFreeSurface(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDybFreeSurface(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
 
                 typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
-                SparseFormat Dxf;                                            //!< Derivative matrix Dxf
-                SparseFormat Dyf;                                            //!< Derivative matrix Dyf
-                SparseFormat Dzf;                                            //!< Derivative matrix Dzf
-                SparseFormat Dxb;                                            //!< Derivative matrix Dxb
-                SparseFormat Dyb;                                            //!< Derivative matrix Dyb
-                SparseFormat Dzb;                                            //!< Derivative matrix Dzb
-                SparseFormat DyfVelocity;                                    //!< Derivative matrix DyfVelocity
-                SparseFormat DyfPressure;                                    //!< Derivative matrix DyfPressure
-                SparseFormat DybVelocity;                                    //!< Derivative matrix DybVelocity
-                SparseFormat DybPressure;                                    //!< Derivative matrix DybPressure
+                scai::lama::StencilMatrix<ValueType> Dxf;                    //!< Derivative matrix Dxf
+                scai::lama::StencilMatrix<ValueType> Dyf;                    //!< Derivative matrix Dyf
+                scai::lama::StencilMatrix<ValueType> Dzf;                    //!< Derivative matrix Dzf
+                scai::lama::StencilMatrix<ValueType> Dxb;                    //!< Derivative matrix Dxb
+                scai::lama::StencilMatrix<ValueType> Dyb;                    //!< Derivative matrix Dyb
+                scai::lama::StencilMatrix<ValueType> Dzb;                    //!< Derivative matrix Dzb
+                SparseFormat DyfFreeSurface;                                 //!< Derivative matrix DyfFreeSurface
+                SparseFormat DybFreeSurface;                                 //!< Derivative matrix DybFreeSurface
 
-                IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
+                scai::IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
 
-                bool useFreeSurface; //!< Switch to use free surface or not
+                scai::IndexType useFreeSurface; //!< Switch to use free surface or not
 
                 scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
                 scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
 
+                scai::common::Stencil1D<ValueType> stencilFD; // FD-stencil
+
               private:
-                typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(IndexType, IndexType &, IndexType &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<IndexType> &, scai::hmemo::WriteAccess<ValueType> &, IndexType, IndexType, IndexType); //!< Pointer to set elements functions
+                typedef void (Derivatives<ValueType>::*setRowElements_DPtr)(scai::IndexType, scai::IndexType &, scai::IndexType &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::ReadAccess<ValueType> &, scai::hmemo::WriteAccess<scai::IndexType> &, scai::hmemo::WriteAccess<scai::IndexType> &, scai::hmemo::WriteAccess<ValueType> &, scai::IndexType, scai::IndexType, scai::IndexType); //!< Pointer to set elements functions
 
-                typedef IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(IndexType, IndexType, IndexType, IndexType); //!< Pointer to counting elements functions
+                typedef scai::IndexType (Derivatives<ValueType>::*calcNumberRowElements_DPtr)(scai::IndexType, scai::IndexType, scai::IndexType, scai::IndexType); //!< Pointer to counting elements functions
 
-                void calcDerivativeMatrix(scai::lama::Matrix &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist);
+                void calcDerivativeMatrix(scai::lama::Matrix<ValueType> &D, calcNumberRowElements_DPtr calcNumberRowElements_D, setRowElements_DPtr setRowElements_D, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
 
-                IndexType calcNumberRowElements_Dxf(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
-                IndexType calcNumberRowElements_Dyf(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
-                IndexType calcNumberRowElements_Dzf(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+                scai::IndexType calcNumberRowElements_Dxf(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                scai::IndexType calcNumberRowElements_Dyf(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                scai::IndexType calcNumberRowElements_Dzf(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
 
-                IndexType calcNumberRowElements_Dyb(IndexType rowNumber, IndexType NX, IndexType NY, IndexType NZ);
+                scai::IndexType calcNumberRowElements_Dyb(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
 
-                void setRowElements_Dxf(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                void setRowElements_Dyf(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                void setRowElements_Dzf(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                void setRowElements_Dyb(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                void setRowElements_Dxf(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                void setRowElements_Dyf(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                void setRowElements_Dzf(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                void setRowElements_Dyb(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
 
-                void setRowElements_DyfVelocity(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                void setRowElements_DybPressure(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
-                void setRowElements_DybVelocity(IndexType rowNumber, IndexType &countJA, IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<IndexType> &csrJALocal, scai::hmemo::WriteAccess<IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, IndexType NX, IndexType NY, IndexType NZ);
+                void setRowElements_DyfFreeSurface(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+                void setRowElements_DybFreeSurface(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_f, scai::hmemo::ReadAccess<ValueType> &read_FDCoeff_b, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */

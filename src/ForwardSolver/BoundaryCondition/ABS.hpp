@@ -4,6 +4,8 @@
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
 
@@ -37,9 +39,13 @@ namespace KITGPI
                  \param NZ Total number of grid points in Z
                  \param BoundaryWidth Width of damping boundary
                  \param DampingCoeff Damping coefficient
-                 \param useFreeSurface Bool if free surface is in use
+                 \param useFreeSurface Indicator which free surface is in use
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, bool useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
+
+              protected:
+                // For the ABS Boundaries Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
+                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

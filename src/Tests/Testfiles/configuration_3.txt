@@ -1,0 +1,6 @@
+T=10
+DT=1
+NX=5
+NY=10
+NZ=15
+ReceiverFilename=../src/Tests/Testfiles/receiver
