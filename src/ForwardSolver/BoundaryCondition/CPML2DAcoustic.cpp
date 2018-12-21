@@ -45,9 +45,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Time sampling
  \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
@@ -58,7 +56,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -107,7 +105,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
     lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
     lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
 
-    Acquisition::Coordinates coordTransform(NX,NY,NZ);
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 
@@ -115,8 +112,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
-        gdist = coordTransform.edgeDistance(coordinate);
+        coordinate = modelCoordinates.index2coordinate(read_localIndices_temp);
+        gdist = modelCoordinates.edgeDistance(coordinate);
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {

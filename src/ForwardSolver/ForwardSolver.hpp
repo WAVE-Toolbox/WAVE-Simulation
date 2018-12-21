@@ -10,6 +10,10 @@
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
 
+#include "BoundaryCondition/FreeSurface.hpp"
+#include "BoundaryCondition/ABS.hpp"
+#include "BoundaryCondition/CPML.hpp"
+
 namespace KITGPI
 {
 
@@ -61,12 +65,15 @@ namespace KITGPI
              *
              *
              \param config Configuration
+             \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
              \param derivatives Derivatives matrices
              \param dist Distribution of the wave fields
              \param ctx Context
              */
-            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
+            virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates const &modelCoordinates , Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
 
+            void prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates const &modelCoordinates , Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType> &FreeSurface,BoundaryCondition::ABS<ValueType> &DampingBoundary,BoundaryCondition::CPML<ValueType> &ConvPML);
+            
             /*! \brief Initialitation of the ForwardSolver
              *
              *
@@ -75,7 +82,7 @@ namespace KITGPI
              \param wavefield Wavefields for the modelling
              \param ctx Context
              */
-            virtual void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
+            virtual void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates const &modelCoordinates , scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
             scai::IndexType useFreeSurface;     //!< Indicator which free surface is in use

@@ -48,6 +48,13 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initOptionalAcquisitio
 {
 }
 
+/*! \brief Initialization of the seismogram handler
+ *
+ *
+ \param NT Number of timesteps
+ \param ctx Context
+ \param dist_wavefield Distribution of global grid
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(IndexType const NT, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist_wavefield)
 {
@@ -102,20 +109,29 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
     seismograms.setContextPtr(ctx);
 }
 
+/*! \brief get number of parameters
+ *
+ * returns the number of parameters of the aquisition matrix eg. X,Y,Z,Seismogram Type
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter() const
 {
     return numParameter;
 }
 
+/*! \brief reads parameters from the acquisition matrix and redistributes 
+ *
+ * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
+ * seismograms are only stored at the spatial domains which include the receiver/source coordinate.
+ \param acquisition_temp Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
+ \param modelCoordinates Coordinates object (handles wavefield coordinates)
+ \param dist_wavefield Distribution of the wavefield
+ \param ctx Context
+ */
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
-
-    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NY > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NZ > 0, "NX<=0");
-
+    
     IndexType nrow_temp = acquisition_temp.getNumRows();
     IndexType ncolumn_temp = acquisition_temp.getNumColumns();
 
@@ -163,8 +179,6 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
         /* Get writeAccess to coordinates vector (local) */
         auto write_coordinates_LA = hostWriteAccess(coordinates.getLocalValues());
 
-        Coordinates coord(NX, NY, NZ);
-
         /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
         for (IndexType i = 0; i < numTracesGlobal; i++) {
@@ -173,7 +187,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
             Y = read_acquisition_HA[i + numTracesGlobal * 1];
             Z = read_acquisition_HA[i + numTracesGlobal * 2];
 
-            write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z);
+            write_coordinates_LA[i] = modelCoordinates.coordinate2index(X, Y, Z);
         }
     }
 

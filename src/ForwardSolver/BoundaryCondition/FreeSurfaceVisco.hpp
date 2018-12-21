@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "../../Modelparameter/Modelparameter.hpp"
 #include "../../Modelparameter/Modelparameter.hpp"
@@ -29,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 virtual ~FreeSurfaceVisco() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates const &modelCoordinates, ValueType DT, ValueType DH) override;
 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT);
 

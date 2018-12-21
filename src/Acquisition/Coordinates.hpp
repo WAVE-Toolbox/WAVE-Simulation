@@ -49,15 +49,15 @@ namespace KITGPI
 
             // Coordinate --> Index:
             // Interfaces 3-D
-            scai::IndexType coordinate2index(coordinate3D coordinate);
-            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            scai::IndexType coordinate2index(coordinate3D coordinate) const;
+            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D index2coordinate(scai::IndexType coordinate);
+            coordinate3D index2coordinate(scai::IndexType coordinate) const;
 
-            coordinate3D edgeDistance(coordinate3D coordinate);
+            coordinate3D edgeDistance(coordinate3D coordinate) const;
 
-            bool locatedOnSurface(scai::IndexType coordinate);
+            bool locatedOnSurface(scai::IndexType coordinate) const;
 
           private:
             scai::IndexType NX;
@@ -65,12 +65,12 @@ namespace KITGPI
             scai::IndexType NZ;
 
             // Coordinate --> Index:
-            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate);
+            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate) const;
 
-            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
         };
     }
 }

@@ -3,6 +3,7 @@
 #include <scai/dmemo.hpp>
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
+#include "../../Acquisition/Coordinates.hpp"
 
 using namespace scai;
 
@@ -34,14 +35,12 @@ namespace KITGPI
                  *
                  \param dist Distribution of the wavefield
                  \param ctx Context
-                 \param NX Total number of grid points in X
-                 \param NY Total number of grid points in Y
-                 \param NZ Total number of grid points in Z
+                 \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
                  \param BoundaryWidth Width of damping boundary
                  \param DampingCoeff Damping coefficient
                  \param useFreeSurface Indicator which free surface is in use
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
 
               protected:
                 // For the ABS Boundaries Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.

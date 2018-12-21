@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 
 #include "CPML.hpp"
@@ -29,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML2DAcoustic(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 

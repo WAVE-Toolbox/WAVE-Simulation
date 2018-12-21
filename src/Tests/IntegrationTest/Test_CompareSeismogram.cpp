@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
     // read configuration parameter from file
     KITGPI::Configuration::Configuration config(argv[1]);
 
+    // Create an object of the mapping (3D-1D) class Coordinates
+
+    Acquisition::Coordinates Coordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"));
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -34,9 +38,9 @@ int main(int argc, char *argv[])
     KITGPI::Acquisition::Seismogram<ValueType> seismogramDiff;
 
     Acquisition::Receivers<ValueType> receiversTest;
-    receiversTest.init(config, ctx, dist);
+    receiversTest.init(config,Coordinates, ctx, dist);
     Acquisition::Receivers<ValueType> receiversRef;
-    receiversRef.init(config, ctx, dist);
+    receiversRef.init(config,Coordinates, ctx, dist);
 
     std::string filenameTest = config.get<std::string>("SeismogramFilename");
     std::size_t pos = filenameTest.find(".ci");

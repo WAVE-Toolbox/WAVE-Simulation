@@ -50,15 +50,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lam
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param BoundaryWidth Width of damping boundary
  \param DampingCoeff Damping coefficient
  \param useFreeSurface Indicator which free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -96,11 +94,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
-    Acquisition::Coordinates coordTransform(NX,NY,NZ);
-//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 100).x == 2, "")
-//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(102, 100, 100, 100).y == 1, "")
-//     SCAI_ASSERT_DEBUG(coordTransform.index2coordinate(2, 100, 100, 1).z == 0, "")
-
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
 
@@ -112,8 +105,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
-        coordinatedist = coordTransform.edgeDistance(coordinate);
+        coordinate = modelCoordinates.index2coordinate(read_localIndices_temp);
+        coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
         temp = 0;
         if (coordinatedist.x < coordinatedist.y) {

@@ -69,6 +69,10 @@ int main(int argc, const char *argv[])
     
     IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
+    // Create an object of the mapping (3D-1D) class Coordinates
+
+    Acquisition::Coordinates modelCoordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"));
+    
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -140,11 +144,11 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Sources<ValueType> sources(config, ctx, dist);
+    Acquisition::Sources<ValueType> sources(config,modelCoordinates, ctx, dist);
     CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
-        receivers.init(config, ctx, dist);
+        receivers.init(config, modelCoordinates, ctx, dist);
         CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
     
@@ -163,7 +167,7 @@ int main(int argc, const char *argv[])
     
     HOST_PRINT(commAll, "", "ForwardSolver ...\n")
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
-    solver->initForwardSolver(config, *derivatives, *wavefields, *model, ctx, config.get<ValueType>("DT"));
+    solver->initForwardSolver(config, *derivatives, *wavefields, *model,modelCoordinates, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
     HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
 
@@ -172,9 +176,9 @@ int main(int argc, const char *argv[])
     for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
         /* Update Source */
         if (!config.get<bool>("runSimultaneousShots"))
-            sources.init(config, ctx, dist, shotNumber);
+            sources.init(config,modelCoordinates, ctx, dist, shotNumber);
         if (config.get<bool>("useReceiversPerShot")) {
-            receivers.init(config, ctx, dist, shotNumber);
+            receivers.init(config,modelCoordinates, ctx, dist, shotNumber);
             CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
         }
 

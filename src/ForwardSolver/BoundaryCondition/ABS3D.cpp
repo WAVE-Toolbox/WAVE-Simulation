@@ -63,15 +63,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
+\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param BoundaryWidth Width of damping boundary
  \param DampingCoeff Damping coefficient
  \param useFreeSurface Indicator which free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::DistributionPtr dist, hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -108,8 +106,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
-    Acquisition::Coordinates coordTransform(NX,NY,NZ);
-
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
 
@@ -121,8 +117,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
-        coordinatedist = coordTransform.edgeDistance(coordinate);
+        coordinate = modelCoordinates.index2coordinate(read_localIndices_temp);
+        coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
         coordinateMin = coordinatedist.min();
         if (coordinateMin < BoundaryWidth) {

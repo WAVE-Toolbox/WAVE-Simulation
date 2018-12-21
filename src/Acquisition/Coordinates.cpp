@@ -17,6 +17,10 @@ KITGPI::Acquisition::Coordinates::Coordinates(scai::IndexType NumX, scai::IndexT
     NX = NumX;
     NY = NumY;
     NZ = NumZ;
+    
+    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
+    SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
+    SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
 }
 
 /*! \brief Returns bool if given coordinate is located on the surface
@@ -28,7 +32,7 @@ KITGPI::Acquisition::Coordinates::Coordinates(scai::IndexType NumX, scai::IndexT
  \param NZ Number of grid points in Z
  *
  */
-bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate)
+bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate) const
 {
     coordinate3D result;
     result = map3Dindex2coordinate(coordinate);
@@ -46,7 +50,7 @@ bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate)
  \param NY Number of grid points in Y
  *
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::map3Dindex2coordinate(IndexType coordinate)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::map3Dindex2coordinate(IndexType coordinate) const
 {
     coordinate3D result;
 
@@ -72,7 +76,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::map3Dindex2c
  \param NZ Number of grid points in Z
  *
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::index2coordinate(IndexType coordinate)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::index2coordinate(IndexType coordinate) const
 {
     return (map3Dindex2coordinate(coordinate));
 }
@@ -86,7 +90,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::index2coordi
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z)
+IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
 
     SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
@@ -114,7 +118,7 @@ IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, I
  \param NZ Total number of grid points in Z
  \return 1-D coordinate
  */
-IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexType Y, IndexType Z)
+IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
     return (map3Dcoordinate2index(X, Y, Z));
 }
@@ -128,7 +132,7 @@ IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexT
  \param NZ Total number of grid points in Z (Horizontal 2)
  \return 1-D coordinate
  */
-IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordinate)
+IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordinate) const
 {
     return (map3Dcoordinate2index(coordinate.x, coordinate.y, coordinate.z));
 }
@@ -143,7 +147,7 @@ IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordi
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
 
     SCAI_ASSERT(Z < NZ, "No valid argument!");
@@ -170,7 +174,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDist
  \param NY Total number of grid points in Y
  \param NZ Total number of grid points in Z
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::edgeDistance(coordinate3D coordinate)
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::edgeDistance(coordinate3D coordinate) const
 {
     return (estimateDistanceToEdges3D(coordinate.x, coordinate.y, coordinate.z));
 }

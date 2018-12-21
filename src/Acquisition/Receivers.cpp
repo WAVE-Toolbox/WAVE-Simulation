@@ -3,15 +3,16 @@
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp,modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -22,11 +23,12 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
 
@@ -38,7 +40,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp,modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -49,11 +51,12 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
 {
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
     if (config.get<bool>("initReceiverFromSU")) {
@@ -64,7 +67,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
