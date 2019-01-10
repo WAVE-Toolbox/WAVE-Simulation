@@ -52,5 +52,4 @@ extern bool verbose; // global variable
  Print message only on master. The third argument is optional. 
  If the global variable verbose is set to true, msgVerbose is printed in addition to msg.
  */
-#define HOST_PRINT(...) HOST_PRINT_MACRO_CHOOSER(__VA_ARGS__) \
-(__VA_ARGS__)
+#define HOST_PRINT(...) HOST_PRINT_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
