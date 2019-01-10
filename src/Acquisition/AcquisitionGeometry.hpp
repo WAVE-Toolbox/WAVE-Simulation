@@ -25,7 +25,7 @@ namespace KITGPI
             ~AcquisitionGeometry(){};
 
             /* I/O for acquisition */
-            void setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
+            void setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
             void writeAcquisitionToFile(std::string const &filename) const;
 
             /* Getter methods */

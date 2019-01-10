@@ -117,8 +117,6 @@ namespace KITGPI
                  */
                 virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::IndexType spatialFDorder, scai::dmemo::CommunicatorPtr comm) = 0;
 
-                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
-
                 void setFDCoef(scai::IndexType spFDo);
 
                 void calcDxf(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);

@@ -6,14 +6,17 @@
 using namespace scai;
 using namespace KITGPI;
 
+typedef float ValueType;
+
 TEST(CoordinateTest, TestLocatedOnSurface)
 {
 
     int NX = 5;
     int NY = 10;
     int NZ = 15;
-
-    Acquisition::Coordinates test(NX,NY,NZ);
+    double DH = 1.0;
+    
+    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
 
     int coord1 = 2;
     EXPECT_TRUE(test.locatedOnSurface(coord1));
@@ -37,14 +40,15 @@ TEST(CoordinateTest, TestIndex2coordinate)
     int testX = 2;
     int testY = 2;
     int testZ = 2;
-
+    double DH = 1.0;
+    
     // index of test coordinates
     int testCoord = 112;
 
     Acquisition::coordinate3D sampleSolution;
     Acquisition::coordinate3D result;
 
-    Acquisition::Coordinates test(NX,NY,NZ);
+    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
 
     result = test.index2coordinate(testCoord);
 
@@ -69,12 +73,13 @@ TEST(CoordinateTest, TestCoordinate2index)
     int testX = 4;
     int testY = 3;
     int testZ = 2;
-
+    double DH = 1.0;
+    
     // index of test coordinates
     int sampleCordinate2index = 119;
 
     // Test first interface
-    Acquisition::Coordinates test1(NX, NY, NZ);
+    Acquisition::Coordinates<ValueType> test1(NX, NY, NZ, DH);
     EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testX, testY, testZ));
 
     // Test second interface
@@ -105,7 +110,8 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     int testX = 4;
     int testY = 4;
     int testZ = 4;
-
+    double DH = 1.0;
+    
     // Distance of these coordinates to edges
     Acquisition::coordinate3D solutionDistance;
     solutionDistance.x = 0;
@@ -117,7 +123,7 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     testCoord.y = testY;
     testCoord.z = testZ;
 
-    Acquisition::Coordinates test(NX,NY,NZ);
+    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
     Acquisition::coordinate3D result;
     result = test.edgeDistance(testCoord);
 

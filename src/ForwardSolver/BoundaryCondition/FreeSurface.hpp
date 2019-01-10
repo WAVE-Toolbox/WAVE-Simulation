@@ -38,7 +38,7 @@ namespace KITGPI
                  \param DT Temporal Sampling
                  \param DH Distance between grid points
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates const &modelCoordinates, ValueType DT, ValueType DH) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH) = 0;
 
                 /*! \brief Getter method for active bool
                  *

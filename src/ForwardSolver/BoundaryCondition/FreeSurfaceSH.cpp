@@ -17,7 +17,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::~FreeSurface
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::init(scai::dmemo::DistributionPtr /*dist*/, Derivatives::Derivatives<ValueType> &/*derivatives*/, IndexType /*NX*/, IndexType /*NY*/, IndexType /*NZ*/, Acquisition::Coordinates const &/*modelCoordinates*/,ValueType /*DT*/, ValueType /*DH*/)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::init(scai::dmemo::DistributionPtr /*dist*/, Derivatives::Derivatives<ValueType> &/*derivatives*/, IndexType /*NX*/, IndexType /*NY*/, IndexType /*NZ*/, Acquisition::Coordinates<ValueType> const &/*modelCoordinates*/,ValueType /*DT*/, ValueType /*DH*/)
 {
 COMMON_THROWEXCEPTION(" Image method is not implemented for Love-Waves ");
 }

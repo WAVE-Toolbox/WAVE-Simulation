@@ -26,7 +26,7 @@ namespace KITGPI
 
                 virtual ~FreeSurfaceSH() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates const &modelCoordinates, ValueType DT, ValueType DH) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH) override;
 
               protected:
                 using FreeSurface<ValueType>::active;

@@ -35,6 +35,7 @@ namespace KITGPI
 
         /*! \brief This class manages the transformation of Coordinates from 3-D to 1-D and vice-versa
          */
+        template <typename ValueType>
         class Coordinates
         {
 
@@ -45,7 +46,7 @@ namespace KITGPI
             //! Destructor, releases all allocated resources.
             ~Coordinates(){};
             // constructor for regular grid
-            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
             // Coordinate --> Index:
             // Interfaces 3-D
@@ -63,6 +64,7 @@ namespace KITGPI
             scai::IndexType NX;
             scai::IndexType NY;
             scai::IndexType NZ;
+            ValueType DH;
 
             // Coordinate --> Index:
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;

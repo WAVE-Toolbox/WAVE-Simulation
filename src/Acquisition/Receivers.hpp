@@ -34,10 +34,10 @@ namespace KITGPI
             //! \brief Default destructor
             ~Receivers(){};
 
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
             
-            void init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
+            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
             
             void getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const;
 

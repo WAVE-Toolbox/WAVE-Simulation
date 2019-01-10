@@ -71,7 +71,7 @@ int main(int argc, const char *argv[])
 
     // Create an object of the mapping (3D-1D) class Coordinates
 
-    Acquisition::Coordinates modelCoordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"));
+    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DH"));
     
     /* --------------------------------------- */
     /* Context and Distribution                */

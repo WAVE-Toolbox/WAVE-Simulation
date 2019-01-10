@@ -428,7 +428,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     pFile = fopen(filetemp, "wb");
     scai::lama::DenseVector<ValueType> tempdata;
 
-    Coordinates coordTransform(NX, NY, NZ);
+    Coordinates<ValueType> coordTransform(NX, NY, NZ, DH);
     coordinate3D coord3Dsrc;
     coordinate3D coord3Drec;
     coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate);

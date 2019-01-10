@@ -12,7 +12,7 @@ using namespace scai;
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model,Acquisition::Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
@@ -50,7 +50,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configurat
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates const &modelCoordinates , Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates , Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
     this->prepareBoundaries(config, modelCoordinates , derivatives, dist, ctx,FreeSurface,DampingBoundary,ConvPML);
 }

@@ -29,7 +29,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
-    Derivatives<ValueType>::initializeMatrices(dist, ctx, config, comm);
+    initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
 //! \brief Constructor of the derivative matrices

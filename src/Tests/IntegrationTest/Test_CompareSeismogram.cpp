@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     // Create an object of the mapping (3D-1D) class Coordinates
 
-    Acquisition::Coordinates Coordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"));
+    Acquisition::Coordinates<ValueType> Coordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DH"));
     
     /* --------------------------------------- */
     /* Context and Distribution                */

@@ -40,7 +40,7 @@ namespace KITGPI
                  \param DampingCoeff Damping coefficient
                  \param useFreeSurface Indicator which free surface is in use
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
 
               protected:
                 // For the ABS Boundaries Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.

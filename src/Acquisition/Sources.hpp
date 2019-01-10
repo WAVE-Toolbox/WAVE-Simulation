@@ -35,17 +35,17 @@ namespace KITGPI
             //! \brief Default constructor
             Sources(){};
 
-            explicit Sources(Configuration::Configuration const &config,Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            explicit Sources(Configuration::Configuration const &config,Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
+            explicit Sources(Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            explicit Sources(Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
             //! \brief Default destructor
             ~Sources(){};
-            void init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(Configuration::Configuration const &config, Coordinates const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
+            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx);
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::IndexType shotNumber);

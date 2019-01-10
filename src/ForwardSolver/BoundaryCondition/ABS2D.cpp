@@ -56,7 +56,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lam
  \param useFreeSurface Indicator which free surface is in use
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 

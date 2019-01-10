@@ -25,7 +25,7 @@ namespace KITGPI
             //! Default constructor
             PartitioningCubes() = delete;
 
-            explicit PartitioningCubes(KITGPI::Configuration::Configuration const &config,Acquisition::Coordinates const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
+            explicit PartitioningCubes(KITGPI::Configuration::Configuration const &config,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
 
             //! Default destructor
             ~PartitioningCubes(){};
@@ -33,7 +33,7 @@ namespace KITGPI
             scai::dmemo::DistributionPtr getDist() const;
 
           private:
-            scai::dmemo::DistributionPtr calculate(scai::IndexType procNX, scai::IndexType procNY, scai::IndexType procNZ, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
+            scai::dmemo::DistributionPtr calculate(scai::IndexType procNX, scai::IndexType procNY, scai::IndexType procNZ, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
 
             scai::dmemo::DistributionPtr dist_cubes; //!< Distribution
         };

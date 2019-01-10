@@ -28,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML2D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 

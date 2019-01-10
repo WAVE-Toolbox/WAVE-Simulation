@@ -652,20 +652,6 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
     return (spatialFDorder);
 }
 
-//! \brief Wrapper to support configuration
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param config Configuration
- \param comm Communicator
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
-{
-    initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
-}
-
 //! \brief Getter method for derivative matrix DybFreeSurface
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() const
