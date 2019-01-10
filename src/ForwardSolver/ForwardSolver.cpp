@@ -13,29 +13,27 @@
  \param ConvPML PML object
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::ForwardSolver<ValueType>::prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates,  Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType> &FreeSurface,BoundaryCondition::ABS<ValueType> &DampingBoundary,BoundaryCondition::CPML<ValueType> &ConvPML)
+void KITGPI::ForwardSolver::ForwardSolver<ValueType>::prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurface<ValueType> &FreeSurface, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPML<ValueType> &ConvPML)
 {
 
     useFreeSurface = config.get<scai::IndexType>("FreeSurface");
 
     /* Prepare Free Surface */
-    if (useFreeSurface==1) {
-        FreeSurface.init(dist, derivatives, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"),modelCoordinates, config.get<ValueType>("DT"),config.get<ValueType>("DH"));
+    if (useFreeSurface == 1) {
+        FreeSurface.init(dist, derivatives, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), modelCoordinates, config.get<ValueType>("DT"), config.get<ValueType>("DH"));
     }
 
     /* Prepare Damping Boundary */
     if (config.get<IndexType>("DampingBoundary") == 1) {
         useDampingBoundary = true;
-        DampingBoundary.init(dist, ctx,modelCoordinates, config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
+        DampingBoundary.init(dist, ctx, modelCoordinates, config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
     }
 
     if (config.get<IndexType>("DampingBoundary") == 2) {
         useConvPML = true;
-        ConvPML.init(dist, ctx,modelCoordinates, config.get<ValueType>("DT"), config.get<ValueType>("DH"), config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
+        ConvPML.init(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<ValueType>("DH"), config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
 
 template class KITGPI::ForwardSolver::ForwardSolver<double>;
 template class KITGPI::ForwardSolver::ForwardSolver<float>;
-
-

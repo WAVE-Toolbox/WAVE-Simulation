@@ -27,8 +27,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
 
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
-    
-    SCAI_ASSERT(sWaveModulus.min()>0,"S wave modulus can't be zero when using image method")
+
+    SCAI_ASSERT(sWaveModulus.min() > 0, "S wave modulus can't be zero when using image method")
 
     auto temp = lama::eval<lama::DenseVector<ValueType>>(pWaveModulus - 2 * sWaveModulus);
 
@@ -57,7 +57,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates,ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 

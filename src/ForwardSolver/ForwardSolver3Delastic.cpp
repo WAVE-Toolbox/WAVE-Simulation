@@ -12,7 +12,7 @@ using namespace scai;
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
@@ -23,7 +23,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configurat
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
-        this->prepareBoundaryConditions(config,modelCoordinates, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
     /* aalocation of auxiliary vectors*/
@@ -50,9 +50,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configurat
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates , Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
-    this->prepareBoundaries(config, modelCoordinates , derivatives, dist, ctx,FreeSurface,DampingBoundary,ConvPML);
+    this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
 /*! \brief resets PML (use after each modelling!)
@@ -76,7 +76,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
 {
-    if (useFreeSurface==1) {
+    if (useFreeSurface == 1) {
         FreeSurface.setModelparameter(model);
     }
 }
@@ -158,7 +158,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
-    
+
     /* -------- */
     /*    vx    */
     /* -------- */
@@ -224,7 +224,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         ConvPML.apply_sxz_x(update);
     }
 
-    if (useFreeSurface==1) {
+    if (useFreeSurface == 1) {
         /* Apply image method */
         update_temp = DybFreeSurface * Syz;
     } else {
@@ -275,7 +275,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update = vxx + vyy;
     update *= sWaveModulus;
     Szz -= 2.0 * update;
-
 
     /* ------------------- */
     /* update shear stress */

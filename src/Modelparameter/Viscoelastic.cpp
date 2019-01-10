@@ -1,8 +1,6 @@
 #include "Viscoelastic.hpp"
 using namespace scai;
 
-
-
 /*! \brief Prepare modellparameter for visco-elastic modelling
  *
  * Applies Equation 12 from Bohlen 2002 and refreshes the modulus
@@ -11,16 +9,15 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "", "Preparation of the model parameters\n"); 
-    
-    //refreshModulus 
-    this->getPWaveModulus();  
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n");
+
+    //refreshModulus
+    this->getPWaveModulus();
     this->getSWaveModulus();
     initializeMatrices(dist, ctx, config, comm);
-  
+
     this->getInverseDensity();
     calculateAveraging();
-    
 
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
@@ -29,28 +26,29 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Config
  \param config Configuration class
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configuration::Configuration const &config)
+{
     lama::DenseVector<ValueType> maskP(velocityP); //mask to restore vacuum
-    maskP.unaryOp(maskP,common::UnaryOp::SIGN);
-    maskP.unaryOp(maskP,common::UnaryOp::ABS);
-    
+    maskP.unaryOp(maskP, common::UnaryOp::SIGN);
+    maskP.unaryOp(maskP, common::UnaryOp::ABS);
+
     lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
-    maskS.unaryOp(maskP,common::UnaryOp::SIGN);
-    maskS.unaryOp(maskP,common::UnaryOp::ABS);
-    
+    maskS.unaryOp(maskP, common::UnaryOp::SIGN);
+    maskS.unaryOp(maskP, common::UnaryOp::ABS);
+
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
     dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-    
+
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
-    
+
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-     
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
@@ -93,7 +91,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 
     if (config.get<IndexType>("ModelWrite")) {
         write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
-	std::cout << "been here\n\n";
+        std::cout << "been here\n\n";
     }
 }
 
@@ -203,7 +201,6 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
     inverseDensity = rhs.inverseDensity;
 }
 
-
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave velocity ".vp.mtx" is added, for the S-wave velocity ".vs.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
@@ -218,13 +215,12 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     std::string filenameTauS = filename + ".tauS.mtx";
     std::string filenameP = filename + ".vp.mtx";
     std::string filenameS = filename + ".vs.mtx";
-    
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
     this->writeModelparameter(tauP, filenameTauP, partitionedOut);
     this->writeModelparameter(tauS, filenameTauS, partitionedOut);
     this->writeModelparameter(velocityP, filenameP, partitionedOut);
     this->writeModelparameter(velocityS, filenameS, partitionedOut);
-
 };
 
 //! \brief Wrapper to support configuration
@@ -256,23 +252,22 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::d
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
-    if (dirtyFlagAveraging)
-    {
-    SCAI_REGION("initializeMatrices")
+    if (dirtyFlagAveraging) {
+        SCAI_REGION("initializeMatrices")
 
-    this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
-    
-    DensityAverageMatrixX.setContextPtr(ctx);
-    DensityAverageMatrixY.setContextPtr(ctx);
-    DensityAverageMatrixZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixXY.setContextPtr(ctx);
-    sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+        this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
+
+        DensityAverageMatrixX.setContextPtr(ctx);
+        DensityAverageMatrixY.setContextPtr(ctx);
+        DensityAverageMatrixZ.setContextPtr(ctx);
+        sWaveModulusAverageMatrixXY.setContextPtr(ctx);
+        sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
+        sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
     }
 }
 
@@ -282,18 +277,17 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::d
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging()
 {
-    if (dirtyFlagAveraging)
-    {
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
-    this->calculateAveragedTauS(tauS, tauSAverageXY, sWaveModulusAverageMatrixXY);
-    this->calculateAveragedTauS(tauS, tauSAverageXZ, sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedTauS(tauS, tauSAverageYZ, sWaveModulusAverageMatrixYZ);
-    dirtyFlagAveraging = false;
+    if (dirtyFlagAveraging) {
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
+        this->calculateAveragedTauS(tauS, tauSAverageXY, sWaveModulusAverageMatrixXY);
+        this->calculateAveragedTauS(tauS, tauSAverageXZ, sWaveModulusAverageMatrixXZ);
+        this->calculateAveragedTauS(tauS, tauSAverageYZ, sWaveModulusAverageMatrixYZ);
+        dirtyFlagAveraging = false;
     }
 }
 
@@ -330,23 +324,23 @@ std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() c
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPWaveModulus()
 {
-        // If the modulus is dirty, than recalculate
-    if (dirtyFlagPWaveModulus) {	   
-	HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "P-Wave modulus will be calculated from density,velocityP,tauP and relaxationFrequency \n");
-        this->calcModulusFromVelocity(velocityP,density,pWaveModulus);
-	/* Set circular frequency w = 2 * pi * relaxation frequency */
-	ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
-	ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency);
-	
-	ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
+    // If the modulus is dirty, than recalculate
+    if (dirtyFlagPWaveModulus) {
+        HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "P-Wave modulus will be calculated from density,velocityP,tauP and relaxationFrequency \n");
+        this->calcModulusFromVelocity(velocityP, density, pWaveModulus);
+        /* Set circular frequency w = 2 * pi * relaxation frequency */
+        ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
+        ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency);
 
-	/* Scaling the P-wave Modulus */
+        ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
 
-	auto temp = lama::eval<lama::DenseVector<ValueType>>( 1.0 + sum * tauP );
-	pWaveModulus = pWaveModulus / temp;
-    dirtyFlagPWaveModulus = false;
+        /* Scaling the P-wave Modulus */
+
+        auto temp = lama::eval<lama::DenseVector<ValueType>>(1.0 + sum * tauP);
+        pWaveModulus = pWaveModulus / temp;
+        dirtyFlagPWaveModulus = false;
     }
-    
+
     return (pWaveModulus);
 }
 
@@ -357,25 +351,24 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus()
 {
-        // If the modulus is dirty, than recalculate
-    if (dirtyFlagSWaveModulus) {	   
-	HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density,velocityS,tauS and relaxationFrequency \n");
-        this->calcModulusFromVelocity(velocityS,density,sWaveModulus);
-	/* Set circular frequency w = 2 * pi * relaxation frequency */
-	ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
-	ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency);
-	
-	ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
+    // If the modulus is dirty, than recalculate
+    if (dirtyFlagSWaveModulus) {
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density,velocityS,tauS and relaxationFrequency \n");
+        this->calcModulusFromVelocity(velocityS, density, sWaveModulus);
+        /* Set circular frequency w = 2 * pi * relaxation frequency */
+        ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
+        ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency);
 
-	/* Scaling the S-wave Modulus */
-	auto temp = lama::eval<lama::DenseVector<ValueType>>( 1.0 + sum * tauS );
-	sWaveModulus = sWaveModulus / temp;
+        ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
+
+        /* Scaling the S-wave Modulus */
+        auto temp = lama::eval<lama::DenseVector<ValueType>>(1.0 + sum * tauS);
+        sWaveModulus = sWaveModulus / temp;
         dirtyFlagSWaveModulus = false;
     }
-    
+
     return (pWaveModulus);
 }
-
 
 /*! \brief Overloading * Operation
  *
@@ -386,7 +379,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
 {
     KITGPI::Modelparameter::Viscoelastic<ValueType> result(*this);
     result *= rhs;
-    return result;  
+    return result;
 }
 
 /*! \brief free function to multiply
@@ -412,11 +405,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     tauP *= rhs;
     velocityP *= rhs;
     velocityS *= rhs;
-    
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagSWaveModulus = true;
-    dirtyFlagAveraging=true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -429,7 +422,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
 {
     KITGPI::Modelparameter::Viscoelastic<ValueType> result(*this);
     result += rhs;
-    return result;  
+    return result;
 }
 
 /*! \brief Overloading += Operation
@@ -444,12 +437,12 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     tauP += rhs.tauP;
     velocityP += rhs.velocityP;
     velocityS += rhs.velocityS;
-	
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagSWaveModulus = true;
-    dirtyFlagAveraging=true;
-    
+    dirtyFlagAveraging = true;
+
     return *this;
 }
 
@@ -462,7 +455,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
 {
     KITGPI::Modelparameter::Viscoelastic<ValueType> result(*this);
     result -= rhs;
-    return result; 
+    return result;
 }
 
 /*! \brief Overloading -= Operation
@@ -477,11 +470,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     tauP -= rhs.tauP;
     velocityP -= rhs.velocityP;
     velocityS -= rhs.velocityS;
-    
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagSWaveModulus = true;
-    dirtyFlagAveraging=true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -502,10 +495,10 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     tauP = rhs.tauP;
     relaxationFrequency = rhs.relaxationFrequency;
     numRelaxationMechanisms = rhs.numRelaxationMechanisms;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;    
+    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
     dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
     dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging= rhs.dirtyFlagAveraging;
+    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
     return *this;
 }
 
@@ -528,7 +521,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparame
     numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
     dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
     dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagSWaveModulus= rhs.getDirtyFlagSWaveModulus();
+    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
     dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
 }
 

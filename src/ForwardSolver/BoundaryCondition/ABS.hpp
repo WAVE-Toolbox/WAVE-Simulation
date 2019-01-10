@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../../Acquisition/Coordinates.hpp"
 #include <scai/dmemo.hpp>
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
-#include "../../Acquisition/Coordinates.hpp"
 
 using namespace scai;
 

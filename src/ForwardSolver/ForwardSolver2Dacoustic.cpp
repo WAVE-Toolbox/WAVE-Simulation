@@ -11,9 +11,9 @@ using namespace scai;
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates,  Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
-    this->prepareBoundaries(config, modelCoordinates , derivatives, dist, ctx,FreeSurface,DampingBoundary,ConvPML);
+    this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
 /*! \brief Initialitation of the ForwardSolver
@@ -27,7 +27,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
@@ -39,7 +39,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configura
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
-        this->prepareBoundaryConditions(config,modelCoordinates, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
     /* Initialisation of auxiliary vectors*/
@@ -112,7 +112,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
-    
+
     update = Dxf * p;
     if (useConvPML) {
         ConvPML.apply_p_x(update);

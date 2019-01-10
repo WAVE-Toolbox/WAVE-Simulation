@@ -15,8 +15,8 @@ TEST(CoordinateTest, TestLocatedOnSurface)
     int NY = 10;
     int NZ = 15;
     double DH = 1.0;
-    
-    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
+
+    Acquisition::Coordinates<ValueType> test(NX, NY, NZ, DH);
 
     int coord1 = 2;
     EXPECT_TRUE(test.locatedOnSurface(coord1));
@@ -41,14 +41,14 @@ TEST(CoordinateTest, TestIndex2coordinate)
     int testY = 2;
     int testZ = 2;
     double DH = 1.0;
-    
+
     // index of test coordinates
     int testCoord = 112;
 
     Acquisition::coordinate3D sampleSolution;
     Acquisition::coordinate3D result;
 
-    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
+    Acquisition::Coordinates<ValueType> test(NX, NY, NZ, DH);
 
     result = test.index2coordinate(testCoord);
 
@@ -74,7 +74,7 @@ TEST(CoordinateTest, TestCoordinate2index)
     int testY = 3;
     int testZ = 2;
     double DH = 1.0;
-    
+
     // index of test coordinates
     int sampleCordinate2index = 119;
 
@@ -90,12 +90,12 @@ TEST(CoordinateTest, TestCoordinate2index)
     EXPECT_EQ(sampleCordinate2index, test1.coordinate2index(testCoord));
 
     // Test if interface throws if wrong input parameters are given
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, 10*testZ));
-     EXPECT_ANY_THROW(test1.coordinate2index(testX, 4*testY, testZ));
-     EXPECT_ANY_THROW(test1.coordinate2index(2*testX, testY, testZ));
-     EXPECT_ANY_THROW(test1.coordinate2index(-testX, testY, testZ));
-     EXPECT_ANY_THROW(test1.coordinate2index(testX, -testY, testZ));
-     EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, -testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, 10 * testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, 4 * testY, testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(2 * testX, testY, testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(-testX, testY, testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, -testY, testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, -testZ));
 }
 
 TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
@@ -111,7 +111,7 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     int testY = 4;
     int testZ = 4;
     double DH = 1.0;
-    
+
     // Distance of these coordinates to edges
     Acquisition::coordinate3D solutionDistance;
     solutionDistance.x = 0;
@@ -123,7 +123,7 @@ TEST(CoordinateTest, TestEstimateDistanceToEdges3D)
     testCoord.y = testY;
     testCoord.z = testZ;
 
-    Acquisition::Coordinates<ValueType> test(NX,NY,NZ,DH);
+    Acquisition::Coordinates<ValueType> test(NX, NY, NZ, DH);
     Acquisition::coordinate3D result;
     result = test.edgeDistance(testCoord);
 

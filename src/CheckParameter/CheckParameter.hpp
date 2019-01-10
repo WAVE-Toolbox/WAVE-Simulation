@@ -13,7 +13,7 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-        
+
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
         *
         \param dt Temporal sampling interval in seconds. 
@@ -63,7 +63,7 @@ namespace KITGPI
                 SCAI_ASSERT_ERROR(dt <= dh / (h * sqrt(D) * vpMax), "\nCourant-Friedrichs-Lewy-Criterion is not met! \ndt is " << dt << " but should be less than dh/(h*sqrt(D)*vpMax=" << dh / (h * sqrt(D) * vpMax) << "\n\n");
             }
         }
-        
+
         /*! \brief check criterion to avoid numerical dispersion
         \param dh Spatial sampling interval in meters.
         \param vMin Minimum wave velocity. (in the acoustic case the minimal P wave velocity is used; in the elastic and viscoelastic cases the minimal S wave velocity is used)
@@ -103,7 +103,7 @@ namespace KITGPI
                 }
             }
         }
-        
+
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
         void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)

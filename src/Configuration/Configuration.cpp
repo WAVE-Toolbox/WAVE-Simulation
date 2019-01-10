@@ -1,8 +1,5 @@
 #include "Configuration.hpp"
 
-
-
-
 /*! \brief Add `KEY=VALUE` pairs to the configuration
  *
  * This function adds `KEY=VALUE` pairs to the configuration class.
@@ -99,8 +96,6 @@ KITGPI::Configuration::Configuration::Configuration(std::string const &filename)
     readFromFile(filename, true);
 }
 
-
-
 /*! \brief Print configuration to stdout
  *
  * This function prints all `KEY=VALUE` pairs contained in the read-in configuration to stdout.
@@ -114,5 +109,3 @@ void KITGPI::Configuration::Configuration::print() const
         std::cout << "\t" << iter->first << " = " << iter->second << std::endl;
     std::cout << std::endl;
 }
-
-

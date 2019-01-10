@@ -7,8 +7,8 @@
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 
-#include "Wavefields.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
+#include "Wavefields.hpp"
 
 namespace KITGPI
 {
@@ -25,7 +25,11 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dacoustic(){equationType="acoustic"; numDimension=2;};
+            FD2Dacoustic()
+            {
+                equationType = "acoustic";
+                numDimension = 2;
+            };
 
             //! Default destructor
             ~FD2Dacoustic(){};
@@ -36,7 +40,7 @@ namespace KITGPI
 
             int getNumDimension() const;
             std::string getEquationType() const;
-            
+
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefVZ() override;
             scai::lama::DenseVector<ValueType> &getRefSxx() override;
@@ -65,15 +69,14 @@ namespace KITGPI
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
             void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
-            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
-            void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
-    
+
           private:
-              
             using Wavefields<ValueType>::numDimension;
-            using Wavefields<ValueType>::equationType; 
-              
+            using Wavefields<ValueType>::equationType;
+
             /* required wavefields */
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;

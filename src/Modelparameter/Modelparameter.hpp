@@ -22,8 +22,8 @@
 
 #include <iostream>
 
-#include "../Common/HostPrint.hpp"
 #include "../Common/Common.hpp"
+#include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../PartitionedInOut/PartitionedInOut.hpp"
 
@@ -44,7 +44,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true),dirtyFlagSWaveModulus(true),parametrisation(0), numRelaxationMechanisms(0){};
+            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parametrisation(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~Modelparameter(){};
@@ -79,7 +79,7 @@ namespace KITGPI
             virtual void write(std::string filename, scai::IndexType partitionedOut) const = 0;
 
             virtual std::string getEquationType() const = 0;
-            
+
             virtual scai::lama::Vector<ValueType> const &getDensity() const;
             virtual scai::lama::Vector<ValueType> const &getInverseDensity();
             virtual scai::lama::Vector<ValueType> const &getInverseDensity() const;
@@ -108,7 +108,7 @@ namespace KITGPI
 
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
-            
+
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
 
             virtual scai::lama::Vector<ValueType> const &getInverseDensityAverageX();
@@ -143,19 +143,19 @@ namespace KITGPI
             KITGPI::Modelparameter::Modelparameter<ValueType> &operator=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             KITGPI::Modelparameter::Modelparameter<ValueType> &operator-=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             KITGPI::Modelparameter::Modelparameter<ValueType> &operator+=(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            
-          protected:
-            bool dirtyFlagInverseDensity; 	//!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
-            bool dirtyFlagAveraging;      	//!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date      
-            bool dirtyFlagPWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
-            bool dirtyFlagSWaveModulus;        //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
-        
-            scai::IndexType parametrisation;    //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
-            scai::IndexType PartitionedIn;  //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
-            scai::IndexType PartitionedOut; //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
 
-            std::string equationType;  
-            
+          protected:
+            bool dirtyFlagInverseDensity; //!< ==true if inverseDensity has to be recalulated; ==false if inverseDensity is up to date
+            bool dirtyFlagAveraging;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date
+            bool dirtyFlagPWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+            bool dirtyFlagSWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
+
+            scai::IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
+            scai::IndexType PartitionedIn;   //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
+            scai::IndexType PartitionedOut;  //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
+
+            std::string equationType;
+
             scai::lama::DenseVector<ValueType> pWaveModulus;   //!< Vector storing P-wave modulus.
             scai::lama::DenseVector<ValueType> sWaveModulus;   //!< Vector storing S-wave modulus.
             scai::lama::DenseVector<ValueType> density;        //!< Vector storing Density.
@@ -180,7 +180,7 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> tauSAverageYZ; //!< Vector storing averaged s-wave modulus in yz-plan.
 
             scai::IndexType numRelaxationMechanisms; //!< Number of relaxation mechanisms
-            ValueType relaxationFrequency;     //!< Relaxation Frequency
+            ValueType relaxationFrequency;           //!< Relaxation Frequency
 
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType value);
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);

@@ -205,7 +205,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::getAcquisitionRow(lama::DenseMat
     acqRowMat.setRow(acqRow, 0, common::BinaryOp::COPY);
 }
 
- //! \brief Initialize a Segy struct
+//! \brief Initialize a Segy struct
 /*!
 \param segy Segy struct
 */

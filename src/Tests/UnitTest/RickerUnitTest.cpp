@@ -27,7 +27,7 @@ TEST(RickerTest, TestConstructor)
     lama::DenseVector<double> one(sampleResult.size(), 1.0);
     help = tau * tau;
     tau = -1.0 * help;
-    tau = lama::exp( tau );
+    tau = lama::exp(tau);
     help = one - 2.0 * help;
     sampleResult = AMP * help * tau;
 

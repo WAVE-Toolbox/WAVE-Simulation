@@ -390,7 +390,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
-//       std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
+    //       std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
@@ -406,7 +406,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 
     data.allocate(distTraces, no_dist_NT);
     coordinates.allocate(distTraces);
-    
+
     resampleMatLeft = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
 
@@ -498,7 +498,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, bool copyDist)
-{   
+{
     scai::dmemo::DistributionPtr distTraces;
     scai::dmemo::DistributionPtr distSamples;
 
@@ -509,7 +509,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
 
     std::string tempstr = addSeismogramTypeToName(filename);
     suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
-    
+
     if (copyDist == 0) {
         replicate();
     } else if (copyDist == 1) {
@@ -550,10 +550,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{  
+{
     std::string tempstr = addSeismogramTypeToName(filename);
     suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
-      
+
     if (distTraces == NULL && distSamples == NULL) {
         replicate();
     } else {
@@ -572,7 +572,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMatLeft;
-        
+
         if (resampleMatRight.getNumColumns() > 0) {
             scai::lama::DenseMatrix<ValueType> dataResampleInt;
             dataResampleInt = data * resampleMatRight;

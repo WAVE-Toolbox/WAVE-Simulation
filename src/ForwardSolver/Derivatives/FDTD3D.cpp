@@ -92,14 +92,12 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyb.setContextPtr(ctx);
 
     lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
-  
+
     // by default do matrix-vector operations synchronously, but can be set via environment
     bool isSet;
 
-    if ( common::Settings::getEnvironment( isSet, "SCAI_ASYNCHRONOUS" ) )
-    {
-        if ( isSet )
-        {
+    if (common::Settings::getEnvironment(isSet, "SCAI_ASYNCHRONOUS")) {
+        if (isSet) {
             syncKind = lama::SyncKind::ASYNC_COMM;
         }
     }

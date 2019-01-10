@@ -21,8 +21,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
     lama::Vector<ValueType> const &tauS = model.getTauS();
     lama::Vector<ValueType> const &tauP = model.getTauP();
-    
-    SCAI_ASSERT(sWaveModulus.min()>0,"S wave modulus can't be zero when using image method")
+
+    SCAI_ASSERT(sWaveModulus.min() > 0, "S wave modulus can't be zero when using image method")
 
     /* On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)

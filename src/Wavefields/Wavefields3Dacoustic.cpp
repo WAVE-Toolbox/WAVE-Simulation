@@ -20,8 +20,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dacoustic<ValueType>::getContextP
 template <typename ValueType>
 KITGPI::Wavefields::FD3Dacoustic<ValueType>::FD3Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
-    equationType="acoustic"; 
-    numDimension=3;
+    equationType = "acoustic";
+    numDimension = 3;
     init(ctx, dist);
 }
 
@@ -41,24 +41,24 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, Modelparameter::Modelparameter<ValueType> const &/*model*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    
-    switch(snapType){ 
-      case 1:
-	this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-	this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-	this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
-	break;
-      case 2:
-	this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
-	break;
-      case 3:
-	COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 3D acoustic case.")
-	break;
-      default:
-	COMMON_THROWEXCEPTION("Invalid snapType.")
+
+    switch (snapType) {
+    case 1:
+        this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+        this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+        this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+        break;
+    case 2:
+        this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
+        break;
+    case 3:
+        COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 3D acoustic case.")
+        break;
+    default:
+        COMMON_THROWEXCEPTION("Invalid snapType.")
     }
 }
 

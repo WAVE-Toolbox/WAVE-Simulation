@@ -23,8 +23,6 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(
     return (parametrisation);
 }
 
-
-
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
@@ -37,10 +35,10 @@ ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFreque
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setRelaxationFrequency(ValueType const setRelaxationFrequency)
 {
-dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-relaxationFrequency=setRelaxationFrequency;
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+    relaxationFrequency = setRelaxationFrequency;
 }
 
 /*! \brief Getter method for number of relaxation mechanisms */
@@ -51,14 +49,14 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getNumRelaxationMec
 }
 
 /*! \brief Set number of Relaxation Mechanisms
- */ 
+ */
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setNumRelaxationMechanisms(IndexType const setNumRelaxationMechanisms)
 {
-dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-numRelaxationMechanisms=setNumRelaxationMechanisms;
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+    numRelaxationMechanisms = setNumRelaxationMechanisms;
 }
 
 /*! \brief Init a single modelparameter by a constant value
@@ -111,7 +109,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai
     switch (partitionedOut) {
     case false:
         vector.writeToFile(filename);
-	HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << "\n");
+        HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << "\n");
         break;
 
     case true:
@@ -186,8 +184,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModulus(
 {
     /* Modulus = pow(velocity,2) * Density */
     /* Velocity = sqrt( Modulus / Density )  */
-    vecVelocity = vectorModulus / vecDensity;   /* = Modulus / Density */
-    vecVelocity = lama::sqrt( vecVelocity );          /* = sqrt( Modulus / Density ) */
+    vecVelocity = vectorModulus / vecDensity; /* = Modulus / Density */
+    vecVelocity = lama::sqrt(vecVelocity);    /* = sqrt( Modulus / Density ) */
 };
 
 /*! \brief Get const reference to inverseDensity model parameter
@@ -200,7 +198,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
     if (dirtyFlagInverseDensity) {
         HOST_PRINT(density.getDistributionPtr()->getCommunicatorPtr(), "", "Inverse density will be calculated from density\n");
         inverseDensity = 1 / density;
-	dirtyFlagInverseDensity = false;
+        dirtyFlagInverseDensity = false;
     }
     return (inverseDensity);
 }
@@ -227,13 +225,12 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setDensity(scai::lama::Vector<ValueType> const &setDensity)
 {
-dirtyFlagPWaveModulus=true;
-dirtyFlagSWaveModulus=true;
-dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
-dirtyFlagAveraging = true; // If inverseDensity will be changed, averaging needs to be redone
-density=setDensity;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
+    dirtyFlagAveraging = true;      // If inverseDensity will be changed, averaging needs to be redone
+    density = setDensity;
 }
-
 
 /*! \brief Get const reference to first Lame model parameter
  * 
@@ -244,10 +241,10 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 {
 
     // If the modulus is dirty, than recalculate
-    if (dirtyFlagPWaveModulus) {	   
-	HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "","P-Wave modulus will be calculated from density and P-Wave velocity\n");
+    if (dirtyFlagPWaveModulus) {
+        HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "", "P-Wave modulus will be calculated from density and P-Wave velocity\n");
         dirtyFlagPWaveModulus = false;
-        calcModulusFromVelocity(velocityP,density,pWaveModulus);
+        calcModulusFromVelocity(velocityP, density, pWaveModulus);
     }
 
     return (pWaveModulus);
@@ -272,9 +269,9 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 
     // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {
-        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "", "S-Wave modulus will be calculated from density and S-Wave velocity\n");    
-        calcModulusFromVelocity(velocityS,density,sWaveModulus);
-	dirtyFlagSWaveModulus=false;
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "", "S-Wave modulus will be calculated from density and S-Wave velocity\n");
+        calcModulusFromVelocity(velocityS, density, sWaveModulus);
+        dirtyFlagSWaveModulus = false;
     }
 
     return (sWaveModulus);
@@ -304,8 +301,8 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setVelocityP(scai::lama::Vector<ValueType> const &setVelocityP)
 {
-dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-velocityP=setVelocityP;
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
+    velocityP = setVelocityP;
 }
 
 /*! \brief Get const reference to S-wave velocity
@@ -321,9 +318,9 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setVelocityS(scai::lama::Vector<ValueType> const &setVelocityS)
 {
-dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-velocityS=setVelocityS;
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+    velocityS = setVelocityS;
 }
 
 /*! \brief Get const reference to tauP
@@ -340,8 +337,8 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setTauP(scai::lama::Vector<ValueType> const &setTauP)
 {
-dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-tauP=setTauP;
+    dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
+    tauP = setTauP;
 }
 
 /*! \brief Get const reference to tauS
@@ -357,11 +354,10 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setTauS(scai::lama::Vector<ValueType> const &setTauS)
 {
-tauS=setTauS;
-dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
+    tauS = setTauS;
+    dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
 }
-
 
 //! \brief Function to set elements of a single row of x-averaging density matrix
 /*!
@@ -1075,11 +1071,11 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
-    
+
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
-    
-    Common::replaceInvalid<ValueType>(vecInverseAvDensity,0.0);
+
+    Common::replaceInvalid<ValueType>(vecInverseAvDensity, 0.0);
 }
 
 /*! \brief calculate averaged s-wave modulus
@@ -1091,14 +1087,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
-    Common::searchAndReplace<ValueType>(vecSWaveModulus,1.0,1.0,1);
-    
+    Common::searchAndReplace<ValueType>(vecSWaveModulus, 1.0, 1.0, 1);
+
     vecAvSWaveModulus = 1 / vecSWaveModulus;
     auto temp = lama::eval<lama::DenseVector<ValueType>>(avSWaveModulusMatrix * vecAvSWaveModulus);
     vecAvSWaveModulus = 1 / temp;
-    
-    Common::searchAndReplace<ValueType>(vecAvSWaveModulus,4.0,0.0,1);
-    
+
+    Common::searchAndReplace<ValueType>(vecAvSWaveModulus, 4.0, 0.0, 1);
 }
 
 /*! \brief calculate averaged tauS
@@ -1341,9 +1336,6 @@ KITGPI::Modelparameter::Modelparameter<ValueType> &KITGPI::Modelparameter::Model
     assign(rhs);
     return *this;
 }
-
-
-
 
 /*! \brief Overloading += Operation
  *

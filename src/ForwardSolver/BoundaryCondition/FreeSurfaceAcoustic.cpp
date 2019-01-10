@@ -17,7 +17,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates,ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 

@@ -22,7 +22,7 @@ namespace KITGPI
         /*!
          * This class handels a single seismogram which consists of several traces.
          */
-        
+
         template <typename ValueType>
         class Seismogram
         {
@@ -39,9 +39,9 @@ namespace KITGPI
 
             void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
             void write(Configuration::Configuration const &config, std::string const &filename) const;
-            void read(Configuration::Configuration const &config, std::string const &filename, bool copyDist = 0);   
+            void read(Configuration::Configuration const &config, std::string const &filename, bool copyDist = 0);
             void read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
-            
+
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, scai::IndexType NT);
 
             void redistribute(scai::dmemo::DistributionPtr distRow, scai::dmemo::DistributionPtr distColumn = scai::dmemo::DistributionPtr());
@@ -65,7 +65,6 @@ namespace KITGPI
             scai::lama::DenseVector<scai::IndexType> const &getCoordinates() const;
             SeismogramType getTraceType() const;
             scai::IndexType getSourceCoordinate() const;
-            
 
             /* Setter functions */
             void setDT(ValueType newDT);
@@ -86,13 +85,13 @@ namespace KITGPI
 
           private:
             std::string addSeismogramTypeToName(std::string const &filename) const;
-            
+
             void writeToFileRaw(std::string const &filename) const;
             void writeToFileSU(std::string const &filename, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH) const;
-            
+
             void readFromFileRaw(std::string const &filename, bool copyDist = 0);
             void readFromFileSU(std::string const &filename, bool copyDist = 0);
-            
+
             void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
             void readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
@@ -109,12 +108,11 @@ namespace KITGPI
 
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
-            
+
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMatLeft;
             scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
             scai::lama::DenseVector<ValueType> resampleVec;
-            
         };
     }
 }

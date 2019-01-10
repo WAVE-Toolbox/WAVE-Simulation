@@ -12,7 +12,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
 {
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp,modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -40,7 +40,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp,modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));

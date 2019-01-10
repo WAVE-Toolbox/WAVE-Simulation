@@ -13,12 +13,8 @@ using namespace scai;
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH): NX(NX), NY(NY), NZ(NZ), DH(DH)
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH) : NX(NX), NY(NY), NZ(NZ), DH(DH)
 {
-//     NX = NumX;
-//     NY = NumY;
-//     NZ = NumZ;
-    
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
     SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");

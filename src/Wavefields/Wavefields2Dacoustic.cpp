@@ -28,8 +28,8 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dacoustic<ValueType>::getContextP
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
-    equationType="acoustic"; 
-    numDimension=2;
+    equationType = "acoustic";
+    numDimension = 2;
     init(ctx, dist);
 }
 
@@ -40,23 +40,23 @@ KITGPI::Wavefields::FD2Dacoustic<ValueType>::FD2Dacoustic(scai::hmemo::ContextPt
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, Modelparameter::Modelparameter<ValueType> const &/*model*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    
-    switch(snapType){ 
-      case 1:
-	this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-	this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-	break;
-      case 2:
-	this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
-	break;
-      case 3:
-	COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 2D acoustic case.")
-	break;
-      default:
-	COMMON_THROWEXCEPTION("Invalid snapType.")
+
+    switch (snapType) {
+    case 1:
+        this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
+        this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+        break;
+    case 2:
+        this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
+        break;
+    case 3:
+        COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 2D acoustic case.")
+        break;
+    default:
+        COMMON_THROWEXCEPTION("Invalid snapType.")
     }
 }
 
@@ -290,7 +290,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields:
  \param rhs Scalar which is multiplied.
  */
 template <typename ValueType>
- void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(ValueType rhs)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(ValueType rhs)
 {
     VX *= rhs;
     VY *= rhs;

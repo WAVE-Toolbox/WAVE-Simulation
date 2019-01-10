@@ -88,12 +88,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
     HOST_PRINT(comm, "", "Initialization of the PMl Coefficients...\n");
-    
+
     active = true;
 
     /* Get local "global" indices */
@@ -120,7 +120,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     this->initVector(psi_sxy_x, ctx, dist);
     this->initVector(psi_sxy_y, ctx, dist);
     this->initVector(psi_syy_y, ctx, dist);
-
 
     /* Distributed vectors */
     k_x.setSameValue(dist, 1.0);

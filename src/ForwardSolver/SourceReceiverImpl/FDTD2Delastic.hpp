@@ -29,9 +29,9 @@ namespace KITGPI
                 void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
                 void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
 
-                void applySourceVZ(Acquisition::Seismogram<ValueType> const &/*seismo*/, Wavefields::Wavefields<ValueType> &/*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY sources can not be implemented in 2D elastic modeling")};
-                void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &/*seismo*/, Wavefields::Wavefields<ValueType> &/*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY receivers can not be implementedin 2D elastic modeling")};
-		
+                void applySourceVZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY sources can not be implemented in 2D elastic modeling")};
+                void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY receivers can not be implementedin 2D elastic modeling")};
+
               private:
                 /* Temporary memory */
                 using SourceReceiverImpl<ValueType>::applySource_samplesPressure;

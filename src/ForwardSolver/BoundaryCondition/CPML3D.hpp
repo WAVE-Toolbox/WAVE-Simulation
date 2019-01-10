@@ -28,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 
@@ -52,7 +52,6 @@ namespace KITGPI
                 void apply_vzz(scai::lama::Vector<ValueType> &vzz);
 
               private:
-		      
                 using CPML<ValueType>::active;
 
                 typedef typename CPML<ValueType>::VectorType VectorType;

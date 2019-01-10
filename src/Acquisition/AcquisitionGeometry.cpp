@@ -131,7 +131,7 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
 template <typename ValueType>
 void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
-    
+
     IndexType nrow_temp = acquisition_temp.getNumRows();
     IndexType ncolumn_temp = acquisition_temp.getNumColumns();
 

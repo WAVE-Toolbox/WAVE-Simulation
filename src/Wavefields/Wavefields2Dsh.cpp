@@ -20,8 +20,8 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Dsh<ValueType>::getContextPtr()
 template <typename ValueType>
 KITGPI::Wavefields::FD2Dsh<ValueType>::FD2Dsh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
-    equationType="sh"; 
-    numDimension=2;
+    equationType = "sh";
+    numDimension = 2;
     init(ctx, dist);
 }
 
@@ -33,7 +33,6 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     this->initWavefield(Syz, ctx, dist);
 }
 
-
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
@@ -41,27 +40,25 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  \param t Current Timestep
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &/*derivatives*/, Modelparameter::Modelparameter<ValueType> const &/*model*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType partitionedOut)
 {
     std::string fileBaseName = baseName + type;
-    
-    switch(snapType){ 
-      case 1:
-	this->writeWavefield(VX, "VZ", fileBaseName, t, partitionedOut);
-	break;
-      case 2:
-	this->writeWavefield(Syy, "Syz", fileBaseName, t, partitionedOut);
-	this->writeWavefield(Sxy, "Sxz", fileBaseName, t, partitionedOut);
-	break;
-      case 3:
-      {
-          COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dsh.");
-      }
-      default:
-	COMMON_THROWEXCEPTION("Invalid snapType.");
+
+    switch (snapType) {
+    case 1:
+        this->writeWavefield(VX, "VZ", fileBaseName, t, partitionedOut);
+        break;
+    case 2:
+        this->writeWavefield(Syy, "Syz", fileBaseName, t, partitionedOut);
+        this->writeWavefield(Sxy, "Sxz", fileBaseName, t, partitionedOut);
+        break;
+    case 3: {
+        COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dsh.");
+    }
+    default:
+        COMMON_THROWEXCEPTION("Invalid snapType.");
     }
 }
-
 
 /*! \brief Set all wavefields to zero.
  */
@@ -191,7 +188,6 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dsh<ValueType>::getRe
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D sh case.")
     return (Rxy);
 }
-
 
 /*! \brief Overloading * Operation
  *

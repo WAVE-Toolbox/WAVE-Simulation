@@ -28,7 +28,7 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML2DAcoustic(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType DH, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
 
                 void resetCPML();
 
@@ -38,8 +38,7 @@ namespace KITGPI
                 void apply_p_y(scai::lama::Vector<ValueType> &p_y);
 
               private:
-              
-	        using CPML<ValueType>::active;
+                using CPML<ValueType>::active;
                 typedef typename CPML<ValueType>::VectorType VectorType;
 
                 VectorType psi_vxx; //!< CPML memory Variable

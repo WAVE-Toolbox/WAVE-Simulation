@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Acoustic(){equationType = "acoustic";};
+            Acoustic() { equationType = "acoustic"; };
 
             //! Destructor, releases all allocated resources.
             ~Acoustic(){};
@@ -57,7 +57,7 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
-            
+
             std::string getEquationType() const;
 
             /* Getter methods for not requiered parameters */
@@ -82,13 +82,13 @@ namespace KITGPI
             ValueType getRelaxationFrequency() const override;
 
             void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-            
+
             void applyThresholds(Configuration::Configuration const &config) override;
-    
+
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-    
+
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(ValueType rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator*=(ValueType const &rhs);
@@ -97,11 +97,11 @@ namespace KITGPI
             KITGPI::Modelparameter::Acoustic<ValueType> operator-(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator-=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
             KITGPI::Modelparameter::Acoustic<ValueType> &operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
-    
+
           private:
             void calculateAveraging() override;
-            
-            using Modelparameter<ValueType>::equationType;  
+
+            using Modelparameter<ValueType>::equationType;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagPWaveModulus;

@@ -26,34 +26,33 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configurati
  \param config Configuration class
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::Configuration const &config)
+{
     lama::DenseVector<ValueType> maskP(velocityP); //mask to restore vacuum
-    maskP.unaryOp(maskP,common::UnaryOp::SIGN);
-    maskP.unaryOp(maskP,common::UnaryOp::ABS);
-    
+    maskP.unaryOp(maskP, common::UnaryOp::SIGN);
+    maskP.unaryOp(maskP, common::UnaryOp::ABS);
+
     lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
-    maskS.unaryOp(maskP,common::UnaryOp::SIGN);
-    maskS.unaryOp(maskP,common::UnaryOp::ABS);
-    
+    maskS.unaryOp(maskP, common::UnaryOp::SIGN);
+    maskS.unaryOp(maskP, common::UnaryOp::ABS);
+
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
     dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-    
+
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
-    
+
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
-    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-     
+    dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
 }
-
-
 
 /*! \brief Constructor that is using the Configuration class
  *
@@ -153,7 +152,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
-{  
+{
     std::string filenameVelocityP = filename + ".vp.mtx";
     std::string filenameVelocityS = filename + ".vs.mtx";
     std::string filenamedensity = filename + ".density.mtx";
@@ -178,7 +177,6 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
     dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
     inverseDensity = rhs.inverseDensity;
 }
-
 
 /*! \brief Write model to an external file
  *
@@ -226,23 +224,22 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
-    if (dirtyFlagAveraging)
-    {
-    SCAI_REGION("initializeMatrices")
+    if (dirtyFlagAveraging) {
+        SCAI_REGION("initializeMatrices")
 
-    this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
-    this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
+        this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
 
-    DensityAverageMatrixX.setContextPtr(ctx);
-    DensityAverageMatrixY.setContextPtr(ctx);
-    DensityAverageMatrixZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixXY.setContextPtr(ctx);
-    sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+        DensityAverageMatrixX.setContextPtr(ctx);
+        DensityAverageMatrixY.setContextPtr(ctx);
+        DensityAverageMatrixZ.setContextPtr(ctx);
+        sWaveModulusAverageMatrixXY.setContextPtr(ctx);
+        sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
+        sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
     }
 }
 
@@ -252,15 +249,14 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
 {
-    if (dirtyFlagAveraging)
-    {
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
-    this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
-    dirtyFlagAveraging = false;
+    if (dirtyFlagAveraging) {
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
+        dirtyFlagAveraging = false;
     }
 }
 
@@ -370,7 +366,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
 {
     KITGPI::Modelparameter::Elastic<ValueType> result(*this);
     result *= rhs;
-    return result;   
+    return result;
 }
 
 /*! \brief free function to multiply
@@ -394,11 +390,11 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     density *= rhs;
     velocityP *= rhs;
     velocityS *= rhs;
-    
-    dirtyFlagInverseDensity=true;
-    dirtyFlagPWaveModulus= true;
-    dirtyFlagSWaveModulus= true;
-    dirtyFlagAveraging= true;
+
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -411,7 +407,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
 {
     KITGPI::Modelparameter::Elastic<ValueType> result(*this);
     result += rhs;
-    return result;   
+    return result;
 }
 
 /*! \brief Overloading += Operation
@@ -424,11 +420,11 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     density += rhs.density;
     velocityP += rhs.velocityP;
     velocityS += rhs.velocityS;
-    
-    dirtyFlagInverseDensity=true;
-    dirtyFlagPWaveModulus= true;
-    dirtyFlagSWaveModulus= true;
-    dirtyFlagAveraging= true;
+
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -441,7 +437,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
 {
     KITGPI::Modelparameter::Elastic<ValueType> result(*this);
     result -= rhs;
-    return result; 
+    return result;
 }
 
 /*! \brief Overloading -= Operation
@@ -454,11 +450,11 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     density = density -= rhs.density;
     velocityP -= rhs.velocityP;
     velocityS -= rhs.velocityS;
-    
-    dirtyFlagInverseDensity=true;
-    dirtyFlagPWaveModulus= true;
-    dirtyFlagSWaveModulus= true;
-    dirtyFlagAveraging= true;
+
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -476,9 +472,9 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     density = rhs.density;
     inverseDensity = rhs.inverseDensity;
     dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus= rhs.dirtyFlagPWaveModulus;
-    dirtyFlagSWaveModulus= rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging= rhs.dirtyFlagAveraging;
+    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
+    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
+    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
     return *this;
 }
 
@@ -497,7 +493,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::assign(KITGPI::Modelparameter::
     density = rhs.getDensity();
     dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
     dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagSWaveModulus= rhs.getDirtyFlagSWaveModulus();
+    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
     dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
 }
 

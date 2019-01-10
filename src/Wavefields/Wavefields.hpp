@@ -5,13 +5,12 @@
 #include <scai/lama/DenseVector.hpp>
 #include <scai/lama/Vector.hpp>
 
-#include <scai/dmemo/BlockDistribution.hpp>
-#include <scai/hmemo/HArray.hpp>
 #include "../Common/HostPrint.hpp"
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-
+#include "../PartitionedInOut/PartitionedInOut.hpp"
+#include <scai/dmemo/BlockDistribution.hpp>
+#include <scai/hmemo/HArray.hpp>
 
 namespace KITGPI
 {
@@ -43,7 +42,7 @@ namespace KITGPI
 
             virtual int getNumDimension() const = 0;
             virtual std::string getEquationType() const = 0;
-            
+
             virtual scai::lama::DenseVector<ValueType> &getRefVX();
             virtual scai::lama::DenseVector<ValueType> &getRefVY();
             virtual scai::lama::DenseVector<ValueType> &getRefVZ();
@@ -81,15 +80,15 @@ namespace KITGPI
             KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator*=(ValueType rhs);
-	    
+
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
             void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
 
             int numDimension;
-            std::string equationType; 
-            
+            std::string equationType;
+
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y
             scai::lama::DenseVector<ValueType> VZ;  //!< Wavefield for velocity in z

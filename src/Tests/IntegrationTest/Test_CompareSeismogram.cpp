@@ -25,8 +25,8 @@ int main(int argc, char *argv[])
 
     // Create an object of the mapping (3D-1D) class Coordinates
 
-    Acquisition::Coordinates<ValueType> Coordinates(config.get<IndexType>("NX"),config.get<IndexType>("NY"),config.get<IndexType>("NZ"),config.get<ValueType>("DH"));
-    
+    Acquisition::Coordinates<ValueType> Coordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -38,17 +38,17 @@ int main(int argc, char *argv[])
     KITGPI::Acquisition::Seismogram<ValueType> seismogramDiff;
 
     Acquisition::Receivers<ValueType> receiversTest;
-    receiversTest.init(config,Coordinates, ctx, dist);
+    receiversTest.init(config, Coordinates, ctx, dist);
     Acquisition::Receivers<ValueType> receiversRef;
-    receiversRef.init(config,Coordinates, ctx, dist);
+    receiversRef.init(config, Coordinates, ctx, dist);
 
     std::string filenameTest = config.get<std::string>("SeismogramFilename");
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
     std::cout << pos << std::endl;
 
-    receiversTest.getSeismogramHandler().read(config,filenameTest, 1);
-    receiversRef.getSeismogramHandler().read(config,filenameRef, 1);
+    receiversTest.getSeismogramHandler().read(config, filenameTest, 1);
+    receiversRef.getSeismogramHandler().read(config, filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
 

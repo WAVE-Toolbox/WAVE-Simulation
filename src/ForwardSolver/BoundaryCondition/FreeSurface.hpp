@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "../Derivatives/Derivatives.hpp"
 #include "FreeSurface.hpp"
-#include "../../Acquisition/Coordinates.hpp"
 
 namespace KITGPI
 {
@@ -38,7 +38,7 @@ namespace KITGPI
                  \param DT Temporal Sampling
                  \param DH Distance between grid points
                  */
-                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH) = 0;
+                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH) = 0;
 
                 /*! \brief Getter method for active bool
                  *

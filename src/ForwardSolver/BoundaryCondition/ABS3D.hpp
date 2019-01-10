@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "../../Common/HostPrint.hpp"
 #include "ABS.hpp"
 
@@ -30,7 +29,7 @@ namespace KITGPI
                 //! Default destructor
                 ~ABS3D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx,Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) override;
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) override;
 
                 void apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3, scai::lama::Vector<ValueType> &v4);
                 void apply(scai::lama::Vector<ValueType> &v1, scai::lama::Vector<ValueType> &v2, scai::lama::Vector<ValueType> &v3, scai::lama::Vector<ValueType> &v4, scai::lama::Vector<ValueType> &v5, scai::lama::Vector<ValueType> &v6, scai::lama::Vector<ValueType> &v7, scai::lama::Vector<ValueType> &v8, scai::lama::Vector<ValueType> &v9);

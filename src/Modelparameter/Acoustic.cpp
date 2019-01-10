@@ -29,20 +29,21 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Configurat
  \param config Configuration class
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration::Configuration const &config) {
+void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration::Configuration const &config)
+{
     lama::DenseVector<ValueType> mask(velocityP); //mask to restore vacuum
-    mask.unaryOp(mask,common::UnaryOp::SIGN);
-    mask.unaryOp(mask,common::UnaryOp::ABS);
-    
+    mask.unaryOp(mask, common::UnaryOp::SIGN);
+    mask.unaryOp(mask, common::UnaryOp::ABS);
+
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
     dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
-    
+
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("upperDensityTh"), config.get<ValueType>("upperDensityTh"), 2);
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
-    dirtyFlagAveraging = true; // If S-Wave velocity will be changed, averaging needs to be redone
-    
+    dirtyFlagAveraging = true;      // If S-Wave velocity will be changed, averaging needs to be redone
+
     velocityP *= mask;
     density *= mask;
 }
@@ -73,7 +74,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (acoustic) from file...\n");
 
-         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -173,7 +174,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, In
 {
     std::string filenameP = filename + ".vp.mtx";
     std::string filenamedensity = filename + ".density.mtx";
-    
+
     this->writeModelparameter(density, filenamedensity, partitionedOut);
     this->writeModelparameter(velocityP, filenameP, partitionedOut);
 };
@@ -207,17 +208,16 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
 {
-    if (dirtyFlagAveraging)
-    {  
-    SCAI_REGION("initializeMatrices")
+    if (dirtyFlagAveraging) {
+        SCAI_REGION("initializeMatrices")
 
-    this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
 
-    DensityAverageMatrixX.setContextPtr(ctx);
-    DensityAverageMatrixY.setContextPtr(ctx);
-    DensityAverageMatrixZ.setContextPtr(ctx);
+        DensityAverageMatrixX.setContextPtr(ctx);
+        DensityAverageMatrixY.setContextPtr(ctx);
+        DensityAverageMatrixZ.setContextPtr(ctx);
     }
 }
 
@@ -227,12 +227,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging()
 {
-    if (dirtyFlagAveraging)
-    {
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-    this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-    dirtyFlagAveraging = false;
+    if (dirtyFlagAveraging) {
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
+        dirtyFlagAveraging = false;
     }
 }
 
@@ -286,7 +285,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 /*! \brief Get reference to tauS
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS() const 
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS() const
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
     return (tauS);
@@ -425,7 +424,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 {
     KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
     result *= rhs;
-    return result;   
+    return result;
 }
 
 /*! \brief non-member function to multiply (scalar as left operand)
@@ -448,12 +447,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 {
     density *= rhs;
     velocityP *= rhs;
-    
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
     return *this;
-
 }
 
 /*! \brief Overloading + Operation
@@ -465,7 +463,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 {
     KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
     result += rhs;
-    return result;    
+    return result;
 }
 
 /*! \brief Overloading += Operation
@@ -477,8 +475,8 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 {
     density += rhs.density;
     velocityP += rhs.velocityP;
-    
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
     return *this;
@@ -493,7 +491,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> KITGPI::Modelparameter::Acoustic<Val
 {
     KITGPI::Modelparameter::Acoustic<ValueType> result(*this);
     result -= rhs;
-    return result; 
+    return result;
 }
 
 /*! \brief Overloading -= Operation
@@ -505,8 +503,8 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 {
     density -= rhs.density;
     velocityP -= rhs.velocityP;
-    
-    dirtyFlagInverseDensity=true;
+
+    dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
     return *this;
@@ -572,7 +570,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::plusAssign(KITGPI::Modelparame
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
 }
-
 
 template class KITGPI::Modelparameter::Acoustic<double>;
 template class KITGPI::Modelparameter::Acoustic<float>;

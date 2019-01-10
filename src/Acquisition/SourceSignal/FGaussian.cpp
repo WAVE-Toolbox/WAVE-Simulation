@@ -47,7 +47,7 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(scai::lama::D
 
     help = -2.0 * tau;
     tau = -1.0 * tau * tau;
-    tau = exp( tau );
+    tau = exp(tau);
     signal = AMP * help * tau;
 }
 

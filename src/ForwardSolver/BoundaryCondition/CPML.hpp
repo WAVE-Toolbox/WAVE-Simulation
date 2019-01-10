@@ -46,7 +46,7 @@ namespace KITGPI
                 typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 VectorType temp; //!< temporary vector for pml application
-                
+
                 bool active; //!< Bool if CPML is active
             };
         } /* end namespace BoundaryCondition  */

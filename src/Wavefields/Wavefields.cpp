@@ -38,7 +38,7 @@ template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
 {
     std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
-    
+
     PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
 
     switch (partitionedOut) {
@@ -55,7 +55,6 @@ void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vecto
         COMMON_THROWEXCEPTION("Unexpected output option!")
         break;
     }
-
 }
 
 //! \brief Getter routine for vX wavefield

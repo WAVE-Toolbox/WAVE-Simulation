@@ -12,9 +12,9 @@ using namespace scai;
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
-    init(config,modelCoordinates, ctx, dist_wavefield);
+    init(config, modelCoordinates, ctx, dist_wavefield);
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields. This Init will read the acquistion of a single source from the Sourcefile or from SU. If the acquisition should be read from SU all sources have to be initialized from SU first.
@@ -26,7 +26,7 @@ KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration co
  \param shotNumber Number of the source in the Source File
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber)
 {
     /* Read shotNumber row of acquisition matrix */
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
@@ -38,7 +38,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
         su.getAcquisitionRow(acquisition_temp, shotNumber);
     }
 
-    this->init(acquisition_temp, config, modelCoordinates,  ctx, dist_wavefield);
+    this->init(acquisition_temp, config, modelCoordinates, ctx, dist_wavefield);
 }
 
 /*! \brief Init of all sources based on the configuration class and the distribution of the wavefields. This function will read the acquistion from the Sourcefile or from SU.
@@ -50,7 +50,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     /* Read acquisition matrix */
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
@@ -63,7 +63,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
     } else
         acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
 
-    this->init(acquisition_temp,  config, modelCoordinates, ctx, dist_wavefield);
+    this->init(acquisition_temp, config, modelCoordinates, ctx, dist_wavefield);
 
     if (config.get<bool>("runSimultaneousShots")) {
         numShots = 1;
@@ -87,7 +87,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
  \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
@@ -95,7 +95,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
-    this->setAcquisition(acquisition_matrix,modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(acquisition_matrix, modelCoordinates, dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
@@ -116,7 +116,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
  \param shotNumber Shot number
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
 {
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
@@ -124,7 +124,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
-    this->setAcquisition(acquisition_matrix,modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(acquisition_matrix, modelCoordinates, dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
@@ -145,7 +145,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
  \param signalMatrix Signal matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config,Coordinates<ValueType> const &modelCoordinates,  scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
+void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
 {
     ValueType DT = config.get<ValueType>("DT");
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
