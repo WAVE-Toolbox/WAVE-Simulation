@@ -15,8 +15,8 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     numTracesLocal = rhs.numTracesLocal;
     DT = rhs.DT;
     type = rhs.type;
-    coordinates = rhs.coordinates;
-    sourceCoordinate = rhs.sourceCoordinate;
+    coordinates1D = rhs.coordinates1D;
+    sourceIndex = rhs.sourceIndex;
     data = rhs.data;
     resampleMatRight = rhs.resampleMatRight;
     resampleMatLeft = rhs.resampleMatLeft;
@@ -37,8 +37,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(numTracesLocal, rhs.numTracesLocal);
     std::swap(DT, rhs.DT);
     std::swap(type, rhs.type);
-    std::swap(coordinates, rhs.coordinates);
-    std::swap(sourceCoordinate, rhs.sourceCoordinate);
+    std::swap(coordinates1D, rhs.coordinates1D);
+    std::swap(sourceIndex, rhs.sourceIndex);
     data.swap(rhs.data);
 }
 
@@ -67,35 +67,34 @@ std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(
 //! \brief Setter method for the context ptr
 /*!
  *
- * This method sets the Context to the coordinates and to the seismogram data.
+ * This method sets the Context to the coordinates1D and to the seismogram data.
  \param ctx Set ContextPtr
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::ContextPtr ctx)
 {
     data.setContextPtr(ctx);
-    coordinates.setContextPtr(ctx);
+    coordinates1D.setContextPtr(ctx);
 }
 
 //! \brief  Read the seismogram from disk
 /*!
  *
- * This method writes the seismogram data to disk. It uses the Configuration class to determine the filename and some requiered header information.\n
- * The output format is determined by the input parameter `SeismogramFormat`, which will be requested to the Configuration class. \n
- * **Supported Formats:**\n
- * 1. MTX: MatrixMaker format
- * 2. SU: SeismicUnix format
- \param config Configuration class which is used to determine the filename and header information
+ * This method writes the seismogram data to disk. \n
+ * The output format is determined by the input parameter `SeismogramFormat` \n
+ \param filename base filename of the seismogram
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
+void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
-    switch (config.get<IndexType>("SeismogramFormat")) {
+    switch (seismogramFormat) {
     case 1:
         writeToFileRaw(filename + ".mtx");
         break;
     case 2:
-        writeToFileSU(filename + ".SU", config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        writeToFileSU(filename + ".SU", modelCoordinates);
         break;
     default:
         COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
@@ -106,18 +105,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(Configuration::Configurat
 //! \brief Read the seismogram from disk
 /*!
  *
- * This method reads the seismogram data from disk. It uses the Configuration class to determine the format.\n
- * **Supported Formats:**\n
- * 1. MTX: MatrixMaker format
- * 2. SU: SeismicUnix format
- \param config Configuration class which is used to determine the filename and header information
+ * This method reads the seismogram data from disk. \n
+\param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
  \param filename Filename to read seismogram
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, bool copyDist)
+void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
-    switch (config.get<IndexType>("SeismogramFormat")) {
+    switch (seismogramFormat) {
     case 1:
         readFromFileRaw(filename + ".mtx", copyDist);
         break;
@@ -133,19 +129,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configurati
 //! \brief Read the seismogram from disk
 /*!
  *
- * This method reads the seismogram data from disk. It uses the Configuration class to determine the format.\n
- * **Supported Formats:**\n
- * 1. MTX: MatrixMaker format
- * 2. SU: SeismicUnix format
- \param config Configuration class which is used to determine the filename and header information
+ * This method reads the seismogram data from disk. \n
+\param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
  \param filename Filename to read seismogram
  \param distTraces Distribution of traces
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    switch (config.get<IndexType>("SeismogramFormat")) {
+    switch (seismogramFormat) {
     case 1:
         readFromFileRaw(filename + ".mtx", distTraces, distSamples);
         break;
@@ -235,17 +228,17 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT)
     DT = newDT;
 }
 
-//! \brief Setter method for the source coordinate
+//! \brief Setter method for the source Index
 /*!
  *
- * This method sets the source coordinate to this class. The source coordinate will be used for calculation of the header information (e.g. Offset), mainly during seismogram output to disk.
- \param sourceCoord Source coordinate in 1-D format
+ * This method sets the source Index to this class. The source Index will be used for calculation of the header information (e.g. Offset), mainly during seismogram output to disk.
+ \param sourceCoord Source Index
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceCoord)
+void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceIdx)
 {
-    SCAI_ASSERT_DEBUG(sourceCoord >= 0, "sourceCoord is not valid");
-    sourceCoordinate = sourceCoord;
+    SCAI_ASSERT_DEBUG(sourceIdx >= 0, "sourceCoord is not valid");
+    sourceIndex = sourceIdx;
 }
 
 //! \brief Setter method for the #SeismogramType
@@ -260,18 +253,18 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
     type = trace;
 };
 
-//! \brief Setter function for the coordinates of the traces
+//! \brief Setter function for the 1D coordinates of the traces
 /*!
  *
- * This method will set the coordinates of the traces to this class. 
- * The size of the coordinate vector has to be equal to the number of global traces.
- \param coord DenseVector with coordinates
+ * This method will set the coordinates1D of the traces to this class. 
+ * The size of the Index vector has to be equal to the number of global traces.
+ \param indeces DenseVector with coordinates1D
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::DenseVector<IndexType> const &coord)
+void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::DenseVector<IndexType> const &indeces)
 {
-    SCAI_ASSERT_ERROR(coord.size() == numTracesGlobal, "Given traceType vector has wrong format");
-    coordinates = coord;
+    SCAI_ASSERT_ERROR(indeces.size() == numTracesGlobal, "Given traceType vector has wrong format");
+    coordinates1D = indeces;
 };
 
 //! \brief Setter methode to set Index for trace-normalization.
@@ -318,7 +311,7 @@ KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::
     return (type);
 }
 
-//! \brief Getter method for reference to coordinates vector
+//! \brief Getter method for reference to coordinates1D vector
 /*!
  *
  * THIS METHOD IS CALLED DURING TIME STEPPING
@@ -326,10 +319,10 @@ KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::
  *
  */
 template <typename ValueType>
-lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::get1DCoordinates() const
 {
-    SCAI_ASSERT_DEBUG(coordinates.size() == numTracesGlobal, "Size mismatch ");
-    return (coordinates);
+    SCAI_ASSERT_DEBUG(coordinates1D.size() == numTracesGlobal, "Size mismatch ");
+    return (coordinates1D);
 }
 
 //! \brief Getter method for reference to seismogram data
@@ -402,10 +395,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
     dmemo::DistributionPtr no_dist_NT(new scai::dmemo::NoDistribution(NT));
 
     data.setContextPtr(ctx);
-    coordinates.setContextPtr(ctx);
+    coordinates1D.setContextPtr(ctx);
 
     data.allocate(distTraces, no_dist_NT);
-    coordinates.allocate(distTraces);
+    coordinates1D.allocate(distTraces);
 
     resampleMatLeft = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
@@ -423,7 +416,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
 
 //! \brief Reset of the seismogram
 /*!
- * This method clears the seismogram data and coordinates and sets numTraces to zero
+ * This method clears the seismogram data and coordinates1D and sets numTraces to zero
  * However, the memory will stay allocated, only the content is overwriten by zeros.
  */
 template <typename ValueType>
@@ -432,8 +425,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
     numTracesGlobal = 0;
     numTracesLocal = 0;
     data.clear();
-    coordinates = lama::DenseVector<scai::IndexType>();
-    sourceCoordinate = 0;
+    coordinates1D = lama::DenseVector<scai::IndexType>();
+    sourceIndex = 0;
     numSamples = 0;
     DT = 0.0;
     normalizeTraces = 0;
@@ -456,7 +449,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
     }
 
     data.redistribute(distTraces, distSamples);
-    coordinates.redistribute(distTraces);
+    coordinates1D.redistribute(distTraces);
 }
 
 //! \brief Read a seismogram from disk without header
@@ -640,15 +633,15 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
     return (numTracesGlobal);
 }
 
-/*! \brief Getter method for the 1D source coordinate
+/*! \brief Getter method for the source Index
 *
 *
-\return The 1D source coordinate
+\return The source Index
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getSourceCoordinate() const
 {
-    return (sourceCoordinate);
+    return (sourceIndex);
 }
 
 //! \brief Write a seismogram to disk in Seismic Unix (SEG-Y) format
@@ -657,17 +650,14 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getSourceCoordinate() cons
  * This method writes the seismogram in the Seismic Unix format to disk.
  * Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
  \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
- \param NX Number of grid points in X direction
- \param NY Number of grid points in Y direction
- \param NZ Number of grid points in Z direction
- \param DH Length of space step in meter
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const &filename, IndexType NX, IndexType NY, IndexType NZ, ValueType DH) const
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
     if (data.getNumValues() > 0) {
         std::string tempstr = addSeismogramTypeToName(filename);
-        suHandler<ValueType>::writeSU(tempstr, data, coordinates, DT, sourceCoordinate, NX, NY, NZ, DH);
+        suHandler<ValueType>::writeSU(tempstr, data, coordinates1D, DT, sourceIndex, modelCoordinates);
     }
 }
 

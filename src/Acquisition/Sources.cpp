@@ -460,9 +460,9 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
         COMMON_THROWEXCEPTION("Row distribution of sources (dist_wavefield_sources) is not set!")
     }
 
-    /* Signals matix is row distributed according to dist_wavefield_sources, No column distribution */
+    /* Signals matrix is row distributed according to dist_wavefield_sources, No column distribution */
     signals.allocate(ctx, dist_traces, NT);
-    signals.setCoordinates(this->getCoordinates());
+    signals.setCoordinates(this->get1DCoordinates());
     signals.setContextPtr(ctx);
 }
 

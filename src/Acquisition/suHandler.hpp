@@ -46,7 +46,7 @@ namespace KITGPI
             static void readSingleDataSU(std::string const &filename, scai::lama::Vector<ValueType> &data, scai::IndexType traceNumber);
             static void readHeaderSU(std::string const &filename, std::vector<Segy> &header);
 
-            static void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates, ValueType DT, scai::IndexType sourceCoordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
+            static void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates, ValueType DT, scai::IndexType sourceCoordinate, Coordinates<ValueType> const &modelCoordinates);
 
           private:
             void buildAcqMatrixSourceComp(std::string const &filename, scai::lama::DenseMatrix<ValueType> &acqMatTmp, ValueType DH);

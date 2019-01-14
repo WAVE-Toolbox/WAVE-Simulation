@@ -47,8 +47,8 @@ int main(int argc, char *argv[])
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
     std::cout << pos << std::endl;
 
-    receiversTest.getSeismogramHandler().read(config, filenameTest, 1);
-    receiversRef.getSeismogramHandler().read(config, filenameRef, 1);
+    receiversTest.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameTest);
+    receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
 

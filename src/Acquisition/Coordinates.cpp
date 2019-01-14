@@ -20,6 +20,16 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, sca
     SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
 }
 
+/*! \brief getter function for DH
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH() const
+{
+    return (DH);
+}
+
 /*! \brief Returns bool if given coordinate is located on the surface
  *
  * This method determines if a given coordinate is located on the surface of the modelling domain.

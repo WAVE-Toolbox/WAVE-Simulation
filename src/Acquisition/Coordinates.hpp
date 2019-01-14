@@ -48,6 +48,8 @@ namespace KITGPI
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
+            ValueType getDH() const;
+
             // Coordinate --> Index:
             // Interfaces 3-D
             scai::IndexType coordinate2index(coordinate3D coordinate) const;

@@ -205,9 +205,9 @@ int main(int argc, const char *argv[])
         receivers.getSeismogramHandler().normalize();
 
         if (!config.get<bool>("runSimultaneousShots")) {
-            receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber));
+            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
         } else {
-            receivers.getSeismogramHandler().write(config, config.get<std::string>("SeismogramFilename"));
+            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename"), modelCoordinates);
         }
 
         solver->resetCPML();

@@ -59,7 +59,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(IndexType const NT, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist_wavefield)
 {
 
-    SCAI_ASSERT_DEBUG(seismogramTypes.size() == coordinates.size(), "Size mismatch");
+    SCAI_ASSERT_DEBUG(seismogramTypes.size() == coordinates1D.size(), "Size mismatch");
     SCAI_ASSERT_DEBUG(numTracesGlobal == seismogramTypes.size(), "Size mismatch");
 
     IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
@@ -86,7 +86,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
 
         tempIndexType = seismogramTypes[i] - 1;
 
-        coord[tempIndexType].setValue(count[tempIndexType], this->getCoordinates().getValue(i));
+        coord[tempIndexType].setValue(count[tempIndexType], this->get1DCoordinates().getValue(i));
         ++count[tempIndexType];
     }
 
@@ -153,7 +153,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     acquisition.allocate(dist_master_numParameter, no_dist_numTracesGlobal);
 
     /* Allocate coordinates on master */
-    coordinates.allocate(dist_master_numTracesGlobal);
+    coordinates1D.allocate(dist_master_numTracesGlobal);
 
     /* Local operations on master: 1. Transpose acquisition, 2. calculate 1-D coordinates  */
     if (dist_wavefield->getCommunicator().getRank() == 0) {
@@ -177,7 +177,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
         /* Get readAccess to acquisition matrix (local) */
         auto read_acquisition_HA = hostReadAccess(acquisition.getLocalStorage().getData());
         /* Get writeAccess to coordinates vector (local) */
-        auto write_coordinates_LA = hostWriteAccess(coordinates.getLocalValues());
+        auto write_coordinates_LA = hostWriteAccess(coordinates1D.getLocalValues());
 
         /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
@@ -192,10 +192,10 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     }
 
     /* Replicate coordinates on all processes */
-    coordinates.redistribute(no_dist_numTracesGlobal);
+    coordinates1D.redistribute(no_dist_numTracesGlobal);
 
     /* Get local traces from global traces */
-    dmemo::DistributionPtr dist_wavefield_traces = calcDistribution(coordinates, dist_wavefield);
+    dmemo::DistributionPtr dist_wavefield_traces = calcDistribution(coordinates1D, dist_wavefield);
 
     numTracesLocal = dist_wavefield_traces->getLocalSize();
     numTracesGlobal = dist_wavefield_traces->getGlobalSize();
@@ -207,10 +207,10 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     acquisition.getRow(seismogramTypesTmp, 3);
     seismogramTypes = lama::cast<IndexType>(seismogramTypesTmp);
 
-    coordinates.redistribute(dist_wavefield_traces);
+    coordinates1D.redistribute(dist_wavefield_traces);
     seismogramTypes.redistribute(dist_wavefield_traces);
 
-    coordinates.setContextPtr(ctx);
+    coordinates1D.setContextPtr(ctx);
     seismogramTypes.setContextPtr(ctx);
 
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
@@ -271,10 +271,10 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<Val
  *
  */
 template <typename ValueType>
-lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<ValueType>::get1DCoordinates() const
 {
-    SCAI_ASSERT_DEBUG(numTracesGlobal == coordinates.size(), "Size mismatch");
-    return (coordinates);
+    SCAI_ASSERT_DEBUG(numTracesGlobal == coordinates1D.size(), "Size mismatch");
+    return (coordinates1D);
 }
 
 /*! \brief Get number of global traces
