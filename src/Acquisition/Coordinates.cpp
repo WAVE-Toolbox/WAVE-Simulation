@@ -30,6 +30,35 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH() const
     return (DH);
 }
 
+/*! \brief getter function for NX
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX() const
+{
+    return (NX);
+}
+
+/*! \brief getter function for NY
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY() const
+{
+    return (NY);
+}
+
+/*! \brief getter function for NZ
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
+{
+    return (NZ);
+}
 /*! \brief Returns bool if given coordinate is located on the surface
  *
  * This method determines if a given coordinate is located on the surface of the modelling domain.

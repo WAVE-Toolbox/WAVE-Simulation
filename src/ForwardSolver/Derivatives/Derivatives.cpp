@@ -206,7 +206,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setRowElements_
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(scai::dmemo::DistributionPtr dist)
 {
     // Attention: keep in mind topology NZ x NY x NX
 
@@ -214,6 +214,43 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexTy
     common::Stencil3D<ValueType> stencil(stencilId, stencilId, stencilFD);
     // use dist for distribution
     Dxf.define(dist, stencil);
+}
+//! \brief Calculate Dxf sparse matrix
+/*!
+ *
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        IndexType Y = coordinate.y;
+        IndexType Z = coordinate.z;
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+
+            IndexType X = coordinate.x;
+            X += (j - spatialFDorder / 2 + 1);
+            //             if (ownedIndex==0)
+            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << X << std::endl;
+
+            if ((X >= 0) && (X < modelCoordinates.getNX())) {
+                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+            }
+        }
+    }
+
+    DxfSparse = lama::zero<SparseFormat>(dist, dist);
+    DxfSparse.fillFromAssembly(assembly);
 }
 
 //! \brief Calculate Dyf matrix
@@ -225,12 +262,50 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(IndexTy
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
     common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
     // use dist for distribution
     Dyf.define(dist, stencil);
+}
+
+//! \brief Calculate Dyf sparse matrix
+/*!
+ *
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        IndexType X = coordinate.x;
+        IndexType Z = coordinate.z;
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+
+            IndexType Y = coordinate.y;
+            Y += (j - spatialFDorder / 2 + 1);
+            //             if (ownedIndex==0)
+            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << Y << std::endl;
+
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+            }
+        }
+    }
+
+    DyfSparse = lama::zero<SparseFormat>(dist, dist);
+    DyfSparse.fillFromAssembly(assembly);
 }
 
 //! \brief Calculate Dzf matrix
@@ -242,12 +317,50 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(IndexTy
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(IndexType, IndexType, IndexType, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
     common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
     // use dist for distribution
     Dzf.define(dist, stencil);
+}
+
+//! \brief Calculate Dzf sparse matrix
+/*!
+ *
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        IndexType X = coordinate.x;
+        IndexType Y = coordinate.y;
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+
+            IndexType Z = coordinate.z;
+            Z += (j - spatialFDorder / 2 + 1);
+            //             if (ownedIndex==0)
+            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << Y << std::endl;
+
+            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
+                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+            }
+        }
+    }
+
+    DzfSparse = lama::zero<SparseFormat>(dist, dist);
+    DzfSparse.fillFromAssembly(assembly);
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -666,42 +779,60 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
 {
-    return (Dxf);
+    if (useSparse)
+        return (DxfSparse);
+    else
+        return (Dxf);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
 {
-    return (Dyf);
+    if (useSparse)
+        return (DyfSparse);
+    else
+        return (Dyf);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
 {
-    return (Dzf);
+    if (useSparse)
+        return (DzfSparse);
+    else
+        return (Dzf);
 }
 
 //! \brief Getter method for derivative matrix Dxb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
 {
-    return (Dxb);
+    if (useSparse)
+        return (DxbSparse);
+    else
+        return (Dxb);
 }
 
 //! \brief Getter method for derivative matrix Dyb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
 {
-    return (Dyb);
+    if (useSparse)
+        return (DybSparse);
+    else
+        return (Dyb);
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
 {
-    return (Dzb);
+    if (useSparse)
+        return (DzbSparse);
+    else
+        return (Dzb);
 }
 
 //! \brief Set FD coefficients for each order

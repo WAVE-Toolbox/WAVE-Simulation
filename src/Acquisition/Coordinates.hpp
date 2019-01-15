@@ -49,6 +49,9 @@ namespace KITGPI
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
             ValueType getDH() const;
+            scai::IndexType getNX() const;
+            scai::IndexType getNY() const;
+            scai::IndexType getNZ() const;
 
             // Coordinate --> Index:
             // Interfaces 3-D

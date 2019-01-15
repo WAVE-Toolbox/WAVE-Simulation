@@ -54,6 +54,8 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
 
+    config.add2config("useSparse", true);
+
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
 
@@ -130,7 +132,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     start_t = common::Walltime::get();
     ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
-    derivatives->init(dist, ctx, config, commShot);
+    derivatives->init(dist, ctx, config, modelCoordinates, commShot);
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
