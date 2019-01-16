@@ -121,20 +121,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyf.scale(DT / DH);
     Dyb.scale(DT / DH);
 
-    //    DxfSparse=Dxf;
-    //    DxfSparse.writeToFile("reDxf.mtx");
-    //    DxbSparse=Dxb;
-    //    DxbSparse.writeToFile("reDxb.mtx");
-    //    DxbSparse=Dxb;
-    //    DxbSparse.writeToFile("reDxb.mtx");
-    //    DyfSparse=Dyf;
-    //    DyfSparse.writeToFile("reDyf.mtx");
-    //    DybSparse=Dyb;
-    //    DybSparse.writeToFile("reDyb.mtx");
-    //    DzfSparse=Dzf;
-    //    DzfSparse.writeToFile("reDzf.mtx");
-    //    DzbSparse=Dzb;
-    //    DzbSparse.writeToFile("reDzb.mtx");
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
@@ -209,13 +195,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DybSparse.scale(DT / DH);
     DzfSparse.scale(DT / DH);
     DzbSparse.scale(DT / DH);
-
-    //     DxfSparse.writeToFile("newDxf.mtx");
-    //     DxbSparse.writeToFile("newDxb.mtx");
-    //     DyfSparse.writeToFile("newDyf.mtx");
-    //     DybSparse.writeToFile("newDyb.mtx");
-    //     DzfSparse.writeToFile("newDzf.mtx");
-    //     DzbSparse.writeToFile("newDzb.mtx");
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

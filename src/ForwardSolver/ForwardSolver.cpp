@@ -20,7 +20,7 @@ void KITGPI::ForwardSolver::ForwardSolver<ValueType>::prepareBoundaries(Configur
 
     /* Prepare Free Surface */
     if (useFreeSurface == 1) {
-        FreeSurface.init(dist, derivatives, config.get<scai::IndexType>("NX"), config.get<scai::IndexType>("NY"), config.get<scai::IndexType>("NZ"), modelCoordinates, config.get<ValueType>("DT"), config.get<ValueType>("DH"));
+        FreeSurface.init(dist, derivatives, modelCoordinates, config.get<ValueType>("DT"));
     }
 
     /* Prepare Damping Boundary */

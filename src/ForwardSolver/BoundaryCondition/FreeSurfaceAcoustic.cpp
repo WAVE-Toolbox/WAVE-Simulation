@@ -9,15 +9,11 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
- \param NX Number of grid points in X-Direction
- \param NY Number of grid points in Y-Direction (Depth)
- \param NZ Number of grid points in Z-Direction
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal Sampling
- \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -26,8 +22,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
-    derivatives.DyfFreeSurface *= DT / DH;
+    derivatives.calcDyfFreeSurface(modelCoordinates, dist);
+    derivatives.DyfFreeSurface *= DT / modelCoordinates.getDH();
     derivatives.Dyf.purge();
 
     /* Distributed vectors */

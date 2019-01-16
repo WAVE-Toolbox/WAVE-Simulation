@@ -98,15 +98,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
- \param NX Number of grid points in X-Direction
- \param NY Number of grid points in Y-Direction (Depth)
- \param NZ Number of grid points in Z-Direction
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal Sampling
- \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "", "Initialization of the free surface...\n");
@@ -114,10 +110,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
-    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
-    derivatives.DybFreeSurface *= DT / DH;
-    derivatives.DyfFreeSurface *= DT / DH;
+    derivatives.calcDyfFreeSurface(modelCoordinates, dist);
+    derivatives.calcDybFreeSurface(modelCoordinates, dist);
+    derivatives.DybFreeSurface *= DT / modelCoordinates.getDH();
+    derivatives.DyfFreeSurface *= DT / modelCoordinates.getDH();
 
     selectHorizontalUpdate.setSameValue(dist, 0.0);
     setSurfaceZero.setSameValue(dist, 1.0);

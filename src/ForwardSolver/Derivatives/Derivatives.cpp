@@ -239,8 +239,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
             IndexType X = coordinate.x;
             X += (j - spatialFDorder / 2 + 1);
-            //             if (ownedIndex==0)
-            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << X << std::endl;
 
             if ((X >= 0) && (X < modelCoordinates.getNX())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
@@ -294,8 +292,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
             IndexType Y = coordinate.y;
             Y += (j - spatialFDorder / 2 + 1);
-            //             if (ownedIndex==0)
-            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << Y << std::endl;
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
@@ -349,8 +345,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
             IndexType Z = coordinate.z;
             Z += (j - spatialFDorder / 2 + 1);
-            //             if (ownedIndex==0)
-            //             std::cout << j << ": " << stencilFD.values()[j] << " coordinate: " << Y << std::endl;
 
             if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
@@ -361,6 +355,87 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
     DzfSparse = lama::zero<SparseFormat>(dist, dist);
     DzfSparse.fillFromAssembly(assembly);
+}
+//! \brief Calculate DyfFreeSurface matrix
+/*!
+ *
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        IndexType X = coordinate.x;
+        IndexType Z = coordinate.z;
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+            IndexType Y = coordinate.y;
+            Y += (j - spatialFDorder / 2 + 1);
+
+            ValueType fdCoeff = stencilFD.values()[j];
+
+            IndexType ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
+            if (ImageIndex >= 0)
+                fdCoeff -= stencilFD.values()[ImageIndex];
+
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                assembly.push(ownedIndex, columnIndex, fdCoeff);
+            }
+        }
+    }
+
+    DyfFreeSurface = lama::zero<SparseFormat>(dist, dist);
+    DyfFreeSurface.fillFromAssembly(assembly);
+}
+
+//! \brief Calculate DyfFreeSurface matrix
+/*!
+ *
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        IndexType X = coordinate.x;
+        IndexType Z = coordinate.z;
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+            IndexType Y = coordinate.y;
+            Y += (j - spatialFDorder / 2);
+
+            ValueType fdCoeff = stencilFD.values()[j];
+
+            IndexType ImageIndex = spatialFDorder - 1 - 2 * coordinate.y - j;
+            if (ImageIndex >= 0)
+                fdCoeff -= stencilFD.values()[ImageIndex];
+
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                assembly.push(ownedIndex, columnIndex, fdCoeff);
+            }
+        }
+    }
+
+    DybFreeSurface = lama::zero<SparseFormat>(dist, dist);
+    DybFreeSurface.fillFromAssembly(assembly);
 }
 
 //! \brief Calculate DybFreeSurface matrix
