@@ -9,6 +9,7 @@ using namespace scai;
  \param dist Distribution of the wavefield
  \param ctx Context
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator
  */
 template <typename ValueType>
@@ -23,6 +24,7 @@ KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::Distr
  \param dist Distribution of the wavefield
  \param ctx Context
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator
  */
 template <typename ValueType>
@@ -41,6 +43,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::Di
  *
  \param dist Distribution of the wavefield
  \param ctx Context
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal sampling interval#
  \param spatialFDorderInput FD-order of spatial derivative stencils
  \param comm Communicator
@@ -129,6 +132,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
  *
  \param dist Distribution of the wavefield
  \param ctx Context
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal sampling interval
  \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator

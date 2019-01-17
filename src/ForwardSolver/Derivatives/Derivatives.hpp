@@ -117,11 +117,7 @@ namespace KITGPI
                 void calcDzf(scai::dmemo::DistributionPtr dist);
                 void calcDzf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-                void calcDyb(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-
-                void calcDyfFreeSurface(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
                 void calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-                void calcDybFreeSurface(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
                 void calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
                 typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
@@ -145,9 +141,6 @@ namespace KITGPI
                 scai::IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
 
                 scai::IndexType useFreeSurface; //!< Switch to use free surface or not
-
-                scai::hmemo::HArray<ValueType> FDCoef_f; //!< FD-coefficients forward
-                scai::hmemo::HArray<ValueType> FDCoef_b; //!< FD-coefficients backward
 
                 scai::common::Stencil1D<ValueType> stencilFD; // FD-stencil
 
