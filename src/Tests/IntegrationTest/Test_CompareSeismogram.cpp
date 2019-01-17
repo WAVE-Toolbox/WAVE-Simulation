@@ -51,20 +51,27 @@ int main(int argc, char *argv[])
     receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
-
+    ValueType max = 0;
     for (int i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
         seismogramTest = receiversTest.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
         seismogramRef = receiversRef.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
 
+        if (seismogramRef.getData().maxNorm() > max) {
+            max = seismogramRef.getData().maxNorm();
+        }
+
+        if (seismogramTest.getData().maxNorm() > max) {
+            max = seismogramTest.getData().maxNorm();
+        }
         seismogramDiff = seismogramTest - seismogramRef;
         misfit = seismogramDiff.getData().l2Norm();
         misfitSum += misfit;
     }
 
-    std::cout << "\n\nL2: " << misfitSum << std::endl;
+    std::cout << "\n\nL2/max: " << misfitSum / max << std::endl;
 
-    if (misfitSum > 0.01) {
-        std::cout << "Seismogram does not match reference solution.\n\n"
+    if (misfitSum > 0.0001 * max) {
+        std::cout << "Seismogram does not match reference solution misfit/maxAmp < 0.01%.\n\n"
                   << std::endl;
         return (1);
     } else {
