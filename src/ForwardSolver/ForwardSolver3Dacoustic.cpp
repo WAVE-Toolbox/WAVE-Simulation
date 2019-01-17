@@ -19,7 +19,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::initForwardSolver(Configura
 
     /* Get distribibution of the wavefields */
     auto dist = wavefield.getRefVX().getDistributionPtr();
-    ;
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
@@ -68,9 +67,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param tStart Counter start in for loop over time steps
- \param tEnd Counter end  in for loop over time steps
- \param DT Temporal Sampling intervall in seconds
+ \param t current timestep
  *
  * The update equations for velocity, \f$v_i\f$, and pressure, \f$p\f$, are implemented as follows where \f$M\f$ is the P-wave modulus and \f$\rho_{inv}\f$ the inverse density. Note that the scaling with the temporal and spatial discretization is included in the derivative matrices. The velocity update is executed first followed by the pressure update and finally the source term is added. If a free surface is chosen, the derivative matrices will be adapted to satisfy the free surface condition.
  *
@@ -91,25 +88,25 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector<ValueType> const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
+    auto const &pWaveModulus = model.getPWaveModulus();
+    auto const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    auto const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    auto const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
 
     /* Get references to required wavefields */
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    lama::Vector<ValueType> &vY = wavefield.getRefVY();
-    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
-    lama::Vector<ValueType> &p = wavefield.getRefP();
+    auto &vX = wavefield.getRefVX();
+    auto &vY = wavefield.getRefVY();
+    auto &vZ = wavefield.getRefVZ();
+    auto &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
-    lama::Matrix<ValueType> const &Dzf = derivatives.getDzf();
-    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+    auto const &Dxf = derivatives.getDxf();
+    auto const &Dzf = derivatives.getDzf();
+    auto const &Dxb = derivatives.getDxb();
+    auto const &Dzb = derivatives.getDzb();
+    auto const &Dyb = derivatives.getDyb();
+    auto const &Dyf = derivatives.getDyf();
+    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 

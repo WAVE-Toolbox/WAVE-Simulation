@@ -19,9 +19,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::initForwardSolver(Configuratio
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution */
-    dmemo::DistributionPtr dist;
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    dist = vX.getDistributionPtr();
+    auto dist = wavefield.getRefVX().getDistributionPtr();
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
@@ -113,9 +111,7 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::prepareBoundaryConditions(Conf
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param tStart Counter start in for loop over time steps
- \param tEnd Counter end  in for loop over time steps
- \param DT Temporal Sampling intervall in seconds
+ \param t current timesample 
  */
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
@@ -124,39 +120,39 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector<ValueType> const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
-    lama::Vector<ValueType> const &tauSAverageXY = model.getTauSAverageXY();
+    auto const &pWaveModulus = model.getPWaveModulus();
+    auto const &sWaveModulus = model.getSWaveModulus();
+    auto const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    auto const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    auto const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
+    auto const &tauSAverageXY = model.getTauSAverageXY();
 
     /* Get references to required wavefields */
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    lama::Vector<ValueType> &vY = wavefield.getRefVY();
+    auto &vX = wavefield.getRefVX();
+    auto &vY = wavefield.getRefVY();
 
-    lama::Vector<ValueType> &Sxx = wavefield.getRefSxx();
-    lama::Vector<ValueType> &Syy = wavefield.getRefSyy();
-    lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
+    auto &Sxx = wavefield.getRefSxx();
+    auto &Syy = wavefield.getRefSyy();
+    auto &Sxy = wavefield.getRefSxy();
 
-    lama::Vector<ValueType> &Rxx = wavefield.getRefRxx();
-    lama::Vector<ValueType> &Ryy = wavefield.getRefRyy();
-    lama::Vector<ValueType> &Rxy = wavefield.getRefRxy();
+    auto &Rxx = wavefield.getRefRxx();
+    auto &Ryy = wavefield.getRefRyy();
+    auto &Rxy = wavefield.getRefRxy();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
-    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
+    auto const &Dxf = derivatives.getDxf();
+    auto const &Dxb = derivatives.getDxb();
 
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+    auto const &Dyb = derivatives.getDyb();
+    auto const &DybFreeSurface = derivatives.getDybFreeSurface();
+    auto const &Dyf = derivatives.getDyf();
+    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* Get reference to required model vectors */
-    lama::Vector<ValueType> const &tauS = model.getTauS();
-    lama::Vector<ValueType> const &tauP = model.getTauP();
+    auto const &tauS = model.getTauS();
+    auto const &tauP = model.getTauP();
 
     /* ----------------*/
     /* update velocity */

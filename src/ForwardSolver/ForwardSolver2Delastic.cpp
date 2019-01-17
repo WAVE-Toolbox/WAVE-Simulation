@@ -18,9 +18,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configurat
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
-    dmemo::DistributionPtr dist;
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    dist = vX.getDistributionPtr();
+    auto dist = wavefield.getRefVX().getDistributionPtr();
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
