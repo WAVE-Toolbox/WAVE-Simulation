@@ -112,8 +112,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
 
-    ValueType DH = modelCoordinates.getDH();
-
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
 
@@ -136,10 +134,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DybSparse.scale(-1.0);
 
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
-    DxfSparse *= DT / DH;
-    DxbSparse *= DT / DH;
-    DyfSparse *= DT / DH;
-    DybSparse *= DT / DH;
+    DxfSparse *= DT;
+    DxbSparse *= DT;
+    DyfSparse *= DT;
+    DybSparse *= DT;
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

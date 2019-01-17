@@ -47,7 +47,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
  \param ctx Context
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Time sampling
- \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
  \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
@@ -56,7 +55,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::apply_
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -117,10 +116,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::init(s
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {
-                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, modelCoordinates.getDH());
             }
             if (gdist.y < BoundaryWidth) {
-                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, modelCoordinates.getDH());
                 if (useFreeSurface > 0) {
                     if (coordinate.y < BoundaryWidth) {
                         this->ResetCoeffFreeSurface(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, i);

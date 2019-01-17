@@ -139,8 +139,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    ValueType DH = modelCoordinates.getDH();
-
     HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
 
     // Set FD-order to class member
@@ -189,12 +187,12 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
 
-    DxfSparse.scale(DT / DH);
-    DxbSparse.scale(DT / DH);
-    DyfSparse.scale(DT / DH);
-    DybSparse.scale(DT / DH);
-    DzfSparse.scale(DT / DH);
-    DzbSparse.scale(DT / DH);
+    DxfSparse.scale(DT);
+    DxbSparse.scale(DT);
+    DyfSparse.scale(DT);
+    DybSparse.scale(DT);
+    DzfSparse.scale(DT);
+    DzbSparse.scale(DT);
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

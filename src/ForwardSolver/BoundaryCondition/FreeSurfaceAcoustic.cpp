@@ -23,7 +23,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     derivatives.useFreeSurface = true;
     derivatives.calcDyfFreeSurface(modelCoordinates, dist);
-    derivatives.DyfFreeSurface *= DT / modelCoordinates.getDH();
+    derivatives.DyfFreeSurface *= DT;
     derivatives.Dyf.purge();
 
     /* Distributed vectors */

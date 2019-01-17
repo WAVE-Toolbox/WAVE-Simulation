@@ -249,6 +249,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
+    DxfSparse *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate Dyf matrix
@@ -302,6 +303,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
     DyfSparse = lama::zero<SparseFormat>(dist, dist);
     DyfSparse.fillFromAssembly(assembly);
+    DyfSparse *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate Dzf matrix
@@ -355,6 +357,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
     DzfSparse = lama::zero<SparseFormat>(dist, dist);
     DzfSparse.fillFromAssembly(assembly);
+    DzfSparse *= 1 / modelCoordinates.getDH();
 }
 //! \brief Calculate DyfFreeSurface matrix
 /*!
@@ -395,6 +398,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
     DyfFreeSurface = lama::zero<SparseFormat>(dist, dist);
     DyfFreeSurface.fillFromAssembly(assembly);
+    DyfFreeSurface *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate DyfFreeSurface matrix
@@ -405,6 +409,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -436,6 +441,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
     DybFreeSurface = lama::zero<SparseFormat>(dist, dist);
     DybFreeSurface.fillFromAssembly(assembly);
+    DybFreeSurface *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate DybFreeSurface matrix

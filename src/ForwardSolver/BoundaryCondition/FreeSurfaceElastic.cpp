@@ -65,8 +65,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     derivatives.calcDyfFreeSurface(modelCoordinates, dist);
     derivatives.calcDybFreeSurface(modelCoordinates, dist);
 
-    derivatives.DybFreeSurface *= DT / modelCoordinates.getDH();
-    derivatives.DyfFreeSurface *= DT / modelCoordinates.getDH();
+    derivatives.DybFreeSurface *= DT;
+    derivatives.DyfFreeSurface *= DT;
 
     /* Get local "global" indices */
     hmemo::HArray<IndexType> localIndices;
