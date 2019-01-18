@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     /* Context and Distribution                */
     /* --------------------------------------- */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    dmemo::DistributionPtr dist(new scai::dmemo::NoDistribution(config.get<IndexType>("NX") * config.get<IndexType>("NY") * config.get<IndexType>("NZ")));
+    dmemo::DistributionPtr dist(new scai::dmemo::NoDistribution(Coordinates.getNX() * Coordinates.getNY() * Coordinates.getNZ()));
 
     KITGPI::Acquisition::Seismogram<ValueType> seismogramTest;
     KITGPI::Acquisition::Seismogram<ValueType> seismogramRef;

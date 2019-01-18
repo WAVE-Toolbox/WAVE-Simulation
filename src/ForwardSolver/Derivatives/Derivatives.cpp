@@ -30,20 +30,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType X = 0;
+    IndexType NX = modelCoordinates.getNX();
+    IndexType columnIndex = 0;
+    IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        IndexType Y = coordinate.y;
-        IndexType Z = coordinate.z;
-        for (IndexType j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
 
-            IndexType X = coordinate.x;
-            X += (j - spatialFDorder / 2 + 1);
+            X = coordinate.x + (j - spatialFDorder / 2 + 1);
 
-            if ((X >= 0) && (X < modelCoordinates.getNX())) {
-                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+            if ((X >= 0) && (X < NX)) {
+                columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
             }
         }
@@ -82,20 +83,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType Y = 0;
+    IndexType NY = modelCoordinates.getNY();
+    IndexType columnIndex = 0;
+    IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        IndexType X = coordinate.x;
-        IndexType Z = coordinate.z;
-        for (IndexType j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
 
-            IndexType Y = coordinate.y;
-            Y += (j - spatialFDorder / 2 + 1);
+            Y = coordinate.y + (j - spatialFDorder / 2 + 1);
 
-            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+            if ((Y >= 0) && (Y < NY)) {
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
             }
         }
@@ -134,20 +136,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType Z = 0;
+    IndexType NZ = modelCoordinates.getNZ();
+    IndexType columnIndex = 0;
+    IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        IndexType X = coordinate.x;
-        IndexType Y = coordinate.y;
-        for (IndexType j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
 
-            IndexType Z = coordinate.z;
-            Z += (j - spatialFDorder / 2 + 1);
+            Z = coordinate.z + (j - spatialFDorder / 2 + 1);
 
-            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
-                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+            if ((Z >= 0) && (Z < NZ)) {
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
                 assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
             }
         }
@@ -171,25 +174,26 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
-
+    IndexType Y = 0;
+    ValueType fdCoeff = 0;
+    ;
+    IndexType ImageIndex = 0;
+    IndexType columnIndex = 0;
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        IndexType X = coordinate.x;
-        IndexType Z = coordinate.z;
         for (IndexType j = 0; j < spatialFDorder; j++) {
-            IndexType Y = coordinate.y;
-            Y += (j - spatialFDorder / 2 + 1);
+            Y = coordinate.y + (j - spatialFDorder / 2 + 1);
 
-            ValueType fdCoeff = stencilFD.values()[j];
+            fdCoeff = stencilFD.values()[j];
 
-            IndexType ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
+            ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
             if (ImageIndex >= 0)
                 fdCoeff -= stencilFD.values()[ImageIndex];
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, fdCoeff);
             }
         }
@@ -214,25 +218,27 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType Y = 0;
+    ValueType fdCoeff = 0;
+    IndexType ImageIndex = 0;
+    IndexType columnIndex = 0;
+    IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        IndexType X = coordinate.x;
-        IndexType Z = coordinate.z;
-        for (IndexType j = 0; j < spatialFDorder; j++) {
-            IndexType Y = coordinate.y;
-            Y += (j - spatialFDorder / 2);
+        for (j = 0; j < spatialFDorder; j++) {
+            Y = coordinate.y + (j - spatialFDorder / 2);
 
-            ValueType fdCoeff = stencilFD.values()[j];
+            fdCoeff = stencilFD.values()[j];
 
-            IndexType ImageIndex = spatialFDorder - 1 - 2 * coordinate.y - j;
+            ImageIndex = spatialFDorder - 1 - 2 * coordinate.y - j;
             if (ImageIndex >= 0)
                 fdCoeff -= stencilFD.values()[ImageIndex];
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                IndexType columnIndex = modelCoordinates.coordinate2index(X, Y, Z);
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, fdCoeff);
             }
         }
