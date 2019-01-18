@@ -8,14 +8,14 @@ using namespace scai;
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters\n");
 
     // refreshModulus
     this->getPWaveModulus();
     this->getSWaveModulus();
-    initializeMatrices(dist, ctx, config, comm);
+    initializeMatrices(dist, ctx, modelCoordinates, comm);
     this->getInverseDensity();
     calculateAveraging();
 
@@ -195,44 +195,25 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, Ind
     this->writeModelparameter(velocityS, filenameS, partitionedOut);
 };
 
-//! \brief Wrapper to support configuration
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param config Configuration
- \param comm Communicator
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm)
-{
-    initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), comm);
-}
-
 //! \brief Initializsation of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param DH Grid spacing (equidistant)
- \param DT Temporal sampling interval
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("initializeMatrices")
 
-        this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
-        this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
-        this->calcDensityAverageMatrixZ(NX, NY, NZ, dist);
-        this->calcSWaveModulusAverageMatrixXY(NX, NY, NZ, dist);
-        this->calcSWaveModulusAverageMatrixXZ(NX, NY, NZ, dist);
-        this->calcSWaveModulusAverageMatrixYZ(NX, NY, NZ, dist);
+        this->calcDensityAverageMatrixX(modelCoordinates, dist);
+        this->calcDensityAverageMatrixY(modelCoordinates, dist);
+        this->calcDensityAverageMatrixZ(modelCoordinates, dist);
+        this->calcSWaveModulusAverageMatrixXY(modelCoordinates, dist);
+        this->calcSWaveModulusAverageMatrixXZ(modelCoordinates, dist);
+        this->calcSWaveModulusAverageMatrixYZ(modelCoordinates, dist);
 
         DensityAverageMatrixX.setContextPtr(ctx);
         DensityAverageMatrixY.setContextPtr(ctx);

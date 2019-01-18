@@ -12,13 +12,13 @@ using namespace scai;
  \param comm Communicator pointer
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters…\n");
 
     // refreshModulus();
     this->getSWaveModulus();
-    initializeMatrices(dist, ctx, config, comm);
+    initializeMatrices(dist, ctx, modelCoordinates, comm);
     this->getInverseDensity();
     calculateAveraging();
     HOST_PRINT(comm, "", "Model ready!\n\n");
@@ -177,40 +177,21 @@ void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexTyp
     this->writeModelparameter(velocityS, filenameS, partitionedOut);
 };
 
-//! \brief Wrapper to support configuration
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param config Configuration
- \param comm Communicator
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm)
-{
-    initializeMatrices(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), config.get<ValueType>("DT"), comm);
-}
-
 //! \brief Initializsation of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param DH Grid spacing (equidistant)
- \param DT Temporal sampling interval
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType /*DH*/, ValueType /*DT*/, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
 
     SCAI_REGION("initializeMatrices")
     // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-    this->calcDensityAverageMatrixX(NX, NY, NZ, dist);
-    this->calcDensityAverageMatrixY(NX, NY, NZ, dist);
+    this->calcDensityAverageMatrixX(modelCoordinates, dist);
+    this->calcDensityAverageMatrixY(modelCoordinates, dist);
 
     sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
     sWaveModulusAverageMatrixYZ.setContextPtr(ctx);

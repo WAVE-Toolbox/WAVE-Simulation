@@ -158,7 +158,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
-    model->prepareForModelling(config, ctx, dist, commShot);
+    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */

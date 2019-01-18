@@ -20,12 +20,12 @@
 #include <scai/common/Walltime.hpp>
 #include <scai/logging.hpp>
 
-#include <iostream>
-
+#include "../Acquisition/Coordinates.hpp"
 #include "../Common/Common.hpp"
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../PartitionedInOut/PartitionedInOut.hpp"
+#include <iostream>
 
 namespace KITGPI
 {
@@ -107,7 +107,7 @@ namespace KITGPI
             virtual void setRelaxationFrequency(ValueType const setRelaxationFrequency);
 
             /*! \brief Prepare the model parameters for modelling */
-            virtual void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
+            virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
 
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
 
@@ -202,22 +202,17 @@ namespace KITGPI
              *
              \param dist Distribution of the wavefield
              \param ctx Context
-             \param NX Total number of grid points in X
-             \param NY Total number of grid points in Y
-             \param NZ Total number of grid points in Z
-             \param DH Grid spacing (equidistant)
-             \param DT Temporal sampling interval
              \param comm Communicator
              */
-            virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) = 0;
+            virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
 
-            void calcDensityAverageMatrixX(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixY(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixZ(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcDensityAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-            void calcSWaveModulusAverageMatrixXY(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixXZ(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixYZ(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcSWaveModulusAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
             SparseFormat DensityAverageMatrixX;                          //!< Averaging density matrix in x-direction
@@ -235,27 +230,6 @@ namespace KITGPI
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             void readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, scai::IndexType partitionedIn);
-
-            typedef void (Modelparameter<ValueType>::*setRowElements_AvPtr)(scai::IndexType, scai::IndexType &, scai::IndexType &, scai::hmemo::WriteAccess<scai::IndexType> &, scai::hmemo::WriteAccess<scai::IndexType> &, scai::hmemo::WriteAccess<ValueType> &, scai::IndexType, scai::IndexType, scai::IndexType); //!< Pointer to set elements functions
-
-            typedef scai::IndexType (Modelparameter<ValueType>::*calcNumberRowElements_AvPtr)(scai::IndexType, scai::IndexType, scai::IndexType, scai::IndexType); //!< Pointer to counting elements functions
-
-            void calcAverageMatrix(scai::lama::Matrix<ValueType> &Av, calcNumberRowElements_AvPtr calcNumberRowElements, setRowElements_AvPtr setRowElements, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist);
-
-            scai::IndexType calcNumberRowElements_DensityAverageMatrixX(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType calcNumberRowElements_DensityAverageMatrixY(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType calcNumberRowElements_DensityAverageMatrixZ(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType calcNumberRowElements_SWaveModulusAverageMatrixXY(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType calcNumberRowElements_SWaveModulusAverageMatrixXZ(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            scai::IndexType calcNumberRowElements_SWaveModulusAverageMatrixYZ(scai::IndexType rowNumber, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-
-            void setRowElements_DensityAverageMatrixX(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            void setRowElements_DensityAverageMatrixY(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            void setRowElements_DensityAverageMatrixZ(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-
-            void setRowElements_SWaveModulusAverageMatrixXY(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            void setRowElements_SWaveModulusAverageMatrixXZ(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
-            void setRowElements_SWaveModulusAverageMatrixYZ(scai::IndexType rowNumber, scai::IndexType &countJA, scai::IndexType &countIA, scai::hmemo::WriteAccess<scai::IndexType> &csrJALocal, scai::hmemo::WriteAccess<scai::IndexType> &csrIALocal, scai::hmemo::WriteAccess<ValueType> &csrvaluesLocal, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
         };
     }
 }
