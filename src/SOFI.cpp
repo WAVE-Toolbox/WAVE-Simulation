@@ -54,8 +54,6 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
 
-    config.add2config("useSparse", true);
-
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
 
