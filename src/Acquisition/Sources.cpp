@@ -56,7 +56,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
 
     if (config.get<bool>("initSourcesFromSU")) {
-        su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), config.get<ValueType>("DH"));
+        su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
         acquisition_temp = su.getAcquisition();
         std::cout << acquisition_temp << std::endl;
         acquisition_temp.writeToFile("test.mtx");

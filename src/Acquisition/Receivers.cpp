@@ -33,7 +33,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
 
     if (config.get<bool>("initReceiverFromSU")) {
-        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename"), config.get<ValueType>("DH"));
+        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename"), modelCoordinates.getDH());
         acquisition_temp = su.getAcquisition();
     } else
         acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
@@ -60,7 +60,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 {
     scai::lama::DenseMatrix<ValueType> acquisition_temp;
     if (config.get<bool>("initReceiverFromSU")) {
-        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), config.get<ValueType>("DH"));
+        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates.getDH());
         acquisition_temp = su.getAcquisition();
     } else
         acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".mtx");
