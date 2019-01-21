@@ -1,59 +1,28 @@
 #include "ForwardSolver2Dacoustic.hpp"
 using namespace scai;
 
-/*! \brief Initialitation of the boundary conditions
- *
- *
- \param config Configuration
- \param derivatives Derivatives matrices
- \param dist Distribution of the wave fields
- \param ctx Context
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
-{
-
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-
-    /* Prepare Free Surface */
-    if (useFreeSurface==1) {
-        FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
-    }
-
-    /* Prepare Damping Boundary */
-    if (config.get<IndexType>("DampingBoundary") == 1) {
-        useDampingBoundary = true;
-        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-    }
-
-    if (config.get<IndexType>("DampingBoundary") == 2) {
-        useConvPML = true;
-        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-    }
-}
-
 /*! \brief Initialitation of the ForwardSolver
  *
  *
  \param config Configuration
  \param derivatives Derivatives matrices
  \param wavefield Wavefields for the modelling
+ \param model
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
-    dmemo::DistributionPtr dist;
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    dist = vX.getDistributionPtr();
+    auto dist = wavefield.getRefVX().getDistributionPtr();
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
-        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
     /* Initialisation of auxiliary vectors*/
@@ -61,6 +30,21 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configura
     update_temp.allocate(dist);
     update.setContextPtr(ctx);
     update_temp.setContextPtr(ctx);
+}
+
+/*! \brief Initialitation of the boundary conditions
+ *
+ *
+ \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param derivatives Derivatives matrices
+ \param dist Distribution of the wave fields
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+{
+    this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
 /*! \brief resets PML (use after each modelling!)
@@ -83,9 +67,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::resetCPML()
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param tStart Counter start in for loop over time steps
- \param tEnd Counter end  in for loop over time steps
- \param DT Temporal Sampling intervall in seconds
+ \param t current time sample
  *
  * The update equations for velocity, \f$v_i\f$, and pressure, \f$p\f$, are implemented as follows where \f$M\f$ is the P-wave modulus and \f$\rho_{inv}\f$ the inverse density. Note that the scaling with the temporal and spatial discretization is included in the derivative matrices. The velocity update is executed first followed by the pressure update and finally the source term is added. If a free surface is chosen, the derivative matrices will be adapted to satisfy the free surface condition.
  *
@@ -105,28 +87,28 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    auto const &pWaveModulus = model.getPWaveModulus();
+    auto const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    auto const &inverseDensityAverageY = model.getInverseDensityAverageY();
 
     /* Get references to required wavefields */
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    lama::Vector<ValueType> &vY = wavefield.getRefVY();
-    lama::Vector<ValueType> &p = wavefield.getRefP();
+    auto &vX = wavefield.getRefVX();
+    auto &vY = wavefield.getRefVY();
+    auto &p = wavefield.getRefP();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
-    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+    auto const &Dxf = derivatives.getDxf();
+    auto const &Dxb = derivatives.getDxb();
+    auto const &Dyb = derivatives.getDyb();
+    auto const &Dyf = derivatives.getDyf();
+    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
-    
+
     update = Dxf * p;
     if (useConvPML) {
         ConvPML.apply_p_x(update);

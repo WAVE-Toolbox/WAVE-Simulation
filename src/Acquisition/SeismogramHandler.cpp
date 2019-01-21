@@ -3,48 +3,55 @@ using namespace scai;
 
 //! \brief Method to write all handled Seismogram to file
 /*!
- * This method allows to write all handled Seismogram to file. The Configuration class will be used to determine requiered information,
- * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ * This method allows to write all handled Seismogram to file. 
+ * The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ * 
  *
- \param config Configuration class, which will be used to determine filename and header information
+ \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param filename base filename of the seismogram
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(Configuration::Configuration const &config, std::string const &filename) const
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
     for (auto const &i : seismo) {
-        i.write(config, filename);
+        i.write(seismogramFormat, filename, modelCoordinates);
     }
 }
 
 //! \brief Method to read all handled Seismograms from file
 /*!
- * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
- * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ * This method allows to read all handled Seismogram from file. 
+ * The #SeismogramType of each Seismogram will be added to the filename automaticly.
  *
- \param config Configuration class, which will be used to determine filename and header information
+ \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param filename base filename of the seismograms
+ \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, bool copyDist)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0)
-            i.read(config, filename, copyDist);
+            i.read(seismogramFormat, filename, copyDist);
     }
 }
 
 //! \brief Method to read all handled Seismograms from file
 /*!
- * This method allows to read all handled Seismogram from file. The Configuration class will be used to determine requiered information,
- * such as filename or header information. The #SeismogramType of each Seismogram will be added to the filename automaticly.
+ * This method allows to read all handled Seismogram from file. The SeismogramType of each Seismogram will be added to the filename automaticly.
  *
- \param config Configuration class, which will be used to determine filename and header information
+ \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param filename base filename of the seismogram
+ \param distTraces distribution of the traces in the data matrix
+ \param DistributionPtr distribution of the samples in the data matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(Configuration::Configuration const &config, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0)
-            i.read(config, filename, distTraces, distSamples);
+            i.read(seismogramFormat, filename, distTraces, distSamples);
     }
 }
 

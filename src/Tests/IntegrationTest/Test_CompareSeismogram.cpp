@@ -23,44 +23,55 @@ int main(int argc, char *argv[])
     // read configuration parameter from file
     KITGPI::Configuration::Configuration config(argv[1]);
 
+    // Create an object of the mapping (3D-1D) class Coordinates
+
+    Acquisition::Coordinates<ValueType> Coordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    dmemo::DistributionPtr dist(new scai::dmemo::NoDistribution(config.get<IndexType>("NX") * config.get<IndexType>("NY") * config.get<IndexType>("NZ")));
+    dmemo::DistributionPtr dist(new scai::dmemo::NoDistribution(Coordinates.getNX() * Coordinates.getNY() * Coordinates.getNZ()));
 
     KITGPI::Acquisition::Seismogram<ValueType> seismogramTest;
     KITGPI::Acquisition::Seismogram<ValueType> seismogramRef;
     KITGPI::Acquisition::Seismogram<ValueType> seismogramDiff;
 
     Acquisition::Receivers<ValueType> receiversTest;
-    receiversTest.init(config, ctx, dist);
+    receiversTest.init(config, Coordinates, ctx, dist);
     Acquisition::Receivers<ValueType> receiversRef;
-    receiversRef.init(config, ctx, dist);
+    receiversRef.init(config, Coordinates, ctx, dist);
 
     std::string filenameTest = config.get<std::string>("SeismogramFilename");
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
     std::cout << pos << std::endl;
 
-    receiversTest.getSeismogramHandler().read(config,filenameTest, 1);
-    receiversRef.getSeismogramHandler().read(config,filenameRef, 1);
+    receiversTest.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameTest);
+    receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
-
+    ValueType max = 0;
     for (int i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
         seismogramTest = receiversTest.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
         seismogramRef = receiversRef.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
 
+        if (seismogramRef.getData().maxNorm() > max) {
+            max = seismogramRef.getData().maxNorm();
+        }
+
+        if (seismogramTest.getData().maxNorm() > max) {
+            max = seismogramTest.getData().maxNorm();
+        }
         seismogramDiff = seismogramTest - seismogramRef;
         misfit = seismogramDiff.getData().l2Norm();
         misfitSum += misfit;
     }
 
-    std::cout << "\n\nL2: " << misfitSum << std::endl;
+    std::cout << "\n\nL2/max: " << misfitSum / max << std::endl;
 
-    if (misfitSum > 0.01) {
-        std::cout << "Seismogram does not match reference solution.\n\n"
+    if (misfitSum > 0.0001 * max) {
+        std::cout << "Seismogram does not match reference solution misfit/maxAmp < 0.01%.\n\n"
                   << std::endl;
         return (1);
     } else {

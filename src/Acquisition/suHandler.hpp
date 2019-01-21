@@ -40,13 +40,13 @@ namespace KITGPI
             void locateTrace(std::string &filename, scai::IndexType &traceNumber, scai::IndexType shotNumber);
             scai::lama::DenseMatrix<ValueType> const &getAcquisition() const;
             void getAcquisitionRow(scai::lama::DenseMatrix<ValueType> &acqRowMat, scai::IndexType shotNumber) const;
-            
+
             // following member functions are static because they are associated with the class rather than the objects
             static void readDataSU(std::string const &filename, scai::lama::Matrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr);
             static void readSingleDataSU(std::string const &filename, scai::lama::Vector<ValueType> &data, scai::IndexType traceNumber);
             static void readHeaderSU(std::string const &filename, std::vector<Segy> &header);
-            
-            static void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates, ValueType DT, scai::IndexType sourceCoordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
+
+            static void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates, ValueType DT, scai::IndexType sourceCoordinate, Coordinates<ValueType> const &modelCoordinates);
 
           private:
             void buildAcqMatrixSourceComp(std::string const &filename, scai::lama::DenseMatrix<ValueType> &acqMatTmp, ValueType DH);
@@ -59,7 +59,5 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> acqMat; // acquisition matrix
             std::vector<scai::IndexType> nShots;       // number of shots per component which is needed to localize a single shot in multiple SU files
         };
-
-       
     }
 }

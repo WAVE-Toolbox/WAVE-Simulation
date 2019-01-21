@@ -25,11 +25,11 @@ namespace KITGPI
             ~AcquisitionGeometry(){};
 
             /* I/O for acquisition */
-            void setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
+            void setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
             void writeAcquisitionToFile(std::string const &filename) const;
 
             /* Getter methods */
-            scai::lama::DenseVector<scai::IndexType> const &getCoordinates() const;
+            scai::lama::DenseVector<scai::IndexType> const &get1DCoordinates() const;
             scai::lama::DenseVector<scai::IndexType> const &getSeismogramTypes() const;
             scai::IndexType getNumTracesGlobal() const;
             scai::IndexType getNumTracesLocal() const;
@@ -52,7 +52,7 @@ namespace KITGPI
             /* Acquisition Settings */
             scai::lama::DenseMatrix<ValueType> acquisition;           //!< Matrix that stores the acquisition
             scai::IndexType numParameter;                             //!< Number of parameters given in acquisition matrix
-            scai::lama::DenseVector<scai::IndexType> coordinates;     //!< Global coordinates of the traces (1-D coordinates)
+            scai::lama::DenseVector<scai::IndexType> coordinates1D;   //!< Global coordinates of the traces (1-D coordinates)
             scai::lama::DenseVector<scai::IndexType> seismogramTypes; //!< #SeismogramType of the traces: 1==Pressure, 2==vX, 3==vY, 4==vZ
 
             /* Methods in derived classes for the readAcquisitionFromFile method */

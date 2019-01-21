@@ -21,13 +21,13 @@ TEST(FGaussianTest, TestConstructor)
 
     //calculate sample result
 
-    auto sampleT = lama::linearDenseVector<double>(NT, 0.0, DT );
+    auto sampleT = lama::linearDenseVector<double>(NT, 0.0, DT);
     auto sampleHelp = lama::fill<lama::DenseVector<double>>(sampleT.size(), 1.2 / FC + Tshift);
     auto sampleTau = lama::eval<lama::DenseVector<double>>(sampleT - sampleHelp);
     sampleTau *= M_PI * FC;
     sampleHelp = -2.0 * sampleTau;
     sampleTau = -1.0 * sampleTau * sampleTau;
-    sampleTau = exp( sampleTau );
+    sampleTau = exp(sampleTau);
     sampleResult = AMP * sampleHelp * sampleTau;
 
     //Testing
