@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     int NX = config.get<IndexType>("NX");
     int NY = config.get<IndexType>("NY");
     int NZ = config.get<IndexType>("NZ");
-    common::Grid3D grid(NZ, NY, NX);
+    common::Grid3D grid(NY, NZ, NX);
 
     // construct model vectors
     lama::GridVector<ValueType> vp(grid);
@@ -59,11 +59,11 @@ int main(int argc, char *argv[])
     //set velocities for second layer
     for (IndexType y = depth; y < NY; ++y) {
 
-        vp(lama::Range(), y, lama::Range()) = vp2;
-        vs(lama::Range(), y, lama::Range()) = vs2;
-        rho(lama::Range(), y, lama::Range()) = rho2;
-        tauP(lama::Range(), y, lama::Range()) = tauP2;
-        tauS(lama::Range(), y, lama::Range()) = tauS2;
+        vp(y, lama::Range(), lama::Range()) = vp2;
+        vs(y, lama::Range(), lama::Range()) = vs2;
+        rho(y, lama::Range(), lama::Range()) = rho2;
+        tauP(y, lama::Range(), lama::Range()) = tauP2;
+        tauS(y, lama::Range(), lama::Range()) = tauS2;
     }
 
     std::string type = config.get<std::string>("equationType");

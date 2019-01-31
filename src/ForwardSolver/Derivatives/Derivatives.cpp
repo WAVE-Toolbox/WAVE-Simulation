@@ -64,7 +64,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
+    common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
     // use dist for distribution
     Dyf.define(dist, stencil);
 }
@@ -117,7 +117,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
+    common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
     // use dist for distribution
     Dzf.define(dist, stencil);
 }

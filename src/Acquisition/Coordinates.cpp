@@ -87,11 +87,11 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
 {
     coordinate3D result;
 
-    result.z = IndexType(index / (NX * NY));
-    index -= result.z * (NX * NY);
+    result.y = IndexType(index / (NX * NZ));
+    index -= result.y * (NX * NZ);
 
-    result.y = IndexType(index / (NX));
-    index -= result.y * (NX);
+    result.z = IndexType(index / (NX));
+    index -= result.z * (NX);
 
     result.x = index;
 
@@ -129,7 +129,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
     SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
     SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
 
-    return ((X) + (Y)*NX + (Z)*NX * NY);
+    return ((X) + (Z)*NX + (Y)*NX * NZ);
 }
 
 /* ---------- */

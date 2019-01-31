@@ -24,7 +24,6 @@
 #include "Wavefields/WavefieldsFactory.hpp"
 
 #include "Common/HostPrint.hpp"
-#include "Partitioning/PartitioningCubes.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 
@@ -114,8 +113,8 @@ int main(int argc, const char *argv[])
     // define the grid topology by sizes NX, NY, and NZ from configuration
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
 
-    common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX"));
-    common::Grid3D procGrid(npZ, npY, npX);
+    common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
+    common::Grid3D procGrid(npY, npZ, npX);
     // distribute the grid onto available processors
     dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
 
