@@ -7,9 +7,9 @@ using namespace scai;
 
 /*! \brief constructor for regular grid
  *
- \param NumX Number of grid points in X
- \param NumY Number of grid points in Y
- \param NumZ Number of grid points in Z
+ \param NX Number of grid points in X
+ \param NY Number of grid points in Y
+ \param NZ Number of grid points in Z
  *
  */
 template <typename ValueType>
@@ -62,17 +62,14 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
 /*! \brief Returns bool if given coordinate is located on the surface
  *
  * This method determines if a given coordinate is located on the surface of the modelling domain.
- \param coordinate 1-D coordinate
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
- \param NZ Number of grid points in Z
+ \param index Model vector Index
  *
  */
 template <typename ValueType>
-bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coordinate) const
+bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType index) const
 {
     coordinate3D result;
-    result = map3Dindex2coordinate(coordinate);
+    result = mapIndex2coordinate(index);
     if (result.y == 0) {
         return (true);
     } else {
@@ -80,54 +77,46 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType coo
     }
 }
 
-/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+/*! \brief General mapping from 1-D index to 3-D coordinate
  *
- \param coordinate 1-D coordinate
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
+ \param index Model vector Index
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::map3Dindex2coordinate(IndexType coordinate) const
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::mapIndex2coordinate(IndexType index) const
 {
     coordinate3D result;
 
-    result.z = IndexType(coordinate) / (NX * NY);
-    coordinate -= result.z * (NX * NY);
+    result.z = IndexType(index / (NX * NY));
+    index -= result.z * (NX * NY);
 
-    result.y = IndexType(coordinate) / (NX);
-    coordinate -= result.y * (NX);
+    result.y = IndexType(index / (NX));
+    index -= result.y * (NX);
 
-    result.x = coordinate;
+    result.x = index;
 
     return (result);
 }
 
-/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+/*! \brief General mapping from 1-D index to 3-D coordinate
  *
- * Maps a 1-D coordinate back into 3-D coordinates.
+ * Maps a 1-D index into 3-D coordinates.
  * The 3-D grid starts at 0 and runs to (NX-1), (NY-1) or (NZ-1).
  *
- \param coordinate 1-D coordinate
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
- \param NZ Number of grid points in Z
+ \param index 1-D coordinate
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType coordinate) const
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType index) const
 {
-    return (map3Dindex2coordinate(coordinate));
+    return (mapIndex2coordinate(index));
 }
 
-/*! \brief General mapping from 3-D coordinates to 1-D coordinate
+/*! \brief General mapping from 3-D coordinates to 1-D indeces
  *
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z) const
@@ -147,16 +136,13 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 /* Interfaces */
 /* ---------- */
 
-/*! \brief Convert 3-D coordinates to 1-D coordinates
+/*! \brief Convert 3-D coordinates to 1-D indeces
  *
  * This method returns the 1-D coordinate of 3-D coordinates.
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \return 1-D coordinate
+ \return 1-D index
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType Z) const
@@ -168,10 +154,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexTyp
  *
  * This method returns the 1-D coordinate of 3-D coordinates.
  \param coordinate as a coordinate3D struct
- \param NX Total number of grid points in X (Horizontal 1)
- \param NY Total number of grid points in Y (Depth)
- \param NZ Total number of grid points in Z (Horizontal 2)
- \return 1-D coordinate
+ \return 1-D index
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate3D coordinate) const
@@ -185,9 +168,6 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
  \param X Coordinate X
  \param Y Coordinate Y
  \param Z Coordinate Z
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
@@ -213,9 +193,6 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::e
  *
  * This method calculates the distance of a given coordinate3D to the boundaries of the modelling domain.
  \param coordinate 3D-coordinate structs
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate) const

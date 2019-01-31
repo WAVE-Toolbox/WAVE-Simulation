@@ -59,11 +59,11 @@ namespace KITGPI
             scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D index2coordinate(scai::IndexType coordinate) const;
+            coordinate3D index2coordinate(scai::IndexType index) const;
 
             coordinate3D edgeDistance(coordinate3D coordinate) const;
 
-            bool locatedOnSurface(scai::IndexType coordinate) const;
+            bool locatedOnSurface(scai::IndexType index) const;
 
           private:
             scai::IndexType NX;
@@ -75,7 +75,7 @@ namespace KITGPI
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate) const;
+            coordinate3D mapIndex2coordinate(scai::IndexType index) const;
 
             coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
         };
