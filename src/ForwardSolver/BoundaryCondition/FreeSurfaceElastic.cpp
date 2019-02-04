@@ -89,7 +89,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
     for (IndexType i = 0; i < numLocalIndices; i++) {
 
         rowGlobal = read_localIndices[i];
-        rowLocal = dist->global2local(rowGlobal);
+        rowLocal = dist->global2Local(rowGlobal);
 
         /* Determine if the current grid point is located on the surface */
         if (coordinateTransformation.locatedOnSurface(rowGlobal)) {

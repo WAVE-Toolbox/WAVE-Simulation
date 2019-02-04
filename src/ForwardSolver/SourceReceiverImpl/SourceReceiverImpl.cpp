@@ -98,7 +98,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
     lama::DenseMatrix<ValueType> &seismogramData = seismo.getData();
 
-    temp.gather(wavefieldSingle, coordinates, common::BinaryOp::COPY);
+    temp.gatherInto(wavefieldSingle, coordinates, common::BinaryOp::COPY);
     seismogramData.setColumn(temp, t, common::BinaryOp::COPY);
 }
 
@@ -174,7 +174,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
     const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
 
     sourcesSignals.getColumn(temp, t);
-    wavefieldSingle.scatter(coordinates, temp, common::BinaryOp::ADD);
+    wavefieldSingle.scatter(coordinates, true, temp, common::BinaryOp::ADD);
 }
 
 /*! \brief Setting context pointer to temporary source and seismogram.

@@ -89,7 +89,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
     write_localIndices.release();
 
     /* create GeneralDistribution */
-    dmemo::DistributionPtr dist_cubus(new dmemo::GeneralDistribution(numGlobalGridPoints, localIndices, comm));
+    dmemo::DistributionPtr dist_cubus(new dmemo::GeneralDistribution(numGlobalGridPoints, localIndices, true, comm));
 
     return (dist_cubus);
 }
