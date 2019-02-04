@@ -18,8 +18,8 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTDacoustic<ValueType>::gatherS
     lama::DenseMatrix<ValueType> &seismogramDataPressure = seismo.getData();
     const lama::DenseVector<IndexType> &coordinates = seismo.get1DCoordinates();
 
-    gatherSeismogram_samplesPressure.gather(p, coordinates, common::BinaryOp::COPY);
-    gatherSeismogram_samplesPressure *= 1;
+    gatherSeismogram_samplesPressure.gatherInto(p, coordinates, common::BinaryOp::COPY);
+    gatherSeismogram_samplesPressure*=1;
     seismogramDataPressure.setColumn(gatherSeismogram_samplesPressure, t, common::BinaryOp::COPY);
 }
 
@@ -41,7 +41,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTDacoustic<ValueType>::applySo
     const lama::DenseVector<IndexType> &coordinatesPressure = seismo.get1DCoordinates();
 
     sourcesSignalsPressure.getColumn(applySource_samplesPressure, t);
-    p.scatter(coordinatesPressure, applySource_samplesPressure, common::BinaryOp::ADD);
+    p.scatter(coordinatesPressure, true, applySource_samplesPressure, common::BinaryOp::ADD);
 }
 
 template class KITGPI::ForwardSolver::SourceReceiverImpl::FDTDacoustic<double>;
