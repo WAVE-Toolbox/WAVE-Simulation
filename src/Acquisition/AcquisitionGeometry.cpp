@@ -230,7 +230,7 @@ dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calc
 
     Global2Local(coordinates, localIndices, dist_wavefield);
 
-    dmemo::DistributionPtr dist_temp(new dmemo::GeneralDistribution(coordinates.size(), localIndices, dist_wavefield->getCommunicatorPtr()));
+    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(coordinates.size(), localIndices, true, dist_wavefield->getCommunicatorPtr()) );
 
     return (dist_temp);
 }

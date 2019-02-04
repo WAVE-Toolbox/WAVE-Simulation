@@ -5,6 +5,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/matrix/MatrixAssembly.hpp>
 #include <scai/lama/matrix/StencilMatrix.hpp>
+#include <scai/tracing.hpp>
 
 /* Forward declaration for friendship */
 namespace KITGPI
