@@ -68,10 +68,6 @@ int main(int argc, const char *argv[])
 
     IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
-    // Create an object of the mapping (3D-1D) class Coordinates
-
-    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
-
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -117,6 +113,38 @@ int main(int argc, const char *argv[])
     common::Grid3D procGrid(npY, npZ, npX);
     // distribute the grid onto available processors
     dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
+
+    // Create an object of the mapping (3D-1D) class Coordinates
+
+    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dist, ctx);
+
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::VectorAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size()); 
+    
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+
+//         scai::IndexType min = 0;
+//         if (coordinatedist.x < coordinatedist.y) {
+//             min = coordinatedist.x;
+//         } else {
+//             min = coordinatedist.y;
+//         }
+        
+//         if (min < 10) {
+        if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
+        assembly.push(ownedIndex,1.25);
+        }
+    }
+    lama::DenseVector<ValueType> weights;
+    weights.allocate(dist);
+    weights=1.0;
+    weights.fillFromAssembly(assembly);
+    weights.setContextPtr(ctx);
 
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");

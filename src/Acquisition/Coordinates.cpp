@@ -20,6 +20,62 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, sca
     SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
 }
 
+/*! \brief constructor for regular grid
+ *
+ \param NX Number of grid points in X
+ \param NY Number of grid points in Y
+ \param NZ Number of grid points in Z
+ *
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ,  ValueType DH, scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx) : NX(NX), NY(NY), NZ(NZ), DH(DH)
+{
+    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
+    SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
+    SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
+    
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::VectorAssembly<IndexType> xAssembly;
+    xAssembly.reserve(ownedIndexes.size());
+    lama::VectorAssembly<IndexType> yAssembly;
+    yAssembly.reserve(ownedIndexes.size());
+    lama::VectorAssembly<IndexType> zAssembly;
+    zAssembly.reserve(ownedIndexes.size()); 
+    
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+    coordinate3D coordinate = index2coordinate(ownedIndex);
+    xAssembly.push(ownedIndex,coordinate.x);
+    yAssembly.push(ownedIndex,coordinate.y);
+    zAssembly.push(ownedIndex,coordinate.z);
+    }
+    
+    xCoordinates.allocate(dist);
+    xCoordinates.fillFromAssembly(xAssembly);
+    xCoordinates.setContextPtr(ctx);
+
+    
+    xCoordinates.writeToFile("xcoord.mtx");
+    
+    yCoordinates.allocate(dist);
+    yCoordinates.fillFromAssembly(yAssembly);
+    yCoordinates.setContextPtr(ctx);
+
+    yCoordinates.writeToFile("ycoord.mtx");
+    
+    zCoordinates.allocate(dist);
+    zCoordinates.fillFromAssembly(zAssembly);
+    zCoordinates.setContextPtr(ctx);
+
+    
+    zCoordinates.writeToFile("zcoord.mtx");
+    
+    useCoordinateVectors=true;
+    
+}
+
 /*! \brief getter function for DH
  *
  *
@@ -59,6 +115,37 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
 {
     return (NZ);
 }
+
+/*! \brief getter function for x coordinates
+ *
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getXCoordinates() const
+{
+    return (xCoordinates);
+}
+
+/*! \brief getter function for y coordinates
+ *
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getYCoordinates() const
+{
+    return (yCoordinates);
+}
+
+/*! \brief getter function for z coordinates
+ *
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getZCoordinates() const
+{
+    return (zCoordinates);
+}
+
 /*! \brief Returns bool if given coordinate is located on the surface
  *
  * This method determines if a given coordinate is located on the surface of the modelling domain.
@@ -87,6 +174,23 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
 {
     coordinate3D result;
 
+    
+//     if (useCoordinateVectors) {
+//         if (index==10){
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;     
+//         }
+//         result.x = xCoordinates.getValue(index);
+//         result.y = yCoordinates.getValue(index);
+//         result.z = zCoordinates.getValue(index);
+//     }else {
+    
     result.y = IndexType(index / (NX * NZ));
     index -= result.y * (NX * NZ);
 
@@ -94,7 +198,8 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     index -= result.z * (NX);
 
     result.x = index;
-
+//     }
+    
     return (result);
 }
 

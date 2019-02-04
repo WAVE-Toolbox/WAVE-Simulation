@@ -44,7 +44,7 @@ namespace KITGPI
 
               protected:
                 // For the ABS Boundaries Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
-                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

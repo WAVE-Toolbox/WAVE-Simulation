@@ -47,12 +47,16 @@ namespace KITGPI
             ~Coordinates(){};
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
-
+            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH,scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx);
+            
             ValueType getDH() const;
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
             scai::IndexType getNZ() const;
-
+            scai::lama::DenseVector<scai::IndexType> getXCoordinates() const;
+            scai::lama::DenseVector<scai::IndexType> getYCoordinates() const;
+            scai::lama::DenseVector<scai::IndexType> getZCoordinates() const;
+            
             // Coordinate --> Index:
             // Interfaces 3-D
             scai::IndexType coordinate2index(coordinate3D coordinate) const;
@@ -70,7 +74,13 @@ namespace KITGPI
             scai::IndexType NY;
             scai::IndexType NZ;
             ValueType DH;
-
+            
+            bool useCoordinateVectors=false;
+            
+            scai::lama::DenseVector<scai::IndexType> xCoordinates;
+            scai::lama::DenseVector<scai::IndexType> yCoordinates;
+            scai::lama::DenseVector<scai::IndexType> zCoordinates;
+            
             // Coordinate --> Index:
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
