@@ -175,21 +175,15 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     coordinate3D result;
 
     
-//     if (useCoordinateVectors) {
-//         if (index==10){
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-//                std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;     
-//         }
-//         result.x = xCoordinates.getValue(index);
-//         result.y = yCoordinates.getValue(index);
-//         result.z = zCoordinates.getValue(index);
-//     }else {
+    if (useCoordinateVectors) {
+        if (index==10){
+               std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+               std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
+        }
+        result.x = xCoordinates.getValue(index);
+        result.y = yCoordinates.getValue(index);
+        result.z = zCoordinates.getValue(index);
+    }else {
     
     result.y = IndexType(index / (NX * NZ));
     index -= result.y * (NX * NZ);
@@ -198,7 +192,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     index -= result.z * (NX);
 
     result.x = index;
-//     }
+    }
     
     return (result);
 }
