@@ -162,5 +162,16 @@ lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueT
     return (Dzf);
 }
 
+//! \brief Getter method for combined derivative matrix
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType>  KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getCombinedMatrix() 
+{
+       auto temp=DxfSparse;
+       temp+=DyfSparse;
+       temp-=DxbSparse;
+       temp-=DybSparse;
+    
+    return (temp);
+}
 template class KITGPI::ForwardSolver::Derivatives::FDTD2D<float>;
 template class KITGPI::ForwardSolver::Derivatives::FDTD2D<double>;

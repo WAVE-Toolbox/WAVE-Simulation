@@ -148,6 +148,7 @@ int main(int argc, const char *argv[])
 
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
+
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
@@ -161,6 +162,19 @@ int main(int argc, const char *argv[])
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
+    
+    
+    /* --------------------------------------- */
+    /* Call partioner                          */
+    /* --------------------------------------- */
+    /* sum all matrices */
+    
+    
+    
+    HOST_PRINT(commAll, modelCoordinates.getCoordinates()[2] << "\n\n");
+    HOST_PRINT(commAll, weights << "\n\n");
+  //  HOST_PRINT(commAll, derivatives->getCombinedMatrix() << "\n\n");
+    auto temp=derivatives->getCombinedMatrix();
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */

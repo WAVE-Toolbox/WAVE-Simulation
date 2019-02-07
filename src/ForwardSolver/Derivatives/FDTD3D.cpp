@@ -201,5 +201,18 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
+//! \brief Getter method for combined derivative matrix
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getCombinedMatrix()
+{
+        auto temp=DxfSparse;
+       temp+=DyfSparse;
+       temp+=DzfSparse;
+       temp-=DxbSparse;
+       temp-=DybSparse;
+       temp-=DzbSparse;
+    return (temp);
+}
+
 template class KITGPI::ForwardSolver::Derivatives::FDTD3D<double>;
 template class KITGPI::ForwardSolver::Derivatives::FDTD3D<float>;

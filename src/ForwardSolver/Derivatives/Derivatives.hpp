@@ -97,6 +97,9 @@ namespace KITGPI
                 virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
+                
+                virtual scai::lama::CSRSparseMatrix<ValueType>  getCombinedMatrix() = 0;
+                
 
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;

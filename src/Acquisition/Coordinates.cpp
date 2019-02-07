@@ -36,44 +36,28 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, sca
     
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
-
-    lama::VectorAssembly<IndexType> xAssembly;
-    xAssembly.reserve(ownedIndexes.size());
-    lama::VectorAssembly<IndexType> yAssembly;
-    yAssembly.reserve(ownedIndexes.size());
-    lama::VectorAssembly<IndexType> zAssembly;
-    zAssembly.reserve(ownedIndexes.size()); 
     
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-    coordinate3D coordinate = index2coordinate(ownedIndex);
-    xAssembly.push(ownedIndex,coordinate.x);
-    yAssembly.push(ownedIndex,coordinate.y);
-    zAssembly.push(ownedIndex,coordinate.z);
+    std::vector<lama::VectorAssembly<IndexType>> assembly(3);
+    for (int i=0;i<3;i++){
+    assembly[i].reserve(ownedIndexes.size());
     }
     
-    xCoordinates.allocate(dist);
-    xCoordinates.fillFromAssembly(xAssembly);
-    xCoordinates.setContextPtr(ctx);
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+    coordinate3D coordinate = index2coordinate(ownedIndex);
 
+    assembly[0].push(ownedIndex,coordinate.x);
+    assembly[1].push(ownedIndex,coordinate.y);
+    assembly[2].push(ownedIndex,coordinate.z);
+    }
     
-    xCoordinates.writeToFile("xcoord.mtx");
+    coordinateVector.resize(3);
     
-    yCoordinates.allocate(dist);
-    yCoordinates.fillFromAssembly(yAssembly);
-    yCoordinates.setContextPtr(ctx);
+    for (int i=0;i<3;i++){
+    coordinateVector[i].allocate(dist);
+    coordinateVector[i].setContextPtr(ctx);
+    coordinateVector[i].fillFromAssembly(assembly[i]);
+    }
 
-    yCoordinates.writeToFile("ycoord.mtx");
-    
-    zCoordinates.allocate(dist);
-    zCoordinates.fillFromAssembly(zAssembly);
-    zCoordinates.setContextPtr(ctx);
-
-    
-    zCoordinates.writeToFile("zcoord.mtx");
-    
-    useCoordinateVectors=true;
-    
 }
 
 /*! \brief getter function for DH
@@ -116,35 +100,16 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
     return (NZ);
 }
 
-/*! \brief getter function for x coordinates
+/*! \brief getter function for coordinates
  *
  *
  */
 template <typename ValueType>
-scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getXCoordinates() const
+std::vector<scai::lama::DenseVector<scai::IndexType>> KITGPI::Acquisition::Coordinates<ValueType>::getCoordinates() const
 {
-    return (xCoordinates);
+    return (coordinateVector);
 }
 
-/*! \brief getter function for y coordinates
- *
- *
- */
-template <typename ValueType>
-scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getYCoordinates() const
-{
-    return (yCoordinates);
-}
-
-/*! \brief getter function for z coordinates
- *
- *
- */
-template <typename ValueType>
-scai::lama::DenseVector<IndexType> KITGPI::Acquisition::Coordinates<ValueType>::getZCoordinates() const
-{
-    return (zCoordinates);
-}
 
 /*! \brief Returns bool if given coordinate is located on the surface
  *
@@ -174,17 +139,6 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
 {
     coordinate3D result;
 
-    
-    if (useCoordinateVectors) {
-        if (index==10){
-               std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-               std::cout <<"message map true: xcoord " << index << " " <<  xCoordinates.getValue(index) << " " << std::endl;
-        }
-        result.x = xCoordinates.getValue(index);
-        result.y = yCoordinates.getValue(index);
-        result.z = zCoordinates.getValue(index);
-    }else {
-    
     result.y = IndexType(index / (NX * NZ));
     index -= result.y * (NX * NZ);
 
@@ -192,7 +146,7 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     index -= result.z * (NX);
 
     result.x = index;
-    }
+
     
     return (result);
 }
@@ -271,7 +225,6 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
-
     SCAI_ASSERT(Z < NZ, "No valid argument!");
     SCAI_ASSERT(X < NX, "No valid argument!");
     SCAI_ASSERT(Y < NY, "No valid argument!");

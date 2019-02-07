@@ -37,6 +37,8 @@ namespace KITGPI
                 scai::lama::Matrix<ValueType> const &getDzf() const override;
                 scai::lama::Matrix<ValueType> const &getDzb() const override;
 
+                scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix()  override;
+                
               private:
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm) override;
 
