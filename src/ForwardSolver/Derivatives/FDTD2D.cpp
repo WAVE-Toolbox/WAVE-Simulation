@@ -36,6 +36,20 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
         initializeMatrices(dist, ctx, modelCoordinates.getDH(), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
+//! \brief redistribution of all matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices(scai::dmemo::DistributionPtr dist)
+{
+DxfSparse.redistribute(dist,dist);
+DyfSparse.redistribute(dist,dist);
+DxbSparse.redistribute(dist,dist);
+DybSparse.redistribute(dist,dist);
+}
+
 //! \brief Constructor of the derivative matrices
 /*!
  *

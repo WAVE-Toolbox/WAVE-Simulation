@@ -101,9 +101,12 @@ namespace KITGPI
                 virtual scai::lama::CSRSparseMatrix<ValueType>  getCombinedMatrix() = 0;
                 
 
+                
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
 
+                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist)=0;
+                
                 //! \brief Getter method for spatial FD-order
                 scai::IndexType getSpatialFDorder() const;
 

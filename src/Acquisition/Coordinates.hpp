@@ -53,7 +53,7 @@ namespace KITGPI
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
             scai::IndexType getNZ() const;
-            std::vector<scai::lama::DenseVector<scai::IndexType>> getCoordinates() const;
+            std::vector<scai::lama::DenseVector<ValueType>> getCoordinates() const;
 
             
             // Coordinate --> Index:
@@ -74,7 +74,7 @@ namespace KITGPI
             scai::IndexType NZ;
             ValueType DH;
              
-            std::vector<scai::lama::DenseVector<scai::IndexType>> coordinateVector;
+            std::vector<scai::lama::DenseVector<ValueType>> coordinateVector;
             
             // Coordinate --> Index:
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;

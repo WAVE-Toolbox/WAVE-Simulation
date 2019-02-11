@@ -37,7 +37,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, sca
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
     
-    std::vector<lama::VectorAssembly<IndexType>> assembly(3);
+    std::vector<lama::VectorAssembly<ValueType>> assembly(3);
     for (int i=0;i<3;i++){
     assembly[i].reserve(ownedIndexes.size());
     }
@@ -45,9 +45,9 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, sca
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
     coordinate3D coordinate = index2coordinate(ownedIndex);
 
-    assembly[0].push(ownedIndex,coordinate.x);
-    assembly[1].push(ownedIndex,coordinate.y);
-    assembly[2].push(ownedIndex,coordinate.z);
+    assembly[0].push(ownedIndex,ValueType (coordinate.x));
+    assembly[1].push(ownedIndex,ValueType (coordinate.y));
+    assembly[2].push(ownedIndex,ValueType (coordinate.z));
     }
     
     coordinateVector.resize(3);
@@ -105,7 +105,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
  *
  */
 template <typename ValueType>
-std::vector<scai::lama::DenseVector<scai::IndexType>> KITGPI::Acquisition::Coordinates<ValueType>::getCoordinates() const
+std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates<ValueType>::getCoordinates() const
 {
     return (coordinateVector);
 }

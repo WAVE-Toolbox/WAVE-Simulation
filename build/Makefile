@@ -21,7 +21,7 @@ GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
 CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall
 
 ################################################################################
 # Usually, there is no need to change anything below this line
@@ -134,6 +134,11 @@ wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wil
 wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
+# --External_libraries----#
+wave.libext      := $(addsuffix /ext/lib,$(wave.dir))
+wave.incext      := $(addsuffix /ext/include,$(wave.dir))
+
+
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
 endif
@@ -142,14 +147,16 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 
-INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs))
+INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(wave.incext)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
+            -lscai_tracing -lscai_logging -lscai_common -lboost_program_options-mt -lboost_filesystem-mt -lboost_system-mt \
+            -L$(wave.libext) -lGeographer  -l_rbc \
+            /usr/lib64/mpi/gcc/openmpi/lib64/libmpi_cxx.so /usr/lib64/mpi/gcc/openmpi/lib64/libmpi.so \
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.extlib):/usr/lib64/mpi/gcc/openmpi/lib64 
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
@@ -231,7 +238,7 @@ $(wave.libdir)/lib$(wave.lib).a: $(wave.libobj)
 $(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/include
 $(wave.unitobj): CXXFLAGS += -isystem -pthread
 $(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main \
-                                       -Wl,-rpath,$(GTEST_DIR)/lib:$(wave.libdir)
+                                       -Wl,-rpath,$(GTEST_DIR)/lib
 $(wave.bindir)/$(wave.utst): $(wave.unitobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
 

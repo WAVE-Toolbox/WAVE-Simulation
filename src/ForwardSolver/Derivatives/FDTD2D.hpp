@@ -32,7 +32,9 @@ namespace KITGPI
                 FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
-
+                
+                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
+                
                 /* non-requiered matrixes */
                 scai::lama::Matrix<ValueType> const &getDzf() const override;
                 scai::lama::Matrix<ValueType> const &getDzb() const override;

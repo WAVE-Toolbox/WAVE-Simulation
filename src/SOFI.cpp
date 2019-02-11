@@ -27,6 +27,9 @@
 
 #include "CheckParameter/CheckParameter.hpp"
 
+#include <ParcoRepart.h>
+
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -39,7 +42,7 @@ int main(int argc, const char *argv[])
 
     common::Settings::parseArgs(argc, argv);
 
-    typedef float ValueType;
+   // typedef float ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {
@@ -167,14 +170,41 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Call partioner                          */
     /* --------------------------------------- */
-    /* sum all matrices */
-    
-    
+    IndexType dimensions=0;
+   // transform to lower cases
+    std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
+
+    // Assert correctness of input values
+    SCAI_ASSERT_ERROR(dimension.compare("3d") == 0 || dimension.compare("2d") == 0, "Unkown dimension");
+
+    if (dimension.compare("2d") == 0) {
+        dimensions=2;
+    }
+    if (dimension.compare("3d") == 0) {
+        dimensions=3;
+    }
+//     modelCoordinates.getCoordinates()[0].writeToFile("xcoordinates.mtx");
+//     modelCoordinates.getCoordinates()[1].writeToFile("ycoordinates.mtx");
+//     modelCoordinates.getCoordinates()[2].writeToFile("zcoordinates.mtx");
     
     HOST_PRINT(commAll, modelCoordinates.getCoordinates()[2] << "\n\n");
     HOST_PRINT(commAll, weights << "\n\n");
-  //  HOST_PRINT(commAll, derivatives->getCombinedMatrix() << "\n\n");
-    auto temp=derivatives->getCombinedMatrix();
+    HOST_PRINT(commAll, derivatives->getDxf() << "\n\n");
+    auto graph=derivatives->getCombinedMatrix();
+    HOST_PRINT(commAll, graph << "\n\n");
+    HOST_PRINT(commAll, dimensions << "\n\n");
+    auto coords=modelCoordinates.getCoordinates();
+    
+    if (dimensions==2){
+    coords.pop_back();
+    }
+    
+    struct Settings settings;
+    settings.dimensions=dimensions;
+    struct Metrics metrics(settings.numBlocks);       //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+    
+    scai::lama::DenseVector<IndexType> partition2 = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+    
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */

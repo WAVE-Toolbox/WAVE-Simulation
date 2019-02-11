@@ -33,6 +33,8 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
+                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
+                
                scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() override;
                 
               private:
