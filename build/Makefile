@@ -146,7 +146,7 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 
-
+MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
 INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(wave.incext)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
@@ -157,8 +157,8 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lboost_program_options -lboost_filesystem -lboost_system \
             -L$(wave.libext) -lgeographer  -l_rbc \
             -lscai_solver \
-            -L/usr/lib64/mpi/gcc/openmpi/lib64 -lmpi -lmpi_cxx \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext):/usr/lib64/mpi/gcc/openmpi/lib64 
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext)
+LDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
