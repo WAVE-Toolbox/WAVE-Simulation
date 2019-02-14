@@ -155,7 +155,8 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
             -lscai_tracing -lscai_logging -lscai_common -lboost_program_options-mt -lboost_filesystem-mt -lboost_system-mt \
             -L$(wave.libext) -lgeographer  -l_rbc \
-            /usr/lib64/mpi/gcc/openmpi/lib64/libmpi_cxx.so /usr/lib64/mpi/gcc/openmpi/lib64/libmpi.so \
+            -lscai_solver \
+            -L/usr/lib64/mpi/gcc/openmpi/lib64 -lmpi -lmpi_cxx \
             -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext):/usr/lib64/mpi/gcc/openmpi/lib64 
 AR       := ar
 ARFLAGS  := cr
