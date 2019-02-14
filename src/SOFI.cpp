@@ -86,14 +86,17 @@ int main(int argc, const char *argv[])
     IndexType npZ = config.get<IndexType>("ProcNZ");
 
     // following lines should be part of checkParameter.tpp
-    if (commAll->getSize() != npS * npX * npY * npZ) {
-        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
-        return (2);
-    }
+//     if (commAll->getSize() != npS * npX * npY * npZ) {
+//         HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
+//         return (2);
+//     }
 
+    //number of processes inside a shot domain
+    IndexType npNpS=commAll->getSize()/npS;
+    
     // Build subsets of processors for the shots
 
-    common::Grid2D procAllGrid(npS, npX * npY * npZ);
+    common::Grid2D procAllGrid(npS, npNpS);
     IndexType procAllGridRank[2];
 
     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
@@ -113,10 +116,13 @@ int main(int argc, const char *argv[])
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
 
     common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
+
     common::Grid3D procGrid(npY, npZ, npX);
     // distribute the grid onto available processors
-    dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
-
+    
+  //  dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
+   int size=config.get<IndexType>("NY")*config.get<IndexType>("NZ")*config.get<IndexType>("NX");
+  dmemo::DistributionPtr dist(new dmemo::BlockDistribution(size,commShot));
     // Create an object of the mapping (3D-1D) class Coordinates
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dist, ctx);
@@ -183,10 +189,7 @@ int main(int argc, const char *argv[])
     if (dimension.compare("3d") == 0) {
         dimensions=3;
     }
-//     modelCoordinates.getCoordinates()[0].writeToFile("xcoordinates.mtx");
-//     modelCoordinates.getCoordinates()[1].writeToFile("ycoordinates.mtx");
-//     modelCoordinates.getCoordinates()[2].writeToFile("zcoordinates.mtx");
-    
+
     HOST_PRINT(commAll, modelCoordinates.getCoordinates()[2] << "\n\n");
     HOST_PRINT(commAll, weights << "\n\n");
     HOST_PRINT(commAll, derivatives->getDxf() << "\n\n");
@@ -201,6 +204,9 @@ int main(int argc, const char *argv[])
     
     struct Settings settings;
     settings.dimensions=dimensions;
+  //  settings.numBlocks=4;
+   settings.numBlocks=commShot->getSize();
+    
     struct Metrics metrics(settings.numBlocks);       //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
     
     scai::lama::DenseVector<IndexType> partition2 = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);

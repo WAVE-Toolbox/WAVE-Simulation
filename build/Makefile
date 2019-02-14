@@ -153,7 +153,8 @@ LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common -lboost_program_options-mt -lboost_filesystem-mt -lboost_system-mt \
+            -lscai_tracing -lscai_logging -lscai_common \
+            -lboost_program_options -lboost_filesystem -lboost_system \
             -L$(wave.libext) -lgeographer  -l_rbc \
             -lscai_solver \
             -L/usr/lib64/mpi/gcc/openmpi/lib64 -lmpi -lmpi_cxx \
@@ -181,6 +182,7 @@ help:
 	@echo "   itest     :: build integration tests"
 	@echo "   model     :: creates models from source in src/Tools/CreateModel"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
+
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
 	@echo "   vinfo     :: print version information stored in executable"
