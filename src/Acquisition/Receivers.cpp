@@ -64,6 +64,11 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         acquisition_temp = su.getAcquisition();
     } else
         acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".mtx");
+    
+    if (config.get<bool>("useReceiversPerShot")) {
+        useReceiversPerShot = true;
+        shotNr = shotNumber;
+    }
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
@@ -96,8 +101,12 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration:
 {
     if (config.get<bool>("initSourcesFromSU"))
         acqMat = su.getAcquisition();
-    else
-        acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
+    else {
+        if (useReceiversPerShot) {
+            acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".mtx"); }
+        else {
+            acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx"); }
+    }
 }
 
 template class KITGPI::Acquisition::Receivers<double>;
