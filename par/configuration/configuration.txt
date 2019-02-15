@@ -3,18 +3,18 @@
 # Use the hashtag "#" for comments
 
 # Type of forward simulation
-dimension=3D              # Dimension: 2D or 3D
+dimension=2D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 NX=100                    # horizontal 1
 NY=100                    # depth
-NZ=100                    # horizontal 2
+NZ=1                    # horizontal 2
 
 # define Partitioning
 UseCubePartitioning=0     # 1=ON, 0=OFF
-ProcNX=2                  # Number of processes in X direction
-ProcNY=2                  # Number of processes in Y direction
+ProcNX=4                  # Number of processes in X direction
+ProcNY=3                  # Number of processes in Y direction
 ProcNZ=1                  # Number of processes in Z direction
 ProcNS=1                  # Number of shot domains
 
@@ -26,7 +26,7 @@ DT=2.0e-03                   # temporal sampling in seconds
 T=2                          # total simulation time in seconds
 
 # define order of spatial FD operator
-spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
+spatialFDorder=8          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
 ModelRead=0               # 1=Model will be read from file, 0=generated on the fly

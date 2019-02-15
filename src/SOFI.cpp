@@ -122,7 +122,9 @@ int main(int argc, const char *argv[])
     
   //  dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
    int size=config.get<IndexType>("NY")*config.get<IndexType>("NZ")*config.get<IndexType>("NX");
-  dmemo::DistributionPtr dist(new dmemo::BlockDistribution(size,commShot));
+   dmemo::DistributionPtr dist(new dmemo::BlockDistribution(size,commShot));
+
+  
     // Create an object of the mapping (3D-1D) class Coordinates
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dist, ctx);
@@ -137,15 +139,15 @@ int main(int argc, const char *argv[])
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
-//         scai::IndexType min = 0;
-//         if (coordinatedist.x < coordinatedist.y) {
-//             min = coordinatedist.x;
-//         } else {
-//             min = coordinatedist.y;
-//         }
+        scai::IndexType min = 0;
+        if (coordinatedist.x < coordinatedist.y) {
+            min = coordinatedist.x;
+        } else {
+            min = coordinatedist.y;
+        }
         
-//         if (min < 10) {
-        if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
+        if (min < config.get<IndexType>("BoundaryWidth")) {
+  //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
         assembly.push(ownedIndex,1.25);
         }
     }
@@ -155,6 +157,8 @@ int main(int argc, const char *argv[])
     weights.fillFromAssembly(assembly);
     weights.setContextPtr(ctx);
 
+    weights.writeToFile("weights.mtx");
+    
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
 
@@ -204,27 +208,37 @@ int main(int argc, const char *argv[])
     
     struct Settings settings;
     settings.dimensions=dimensions;
-  //  settings.numBlocks=4;
+//    settings.noRefinement = true;
    settings.numBlocks=commShot->getSize();
     
     struct Metrics metrics(settings.numBlocks);       //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
     
-    scai::lama::DenseVector<IndexType> partition2 = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+    scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+    
+    partition.writeToFile("partitition.mtx");
+    
+      dmemo::DistributionPtr distFromPartition = scai::dmemo::generalDistributionByNewOwners( partition.getDistribution(), partition.getLocalValues() );
+    //    dmemo::DistributionPtr distFromPartition(new dmemo::GridDistribution(grid, commShot, procGrid));
+     //  dmemo::DistributionPtr distFromPartition(new dmemo::BlockDistribution(size,commShot));
+    
+    
+    
+    derivatives->redistributeMatrices(distFromPartition);
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
-    wavefields->init(ctx, dist);
+    wavefields->init(ctx, distFromPartition);
 
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
+    Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, distFromPartition);
     CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
-        receivers.init(config, modelCoordinates, ctx, dist);
+        receivers.init(config, modelCoordinates, ctx, distFromPartition);
         CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
 
@@ -232,8 +246,8 @@ int main(int argc, const char *argv[])
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(config, ctx, dist);
-    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+    model->init(config, ctx, distFromPartition);
+    model->prepareForModelling(modelCoordinates, ctx, distFromPartition, commShot);
     CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
@@ -251,9 +265,9 @@ int main(int argc, const char *argv[])
     for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
         /* Update Source */
         if (!config.get<bool>("runSimultaneousShots"))
-            sources.init(config, modelCoordinates, ctx, dist, shotNumber);
+            sources.init(config, modelCoordinates, ctx, distFromPartition, shotNumber);
         if (config.get<bool>("useReceiversPerShot")) {
-            receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+            receivers.init(config, modelCoordinates, ctx, distFromPartition, shotNumber);
             CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
         }
 
