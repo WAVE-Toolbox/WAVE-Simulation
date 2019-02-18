@@ -7,6 +7,8 @@ dimension=2D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
+useVariableGrid=1
+
 NX=100                    # horizontal 1
 NY=100                    # depth
 NZ=1                    # horizontal 2

@@ -31,7 +31,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
-    useSparse = true;
+    useSparse = config.get<bool>("useVariableGrid");
     if (useSparse)
         initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
     else

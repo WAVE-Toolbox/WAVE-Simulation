@@ -180,8 +180,8 @@ struct Metrics{
 		totalBoundaryNodes = std::accumulate( numBorderNodesPerBlock.begin(), numBorderNodesPerBlock.end(), 0 );
 		
 		std::vector<ValueType> percentBorderNodesPerBlock( settings.numBlocks, 0);
-		SCAI_ASSERT_EQ_ERROR( settings.numBlocks, numBorderNodesPerBlock.size(), "Vector size mismatch.");
-		SCAI_ASSERT_EQ_ERROR( settings.numBlocks, numInnerNodesPerBlock.size(), "Vector size mismatch.");
+		SCAI_ASSERT_EQ_ERROR(IndexType( settings.numBlocks),IndexType( numBorderNodesPerBlock.size()), "Vector size mismatch.");
+		SCAI_ASSERT_EQ_ERROR(IndexType( settings.numBlocks), IndexType (numInnerNodesPerBlock.size()), "Vector size mismatch.");
 		
 		for(IndexType i=0; i<settings.numBlocks; i++){
 			percentBorderNodesPerBlock[i] = (ValueType (numBorderNodesPerBlock[i]))/(numBorderNodesPerBlock[i]+numInnerNodesPerBlock[i]);
@@ -560,7 +560,7 @@ inline void printVectorMetrics( std::vector<struct Metrics>& metricsVec, std::os
 	for(IndexType run=0; run<numRuns; run++){
 		Metrics thisMetric = metricsVec[ run ];
 		
-		SCAI_ASSERT_EQ_ERROR(thisMetric.timeMigrationAlgo.size(), comm->getSize(), "Wrong vector size" );
+		SCAI_ASSERT_EQ_ERROR(IndexType (thisMetric.timeMigrationAlgo.size()), comm->getSize(), "Wrong vector size" );
 		
 		// for these time we have one measurement per PE and must make a max
 		ValueType maxTimeMigrationAlgo = *std::max_element( thisMetric.timeMigrationAlgo.begin(), thisMetric.timeMigrationAlgo.end() );
@@ -696,7 +696,7 @@ inline void printVectorMetricsShort( std::vector<struct Metrics>& metricsVec, st
 	for(IndexType run=0; run<numRuns; run++){
 		Metrics thisMetric = metricsVec[ run ];
 		
-		SCAI_ASSERT_EQ_ERROR(thisMetric.timeMigrationAlgo.size(), comm->getSize(), "Wrong vector size" );
+		SCAI_ASSERT_EQ_ERROR(IndexType (thisMetric.timeMigrationAlgo.size()), comm->getSize(), "Wrong vector size" );
 		
 		// these times are global, no need to max
 		ValueType timeFinal = thisMetric.timeFinalPartition;
