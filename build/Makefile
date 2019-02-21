@@ -135,8 +135,9 @@ wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp)
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
 # --External_libraries----#
-wave.libext      := $(addsuffix /ext/lib,$(wave.dir))
-wave.incext      := $(addsuffix /ext/include,$(wave.dir))
+wave.libext      := $(addsuffix /ext/myLib,$(wave.dir)) -L/home/harry/geographer-dev/src/RBC/build/lib/
+#wave.libext += $(realpath, /home/harry/geographer-dev/src/RBC/build/lib/)
+wave.incext      := $(addsuffix /ext/myInclude,$(wave.dir))
 
 
 ifeq ($(wave.incdirs),)
@@ -154,8 +155,8 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
             -lscai_tracing -lscai_logging -lscai_common \
-            -lboost_program_options -lboost_filesystem -lboost_system \
             -L$(wave.libext) -lgeographer  -l_rbc \
+            -lboost_program_options -lboost_filesystem -lboost_system \
             -lscai_solver \
             -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext)
 LDFLAGS += $(MPI_LINK_FLAGS)
@@ -238,9 +239,9 @@ $(wave.bindir)/$(wave.exe): $(wave.mainobj) $(wave.libdir)/lib$(wave.lib).a
 $(wave.libdir)/lib$(wave.lib).a: $(wave.libobj)
 	$(call cmd,ar,$(wave.objdir))
 
-$(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/include
+$(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/googletest/include
 $(wave.unitobj): CXXFLAGS += -isystem -pthread
-$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main \
+$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/mybuild/lib -lgtest -lgtest_main \
                                        -Wl,-rpath,$(GTEST_DIR)/lib
 $(wave.bindir)/$(wave.utst): $(wave.unitobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)

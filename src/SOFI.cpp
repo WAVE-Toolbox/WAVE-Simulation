@@ -148,7 +148,7 @@ int main(int argc, const char *argv[])
         
         if (min < config.get<IndexType>("BoundaryWidth")) {
   //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
-        assembly.push(ownedIndex,1.25);
+        assembly.push(ownedIndex, 1.5);
         }
     }
     lama::DenseVector<ValueType> weights;
@@ -206,25 +206,59 @@ int main(int argc, const char *argv[])
     coords.pop_back();
     }
     
+//std::cout << graph.getNumValues() << std::endl;
+
+if( commShot->getRank() ==0 ){
+	std::cout << graph.getLocalStorage().getValues()[0] << std::endl;
+	//std::cout << graph.getLocalStorage().getValues().sum() << std::endl;
+	std::cout << graph.getLocalStorage().getValues()[100] << std::endl;
+}
+
+//coords[0].writeToFile("coordsX.mtx");
+//coords[1].writeToFile("coordsY.mtx");
+
     struct Settings settings;
     settings.dimensions=dimensions;
-//    settings.noRefinement = true;
-   settings.numBlocks=commShot->getSize();
+    settings.noRefinement = true;
+    settings.verbose = false;
+    settings.minBorderNodes = 100;
+    settings.multiLevelRounds = 9;
+   	settings.numBlocks=commShot->getSize();
+    settings.coarseningStepsBetweenRefinement = 1;
+    //settings.maxKMeansIterations = 10;
+    //settings.minSamplingNodes = -1;
+    settings.writeInFile = true;
+    settings.initialPartition = InitialPartitioningMethods::KMeans;
+
+    struct Metrics metrics(settings);      //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
     
-    struct Metrics metrics(settings.numBlocks);       //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
-    
+    if( commShot->getRank() ==0 ){
+		settings.print( std::cout );
+	}
+
     scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
-    
+	    
     partition.writeToFile("partitition.mtx");
     
-      dmemo::DistributionPtr distFromPartition = scai::dmemo::generalDistributionByNewOwners( partition.getDistribution(), partition.getLocalValues() );
+    dmemo::DistributionPtr distFromPartition = scai::dmemo::generalDistributionByNewOwners( partition.getDistribution(), partition.getLocalValues() );
     //    dmemo::DistributionPtr distFromPartition(new dmemo::GridDistribution(grid, commShot, procGrid));
      //  dmemo::DistributionPtr distFromPartition(new dmemo::BlockDistribution(size,commShot));
-    
-    
+       
     
     derivatives->redistributeMatrices(distFromPartition);
     
+   	//redistribute all data to get metrics
+    scai::dmemo::DistributionPtr noDistPtr( new scai::dmemo::NoDistribution( graph.getNumRows() ));
+    graph.redistribute( distFromPartition , noDistPtr );
+    partition.redistribute( distFromPartition );
+    weights.redistribute( distFromPartition );
+
+	metrics.getAllMetrics(graph, partition, weights, settings);
+
+	if( commShot->getRank() ==0 ){
+		metrics.print( std::cout );
+	}
+
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
