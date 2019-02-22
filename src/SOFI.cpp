@@ -120,7 +120,7 @@ int main(int argc, const char *argv[])
     common::Grid3D procGrid(npY, npZ, npX);
     // distribute the grid onto available processors
     
-  //  dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
+   //  dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
    int size=config.get<IndexType>("NY")*config.get<IndexType>("NZ")*config.get<IndexType>("NX");
    dmemo::DistributionPtr dist(new dmemo::BlockDistribution(size,commShot));
 
@@ -197,7 +197,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, modelCoordinates.getCoordinates()[2] << "\n\n");
     HOST_PRINT(commAll, weights << "\n\n");
     HOST_PRINT(commAll, derivatives->getDxf() << "\n\n");
-    auto graph=derivatives->getCombinedMatrix();
+    scai::lama::CSRSparseMatrix<ValueType> graph=derivatives->getCombinedMatrix();
     HOST_PRINT(commAll, graph << "\n\n");
     HOST_PRINT(commAll, dimensions << "\n\n");
     auto coords=modelCoordinates.getCoordinates();
@@ -217,17 +217,44 @@ if( commShot->getRank() ==0 ){
 //coords[0].writeToFile("coordsX.mtx");
 //coords[1].writeToFile("coordsY.mtx");
 
+//change all edge weights to 1
+/*
+{
+	CSRStorage<ValueType>& localStorage = graph.getLocalStorage();
+	//scai::hmemo::WriteAccess<ValueType> values(localStorage.getValues());
+
+	scai::hmemo::HArray<IndexType> localIA = localStorage.getIA();
+	scai::hmemo::HArray<IndexType> localJA = localStorage.getJA();
+	scai::hmemo::HArray<ValueType> localValues = localStorage.getValues();
+
+	for( unsigned int i=0; i<localValues.size(); i++ ){
+		localValues[i] = 1;
+	}
+
+	localStorage.swap( localIA, localJA, localValues);
+}
+*/
+
+PRINT(commShot->getRank() << ": " << (DenseVector<ValueType>(graph.getLocalStorage().getValues())).sum() );	
+std::string graphFile = "gpi100x100_edge_weights.graph";
+std::string coordsFile = "gpi100x100.graph.xyz";
+if( commShot->getRank()==0 ) PRINT( "writing graph and coords to files " << graphFile << " and " << coordsFile );
+
+//ITI::FileIO<IndexType, ValueType>::writeCoords( coords, coordsFile );
+ITI::FileIO<IndexType, ValueType>::writeGraph( graph, graphFile, 1 /*for edges weights*/ );
+
     struct Settings settings;
     settings.dimensions=dimensions;
-    settings.noRefinement = true;
+    settings.noRefinement = false;
     settings.verbose = false;
     settings.minBorderNodes = 100;
-    settings.multiLevelRounds = 9;
+    settings.multiLevelRounds = 6;
    	settings.numBlocks=commShot->getSize();
-    settings.coarseningStepsBetweenRefinement = 1;
+    settings.coarseningStepsBetweenRefinement = 3;
     //settings.maxKMeansIterations = 10;
     //settings.minSamplingNodes = -1;
-    settings.writeInFile = true;
+    settings.writeInFile = false;
+    //settings.bisect = true;
     settings.initialPartition = InitialPartitioningMethods::KMeans;
 
     struct Metrics metrics(settings);      //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
@@ -249,7 +276,10 @@ if( commShot->getRank() ==0 ){
     
    	//redistribute all data to get metrics
     scai::dmemo::DistributionPtr noDistPtr( new scai::dmemo::NoDistribution( graph.getNumRows() ));
-    graph.redistribute( distFromPartition , noDistPtr );
+ //TODO: if we remove the partition.redistribute works but I am not sure the the computation of the cut is correct:
+ // local refinement says it gives a gain but the final cut is more than the first cut
+ // if we remove any other, the computeCut hangs
+   	graph.redistribute( distFromPartition , noDistPtr );
     partition.redistribute( distFromPartition );
     weights.redistribute( distFromPartition );
 
