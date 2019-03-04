@@ -77,22 +77,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
 
     active = true;
 
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);
-
-    IndexType numLocalIndices = localIndices.size(); // Number of local indices
-
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
-    IndexType read_localIndices_temp;                             // Temporary storage, so we do not have to access the array
+    /* Get local owned global indices */
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
 
     /* Distributed vectors */
     damping.setSameValue(dist, 1.0); // sparse vector damping gets zero element 1.0
-    lama::DenseVector<ValueType> damping_temp(dist, 1.0);
-
-    /* Get write access to local part of damping_temp */
-    hmemo::HArray<ValueType> *damping_LA = &damping_temp.getLocalValues();
-    hmemo::WriteAccess<ValueType> write_damping(*damping_LA);
 
     // calculate damping function
     ValueType amp = 0;
@@ -106,43 +96,41 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::init(dmemo::Dis
         coeff[j] = exp(-(a * a * (BoundaryWidth - j) * (BoundaryWidth - j)));
     }
 
+    lama::VectorAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndeces.size());
+
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D coordinatedist;
 
     IndexType coordinateMin = 0;
     IndexType coordinatexzMin = 0;
 
-    /* Set the values into the indice arrays and the value array */
-    for (IndexType i = 0; i < numLocalIndices; i++) {
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
 
-        read_localIndices_temp = read_localIndices[i];
-
-        coordinate = modelCoordinates.index2coordinate(read_localIndices_temp);
+        coordinate = modelCoordinates.index2coordinate(ownedIndex);
         coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
         coordinateMin = coordinatedist.min();
-        if (coordinateMin < BoundaryWidth) {
-            write_damping[i] = coeff[coordinateMin];
-        }
 
-        if (useFreeSurface > 0) {
+        if (useFreeSurface == 0) {
+            if (coordinateMin < BoundaryWidth) {
+                assembly.push(ownedIndex, coeff[coordinateMin]);
+            }
+
+        } else {
             coordinatexzMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
             if (coordinate.y < BoundaryWidth) {
-                write_damping[i] = 1.0;
-
                 if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)) {
-                    write_damping[i] = coeff[coordinatexzMin];
+                    assembly.push(ownedIndex, coeff[coordinatexzMin]);
                 }
+            } else if (coordinateMin < BoundaryWidth) {
+                assembly.push(ownedIndex, coeff[coordinateMin]);
             }
         }
     }
 
-    /* Release all read and write access */
-    read_localIndices.release();
-    write_damping.release();
-
     damping.setContextPtr(ctx);
-    damping = damping_temp;
+    damping.fillFromAssembly(assembly);
 
     HOST_PRINT(comm, "Finished with initialization of the Damping Boundary!\n\n");
 }

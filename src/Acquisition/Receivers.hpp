@@ -44,6 +44,8 @@ namespace KITGPI
           private:
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
             suHandler<ValueType> su;
+            bool useReceiversPerShot;
+            scai::IndexType shotNr;
         };
     }
 }
