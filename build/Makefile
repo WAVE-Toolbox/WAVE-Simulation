@@ -134,6 +134,11 @@ wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wil
 wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
+# --External_libraries----#
+wave.libext      := $(addsuffix /ext/lib,$(wave.dir))
+wave.incext      := $(addsuffix /ext/include,$(wave.dir))
+
+
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
 endif
@@ -141,15 +146,19 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 
-
-INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs))
+MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
+INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(wave.incext)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
             -lscai_tracing -lscai_logging -lscai_common \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
+            -lboost_program_options -lboost_filesystem -lboost_system \
+            -L$(wave.libext) -lgeographer  -l_rbc \
+            -lscai_solver \
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext)
+LDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
@@ -173,6 +182,7 @@ help:
 	@echo "   itest     :: build integration tests"
 	@echo "   model     :: creates models from source in src/Tools/CreateModel"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
+
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
 	@echo "   vinfo     :: print version information stored in executable"
@@ -231,7 +241,7 @@ $(wave.libdir)/lib$(wave.lib).a: $(wave.libobj)
 $(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/include
 $(wave.unitobj): CXXFLAGS += -isystem -pthread
 $(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main \
-                                       -Wl,-rpath,$(GTEST_DIR)/lib:$(wave.libdir)
+                                       -Wl,-rpath,$(GTEST_DIR)/lib
 $(wave.bindir)/$(wave.utst): $(wave.unitobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
 
