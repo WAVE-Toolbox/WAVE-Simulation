@@ -170,6 +170,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
     this->calcDzf(modelCoordinates, dist);
+    this->calcDxb(modelCoordinates, dist);
+    this->calcDyb(modelCoordinates, dist);
+    this->calcDzb(modelCoordinates, dist);
+    
 
     HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
 
@@ -198,12 +202,12 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzfSparse.setCommunicationKind(syncKind);
     DzbSparse.setCommunicationKind(syncKind);
 
-    DxbSparse.assignTranspose(DxfSparse);
-    DxbSparse.scale(-1.0);
-    DybSparse.assignTranspose(DyfSparse);
-    DybSparse *= -1.0;
-    DzbSparse.assignTranspose(DzfSparse);
-    DzbSparse *= -1.0;
+//     DxbSparse.assignTranspose(DxfSparse);
+//     DxbSparse.scale(-1.0);
+//     DybSparse.assignTranspose(DyfSparse);
+//     DybSparse *= -1.0;
+//     DzbSparse.assignTranspose(DzfSparse);
+//     DzbSparse *= -1.0;
 
     HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
 

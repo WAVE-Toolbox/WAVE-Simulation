@@ -47,13 +47,21 @@ namespace KITGPI
             ~Coordinates(){};
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
-            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH,scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx);
+           Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz,ValueType dh, std::vector<scai::IndexType> & dhFactor, std::vector<scai::IndexType> & interface);
             
             ValueType getDH() const;
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
             scai::IndexType getNZ() const;
-            std::vector<scai::lama::DenseVector<ValueType>> getCoordinates() const;
+            scai::IndexType getNGridpoints() const;
+            ValueType getDH(coordinate3D coordinate) const;
+            scai::IndexType getDHFactor(coordinate3D coordinate) const;
+            scai::IndexType getNX(coordinate3D coordinate) const;
+            scai::IndexType getNY(coordinate3D coordinate) const;
+            scai::IndexType getNZ(coordinate3D coordinate) const;
+            
+            
+            std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx) const;
 
             
             // Coordinate --> Index:
@@ -73,7 +81,24 @@ namespace KITGPI
             scai::IndexType NY;
             scai::IndexType NZ;
             ValueType DH;
-             
+            
+            std::vector<scai::IndexType> dhFactor;
+            std::vector<scai::IndexType> interface;
+            
+            std::vector<ValueType> varDH;
+            std::vector<scai::IndexType> varNX;
+            std::vector<scai::IndexType> varNY;
+            std::vector<scai::IndexType> varNZ;
+       
+            
+            scai::IndexType numLayers;
+            std::vector<scai::IndexType> layerStart;
+            std::vector<scai::IndexType> layerEnd;
+            std::vector<scai::IndexType> transision;
+            
+            scai::IndexType nGridpoints;
+            std::vector<scai::IndexType> nGridpointsPerLayer;
+            
             std::vector<scai::lama::DenseVector<ValueType>> coordinateVector;
             
             // Coordinate --> Index:

@@ -70,6 +70,24 @@ int main(int argc, const char *argv[])
 
     IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
 
+    // Create an object of the mapping (3D-1D) class Coordinates
+
+    //input for coordinates
+      std::vector<IndexType> interface;
+      std::vector<IndexType> dhFactor;
+      dhFactor.push_back(1); 
+      
+      if (config.get<bool>("useVariableGrid")) {
+      dhFactor.push_back(3);//dhFactor.push_back(1);dhFactor.push_back(3);
+      interface.push_back(40);
+       //  interface.push_back(10);interface.push_back(37);interface.push_back(55);
+      }
+     
+         
+    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"),config.get<ValueType>("DH"),dhFactor,interface);
+
+
+     
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -113,7 +131,7 @@ int main(int argc, const char *argv[])
     // define the grid topology by sizes NX, NY, and NZ from configuration
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
     if (config.get<bool>("useVariableGrid")) {
-        int size = config.get<IndexType>("NY") * config.get<IndexType>("NZ") * config.get<IndexType>("NX");
+        int size = modelCoordinates.getNGridpoints();
         dist = std::make_shared<dmemo::BlockDistribution>(size, commShot);
     } else {
 
@@ -125,40 +143,41 @@ int main(int argc, const char *argv[])
         dist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     }
 
-    // Create an object of the mapping (3D-1D) class Coordinates
 
-    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dist, ctx);
 
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::VectorAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size());
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
-
-        scai::IndexType min = 0;
-        if (coordinatedist.x < coordinatedist.y) {
-            min = coordinatedist.x;
-        } else {
-            min = coordinatedist.y;
-        }
-
-        if (min < config.get<IndexType>("BoundaryWidth")) {
-            //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
-            assembly.push(ownedIndex, 1.25);
-        }
-    }
+        
+//     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+//     dist->getOwnedIndexes(ownedIndexes);
+// 
+//     lama::VectorAssembly<ValueType> assembly;
+//     assembly.reserve(ownedIndexes.size());
+//     
+//     
+//     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+//         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+//         Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+// 
+//         scai::IndexType min = 0;
+//         if (coordinatedist.x < coordinatedist.y) {
+//             min = coordinatedist.x;
+//         } else {
+//             min = coordinatedist.y;
+//         }
+// 
+//         if (min < config.get<IndexType>("BoundaryWidth")) {
+//             //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
+//             assembly.push(ownedIndex, 1.25);
+//         }
+//     }
     lama::DenseVector<ValueType> weights;
     weights.allocate(dist);
     weights = 1.0;
-    weights.fillFromAssembly(assembly);
+//     weights.fillFromAssembly(assembly);
     weights.setContextPtr(ctx);
 
     weights.writeToFile("weights.mtx");
-
+    
+    
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
 
@@ -194,8 +213,11 @@ int main(int argc, const char *argv[])
         }
 
         auto graph = derivatives->getCombinedMatrix();
-        auto coords = modelCoordinates.getCoordinates();
-
+        auto coords = modelCoordinates.getCoordinates(dist,ctx);
+        coords[0].writeToFile("xcoords.mtx");
+        coords[1].writeToFile("ycoords.mtx");
+        coords[2].writeToFile("zcoords.mtx");
+        
         if (dimensions == 2) {
             coords.pop_back();
         }
@@ -206,15 +228,16 @@ int main(int argc, const char *argv[])
 
         struct Metrics metrics(settings.numBlocks); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
-        scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+       scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
 
-        partition.writeToFile("partitition.mtx");
+       partition.writeToFile("partitition.mtx");
 
         dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
         derivatives->redistributeMatrices(dist);
     }
-
+    
+    
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */

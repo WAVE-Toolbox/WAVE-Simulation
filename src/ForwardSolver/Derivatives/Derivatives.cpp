@@ -31,28 +31,27 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
     IndexType X = 0;
-    IndexType NX = modelCoordinates.getNX();
     IndexType columnIndex = 0;
     IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
+        
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         for (j = 0; j < spatialFDorder; j++) {
 
-            X = coordinate.x + (j - spatialFDorder / 2 + 1);
+            X = coordinate.x + modelCoordinates.getDHFactor(coordinate)*(j - spatialFDorder / 2 + 1);
 
-            if ((X >= 0) && (X < NX)) {
+            if ((X >= 0) && (X < modelCoordinates.getNX())) {
                 columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
             }
         }
     }
 
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
-    DxfSparse *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate Dyf matrix
@@ -84,7 +83,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
     IndexType Y = 0;
-    IndexType NY = modelCoordinates.getNY();
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -92,20 +90,26 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
+//         if (modelCoordinates.coordinate2index(coordinate.x, coordinate.y, coordinate.z) != ownedIndex)
+//             std::cout << "mistake in coordinateto index" << std::endl;
+        
+        if (ownedIndex==4300){
+           std::cout << coordinate.y << " " << modelCoordinates.getDHFactor(coordinate) << " " << modelCoordinates.getNY() <<  std::endl;
+        }
+            
         for (j = 0; j < spatialFDorder; j++) {
 
-            Y = coordinate.y + (j - spatialFDorder / 2 + 1);
+            Y = coordinate.y + modelCoordinates.getDHFactor(coordinate)*(j - spatialFDorder / 2 + 1);
 
-            if ((Y >= 0) && (Y < NY)) {
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
             }
         }
     }
 
     DyfSparse = lama::zero<SparseFormat>(dist, dist);
     DyfSparse.fillFromAssembly(assembly);
-    DyfSparse *= 1 / modelCoordinates.getDH();
 }
 
 //! \brief Calculate Dzf matrix
@@ -137,7 +141,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
     IndexType Z = 0;
-    IndexType NZ = modelCoordinates.getNZ();
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -147,18 +150,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
         for (j = 0; j < spatialFDorder; j++) {
 
-            Z = coordinate.z + (j - spatialFDorder / 2 + 1);
+            Z = coordinate.z + modelCoordinates.getDHFactor(coordinate)*(j - spatialFDorder / 2 + 1);
 
-            if ((Z >= 0) && (Z < NZ)) {
+            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
-                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j]);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
             }
         }
     }
-
     DzfSparse = lama::zero<SparseFormat>(dist, dist);
     DzfSparse.fillFromAssembly(assembly);
-    DzfSparse *= 1 / modelCoordinates.getDH();
 }
 //! \brief Calculate DyfFreeSurface matrix
 /*!
@@ -176,7 +177,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
     IndexType Y = 0;
     ValueType fdCoeff = 0;
-    ;
+
     IndexType ImageIndex = 0;
     IndexType columnIndex = 0;
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
@@ -184,27 +185,25 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         for (IndexType j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + (j - spatialFDorder / 2 + 1);
-
+           Y = coordinate.y + modelCoordinates.getDHFactor(coordinate)*(j - spatialFDorder / 2 + 1);
             fdCoeff = stencilFD.values()[j];
 
-            ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
+           ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / modelCoordinates.getDHFactor(coordinate) - j;
             if (ImageIndex >= 0)
                 fdCoeff -= stencilFD.values()[ImageIndex];
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff);
+               assembly.push(ownedIndex, columnIndex, fdCoeff / modelCoordinates.getDH(coordinate));
             }
         }
     }
 
     DyfFreeSurface = lama::zero<SparseFormat>(dist, dist);
     DyfFreeSurface.fillFromAssembly(assembly);
-    DyfFreeSurface *= 1 / modelCoordinates.getDH();
 }
 
-//! \brief Calculate DyfFreeSurface matrix
+//! \brief Calculate DybFreeSurface matrix
 /*!
   \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param dist Distribution
@@ -229,25 +228,139 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         for (j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + (j - spatialFDorder / 2);
+            Y = coordinate.y + modelCoordinates.getDHFactor(coordinate) *(j - spatialFDorder / 2);
+
 
             fdCoeff = stencilFD.values()[j];
 
-            ImageIndex = spatialFDorder - 1 - 2 * coordinate.y - j;
+            ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / modelCoordinates.getDHFactor(coordinate) - j;
+
             if (ImageIndex >= 0)
                 fdCoeff -= stencilFD.values()[ImageIndex];
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff);
+                assembly.push(ownedIndex, columnIndex, fdCoeff / modelCoordinates.getDH(coordinate));
+
             }
         }
     }
 
     DybFreeSurface = lama::zero<SparseFormat>(dist, dist);
     DybFreeSurface.fillFromAssembly(assembly);
-    DybFreeSurface *= 1 / modelCoordinates.getDH();
 }
+
+//! \brief Calculate Dxb sparse matrix
+/*!
+ *
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType X = 0;
+    IndexType columnIndex = 0;
+    IndexType j = 0;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        for (j = 0; j < spatialFDorder; j++) {
+
+            X = coordinate.x + modelCoordinates.getDHFactor(coordinate)*(j - spatialFDorder / 2);
+
+            if ((X >= 0) && (X < modelCoordinates.getNX())) {
+                columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+            }
+        }
+    }
+
+    DxbSparse = lama::zero<SparseFormat>(dist, dist);
+    DxbSparse.fillFromAssembly(assembly);
+}
+
+//! \brief Calculate Dyb matrix
+/*!
+  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType Y = 0;
+    IndexType columnIndex = 0;
+    IndexType j = 0;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        for (j = 0; j < spatialFDorder; j++) {
+            Y = coordinate.y + modelCoordinates.getDHFactor(coordinate) *(j - spatialFDorder / 2);
+
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                std::cout << modelCoordinates.getNY() << std::endl; 
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+            }
+        }
+    }
+
+    DybSparse = lama::zero<SparseFormat>(dist, dist);
+    DybSparse.fillFromAssembly(assembly);
+}
+
+//! \brief Calculate Dzb sparse matrix
+/*!
+ *
+\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param dist Distribution
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    IndexType Z = 0;
+    IndexType columnIndex = 0;
+    IndexType j = 0;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+
+        for (j = 0; j < spatialFDorder; j++) {
+
+            Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+
+            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
+                assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+            }
+        }
+    }
+    DzbSparse = lama::zero<SparseFormat>(dist, dist);
+    DzbSparse.fillFromAssembly(assembly);
+}    
+    
 
 //! \brief Getter method for the spatial FD-order
 template <typename ValueType>
