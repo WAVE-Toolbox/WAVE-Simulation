@@ -93,9 +93,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 //         if (modelCoordinates.coordinate2index(coordinate.x, coordinate.y, coordinate.z) != ownedIndex)
 //             std::cout << "mistake in coordinateto index" << std::endl;
         
-        if (ownedIndex==4300){
-           std::cout << coordinate.y << " " << modelCoordinates.getDHFactor(coordinate) << " " << modelCoordinates.getNY() <<  std::endl;
-        }
+//         if (ownedIndex==4300){
+//            std::cout << coordinate.y << " " << modelCoordinates.getDHFactor(coordinate) << " " << modelCoordinates.getNY() <<  std::endl;
+//         }
             
         for (j = 0; j < spatialFDorder; j++) {
 
@@ -314,7 +314,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
             Y = coordinate.y + modelCoordinates.getDHFactor(coordinate) *(j - spatialFDorder / 2);
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                std::cout << modelCoordinates.getNY() << std::endl; 
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
             }

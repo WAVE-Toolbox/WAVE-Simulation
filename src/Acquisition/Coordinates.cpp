@@ -26,21 +26,22 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
     
     numLayers = dhFactor.size();
 
-    varNX.resize(numLayers);
-    varNY.resize(numLayers);
-    varNZ.resize(numLayers);
-    varDH.resize(numLayers);
+    varNX.assign(numLayers,0);
+    varNY.assign(numLayers,0);
+    varNZ.assign(numLayers,0);
+    varDH.assign(numLayers,0.0);
 
-    layerStart.resize(numLayers);
-    layerEnd.resize(numLayers);
-    transision.resize(numLayers);
+    layerStart.assign(numLayers,0);
+    layerEnd.assign(numLayers,0);
+    transision.assign(numLayers,0);
 
-    nGridpointsPerLayer.resize(numLayers);
+    nGridpointsPerLayer.assign(numLayers,0);
     nGridpoints = 0;
 
-    interface.insert(interface.begin(), -1);
-    interface.push_back(ny - 1);
 
+    interface.push_back(ny - 1);
+    interface.insert(interface.begin(), -1);
+    
     /* loop over all layers in the variable grid 
      DH will be multiplied with the enlargement factor dhFactor.  dhFactor must be a multiple of 3.
      The begin and end of each layer will be estimated from the layer interfaces. 
@@ -80,11 +81,15 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
          
         nGridpointsPerLayer[layer] = varNX[layer] * varNY[layer] * varNZ[layer];
         nGridpoints += nGridpointsPerLayer[layer];
-        
-  //       std::cout << "nGridpointsPerLayer [" << layer << "] = "<< nGridpointsPerLayer[layer] << std::endl;
+       
+//         std::cout << "layerstart [" << layer << "] = "<< layerStart[layer] << std::endl;
+//         std::cout << "layerend [" << layer << "] = "<< layerEnd[layer] << std::endl;
+//          std::cout << "nGridpointsPerLayer [" << layer << "] = "<< nGridpointsPerLayer[layer] << std::endl;
         varDH[layer]=dh*dhFactor[layer];
     }
-    std::cout << "nGridpoints " << nGridpoints << std::endl;
+//     std::cout << NX << NY << NZ << std::endl;
+//     std::cout << varNX[0] << varNY[0] <<  varNZ[0] << std::endl;
+//    std::cout << "nGridpoints " << nGridpoints << std::endl;
 }
 
 
@@ -113,8 +118,9 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, sca
 
     nGridpointsPerLayer.push_back(nGridpoints);
 
-    interface.insert(interface.begin(), 0);
     interface.push_back(ny - 1);
+    interface.insert(interface.begin(), 0);
+
     dhFactor.push_back(1);
     transision.push_back(0);
 
@@ -387,9 +393,9 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
 
-//     SCAI_ASSERT(Z < getNZ(), "Could not map from coordinate to index!");
-//     SCAI_ASSERT(X < getNX(), "Could not map from coordinate to index!");
-//     SCAI_ASSERT(Y < getNY(), "Could not map from coordinate to index! " << getNY());
+    SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NX, "Could not map from coordinate to index!");
+    SCAI_ASSERT(Y < NY, "Could not map from coordinate to index! " << getNY());
     SCAI_ASSERT(Z >= 0, "Could not map from coordinate to index!");
     SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
     SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
@@ -452,18 +458,18 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
-//     SCAI_ASSERT(Z < NZ[0], "No valid argument!");
-//     SCAI_ASSERT(X < NX[0], "No valid argument!");
-//     SCAI_ASSERT(Y < NY[0], "No valid argument!");
+    SCAI_ASSERT(Z < NZ, "No valid argument!");
+    SCAI_ASSERT(X < NX, "No valid argument!");
+    SCAI_ASSERT(Y < NY, "No valid argument!");
     SCAI_ASSERT(Z >= 0, "No valid argument!");
     SCAI_ASSERT(Y >= 0, "No valid argument!");
     SCAI_ASSERT(X >= 0, "No valid argument!");
 
     coordinate3D distance;
 
-//     distance.x = !((NX[0] - 1 - X) < (X)) ? (X) : (NX[0] - 1 - X);
-//     distance.y = !((NY[0] - 1 - Y) < (Y)) ? (Y) : (NY[0] - 1 - Y);
-//     distance.z = !((NZ[0] - 1 - Z) < (Z)) ? (Z) : (NZ[0] - 1 - Z);
+    distance.x = !((NX - 1 - X) < (X)) ? (X) : (NX - 1 - X);
+    distance.y = !((NY - 1 - Y) < (Y)) ? (Y) : (NY - 1 - Y);
+    distance.z = !((NZ - 1 - Z) < (Z)) ? (Z) : (NZ - 1 - Z);
 
     return (distance);
 }
