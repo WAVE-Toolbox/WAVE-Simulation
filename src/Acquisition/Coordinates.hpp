@@ -55,11 +55,10 @@ namespace KITGPI
             scai::IndexType getNZ() const;
             scai::IndexType getNGridpoints() const;
             ValueType getDH(coordinate3D coordinate) const;
+            ValueType getDH(scai::IndexType layer) const;
+            scai::IndexType getLayer(coordinate3D coordinate) const;
             scai::IndexType getDHFactor(coordinate3D coordinate) const;
-            scai::IndexType getNX(coordinate3D coordinate) const;
-            scai::IndexType getNY(coordinate3D coordinate) const;
-            scai::IndexType getNZ(coordinate3D coordinate) const;
-            
+            scai::IndexType getDHFactor(scai::IndexType layer) const;
             
             std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx) const;
 
@@ -75,7 +74,10 @@ namespace KITGPI
             coordinate3D edgeDistance(coordinate3D coordinate) const;
 
             bool locatedOnSurface(scai::IndexType index) const;
-
+            
+            bool locatedOnInterface(coordinate3D coordinate) const;
+            bool getTransition(coordinate3D coordinate) const;
+            
           private:
             scai::IndexType NX;
             scai::IndexType NY;
@@ -94,7 +96,7 @@ namespace KITGPI
             scai::IndexType numLayers;
             std::vector<scai::IndexType> layerStart;
             std::vector<scai::IndexType> layerEnd;
-            std::vector<scai::IndexType> transision;
+            std::vector<scai::IndexType> transition;
             
             scai::IndexType nGridpoints;
             std::vector<scai::IndexType> nGridpointsPerLayer;

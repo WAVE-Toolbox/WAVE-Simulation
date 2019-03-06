@@ -1,10 +1,10 @@
 clearvars; close all;
 
 %% Define input parameter
-filename='model.vp.mtx'; % File name of the model
+filename='../damping.mtx'; % File name of the model
 NX=100;  % Number of grid points in X
 NY=100;  % Number of grid points in Y
-NZ=100;  % Number of grid points in Z
+NZ=1;  % Number of grid points in Z
 DH=50;   % Spatial grid sampling
 LAYER=1; % Define layer of 3D model to display as 2D slice
 

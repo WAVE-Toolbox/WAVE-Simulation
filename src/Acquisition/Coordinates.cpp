@@ -33,7 +33,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
 
     layerStart.assign(numLayers,0);
     layerEnd.assign(numLayers,0);
-    transision.assign(numLayers,0);
+    transition.assign(numLayers,0);
 
     nGridpointsPerLayer.assign(numLayers,0);
     nGridpoints = 0;
@@ -50,18 +50,18 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
      */
     for (IndexType layer = 0; layer < numLayers - 1; layer++) {
         if (dhFactor[layer] < dhFactor[layer + 1]) {
-            transision[layer] = 1;
+            transition[layer] = 1;
             layerEnd[layer] = interface[layer + 1];
             layerStart[layer + 1] = interface[layer + 1] + dhFactor[layer + 1];
         } else {
-            transision[layer] = 0;
+            transition[layer] = 0;
             layerEnd[layer] = interface[layer + 1] - dhFactor[layer];
             layerStart[layer + 1] = interface[layer + 1];
         }
     }
     
     // set the last elements
-    transision[numLayers - 1] = 0;
+    transition[numLayers - 1] = 0;
     layerEnd[numLayers - 1] = interface[numLayers];
 
     for (IndexType layer = 0; layer < numLayers; layer++) {
@@ -112,7 +112,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, sca
     
     layerStart.push_back(0);
     layerEnd.push_back(ny - 1);
-    // transision.resize(numLayers);
+    // transition.resize(numLayers);
 
     nGridpoints = nx * ny * nz;
 
@@ -122,7 +122,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, sca
     interface.insert(interface.begin(), 0);
 
     dhFactor.push_back(1);
-    transision.push_back(0);
+    transition.push_back(0);
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
@@ -179,6 +179,38 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() co
     return (nGridpoints);
 }
 
+
+/*! \brief getter function for the layer
+ *
+ *  coarse grids contain the interface at the fine<->coarse and coarse<->fine transition 
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getLayer(coordinate3D coordinate) const
+{
+    IndexType layer = 0;
+
+    for (layer = 0; layer < numLayers; layer++) {
+        if ((coordinate.y < interface[layer + 1]) && (coordinate.y > interface[layer])) {
+            break;
+        } else if (coordinate.y == interface[layer + 1]) {
+            layer += transition.at(layer);
+            break;
+        }
+    }
+    return (layer);
+}
+
+/*! \brief getter function for DH
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(IndexType layer) const
+{
+    return (varDH[layer]);
+}
+
+
 /*! \brief getter function for DH
  *
  *
@@ -186,20 +218,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() co
 template <typename ValueType>
 ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(coordinate3D coordinate) const
 {
-    IndexType layer = 0;
-
-    for (layer = 0; layer < numLayers; ++layer) {
-        if ((coordinate.y < interface[layer + 1]) && (coordinate.y > interface[layer])) {
-            break;
-        } else if (coordinate.y == interface[layer + 1]) {
-            layer += transision[layer];
-            break;
-        } 
-    }
-//     if (varDH[layer]== 0)
-//         std::cout << "error at y = " << coordinate.y << " layer = " << layer << " interface = " << interface[0] << " " << interface[1] << " transition = " << transision[0] << " " << transision[1] << std::endl;
-
-    return (varDH[layer]);
+    return (varDH[getLayer(coordinate)]);
 }
 
 /*! \brief getter function for dhFactor
@@ -209,53 +228,33 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(coordinate3D coordi
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(coordinate3D coordinate) const
 {
-    IndexType layer = 0;
+    return (dhFactor[getLayer(coordinate)]);
+}
 
-    for (layer = 0; layer < numLayers; layer++) {
-        if ((coordinate.y < interface[layer + 1]) && (coordinate.y > interface[layer])) {
-            break;
-        } else if (coordinate.y == interface[layer + 1]) {
-            layer += transision.at(layer);
-            break;
-        }
-    }
-
+/*! \brief getter function for dhFactor
+ *
+ *
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType layer) const
+{
     return (dhFactor[layer]);
 }
-/*! \brief getter function for NX
+
+/*! \brief 
  *
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX(coordinate3D coordinate) const
+bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3D coordinate) const
 {
-    IndexType layer;
-
-    for (layer = 0; layer < numLayers; layer++) {
-        if ((coordinate.y <= layerEnd[layer]) && (coordinate.y >= layerStart[layer])) {
-            break;
-        }
-    }
-
-    return (varNX[layer]);
+    bool isOnInterface=false;
+for (int layer=0;layer<numLayers;layer++) {
+   if (coordinate.y==interface[layer]) {
+    isOnInterface=true;
 }
-
-/*! \brief getter function for NY
- *
- *
- */
-template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY(coordinate3D coordinate) const
-{
-    IndexType layer;
-
-    for (layer = 0; layer < numLayers; layer++) {
-        if ((coordinate.y <= layerEnd[layer]) && (coordinate.y >= layerStart[layer])) {
-            break;
-        }
-    }
-
-    return (varNY[layer]);
+}
+return (isOnInterface);
 }
 
 /*! \brief getter function for NZ
@@ -263,17 +262,18 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY(coordinate3D 
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ(coordinate3D coordinate) const
+bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
 {
-    IndexType layer;
+bool fineToCoarse=false;
+for (int layer=0;layer<numLayers;layer++) {
+   if (coordinate.y==interface[layer+1]) {
+    fineToCoarse=transition[layer];
+   // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
+   }
+   
+}
 
-    for (layer = 0; layer < numLayers; layer++) {
-        if ((coordinate.y <= layerEnd[layer]) && (coordinate.y >= layerStart[layer])) {
-            break;
-        }
-    }
-
-    return (varNZ[layer]);
+return (fineToCoarse);
 }
 
 /*! \brief getter function for coordinates

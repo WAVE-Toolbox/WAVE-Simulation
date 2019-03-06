@@ -73,21 +73,22 @@ int main(int argc, const char *argv[])
     // Create an object of the mapping (3D-1D) class Coordinates
 
     //input for coordinates
-      std::vector<IndexType> interface;
-      std::vector<IndexType> dhFactor;
-      dhFactor.push_back(1); 
-      
-      if (config.get<bool>("useVariableGrid")) {
-      dhFactor.push_back(3);//dhFactor.push_back(1);dhFactor.push_back(3);
-      interface.push_back(40);
-       //  interface.push_back(10);interface.push_back(37);interface.push_back(55);
-      }
-     
-         
-    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"),config.get<ValueType>("DH"),dhFactor,interface);
+    std::vector<IndexType> interface;
+    std::vector<IndexType> dhFactor;
 
+    if (config.get<bool>("useVariableGrid")) {
+        std::ifstream is(config.get<std::string>("interfaceFilename"));
+        std::istream_iterator<IndexType> start(is), end;
+        interface.assign(start, end);
+        std::ifstream is2(config.get<std::string>("dhFactorFilename"));
+        std::istream_iterator<IndexType> start2(is2);
+        dhFactor.assign(start2, end);
+    } else {
+        dhFactor.push_back(1);
+    }
 
-     
+    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dhFactor, interface);
+
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -143,41 +144,37 @@ int main(int argc, const char *argv[])
         dist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     }
 
-
-
-        
-//     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-//     dist->getOwnedIndexes(ownedIndexes);
-// 
-//     lama::VectorAssembly<ValueType> assembly;
-//     assembly.reserve(ownedIndexes.size());
-//     
-//     
-//     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-//         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-//         Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
-// 
-//         scai::IndexType min = 0;
-//         if (coordinatedist.x < coordinatedist.y) {
-//             min = coordinatedist.x;
-//         } else {
-//             min = coordinatedist.y;
-//         }
-// 
-//         if (min < config.get<IndexType>("BoundaryWidth")) {
-//             //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
-//             assembly.push(ownedIndex, 1.25);
-//         }
-//     }
+    //     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    //     dist->getOwnedIndexes(ownedIndexes);
+    //
+    //     lama::VectorAssembly<ValueType> assembly;
+    //     assembly.reserve(ownedIndexes.size());
+    //
+    //
+    //     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+    //         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+    //         Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+    //
+    //         scai::IndexType min = 0;
+    //         if (coordinatedist.x < coordinatedist.y) {
+    //             min = coordinatedist.x;
+    //         } else {
+    //             min = coordinatedist.y;
+    //         }
+    //
+    //         if (min < config.get<IndexType>("BoundaryWidth")) {
+    //             //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
+    //             assembly.push(ownedIndex, 1.25);
+    //         }
+    //     }
     lama::DenseVector<ValueType> weights;
     weights.allocate(dist);
     weights = 1.0;
-//     weights.fillFromAssembly(assembly);
+    //     weights.fillFromAssembly(assembly);
     weights.setContextPtr(ctx);
 
     weights.writeToFile("weights.mtx");
-    
-    
+
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
 
@@ -194,6 +191,7 @@ int main(int argc, const char *argv[])
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
+    
     /* --------------------------------------- */
     /* Call partioner (only for variable Grids)*/
     /* --------------------------------------- */
@@ -213,11 +211,11 @@ int main(int argc, const char *argv[])
         }
 
         auto graph = derivatives->getCombinedMatrix();
-        auto coords = modelCoordinates.getCoordinates(dist,ctx);
-        coords[0].writeToFile("xcoords.mtx");
-        coords[1].writeToFile("ycoords.mtx");
-        coords[2].writeToFile("zcoords.mtx");
-        
+        auto coords = modelCoordinates.getCoordinates(dist, ctx);
+        coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
+        coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
+        coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
+
         if (dimensions == 2) {
             coords.pop_back();
         }
@@ -228,15 +226,19 @@ int main(int argc, const char *argv[])
 
         struct Metrics metrics(settings.numBlocks); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
-       scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+        scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
 
-       partition.writeToFile("partitition.mtx");
+        partition.writeToFile("partitition.mtx");
 
         dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
         derivatives->redistributeMatrices(dist);
     }
-    
+
+//         auto coords = modelCoordinates.getCoordinates(dist, ctx);
+//         coords[0].writeToFile("configuration/coordinatesX.mtx");
+//         coords[1].writeToFile("configuration/coordinatesY.mtx");
+//         coords[2].writeToFile("configuration/coordinatesZ.mtx");
     
     /* --------------------------------------- */
     /* Wavefields                              */

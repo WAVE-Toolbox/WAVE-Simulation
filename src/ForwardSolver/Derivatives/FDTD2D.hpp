@@ -70,6 +70,8 @@ namespace KITGPI
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
                 using Derivatives<ValueType>::spatialFDorder;
+                
+                using Derivatives<ValueType>::InterpolationP;
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */

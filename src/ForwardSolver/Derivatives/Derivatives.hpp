@@ -98,9 +98,13 @@ namespace KITGPI
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
                 
+                //! \brief Getter method for interpolation matrix interP
+                virtual scai::lama::Matrix<ValueType> const *getInterP() const;
+
+                
                 virtual scai::lama::CSRSparseMatrix<ValueType>  getCombinedMatrix() = 0;
                 
-
+ 
                 
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -130,6 +134,8 @@ namespace KITGPI
                 void calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
                 void calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
+                void calcInterpolationP(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                
                 typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
                 scai::lama::StencilMatrix<ValueType> Dxf;                    //!< Derivative matrix Dxf
                 scai::lama::StencilMatrix<ValueType> Dyf;                    //!< Derivative matrix Dyf
@@ -148,6 +154,8 @@ namespace KITGPI
                 SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
                 SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
 
+                SparseFormat InterpolationP; //!< Interpolation matrix for P
+                
                 scai::IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
 
                 scai::IndexType useFreeSurface; //!< Switch to use free surface or not

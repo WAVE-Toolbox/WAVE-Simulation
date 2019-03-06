@@ -68,6 +68,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
     hmemo::HArray<IndexType> ownedIndeces;
     dist->getOwnedIndexes(ownedIndeces);
     /* Distributed vectors */
+    /*allocate Sparse Vector and temporary Dense Vector*/
     damping.setSameValue(dist, 1.0); // sparse vector damping gets zero element 1.0
 
     lama::VectorAssembly<ValueType> assembly;
@@ -104,9 +105,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
         }
         coordinateMin = temp;
         if (useFreeSurface == 0) {
-            if (coordinateMin < BoundaryWidth) {
+        if (coordinateMin < BoundaryWidth) {
                 assembly.push(ownedIndex, coeff[coordinateMin]);
-            }
+        }
 
         } else {
             if (coordinate.y < BoundaryWidth) {
@@ -121,6 +122,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
 
     damping.setContextPtr(ctx);
     damping.fillFromAssembly(assembly);
+
+   damping.writeToFile("damping.mtx");
 
     HOST_PRINT(comm, "Finished with initialization of the Damping Boundary!\n\n");
 }

@@ -48,6 +48,7 @@ DxfSparse.redistribute(dist,dist);
 DyfSparse.redistribute(dist,dist);
 DxbSparse.redistribute(dist,dist);
 DybSparse.redistribute(dist,dist);
+InterpolationP.redistribute(dist,dist);
 }
 
 //! \brief Constructor of the derivative matrices
@@ -154,17 +155,16 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DxbSparse.writeToFile("Dxb.mtx");
     DybSparse.writeToFile("Dyb.mtx");
     
-//     DxbSparse.assignTranspose(DxfSparse);
-//     DxbSparse.scale(-1.0);
-//     DybSparse.assignTranspose(DyfSparse);
-//     DybSparse.scale(-1.0);
-
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;
     DxbSparse *= DT;
     DyfSparse *= DT;
     DybSparse *= DT;
 
+    this->calcInterpolationP(modelCoordinates, dist);
+    
+    InterpolationP.writeToFile("interp.mtx");
+    
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
