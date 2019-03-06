@@ -375,23 +375,23 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-//         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-//         scai::IndexType X = coordinate.x;
-//         if (X == modelCoordinates.getNX() - 1)
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-// 
-//         X++;
-//         if (X < modelCoordinates.getNX()) {
-//             IndexType columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//         }
-        assembly.push(ownedIndex, ownedIndex, 1.0);
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        scai::IndexType X = coordinate.x;
+        if ((X + modelCoordinates.getDHFactor(coordinate)*0.5) == modelCoordinates.getNX() - 0.5)
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+
+        X+=modelCoordinates.getDHFactor(coordinate);
+        if (X < modelCoordinates.getNX()) {
+            IndexType columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+        }
     }
 
     DensityAverageMatrixX = lama::zero<SparseFormat>(dist, dist);
     DensityAverageMatrixX.fillFromAssembly(assembly);
+    DensityAverageMatrixX.writeToFile("test.mtx");
 }
 
 //! \brief Calculate density averaging matrix in y-direction
@@ -408,22 +408,30 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * 2);
-
+    IndexType layer=0;
+    
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-//         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-//         scai::IndexType Y = coordinate.y;
-//         if (Y == modelCoordinates.getNY() - 1)
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-// 
-//         Y++;
-//         if (Y < modelCoordinates.getNY()) {
-//             IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//         }
-         assembly.push(ownedIndex, ownedIndex, 1.0);
+        
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        
+        layer=modelCoordinates.getLayer(coordinate);
+        
+        scai::IndexType Y = coordinate.y;
+        if ((Y + modelCoordinates.getDHFactor(layer)*0.5) == modelCoordinates.getNY() - 0.5)
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+
+        if ((modelCoordinates.locatedOnInterface(coordinate)) && (modelCoordinates.getTransition(coordinate)))
+        Y+=modelCoordinates.getDHFactor(layer);
+        else
+        Y+=modelCoordinates.getDHFactor(layer-1);  
+        
+        if (Y < modelCoordinates.getNY()) {
+            IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+        }
     }
 
     DensityAverageMatrixY = lama::zero<SparseFormat>(dist, dist);
@@ -447,19 +455,18 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-//         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-//         scai::IndexType Z = coordinate.z;
-//         if (Z == modelCoordinates.getNZ() - 1)
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-// 
-//         Z++;
-//         if (Z < modelCoordinates.getNZ()) {
-//             IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//         }
-        assembly.push(ownedIndex, ownedIndex, 1.0);
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        scai::IndexType Z = coordinate.z;
+        if ((Z + modelCoordinates.getDHFactor(coordinate)*0.5) == modelCoordinates.getNZ() - 0.5)
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+
+        Z+= modelCoordinates.getDHFactor(coordinate);
+        if (Z < modelCoordinates.getNZ()) {
+            IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+        }
     }
 
     DensityAverageMatrixZ = lama::zero<SparseFormat>(dist, dist);
@@ -488,49 +495,48 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
         scai::IndexType Y = coordinate.y;
         IndexType columnIndex;
 
-//         /*Points
-//             1      2
-//                av
-//             3      4
-//         */
-//         // Point 1 (diagonal element)
-//         if ((X == modelCoordinates.getNX() - 1) && (Y == modelCoordinates.getNY() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else if (!(X == modelCoordinates.getNX() - 1) != !(Y == modelCoordinates.getNY() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
-// 
-//         //Point 2
-//         X = coordinate.x + 1;
-//         Y = coordinate.y;
-//         if (X < modelCoordinates.getNX()) {
-//             columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
-//             if (Y == modelCoordinates.getNY() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 3
-//         X = coordinate.x;
-//         Y = coordinate.y + 1;
-//         if (Y < modelCoordinates.getNY()) {
-//             columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
-//             if (X == modelCoordinates.getNX() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 4
-//         X = coordinate.x + 1;
-//         Y = coordinate.y + 1;
-//         if ((X < modelCoordinates.getNX()) && (Y < modelCoordinates.getNY())) {
-//             columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-        assembly.push(ownedIndex, ownedIndex, 1.0);
+        /*Points
+            1      2
+               av
+            3      4
+        */
+        // Point 1 (diagonal element)
+        if ((X == modelCoordinates.getNX() - 1) && (Y == modelCoordinates.getNY() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else if (!(X == modelCoordinates.getNX() - 1) != !(Y == modelCoordinates.getNY() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
+
+        //Point 2
+        X = coordinate.x + 1;
+        Y = coordinate.y;
+        if (X < modelCoordinates.getNX()) {
+            columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
+            if (Y == modelCoordinates.getNY() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 3
+        X = coordinate.x;
+        Y = coordinate.y + 1;
+        if (Y < modelCoordinates.getNY()) {
+            columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
+            if (X == modelCoordinates.getNX() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 4
+        X = coordinate.x + 1;
+        Y = coordinate.y + 1;
+        if ((X < modelCoordinates.getNX()) && (Y < modelCoordinates.getNY())) {
+            columnIndex = modelCoordinates.coordinate2index(X, Y, coordinate.z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
     }
 
     sWaveModulusAverageMatrixXY = lama::zero<SparseFormat>(dist, dist);
@@ -566,44 +572,43 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
                av
             3      4
         */
-//         // Point 1 (diagonal element)
-//         if ((X == modelCoordinates.getNX() - 1) && (Z == modelCoordinates.getNZ() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else if (!(X == modelCoordinates.getNX() - 1) != !(Z == modelCoordinates.getNZ() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
-// 
-//         //Point 2
-//         X = coordinate.x + 1;
-//         Z = coordinate.z;
-//         if (X < modelCoordinates.getNX()) {
-//             columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
-//             if (Z == modelCoordinates.getNZ() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 3
-//         X = coordinate.x;
-//         Z = coordinate.z + 1;
-//         if (Z < modelCoordinates.getNZ()) {
-//             columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
-//             if (X == modelCoordinates.getNX() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 4
-//         X = coordinate.x + 1;
-//         Z = coordinate.z + 1;
-//         if ((X < modelCoordinates.getNX()) && (Z < modelCoordinates.getNZ())) {
-//             columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-assembly.push(ownedIndex, ownedIndex, 1.0);
+        // Point 1 (diagonal element)
+        if ((X == modelCoordinates.getNX() - 1) && (Z == modelCoordinates.getNZ() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else if (!(X == modelCoordinates.getNX() - 1) != !(Z == modelCoordinates.getNZ() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
+
+        //Point 2
+        X = coordinate.x + 1;
+        Z = coordinate.z;
+        if (X < modelCoordinates.getNX()) {
+            columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
+            if (Z == modelCoordinates.getNZ() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 3
+        X = coordinate.x;
+        Z = coordinate.z + 1;
+        if (Z < modelCoordinates.getNZ()) {
+            columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
+            if (X == modelCoordinates.getNX() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 4
+        X = coordinate.x + 1;
+        Z = coordinate.z + 1;
+        if ((X < modelCoordinates.getNX()) && (Z < modelCoordinates.getNZ())) {
+            columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, Z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
     }
 
     sWaveModulusAverageMatrixXZ = lama::zero<SparseFormat>(dist, dist);
@@ -637,44 +642,43 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
                av
             3      4
         */
-//         // Point 1 (diagonal element)
-//         if ((Y == modelCoordinates.getNY() - 1) && (Z == modelCoordinates.getNZ() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0);
-//         else if (!(Y == modelCoordinates.getNY() - 1) != !(Z == modelCoordinates.getNZ() - 1))
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-//         else
-//             assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
-// 
-//         //Point 2
-//         Y = coordinate.y + 1;
-//         Z = coordinate.z;
-//         if (Y < modelCoordinates.getNY()) {
-//             columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
-//             if (Z == modelCoordinates.getNZ() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 3
-//         Y = coordinate.y;
-//         Z = coordinate.z + 1;
-//         if (Z < modelCoordinates.getNZ()) {
-//             columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
-//             if (Y == modelCoordinates.getNY() - 1)
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-//             else
-//                 assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-// 
-//         //Point 4
-//         Y = coordinate.y + 1;
-//         Z = coordinate.z + 1;
-//         if ((Y < modelCoordinates.getNY()) && (Z < modelCoordinates.getNZ())) {
-//             columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
-//             assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
-//         }
-assembly.push(ownedIndex, ownedIndex, 1.0);
+        // Point 1 (diagonal element)
+        if ((Y == modelCoordinates.getNY() - 1) && (Z == modelCoordinates.getNZ() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0);
+        else if (!(Y == modelCoordinates.getNY() - 1) != !(Z == modelCoordinates.getNZ() - 1))
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
+        else
+            assembly.push(ownedIndex, ownedIndex, 1.0 / 4.0);
+
+        //Point 2
+        Y = coordinate.y + 1;
+        Z = coordinate.z;
+        if (Y < modelCoordinates.getNY()) {
+            columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
+            if (Z == modelCoordinates.getNZ() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 3
+        Y = coordinate.y;
+        Z = coordinate.z + 1;
+        if (Z < modelCoordinates.getNZ()) {
+            columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
+            if (Y == modelCoordinates.getNY() - 1)
+                assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
+            else
+                assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
+
+        //Point 4
+        Y = coordinate.y + 1;
+        Z = coordinate.z + 1;
+        if ((Y < modelCoordinates.getNY()) && (Z < modelCoordinates.getNZ())) {
+            columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, Z);
+            assembly.push(ownedIndex, columnIndex, 1.0 / 4.0);
+        }
     }
 
     sWaveModulusAverageMatrixYZ = lama::zero<SparseFormat>(dist, dist);
