@@ -423,10 +423,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
         else
             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
 
-        if ((modelCoordinates.locatedOnInterface(coordinate)) && (modelCoordinates.getTransition(coordinate)))
         Y+=modelCoordinates.getDHFactor(layer);
-        else
-        Y+=modelCoordinates.getDHFactor(layer-1);  
+        if ((modelCoordinates.locatedOnInterface(coordinate)) && (!modelCoordinates.getTransition(coordinate)))
+        Y+=modelCoordinates.getDHFactor(layer-1)-modelCoordinates.getDHFactor(layer);  
         
         if (Y < modelCoordinates.getNY()) {
             IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
