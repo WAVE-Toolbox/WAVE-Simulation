@@ -78,7 +78,7 @@ endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
+  #  GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
     $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
   endif
 endif
