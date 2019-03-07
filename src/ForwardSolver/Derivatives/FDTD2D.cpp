@@ -133,7 +133,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
-
+    
     /* Set FD-Coefficients */
     this->setFDCoef(spatialFDorder);
 
@@ -142,7 +142,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     this->calcDyf(modelCoordinates, dist);
     this->calcDxb(modelCoordinates, dist);
     this->calcDyb(modelCoordinates, dist);
-    
 
     HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     DxfSparse.setContextPtr(ctx);
@@ -150,10 +149,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
 
-    DxfSparse.writeToFile("Dxf.mtx");
-    DyfSparse.writeToFile("Dyf.mtx");
-    DxbSparse.writeToFile("Dxb.mtx");
-    DybSparse.writeToFile("Dyb.mtx");
+//     DxfSparse.writeToFile("Dxf.mtx");
+//     DyfSparse.writeToFile("Dyf.mtx");
+//     DxbSparse.writeToFile("Dxb.mtx");
+//     DybSparse.writeToFile("Dyb.mtx");
     
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;

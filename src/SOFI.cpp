@@ -144,6 +144,11 @@ int main(int argc, const char *argv[])
         dist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     }
 
+        auto coords = modelCoordinates.getCoordinates(dist, ctx);
+        coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
+        coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
+        coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
+    
     //     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     //     dist->getOwnedIndexes(ownedIndexes);
     //
@@ -211,10 +216,7 @@ int main(int argc, const char *argv[])
         }
 
         auto graph = derivatives->getCombinedMatrix();
-        auto coords = modelCoordinates.getCoordinates(dist, ctx);
-        coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
-        coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
-        coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
+
 
         if (dimensions == 2) {
             coords.pop_back();
@@ -235,11 +237,7 @@ int main(int argc, const char *argv[])
         derivatives->redistributeMatrices(dist);
     }
 
-//         auto coords = modelCoordinates.getCoordinates(dist, ctx);
-//         coords[0].writeToFile("configuration/coordinatesX.mtx");
-//         coords[1].writeToFile("configuration/coordinatesY.mtx");
-//         coords[2].writeToFile("configuration/coordinatesZ.mtx");
-    
+
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
@@ -250,11 +248,11 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
-    CheckParameter::checkSources<ValueType>(config, sources, commShot);
+  //  CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
-        CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
+      //  CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
 
     /* --------------------------------------- */
@@ -263,7 +261,7 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+   // CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
     /* Forward solver                          */

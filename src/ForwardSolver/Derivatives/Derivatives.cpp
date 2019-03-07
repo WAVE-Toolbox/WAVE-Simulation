@@ -390,24 +390,38 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     assembly.reserve(ownedIndexes.size() * 2);
 
     ValueType third = ValueType(1) / ValueType(3);
-
+    IndexType layer=0;
+    IndexType dhFactor=0;
+    IndexType dhFactorFineGrid=0;
+    
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         const IndexType &x = coordinate.x;
         const IndexType &y = coordinate.y;
         const IndexType &z = coordinate.z;
-
-        if (!modelCoordinates.locatedOnInterface(coordinate) || (x % 3 == 0)) {
+        
+        layer=modelCoordinates.getLayer(coordinate);
+        dhFactor=modelCoordinates.getDHFactor(layer);
+        dhFactorFineGrid=dhFactor;
+        
+        if (modelCoordinates.locatedOnInterface(coordinate)) {
+            if (modelCoordinates.getTransition(coordinate))
+              dhFactorFineGrid=modelCoordinates.getDHFactor(layer-1);
+            else
+              dhFactorFineGrid=modelCoordinates.getDHFactor(layer+1);
+        }
+        
+        if (!modelCoordinates.locatedOnInterface(coordinate) || (x % dhFactor== 0)) {
             assembly.push(ownedIndex, ownedIndex, ValueType(1));
-        } else if ((x % 3 == 1) && (x < modelCoordinates.getNX() - 2)) {
-            IndexType leftIndex = modelCoordinates.coordinate2index(x - 1, y, z);
-            IndexType rightIndex = modelCoordinates.coordinate2index(x + 2, y, z);
+        } else if ((x % dhFactor == dhFactorFineGrid) && (x < modelCoordinates.getNX() - 2*dhFactorFineGrid)) {
+            IndexType leftIndex = modelCoordinates.coordinate2index(x - dhFactorFineGrid, y, z);
+            IndexType rightIndex = modelCoordinates.coordinate2index(x + 2*dhFactorFineGrid, y, z);
             assembly.push(ownedIndex, leftIndex, 2 * third);
             assembly.push(ownedIndex, rightIndex, 1 * third);
-        } else if (x < modelCoordinates.getNX() - 1) {
-            IndexType leftIndex = modelCoordinates.coordinate2index(x - 2, y, z);
-            IndexType rightIndex = modelCoordinates.coordinate2index(x + 1, y, z);
+        } else if (x < modelCoordinates.getNX() - dhFactorFineGrid) {
+            IndexType leftIndex = modelCoordinates.coordinate2index(x - 2*dhFactorFineGrid, y, z);
+            IndexType rightIndex = modelCoordinates.coordinate2index(x + 1*dhFactorFineGrid, y, z);
             assembly.push(ownedIndex, leftIndex, 1 * third);
             assembly.push(ownedIndex, rightIndex, 2 * third);
         }
