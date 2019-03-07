@@ -6,26 +6,30 @@ clc
 
 %% Input
 % Gridpoints of layer with dh=1 (every gridpoint)
-NXmax=104;
+NXmax=305;
 NZmax=1;
-NYmax=104;
+NYmax=305;
 
-interface(1)=40;
-interface(2)=NYmax-1;
+interface(1)=100;
+% interface(2)=151;
+% interface(3)=202;
+
 
 % interface(1)=10;
 % interface(2)=37;
 % interface(3)=55;
-% interface(4)=NYmax-1;
+
 % 
 % 
  dh(1)=1;
  dh(2)=3;
-% dh(3)=1;
-% dh(4)=3;
+%  dh(3)=9;
+%  dh(4)=1;
 
 
 %% constructor
+interface(length(interface)+1)=NYmax-1;
+
 
 DHmax=max(dh);
 if (NXmax ~= floor(NXmax/DHmax)*DHmax+1 + floor(DHmax/2))
@@ -74,9 +78,9 @@ for ii=1:numLayers
     
 end
 
-nx
-ny
-nz
+% nx
+% ny
+% nz
 
 
 values=zeros(1,nGridpoints);
@@ -116,9 +120,28 @@ for ii=1:nGridpoints
     % move the subgrid coordinates to global coordinates
     coordinates.y(ii)=coordinates.y(ii)+layerStart(layer);
    
-    x=coordinates.x(ii)
-    y=coordinates.y(ii)
-    z=coordinates.z(ii)
+    x=coordinates.x(ii);
+    y=coordinates.y(ii);
+    z=coordinates.z(ii);
+    
+    
+    if (ii)==32441
+        x
+        y
+        z
+    end
+    if (ii)==32237
+        x
+        y
+        z
+    end
+    
+%     if (ii)==3977
+%         x
+%         y
+%         z
+%     end
+    
     
     % set values nd gridpointsize for plotting
     values(ii)=layer;
