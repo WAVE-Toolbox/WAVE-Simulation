@@ -24,7 +24,6 @@
 #include "Wavefields/WavefieldsFactory.hpp"
 
 #include "Common/HostPrint.hpp"
-#include "Partitioning/PartitioningCubes.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 
@@ -148,7 +147,7 @@ int main(int argc, const char *argv[])
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
-        CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
+     //   CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
 
     /* --------------------------------------- */
