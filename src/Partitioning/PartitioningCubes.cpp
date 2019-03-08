@@ -14,12 +14,13 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::getDi
 /*! \brief Constructor based on the configuration class and the communicator
  *
  \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(KITGPI::Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(KITGPI::Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    dist_cubes = calculate(config.get<IndexType>("ProcNX"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), comm);
+    dist_cubes = calculate(config.get<IndexType>("ProcNX"), config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), modelCoordinates, comm);
 }
 
 //! \brief Calculation of cube partition
@@ -34,10 +35,11 @@ KITGPI::Partitioning::PartitioningCubes<ValueType>::PartitioningCubes(KITGPI::Co
  \param NX Number of grid points in X-direction
  \param NY Number of grid points in X-direction
  \param NZ Number of grid points in X-direction
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator for the distribution
  */
 template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::CommunicatorPtr comm)
+dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calculate(IndexType procNX, IndexType procNY, IndexType procNZ, IndexType NX, IndexType NY, IndexType NZ, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
     IndexType rank = comm->getRank();
@@ -66,8 +68,6 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
     IndexType numGlobalGridPoints = NX * NY * NZ;
     IndexType numLocalGridPoints = (numGlobalGridPoints) / numRanks;
 
-    Acquisition::Coordinates coord(NX,NY,NZ);
-
     /* Determine local indices */
     hmemo::HArray<IndexType> localIndices;
     localIndices.resize(numLocalGridPoints);
@@ -78,7 +78,7 @@ dmemo::DistributionPtr KITGPI::Partitioning::PartitioningCubes<ValueType>::calcu
         for (IndexType y = 0; y < NY; y++) {
             for (IndexType z = 0; z < NZ; z++) {
                 if (x >= range_x_lower && x < range_x_upper && y >= range_y_lower && y < range_y_upper && z >= range_z_lower && z < range_z_upper) {
-                    indice = coord.coordinate2index(x, y, z);
+                    indice = modelCoordinates.coordinate2index(x, y, z);
                     write_localIndices[i] = indice;
                     i++;
                 }

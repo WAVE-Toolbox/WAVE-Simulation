@@ -15,11 +15,10 @@ TEST(ABS2DTest, TestApplyThrows)
     double testValue = 123.0;
     lama::DenseVector<double> testVector;
     testVector.allocate(N);
-    testVector=testValue;
-    
+    testVector = testValue;
+
     ForwardSolver::BoundaryCondition::ABS2D<double> test;
-    
+
     ASSERT_ANY_THROW(test.apply(testVector, testVector, testVector));
     ASSERT_ANY_THROW(test.apply(testVector, testVector, testVector, testVector, testVector));
-    
 }

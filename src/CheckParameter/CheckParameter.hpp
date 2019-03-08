@@ -13,17 +13,17 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-        
+
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
         *
         \param dt Temporal sampling interval in seconds. 
-        \param dh Spatial sampling interval in meters.
+        \param DH Spatial sampling interval in meters.
         \param vpMax Maximum P wave velocity.
         \param dimension Dimension specified in config.txt 
         \param spFDo Spatial FD order
         */
         template <typename ValueType>
-        void checkStabilityCriterion(ValueType dt, ValueType dh, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkStabilityCriterion(ValueType dt, ValueType DH, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
         {
             if (comm->getRank() == MASTERGPI) {
                 scai::IndexType D;
@@ -60,18 +60,18 @@ namespace KITGPI
                 }
 
                 //Assess stability criterion
-                SCAI_ASSERT_ERROR(dt <= dh / (h * sqrt(D) * vpMax), "\nCourant-Friedrichs-Lewy-Criterion is not met! \ndt is " << dt << " but should be less than dh/(h*sqrt(D)*vpMax=" << dh / (h * sqrt(D) * vpMax) << "\n\n");
+                SCAI_ASSERT_ERROR(dt <= DH / (h * sqrt(D) * vpMax), "\nCourant-Friedrichs-Lewy-Criterion is not met! \ndt is " << dt << " but should be less than DH/(h*sqrt(D)*vpMax=" << DH / (h * sqrt(D) * vpMax) << "\n\n");
             }
         }
-        
+
         /*! \brief check criterion to avoid numerical dispersion
-        \param dh Spatial sampling interval in meters.
+        \param DH Spatial sampling interval in meters.
         \param vMin Minimum wave velocity. (in the acoustic case the minimal P wave velocity is used; in the elastic and viscoelastic cases the minimal S wave velocity is used)
         \param fcMax Maximum center frequency of the sources in hertz.
         \param spFDo Spatial FD order.
         */
         template <typename ValueType>
-        void checkNumericalDispersion(ValueType dh, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalDispersion(ValueType DH, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
         {
             if (comm->getRank() == MASTERGPI) {
                 scai::IndexType N;
@@ -98,12 +98,12 @@ namespace KITGPI
                     SCAI_ASSERT_ERROR(false, "Unknown spatial FD order")
                 }
 
-                if (dh > vMin / (2 * fcMax * N)) {
-                    std::cerr << "\nCriterion to avoid numerical dispersion is not met! \ndh is " << dh << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n";
+                if (DH > vMin / (2 * fcMax * N)) {
+                    std::cerr << "\nCriterion to avoid numerical dispersion is not met! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n";
                 }
             }
         }
-        
+
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
         void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)

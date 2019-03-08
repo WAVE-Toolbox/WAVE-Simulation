@@ -24,7 +24,11 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dsh(){equationType="sh"; numDimension=2;};
+            FD2Dsh()
+            {
+                equationType = "sh";
+                numDimension = 2;
+            };
 
             //! Default destructor
             ~FD2Dsh(){};
@@ -32,7 +36,7 @@ namespace KITGPI
             explicit FD2Dsh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             void resetWavefields() override;
-            
+
             int getNumDimension() const;
             std::string getEquationType() const;
 
@@ -63,17 +67,15 @@ namespace KITGPI
 
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
-
-            void minusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
-            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
-            void assign(KITGPI::Wavefields::Wavefields<ValueType>  &rhs);
+            void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
-    
+
           private:
-              
             using Wavefields<ValueType>::numDimension;
-            using Wavefields<ValueType>::equationType; 
-            
+            using Wavefields<ValueType>::equationType;
+
             /* required wavefields */
             using Wavefields<ValueType>::VZ;
             using Wavefields<ValueType>::Sxz;

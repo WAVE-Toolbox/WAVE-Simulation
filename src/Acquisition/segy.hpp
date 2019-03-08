@@ -62,26 +62,25 @@
 //School of Mines, partially based on Stanford Exploration Project (SEP)
 //software.
 
-
 //! \brief Define the structure for Seismic Unix (SEG-Y) header
-#define SU_NFLTS	USHRT_MAX	/* Arbitrary limit on data array size	*/
-struct Segy{	/* segy - trace identification header */
-    
-    signed tracl   :32;	/* trace sequence number within line */
-    
-    signed tracr   :32;	/* trace sequence number within reel */
-    
-    signed fldr    :32;	/* field record number */
-    
-    signed tracf   :32;	/* trace number within field record */
-    
-    signed ep      :32;	/* energy source point number */
-    
-    signed cdp     :32;	/* CDP ensemble number */
-    
-    signed cdpt    :32;	/* trace number within CDP ensemble */
-    
-    signed trid    :16;	/* trace identification code:
+#define SU_NFLTS USHRT_MAX /* Arbitrary limit on data array size	*/
+struct Segy {              /* segy - trace identification header */
+
+    signed tracl : 32; /* trace sequence number within line */
+
+    signed tracr : 32; /* trace sequence number within reel */
+
+    signed fldr : 32; /* field record number */
+
+    signed tracf : 32; /* trace number within field record */
+
+    signed ep : 32; /* energy source point number */
+
+    signed cdp : 32; /* CDP ensemble number */
+
+    signed cdpt : 32; /* trace number within CDP ensemble */
+
+    signed trid : 16; /* trace identification code:
                          1 = seismic data
                          2 = dead
                          3 = dummy
@@ -145,56 +144,56 @@ struct Segy{	/* segy - trace identification header */
                          
                          102 = Seismic data packed to 2 bytes (by supack2)
                          */
-    
-    signed nvs    :16;   /* number of vertically summed traces (see vscode
+
+    signed nvs : 16; /* number of vertically summed traces (see vscode
                           in bhed structure) */
-    
-    signed nhs    :16;   /* number of horizontally summed traces (see vscode
+
+    signed nhs : 16; /* number of horizontally summed traces (see vscode
                           in bhed structure) */
-    
-    signed duse   :16;   /* data use:
+
+    signed duse : 16; /* data use:
                           1 = production
                           2 = test */
-    
-    signed offset :32; /* distance from source point to receiver
+
+    signed offset : 32; /* distance from source point to receiver
                         group (negative if opposite to direction
                         in which the line was shot) */
-    
-    signed gelev  :32; /* receiver group elevation from sea level
+
+    signed gelev : 32; /* receiver group elevation from sea level
                         (above sea level is positive) */
-    
-    signed selev  :32; /* source elevation from sea level
+
+    signed selev : 32; /* source elevation from sea level
                         (above sea level is positive) */
-    
-    signed sdepth :32; /* source depth (positive) */
-    
-    signed gdel   :32; /* datum elevation at receiver group */
-    
-    signed sdel   :32; /* datum elevation at source */
-    
-    signed swdep  :32; /* water depth at source */
-    
-    signed gwdep  :32; /* water depth at receiver group */
-    
-    signed scalel :16; /* scale factor for previous 7 entries
+
+    signed sdepth : 32; /* source depth (positive) */
+
+    signed gdel : 32; /* datum elevation at receiver group */
+
+    signed sdel : 32; /* datum elevation at source */
+
+    signed swdep : 32; /* water depth at source */
+
+    signed gwdep : 32; /* water depth at receiver group */
+
+    signed scalel : 16; /* scale factor for previous 7 entries
                         with value plus or minus 10 to the
                         power 0, 1, 2, 3, or 4 (if positive,
                         multiply, if negative divide) */
-    
-    signed scalco :16; /* scale factor for next 4 entries
+
+    signed scalco : 16; /* scale factor for next 4 entries
                         with value plus or minus 10 to the
                         power 0, 1, 2, 3, or 4 (if positive,
                         multiply, if negative divide) */
-    
-    signed  sx    :32;   /* X source coordinate */
-    
-    signed  sy    :32;   /* Y source coordinate */
-    
-    signed  gx    :32;   /* X group coordinate */
-    
-    signed  gy    :32;   /* Y group coordinate */
-    
-    signed counit :16;   /* coordinate units code:
+
+    signed sx : 32; /* X source coordinate */
+
+    signed sy : 32; /* Y source coordinate */
+
+    signed gx : 32; /* X group coordinate */
+
+    signed gy : 32; /* Y group coordinate */
+
+    signed counit : 16; /* coordinate units code:
                           for previous four entries
                           1 = length (meters or feet)
                           2 = seconds of arc (in this case, the
@@ -202,152 +201,151 @@ struct Segy{	/* segy - trace identification header */
                           are latitude, a positive value designates
                           the number of seconds east of Greenwich
                           or north of the equator */
-    
-    signed wevel  :16;	/* weathering velocity */
-    
-    signed swevel :16;	/* subweathering velocity */
-    
-    signed sut    :16;	/* uphole time at source */
-    
-    signed gut    :16;	/* uphole time at receiver group */
-    
-    signed sstat  :16;	/* source static correction */
-    
-    signed gstat  :16;	/* group static correction */
-    
-    signed tstat  :16;	/* total static applied */
-    
-    signed laga   :16; /* lag time A, time in ms between end of 240-
+
+    signed wevel : 16; /* weathering velocity */
+
+    signed swevel : 16; /* subweathering velocity */
+
+    signed sut : 16; /* uphole time at source */
+
+    signed gut : 16; /* uphole time at receiver group */
+
+    signed sstat : 16; /* source static correction */
+
+    signed gstat : 16; /* group static correction */
+
+    signed tstat : 16; /* total static applied */
+
+    signed laga : 16; /* lag time A, time in ms between end of 240-
                         byte trace identification header and time
                         break, positive if time break occurs after
                         end of header, time break is defined as
                         the initiation pulse which maybe recorded
                         on an auxiliary trace or as otherwise
                         specified by the recording system */
-    
-    signed lagb   :16; /* lag time B, time in ms between the time break
+
+    signed lagb : 16; /* lag time B, time in ms between the time break
                         and the initiation time of the energy source,
                         may be positive or negative */
-    
-    signed delrt  :16; /* delay recording time, time in ms between
+
+    signed delrt : 16; /* delay recording time, time in ms between
                         initiation time of energy source and time
                         when recording of data samples begins
                         (for deep water work if recording does not
                         start at zero time) */
-    
-    signed muts   :16; /* mute time--start */
-    
-    signed mute   :16; /* mute time--end */
-    
-    unsigned ns   :16; /* number of samples in this trace */
-    
-    unsigned dt   :16; /* sample interval; in micro-seconds */
-    
-    signed gain   :16; /* gain type of field instruments code:
+
+    signed muts : 16; /* mute time--start */
+
+    signed mute : 16; /* mute time--end */
+
+    unsigned ns : 16; /* number of samples in this trace */
+
+    unsigned dt : 16; /* sample interval; in micro-seconds */
+
+    signed gain : 16; /* gain type of field instruments code:
                         1 = fixed
                         2 = binary
                         3 = floating point
                         4 ---- N = optional use */
-    
-    signed igc    :16; /* instrument gain constant */
-    
-    signed igi    :16; /* instrument early or initial gain */
-    
-    signed corr   :16; /* correlated:
+
+    signed igc : 16; /* instrument gain constant */
+
+    signed igi : 16; /* instrument early or initial gain */
+
+    signed corr : 16; /* correlated:
                         1 = no
                         2 = yes */
-    
-    signed sfs    :16; /* sweep frequency at start */
-    
-    signed sfe    :16; /* sweep frequency at end */
-    
-    signed slen   :16; /* sweep length in ms */
-    
-    signed styp   :16; /* sweep type code:
+
+    signed sfs : 16; /* sweep frequency at start */
+
+    signed sfe : 16; /* sweep frequency at end */
+
+    signed slen : 16; /* sweep length in ms */
+
+    signed styp : 16; /* sweep type code:
                         1 = linear
                         2 = cos-squared
                         3 = other */
-    
-    signed stas   :16; /* sweep trace length at start in ms */
-    
-    signed stae   :16; /* sweep trace length at end in ms */
-    
-    signed tatyp  :16; /* taper type: 1=linear, 2=cos^2, 3=other */
-    
-    signed afilf  :16; /* alias filter frequency if used */
-    
-    signed afils  :16; /* alias filter slope */
-    
-    signed nofilf :16; /* notch filter frequency if used */
-    
-    signed nofils :16; /* notch filter slope */
-    
-    signed lcf    :16; /* low cut frequency if used */
-    
-    signed hcf    :16; /* high cut frequncy if used */
-    
-    signed lcs    :16; /* low cut slope */
-    
-    signed hcs    :16; /* high cut slope */
-    
-    signed year   :16; /* year data recorded */
-    
-    signed day    :16; /* day of year */
-    
-    signed hour   :16; /* hour of day (24 hour clock) */
-    
-    signed minute :16; /* minute of hour */
-    
-    signed sec    :16; /* second of minute */
-    
-    signed timbas :16; /* time basis code:
+
+    signed stas : 16; /* sweep trace length at start in ms */
+
+    signed stae : 16; /* sweep trace length at end in ms */
+
+    signed tatyp : 16; /* taper type: 1=linear, 2=cos^2, 3=other */
+
+    signed afilf : 16; /* alias filter frequency if used */
+
+    signed afils : 16; /* alias filter slope */
+
+    signed nofilf : 16; /* notch filter frequency if used */
+
+    signed nofils : 16; /* notch filter slope */
+
+    signed lcf : 16; /* low cut frequency if used */
+
+    signed hcf : 16; /* high cut frequncy if used */
+
+    signed lcs : 16; /* low cut slope */
+
+    signed hcs : 16; /* high cut slope */
+
+    signed year : 16; /* year data recorded */
+
+    signed day : 16; /* day of year */
+
+    signed hour : 16; /* hour of day (24 hour clock) */
+
+    signed minute : 16; /* minute of hour */
+
+    signed sec : 16; /* second of minute */
+
+    signed timbas : 16; /* time basis code:
                         1 = local
                         2 = GMT
                         3 = other */
-    
-    signed trwf   :16; /* trace weighting factor, defined as 1/2^N
+
+    signed trwf : 16; /* trace weighting factor, defined as 1/2^N
                         volts for the least sigificant bit */
-    
-    signed grnors :16; /* geophone group number of roll switch
+
+    signed grnors : 16; /* geophone group number of roll switch
                         position one */
-    
-    signed grnofr :16; /* geophone group number of trace one within
+
+    signed grnofr : 16; /* geophone group number of trace one within
                         original field record */
-    
-    signed grnlof :16; /* geophone group number of last trace within
+
+    signed grnlof : 16; /* geophone group number of last trace within
                         original field record */
-    
-    signed gaps   :16;  /* gap size (total number of groups dropped) */
-    
-    signed otrav  :16;  /* overtravel taper code:
+
+    signed gaps : 16; /* gap size (total number of groups dropped) */
+
+    signed otrav : 16; /* overtravel taper code:
                          1 = down (or behind)
                          2 = up (or ahead) */
-    
+
     /* local assignments */
-    
+
     /*        signed pad :32; */ /* double word alignment for Cray 64-bit floats */
-    
-    float d1;	/* sample spacing for non-seismic data */
-    
-    float f1;	/* first sample location for non-seismic data */
-    
-    float d2;	/* sample spacing between traces */
-    
-    float f2;	/* first trace location */
-    
-    float ungpow;	/* negative of power used for dynamic
+
+    float d1; /* sample spacing for non-seismic data */
+
+    float f1; /* first sample location for non-seismic data */
+
+    float d2; /* sample spacing between traces */
+
+    float f2; /* first trace location */
+
+    float ungpow; /* negative of power used for dynamic
                      range compression */
-    
-    float unscale;	/* reciprocal of scaling factor to normalize
+
+    float unscale;   /* reciprocal of scaling factor to normalize
                      range */
-    signed ntr   :32;   /* number of traces */
-    
-    signed mark  :16;   /* mark selected traces */
-    
-    signed unass :16;   /* unassigned values */
-    
-    float  data[SU_NFLTS];
-    
+    signed ntr : 32; /* number of traces */
+
+    signed mark : 16; /* mark selected traces */
+
+    signed unass : 16; /* unassigned values */
+
+    float data[SU_NFLTS];
 };
 
 // \endcond

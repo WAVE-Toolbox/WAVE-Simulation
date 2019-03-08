@@ -77,11 +77,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Time sampling
- \param DH Grid spacing
  \param BoundaryWidth Width of damping boundary
  \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
@@ -90,12 +87,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, IndexType DH, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
     HOST_PRINT(comm, "", "Initialization of the PMl Coefficients...\n");
-    
+
     active = true;
 
     /* Get local "global" indices */
@@ -123,7 +120,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     this->initVector(psi_sxy_y, ctx, dist);
     this->initVector(psi_syy_y, ctx, dist);
 
-
     /* Distributed vectors */
     k_x.setSameValue(dist, 1.0);
     k_y.setSameValue(dist, 1.0);
@@ -145,7 +141,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     lama::DenseVector<ValueType> b_x_half_temp(dist, 0.0, ctx);
     lama::DenseVector<ValueType> b_y_half_temp(dist, 0.0, ctx);
 
-    Acquisition::Coordinates coordTransform(NX,NY,NZ);
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
 
@@ -153,15 +148,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
 
         read_localIndices_temp = read_localIndices[i];
 
-        coordinate = coordTransform.index2coordinate(read_localIndices_temp);
-        gdist = coordTransform.edgeDistance(coordinate);
+        coordinate = modelCoordinates.index2coordinate(read_localIndices_temp);
+        gdist = modelCoordinates.edgeDistance(coordinate);
 
         if ((gdist.x < BoundaryWidth) || (gdist.y < BoundaryWidth)) {
             if (gdist.x < BoundaryWidth) {
-                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_x_temp, b_x_temp, k_x_temp, a_x_half_temp, b_x_half_temp, k_x_half_temp, coordinate.x, gdist.x, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, modelCoordinates.getDH());
             }
             if (gdist.y < BoundaryWidth) {
-                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, DH);
+                this->SetCoeffCPML(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, coordinate.y, gdist.y, BoundaryWidth, NPower, KMaxCPML, CenterFrequencyCPML, VMaxCPML, i, DT, modelCoordinates.getDH());
                 if (useFreeSurface) {
                     if (coordinate.y < BoundaryWidth) {
                         this->ResetCoeffFreeSurface(a_y_temp, b_y_temp, k_y_temp, a_y_half_temp, b_y_half_temp, k_y_half_temp, i);

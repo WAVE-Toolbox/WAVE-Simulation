@@ -9,12 +9,13 @@ using namespace scai;
  \param dist Distribution of the wavefield
  \param ctx Context
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    init(dist, ctx, config, comm);
+    init(dist, ctx, config, modelCoordinates, comm);
 }
 
 //! \brief Initialisation to support Configuration
@@ -23,13 +24,18 @@ KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::Distr
  \param dist Distribution of the wavefield
  \param ctx Context
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
-    Derivatives<ValueType>::initializeMatrices(dist, ctx, config, comm);
+    useSparse = false;
+    if (useSparse)
+        initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
+    else
+        initializeMatrices(dist, ctx, modelCoordinates.getDH(), config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
 }
 
 //! \brief Constructor of the derivative matrices
@@ -37,18 +43,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::Di
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param DH Grid spacing (equidistant)
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal sampling interval#
  \param spatialFDorderInput FD-order of spatial derivative stencils
  \param comm Communicator
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
+KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
 {
-    initializeMatrices(dist, ctx, NX, NY, NZ, DH, DT, spatialFDorderInput, comm);
+    initializeMatrices(dist, ctx, modelCoordinates, DT, spatialFDorderInput, comm);
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -56,16 +59,12 @@ KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::Distr
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \param DH Grid spacing (equidistant)
  \param DT Temporal sampling interval
  \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, IndexType NX, IndexType NY, IndexType NZ, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
 {
 
     SCAI_REGION("initializeMatrices");
@@ -78,9 +77,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     /* Set FD-Coefficients */
     this->setFDCoef(spatialFDorder);
 
-    this->calcDxf(NX, NY, NZ, dist);
-    this->calcDzf(NX, NY, NZ, dist);
-    this->calcDyf(NX, NY, NZ, dist);
+    this->calcDxf(dist);
+    this->calcDzf(dist);
+    this->calcDyf(dist);
 
     HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
 
@@ -92,14 +91,12 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyb.setContextPtr(ctx);
 
     lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
-  
+
     // by default do matrix-vector operations synchronously, but can be set via environment
     bool isSet;
 
-    if ( common::Settings::getEnvironment( isSet, "SCAI_ASYNCHRONOUS" ) )
-    {
-        if ( isSet )
-        {
+    if (common::Settings::getEnvironment(isSet, "SCAI_ASYNCHRONOUS")) {
+        if (isSet) {
             syncKind = lama::SyncKind::ASYNC_COMM;
         }
     }
@@ -126,6 +123,80 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dzb.scale(DT / DH);
     Dyf.scale(DT / DH);
     Dyb.scale(DT / DH);
+
+    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
+}
+
+//! \brief Initializsation of the derivative matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param DT Temporal sampling interval
+ \param spatialFDorderInput FD-order of spatial stencils
+ \param comm Communicator
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
+{
+
+    SCAI_REGION("initializeMatrices")
+
+    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb…\n");
+
+    // Set FD-order to class member
+    spatialFDorder = spatialFDorderInput;
+
+    /* Set FD-Coefficients */
+    this->setFDCoef(spatialFDorder);
+
+    this->calcDxf(modelCoordinates, dist);
+    this->calcDyf(modelCoordinates, dist);
+    this->calcDzf(modelCoordinates, dist);
+
+    HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
+
+    DxfSparse.setContextPtr(ctx);
+    DxbSparse.setContextPtr(ctx);
+    DyfSparse.setContextPtr(ctx);
+    DybSparse.setContextPtr(ctx);
+    DzfSparse.setContextPtr(ctx);
+    DzbSparse.setContextPtr(ctx);
+
+    lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
+
+    // by default do matrix-vector operations synchronously, but can be set via environment
+    bool isSet;
+
+    if (common::Settings::getEnvironment(isSet, "SCAI_ASYNCHRONOUS")) {
+        if (isSet) {
+            syncKind = lama::SyncKind::ASYNC_COMM;
+        }
+    }
+
+    DxfSparse.setCommunicationKind(syncKind);
+    DxbSparse.setCommunicationKind(syncKind);
+    DyfSparse.setCommunicationKind(syncKind);
+    DybSparse.setCommunicationKind(syncKind);
+    DzfSparse.setCommunicationKind(syncKind);
+    DzbSparse.setCommunicationKind(syncKind);
+
+    DxbSparse.assignTranspose(DxfSparse);
+    DxbSparse.scale(-1.0);
+    DybSparse.assignTranspose(DyfSparse);
+    DybSparse *= -1.0;
+    DzbSparse.assignTranspose(DzfSparse);
+    DzbSparse *= -1.0;
+
+    HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
+
+    DxfSparse.scale(DT);
+    DxbSparse.scale(DT);
+    DyfSparse.scale(DT);
+    DybSparse.scale(DT);
+    DzfSparse.scale(DT);
+    DzbSparse.scale(DT);
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

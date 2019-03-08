@@ -21,8 +21,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
     lama::Vector<ValueType> const &tauS = model.getTauS();
     lama::Vector<ValueType> const &tauP = model.getTauP();
-    
-    SCAI_ASSERT(sWaveModulus.min()>0,"S wave modulus can't be zero when using image method")
+
+    SCAI_ASSERT(sWaveModulus.min() > 0, "S wave modulus can't be zero when using image method")
 
     /* On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
@@ -98,14 +98,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
- \param NX Number of grid points in X-Direction
- \param NY Number of grid points in Y-Direction (Depth)
- \param NZ Number of grid points in Z-Direction
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal Sampling
- \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "", "Initialization of the free surface...\n");
@@ -113,10 +110,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
-    derivatives.calcDybFreeSurface(NX, NY, NZ, dist);
-    derivatives.DybFreeSurface *= DT / DH;
-    derivatives.DyfFreeSurface *= DT / DH;
+    derivatives.calcDyfFreeSurface(modelCoordinates, dist);
+    derivatives.calcDybFreeSurface(modelCoordinates, dist);
+    derivatives.DybFreeSurface *= DT;
+    derivatives.DyfFreeSurface *= DT;
 
     selectHorizontalUpdate.setSameValue(dist, 0.0);
     setSurfaceZero.setSameValue(dist, 1.0);
@@ -136,8 +133,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     /* Get write access to local part of temp */
     auto write_setSurfaceZero = hmemo::hostWriteAccess(temp.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates coordinateTransformation(NX,NY,NZ);
-
     IndexType rowGlobal;
     IndexType rowLocal;
 
@@ -147,7 +142,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
         rowLocal = dist->global2Local(rowGlobal);
 
         /* Determine if the current grid point is located on the surface */
-        if (coordinateTransformation.locatedOnSurface(rowGlobal)) {
+        if (modelCoordinates.locatedOnSurface(rowGlobal)) {
 
             /* Set horizontal update to +1 at the surface and leave it zero else */
             write_selectHorizontalUpdate[rowLocal] = 1.0;

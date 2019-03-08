@@ -48,11 +48,18 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initOptionalAcquisitio
 {
 }
 
+/*! \brief Initialization of the seismogram handler
+ *
+ *
+ \param NT Number of timesteps
+ \param ctx Context
+ \param dist_wavefield Distribution of global grid
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(IndexType const NT, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist_wavefield)
 {
 
-    SCAI_ASSERT_DEBUG(seismogramTypes.size() == coordinates.size(), "Size mismatch");
+    SCAI_ASSERT_DEBUG(seismogramTypes.size() == coordinates1D.size(), "Size mismatch");
     SCAI_ASSERT_DEBUG(numTracesGlobal == seismogramTypes.size(), "Size mismatch");
 
     IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
@@ -79,7 +86,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
 
         tempIndexType = seismogramTypes[i] - 1;
 
-        coord[tempIndexType].setValue(count[tempIndexType], this->getCoordinates().getValue(i));
+        coord[tempIndexType].setValue(count[tempIndexType], this->get1DCoordinates().getValue(i));
         ++count[tempIndexType];
     }
 
@@ -102,19 +109,28 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
     seismograms.setContextPtr(ctx);
 }
 
+/*! \brief get number of parameters
+ *
+ * returns the number of parameters of the aquisition matrix eg. X,Y,Z,Seismogram Type
+ */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter() const
 {
     return numParameter;
 }
 
+/*! \brief reads parameters from the acquisition matrix and redistributes 
+ *
+ * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
+ * seismograms are only stored at the spatial domains which include the receiver/source coordinate.
+ \param acquisition_temp Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
+ \param modelCoordinates Coordinates object (handles wavefield coordinates)
+ \param dist_wavefield Distribution of the wavefield
+ \param ctx Context
+ */
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, IndexType NX, IndexType NY, IndexType NZ, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::lama::DenseMatrix<ValueType> acquisition_temp, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
 {
-
-    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NY > 0, "NX<=0");
-    SCAI_ASSERT_ERROR(NZ > 0, "NX<=0");
 
     IndexType nrow_temp = acquisition_temp.getNumRows();
     IndexType ncolumn_temp = acquisition_temp.getNumColumns();
@@ -137,7 +153,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     acquisition.allocate(dist_master_numParameter, no_dist_numTracesGlobal);
 
     /* Allocate coordinates on master */
-    coordinates.allocate(dist_master_numTracesGlobal);
+    coordinates1D.allocate(dist_master_numTracesGlobal);
 
     /* Local operations on master: 1. Transpose acquisition, 2. calculate 1-D coordinates  */
     if (dist_wavefield->getCommunicator().getRank() == 0) {
@@ -161,9 +177,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
         /* Get readAccess to acquisition matrix (local) */
         auto read_acquisition_HA = hostReadAccess(acquisition.getLocalStorage().getData());
         /* Get writeAccess to coordinates vector (local) */
-        auto write_coordinates_LA = hostWriteAccess(coordinates.getLocalValues());
-
-        Coordinates coord(NX, NY, NZ);
+        auto write_coordinates_LA = hostWriteAccess(coordinates1D.getLocalValues());
 
         /* 2. Calculate 1-D coordinates from 3-D coordinates */
         IndexType X, Y, Z;
@@ -173,15 +187,15 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
             Y = read_acquisition_HA[i + numTracesGlobal * 1];
             Z = read_acquisition_HA[i + numTracesGlobal * 2];
 
-            write_coordinates_LA[i] = coord.coordinate2index(X, Y, Z);
+            write_coordinates_LA[i] = modelCoordinates.coordinate2index(X, Y, Z);
         }
     }
 
     /* Replicate coordinates on all processes */
-    coordinates.redistribute(no_dist_numTracesGlobal);
+    coordinates1D.redistribute(no_dist_numTracesGlobal);
 
     /* Get local traces from global traces */
-    dmemo::DistributionPtr dist_wavefield_traces = calcDistribution(coordinates, dist_wavefield);
+    dmemo::DistributionPtr dist_wavefield_traces = calcDistribution(coordinates1D, dist_wavefield);
 
     numTracesLocal = dist_wavefield_traces->getLocalSize();
     numTracesGlobal = dist_wavefield_traces->getGlobalSize();
@@ -193,10 +207,10 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::setAcquisition(scai::l
     acquisition.getRow(seismogramTypesTmp, 3);
     seismogramTypes = lama::cast<IndexType>(seismogramTypesTmp);
 
-    coordinates.redistribute(dist_wavefield_traces);
+    coordinates1D.redistribute(dist_wavefield_traces);
     seismogramTypes.redistribute(dist_wavefield_traces);
 
-    coordinates.setContextPtr(ctx);
+    coordinates1D.setContextPtr(ctx);
     seismogramTypes.setContextPtr(ctx);
 
     initOptionalAcquisitionParameter(numParameter, numTracesGlobal, acquisition, dist_wavefield_traces, ctx);
@@ -257,10 +271,10 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<Val
  *
  */
 template <typename ValueType>
-lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getCoordinates() const
+lama::DenseVector<IndexType> const &KITGPI::Acquisition::AcquisitionGeometry<ValueType>::get1DCoordinates() const
 {
-    SCAI_ASSERT_DEBUG(numTracesGlobal == coordinates.size(), "Size mismatch");
-    return (coordinates);
+    SCAI_ASSERT_DEBUG(numTracesGlobal == coordinates1D.size(), "Size mismatch");
+    return (coordinates1D);
 }
 
 /*! \brief Get number of global traces

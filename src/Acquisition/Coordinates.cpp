@@ -7,31 +7,69 @@ using namespace scai;
 
 /*! \brief constructor for regular grid
  *
- \param NumX Number of grid points in X
- \param NumY Number of grid points in Y
- \param NumZ Number of grid points in Z
- *
- */
-KITGPI::Acquisition::Coordinates::Coordinates(scai::IndexType NumX, scai::IndexType NumY, scai::IndexType NumZ)
-{
-    NX = NumX;
-    NY = NumY;
-    NZ = NumZ;
-}
-
-/*! \brief Returns bool if given coordinate is located on the surface
- *
- * This method determines if a given coordinate is located on the surface of the modelling domain.
- \param coordinate 1-D coordinate
  \param NX Number of grid points in X
  \param NY Number of grid points in Y
  \param NZ Number of grid points in Z
  *
  */
-bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate)
+template <typename ValueType>
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH) : NX(NX), NY(NY), NZ(NZ), DH(DH)
+{
+    SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
+    SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
+    SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
+}
+
+/*! \brief getter function for DH
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH() const
+{
+    return (DH);
+}
+
+/*! \brief getter function for NX
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX() const
+{
+    return (NX);
+}
+
+/*! \brief getter function for NY
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY() const
+{
+    return (NY);
+}
+
+/*! \brief getter function for NZ
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
+{
+    return (NZ);
+}
+/*! \brief Returns bool if given coordinate is located on the surface
+ *
+ * This method determines if a given coordinate is located on the surface of the modelling domain.
+ \param index Model vector Index
+ *
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnSurface(IndexType index) const
 {
     coordinate3D result;
-    result = map3Dindex2coordinate(coordinate);
+    result = mapIndex2coordinate(index);
     if (result.y == 0) {
         return (true);
     } else {
@@ -39,54 +77,49 @@ bool KITGPI::Acquisition::Coordinates::locatedOnSurface(IndexType coordinate)
     }
 }
 
-/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+/*! \brief General mapping from 1-D index to 3-D coordinate
  *
- \param coordinate 1-D coordinate
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
+ \param index Model vector Index
  *
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::map3Dindex2coordinate(IndexType coordinate)
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::mapIndex2coordinate(IndexType index) const
 {
     coordinate3D result;
 
-    result.z = IndexType(coordinate) / (NX * NY);
-    coordinate -= result.z * (NX * NY);
+    result.z = IndexType(index / (NX * NY));
+    index -= result.z * (NX * NY);
 
-    result.y = IndexType(coordinate) / (NX);
-    coordinate -= result.y * (NX);
+    result.y = IndexType(index / (NX));
+    index -= result.y * (NX);
 
-    result.x = coordinate;
+    result.x = index;
 
     return (result);
 }
 
-/*! \brief General mapping from 1-D coordinate to 3-D coordinate
+/*! \brief General mapping from 1-D index to 3-D coordinate
  *
- * Maps a 1-D coordinate back into 3-D coordinates.
+ * Maps a 1-D index into 3-D coordinates.
  * The 3-D grid starts at 0 and runs to (NX-1), (NY-1) or (NZ-1).
  *
- \param coordinate 1-D coordinate
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
- \param NZ Number of grid points in Z
+ \param index 1-D coordinate
  *
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::index2coordinate(IndexType coordinate)
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::index2coordinate(IndexType index) const
 {
-    return (map3Dindex2coordinate(coordinate));
+    return (mapIndex2coordinate(index));
 }
 
-/*! \brief General mapping from 3-D coordinates to 1-D coordinate
+/*! \brief General mapping from 3-D coordinates to 1-D indeces
  *
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
-IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z)
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
 
     SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
@@ -103,18 +136,16 @@ IndexType KITGPI::Acquisition::Coordinates::map3Dcoordinate2index(IndexType X, I
 /* Interfaces */
 /* ---------- */
 
-/*! \brief Convert 3-D coordinates to 1-D coordinates
+/*! \brief Convert 3-D coordinates to 1-D indeces
  *
  * This method returns the 1-D coordinate of 3-D coordinates.
  \param X 3-D coordinate in X (Horizontal 1)
  \param Y 3-D coordinate in Y (Depth)
  \param Z 3-D coordinate in Z (Horizontal 2)
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
- \return 1-D coordinate
+ \return 1-D index
  */
-IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexType Y, IndexType Z)
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
     return (map3Dcoordinate2index(X, Y, Z));
 }
@@ -123,12 +154,10 @@ IndexType KITGPI::Acquisition::Coordinates::coordinate2index(IndexType X, IndexT
  *
  * This method returns the 1-D coordinate of 3-D coordinates.
  \param coordinate as a coordinate3D struct
- \param NX Total number of grid points in X (Horizontal 1)
- \param NY Total number of grid points in Y (Depth)
- \param NZ Total number of grid points in Z (Horizontal 2)
- \return 1-D coordinate
+ \return 1-D index
  */
-IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordinate)
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordinate3D coordinate) const
 {
     return (map3Dcoordinate2index(coordinate.x, coordinate.y, coordinate.z));
 }
@@ -139,11 +168,9 @@ IndexType KITGPI::Acquisition::Coordinates::coordinate2index(coordinate3D coordi
  \param X Coordinate X
  \param Y Coordinate Y
  \param Z Coordinate Z
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z)
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
 
     SCAI_ASSERT(Z < NZ, "No valid argument!");
@@ -166,11 +193,12 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::estimateDist
  *
  * This method calculates the distance of a given coordinate3D to the boundaries of the modelling domain.
  \param coordinate 3D-coordinate structs
- \param NX Total number of grid points in X
- \param NY Total number of grid points in Y
- \param NZ Total number of grid points in Z
  */
-KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates::edgeDistance(coordinate3D coordinate)
+template <typename ValueType>
+KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::edgeDistance(coordinate3D coordinate) const
 {
     return (estimateDistanceToEdges3D(coordinate.x, coordinate.y, coordinate.z));
 }
+
+template class KITGPI::Acquisition::Coordinates<float>;
+template class KITGPI::Acquisition::Coordinates<double>;

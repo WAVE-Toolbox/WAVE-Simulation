@@ -7,21 +7,22 @@ using namespace scai;
  \param config Configuration
  \param derivatives Derivatives matrices
  \param wavefield Wavefields for the modelling
+ \param model model class
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
     auto dist = wavefield.getRefVX().getDistributionPtr();
-    ;
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
-        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
     /* aalocation of auxiliary vectors*/
@@ -42,30 +43,15 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::initForwardSolver(Configurat
  *
  *
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param derivatives Derivatives matrices
  \param dist Distribution of the wave fields
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
-
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-
-    /* Prepare Free Surface */
-    if (useFreeSurface==1) {
-        FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
-    }
-
-    /* Prepare Damping Boundary */
-    if (config.get<IndexType>("DampingBoundary") == 1) {
-        useDampingBoundary = true;
-        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-    }
-    if (config.get<IndexType>("DampingBoundary") == 2) {
-        useConvPML = true;
-        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-    }
+    this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
 /*! \brief resets PML (use after each modelling!)
@@ -89,7 +75,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
 {
-    if (useFreeSurface==1) {
+    if (useFreeSurface == 1) {
         FreeSurface.setModelparameter(model);
     }
 }
@@ -103,9 +89,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelpar
  \param model Configuration of the modelparameter
  \param wavefield Wavefields for the modelling
  \param derivatives Derivations matrices to calculate the spatial derivatives
- \param tStart Counter start in for loop over time steps
- \param tEnd Counter end  in for loop over time steps
- \param DT Temporal Sampling intervall in seconds
+ \param t current timestep
  *
  * The update equations for velocity, \f$v_i\f$, and stress, \f$\sigma_{ij}\f$, are implemented as follows where \f$M\f$ is the P-wave modulus, \f$\mu\f$ the S-wave modulus and \f$\rho_{inv}\f$ the inverse density. Note that the equations for normal stresses are rearranged compared to the user manual and the scaling with the temporal and spatial discretization is included in the derivative matrices. The velocity update is executed first followed by the stress update and finally the source term is added. If a free surface is chosen, the derivative matrices will be adapted to satisfy the free surface condition.
  *
@@ -133,45 +117,45 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     SCAI_REGION("timestep");
 
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
-    lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
-    lama::Vector<ValueType> const &inverseDensityAverageX = model.getInverseDensityAverageX();
-    lama::Vector<ValueType> const &inverseDensityAverageY = model.getInverseDensityAverageY();
-    lama::Vector<ValueType> const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
-    lama::Vector<ValueType> const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
-    lama::Vector<ValueType> const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
-    lama::Vector<ValueType> const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
+    auto const &pWaveModulus = model.getPWaveModulus();
+    auto const &sWaveModulus = model.getSWaveModulus();
+    auto const &inverseDensityAverageX = model.getInverseDensityAverageX();
+    auto const &inverseDensityAverageY = model.getInverseDensityAverageY();
+    auto const &inverseDensityAverageZ = model.getInverseDensityAverageZ();
+    auto const &sWaveModulusAverageXY = model.getSWaveModulusAverageXY();
+    auto const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
+    auto const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector<ValueType> &vX = wavefield.getRefVX();
-    lama::Vector<ValueType> &vY = wavefield.getRefVY();
-    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
+    auto &vX = wavefield.getRefVX();
+    auto &vY = wavefield.getRefVY();
+    auto &vZ = wavefield.getRefVZ();
 
-    lama::Vector<ValueType> &Sxx = wavefield.getRefSxx();
-    lama::Vector<ValueType> &Syy = wavefield.getRefSyy();
-    lama::Vector<ValueType> &Szz = wavefield.getRefSzz();
+    auto &Sxx = wavefield.getRefSxx();
+    auto &Syy = wavefield.getRefSyy();
+    auto &Szz = wavefield.getRefSzz();
 
-    lama::Vector<ValueType> &Syz = wavefield.getRefSyz();
-    lama::Vector<ValueType> &Sxz = wavefield.getRefSxz();
-    lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
+    auto &Syz = wavefield.getRefSyz();
+    auto &Sxz = wavefield.getRefSxz();
+    auto &Sxy = wavefield.getRefSxy();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
-    lama::Matrix<ValueType> const &Dzf = derivatives.getDzf();
-    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dzb = derivatives.getDzb();
+    auto const &Dxf = derivatives.getDxf();
+    auto const &Dzf = derivatives.getDzf();
+    auto const &Dxb = derivatives.getDxb();
+    auto const &Dzb = derivatives.getDzb();
 
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+    auto const &Dyb = derivatives.getDyb();
+    auto const &DybFreeSurface = derivatives.getDybFreeSurface();
+    auto const &Dyf = derivatives.getDyf();
+    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
-    
+
     /* -------- */
     /*    vx    */
     /* -------- */
@@ -237,7 +221,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
         ConvPML.apply_sxz_x(update);
     }
 
-    if (useFreeSurface==1) {
+    if (useFreeSurface == 1) {
         /* Apply image method */
         update_temp = DybFreeSurface * Syz;
     } else {
@@ -288,7 +272,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update = vxx + vyy;
     update *= sWaveModulus;
     Szz -= 2.0 * update;
-
 
     /* ------------------- */
     /* update shear stress */

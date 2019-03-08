@@ -205,7 +205,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::getAcquisitionRow(lama::DenseMat
     acqRowMat.setRow(acqRow, 0, common::BinaryOp::COPY);
 }
 
- //! \brief Initialize a Segy struct
+//! \brief Initialize a Segy struct
 /*!
 \param segy Segy struct
 */
@@ -400,13 +400,13 @@ void KITGPI::Acquisition::suHandler<ValueType>::readSingleDataSU(std::string con
 * This method writes the seismogram in the Seismic Unix format to disk.
 * Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
 \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
-\param NX Number of grid points in X direction
-\param NY Number of grid points in Y direction
-\param NZ Number of grid points in Z direction
-\param DH Length of space step in meter
+\param data DenseMatrix with traces of one seismogramtype
+\param coordinates1D coordinates of the traces
+\param sourceCoordinate1D source coordinate (is only !=0 if a single source is used)
+\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
 */
 template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates, ValueType DT, scai::IndexType sourceCoordinate, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH)
+void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates1D, ValueType DT, scai::IndexType sourceCoordinate1D, Coordinates<ValueType> const &modelCoordinates)
 {
     Segy tr;
     initSegy(tr);
@@ -428,10 +428,10 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     pFile = fopen(filetemp, "wb");
     scai::lama::DenseVector<ValueType> tempdata;
 
-    Coordinates coordTransform(NX, NY, NZ);
     coordinate3D coord3Dsrc;
     coordinate3D coord3Drec;
-    coord3Dsrc = coordTransform.index2coordinate(sourceCoordinate);
+    coord3Dsrc = modelCoordinates.index2coordinate(sourceCoordinate1D);
+    ValueType DH = modelCoordinates.getDH();
 
     YS = coord3Dsrc.y;
     XS = coord3Dsrc.x;
@@ -441,9 +441,9 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     ZS = ZS * DH;
 
     for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-        temp3 = float(coordinates.getValue(tracl1));
+        temp3 = float(coordinates1D.getValue(tracl1));
         temp2 = floor(temp3);
-        coord3Drec = coordTransform.index2coordinate(temp2);
+        coord3Drec = modelCoordinates.index2coordinate(temp2);
         xr = coord3Drec.x;
         yr = coord3Drec.y;
         zr = coord3Drec.z;

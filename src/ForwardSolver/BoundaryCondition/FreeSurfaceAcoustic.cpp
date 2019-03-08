@@ -9,14 +9,11 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeS
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class
- \param NX Number of grid points in X-Direction
- \param NY Number of grid points in Y-Direction (Depth)
- \param NZ Number of grid points in Z-Direction
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal Sampling
- \param DH Distance between grid points
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, IndexType NX, IndexType NY, IndexType NZ, ValueType DT, ValueType DH)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -25,8 +22,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     active = true;
 
     derivatives.useFreeSurface = true;
-    derivatives.calcDyfFreeSurface(NX, NY, NZ, dist);
-    derivatives.DyfFreeSurface *= DT / DH;
+    derivatives.calcDyfFreeSurface(modelCoordinates, dist);
+    derivatives.DyfFreeSurface *= DT;
     derivatives.Dyf.purge();
 
     /* Distributed vectors */
@@ -43,8 +40,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
     /* Get write access to local part of setSurfaceZero */
     auto write_setSurfaceZero = hostWriteAccess(setSurfaceZero.getLocalValues());
 
-    KITGPI::Acquisition::Coordinates coordinateTransformation(NX,NY,NZ);
-
     IndexType rowGlobal;
     IndexType rowLocal;
 
@@ -54,7 +49,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
         rowLocal = dist->global2Local(rowGlobal);
 
         /* Determine if the current grid point is located on the surface */
-        if (coordinateTransformation.locatedOnSurface(rowGlobal)) {
+        if (modelCoordinates.locatedOnSurface(rowGlobal)) {
 
             /* Set elements at the surface to zero */
             write_setSurfaceZero[rowLocal] = 0.0;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "../../Modelparameter/Modelparameter.hpp"
 #include "../Derivatives/Derivatives.hpp"
@@ -27,7 +26,7 @@ namespace KITGPI
 
                 virtual ~FreeSurfaceAcoustic() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DT, ValueType DH) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
 
               protected:
                 using FreeSurface<ValueType>::active;

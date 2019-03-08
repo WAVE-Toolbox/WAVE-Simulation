@@ -47,7 +47,7 @@ void KITGPI::Acquisition::SourceSignal::Ricker<ValueType>::calc(scai::lama::Dens
     lama::DenseVector<ValueType> one(signal.size(), 1.0);
     help = tau * tau;
     tau = -1.0 * help;
-    tau = exp( tau );
+    tau = exp(tau);
     help = one - 2.0 * help;
     signal = AMP * help * tau;
 }

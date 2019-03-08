@@ -37,23 +37,23 @@ void KITGPI::Filter::Filter<ValueType>::calcFrequencyVector(scai::lama::DenseVec
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::calcFrequencyMat(std::string filterType, scai::IndexType order, ValueType fc, scai::lama::DenseVector<ValueType> &frequencyVector, scai::lama::DenseMatrix<ComplexValueType> &frequencyMat)
 {
-    frequencyMat.allocate(frequencyVector.size(), order+1);
-    
+    frequencyMat.allocate(frequencyVector.size(), order + 1);
+
     scai::lama::DenseVector<ComplexValueType> fNormCompl;
     scai::lama::DenseVector<ValueType> freqVecNorm;
-    
+
     if (filterType == "lp") {
-        freqVecNorm = frequencyVector/fc;
+        freqVecNorm = frequencyVector / fc;
         fNormCompl.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(frequencyVector.size(), 0.0), freqVecNorm);
     } else if (filterType == "hp") {
-        freqVecNorm = -fc/frequencyVector;
+        freqVecNorm = -fc / frequencyVector;
         fNormCompl.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(frequencyVector.size(), 0.0), freqVecNorm);
     } else {
         COMMON_THROWEXCEPTION("Invalid filter type.");
     }
-    
-    for (scai::IndexType iCol = 0; iCol <=  order; ++iCol) {
-        frequencyMat.setColumn(scai::lama::eval<scai::lama::DenseVector<ComplexValueType>>(scai::lama::pow<ComplexValueType>(fNormCompl,iCol)), iCol, scai::common::BinaryOp::COPY);
+
+    for (scai::IndexType iCol = 0; iCol <= order; ++iCol) {
+        frequencyMat.setColumn(scai::lama::eval<scai::lama::DenseVector<ComplexValueType>>(scai::lama::pow<ComplexValueType>(fNormCompl, iCol)), iCol, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -62,36 +62,37 @@ void KITGPI::Filter::Filter<ValueType>::calcFrequencyMat(std::string filterType,
  \param poly Result where the coefficients are stored
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly) {
-    
-    poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order+1, 0.0);
+void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly)
+{
+
+    poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order + 1, 0.0);
     poly[0] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
-    
-    scai::IndexType fPolyLen = Common::calcNextPowTwo<ValueType>(order+1);
-    
+
+    scai::IndexType fPolyLen = Common::calcNextPowTwo<ValueType>(order + 1);
+
     auto fPolyDist = std::make_shared<scai::dmemo::NoDistribution>(fPolyLen);
     auto polyDist = poly.getDistributionPtr();
-    
+
     scai::lama::DenseVector<ComplexValueType> fPoly;
     fPoly = scai::lama::cast<ComplexValueType>(poly);
     fPoly.resize(fPolyDist);
     scai::lama::fft<ComplexValueType>(fPoly);
-    
+
     scai::lama::DenseVector<ValueType> polyTemp = scai::lama::fill<scai::lama::DenseVector<ValueType>>(fPolyLen, 0.0); // Single factor of Butterworth polynomial
     polyTemp[0] = 1.0;
     polyTemp[2] = 1.0;
-    
+
     scai::lama::DenseVector<ComplexValueType> fPolyTemp;
-    
-    for (scai::IndexType iOrder = 1; iOrder <= order/2; ++iOrder) {
+
+    for (scai::IndexType iOrder = 1; iOrder <= order / 2; ++iOrder) {
         polyTemp[1] = -2.0 * scai::common::Math::cos((2.0 * iOrder + order - 1.0) / (2.0 * order) * M_PI);
         fPolyTemp = scai::lama::cast<ComplexValueType>(polyTemp);
         fPolyTemp.resize(fPolyDist);
         scai::lama::fft<ComplexValueType>(fPolyTemp);
         fPoly *= fPolyTemp; // convolution of polynomial factors is multiplication in frequency domain
     }
-    
-    if (order%2 != 0) {
+
+    if (order % 2 != 0) {
         polyTemp[1] = 1.0;
         polyTemp[2] = 0.0;
         fPolyTemp = scai::lama::cast<ComplexValueType>(polyTemp);
@@ -138,7 +139,7 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
 
     scai::lama::DenseVector<ValueType> freqVec;
     calcFrequencyVector(freqVec);
-    
+
     if (filterType == "lp") {
         calcButterworthLp(transFcn, freqVec, order, fc1);
     } else if (filterType == "hp") {
@@ -161,13 +162,13 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVecto
 {
     scai::lama::DenseMatrix<ComplexValueType> freqMat;
     calcFrequencyMat("lp", order, fc, freqVec, freqMat);
-    
+
     scai::lama::DenseVector<ValueType> poly;
     calcButterPoly(order, poly);
-    
+
     scai::lama::DenseVector<ComplexValueType> cPoly;
     cPoly = scai::lama::cast<ComplexValueType>(poly);
-    
+
     transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
     transFcnTmp.setValue(0, ComplexValueType(1.0, 0.0));
@@ -184,13 +185,13 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVecto
 {
     scai::lama::DenseMatrix<ComplexValueType> freqMat;
     calcFrequencyMat("hp", order, fc, freqVec, freqMat);
-    
+
     scai::lama::DenseVector<ValueType> poly;
     calcButterPoly(order, poly);
-    
+
     scai::lama::DenseVector<ComplexValueType> cPoly;
     cPoly = scai::lama::cast<ComplexValueType>(poly);
-    
+
     transFcnTmp = freqMat * cPoly;
     transFcnTmp.unaryOp(transFcnTmp, scai::common::UnaryOp::RECIPROCAL);
     transFcnTmp.setValue(0, ComplexValueType(0.0, 0.0));
@@ -223,14 +224,14 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     SCAI_ASSERT_ERROR(signal.size() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseVector<ComplexValueType> fSignal;
-    
+
     fSignal = scai::lama::cast<ComplexValueType>(signal);
     fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
     scai::lama::fft<ComplexValueType>(fSignal);
 
     fSignal *= transFcn;
     fSignal /= len; // proper fft normalization
-    
+
     scai::lama::ifft<ComplexValueType>(fSignal);
     fSignal.resize(signal.getDistributionPtr());
 
@@ -243,25 +244,24 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType> &signal) const
 {
-    scai::IndexType len = 2*fNyquist/df;
-    SCAI_ASSERT_ERROR(signal.getNumColumns()+zeroPadding == len,"\nFilter is designed for different input length\n\n");
+    scai::IndexType len = 2 * fNyquist / df;
+    SCAI_ASSERT_ERROR(signal.getNumColumns() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseMatrix<ComplexValueType> fSignal;
 
     fSignal = scai::lama::cast<ComplexValueType>(signal);
-    fSignal.resize(signal.getRowDistributionPtr(),std::make_shared<scai::dmemo::NoDistribution>(len));
+    fSignal.resize(signal.getRowDistributionPtr(), std::make_shared<scai::dmemo::NoDistribution>(len));
 
-    scai::lama::fft<ComplexValueType>(fSignal,1);
-    
+    scai::lama::fft<ComplexValueType>(fSignal, 1);
+
     fSignal.scaleColumns(transFcn);
 
     fSignal *= (1.0 / ValueType(len)); // proper fft normalization
 
-    scai::lama::ifft<ComplexValueType>(fSignal,1);
-    fSignal.resize(signal.getRowDistributionPtr(),signal.getColDistributionPtr());
+    scai::lama::ifft<ComplexValueType>(fSignal, 1);
+    fSignal.resize(signal.getRowDistributionPtr(), signal.getColDistributionPtr());
     signal = scai::lama::real(fSignal);
 }
-
 
 template class KITGPI::Filter::Filter<double>;
 template class KITGPI::Filter::Filter<float>;

@@ -35,6 +35,7 @@ namespace KITGPI
 
         /*! \brief This class manages the transformation of Coordinates from 3-D to 1-D and vice-versa
          */
+        template <typename ValueType>
         class Coordinates
         {
 
@@ -45,32 +46,38 @@ namespace KITGPI
             //! Destructor, releases all allocated resources.
             ~Coordinates(){};
             // constructor for regular grid
-            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ);
+            Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
+
+            ValueType getDH() const;
+            scai::IndexType getNX() const;
+            scai::IndexType getNY() const;
+            scai::IndexType getNZ() const;
 
             // Coordinate --> Index:
             // Interfaces 3-D
-            scai::IndexType coordinate2index(coordinate3D coordinate);
-            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            scai::IndexType coordinate2index(coordinate3D coordinate) const;
+            scai::IndexType coordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D index2coordinate(scai::IndexType coordinate);
+            coordinate3D index2coordinate(scai::IndexType index) const;
 
-            coordinate3D edgeDistance(coordinate3D coordinate);
+            coordinate3D edgeDistance(coordinate3D coordinate) const;
 
-            bool locatedOnSurface(scai::IndexType coordinate);
+            bool locatedOnSurface(scai::IndexType index) const;
 
           private:
             scai::IndexType NX;
             scai::IndexType NY;
             scai::IndexType NZ;
+            ValueType DH;
 
             // Coordinate --> Index:
-            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
             // Index --> Coordinate:
-            coordinate3D map3Dindex2coordinate(scai::IndexType coordinate);
+            coordinate3D mapIndex2coordinate(scai::IndexType index) const;
 
-            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z);
+            coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
         };
     }
 }

@@ -16,7 +16,7 @@ KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::Source
     if (seismogramHandlerSrc.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
-        IndexType temp = sourceConfig.getCoordinates().getValue(0);
+        IndexType temp = sourceConfig.get1DCoordinates().getValue(0);
         seismogramHandlerRec.setSourceCoordinate(temp);
     } else {
         /* If more than one source is injected at the same time, the source coordinate is
@@ -95,7 +95,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
 template <typename ValueType>
 void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
 {
-    const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
+    const lama::DenseVector<IndexType> &coordinates = seismo.get1DCoordinates();
     lama::DenseMatrix<ValueType> &seismogramData = seismo.getData();
 
     temp.gatherInto(wavefieldSingle, coordinates, common::BinaryOp::COPY);
@@ -171,7 +171,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
 {
     /* Get reference to sourcesignal storing seismogram */
     const lama::DenseMatrix<ValueType> &sourcesSignals = seismo.getData();
-    const lama::DenseVector<IndexType> &coordinates = seismo.getCoordinates();
+    const lama::DenseVector<IndexType> &coordinates = seismo.get1DCoordinates();
 
     sourcesSignals.getColumn(temp, t);
     wavefieldSingle.scatter(coordinates, true, temp, common::BinaryOp::ADD);

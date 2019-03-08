@@ -7,22 +7,22 @@ using namespace scai;
  \param config Configuration
  \param derivatives Derivatives matrices
  \param wavefield Wavefields for the modelling
+ \param model model class
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVZ().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
-    dmemo::DistributionPtr dist;
-    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
-    dist = vZ.getDistributionPtr();
+    auto dist = wavefield.getRefVZ().getDistributionPtr();
 
     /* Initialisation of Boundary Conditions */
     if (config.get<IndexType>("FreeSurface") || config.get<IndexType>("DampingBoundary")) {
-        this->prepareBoundaryConditions(config, derivatives, dist, ctx);
+        this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
     /* aalocation of auxiliary vectors*/
@@ -37,32 +37,15 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::
  *
  *
  \param config Configuration
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param derivatives Derivatives matrices
  \param dist Distribution of the wave fields
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> & /*derivatives*/, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
-
-      useFreeSurface = config.get<IndexType>("FreeSurface");
-  
-    /* Prepare Free Surface */
-    if (useFreeSurface==1) {
-        useFreeSurface = true;
-        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-           //    FreeSurface.init(dist, derivatives, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<ValueType>("DH"));
-    }
-
-    /* Prepare Damping Boundary */
-    if (config.get<IndexType>("DampingBoundary") == 1) {
-        useDampingBoundary = true;
-        DampingBoundary.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("DampingCoeff"), useFreeSurface);
-    }
-    if (config.get<IndexType>("DampingBoundary") == 2) {
-        useConvPML = true;
-        ConvPML.init(dist, ctx, config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DT"), config.get<IndexType>("DH"), config.get<IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
-    }
+    this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
 /*! \brief resets PML (use after each modelling!)
@@ -84,11 +67,11 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::resetCPML()
 
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &/*model*/, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const & /*model*/, ValueType /*DT*/)
 {
-    if (useFreeSurface==1) {
-              SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-    //    FreeSurface.setModelparameter(model);
+    if (useFreeSurface == 1) {
+        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+        //    FreeSurface.setModelparameter(model);
     }
 }
 
@@ -120,29 +103,28 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     SCAI_REGION("timestep")
 
-
     /* Get references to required modelparameter */
-    lama::Vector<ValueType> const &inverseDensity = model.getInverseDensity();
-    lama::Vector<ValueType> const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
-    lama::Vector<ValueType> const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
+    auto const &inverseDensity = model.getInverseDensity();
+    auto const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
+    auto const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
 
     /* Get references to required wavefields */
-    lama::Vector<ValueType> &vZ = wavefield.getRefVZ();
-    lama::Vector<ValueType> &Sxz = wavefield.getRefSxz();
-    lama::Vector<ValueType> &Syz = wavefield.getRefSyz();
+    auto &vZ = wavefield.getRefVZ();
+    auto &Sxz = wavefield.getRefSxz();
+    auto &Syz = wavefield.getRefSyz();
 
     /* Get references to required derivatives matrixes */
-    lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
-    lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
- //   lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
-    
+    auto const &Dxf = derivatives.getDxf();
+    auto const &Dxb = derivatives.getDxb();
+    auto const &Dyb = derivatives.getDyb();
+    auto const &Dyf = derivatives.getDyf();
+    //   lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
+
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     if (useFreeSurface) {
         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-   //         FreeSurface.setModelparameter(model);
+        //         FreeSurface.setModelparameter(model);
     }
 
     /* ----------------*/
@@ -156,7 +138,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
         ConvPML.apply_vxx(update);
         ConvPML.apply_vyy(update_temp);
     }
-    
+
     update += update_temp;
 
     update *= inverseDensity;
@@ -166,7 +148,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /*  update stress  */
     /* ----------------*/
 
-    update = Dxf*vZ;
+    update = Dxf * vZ;
     if (useConvPML) {
         ConvPML.apply_sxx_x(update);
     }
@@ -175,7 +157,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     Sxz += update;
 
-    update = Dyf*vZ;
+    update = Dyf * vZ;
     if (useConvPML) {
         ConvPML.apply_syy_y(update);
     }
@@ -186,7 +168,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /* Apply free surface to stress update */
     if (useFreeSurface) {
         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-            //       FreeSurface.apply(vZ, Sxz, Syz);
+        //       FreeSurface.apply(vZ, Sxz, Syz);
     }
 
     /* Apply the damping boundary */
@@ -197,7 +179,6 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /* Apply source and save seismogram */
     SourceReceiver.applySource(t);
     SourceReceiver.gatherSeismogram(t);
-
 }
 
 template class KITGPI::ForwardSolver::FD2Dsh<float>;

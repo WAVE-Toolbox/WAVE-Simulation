@@ -40,7 +40,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Elastic(){equationType = "elastic";};
+            Elastic() { equationType = "elastic"; };
 
             //! Destructor, releases all allocated resources.
             ~Elastic(){};
@@ -59,7 +59,7 @@ namespace KITGPI
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
             std::string getEquationType() const;
-            
+
             /* Getter methods for not requiered parameters */
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
@@ -72,10 +72,10 @@ namespace KITGPI
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
-            void prepareForModelling(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
-            
+            void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
+
             void applyThresholds(Configuration::Configuration const &config) override;
-    
+
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
@@ -93,7 +93,7 @@ namespace KITGPI
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::equationType;
-            
+
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
             using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
@@ -105,9 +105,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
 
-            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
-
-            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration config, scai::dmemo::CommunicatorPtr comm);
+            void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
             using Modelparameter<ValueType>::DensityAverageMatrixX;
             using Modelparameter<ValueType>::DensityAverageMatrixY;

@@ -7,11 +7,11 @@ stages:
 gcc:
   stage: build
   before_script:
-    - SCAI_ROOT=/data14/software/scai_lama/build_dev_g++-7
+    - SCAI_ROOT=/home/tmetz/lama/build_g++-7.4
     - echo "LAMA Version:" && file ${SCAI_ROOT}/lib/libscai_lama.so | sed 's/.*libscai_lama\.so\.\([0-9]*\.[0-9]*\.[0.9]*\).*/\1/g'
   script:
-    - echo "g++ Version:" && g++ --version
-    - cd build/ && make -j 8 prog && make -j 8 utest && make itest && make model
+    - echo "g++ Version:" && /usr/local/GCC740/bin/g++-7.4.0 --version
+    - cd build/ && make -j 8 prog CXX=/usr/local/GCC740/bin/g++-7.4.0 && make utest -j 8 CXX=/usr/local/GCC740/bin/g++-7.4.0 && make itest CXX=/usr/local/GCC740/bin/g++-7.4.0 && make model CXX=/usr/local/GCC740/bin/g++-7.4.0
   artifacts:
     when: on_success
     expire_in: 30 min
