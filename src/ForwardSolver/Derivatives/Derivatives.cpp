@@ -379,6 +379,21 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
     DzbSparse.fillFromAssembly(assembly);
 }
 
+//! \brief Calculate interpolation Matrix acoustic (2D/3D) variable grid simulations 
+/*!
+ * Bilinear interpolation is used for the interpolation
+ * 
+ *   21 ---o---o---22
+ *    |            |
+ *    o    o   o   o
+ *    |            |
+ * z  o    o   o   o
+ * ^  |            |
+ * | 11 ---o---o---21
+ *   --> x
+\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param dist Distribution
+ */
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolationP(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
@@ -389,41 +404,66 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * 2);
 
-    ValueType third = ValueType(1) / ValueType(3);
-    IndexType layer=0;
-    IndexType dhFactor=0;
-    IndexType dhFactorFineGrid=0;
-    
+    ValueType denom = 0;
+    IndexType dhFactorFineGrid = 0;
+    IndexType modx = 0;
+    IndexType modz = 0;
+    ValueType value;
+    IndexType index;
+
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         const IndexType &x = coordinate.x;
         const IndexType &y = coordinate.y;
         const IndexType &z = coordinate.z;
-        
-        layer=modelCoordinates.getLayer(coordinate);
-        dhFactor=modelCoordinates.getDHFactor(layer);
-        dhFactorFineGrid=dhFactor;
-        
+
+        const IndexType &NX = modelCoordinates.getNX();
+        const IndexType &NZ = modelCoordinates.getNZ();
+
+        const IndexType &layer = modelCoordinates.getLayer(coordinate);
+        const IndexType &dhFactor = modelCoordinates.getDHFactor(layer);
+        dhFactorFineGrid = dhFactor;
+        denom = ValueType(1) / ValueType(dhFactor * dhFactor);
+
         if (modelCoordinates.locatedOnInterface(coordinate)) {
             if (modelCoordinates.getTransition(coordinate))
-              dhFactorFineGrid=modelCoordinates.getDHFactor(layer-1);
+                dhFactorFineGrid = modelCoordinates.getDHFactor(layer - 1);
             else
-              dhFactorFineGrid=modelCoordinates.getDHFactor(layer+1);
+                dhFactorFineGrid = modelCoordinates.getDHFactor(layer + 1);
         }
-        
-        if (!modelCoordinates.locatedOnInterface(coordinate) || (x % dhFactor== 0)) {
+
+        if (!modelCoordinates.locatedOnInterface(coordinate)) {
             assembly.push(ownedIndex, ownedIndex, ValueType(1));
-        } else if ((x % dhFactor == dhFactorFineGrid) && (x < modelCoordinates.getNX() - 2*dhFactorFineGrid)) {
-            IndexType leftIndex = modelCoordinates.coordinate2index(x - dhFactorFineGrid, y, z);
-            IndexType rightIndex = modelCoordinates.coordinate2index(x + 2*dhFactorFineGrid, y, z);
-            assembly.push(ownedIndex, leftIndex, 2 * third);
-            assembly.push(ownedIndex, rightIndex, 1 * third);
-        } else if (x < modelCoordinates.getNX() - dhFactorFineGrid) {
-            IndexType leftIndex = modelCoordinates.coordinate2index(x - 2*dhFactorFineGrid, y, z);
-            IndexType rightIndex = modelCoordinates.coordinate2index(x + 1*dhFactorFineGrid, y, z);
-            assembly.push(ownedIndex, leftIndex, 1 * third);
-            assembly.push(ownedIndex, rightIndex, 2 * third);
+        } else {
+            modx = x % dhFactor;
+            modz = z % dhFactor;
+
+            // Point 11
+            value = (dhFactor - modx) * (dhFactor - modz) * denom;
+            index = modelCoordinates.coordinate2index(x - modx, y, z - modz);
+            assembly.push(ownedIndex, index, value);
+
+            // Point 12
+            if (x < NX - 2 * dhFactorFineGrid) {
+                value = modx * (dhFactor - modz) * denom;
+                index = modelCoordinates.coordinate2index(x + dhFactor - modx, y, z - modz);
+                assembly.push(ownedIndex, index, value);
+            }
+
+            //Point 21
+            if (z < NZ - 2 * dhFactorFineGrid) {
+                value = (dhFactor - modx) * modz * denom;
+                index = modelCoordinates.coordinate2index(x - modx, y, z + dhFactor - modz);
+                assembly.push(ownedIndex, index, value);
+            }
+            
+            //Point 22
+            if ((x < NX - 2 * dhFactorFineGrid) && (z < NZ - 2 * dhFactorFineGrid)) {
+                value = modx * modz * denom;
+                index = modelCoordinates.coordinate2index(x + dhFactor - modx, y, z + dhFactor - modz);
+                assembly.push(ownedIndex, index, value);
+            }
         }
     }
 
