@@ -149,10 +149,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
 
-//     DxfSparse.writeToFile("Dxf.mtx");
-//     DyfSparse.writeToFile("Dyf.mtx");
-//     DxbSparse.writeToFile("Dxb.mtx");
-//     DybSparse.writeToFile("Dyb.mtx");
     
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;
@@ -161,8 +157,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DybSparse *= DT;
 
     this->calcInterpolationP(modelCoordinates, dist);
-    
-    InterpolationP.writeToFile("interp.mtx");
     
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

@@ -52,6 +52,7 @@ DzfSparse.redistribute(dist,dist);
 DxbSparse.redistribute(dist,dist);
 DybSparse.redistribute(dist,dist);
 DzbSparse.redistribute(dist,dist);
+InterpolationP.redistribute(dist,dist);
 }
 
 //! \brief Constructor of the derivative matrices
@@ -219,6 +220,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzbSparse.scale(DT);
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
+    
+     this->calcInterpolationP(modelCoordinates, dist);
+    
 }
 
 //! \brief Getter method for combined derivative matrix
