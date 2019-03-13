@@ -434,8 +434,8 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 {
 
     SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z << " NX=" << NX << " Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Y < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Z < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
     SCAI_ASSERT(X >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
     SCAI_ASSERT(Y >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
     SCAI_ASSERT(Z >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
@@ -499,8 +499,8 @@ template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
     SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z << " NX=" << NX << " Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Y < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Z < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
     SCAI_ASSERT(X >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
     SCAI_ASSERT(Y >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
     SCAI_ASSERT(Z >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
