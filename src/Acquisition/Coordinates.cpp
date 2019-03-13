@@ -1,8 +1,8 @@
 #include "Coordinates.hpp"
 #include <algorithm>
-#include <vector>
 #include <cmath>
-#include <iterator> 
+#include <iterator>
+#include <vector>
 using namespace scai;
 
 /* ------- */
@@ -19,86 +19,81 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType ny, IndexType nz, ValueType dh, std::vector<IndexType> &dhFactors, std::vector<IndexType> &interfaces) : NX(nx), NY(ny), NZ(nz), DH(dh), dhFactor(dhFactors), interface(interfaces)
 {
-    
+
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
     SCAI_ASSERT_ERROR(NZ > 0, "NZ<=0");
-    
+
     numLayers = dhFactor.size();
 
-    varNX.assign(numLayers,0);
-    varNY.assign(numLayers,0);
-    varNZ.assign(numLayers,0);
-    varDH.assign(numLayers,0.0);
+    varNX.assign(numLayers, 0);
+    varNY.assign(numLayers, 0);
+    varNZ.assign(numLayers, 0);
+    varDH.assign(numLayers, 0.0);
 
-    layerStart.assign(numLayers,0);
-    layerEnd.assign(numLayers,0);
-    transition.assign(numLayers,0);
+    layerStart.assign(numLayers, 0);
+    layerEnd.assign(numLayers, 0);
+    transition.assign(numLayers, 0);
 
-    nGridpointsPerLayer.assign(numLayers,0);
+    nGridpointsPerLayer.assign(numLayers, 0);
     nGridpoints = 0;
-
 
     interface.push_back(ny - 1);
     interface.insert(interface.begin(), -1);
-    
-    IndexType dhMax=0;
+
+    IndexType dhMax = 0;
     /*Check for incompatible NX,NZ,NY interfaces and dhFactors and correct them if necessary*/
     for (IndexType layer = 0; layer < numLayers; layer++) {
-        SCAI_ASSERT_ERROR(floor(std::log(dhFactor[layer])/std::log(3)) == std::log(dhFactor[layer])/std::log(3),"incompativle dhFactor, dhFactor must be 3^n")
-        if (dhFactor[layer]>dhMax)
-            dhMax=dhFactor[layer];
-    }
-    
-    
-    IndexType NXmax=nx;
-    IndexType NZmax=nz;
-    
-    if (dhMax!=1){
-    while (true) {
-        if(NXmax==floor(NXmax/dhMax)*dhMax + 1 +floor(dhMax/2)){
-            break;
-        }
-        NXmax--;       
+        SCAI_ASSERT_ERROR(floor(std::log(dhFactor[layer]) / std::log(3)) == std::log(dhFactor[layer]) / std::log(3), "incompatible dhFactor, dhFactor must be 3^n")
+        if (dhFactor[layer] > dhMax)
+            dhMax = dhFactor[layer];
     }
 
-    
-    while ((true)&&(nz!=1)) {
-        if(NZmax==floor(NZmax/dhMax)*dhMax+1+floor(dhMax/2)){
-            break;
+    IndexType NXmax = nx;
+    IndexType NZmax = nz;
+
+    if (dhMax != 1) {
+        while (true) {
+            if (NXmax == floor(NXmax / dhMax) * dhMax + 1 + floor(dhMax / 2)) {
+                break;
+            }
+            NXmax--;
         }
-        NZmax--;       
-    }
-    
-    
-    if (NXmax!=nx)
-        std::cout << "NX for the variable grid has been changed from " << nx << " to " << NXmax << std::endl;
-    if (NZmax!=nz)
-        std::cout << "NZ for the variable grid has been changed from " << nz << " to " << NZmax << std::endl;
-    
-    /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
-     IndexType layer=0;
-    while ( layer <= 1){
-    layer++;
-    ValueType test=ValueType(interface[layer]-interface[layer-1]-1)/dhFactor[layer-1];
-            if (floor(test)!=test){
-            std::cout << "interface[" << layer << "] has been changed from "<< interface[layer] << " to " << interface[layer]-1 << std::endl;
-            interface[layer]--;
-            layer--;
+
+        while ((true) && (nz != 1)) {
+            if (NZmax == floor(NZmax / dhMax) * dhMax + 1 + floor(dhMax / 2)) {
+                break;
+            }
+            NZmax--;
         }
-    }
-    
-    layer=1;
-    while ( layer < numLayers) {
-        layer++;
-        ValueType test=ValueType(interface[layer]-interface[layer-1])/dhFactor[layer-1];
-        if (floor(test)!=test){
-            std::cout << "interface[" << layer << "] has been changed from "<< interface[layer] << " to " << interface[layer]-1 << std::endl;
-            interface[layer]--;
-            layer--;
+
+        if (NXmax != nx)
+            std::cout << "NX for the variable grid has been changed from " << nx << " to " << NXmax << std::endl;
+        if (NZmax != nz)
+            std::cout << "NZ for the variable grid has been changed from " << nz << " to " << NZmax << std::endl;
+
+        /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
+        IndexType layer = 0;
+        while (layer < 1) {
+            layer++;
+            ValueType test = ValueType(interface[layer] - interface[layer - 1] - 1) / dhFactor[layer - 1];
+            if (floor(test) != test) {
+                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
+                interface[layer]--;
+                layer--;
+            }
         }
-    }
-    
+
+        layer = 1;
+        while (layer < numLayers) {
+            layer++;
+            ValueType test = ValueType(interface[layer] - interface[layer - 1]) / dhFactor[layer - 1];
+            if (floor(test) != test) {
+                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
+                interface[layer]--;
+                layer--;
+            }
+        }
     }
     /* loop over all layers in the variable grid 
      DH will be multiplied with the enlargement factor dhFactor.  dhFactor must be a multiple of 3.
@@ -117,39 +112,29 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
             layerStart[layer + 1] = interface[layer + 1];
         }
     }
-    
+
     // set the last elements
     transition[numLayers - 1] = 0;
     layerEnd[numLayers - 1] = interface[numLayers];
 
+    //calculate NX,NY,NZ and number of gridpoints per layer
     for (IndexType layer = 0; layer < numLayers; layer++) {
 
         varNY[layer] = (layerEnd[layer] - layerStart[layer]) / dhFactor[layer] + 1;
-        varNX[layer] = floor(nx / dhFactor[layer]);
-        varNZ[layer] = floor(nz / dhFactor[layer]);
-        
-       
-        
+        varNX[layer] = floor(NXmax / dhFactor[layer]);
+        varNZ[layer] = floor(NZmax / dhFactor[layer]);
+
         if (dhFactor[layer] > 1) {
             varNX[layer] = varNX[layer] + 1;
             varNZ[layer] = varNZ[layer] + 1;
         }
 
-        
-         
         nGridpointsPerLayer[layer] = varNX[layer] * varNY[layer] * varNZ[layer];
         nGridpoints += nGridpointsPerLayer[layer];
-       
-//         std::cout << "layerstart [" << layer << "] = "<< layerStart[layer] << std::endl;
-//         std::cout << "layerend [" << layer << "] = "<< layerEnd[layer] << std::endl;
-//          std::cout << "nGridpointsPerLayer [" << layer << "] = "<< nGridpointsPerLayer[layer] << std::endl;
-        varDH[layer]=dh*dhFactor[layer];
-    }
-//     std::cout << NX << NY << NZ << std::endl;
-//     std::cout << varNX[0] << varNY[0] <<  varNZ[0] << std::endl;
-//    std::cout << "nGridpoints " << nGridpoints << std::endl;
-}
 
+        varDH[layer] = dh * dhFactor[layer];
+    }
+}
 
 /*! \brief constructor for regular grid
  *
@@ -167,7 +152,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, sca
     varNY.push_back(ny);
     varNZ.push_back(nz);
     varDH.push_back(dh);
-    
+
     layerStart.push_back(0);
     layerEnd.push_back(ny - 1);
     // transition.resize(numLayers);
@@ -177,7 +162,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, sca
     nGridpointsPerLayer.push_back(nGridpoints);
 
     interface.push_back(ny - 1);
-    interface.insert(interface.begin(), 0);
+    interface.insert(interface.begin(), -1);
 
     dhFactor.push_back(1);
     transition.push_back(0);
@@ -237,7 +222,6 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() co
     return (nGridpoints);
 }
 
-
 /*! \brief getter function for the layer
  *
  *  coarse grids contain the interface at the fine<->coarse and coarse<->fine transition 
@@ -267,7 +251,6 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(IndexType layer) co
 {
     return (varDH[layer]);
 }
-
 
 /*! \brief getter function for DH
  *
@@ -306,13 +289,13 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType lay
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3D coordinate) const
 {
-    bool isOnInterface=false;
-for (int layer=0;layer<numLayers;layer++) {
-   if (coordinate.y==interface[layer]) {
-    isOnInterface=true;
-}
-}
-return (isOnInterface);
+    bool isOnInterface = false;
+    for (int layer = 0; layer < numLayers; layer++) {
+        if (coordinate.y == interface[layer]) {
+            isOnInterface = true;
+        }
+    }
+    return (isOnInterface);
 }
 
 /*! \brief getter function for NZ
@@ -322,16 +305,15 @@ return (isOnInterface);
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
 {
-bool fineToCoarse=false;
-for (int layer=0;layer<numLayers;layer++) {
-   if (coordinate.y==interface[layer+1]) {
-    fineToCoarse=transition[layer];
-   // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
-   }
-   
-}
+    bool fineToCoarse = false;
+    for (int layer = 0; layer < numLayers; layer++) {
+        if (coordinate.y == interface[layer + 1]) {
+            fineToCoarse = transition[layer];
+            // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
+        }
+    }
 
-return (fineToCoarse);
+    return (fineToCoarse);
 }
 
 /*! \brief getter function for coordinates
@@ -451,12 +433,12 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(IndexType X, IndexType Y, IndexType Z) const
 {
 
-    SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z<< " NX="<< NX << " Could not map from coordinate to index!" );
-    SCAI_ASSERT(Y < NY, "Could not map from coordinate to index! " << getNY());
-    SCAI_ASSERT(Z >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
-    SCAI_ASSERT(X >= 0, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z << " NX=" << NX << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Y >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Z >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
 
     IndexType layer;
 
@@ -516,12 +498,12 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::coordinate2index(coordina
 template <typename ValueType>
 KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::estimateDistanceToEdges3D(IndexType X, IndexType Y, IndexType Z) const
 {
-    SCAI_ASSERT(Z < NZ, "No valid argument!");
-    SCAI_ASSERT(X < NX, "No valid argument!");
-    SCAI_ASSERT(Y < NY, "No valid argument!");
-    SCAI_ASSERT(Z >= 0, "No valid argument!");
-    SCAI_ASSERT(Y >= 0, "No valid argument!");
-    SCAI_ASSERT(X >= 0, "No valid argument!");
+    SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z << " NX=" << NX << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NY, "X=" << X << " Y=" << Y << " Z=" << Z << " NY=" << NY << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NZ, "X=" << X << " Y=" << Y << " Z=" << Z << " NZ=" << NZ << " Could not map from coordinate to index!");
+    SCAI_ASSERT(X >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Y >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
+    SCAI_ASSERT(Z >= 0, "X=" << X << " Y=" << Y << " Z=" << Z << " Could not map from coordinate to index!");
 
     coordinate3D distance;
 
