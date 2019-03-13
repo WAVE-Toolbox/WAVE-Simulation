@@ -42,6 +42,64 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
     interface.push_back(ny - 1);
     interface.insert(interface.begin(), -1);
     
+    IndexType dhMax=0;
+    /*Check for incompatible NX,NZ,NY interfaces and dhFactors and correct them if necessary*/
+    for (IndexType layer = 0; layer < numLayers; layer++) {
+        SCAI_ASSERT_ERROR(floor(std::log(dhFactor[layer])/std::log(3)) == std::log(dhFactor[layer])/std::log(3),"incompativle dhFactor, dhFactor must be 3^n")
+        if (dhFactor[layer]>dhMax)
+            dhMax=dhFactor[layer];
+    }
+    
+    
+    IndexType NXmax=nx;
+    IndexType NZmax=nz;
+    
+    if (dhMax!=1){
+    while (true) {
+        if(NXmax==floor(NXmax/dhMax)*dhMax + 1 +floor(dhMax/2)){
+            break;
+        }
+        NXmax--;       
+    }
+
+    
+    while ((true)&&(nz!=1)) {
+        if(NZmax==floor(NZmax/dhMax)*dhMax+1+floor(dhMax/2)){
+            break;
+        }
+        NZmax--;       
+    }
+    
+    
+    if (NXmax!=nx)
+        std::cout << "NX for the variable grid has been changed from " << nx << " to " << NXmax << std::endl;
+    if (NZmax!=nz)
+        std::cout << "NZ for the variable grid has been changed from " << nz << " to " << NZmax << std::endl;
+    
+    /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
+     IndexType layer=0;
+    while ( layer <= 1){
+    layer++;
+    ValueType test=ValueType(interface[layer]-interface[layer-1]-1)/dhFactor[layer-1];
+            if (floor(test)!=test){
+            std::cout << "interface[" << layer << "] has been changed from "<< interface[layer] << " to " << interface[layer]-1 << std::endl;
+            interface[layer]--;
+            layer--;
+        }
+    }
+    
+    layer=1;
+    while ( layer < numLayers) {
+        layer++;
+        ValueType test=ValueType(interface[layer]-interface[layer-1])/dhFactor[layer-1];
+        if (floor(test)!=test){
+            std::cout << "interface[" << layer << "] has been changed from "<< interface[layer] << " to " << interface[layer]-1 << std::endl;
+            interface[layer]--;
+            layer--;
+        }
+    }
+    
+    }
     /* loop over all layers in the variable grid 
      DH will be multiplied with the enlargement factor dhFactor.  dhFactor must be a multiple of 3.
      The begin and end of each layer will be estimated from the layer interfaces. 
@@ -394,7 +452,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::map3Dcoordinate2index(Ind
 {
 
     SCAI_ASSERT(Z < NZ, "Could not map from coordinate to index!");
-    SCAI_ASSERT(X < NX, "Could not map from coordinate to index!");
+    SCAI_ASSERT(X < NX, "X=" << X << " Y=" << Y << " Z=" << Z<< " NX="<< NX << " Could not map from coordinate to index!" );
     SCAI_ASSERT(Y < NY, "Could not map from coordinate to index! " << getNY());
     SCAI_ASSERT(Z >= 0, "Could not map from coordinate to index!");
     SCAI_ASSERT(Y >= 0, "Could not map from coordinate to index!");
