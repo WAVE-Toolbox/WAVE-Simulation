@@ -88,7 +88,7 @@ int main(int argc, const char *argv[])
     }
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"), dhFactor, interface);
-
+    Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
@@ -128,26 +128,31 @@ int main(int argc, const char *argv[])
 
     SCAI_DMEMO_TASK(commShot)
     dmemo::DistributionPtr dist = nullptr;
+    dmemo::DistributionPtr regularDist = nullptr;
     // inter node distribution
     // define the grid topology by sizes NX, NY, and NZ from configuration
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
     if (config.get<bool>("useVariableGrid")) {
         int size = modelCoordinates.getNGridpoints();
         dist = std::make_shared<dmemo::BlockDistribution>(size, commShot);
+        common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
+        common::Grid3D procGrid(config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNX"));
+        // distribute the grid onto available processors
+        regularDist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     } else {
 
         common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
-
         common::Grid3D procGrid(config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNX"));
         // distribute the grid onto available processors
-
         dist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     }
 
-        auto coords = modelCoordinates.getCoordinates(dist, ctx);
-        coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
-        coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
-        coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
+    auto coords = modelCoordinates.getCoordinates(dist, ctx);
+    if (config.get<bool>("useVariableGrid")) {
+            coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
+            coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
+            coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
+    }
     
     //     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     //     dist->getOwnedIndexes(ownedIndexes);
@@ -196,7 +201,6 @@ int main(int argc, const char *argv[])
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
-    
     /* --------------------------------------- */
     /* Call partioner (only for variable Grids)*/
     /* --------------------------------------- */
@@ -217,7 +221,6 @@ int main(int argc, const char *argv[])
 
         auto graph = derivatives->getCombinedMatrix();
 
-
         if (dimensions == 2) {
             coords.pop_back();
         }
@@ -237,7 +240,6 @@ int main(int argc, const char *argv[])
         derivatives->redistributeMatrices(dist);
     }
 
-
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
@@ -248,20 +250,24 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
-  //  CheckParameter::checkSources<ValueType>(config, sources, commShot);
+    //  CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
-      //  CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
+        //  CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
     }
 
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modeltmp(Modelparameter::Factory<ValueType>::Create(equationType));
+    modeltmp->init(config, ctx, regularDist);
+    //  model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(config, ctx, dist);
+    model->init(*modeltmp, dist, modelCoordinates, regularCoordinates);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-   // CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+    // CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
     /* Forward solver                          */
