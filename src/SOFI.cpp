@@ -260,13 +260,13 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modeltmp(Modelparameter::Factory<ValueType>::Create(equationType));
-    modeltmp->init(config, ctx, regularDist);
-    //  model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-
-    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(*modeltmp, dist, modelCoordinates, regularCoordinates);
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model (Modelparameter::Factory<ValueType>::Create(equationType));
+    model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+
+//     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
+//     model->init(*modeltmp, dist, modelCoordinates, regularCoordinates);
+//     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     // CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
