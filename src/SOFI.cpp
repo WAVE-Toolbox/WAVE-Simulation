@@ -188,7 +188,6 @@ int main(int argc, const char *argv[])
     
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
-
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
@@ -289,10 +288,10 @@ if( commShot->getRank() ==0 ){
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
+    CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
-
     }
 
     /* --------------------------------------- */

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scai/dmemo/CyclicDistribution.hpp>
+#include <scai/dmemo/GeneralDistribution.hpp>
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
 

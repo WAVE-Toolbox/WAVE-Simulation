@@ -133,7 +133,6 @@ wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wil
 wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
-
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
 endif
@@ -177,7 +176,6 @@ help:
 	@echo "   itest     :: build integration tests"
 	@echo "   model     :: creates models from source in src/Tools/CreateModel"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
-
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
 	@echo "   vinfo     :: print version information stored in executable"
