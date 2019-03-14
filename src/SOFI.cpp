@@ -29,6 +29,7 @@
 
 #include <ParcoRepart.h>
 
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -41,7 +42,7 @@ int main(int argc, const char *argv[])
 
     common::Settings::parseArgs(argc, argv);
 
-    // typedef float ValueType;
+   // typedef float ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {
@@ -109,8 +110,8 @@ int main(int argc, const char *argv[])
     }
 
     //number of processes inside a shot domain
-    IndexType npNpS = commAll->getSize() / npS;
-
+    IndexType npNpS=commAll->getSize()/npS;
+    
     // Build subsets of processors for the shots
 
     common::Grid2D procAllGrid(npS, npNpS);
@@ -141,50 +142,50 @@ int main(int argc, const char *argv[])
         regularDist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     } else {
 
-        common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
+    common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
         common::Grid3D procGrid(config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNX"));
-        // distribute the grid onto available processors
+    // distribute the grid onto available processors
         dist = std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid);
     }
-
+    
     auto coords = modelCoordinates.getCoordinates(dist, ctx);
     if (config.get<bool>("useVariableGrid")) {
             coords[0].writeToFile(config.get<std::string>("coordinateFilename") + "X.mtx");
             coords[1].writeToFile(config.get<std::string>("coordinateFilename") + "Y.mtx");
             coords[2].writeToFile(config.get<std::string>("coordinateFilename") + "Z.mtx");
-    }
+        }
+        
+        hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+        dist->getOwnedIndexes(ownedIndexes);
     
-    //     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    //     dist->getOwnedIndexes(ownedIndexes);
-    //
-    //     lama::VectorAssembly<ValueType> assembly;
-    //     assembly.reserve(ownedIndexes.size());
-    //
-    //
-    //     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-    //         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-    //         Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
-    //
-    //         scai::IndexType min = 0;
-    //         if (coordinatedist.x < coordinatedist.y) {
-    //             min = coordinatedist.x;
-    //         } else {
-    //             min = coordinatedist.y;
-    //         }
-    //
-    //         if (min < config.get<IndexType>("BoundaryWidth")) {
-    //             //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
-    //             assembly.push(ownedIndex, 1.25);
-    //         }
-    //     }
+        lama::VectorAssembly<ValueType> assembly;
+        assembly.reserve(ownedIndexes.size());
+    
+    
+        for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+            Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+            Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+    
+            scai::IndexType min = 0;
+            if (coordinatedist.x < coordinatedist.y) {
+                min = coordinatedist.x;
+            } else {
+                min = coordinatedist.y;
+            }
+    
+            if (min < config.get<IndexType>("BoundaryWidth")) {
+                //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
+                assembly.push(ownedIndex, 1.5);
+            }
+        }
     lama::DenseVector<ValueType> weights;
     weights.allocate(dist);
-    weights = 1.0;
-    //     weights.fillFromAssembly(assembly);
+    weights=1.0;
+    weights.fillFromAssembly(assembly);
     weights.setContextPtr(ctx);
 
     weights.writeToFile("weights.mtx");
-
+    
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
 
@@ -201,45 +202,83 @@ int main(int argc, const char *argv[])
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
+    
+    
     /* --------------------------------------- */
     /* Call partioner (only for variable Grids)*/
     /* --------------------------------------- */
     if (config.get<bool>("useVariableGrid")) {
-        IndexType dimensions = 0;
-        // transform to lower cases
-        std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
+    IndexType dimensions=0;
+   // transform to lower cases
+    std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
 
-        // Assert correctness of input values
-        SCAI_ASSERT_ERROR(dimension.compare("3d") == 0 || dimension.compare("2d") == 0, "Unkown dimension");
+    // Assert correctness of input values
+    SCAI_ASSERT_ERROR(dimension.compare("3d") == 0 || dimension.compare("2d") == 0, "Unkown dimension");
 
-        if (dimension.compare("2d") == 0) {
-            dimensions = 2;
-        }
-        if (dimension.compare("3d") == 0) {
-            dimensions = 3;
-        }
-
-        auto graph = derivatives->getCombinedMatrix();
-
-        if (dimensions == 2) {
-            coords.pop_back();
-        }
-
-        struct Settings settings;
-        settings.dimensions = dimensions;
-        settings.numBlocks = commShot->getSize();
-
-        struct Metrics metrics(settings.numBlocks); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
-
-        scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
-
-        partition.writeToFile("partitition.mtx");
-
-        dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
-
-        derivatives->redistributeMatrices(dist);
+    if (dimension.compare("2d") == 0) {
+        dimensions=2;
+    }
+    if (dimension.compare("3d") == 0) {
+        dimensions=3;
     }
 
+    auto graph=derivatives->getCombinedMatrix();
+    
+    if (dimensions==2){
+    coords.pop_back();
+    }
+    
+//std::cout << graph.getNumValues() << std::endl;
+
+if( commShot->getRank() ==0 ){
+	std::cout << graph.getLocalStorage().getValues()[0] << std::endl;
+	//std::cout << graph.getLocalStorage().getValues().sum() << std::endl;
+	std::cout << graph.getLocalStorage().getValues()[100] << std::endl;
+}
+
+    
+    struct Settings settings;
+    settings.dimensions=dimensions;
+    settings.noRefinement = true;
+    settings.verbose = false;
+    settings.minBorderNodes = 100;
+    settings.multiLevelRounds = 9;
+   settings.numBlocks=commShot->getSize();
+    settings.coarseningStepsBetweenRefinement = 1;
+    //settings.maxKMeansIterations = 10;
+    //settings.minSamplingNodes = -1;
+    settings.writeInFile = true;
+    settings.initialPartition = InitialPartitioningMethods::KMeans;
+    
+    struct Metrics metrics(settings);      //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+    
+    if( commShot->getRank() ==0 ){
+		settings.print( std::cout );
+	}
+    
+    scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType,ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+    
+    partition.writeToFile("partitition.mtx");
+    
+    dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
+    //    dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
+     //  dmemo::DistributionPtr dist(new dmemo::BlockDistribution(size,commShot));
+    
+    
+    derivatives->redistributeMatrices(dist);
+    
+   	//redistribute all data to get metrics
+    scai::dmemo::DistributionPtr noDistPtr( new scai::dmemo::NoDistribution( graph.getNumRows() ));
+    graph.redistribute( dist , noDistPtr );
+    partition.redistribute( dist );
+    weights.redistribute( dist );
+
+	metrics.getAllMetrics(graph, partition, weights, settings);
+
+	if( commShot->getRank() ==0 ){
+		metrics.print( std::cout );
+	}
+    }
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
@@ -250,21 +289,19 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
-    //  CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
-        //  CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
+
     }
 
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model (Modelparameter::Factory<ValueType>::Create(equationType));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-
-//     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
+ //     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
 //     model->init(*modeltmp, dist, modelCoordinates, regularCoordinates);
 //     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     // CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);

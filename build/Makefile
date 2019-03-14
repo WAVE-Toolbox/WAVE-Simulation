@@ -17,10 +17,11 @@ UTSTNAME := Test_unit
 ITSTNAME := Test_integration
 
 SCAI_ROOT_DEFAULT := /data14/software/scai_lama/build_dev
+GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
 CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-CXXFLAGS := -O2 -g -std=c++11 -fopenmp -Wall 
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall
 
 ################################################################################
 # Usually, there is no need to change anything below this line
@@ -232,9 +233,9 @@ $(wave.bindir)/$(wave.exe): $(wave.mainobj) $(wave.libdir)/lib$(wave.lib).a
 $(wave.libdir)/lib$(wave.lib).a: $(wave.libobj)
 	$(call cmd,ar,$(wave.objdir))
 
-$(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/include
+$(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/googletest/include
 $(wave.unitobj): CXXFLAGS += -isystem -pthread
-$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main \
+$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/mybuild/lib -lgtest -lgtest_main \
                                        -Wl,-rpath,$(GTEST_DIR)/lib
 $(wave.bindir)/$(wave.utst): $(wave.unitobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
