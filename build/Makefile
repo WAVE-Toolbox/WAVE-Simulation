@@ -17,7 +17,6 @@ UTSTNAME := Test_unit
 ITSTNAME := Test_integration
 
 SCAI_ROOT_DEFAULT := /data14/software/scai_lama/build_dev
-GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
 CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
@@ -38,7 +37,7 @@ wave.exe  := $(strip $(EXENAME))
 wave.lib  := $(strip $(LIBNAME))
 wave.utst := $(strip $(UTSTNAME))
 wave.itst := $(strip $(ITSTNAME))
-gtest     := $(strip $(shell gtest-config --version 2>/dev/null))
+gtest     := $(strip $(shell ls /usr/include/gtest))
 
 wave.blddir := $(realpath $(PWD))
 
@@ -78,8 +77,7 @@ endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
-    $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
+    $(warning GTEST: no local installation and no GTEST_DIR environment variable found;)
   endif
 endif
 
@@ -134,10 +132,6 @@ wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wil
 wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
-# --External_libraries----#
-wave.libext      := $(addsuffix /ext/lib,$(wave.dir))
-wave.incext      := $(addsuffix /ext/include,$(wave.dir))
-
 
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
@@ -147,7 +141,7 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
-INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(wave.incext)
+INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(GEOGRAPHER_ROOT)/src -I$(GEOGRAPHER_ROOT)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
@@ -155,9 +149,9 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
             -lscai_tracing -lscai_logging -lscai_common \
             -lboost_program_options -lboost_filesystem -lboost_system \
-            -L$(wave.libext) -lgeographer  -l_rbc \
+            -L$(GEOGRAPHER_ROOT) -lgeographer -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
             -lscai_solver \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext)
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(GEOGRAPHER_ROOT)
 LDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr
