@@ -21,7 +21,7 @@ GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
 CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra  
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror 
 
 ################################################################################
 # Usually, there is no need to change anything below this line
@@ -38,7 +38,7 @@ wave.exe  := $(strip $(EXENAME))
 wave.lib  := $(strip $(LIBNAME))
 wave.utst := $(strip $(UTSTNAME))
 wave.itst := $(strip $(ITSTNAME))
-gtest     := $(strip $(shell gtest-config --version 2>/dev/null))
+gtest     := $(strip $(shell ls /usr/include/gtest))
 
 wave.blddir := $(realpath $(PWD))
 
@@ -78,7 +78,7 @@ endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
+  #  GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
     $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
   endif
 endif
