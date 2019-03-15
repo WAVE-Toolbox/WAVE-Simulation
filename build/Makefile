@@ -28,7 +28,6 @@ CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror
 ################################################################################
 
 .SUFFIXES:
-.SECONDARY:
 
 MAKEFLAGS += -rR
 SHELL     := /bin/bash
