@@ -206,5 +206,15 @@ namespace KITGPI
             resampleVec.binaryOpScalar(resampleVec, 1.0, scai::common::BinaryOp::MODULO, false);
             resampleVec.replicate();
         }
+
+        /*! \brief Calculates the time step to a corresponding continous time
+        \param time continous time in seconds
+        \param DT time sampling interval in seconds
+        */
+        template <typename ValueType>
+        scai::IndexType time2index(ValueType time, ValueType DT)
+        {
+            return (static_cast<scai::IndexType>(time / DT + 0.5));
+        }
     }
 }

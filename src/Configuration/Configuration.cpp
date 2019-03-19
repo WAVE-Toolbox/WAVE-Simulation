@@ -16,6 +16,7 @@ void KITGPI::Configuration::Configuration::add2map(std::string const &KEY, std::
 {
     if (configMap.count(KEY) == 0) {
         configMap.insert(std::pair<std::string, std::string>(KEY, VALUE));
+        insertionOrder.push_back(KEY);
     } else {
         if (overwrite) {
             configMap.erase(KEY);
@@ -43,6 +44,8 @@ void KITGPI::Configuration::Configuration::add2map(std::string const &KEY, std::
  */
 void KITGPI::Configuration::Configuration::readFromFile(std::string const &filename, bool overwrite)
 {
+    //     configMap.reserve(64);
+    //     configMap.rehash(64);
     std::string line;
     std::ifstream input(filename.c_str());
     if (input.good() != true) {
@@ -105,7 +108,7 @@ void KITGPI::Configuration::Configuration::print() const
     std::cout << "\t"
               << "Configuration: \n"
               << std::endl;
-    for (std::unordered_map<std::string, std::string>::const_iterator iter = configMap.begin(); iter != configMap.end(); ++iter)
-        std::cout << "\t" << iter->first << " = " << iter->second << std::endl;
+    for (std::string name : insertionOrder)
+        std::cout << "\t" << name << " = " << configMap.at(name) << std::endl;
     std::cout << std::endl;
 }

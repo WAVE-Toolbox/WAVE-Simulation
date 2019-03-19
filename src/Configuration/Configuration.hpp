@@ -3,6 +3,7 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <scai/lama.hpp>
 #include <sstream>
 #include <string>
@@ -40,12 +41,13 @@ namespace KITGPI
             ReturnType get(std::string const &parameterName) const;
 
             template <typename InputType>
-            void add2config(std::string const &KEY, InputType const &VALUE);
+            void add2config(std::string const &KEY, InputType const &VALUE, bool overwrite = false);
 
           private:
             void add2map(std::string const &KEY, std::string const &VALUE, bool overwrite = false);
 
             std::unordered_map<std::string, std::string> configMap; ///< Map that is used for internal handling of the `KEY=VALUE` pairs
+            std::list<std::string> insertionOrder;                  ///< list of insertion order
         };
 
         /*! \brief Add `KEY=VALUE` pairs to the configuration
@@ -56,7 +58,7 @@ namespace KITGPI
 	\param VALUE for the KEY to add
 	*/
         template <typename InputType>
-        void Configuration::add2config(std::string const &KEY, InputType const &VALUE)
+        void Configuration::add2config(std::string const &KEY, InputType const &VALUE, bool overwrite)
         {
             std::string tempName = KEY;
             std::transform(tempName.begin(), tempName.end(), tempName.begin(), ::tolower);
@@ -65,11 +67,7 @@ namespace KITGPI
             sstream << VALUE;
             std::string tempValue = sstream.str();
 
-            if (configMap.find(tempName) == configMap.end()) {
-                add2map(tempName, tempValue);
-            } else {
-                COMMON_THROWEXCEPTION("Parameter <" << tempName << "> already exists, overwriting parameters is not allowed! " << std::endl)
-            }
+            add2map(tempName, tempValue, overwrite);
         }
 
         /*! \brief Get the value of a parameter from the read-in configuration

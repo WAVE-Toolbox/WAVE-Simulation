@@ -1,21 +1,17 @@
 #include <scai/lama.hpp>
-
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/dmemo/GridDistribution.hpp>
 
 #include <iostream>
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 
 #include "Configuration/Configuration.hpp"
-
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 #include "Acquisition/suHandler.hpp"
-
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
@@ -24,11 +20,9 @@
 #include "Wavefields/WavefieldsFactory.hpp"
 
 #include "Common/HostPrint.hpp"
-
 #include "CheckParameter/CheckParameter.hpp"
 
 #include <ParcoRepart.h>
-
 
 using namespace scai;
 using namespace KITGPI;
@@ -55,22 +49,19 @@ int main(int argc, const char *argv[])
     /* Read configuration from file            */
     /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
+    verbose = config.get<bool>("verbose");
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
 
-    // following lines should be in a extra function in check parameter class
-    IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+    /* inter node communicator */
+    dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    common::Settings::setRank(commAll->getNodeRank());
 
-    IndexType firstSnapshot = 0, lastSnapshot = 0, incSnapshot = 0;
-    if (config.get<IndexType>("snapType") > 0) {
-        firstSnapshot = static_cast<IndexType>(config.get<ValueType>("tFirstSnapshot") / config.get<ValueType>("DT") + 0.5);
-        lastSnapshot = static_cast<IndexType>(config.get<ValueType>("tLastSnapshot") / config.get<ValueType>("DT") + 0.5);
-        incSnapshot = static_cast<IndexType>(config.get<ValueType>("tIncSnapshot") / config.get<ValueType>("DT") + 0.5);
+    HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
+    if (commAll->getRank() == MASTERGPI) {
+        config.print();
     }
-
-    IndexType partitionedOut = static_cast<IndexType>(config.get<ValueType>("PartitionedOut"));
-
     // Create an object of the mapping (3D-1D) class Coordinates
 
     //input for coordinates
@@ -93,25 +84,18 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Context and Distribution                */
     /* --------------------------------------- */
-    /* inter node communicator */
-    dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
-    common::Settings::setRank(commAll->getNodeRank());
+
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
     IndexType npS = config.get<IndexType>("ProcNS");
-
-    // following lines should be part of checkParameter.tpp
-    if (!config.get<bool>("useVariableGrid")) {
-        if (commAll->getSize() != npS * config.get<IndexType>("ProcNX") * config.get<IndexType>("ProcNY") * config.get<IndexType>("ProcNZ")) {
-            HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in " << argv[1] << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * config.get<IndexType>("ProcNX") * config.get<IndexType>("ProcNY") * config.get<IndexType>("ProcNZ") << "\n")
-            return (2);
-        }
-    }
-
     //number of processes inside a shot domain
     IndexType npNpS=commAll->getSize()/npS;
-    
+
+    if (!config.get<bool>("useVariableGrid")) {
+    CheckParameter::checkNumberOfProcesses(config, commAll);
+    }
+
     // Build subsets of processors for the shots
 
     common::Grid2D procAllGrid(npS, npNpS);
@@ -128,6 +112,7 @@ int main(int argc, const char *argv[])
     dmemo::CommunicatorPtr commInterShot = commAll->split(commShot->getRank());
 
     SCAI_DMEMO_TASK(commShot)
+
     dmemo::DistributionPtr dist = nullptr;
     dmemo::DistributionPtr regularDist = nullptr;
     // inter node distribution
@@ -185,7 +170,7 @@ int main(int argc, const char *argv[])
     weights.setContextPtr(ctx);
 
     weights.writeToFile("weights.mtx");
-    
+
     verbose = config.get<bool>("verbose");
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
     if (commAll->getRank() == MASTERGPI) {
@@ -288,7 +273,6 @@ if( commShot->getRank() ==0 ){
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
-    CheckParameter::checkSources<ValueType>(config, sources, commShot);
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
@@ -315,6 +299,9 @@ if( commShot->getRank() ==0 ){
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
     HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
 
+    ValueType DT = config.get<ValueType>("DT");
+    IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
+
     dmemo::BlockDistribution shotDist(sources.getNumShots(), commInterShot);
 
     for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
@@ -323,11 +310,9 @@ if( commShot->getRank() ==0 ){
             sources.init(config, modelCoordinates, ctx, dist, shotNumber);
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
-            CheckParameter::checkReceivers<ValueType>(config, receivers, commShot);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\n",
-                   "Total Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();
@@ -340,8 +325,8 @@ if( commShot->getRank() ==0 ){
 
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
-            if (config.get<IndexType>("snapType") > 0 && tStep >= firstSnapshot && tStep <= lastSnapshot && (tStep - firstSnapshot) % incSnapshot == 0) {
-                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName"), tStep, *derivatives, *model, partitionedOut);
+            if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName"), tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
             }
         }
 
