@@ -3,12 +3,14 @@
 dimension=2D
 equationType=acoustic
 
+UseVariableGrid=0
 NX=100 # horizontal 1
 NY=100 # depth
 NZ=1 # horizontal 2
 
 # define Partitioning
-UseVariableGrid=0
+useGraphPartitioning=0
+
 ProcNX=2
 ProcNY=2
 ProcNZ=1

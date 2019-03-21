@@ -377,12 +377,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         scai::IndexType X = coordinate.x;
-        if ((X + modelCoordinates.getDHFactor(coordinate)*0.5) == modelCoordinates.getNX() - 0.5)
+        if ((X + modelCoordinates.getDHFactor(coordinate) * 0.5) == modelCoordinates.getNX() - 0.5)
             assembly.push(ownedIndex, ownedIndex, 1.0);
         else
             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
 
-        X+=modelCoordinates.getDHFactor(coordinate);
+        X += modelCoordinates.getDHFactor(coordinate);
         if (X < modelCoordinates.getNX()) {
             IndexType columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
@@ -408,35 +408,33 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * 2);
-    IndexType layer=0;
-    
+    IndexType layer = 0;
+
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-        
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        
-        layer=modelCoordinates.getLayer(coordinate);
-        
+
+        layer = modelCoordinates.getLayer(coordinate);
+
         scai::IndexType Y = coordinate.y;
-        if ((Y + modelCoordinates.getDHFactor(layer)*0.5) == modelCoordinates.getNY() - 0.5)
+        if ((Y + modelCoordinates.getDHFactor(layer) * 0.5) == modelCoordinates.getNY() - 0.5)
             assembly.push(ownedIndex, ownedIndex, 1.0);
         else
             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
 
-        Y+=modelCoordinates.getDHFactor(layer);
-        if ((modelCoordinates.locatedOnInterface(coordinate)) && (!modelCoordinates.getTransition(coordinate)))
-        Y+=modelCoordinates.getDHFactor(layer+1)-modelCoordinates.getDHFactor(layer);  
-        
+        if ((modelCoordinates.locatedOnInterface(coordinate)) && (modelCoordinates.getTransition(coordinate) == 0)) {
+            Y += modelCoordinates.getDHFactor(layer + 1);
+        } else {
+            Y += modelCoordinates.getDHFactor(layer);
+        }
         if (Y < modelCoordinates.getNY()) {
             IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
         }
-     //   assembly.push(ownedIndex, ownedIndex, 1.0);
     }
 
     DensityAverageMatrixY = lama::zero<SparseFormat>(dist, dist);
     DensityAverageMatrixY.fillFromAssembly(assembly);
-
 }
 
 //! \brief Calculate density averaging matrix in z-direction
@@ -457,12 +455,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         scai::IndexType Z = coordinate.z;
-        if ((Z + modelCoordinates.getDHFactor(coordinate)*0.5) == modelCoordinates.getNZ() - 0.5)
+        if ((Z + modelCoordinates.getDHFactor(coordinate) * 0.5) == modelCoordinates.getNZ() - 0.5)
             assembly.push(ownedIndex, ownedIndex, 1.0);
         else
             assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
 
-        Z+= modelCoordinates.getDHFactor(coordinate);
+        Z += modelCoordinates.getDHFactor(coordinate);
         if (Z < modelCoordinates.getNZ()) {
             IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
             assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);

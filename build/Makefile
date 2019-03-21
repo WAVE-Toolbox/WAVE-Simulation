@@ -23,6 +23,10 @@ CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
 CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall
 
+ifdef GEOGRAPHER_ROOT
+CXXFLAGS += -DUSE_GEOGRAPHER
+endif
+
 ################################################################################
 # Usually, there is no need to change anything below this line
 ################################################################################
@@ -146,11 +150,13 @@ LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common \
-            -lboost_program_options -lboost_filesystem -lboost_system \
-            -L$(GEOGRAPHER_ROOT) -lgeographer -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
-            -lscai_solver \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(GEOGRAPHER_ROOT)
+            -lscai_tracing -lscai_logging -lscai_common -lscai_solver \
+	    -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
+ifdef GEOGRAPHER_ROOT
+LDFLAGS  +=   -L$(GEOGRAPHER_ROOT) -lgeographer -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
+              -lboost_program_options -lboost_filesystem -lboost_system \
+              -Wl,-rpath,$(GEOGRAPHER_ROOT)
+endif
 LDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr

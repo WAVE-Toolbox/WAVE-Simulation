@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Configuration/Configuration.hpp"
 #include <scai/lama.hpp>
 
 namespace KITGPI
@@ -45,10 +46,13 @@ namespace KITGPI
 
             //! Destructor, releases all allocated resources.
             ~Coordinates(){};
+
+            Coordinates(Configuration::Configuration const &config);
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
-           Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz,ValueType dh, std::vector<scai::IndexType> & dhFactor, std::vector<scai::IndexType> & interface);
-            
+
+            Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh, std::vector<scai::IndexType> &dhFactor, std::vector<scai::IndexType> &interface);
+
             ValueType getDH() const;
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
@@ -59,10 +63,10 @@ namespace KITGPI
             scai::IndexType getLayer(coordinate3D coordinate) const;
             scai::IndexType getDHFactor(coordinate3D coordinate) const;
             scai::IndexType getDHFactor(scai::IndexType layer) const;
-            
-            std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist,scai::hmemo::ContextPtr ctx) const;
 
-            
+            std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) const;
+            void writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename) const;
+
             // Coordinate --> Index:
             // Interfaces 3-D
             scai::IndexType coordinate2index(coordinate3D coordinate) const;
@@ -74,35 +78,38 @@ namespace KITGPI
             coordinate3D edgeDistance(coordinate3D coordinate) const;
 
             bool locatedOnSurface(scai::IndexType index) const;
-            
+
             bool locatedOnInterface(coordinate3D coordinate) const;
             bool getTransition(coordinate3D coordinate) const;
-            
+            bool isVariable() const { return (VariableGrid); };
+
           private:
             scai::IndexType NX;
             scai::IndexType NY;
             scai::IndexType NZ;
             ValueType DH;
-            
+
             std::vector<scai::IndexType> dhFactor;
             std::vector<scai::IndexType> interface;
-            
+
             std::vector<ValueType> varDH;
             std::vector<scai::IndexType> varNX;
             std::vector<scai::IndexType> varNY;
             std::vector<scai::IndexType> varNZ;
-       
-            
+
             scai::IndexType numLayers;
             std::vector<scai::IndexType> layerStart;
             std::vector<scai::IndexType> layerEnd;
             std::vector<scai::IndexType> transition;
-            
+
             scai::IndexType nGridpoints;
             std::vector<scai::IndexType> nGridpointsPerLayer;
-            
+
             std::vector<scai::lama::DenseVector<ValueType>> coordinateVector;
-            
+
+            void init();
+            void init(std::vector<scai::IndexType> &dhFactor, std::vector<scai::IndexType> &interface);
+
             // Coordinate --> Index:
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
 
@@ -110,6 +117,8 @@ namespace KITGPI
             coordinate3D mapIndex2coordinate(scai::IndexType index) const;
 
             coordinate3D estimateDistanceToEdges3D(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;
+
+            bool VariableGrid;
         };
     }
 }

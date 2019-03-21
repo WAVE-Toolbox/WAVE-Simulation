@@ -11,14 +11,56 @@ using namespace scai;
 
 /*! \brief constructor for variable grid
  *
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
- \param NZ Number of grid points in Z
+ \param config Configuration class
+ *
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config) : NX(config.get<IndexType>("NX")), NY(config.get<IndexType>("NY")), NZ(config.get<IndexType>("NZ")), DH(config.get<ValueType>("DH"))
+{
+
+    if (config.get<bool>("useVariableGrid")) {
+        VariableGrid = true;
+        std::vector<IndexType> dhFactor;
+        std::vector<IndexType> interface;
+        std::ifstream is(config.get<std::string>("interfaceFilename"));
+        std::istream_iterator<IndexType> start(is), end;
+        interface.assign(start, end);
+        std::ifstream is2(config.get<std::string>("dhFactorFilename"));
+        std::istream_iterator<IndexType> start2(is2);
+        dhFactor.assign(start2, end);
+        init(dhFactor, interface);
+    } else {
+        VariableGrid = false;
+        init();
+    }
+}
+/*! \brief constructor for variable grid
+ *
+ \param nx Number of grid points in X
+ \param ny Number of grid points in Y
+ \param nz Number of grid points in Z
  *
  */
 template <typename ValueType>
 KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType ny, IndexType nz, ValueType dh, std::vector<IndexType> &dhFactors, std::vector<IndexType> &interfaces) : NX(nx), NY(ny), NZ(nz), DH(dh), dhFactor(dhFactors), interface(interfaces)
 {
+    VariableGrid = true;
+    init(dhFactors, interface);
+}
+
+/*! \brief constructor for variable grid
+ *
+ \param dhFactors // std::vector with grid stretch factors f=3^n
+ \param interfaces // std::vector with 3D indeces (with respect to a regular grid) of the interfaces
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &dhFactors, std::vector<IndexType> &interfaces)
+{
+    dhFactor = dhFactors;
+    interface = interfaces;
+    SCAI_ASSERT_ERROR(dhFactor.size() > 0, "vector of fifferent grid spacings: dhFactor is emty");
+    SCAI_ASSERT_ERROR(interface.size() == dhFactor.size() - 1, "number of interfaces doesn't match to the number of different grid spacings");
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
     SCAI_ASSERT_ERROR(NY > 0, "NY<=0");
@@ -38,7 +80,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
     nGridpointsPerLayer.assign(numLayers, 0);
     nGridpoints = 0;
 
-    interface.push_back(ny - 1);
+    interface.push_back(NY - 1);
     interface.insert(interface.begin(), -1);
 
     IndexType dhMax = 0;
@@ -49,8 +91,8 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
             dhMax = dhFactor[layer];
     }
 
-    IndexType NXmax = nx;
-    IndexType NZmax = nz;
+    IndexType NXmax = NX;
+    IndexType NZmax = NZ;
 
     if (dhMax != 1) {
         while (true) {
@@ -60,17 +102,17 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
             NXmax--;
         }
 
-        while ((true) && (nz != 1)) {
+        while ((true) && (NZ != 1)) {
             if (NZmax == floor(NZmax / dhMax) * dhMax + 1 + floor(dhMax / 2)) {
                 break;
             }
             NZmax--;
         }
 
-        if (NXmax != nx)
-            std::cout << "NX for the variable grid has been changed from " << nx << " to " << NXmax << std::endl;
-        if (NZmax != nz)
-            std::cout << "NZ for the variable grid has been changed from " << nz << " to " << NZmax << std::endl;
+        if (NXmax != NX)
+            std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
+        if (NZmax != NZ)
+            std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
 
         /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
         IndexType layer = 0;
@@ -132,36 +174,48 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
         nGridpointsPerLayer[layer] = varNX[layer] * varNY[layer] * varNZ[layer];
         nGridpoints += nGridpointsPerLayer[layer];
 
-        varDH[layer] = dh * dhFactor[layer];
+        varDH[layer] = DH * dhFactor[layer];
     }
 }
 
 /*! \brief constructor for regular grid
  *
- \param NX Number of grid points in X
- \param NY Number of grid points in Y
- \param NZ Number of grid points in Z
+ \param nx Number of grid points in X
+ \param ny Number of grid points in Y
+ \param nz Number of grid points in Z
+ \param dh grid spacing in meter
  *
  */
 template <typename ValueType>
 KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh) : NX(nx), NY(ny), NZ(nz), DH(dh)
 {
+    VariableGrid = false;
+    init();
+}
+
+/*! \brief constructor for regular grid
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Coordinates<ValueType>::init()
+{
     numLayers = 1;
 
-    varNX.push_back(nx);
-    varNY.push_back(ny);
-    varNZ.push_back(nz);
-    varDH.push_back(dh);
+    varNX.push_back(NX);
+    varNY.push_back(NY);
+    varNZ.push_back(NZ);
+    varDH.push_back(DH);
 
     layerStart.push_back(0);
-    layerEnd.push_back(ny - 1);
+    layerEnd.push_back(NY - 1);
     // transition.resize(numLayers);
 
-    nGridpoints = nx * ny * nz;
+    nGridpoints = NX * NY * NZ;
 
     nGridpointsPerLayer.push_back(nGridpoints);
 
-    interface.push_back(ny - 1);
+    interface.push_back(NY - 1);
     interface.insert(interface.begin(), -1);
 
     dhFactor.push_back(1);
@@ -323,6 +377,7 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coo
 template <typename ValueType>
 std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates<ValueType>::getCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) const
 {
+    SCAI_ASSERT_ERROR(dist, "no distribution given");
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -352,6 +407,18 @@ std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates
     return (coordinates);
 }
 
+/*! \brief getter function for coordinates
+ *
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Coordinates<ValueType>::writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename) const
+{
+    auto coords = getCoordinates(dist, ctx);
+    coords[0].writeToFile(filename + "X.mtx");
+    coords[1].writeToFile(filename + "Y.mtx");
+    coords[2].writeToFile(filename + "Z.mtx");
+}
 /*! \brief Returns bool if given coordinate is located on the surface
  *
  * This method determines if a given coordinate is located on the surface of the modelling domain.

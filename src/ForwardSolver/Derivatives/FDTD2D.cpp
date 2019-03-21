@@ -29,7 +29,9 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
-    useSparse = config.get<bool>("useVariableGrid");
+    if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
+        useSparse = true;
+    }
     if (useSparse)
         initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
     else
@@ -44,11 +46,11 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices(scai::dmemo::DistributionPtr dist)
 {
-DxfSparse.redistribute(dist,dist);
-DyfSparse.redistribute(dist,dist);
-DxbSparse.redistribute(dist,dist);
-DybSparse.redistribute(dist,dist);
-InterpolationP.redistribute(dist,dist);
+    DxfSparse.redistribute(dist, dist);
+    DyfSparse.redistribute(dist, dist);
+    DxbSparse.redistribute(dist, dist);
+    DybSparse.redistribute(dist, dist);
+    InterpolationP.redistribute(dist, dist);
 }
 
 //! \brief Constructor of the derivative matrices
@@ -133,11 +135,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     // Set FD-order to class member
     spatialFDorder = spatialFDorderInput;
-    
+
     /* Set FD-Coefficients */
     this->setFDCoef(spatialFDorder);
 
-    //  if(useSparse)
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
     this->calcDxb(modelCoordinates, dist);
@@ -149,15 +150,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
 
-    
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;
     DxbSparse *= DT;
     DyfSparse *= DT;
     DybSparse *= DT;
 
-    this->calcInterpolationP(modelCoordinates, dist);
-    
+    if (modelCoordinates.isVariable())
+        this->calcInterpolationP(modelCoordinates, dist);
+
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
@@ -179,13 +180,13 @@ lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueT
 
 //! \brief Getter method for combined derivative matrix
 template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType>  KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getCombinedMatrix() 
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getCombinedMatrix()
 {
-       auto temp=DxfSparse;
-       temp+=DyfSparse;
-       temp-=DxbSparse;
-       temp-=DybSparse;
-    
+    auto temp = DxfSparse;
+    temp += DyfSparse;
+    temp -= DxbSparse;
+    temp -= DybSparse;
+
     return (temp);
 }
 template class KITGPI::ForwardSolver::Derivatives::FDTD2D<float>;

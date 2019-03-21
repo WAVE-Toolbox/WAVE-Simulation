@@ -507,8 +507,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     InterpolationP = lama::zero<SparseFormat>(dist, dist);
 
     InterpolationP.fillFromAssembly(assembly);
-
-    std::cout << "InterpolationP computed: " << std::endl;
 }
 
 //! \brief Getter method for the spatial FD-order

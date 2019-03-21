@@ -8,6 +8,7 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=1
+useGraphPartitioning=1
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
@@ -48,7 +49,7 @@ PartitionedOut=0          # 1=Write files parallel, 0=serial
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
 
 # Damping Boundary
-DampingBoundary=1         # Type of damping boundary: 0=OFF 1=ABS 2=CPML
+DampingBoundary=2         # Type of damping boundary: 0=OFF 1=ABS 2=CPML
 BoundaryWidth=30          # Width of damping boundary in grid points
 DampingCoeff=8.0          # Damping coefficient 
 VMaxCPML=3500.0           # Maximum velocity of the CPML
