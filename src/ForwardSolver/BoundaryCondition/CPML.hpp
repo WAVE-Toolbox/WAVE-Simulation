@@ -43,7 +43,7 @@ namespace KITGPI
 
                 /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::Vector<ValueType> &Psi, scai::lama::Vector<ValueType> &a, scai::lama::Vector<ValueType> &b, scai::lama::Vector<ValueType> &kInv);
 
-                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 VectorType temp; //!< temporary vector for pml application
 
