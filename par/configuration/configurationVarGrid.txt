@@ -9,9 +9,11 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 # define spatial sampling: number of grid points in direction
 useVariableGrid=1
 useGraphPartitioning=1
+useVariableFDoperators=1
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
+spatialFDorderFilename=configuration/FDorders.txt
 coordinateFilename=configuration/coordinates
 
 
@@ -89,4 +91,4 @@ tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.1          # Time increment between snapshot in seconds
 
 # console output
-verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

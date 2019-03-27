@@ -39,6 +39,9 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
  \param nx Number of grid points in X
  \param ny Number of grid points in Y
  \param nz Number of grid points in Z
+ \param dh finest grid spacing
+ \param dhFactors grid spacing factor per layer (3^n)
+ \param interfaces std::vector with 3D indeces (with respect to a regular grid) of the interfaces
  *
  */
 template <typename ValueType>
@@ -50,8 +53,8 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
 
 /*! \brief constructor for variable grid
  *
- \param dhFactors // std::vector with grid stretch factors f=3^n
- \param interfaces // std::vector with 3D indeces (with respect to a regular grid) of the interfaces
+ \param dhFactors std::vector with grid stretch factors f=3^n
+ \param interfaces std::vector with 3D indeces (with respect to a regular grid) of the interfaces
  *
  */
 template <typename ValueType>
@@ -295,9 +298,17 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getLayer(coordinate3D coo
     }
     return (layer);
 }
-
-/*! \brief getter function for DH
+/*! \brief getter function for number of layers
  *
+
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNumLayers() const
+{
+    return (numLayers);
+}
+/*! \brief getter function for DH
+ \param layer layer of the variable grid
  *
  */
 template <typename ValueType>
@@ -307,7 +318,7 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(IndexType layer) co
 }
 
 /*! \brief getter function for DH
- *
+ \param coordinate 3D coordinate struct
  *
  */
 template <typename ValueType>
@@ -318,7 +329,7 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH(coordinate3D coordi
 
 /*! \brief getter function for dhFactor
  *
- *
+ \param coordinate 3D coordinate struct
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(coordinate3D coordinate) const
@@ -328,7 +339,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(coordinate3D 
 
 /*! \brief getter function for dhFactor
  *
- *
+  \param layer layer of the variable grid
  */
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType layer) const
@@ -336,9 +347,9 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType lay
     return (dhFactor[layer]);
 }
 
-/*! \brief 
+/*! \brief check if coordinate is on an variable grid interface
  *
- *
+  \param coordinate 3D coordinate struct
  */
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3D coordinate) const
@@ -352,8 +363,24 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3
     return (isOnInterface);
 }
 
-/*! \brief getter function for NZ
+/*! \brief calculate distance in gridpoints of the finest grid to the variable grid interfaces
  *
+ \param Y y coordinate
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::distToInterface(IndexType Y) const
+{
+    IndexType dist = NY;
+    for (auto i = interface.begin() + 1; i != interface.end() - 1; ++i) {
+        IndexType temp = std::abs(Y - *i);
+        if (temp < dist)
+            dist = temp;
+    }
+    return (dist);
+}
+
+/*! \brief getter function for NZ
+  \param coordinate 3D coordinate struct
  *
  */
 template <typename ValueType>
@@ -372,7 +399,8 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coo
 
 /*! \brief getter function for coordinates
  *
- *
+ \param dist Distribution
+ \param ctx lama context 
  */
 template <typename ValueType>
 std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates<ValueType>::getCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) const
@@ -409,7 +437,9 @@ std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates
 
 /*! \brief getter function for coordinates
  *
- *
+ \param dist Distribution
+ \param ctx lama context 
+ \param filename string with the filename to write the coordinates
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Coordinates<ValueType>::writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename) const

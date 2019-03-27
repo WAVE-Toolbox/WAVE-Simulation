@@ -391,7 +391,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
 
     DensityAverageMatrixX = lama::zero<SparseFormat>(dist, dist);
     DensityAverageMatrixX.fillFromAssembly(assembly);
-    DensityAverageMatrixX.writeToFile("test.mtx");
 }
 
 //! \brief Calculate density averaging matrix in y-direction

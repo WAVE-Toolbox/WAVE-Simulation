@@ -12,7 +12,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(scai::d
     // Attention: keep in mind topology NZ x NY x NX
 
     common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilId, stencilId, stencilFD);
+    common::Stencil3D<ValueType> stencil(stencilId, stencilId, stencilFDmap[spatialFDorder]);
     // use dist for distribution
     Dxf.define(dist, stencil);
 }
@@ -29,7 +29,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -38,6 +38,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
@@ -46,12 +50,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
                     columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
                 }
             }
         }
     }
-
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
 }
@@ -65,7 +68,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilFD, stencilId, stencilId);
+    common::Stencil3D<ValueType> stencil(stencilFDmap[spatialFDorder], stencilId, stencilId);
     // use dist for distribution
     Dyf.define(dist, stencil);
 }
@@ -83,7 +86,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -95,6 +98,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         layer = modelCoordinates.getLayer(coordinate);
+        if (useVarFDorder) {
+            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+            spatialFDorder = spatialFDorderVec[layer];
+
+            /* reduce FDorder at the variable grid interfaces*/
+            if (distance == 0)
+                spatialFDorder = 2;
+            else if (spatialFDorder - distance * 2 > 0)
+                spatialFDorder = distance * 2;
+        }
 
         //Transition from coarse (layer) to fine grid (layer+1) uses fine operator for Dyf
         if ((modelCoordinates.locatedOnInterface(coordinate)) && (!modelCoordinates.getTransition(coordinate))) {
@@ -111,7 +124,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / DH);
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / DH);
                 }
             }
         }
@@ -130,7 +143,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(scai::dmemo::DistributionPtr dist)
 {
     common::Stencil1D<ValueType> stencilId(1);
-    common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
+    common::Stencil3D<ValueType> stencil(stencilId, stencilFDmap[spatialFDorder], stencilId);
     // use dist for distribution
     Dzf.define(dist, stencil);
 }
@@ -148,7 +161,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -158,6 +171,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
@@ -166,7 +183,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
                 }
             }
         }
@@ -187,7 +204,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     ValueType DH = 0;
@@ -211,15 +228,26 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
             DH = modelCoordinates.getDH(layer);
         }
 
+        if (useVarFDorder) {
+            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+            spatialFDorder = spatialFDorderVec[layer];
+
+            /* reduce FDorder at the variable grid interfaces*/
+            if (distance == 0)
+                spatialFDorder = 2;
+            else if (spatialFDorder - distance * 2 > 0)
+                spatialFDorder = distance * 2;
+        }
+
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
 
             for (IndexType j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
-                fdCoeff = stencilFD.values()[j];
+                fdCoeff = stencilFDmap[spatialFDorder].values()[j];
 
                 ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
                 if (ImageIndex >= 0)
-                    fdCoeff -= stencilFD.values()[ImageIndex];
+                    fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
@@ -246,7 +274,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     ValueType fdCoeff = 0;
     IndexType ImageIndex = 0;
@@ -259,6 +287,17 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
+        if (useVarFDorder) {
+            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+            spatialFDorder = spatialFDorderVec[layer];
+
+            /* reduce FDorder at the variable grid interfaces*/
+            if (distance == 0)
+                spatialFDorder = 2;
+            else if (spatialFDorder - distance * 2 > 0)
+                spatialFDorder = distance * 2;
+        }
+
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
@@ -268,12 +307,12 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
                     Y += modelCoordinates.getDHFactor(layer + 1 - 2 * modelCoordinates.getTransition(coordinate));
                 }
 
-                fdCoeff = stencilFD.values()[j];
+                fdCoeff = stencilFDmap[spatialFDorder].values()[j];
 
                 ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
 
                 if (ImageIndex >= 0)
-                    fdCoeff -= stencilFD.values()[ImageIndex];
+                    fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
@@ -300,7 +339,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -309,6 +348,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
@@ -317,7 +360,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
                     columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
                 }
             }
         }
@@ -340,7 +383,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -348,9 +391,19 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        const IndexType &layer = modelCoordinates.getLayer(coordinate);
 
+        const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
+        if (useVarFDorder) {
+            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+            spatialFDorder = spatialFDorderVec[layer];
+
+            /* reduce FDorder at the variable grid interfaces*/
+            if (distance == 0)
+                spatialFDorder = 2;
+            else if (spatialFDorder - distance * 2 > 0)
+                spatialFDorder = distance * 2;
+        }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
@@ -365,7 +418,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
                 }
             }
         }
@@ -388,7 +441,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
+    assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -398,6 +451,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
@@ -406,7 +463,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
-                    assembly.push(ownedIndex, columnIndex, stencilFD.values()[j] / modelCoordinates.getDH(coordinate));
+                    assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
                 }
             }
         }
@@ -509,6 +566,51 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     InterpolationP.fillFromAssembly(assembly);
 }
 
+//! \brief set variable FDorder
+/*!
+\param FDorderFilename Filename of the FDorder File. This File contains the FDorder for every layer in the variable grid.
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(std::string const &FDorderFilename)
+{
+
+    std::ifstream is(FDorderFilename);
+    if (!is)
+        COMMON_THROWEXCEPTION(" could not open " << FDorderFilename);
+    std::istream_iterator<IndexType> start(is), end;
+    spatialFDorderVec.assign(start, end);
+    if (spatialFDorderVec.empty()) {
+        COMMON_THROWEXCEPTION("FDorder file is empty");
+    }
+
+    for (auto i : spatialFDorderVec) {
+        if (stencilFDmap.find(i) == stencilFDmap.end())
+            COMMON_THROWEXCEPTION("spatialFDorder = " << i << " Unsupported spatialFDorder value.");
+    }
+}
+
+//! \brief set variable FDorder
+/*!
+\param FDorder std vector of FDorders per layer
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(std::vector<scai::IndexType> &FDorder)
+{
+    spatialFDorderVec = FDorder;
+}
+
+//! \brief set constant FDorder
+/*!
+\param FDorder spatial FD order
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(IndexType FDorder)
+{
+    spatialFDorder = FDorder;
+    if (stencilFDmap.find(FDorder) == stencilFDmap.end())
+        COMMON_THROWEXCEPTION("spatialFDorder = " << FDorder << " Unsupported spatialFDorder value.");
+}
+
 //! \brief Getter method for the spatial FD-order
 template <typename ValueType>
 IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatialFDorder() const
@@ -604,21 +706,23 @@ scai::lama::Matrix<ValueType> const *KITGPI::ForwardSolver::Derivatives::Derivat
 //! \brief Set FD coefficients for each order
 /*!
  *
- \param spFDo Order of spatial FD-coefficient
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(IndexType spFDo)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef()
 {
-
     const ValueType FD2[] = {-1.0, 1.0};
+    stencilFDmap[2] = common::Stencil1D<ValueType>(2, FD2);
 
     const ValueType FD4[] = {1.0 / 24.0, -9.0 / 8.0, 9.0 / 8.0, -1.0 / 24.0};
+    stencilFDmap[4] = common::Stencil1D<ValueType>(4, FD4);
 
     const ValueType FD6[] = {-3.0 / 640.0, 25.0 / 384.0, -75.0 / 64.0,
                              75.0 / 64.0, -25.0 / 384.0, 3.0 / 640.0};
+    stencilFDmap[6] = common::Stencil1D<ValueType>(6, FD6);
 
     const ValueType FD8[] = {5.0 / 7168.0, -49.0 / 5120.0, 245.0 / 3072.0, -1225.0 / 1024.0,
                              1225.0 / 1024.0, -245.0 / 3072.0, 49.0 / 5120.0, -5.0 / 7168.0};
+    stencilFDmap[8] = common::Stencil1D<ValueType>(8, FD8);
 
     const ValueType FD10[] = {-8756999275442633.0 / 73786976294838206464.0,
                               8142668969129685.0 / 4611686018427387904.0,
@@ -630,6 +734,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
                               567.0 / 40960.0,
                               -8142668969129685.0 / 4611686018427387904.0,
                               8756999275442633.0 / 73786976294838206464.0};
+    stencilFDmap[10] = common::Stencil1D<ValueType>(10, FD10);
 
     const ValueType FD12[] = {6448335830095439.0 / 295147905179352825856.0,
                               -1655620175512543.0 / 4611686018427387904.0,
@@ -643,30 +748,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef(Index
                               -6842103786556949.0 / 2305843009213693952.0,
                               1655620175512543.0 / 4611686018427387904.0,
                               -6448335830095439.0 / 295147905179352825856.0};
-
-    switch (spFDo) {
-    case 2:
-        stencilFD = common::Stencil1D<ValueType>(2, FD2);
-        break;
-    case 4:
-        stencilFD = common::Stencil1D<ValueType>(4, FD4);
-        break;
-    case 6:
-        stencilFD = common::Stencil1D<ValueType>(6, FD6);
-        break;
-    case 8:
-        stencilFD = common::Stencil1D<ValueType>(8, FD8);
-        break;
-    case 10:
-        stencilFD = common::Stencil1D<ValueType>(10, FD10);
-        break;
-    case 12:
-        stencilFD = common::Stencil1D<ValueType>(12, FD12);
-        break;
-    default:
-        COMMON_THROWEXCEPTION(" Unkown spatialFDorder value.");
-        break;
-    }
+    stencilFDmap[12] = common::Stencil1D<ValueType>(12, FD12);
 }
 
 template class KITGPI::ForwardSolver::Derivatives::Derivatives<float>;
