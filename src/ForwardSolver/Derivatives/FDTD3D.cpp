@@ -31,6 +31,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
+    useVarGrid = modelCoordinates.isVariable();
 
     this->setFDCoef();
 
@@ -69,11 +70,12 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm, std::vector<IndexType> &FDorder)
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
+    useVarGrid = modelCoordinates.isVariable();
     useSparse = true;
     useVarFDorder = true;
 
     this->setFDCoef();
-    this->setFDOrder(config.get<std::string>("spatialFDorderFilename"));
+    this->setFDOrder(FDorder);
 
     initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), comm);
 }
@@ -92,7 +94,8 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
     DzbSparse.redistribute(dist, dist);
-    InterpolationP.redistribute(dist, dist);
+    if (useVarGrid)
+        InterpolationP.redistribute(dist, dist);
 }
 
 //! \brief Constructor of the derivative matrices

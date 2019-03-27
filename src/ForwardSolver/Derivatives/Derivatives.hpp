@@ -165,6 +165,7 @@ namespace KITGPI
                 scai::IndexType useFreeSurface = 0; //!< Switch to use free surface or not
                 bool useSparse = false;             //!< Switch to use Sparse Matrices
                 bool useVarFDorder = false;         //!< Switch to use variable FDorder (layered)
+                bool useVarGrid = false;            //!< Switch to use variable Grid
 
               private:
                 std::map<scai::IndexType, scai::common::Stencil1D<ValueType>> stencilFDmap; // FD-stencil

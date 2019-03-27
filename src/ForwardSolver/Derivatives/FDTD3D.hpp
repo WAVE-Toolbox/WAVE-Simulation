@@ -63,6 +63,7 @@ namespace KITGPI
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
                 using Derivatives<ValueType>::useVarFDorder;
+                using Derivatives<ValueType>::useVarGrid;
 
                 using Derivatives<ValueType>::InterpolationP;
             };
