@@ -63,12 +63,17 @@ namespace KITGPI
             /* Getter methods for not requiered parameters */
 
             scai::lama::Vector<ValueType> const &getVelocityP() const override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
+            scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
+            scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
+            
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
