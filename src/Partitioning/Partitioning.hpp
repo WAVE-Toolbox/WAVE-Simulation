@@ -94,25 +94,29 @@ namespace KITGPI
             return (dist);
         }
 #endif
-        /*! \brief 
+        /*! \brief calculatio of the weights for the absorbing boundary
             \param config configuration object
-            \param distribution distributionPtr of the model
+            \param dist distributionPtr of the model
             \param modelCoordinates coordinate object
             */
         template <typename ValueType>
         scai::lama::DenseVector<ValueType> weights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
 
+            std::string dimension = config.get<std::string>("dimension");
+             std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
+            
+            
             hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
             dist->getOwnedIndexes(ownedIndexes);
 
             lama::VectorAssembly<ValueType> assembly;
             assembly.reserve(ownedIndexes.size());
-
+            if (config.get<IndexType>("DampingBoundary")) {
             for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
                 Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
                 Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
-
+                
                 scai::IndexType min = 0;
                 if (coordinatedist.x < coordinatedist.y) {
                     min = coordinatedist.x;
@@ -120,12 +124,16 @@ namespace KITGPI
                     min = coordinatedist.y;
                 }
 
+                 if (dimension.compare("3d") == 0) {
+                     min=coordinatedist.min();
+                 }
+                
                 if (min < config.get<IndexType>("BoundaryWidth")) {
-                    //      if (coordinatedist.min() <  config.get<IndexType>("BoundaryWidth")){
-                    assembly.push(ownedIndex, 1.5);
+                    assembly.push(ownedIndex, 2);
                 }
             }
-
+            }
+            
             lama::DenseVector<ValueType> weights;
             weights.allocate(dist);
             weights = 1.0;
