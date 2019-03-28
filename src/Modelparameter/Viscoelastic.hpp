@@ -63,8 +63,10 @@ namespace KITGPI
             std::string getEquationType() const;
 
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
-
+            scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             void applyThresholds(Configuration::Configuration const &config) override;
