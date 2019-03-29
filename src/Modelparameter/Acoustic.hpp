@@ -86,9 +86,9 @@ namespace KITGPI
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
-            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(ValueType rhs);

@@ -64,15 +64,17 @@ namespace KITGPI
             std::string getEquationType() const;
 
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
-
+            scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
-            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(ValueType rhs);
