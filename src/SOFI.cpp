@@ -127,7 +127,7 @@ int main(int argc, const char *argv[])
     if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
 
         auto graph = derivatives->getCombinedMatrix();
-        auto weights = Partitioning::weights(config, blockDist, modelCoordinates);
+        auto weights = Partitioning::BoundaryWeights(config, blockDist, modelCoordinates,2.0);
         auto coords = modelCoordinates.getCoordinates(blockDist, ctx);
         modelCoordinates.writeCoordinates(blockDist, ctx, config.get<std::string>("coordinateFilename"));
 

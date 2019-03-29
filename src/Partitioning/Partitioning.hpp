@@ -100,40 +100,58 @@ namespace KITGPI
             \param modelCoordinates coordinate object
             */
         template <typename ValueType>
-        scai::lama::DenseVector<ValueType> weights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+        scai::lama::DenseVector<ValueType> BoundaryWeights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,ValueType weight)
         {
 
             std::string dimension = config.get<std::string>("dimension");
-             std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
-            
-            
+            std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
+
+            auto BoundaryWidth = config.get<IndexType>("BoundaryWidth");
+
             hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
             dist->getOwnedIndexes(ownedIndexes);
 
             lama::VectorAssembly<ValueType> assembly;
             assembly.reserve(ownedIndexes.size());
             if (config.get<IndexType>("DampingBoundary")) {
-            for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-                Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-                Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
-                
-                scai::IndexType min = 0;
-                if (coordinatedist.x < coordinatedist.y) {
-                    min = coordinatedist.x;
-                } else {
-                    min = coordinatedist.y;
-                }
+                for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+                    Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
-                 if (dimension.compare("3d") == 0) {
-                     min=coordinatedist.min();
-                 }
-                
-                if (min < config.get<IndexType>("BoundaryWidth")) {
-                    assembly.push(ownedIndex, 2);
+                    scai::IndexType min = 0;
+                    if (coordinatedist.x < coordinatedist.y) {
+                        min = coordinatedist.x;
+                    } else {
+                        min = coordinatedist.y;
+                    }
+
+                    if (dimension.compare("3d") == 0) {
+                        min = coordinatedist.min();
+                    }
+
+                    if (config.get<IndexType>("FreeSurface") == 0) {
+                        if (min < BoundaryWidth) {
+                            assembly.push(ownedIndex, weight);
+                        }
+                    } else {
+                        IndexType HorizontalMin = 0;
+                        if (dimension.compare("3d") == 0) {
+                            HorizontalMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
+                        } else {
+                            HorizontalMin = coordinatedist.x;
+                        }
+
+                        if (coordinate.y < BoundaryWidth) {
+                            if (HorizontalMin < BoundaryWidth) {
+                                assembly.push(ownedIndex, weight);
+                            }
+                        } else if (min < BoundaryWidth) {
+                            assembly.push(ownedIndex, weight);
+                        }
+                    }
                 }
             }
-            }
-            
+
             lama::DenseVector<ValueType> weights;
             weights.allocate(dist);
             weights = 1.0;
