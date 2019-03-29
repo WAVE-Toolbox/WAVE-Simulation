@@ -233,6 +233,16 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getV
  *
  */
 template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getPWaveModulus()
+{
+    COMMON_THROWEXCEPTION("There is no pWaveModulus parameter in an sh modelling")
+    return (pWaveModulus);
+}
+
+/*! \brief Get reference to tauP
+ *
+ */
+template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getPWaveModulus() const
 {
     COMMON_THROWEXCEPTION("There is no pWaveModulus parameter in an sh modelling")
@@ -283,10 +293,28 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getT
     return (tauSAverageXY);
 }
 
+/*! \brief Get reference to tauS xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXY() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
+    return (tauSAverageXY);
+}
+
 /*! \brief Get reference to tauS xz-plane
  */
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXZ()
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
+    return (tauSAverageXZ);
+}
+
+/*! \brief Get reference to tauS xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageXZ() const
 {
     COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
     return (tauSAverageXZ);
@@ -301,6 +329,14 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getT
     return (tauSAverageYZ);
 }
 
+/*! \brief Get reference to tauS yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getTauSAverageYZ() const
+{
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an sh modelling")
+    return (tauSAverageYZ);
+}
 /*! \brief Overloading * Operation
  *
  \param rhs ValueType factor with which the vectors are multiplied.
