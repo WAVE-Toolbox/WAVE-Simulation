@@ -12,7 +12,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
 {
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
+    std::vector<receiverSettings> allSettings;
+    acqMat2settings(acquisition_temp, allSettings, dist_wavefield);
+    this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -30,17 +32,17 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
-    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    std::vector<receiverSettings> allSettings;
 
     if (config.get<bool>("initReceiverFromSU")) {
         su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename"), modelCoordinates.getDH());
-        acquisition_temp = su.getAcquisition();
+        allSettings = su.getReceiverSettingsVec();
     } else
-        acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx");
+        readAllSettings(allSettings, std::string(config.get<std::string>("ReceiverFilename") + ".txt"));
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -58,12 +60,12 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
 {
-    scai::lama::DenseMatrix<ValueType> acquisition_temp;
+    std::vector<receiverSettings> allSettings;
     if (config.get<bool>("initReceiverFromSU")) {
         su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates.getDH());
-        acquisition_temp = su.getAcquisition();
+        allSettings = su.getReceiverSettingsVec();
     } else
-        acquisition_temp.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".mtx");
+        readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
     
     if (config.get<bool>("useReceiversPerShot")) {
         useReceiversPerShot = true;
@@ -72,7 +74,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
-    this->setAcquisition(acquisition_temp, modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
 
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
@@ -97,15 +99,30 @@ void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const
+void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, std::vector<receiverSettings> &allReceiverSettings)
 {
     if (config.get<bool>("initSourcesFromSU"))
-        acqMat = su.getAcquisition();
+        allReceiverSettings = su.getReceiverSettingsVec();
     else {
         if (useReceiversPerShot) {
-            acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".mtx"); }
+            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".mtx"); }
         else {
-            acqMat.readFromFile(config.get<std::string>("ReceiverFilename") + ".mtx"); }
+            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".mtx"); }
+    }
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield) {
+    scai::IndexType nRows = acqMat.getNumRows();
+    allSettings.reserve(nRows);
+    if (dist_wavefield->getCommunicator().getRank() == 0) {
+        auto read_acquisition_temp_HA = hostReadAccess(acqMat.getLocalStorage().getData());
+        for (scai::IndexType row = 0; row < nRows; row++) {
+            allSettings[row].receiverCoords.x = read_acquisition_temp_HA[row*9+0];
+            allSettings[row].receiverCoords.y = read_acquisition_temp_HA[row*9+1];
+            allSettings[row].receiverCoords.z = read_acquisition_temp_HA[row*9+2];
+            allSettings[row].receiverType = read_acquisition_temp_HA[row*9+3];
+        }
     }
 }
 
