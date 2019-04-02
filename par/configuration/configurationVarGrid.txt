@@ -3,13 +3,15 @@
 # Use the hashtag "#" for comments
 
 # Type of forward simulation
-dimension=2D              # Dimension: 2D or 3D
+dimension=3D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=1
 useGraphPartitioning=1
+BoundaryWeights=2.0
 useVariableFDoperators=1
+
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
@@ -19,13 +21,13 @@ coordinateFilename=configuration/coordinates
 
 NX=305                    # horizontal 1
 NY=305                    # depth
-NZ=1                    # horizontal 2
+NZ=305                    # horizontal 2
 
 # define Partitioning
 UseCubePartitioning=0     # 1=ON, 0=OFF
 ProcNX=2
 ProcNY=1
-ProcNZ=1
+ProcNZ=2
 ProcNS=1                  # Number of shot domains
 
 # distance between two grid points
@@ -36,7 +38,7 @@ DT=2.0e-03                   # temporal sampling in seconds
 T=2                          # total simulation time in seconds
 
 # define order of spatial FD operator
-spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
+spatialFDorder=4          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
 ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
@@ -84,7 +86,7 @@ useReceiversPerShot=0                          # 1=Uses an individual receiver g
 runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
 
 # wavefield snapshots
-snapType=2                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds
