@@ -325,6 +325,17 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
     return (pWaveModulus);
 }
 
+/*! \brief Get const reference to P-wave modulus (viscoelastic case)
+ *
+ * if P-Wave Modulus is dirty (eg. because of changes in velocityP, the P-Wave modulus will be recalculated
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPWaveModulus() const
+{
+    SCAI_ASSERT(dirtyFlagPWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
+    return (pWaveModulus);
+}
+
 /*! \brief Get const reference to S-wave modulus (viscoelastic case)
  *
  * if S-Wave Modulus is dirty (eg. because of changes in velocityS, the S-Wave modulus will be recalculated
@@ -348,7 +359,18 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
         dirtyFlagSWaveModulus = false;
     }
 
-    return (pWaveModulus);
+    return (sWaveModulus);
+}
+
+/*! \brief Get const reference to S-wave modulus (viscoelastic case) const
+ *
+ * if S-Wave Modulus is dirty (eg. because of changes in velocityS it ca
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus() const
+{
+   SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
+    return (sWaveModulus);
 }
 
 /*! \brief Overloading * Operation
