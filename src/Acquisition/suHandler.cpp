@@ -63,7 +63,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSourceComp(std::st
     sourceSettingsVec.clear();
     sourceSettingsVec.reserve(header.size());
 
-    for (scai::IndexType i = 0; i < header.size(); i++) {
+    for (unsigned int i = 0; i < header.size(); i++) {
         thisHeader = header[i];
         sourceSettingsVec[i].sourceCoords.x = static_cast<IndexType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
         sourceSettingsVec[i].sourceCoords.y = static_cast<IndexType>(thisHeader.sdepth * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH + 0.5);
@@ -90,7 +90,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiverComp(std::
     receiverSettingsVec.clear();
     receiverSettingsVec.reserve(header.size());
 
-    for (scai::IndexType i = 0; i < header.size() / 4; i++) {
+    for (unsigned int i = 0; i < header.size() / 4; i++) {
         thisHeader = header[i];
         receiverSettingsVec[i].receiverCoords.x = static_cast<IndexType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
         receiverSettingsVec[i].receiverCoords.y = static_cast<IndexType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
