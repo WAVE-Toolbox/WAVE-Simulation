@@ -98,16 +98,17 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         layer = modelCoordinates.getLayer(coordinate);
-        if (useVarFDorder) {
-            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
-            spatialFDorder = spatialFDorderVec[layer];
 
-            /* reduce FDorder at the variable grid interfaces*/
-            if (distance == 0)
-                spatialFDorder = 2;
-            else if (spatialFDorder - distance * 2 > 0)
-                spatialFDorder = distance * 2;
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
         }
+
+        /* reduce FDorder at the variable grid interfaces*/
+        auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+        if (distance == 0)
+            spatialFDorder = 2;
+        else if (spatialFDorder - distance * 2 > 0)
+            spatialFDorder = distance * 2;
 
         //Transition from coarse (layer) to fine grid (layer+1) uses fine operator for Dyf
         if ((modelCoordinates.locatedOnInterface(coordinate)) && (!modelCoordinates.getTransition(coordinate))) {
@@ -229,15 +230,15 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         }
 
         if (useVarFDorder) {
-            auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
             spatialFDorder = spatialFDorderVec[layer];
-
-            /* reduce FDorder at the variable grid interfaces*/
-            if (distance == 0)
-                spatialFDorder = 2;
-            else if (spatialFDorder - distance * 2 > 0)
-                spatialFDorder = distance * 2;
         }
+
+        /* reduce FDorder at the variable grid interfaces*/
+        auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
+        if (distance == 0)
+            spatialFDorder = 2;
+        else if (spatialFDorder - distance * 2 > 0)
+            spatialFDorder = distance * 2;
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
 
