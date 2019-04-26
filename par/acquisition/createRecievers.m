@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='receiver.mtx';
+OUTPUT_FILENAME='receiver.txt';
 
 %% Requiered Parameters
 X=[70]; % Coordinates in X (Grid points)
@@ -13,5 +13,7 @@ RECEIVER_TYPE=[1]; % RECEIVER Type (1=P, 2=vX, 3=vY, 4=vZ)
 % Create Matrix
 RECEIVER_FILE=[X' Y' Z' RECEIVER_TYPE'];
 
-% Write mtx file
-writeMatrix2mtx(OUTPUT_FILENAME,RECEIVER_FILE);
+% Write txt file
+dlmwrite(OUTPUT_FILENAME,RECEIVER_FILE,'delimiter',' ')
+% writematrix(SOURCE_FILE,OUTPUT_FILENAME,'Delimiter','space') % introduced
+% in Matlab 2019
