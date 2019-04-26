@@ -1,17 +1,17 @@
-#include <scai/lama.hpp>
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/dmemo/GridDistribution.hpp>
+#include <scai/lama.hpp>
 
 #include <iostream>
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "Configuration/Configuration.hpp"
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 #include "Acquisition/suHandler.hpp"
+#include "Configuration/Configuration.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
@@ -19,8 +19,8 @@
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
 
-#include "Common/HostPrint.hpp"
 #include "CheckParameter/CheckParameter.hpp"
+#include "Common/HostPrint.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -134,7 +134,7 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
     /* Forward solver                          */
