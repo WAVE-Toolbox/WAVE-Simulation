@@ -259,14 +259,14 @@ guide: $(wave.docdir)/guide/WAVE_guide_EN.pdf
 $(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.libsrc)
 	@echo "   [DOC]   $@"
 	$(Q)mkdir -p $(wave.docdir)/doxygen && cd  $(wave.docdir)/doxygen && \
-    sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  Doxyfile && \
+	sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  Doxyfile && \
 	doxygen Doxyfile &> log 
 	@echo "   [DOC]   doxygen log file: $(wave.docdir)/doxygen/log"
 
 $(wave.docdir)/guide/WAVE_guide_EN.pdf: $(wave.dir)/doc/guide/WAVE_guide_EN.tex
 	@echo "   [DOC]   $@"
 	$(Q)mkdir -p $(wave.docdir)/guide && cd  $(wave.docdir)/guide && \
-    sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  WAVE_guide_EN.tex && \
+	sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  WAVE_guide_EN.tex && \
 	pdflatex WAVE_guide_EN > /dev/null && bibtex WAVE_guide_EN > /dev/null && \
 	pdflatex WAVE_guide_EN > /dev/null && pdflatex WAVE_guide_EN > log && rm WAVE_guide_EN.tex
 	@echo "   [DOC]   pdflatex log file: $(wave.docdir)/guide/log"
