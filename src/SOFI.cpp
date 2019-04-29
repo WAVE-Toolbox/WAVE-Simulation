@@ -25,7 +25,7 @@
 using namespace scai;
 using namespace KITGPI;
 
-bool verbose; // global variable definition
+extern bool verbose; // global variable definition
 
 int main(int argc, const char *argv[])
 {
