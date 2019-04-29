@@ -69,15 +69,20 @@ int main(int argc, const char *argv[])
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
     IndexType npS = config.get<IndexType>("ProcNS");
-    IndexType npX = config.get<IndexType>("ProcNX");
-    IndexType npY = config.get<IndexType>("ProcNY");
-    IndexType npZ = config.get<IndexType>("ProcNZ");
+    IndexType npM = commAll->getSize() / npS;
+
+    if (commAll->getSize() != npS * npM)
+    {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() 
+                             << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
+        return(2);         
+    }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
 
     // Build subsets of processors for the shots
 
-    common::Grid2D procAllGrid(npS, npX * npY * npZ);
+    common::Grid2D procAllGrid(npS, npM);
     IndexType procAllGridRank[2];
 
     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
@@ -97,9 +102,8 @@ int main(int argc, const char *argv[])
     // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
 
     common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX"));
-    common::Grid3D procGrid(npZ, npY, npX);
     // distribute the grid onto available processors
-    dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot, procGrid));
+    dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot));
 
     // Create an object of the mapping (3D-1D) class Coordinates
     Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
