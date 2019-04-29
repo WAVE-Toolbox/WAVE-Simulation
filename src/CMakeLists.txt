@@ -91,7 +91,7 @@ include_directories( ${SCAI_INCLUDE_DIRS} )
 
 include_directories( Common Configuration Acquisition Modelparameter )
 
-add_library( SOFI ${SOFI_FILES} )
+add_library( SOFI SHARED ${SOFI_FILES} )
 
 target_link_libraries( SOFI ${SCAI_LIBRARIES} )
 
