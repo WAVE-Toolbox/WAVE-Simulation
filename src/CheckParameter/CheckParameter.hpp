@@ -22,12 +22,10 @@ namespace KITGPI
         void checkNumberOfProcesses(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll)
         {
             IndexType npS = config.get<IndexType>("ProcNS");
-            IndexType npX = config.get<IndexType>("ProcNX");
-            IndexType npY = config.get<IndexType>("ProcNY");
-            IndexType npZ = config.get<IndexType>("ProcNZ");
+            IndexType npM = commAll->getSize() / npS;
 
-            SCAI_ASSERT_ERROR(commAll->getSize() == npS * npX * npY * npZ, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in configuration"
-                                                                                                                 << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
+            SCAI_ASSERT_ERROR(commAll->getSize() == npS * npM, "\n Error: Number of MPI processes (" << commAll->getSize() << ") is not multiple of shot domains in configuration"
+                                                                                                                 << ": ProcNS = " << npS << "\n")
         }
 
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
