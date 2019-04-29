@@ -22,7 +22,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector)
 {
-    scai::IndexType nFreq = fNyquist / df;
+    long nFreq = fNyquist / df;
     scai::lama::DenseVector<ValueType> fPos = scai::lama::linearDenseVector<ValueType>(nFreq + 1, 0.0, df);
     scai::lama::DenseVector<ValueType> fNeg = scai::lama::linearDenseVector<ValueType>(nFreq - 1, -(nFreq - 1) * df, df);
     frequencyVector.cat(fPos, fNeg);

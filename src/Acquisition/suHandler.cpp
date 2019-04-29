@@ -20,7 +20,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSource(std::string
         filenameTmp = filename + "." + std::string(SeismogramTypeString[SeismogramType(iComponent)]) + ".SU";
         buildAcqMatrixSourceComp(filenameTmp, sourceSettingsVecTmp, DH);
         nShots[iComponent] = sourceSettingsVecTmp.size();
-        acqSource.insert(acqSource.end(),sourceSettingsVecTmp.begin(), sourceSettingsVecTmp.end());
+        acqSource.insert(acqSource.end(), sourceSettingsVecTmp.begin(), sourceSettingsVecTmp.end());
     }
 }
 
@@ -42,7 +42,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiver(std::stri
         filenameTmp = filename + "." + std::string(SeismogramTypeString[SeismogramType(iComponent)]) + ".SU";
         buildAcqMatrixReceiverComp(filenameTmp, receiverSettingsVecTmp, DH);
         nShots[iComponent] = receiverSettingsVecTmp.size();
-        acqReceiver.insert(acqReceiver.end(),receiverSettingsVecTmp.begin(), receiverSettingsVecTmp.end());
+        acqReceiver.insert(acqReceiver.end(), receiverSettingsVecTmp.begin(), receiverSettingsVecTmp.end());
     }
 }
 
@@ -143,17 +143,20 @@ scai::IndexType KITGPI::Acquisition::suHandler<ValueType>::getComponentFromName(
 }
 
 template <typename ValueType>
-std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettingsVec()  {
+std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettingsVec()
+{
     return (acqSource);
 }
 
 template <typename ValueType>
-std::vector<KITGPI::Acquisition::receiverSettings> &KITGPI::Acquisition::suHandler<ValueType>::getReceiverSettingsVec()  {
+std::vector<KITGPI::Acquisition::receiverSettings> &KITGPI::Acquisition::suHandler<ValueType>::getReceiverSettingsVec()
+{
     return (acqReceiver);
 }
 
 template <typename ValueType>
-KITGPI::Acquisition::sourceSettings<ValueType> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettings(IndexType shotNumber) {
+KITGPI::Acquisition::sourceSettings<ValueType> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettings(IndexType shotNumber)
+{
     return (acqSource[shotNumber]);
 }
 
@@ -363,13 +366,13 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     Segy tr;
     initSegy(tr);
 
-    int tracl1;
-    double temp3;
+    IndexType tracl1;
+    ValueType temp3;
     scai::IndexType temp2;
-    float xr, yr, zr, x, y, z;
-    float XS = 0.0, YS = 0.0, ZS = 0.0;
-    const float xshift = 800.0, yshift = 800.0;
-    float dtms = float(DT * 1000000);
+    ValueType xr, yr, zr, x, y, z;
+    ValueType XS = 0.0, YS = 0.0, ZS = 0.0;
+    const ValueType xshift = 800.0, yshift = 800.0;
+    ValueType dtms = (ValueType)(DT * 1000000);
 
     scai::IndexType ns = data.getNumColumns();
     scai::IndexType ntr = data.getNumRows();
@@ -393,7 +396,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     ZS = ZS * DH;
 
     for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-        temp3 = float(coordinates1D.getValue(tracl1));
+        temp3 = (ValueType)(coordinates1D.getValue(tracl1));
         temp2 = floor(temp3);
         coord3Drec = modelCoordinates.index2coordinate(temp2);
         xr = coord3Drec.x;
@@ -406,10 +409,10 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         y = yr - YS;
         z = zr - ZS;
 
-        tr.tracl = tracl1 + 1; // trace sequence number within line
-        tr.tracr = 1;          // trace sequence number within reel
+        tr.tracl = (int)tracl1 + 1; // trace sequence number within line
+        tr.tracr = 1;               // trace sequence number within reel
         tr.ep = 1;
-        tr.cdp = ntr;
+        tr.cdp = (int)ntr;
         tr.trid = (short)1;
         tr.offset = (signed int)round(sqrt((XS - xr) * (XS - xr) + (YS - yr) * (YS - yr) + (ZS - zr) * (ZS - zr)) * 1000.0);
         tr.gelev = (signed int)round(yr * 1000.0);
@@ -418,7 +421,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
             (sperical coordinate system: swdep=theta, gwdep=phi) */
         tr.gdel = (signed int)round(atan2(-y, z) * 180 * 1000.0 / 3.1415926);
         tr.gwdep = (signed int)round(sqrt(z * z + y * y) * 1000.0);
-        tr.swdep = round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
+        tr.swdep = (int)round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
         tr.scalel = (signed short)-3;
         tr.scalco = (signed short)-3;
         tr.sx = (signed int)round(XS * 1000.0); /* X source coordinate */

@@ -188,9 +188,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
             fdCoeff = stencilFD.values()[j];
 
-            ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
-            if (ImageIndex >= 0)
+            //   ImageIndex = spatialFDorder - (2 + 2 * coordinate.y + j);
+            if (spatialFDorder >= (2 + 2 * coordinate.y + j)) {
+                ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
                 fdCoeff -= stencilFD.values()[ImageIndex];
+            }
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
@@ -233,10 +235,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
             fdCoeff = stencilFD.values()[j];
 
-            ImageIndex = spatialFDorder - 1 - 2 * coordinate.y - j;
-            if (ImageIndex >= 0)
+            if (spatialFDorder >= (1 + 2 * coordinate.y + j)) {
+                ImageIndex = spatialFDorder - (1 + 2 * coordinate.y + j);
                 fdCoeff -= stencilFD.values()[ImageIndex];
-
+            }
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, fdCoeff);

@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
     KITGPI::Configuration::Configuration config(argv[1]);
 
     // estimate grid with parameters out of the configuration
-    int NX = config.get<IndexType>("NX");
-    int NY = config.get<IndexType>("NY");
-    int NZ = config.get<IndexType>("NZ");
+    IndexType NX = config.get<IndexType>("NX");
+    IndexType NY = config.get<IndexType>("NY");
+    IndexType NZ = config.get<IndexType>("NZ");
     common::Grid3D grid(NZ, NY, NX);
 
     // construct model vectors
