@@ -13,7 +13,9 @@
 
 project( SOFI )
 
-cmake_minimum_required ( VERSION 3.0 )
+## cmake minimum version is 2.8.12 due to command 'target_include_directories' used here
+
+cmake_minimum_required ( VERSION 2.8.12 )
 
 if ( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -43,6 +45,7 @@ set ( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 ## SCAI Lama library required, use SCAI_DIR or SCAI_ROOT (policy 0074) to find it
 
 if ( ${CMAKE_VERSION} VERSION_GREATER 3.11)
+    ## use new policy to configure with SCAI_ROOT, suppress warning
     cmake_policy( SET CMP0074 NEW )
 endif ()
 
@@ -103,7 +106,7 @@ install( TARGETS SOFI DESTINATION lib )
 
 add_executable( prog SOFI.cpp )
 
-target_link_libraries( prog SOFI )
+target_link_libraries( prog SOFI ${SCAI_LIBRARIES} )
 
 set_target_properties( prog PROPERTIES OUTPUT_NAME SOFI )
 
@@ -122,7 +125,8 @@ if ( ${GTEST_FOUND} )
    add_executable( utest ${SOFI_UNIT_TEST_SOURCES} )
 
    target_include_directories( utest PRIVATE ForwardSolver Configuration Acquisition Modelparameter ${GTEST_INCLUDE_DIR} )
-   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} SOFI )
+
+   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} SOFI ${SCAI_LIBRARIES} )
 
    set_target_properties( utest PROPERTIES OUTPUT_NAME Test_unit )
 
@@ -149,7 +153,7 @@ set ( SOFI_INTEGRATION_TEST_SOURCES
 
 add_executable( itest ${SOFI_INTEGRATION_TEST_SOURCES} )
 
-target_link_libraries( itest SOFI )
+target_link_libraries( itest SOFI ${SCAI_LIBRARIES} )
 
 set_target_properties( itest PROPERTIES OUTPUT_NAME Test_integration )
 
@@ -161,7 +165,7 @@ install( TARGETS itest DESTINATION bin )
 
 add_executable( model Tools/CreateModel/TwoLayer.cpp )
 
-target_link_libraries( model SOFI )
+target_link_libraries( model SOFI ${SCAI_LIBRARIES} )
 
 set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 
