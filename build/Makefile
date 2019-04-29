@@ -21,14 +21,13 @@ GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
 CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
-CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror
+CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall -Wextra -Werror 
 
 ################################################################################
 # Usually, there is no need to change anything below this line
 ################################################################################
 
 .SUFFIXES:
-.SECONDARY:
 
 MAKEFLAGS += -rR
 SHELL     := /bin/bash
@@ -38,7 +37,7 @@ wave.exe  := $(strip $(EXENAME))
 wave.lib  := $(strip $(LIBNAME))
 wave.utst := $(strip $(UTSTNAME))
 wave.itst := $(strip $(ITSTNAME))
-gtest     := $(strip $(shell gtest-config --version 2>/dev/null))
+gtest     := $(strip $(shell ls /usr/include/gtest))
 
 wave.blddir := $(realpath $(PWD))
 
@@ -78,7 +77,7 @@ endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
+  #  GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
     $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
   endif
 endif
@@ -148,7 +147,8 @@ LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common 
+            -lscai_tracing -lscai_logging -lscai_common \
+            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
@@ -190,7 +190,7 @@ ifeq "$(origin GTEST_DIR)" 'environment'
 endif
 	@echo
 
-all: lib prog doc utest itest copyhpp
+all: lib prog doc utest itest model copyhpp
 
 prog: $(wave.bindir)/$(wave.exe)
 
@@ -229,7 +229,8 @@ $(wave.libdir)/lib$(wave.lib).a: $(wave.libobj)
 
 $(wave.unitobj): INCDIRS += -I$(GTEST_DIR)/include
 $(wave.unitobj): CXXFLAGS += -isystem -pthread
-$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main
+$(wave.bindir)/$(wave.utst): LDFLAGS += -L$(GTEST_DIR)/lib -lgtest -lgtest_main \
+                                       -Wl,-rpath,$(GTEST_DIR)/lib:$(wave.libdir)
 $(wave.bindir)/$(wave.utst): $(wave.unitobj) $(wave.libdir)/lib$(wave.lib).a
 	$(call cmd,link)
 
@@ -258,14 +259,14 @@ guide: $(wave.docdir)/guide/WAVE_guide_EN.pdf
 $(wave.docdir)/doxygen/html/index.html: $(wave.dir)/doc/doxygen/Doxyfile $(wave.libsrc)
 	@echo "   [DOC]   $@"
 	$(Q)mkdir -p $(wave.docdir)/doxygen && cd  $(wave.docdir)/doxygen && \
-	sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  Doxyfile && \
+    sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  Doxyfile && \
 	doxygen Doxyfile &> log 
 	@echo "   [DOC]   doxygen log file: $(wave.docdir)/doxygen/log"
 
 $(wave.docdir)/guide/WAVE_guide_EN.pdf: $(wave.dir)/doc/guide/WAVE_guide_EN.tex
 	@echo "   [DOC]   $@"
 	$(Q)mkdir -p $(wave.docdir)/guide && cd  $(wave.docdir)/guide && \
-	sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  WAVE_guide_EN.tex && \
+    sed -e 's#\@CMAKE\_SOURCE\_DIR\@#$(wave.dir)/src#g' $< >  WAVE_guide_EN.tex && \
 	pdflatex WAVE_guide_EN > /dev/null && bibtex WAVE_guide_EN > /dev/null && \
 	pdflatex WAVE_guide_EN > /dev/null && pdflatex WAVE_guide_EN > log && rm WAVE_guide_EN.tex
 	@echo "   [DOC]   pdflatex log file: $(wave.docdir)/guide/log"
