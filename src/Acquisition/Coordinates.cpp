@@ -112,11 +112,15 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             NZmax--;
         }
 
-        if (NXmax != NX)
+        if (NXmax != NX) {
             std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
-        if (NZmax != NZ)
+            NX=NXmax;
+        }
+        if (NZmax != NZ) {
             std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
-
+            NZ=NZmax;
+        }
+        
         /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
         IndexType layer = 0;
         while (layer < 1) {
