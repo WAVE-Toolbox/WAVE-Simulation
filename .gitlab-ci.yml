@@ -43,6 +43,17 @@ acousticVarGrid2D-gcc:
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.varGrid.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.varGrid.txt"
 
+
+acousticVarGrid3D-gcc:
+
+  stage: simulation
+  script:
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.acoustic.varGrid.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.3D.acoustic.varGrid.txt"
+
+
 acoustic3D-gcc:
   stage: simulation
   script:
