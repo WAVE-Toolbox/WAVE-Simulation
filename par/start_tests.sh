@@ -36,6 +36,15 @@ if [ "$?" != "0" ]; then
 	exit
 fi
 
+
+mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
+${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
+if [ "$?" != "0" ]; then
+	echo "Test failed ! "
+	exit
+fi
+
+
 ${MODEL_EXE} ci/configuration_ci.3D.acoustic.txt || { echo "Model creation failed !" ; exit 1; } 
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.acoustic.txt
