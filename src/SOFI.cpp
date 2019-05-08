@@ -26,7 +26,7 @@
 using namespace scai;
 using namespace KITGPI;
 
-bool verbose; // global variable definition
+extern bool verbose; // global variable definition
 
 int main(int argc, const char *argv[])
 {
@@ -73,14 +73,20 @@ int main(int argc, const char *argv[])
     /* communicator for shot parallelisation   */
     /* --------------------------------------- */
 
+    
     IndexType npS = config.get<IndexType>("ProcNS");
-    //number of processes inside a shot domain
-    IndexType npNpS = commAll->getSize() / npS;
+    IndexType npM = commAll->getSize() / npS;
+    if (commAll->getSize() != npS * npM)
+    {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() 
+                             << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
+        return(2);         
+    }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
 
     // Build subsets of processors for the shots
-    common::Grid2D procAllGrid(npS, npNpS);
+    common::Grid2D procAllGrid(npS, npM);
     IndexType procAllGridRank[2];
     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
 
@@ -165,6 +171,7 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
     /* --------------------------------------- */
     /* Forward solver                          */

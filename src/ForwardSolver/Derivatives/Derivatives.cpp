@@ -44,16 +44,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-            for (j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
 
                 X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
-                    columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
+                columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
-                }
             }
         }
+    }
     }
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
@@ -120,11 +120,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-            for (j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / DH);
                 }
             }
@@ -178,16 +178,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-            for (j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
 
                 Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
-                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
-                }
             }
         }
+    }
     }
     DzfSparse = lama::zero<SparseFormat>(dist, dist);
     DzfSparse.fillFromAssembly(assembly);
@@ -242,16 +242,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
 
-            for (IndexType j = 0; j < spatialFDorder; j++) {
+        for (IndexType j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
                 fdCoeff = stencilFDmap[spatialFDorder].values()[j];
 
                 ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
-                if (ImageIndex >= 0)
+            if (ImageIndex >= 0)
                     fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
 
-                if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, fdCoeff / DH);
                 }
             }
@@ -300,7 +300,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-            for (j = 0; j < spatialFDorder; j++) {
+        for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
 
                 if ((modelCoordinates.locatedOnInterface(coordinate)) && (j != modelCoordinates.getTransition(coordinate))) {
@@ -315,8 +315,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
                 if (ImageIndex >= 0)
                     fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
 
-                if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, fdCoeff / modelCoordinates.getDH(coordinate));
                 }
             }

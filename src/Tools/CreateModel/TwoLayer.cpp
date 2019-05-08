@@ -33,13 +33,15 @@ int main(int argc, char *argv[])
         return (2);
     }
 
+
+    
     // read configuration parameter from file
     KITGPI::Configuration::Configuration config(argv[1]);
 
     // estimate grid with parameters out of the configuration
-    int NX = config.get<IndexType>("NX");
-    int NY = config.get<IndexType>("NY");
-    int NZ = config.get<IndexType>("NZ");
+    IndexType NX = config.get<IndexType>("NX");
+    IndexType NY = config.get<IndexType>("NY");
+    IndexType NZ = config.get<IndexType>("NZ");
     common::Grid3D grid(NY, NZ, NX);
 
     // construct model vectors
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
     lama::GridVector<ValueType> rho(grid);
     lama::GridVector<ValueType> tauP(grid);
     lama::GridVector<ValueType> tauS(grid);
-
+    
     //set velocities for first layer
     vp = vp1;
     vs = vs1;
@@ -66,6 +68,7 @@ int main(int argc, char *argv[])
         tauS(y, lama::Range(), lama::Range()) = tauS2;
     }
 
+    
     std::string type = config.get<std::string>("equationType");
 
     //write model to file specified in configuration

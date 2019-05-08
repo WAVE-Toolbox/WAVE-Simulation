@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='sources.mtx';
+OUTPUT_FILENAME='sources.txt';
 
 %% Requiered Parameters
 X=[50]; % Coordinates in X (Grid points)
@@ -21,5 +21,7 @@ TShift=[0]; % Time shift in s
 % Create Matrix
 SOURCE_FILE=[X' Y' Z' SOURCE_TYPE' WAVELET_TYPE' WAVELET_SHAPE' FC' AMP' TShift'];
 
-% Write mtx file
-writeMatrix2mtx(OUTPUT_FILENAME,SOURCE_FILE);
+% Write txt file
+dlmwrite(OUTPUT_FILENAME,SOURCE_FILE,'delimiter',' ')
+% writematrix(SOURCE_FILE,OUTPUT_FILENAME,'Delimiter','space') % introduced
+% in Matlab 2019

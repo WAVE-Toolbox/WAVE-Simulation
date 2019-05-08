@@ -10,7 +10,18 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSource(std::string const &filename, ValueType DH)
 {
-    buildAcqMatrix(filename, DH, &suHandler<ValueType>::buildAcqMatrixSourceComp);
+    acqSource.clear();
+    std::vector<sourceSettings<ValueType>> sourceSettingsVecTmp;
+
+    std::string filenameTmp;
+
+    // read all source files
+    for (scai::IndexType iComponent = 0; iComponent < NUM_ELEMENTS_SEISMOGRAMTYPE; iComponent++) {
+        filenameTmp = filename + "." + std::string(SeismogramTypeString[SeismogramType(iComponent)]) + ".SU";
+        buildAcqMatrixSourceComp(filenameTmp, sourceSettingsVecTmp, DH);
+        nShots[iComponent] = sourceSettingsVecTmp.size();
+        acqSource.insert(acqSource.end(), sourceSettingsVecTmp.begin(), sourceSettingsVecTmp.end());
+    }
 }
 
 //! \brief Build a Receiver Acquisition Matrix from all SU files
@@ -21,53 +32,45 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSource(std::string
 template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiver(std::string const &filename, ValueType DH)
 {
-    buildAcqMatrix(filename, DH, &suHandler<ValueType>::buildAcqMatrixReceiverComp);
-}
-
-//! \brief Build a Acquisition Matrix from all SU files
-/*!
- \param filename Name of the file
- \param DH grid spacing
- \param buildAcqMat Function pointer to decide if a source or receiver matrix should be build
- */
-template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrix(std::string const &filename, ValueType DH, buildAcqMatPtr buildAcqMat)
-{
-    acqMat.clear();
-    std::vector<lama::DenseMatrix<ValueType>> acqMatVec(NUM_ELEMENTS_SEISMOGRAMTYPE);
+    acqReceiver.clear();
+    std::vector<receiverSettings> receiverSettingsVecTmp;
 
     std::string filenameTmp;
 
-    // read all source files
+    // read all receiver files
     for (scai::IndexType iComponent = 0; iComponent < NUM_ELEMENTS_SEISMOGRAMTYPE; iComponent++) {
         filenameTmp = filename + "." + std::string(SeismogramTypeString[SeismogramType(iComponent)]) + ".SU";
-        (this->*buildAcqMat)(filenameTmp, acqMatVec[iComponent], DH);
-        nShots[iComponent] = acqMatVec[iComponent].getNumRows();
+        buildAcqMatrixReceiverComp(filenameTmp, receiverSettingsVecTmp, DH);
+        nShots[iComponent] = receiverSettingsVecTmp.size();
+        acqReceiver.insert(acqReceiver.end(), receiverSettingsVecTmp.begin(), receiverSettingsVecTmp.end());
     }
+}
 
-    // count number of sources to allocate final acquisition matrix
-    IndexType numSources = 0;
-    for (auto it = acqMatVec.begin(); it != acqMatVec.end(); it++)
-        numSources += (*it).getNumRows();
+//! \brief Build a source Acquisition Matrix from one SU file
+/*!
+ \param filename Name of the file
+ \param sourceSettingsVec Vector of source settings
+ \param DH grid spacing
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSourceComp(std::string const &filename, std::vector<sourceSettings<ValueType>> &sourceSettingsVec, ValueType DH)
+{
+    std::vector<Segy> header;
+    readHeaderSU(filename, header);
+    Segy thisHeader;
 
-    auto rowDist = std::make_shared<scai::dmemo::SingleDistribution>(numSources, dmemo::Communicator::getCommunicatorPtr(), 0);
-    auto colDist = std::make_shared<scai::dmemo::NoDistribution>(acqMatVec[0].getNumColumns());
+    IndexType component = getComponentFromName(filename);
+    sourceSettingsVec.clear();
+    sourceSettingsVec.reserve(header.size());
 
-    acqMat.allocate(rowDist, colDist);
-
-    // concatenate the acquisition matrices of all components
-    auto write_acquisition_HA = hostWriteAccess(acqMat.getLocalStorage().getData());
-
-    IndexType j = 0;
-    for (auto it = acqMatVec.begin(); it != acqMatVec.end(); it++) {
-        auto read_acquisition_HA = hostReadAccess((*it).getLocalStorage().getData());
-        for (IndexType i = 0; i < read_acquisition_HA.size(); i++) {
-            write_acquisition_HA[j] = read_acquisition_HA[i];
-            j++;
-        }
-        read_acquisition_HA.release();
+    for (unsigned int i = 0; i < header.size(); i++) {
+        thisHeader = header[i];
+        sourceSettingsVec[i].sourceCoords.x = static_cast<IndexType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
+        sourceSettingsVec[i].sourceCoords.y = static_cast<IndexType>(thisHeader.sdepth * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH + 0.5);
+        sourceSettingsVec[i].sourceCoords.z = static_cast<IndexType>(thisHeader.sy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
+        sourceSettingsVec[i].sourceType = component;
+        sourceSettingsVec[i].waveletType = 3; // each source signal should be read from file
     }
-    write_acquisition_HA.release();
 }
 
 //! \brief Build a source Acquisition Matrix from one SU file
@@ -77,64 +80,23 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrix(std::string const
  \param DH grid spacing
  */
 template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSourceComp(std::string const &filename, lama::DenseMatrix<ValueType> &acqMatTmp, ValueType DH)
+void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiverComp(std::string const &filename, std::vector<receiverSettings> &receiverSettingsVec, ValueType DH)
 {
     std::vector<Segy> header;
     readHeaderSU(filename, header);
     Segy thisHeader;
 
     IndexType component = getComponentFromName(filename);
+    receiverSettingsVec.clear();
+    receiverSettingsVec.reserve(header.size());
 
-    auto rowDist = std::make_shared<scai::dmemo::SingleDistribution>(header.size(), dmemo::Communicator::getCommunicatorPtr(), 0);
-    auto colDist = std::make_shared<scai::dmemo::NoDistribution>(9);
-
-    acqMatTmp.allocate(rowDist, colDist);
-
-    auto write_acquisition_HA = writeAccess(acqMatTmp.getLocalStorage().getData());
-
-    for (int i = 0; i < write_acquisition_HA.size() / 9; i++) {
+    for (unsigned int i = 0; i < header.size() / 4; i++) {
         thisHeader = header[i];
-        write_acquisition_HA[i * 9 + 0] = common::Math::floor<ValueType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
-        write_acquisition_HA[i * 9 + 1] = common::Math::floor<ValueType>(thisHeader.sdepth * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH + 0.5);
-        write_acquisition_HA[i * 9 + 2] = common::Math::floor<ValueType>(thisHeader.sy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
-        write_acquisition_HA[i * 9 + 3] = ValueType(component);
-        write_acquisition_HA[i * 9 + 4] = 3; // each source signal should be read from file
+        receiverSettingsVec[i].receiverCoords.x = static_cast<IndexType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
+        receiverSettingsVec[i].receiverCoords.y = static_cast<IndexType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
+        receiverSettingsVec[i].receiverCoords.z = static_cast<IndexType>(thisHeader.gy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
+        receiverSettingsVec[i].receiverType = component;
     }
-
-    write_acquisition_HA.release();
-}
-
-//! \brief Build a source Acquisition Matrix from one SU file
-/*!
- \param filename Name of the file
- \param acqMat Acquisition Matrix
- \param DH grid spacing
- */
-template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiverComp(std::string const &filename, lama::DenseMatrix<ValueType> &acqMatTmp, ValueType DH)
-{
-    std::vector<Segy> header;
-    readHeaderSU(filename, header);
-    Segy thisHeader;
-
-    IndexType component = getComponentFromName(filename);
-
-    auto rowDist = std::make_shared<scai::dmemo::SingleDistribution>(header.size(), dmemo::Communicator::getCommunicatorPtr(), 0);
-    auto colDist = std::make_shared<scai::dmemo::NoDistribution>(4);
-
-    acqMatTmp.allocate(rowDist, colDist);
-
-    auto write_acquisition_HA = writeAccess(acqMatTmp.getLocalStorage().getData());
-
-    for (int i = 0; i < write_acquisition_HA.size() / 4; i++) {
-        thisHeader = header[i];
-        write_acquisition_HA[i * 4 + 0] = common::Math::floor<ValueType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
-        write_acquisition_HA[i * 4 + 1] = common::Math::floor<ValueType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
-        write_acquisition_HA[i * 4 + 2] = common::Math::floor<ValueType>(thisHeader.gy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
-        write_acquisition_HA[i * 4 + 3] = ValueType(component);
-    }
-
-    write_acquisition_HA.release();
 }
 
 //! \brief Locate the trace in the SU files based on a shot number
@@ -180,34 +142,27 @@ scai::IndexType KITGPI::Acquisition::suHandler<ValueType>::getComponentFromName(
     return component;
 }
 
-//! \brief Getter member function for the Acquisition Matrix
 template <typename ValueType>
-lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::suHandler<ValueType>::getAcquisition() const
+std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettingsVec()
 {
-    return (acqMat);
+    return (acqSource);
 }
 
-//! \brief Getter member function for the Acquisition Matrix
-/*!
- \param acqRowMat Acquisition Matrix
- \param shotNumber Shot number to get
- */
 template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::getAcquisitionRow(lama::DenseMatrix<ValueType> &acqRowMat, IndexType shotNumber) const
+std::vector<KITGPI::Acquisition::receiverSettings> &KITGPI::Acquisition::suHandler<ValueType>::getReceiverSettingsVec()
 {
-    scai::lama::DenseVector<ValueType> acqRow;
-    acqMat.getRow(acqRow, shotNumber);
+    return (acqReceiver);
+}
 
-    auto rowDist = std::make_shared<scai::dmemo::SingleDistribution>(1, dmemo::Communicator::getCommunicatorPtr(), 0);
-    auto colDist = std::make_shared<scai::dmemo::NoDistribution>(9);
-
-    acqRowMat.allocate(rowDist, colDist);
-    acqRowMat.setRow(acqRow, 0, common::BinaryOp::COPY);
+template <typename ValueType>
+KITGPI::Acquisition::sourceSettings<ValueType> &KITGPI::Acquisition::suHandler<ValueType>::getSourceSettings(IndexType shotNumber)
+{
+    return (acqSource[shotNumber]);
 }
 
 //! \brief Initialize a Segy struct
 /*!
-\param segy Segy struct
+\param tr Segy struct
 */
 template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::initSegy(Segy &tr)
@@ -411,13 +366,13 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     Segy tr;
     initSegy(tr);
 
-    int tracl1;
-    double temp3;
+    IndexType tracl1;
+    ValueType temp3;
     scai::IndexType temp2;
-    float xr, yr, zr, x, y, z;
-    float XS = 0.0, YS = 0.0, ZS = 0.0;
-    const float xshift = 800.0, yshift = 800.0;
-    float dtms = float(DT * 1000000);
+    ValueType xr, yr, zr, x, y, z;
+    ValueType XS = 0.0, YS = 0.0, ZS = 0.0;
+    const ValueType xshift = 800.0, yshift = 800.0;
+    ValueType dtms = (ValueType)(DT * 1000000);
 
     scai::IndexType ns = data.getNumColumns();
     scai::IndexType ntr = data.getNumRows();
@@ -441,7 +396,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     ZS = ZS * DH;
 
     for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-        temp3 = float(coordinates1D.getValue(tracl1));
+        temp3 = (ValueType)(coordinates1D.getValue(tracl1));
         temp2 = floor(temp3);
         coord3Drec = modelCoordinates.index2coordinate(temp2);
         xr = coord3Drec.x;
@@ -454,10 +409,10 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         y = yr - YS;
         z = zr - ZS;
 
-        tr.tracl = tracl1 + 1; // trace sequence number within line
-        tr.tracr = 1;          // trace sequence number within reel
+        tr.tracl = (int)tracl1 + 1; // trace sequence number within line
+        tr.tracr = 1;               // trace sequence number within reel
         tr.ep = 1;
-        tr.cdp = ntr;
+        tr.cdp = (int)ntr;
         tr.trid = (short)1;
         tr.offset = (signed int)round(sqrt((XS - xr) * (XS - xr) + (YS - yr) * (YS - yr) + (ZS - zr) * (ZS - zr)) * 1000.0);
         tr.gelev = (signed int)round(yr * 1000.0);
@@ -466,7 +421,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
             (sperical coordinate system: swdep=theta, gwdep=phi) */
         tr.gdel = (signed int)round(atan2(-y, z) * 180 * 1000.0 / 3.1415926);
         tr.gwdep = (signed int)round(sqrt(z * z + y * y) * 1000.0);
-        tr.swdep = round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
+        tr.swdep = (int)round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
         tr.scalel = (signed short)-3;
         tr.scalco = (signed short)-3;
         tr.sx = (signed int)round(XS * 1000.0); /* X source coordinate */

@@ -4,6 +4,7 @@
 #include "suHandler.hpp"
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
+#include "AcquisitionSettings.hpp"
 
 namespace KITGPI
 {
@@ -39,10 +40,11 @@ namespace KITGPI
             void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
             void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
 
-            void getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const;
+            void getAcquisitionMat(Configuration::Configuration const &config, std::vector<receiverSettings> &allReceiverSettings);
 
           private:
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
+            void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);
             suHandler<ValueType> su;
             bool useReceiversPerShot;
             scai::IndexType shotNr;
