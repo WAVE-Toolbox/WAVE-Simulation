@@ -8,7 +8,7 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=1
-useGraphPartitioning=1
+partitioning=2
 BoundaryWeights=2.0
 useVariableFDoperators=1
 
@@ -16,7 +16,11 @@ useVariableFDoperators=1
 interfaceFilename=ci/interfacesVarGrid.txt
 dhFactorFilename=ci/dhFactorsVarGrid.txt
 spatialFDorderFilename=ci/FDordersVarGrid.txt
-coordinateFilename=ci/coordinates
+
+partitionWrite=0  
+coordinateWrite=0 
+weightsWrite=0  
+
 
 
 NX=305                    # horizontal 1
@@ -24,7 +28,6 @@ NY=303                    # depth
 NZ=1                      # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=0     # 1=ON, 0=OFF
 ProcNX=2
 ProcNY=2
 ProcNZ=1

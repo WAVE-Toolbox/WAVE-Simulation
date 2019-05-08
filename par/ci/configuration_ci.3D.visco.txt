@@ -9,7 +9,9 @@ NZ=100 # horizontal 2
 
 # define Partitioning
 UseVariableGrid=0
-UseGraphPartitioning=0
+partitioning=1
+useVariableFDoperators=0
+
 ProcNX=2
 ProcNY=2
 ProcNZ=1

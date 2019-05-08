@@ -4,13 +4,14 @@ dimension=2D
 equationType=acoustic
 
 UseVariableGrid=0
+useVariableFDoperators=0
+
 NX=100 # horizontal 1
 NY=100 # depth
 NZ=1 # horizontal 2
 
 # define Partitioning
-useGraphPartitioning=0
-
+partitioning=1
 ProcNX=2
 ProcNY=2
 ProcNZ=1

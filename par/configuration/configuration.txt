@@ -8,7 +8,9 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=0
-useGraphPartitioning=0
+partitioning=1
+useVariableFDoperators=0
+
 NX=100                    # horizontal 1
 NY=100                    # depth
 NZ=100                    # horizontal 2

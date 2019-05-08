@@ -23,7 +23,7 @@ namespace KITGPI
         {
             IndexType npS = config.get<IndexType>("ProcNS");
 
-            if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
+            if ((config.get<bool>("useVariableGrid")) || (config.get<IndexType>("partitioning") == 2)) {
                 IndexType npNpS = commAll->getSize() / npS;
                 SCAI_ASSERT_ERROR(floor(npNpS) == npNpS, "Number of processes must be (number of processes for one shot domain) * (number of shot domains)");
             } else {

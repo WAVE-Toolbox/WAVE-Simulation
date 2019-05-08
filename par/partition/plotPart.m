@@ -1,21 +1,20 @@
 clearvars; close all;
 
+
+addpath("../model");
+
 %% Define input parameter
-filename='../partitition.mtx'; % File name of the model
+filename='./partition.mtx'; % File name of the model
 %filenames= [ "../part_kmeans_1.mtx", "../part_kmeans_2.mtx", "../part_kmeans_3.mtx",  "../part_kmeans_4.mtx",  "../part_kmeans_5.mtx","../part_kmeans_6.mtx",  "../part_kmeans_7.mtx" ]
 
-filename_w='../weights.mtx'; % File name of the model
-filename_d='../damping.mtx'; % File name of the model
+filename_w='./weights.mtx'; % File name of the model
 filename_x='../configuration/coordinatesX.mtx'; % File name of the model
 filename_y='../configuration/coordinatesY.mtx'; % File name of the model
 filename_z='../configuration/coordinatesZ.mtx'; % File name of the model
 
-filename_w='../weights.mtx'; % File name of the model
-NX=100;  % Number of grid points in X
-NY=100;  % Number of grid points in Y
-NZ=1;  % Number of grid points in Z
-DH=50;   % Spatial grid sampling
-LAYER=1; % Define layer of 3D model to display as 2D slice
+%Ruduce data to show every "increment" point
+increment=8;
+
 
 %% Read model
 
@@ -26,6 +25,12 @@ z=readVectorfromMtx(filename_z);
 weights=readVectorfromMtx(filename_w);
 part=readVectorfromMtx(filename);
   
+x=x(1:increment:end);
+y=y(1:increment:end);
+z=z(1:increment:end);
+part=part(1:increment:end);
+weights=weights(1:increment:end);
+
 figure  
 scatter3(x,y,z,20,part,'filled','s')
 xlabel('x')

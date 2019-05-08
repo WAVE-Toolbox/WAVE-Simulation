@@ -33,18 +33,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
 
     this->setFDCoef();
 
-    auto useVariableGrid = config.get<bool>("useVariableGrid");
-    auto useGraphPartitioning = config.get<bool>("useGraphPartitioning");
-
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-    if ((useVariableGrid) || (useGraphPartitioning)) {
+    if (config.get<IndexType>("partitioning") != 1)
         useSparse = true;
-    }
+    useFreeSurface = config.get<IndexType>("FreeSurface");
 
-    if ((useVariableGrid || useGraphPartitioning) && config.get<bool>("useVariableFDoperators")) {
+    if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
         this->setFDOrder(config.get<std::string>("spatialFDorderFilename"));
     } else {
+        SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for grid distribution")
         this->setFDOrder(config.get<IndexType>("spatialFDorder"));
     }
 

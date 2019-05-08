@@ -6,25 +6,33 @@
 dimension=3D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
-# define spatial sampling: number of grid points in direction
+# Variable grid configuration
 useVariableGrid=1
-useGraphPartitioning=1
-BoundaryWeights=2.0
+partitioning=2 # 0=Block Distribution 1=Grid Distribution 2=Graph Partitioning
 useVariableFDoperators=1
-
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
 spatialFDorderFilename=configuration/FDorders.txt
-coordinateFilename=configuration/coordinates
 
 
+partitionWrite=0                                   # 1=partition will be written to disk, 0=not
+partitionFilename=partition/partition
+
+coordinateWrite=0                                  # 1=coordinates will be written to disk, 0=not
+coordinateFilename=configuration/coordinates       
+
+BoundaryWeights=2.0
+weightsWrite=0                                  # 1=weigths will be written to disk, 0=not
+weightsFilename=partition/weights       
+
+
+# define spatial sampling: number of grid points in direction
 NX=305                    # horizontal 1
 NY=305                    # depth
 NZ=305                    # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=0     # 1=ON, 0=OFF
 ProcNX=2
 ProcNY=1
 ProcNZ=2
