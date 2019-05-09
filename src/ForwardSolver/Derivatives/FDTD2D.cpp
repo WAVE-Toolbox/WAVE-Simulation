@@ -167,16 +167,16 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     this->calcDxb(modelCoordinates, dist);
     this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
 
-    HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     DxfSparse.setContextPtr(ctx);
     DxbSparse.setContextPtr(ctx);
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
 
-    HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;
     DxbSparse *= DT;
     DyfSparse *= DT;

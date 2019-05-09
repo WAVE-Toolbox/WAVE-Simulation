@@ -44,16 +44,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-        for (j = 0; j < spatialFDorder; j++) {
+            for (j = 0; j < spatialFDorder; j++) {
 
                 X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
-                columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
+                    columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
+                }
             }
         }
-    }
     }
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
@@ -107,7 +107,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
         if (distance == 0)
             spatialFDorder = 2;
-        else if (spatialFDorder - distance * 2 > 0)
+        else if (spatialFDorder > distance * 2)
             spatialFDorder = distance * 2;
 
         //Transition from coarse (layer) to fine grid (layer+1) uses fine operator for Dyf
@@ -120,11 +120,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-        for (j = 0; j < spatialFDorder; j++) {
+            for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
 
                 if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / DH);
                 }
             }
@@ -178,16 +178,16 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
         }
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-        for (j = 0; j < spatialFDorder; j++) {
+            for (j = 0; j < spatialFDorder; j++) {
 
                 Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
+                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
                     assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
+                }
             }
         }
-    }
     }
     DzfSparse = lama::zero<SparseFormat>(dist, dist);
     DzfSparse.fillFromAssembly(assembly);
@@ -237,21 +237,22 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
         if (distance == 0)
             spatialFDorder = 2;
-        else if (spatialFDorder - distance * 2 > 0)
+        else if (spatialFDorder > distance * 2)
             spatialFDorder = distance * 2;
 
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
 
-        for (IndexType j = 0; j < spatialFDorder; j++) {
+            for (IndexType j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
                 fdCoeff = stencilFDmap[spatialFDorder].values()[j];
 
-                ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
-            if (ImageIndex >= 0)
+                if (spatialFDorder >= (2 + 2 * coordinate.y / dhFactor + j)) {
+                    ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
                     fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
+                }
 
-            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, fdCoeff / DH);
                 }
             }
@@ -295,12 +296,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
             /* reduce FDorder at the variable grid interfaces*/
             if (distance == 0)
                 spatialFDorder = 2;
-            else if (spatialFDorder - distance * 2 > 0)
+            else if (spatialFDorder > distance * 2)
                 spatialFDorder = distance * 2;
         }
 
+
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
-        for (j = 0; j < spatialFDorder; j++) {
+            for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
 
                 if ((modelCoordinates.locatedOnInterface(coordinate)) && (j != modelCoordinates.getTransition(coordinate))) {
@@ -310,13 +312,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
                 fdCoeff = stencilFDmap[spatialFDorder].values()[j];
 
-                ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
-
-                if (ImageIndex >= 0)
+                if (spatialFDorder >= (1 + 2 * coordinate.y / dhFactor + j)) {
+                    ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
                     fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
+                }
 
-            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+                    columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                     assembly.push(ownedIndex, columnIndex, fdCoeff / modelCoordinates.getDH(coordinate));
                 }
             }
@@ -402,7 +404,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
             /* reduce FDorder at the variable grid interfaces*/
             if (distance == 0)
                 spatialFDorder = 2;
-            else if (spatialFDorder - distance * 2 > 0)
+            else if (spatialFDorder > distance * 2)
                 spatialFDorder = distance * 2;
         }
 
@@ -505,6 +507,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     ValueType value;
     IndexType index;
 
+
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
@@ -539,28 +542,36 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
             assembly.push(ownedIndex, index, value);
 
             // Point 12
-            if (x < NX - 2 * dhFactorFineGrid) {
+            if (x + 2 * dhFactorFineGrid < NX) {
                 value = modx * (dhFactor - modz) * denom;
                 index = modelCoordinates.coordinate2index(x + dhFactor - modx, y, z - modz);
                 assembly.push(ownedIndex, index, value);
             }
 
             //Point 21
-            if (z < NZ - 2 * dhFactorFineGrid) {
+            if (z + 2 * dhFactorFineGrid < NZ) {
                 value = (dhFactor - modx) * modz * denom;
-                index = modelCoordinates.coordinate2index(x - modx, y, z + dhFactor - modz);
+                try {
+                    index = modelCoordinates.coordinate2index(x - modx, y, z + dhFactor - modz);
+                } catch (scai::common::Exception &e) {
+                    COMMON_THROWEXCEPTION("Error: coordinate2index called from calcInterpolationP in derivatives.cpp" << e.what());
+                }
+
                 assembly.push(ownedIndex, index, value);
             }
 
             //Point 22
-            if ((x < NX - 2 * dhFactorFineGrid) && (z < NZ - 2 * dhFactorFineGrid)) {
+            if ((x + 2 * dhFactorFineGrid < NX) && (z + 2 * dhFactorFineGrid < NZ)) {
                 value = modx * modz * denom;
-                index = modelCoordinates.coordinate2index(x + dhFactor - modx, y, z + dhFactor - modz);
+                try {
+                    index = modelCoordinates.coordinate2index(x + dhFactor - modx, y, z + dhFactor - modz);
+                } catch (scai::common::Exception &e) {
+                    COMMON_THROWEXCEPTION("Error: coordinate2index called from calcInterpolationP in derivatives.cpp" << e.what());
+                }
                 assembly.push(ownedIndex, index, value);
             }
         }
     }
-
     // auto colDist = std::make_shared<dmemo::NoDistribution( dist.getGlobalSize() );
     InterpolationP = lama::zero<SparseFormat>(dist, dist);
 

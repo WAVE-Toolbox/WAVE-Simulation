@@ -21,7 +21,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
     if (config.get<bool>("useVariableGrid")) {
         VariableGrid = true;
         std::vector<IndexType> dhFactor;
-        std::vector<IndexType> interface;
+        std::vector<int> interface;
         std::ifstream is(config.get<std::string>("interfaceFilename"));
         std::istream_iterator<IndexType> start(is), end;
         interface.assign(start, end);
@@ -45,7 +45,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType ny, IndexType nz, ValueType dh, std::vector<IndexType> &dhFactors, std::vector<IndexType> &interfaces) : NX(nx), NY(ny), NZ(nz), DH(dh), dhFactor(dhFactors), interface(interfaces)
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType ny, IndexType nz, ValueType dh, std::vector<IndexType> &dhFactors, std::vector<int> &interfaces) : NX(nx), NY(ny), NZ(nz), DH(dh), dhFactor(dhFactors), interface(interfaces)
 {
     VariableGrid = true;
     init(dhFactors, interface);
@@ -58,7 +58,7 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType
  *
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &dhFactors, std::vector<IndexType> &interfaces)
+void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &dhFactors, std::vector<int> &interfaces)
 {
     dhFactor = dhFactors;
     interface = interfaces;
@@ -114,13 +114,13 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
 
         if (NXmax != NX) {
             std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
-            NX=NXmax;
+            NX = NXmax;
         }
         if (NZmax != NZ) {
             std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
-            NZ=NZmax;
+            NZ = NZmax;
         }
-        
+
         /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
         IndexType layer = 0;
         while (layer < 1) {
@@ -293,9 +293,9 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getLayer(coordinate3D coo
     IndexType layer = 0;
 
     for (layer = 0; layer < numLayers; layer++) {
-        if ((coordinate.y < interface[layer + 1]) && (coordinate.y > interface[layer])) {
+        if ((int(coordinate.y) < interface[layer + 1]) && (int(coordinate.y) > interface[layer])) {
             break;
-        } else if (coordinate.y == interface[layer + 1]) {
+        } else if (int(coordinate.y) == interface[layer + 1]) {
             layer += transition.at(layer);
             break;
         }
@@ -359,8 +359,8 @@ template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3D coordinate) const
 {
     bool isOnInterface = false;
-    for (int layer = 0; layer < numLayers; layer++) {
-        if (coordinate.y == interface[layer]) {
+    for (IndexType layer = 0; layer < numLayers; layer++) {
+        if (int(coordinate.y) == interface[layer]) {
             isOnInterface = true;
         }
     }
@@ -376,7 +376,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::distToInterface(IndexType
 {
     IndexType dist = NY;
     for (auto i = interface.begin() + 1; i != interface.end() - 1; ++i) {
-        IndexType temp = std::abs(Y - *i);
+        IndexType temp = std::abs(int(Y) - int(*i));
         if (temp < dist)
             dist = temp;
     }
@@ -391,8 +391,8 @@ template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
 {
     bool fineToCoarse = false;
-    for (int layer = 0; layer < numLayers; layer++) {
-        if (coordinate.y == interface[layer + 1]) {
+    for (IndexType layer = 0; layer < numLayers; layer++) {
+        if (int(coordinate.y) == interface[layer + 1]) {
             fineToCoarse = transition[layer];
             // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
         }
@@ -482,11 +482,10 @@ KITGPI::Acquisition::coordinate3D KITGPI::Acquisition::Coordinates<ValueType>::m
     IndexType layer;
     // find out which in which layer the index is and reduce index to index inside this layer
     for (layer = 0; layer < numLayers; layer++) {
-        index -= nGridpointsPerLayer[layer];
-        if (index < 0) {
-            index += nGridpointsPerLayer[layer];
+        if (index >= nGridpointsPerLayer[layer])
+            index -= nGridpointsPerLayer[layer];
+        else
             break;
-        }
     }
 
     coordinate3D result;
