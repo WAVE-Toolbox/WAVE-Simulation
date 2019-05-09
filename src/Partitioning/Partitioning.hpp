@@ -75,7 +75,10 @@ namespace KITGPI
                 settings.print(std::cout);
             }
 
-            scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
+            std::vector<lama::DenseVector<ValueType>> weightVector;
+            weightVector.push_back(weights);
+
+            scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 
             if (config.get<bool>("partitionWrite"))
                 partition.writeToFile(config.get<std::string>("partitionFilename") + ".mtx");
@@ -86,9 +89,9 @@ namespace KITGPI
             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
             graph.redistribute(dist, noDistPtr);
             partition.redistribute(dist);
-            weights.redistribute(dist);
+            weightVector[0].redistribute(dist);
 
-            metrics.getAllMetrics(graph, partition, weights, settings);
+            metrics.getAllMetrics(graph, partition, weightVector, settings);
 
             if (commShot->getRank() == 0) {
                 metrics.print(std::cout);
