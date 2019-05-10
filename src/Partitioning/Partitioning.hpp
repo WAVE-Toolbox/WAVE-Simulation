@@ -9,7 +9,7 @@
 #include <vector>
 
 #ifdef USE_GEOGRAPHER
-#include <ParcoRepart.h>
+#include <geographer/ParcoRepart.h>
 #endif
 namespace KITGPI
 {
