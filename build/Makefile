@@ -143,7 +143,6 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 
-MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
 INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(GEOGRAPHER_ROOT)/include
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
@@ -152,12 +151,13 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
             -lscai_tracing -lscai_logging -lscai_common -lscai_solver \
 	    -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
+
 ifdef GEOGRAPHER_ROOT
 LDFLAGS  +=   -L$(GEOGRAPHER_ROOT)/lib/geographer -lgeographer \
               -lboost_program_options -lboost_filesystem -lboost_system \
               -Wl,-rpath,$(GEOGRAPHER_ROOT)/lib/geographer
 endif
-LDFLAGS += $(MPI_LINK_FLAGS)
+
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
