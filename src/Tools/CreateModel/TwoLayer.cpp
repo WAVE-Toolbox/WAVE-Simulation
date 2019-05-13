@@ -33,8 +33,6 @@ int main(int argc, char *argv[])
         return (2);
     }
 
-
-    
     // read configuration parameter from file
     KITGPI::Configuration::Configuration config(argv[1]);
 
@@ -42,33 +40,26 @@ int main(int argc, char *argv[])
     IndexType NX = config.get<IndexType>("NX");
     IndexType NY = config.get<IndexType>("NY");
     IndexType NZ = config.get<IndexType>("NZ");
-    common::Grid3D grid(NY, NZ, NX);
+    common::Grid3D grid(NZ, NY, NX);
 
-    // construct model vectors
-    lama::GridVector<ValueType> vp(grid);
-    lama::GridVector<ValueType> vs(grid);
-    lama::GridVector<ValueType> rho(grid);
-    lama::GridVector<ValueType> tauP(grid);
-    lama::GridVector<ValueType> tauS(grid);
-    
-    //set velocities for first layer
-    vp = vp1;
-    vs = vs1;
-    rho = rho1;
-    tauP = tauP1;
-    tauS = tauS1;
+    // construct model vectors and set velocities for first layer
+
+    lama::GridVector<ValueType> vp(grid, vp1);
+    lama::GridVector<ValueType> vs(grid, vs1);
+    lama::GridVector<ValueType> rho(grid, rho1);
+    lama::GridVector<ValueType> tauP(grid, tauP1);
+    lama::GridVector<ValueType> tauS(grid, tauS1);
 
     //set velocities for second layer
     for (IndexType y = depth; y < NY; ++y) {
 
-        vp(y, lama::Range(), lama::Range()) = vp2;
-        vs(y, lama::Range(), lama::Range()) = vs2;
-        rho(y, lama::Range(), lama::Range()) = rho2;
-        tauP(y, lama::Range(), lama::Range()) = tauP2;
-        tauS(y, lama::Range(), lama::Range()) = tauS2;
+        vp(lama::Range(), y, lama::Range()) = vp2;
+        vs(lama::Range(), y, lama::Range()) = vs2;
+        rho(lama::Range(), y, lama::Range()) = rho2;
+        tauP(lama::Range(), y, lama::Range()) = tauP2;
+        tauS(lama::Range(), y, lama::Range()) = tauS2;
     }
 
-    
     std::string type = config.get<std::string>("equationType");
 
     //write model to file specified in configuration
