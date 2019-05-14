@@ -20,7 +20,6 @@ interfaceFilename=ci/interfacesVarGrid.txt
 dhFactorFilename=ci/dhFactorsVarGrid.txt
 spatialFDorderFilename=ci/FDordersVarGrid.txt
 
-
 NX=104                    # horizontal 1
 NY=303                    # depth
 NZ=104                      # horizontal 2

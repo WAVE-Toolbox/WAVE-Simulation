@@ -26,9 +26,8 @@ namespace KITGPI
         dmemo::DistributionPtr gridPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
         {
             common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
-            common::Grid3D procGrid(config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNX"));
             // distribute the grid onto available processors
-            return (std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid));
+            return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
         }
 
 #ifdef USE_GEOGRAPHER
