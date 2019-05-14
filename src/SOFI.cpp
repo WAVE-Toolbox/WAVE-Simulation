@@ -73,14 +73,12 @@ int main(int argc, const char *argv[])
     /* communicator for shot parallelisation   */
     /* --------------------------------------- */
 
-    
     IndexType npS = config.get<IndexType>("ProcNS");
     IndexType npM = commAll->getSize() / npS;
-    if (commAll->getSize() != npS * npM)
-    {
-        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() 
-                             << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
-        return(2);         
+    if (commAll->getSize() != npS * npM) {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                                                                  << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
+        return (2);
     }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
@@ -151,12 +149,6 @@ int main(int argc, const char *argv[])
     }
 
     /* --------------------------------------- */
-    /* Wavefields                              */
-    /* --------------------------------------- */
-    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
-    wavefields->init(ctx, dist);
-
-    /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
@@ -169,10 +161,30 @@ int main(int argc, const char *argv[])
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(config, ctx, dist);
+    if ((config.get<IndexType>("ModelRead") == 2) && (config.get<bool>("useVariableGrid"))){
+        HOST_PRINT(commAll, "", "reading regular model ...\n")
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), commShot));
+
+        Modelparameter::Modelparameter<ValueType>::ModelparameterPtr regularModel(Modelparameter::Factory<ValueType>::Create(equationType));
+        regularModel->init(config, ctx, regularDist);
+        HOST_PRINT(commAll, "", "reading regular model finished\n\n")
+        
+        HOST_PRINT(commAll, "", "initialising model on discontineous grid ...\n")
+        model->init(*regularModel, dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(commAll, "", "initialising model on discontineous grid finished\n\n")
+    } else {
+        model->init(config, ctx, dist);
+    }
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
 
+    /* --------------------------------------- */
+    /* Wavefields                              */
+    /* --------------------------------------- */
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
+    wavefields->init(ctx, dist);
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */

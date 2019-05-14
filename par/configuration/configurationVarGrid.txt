@@ -33,9 +33,6 @@ NY=305                    # depth
 NZ=305                    # horizontal 2
 
 # define Partitioning
-ProcNX=2
-ProcNY=1
-ProcNZ=2
 ProcNS=1                  # Number of shot domains
 
 # distance between two grid points
@@ -49,7 +46,7 @@ T=2                          # total simulation time in seconds
 spatialFDorder=4          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
-ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
+ModelRead=0               # 1=Model will be read from file, 2=regular Model will be read from file and meshed onto the disconitinous grid 0=generated on the fly
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
 

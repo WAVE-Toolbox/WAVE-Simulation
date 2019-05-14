@@ -88,10 +88,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model
-             \param config Configuration from configuration file
-             \param ctx Context
+             \param model regular input model
              \param variableDist Distribution for a variable grid
-             \param regularDist Distribution for a regular grid
              \param variableCoordinates Coordinate Class of a Variable Grid
              \param regularCoordinates Coordinate Class of a regular Grid
              */
@@ -105,8 +103,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(KITGPI::Modelparameter::M
    
    
     for (IndexType variableIndex=0;variableIndex<variableCoordinates.getNGridpoints();variableIndex++) {
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+        
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);    
         IndexType const &regularIndex=regularCoordinates.coordinate2index(coordinate);
+        
         density.setValue(variableIndex,regularDensity.getValue(regularIndex));
         velocityP.setValue(variableIndex,regularVelocityP.getValue(regularIndex));
     }
