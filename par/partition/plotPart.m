@@ -13,7 +13,7 @@ filename_y='../configuration/coordinatesY.mtx'; % File name of the model
 filename_z='../configuration/coordinatesZ.mtx'; % File name of the model
 
 %Ruduce data to show every "increment" point
-increment=8;
+increment=1;
 
 
 %% Read model
@@ -45,4 +45,16 @@ xlabel('x')
 ylabel('y')
 zlabel('z')
 view(0,90)
+
+figure 
+histogram(part)
+
+histo=zeros(1,max(part)+1);
+for ii=0:max(part)
+index=find(part==ii);
+histo(ii+1)=sum(weights(index))/sum(weights);
+end
+
+figure
+plot(0:max(part),histo)
 
