@@ -131,12 +131,32 @@ int main(int argc, const char *argv[])
         auto coords = modelCoordinates.getCoordinates(blockDist, ctx);
         modelCoordinates.writeCoordinates(blockDist, ctx, config.get<std::string>("coordinateFilename"));
 
+        std::string toolStr = config.get<std::string>("graphPartitionTool");
+		/*
+        
+		std::map<std::string,ITI::Tool> toolName = { 
+			{"geographer",ITI::Tool::geographer}, {"geoKmeans",ITI::Tool::geoKmeans}, {"geoSFC",ITI::Tool::geoSFC}, {"geoMS", ITI::Tool::geoMS},
+			{"geoHierKM", ITI::Tool::geoHierKM}, {"geoHierRepart", ITI::Tool::geoHierRepart},
+			{"parMetisSFC",ITI::Tool::parMetisSFC}, {"parMetisGeom",ITI::Tool::parMetisGeom}, {"parMetisGraph",ITI::Tool::parMetisGraph},
+			{"zoltanRcb",ITI::Tool::zoltanRCB}, {"zoltanRib",ITI::Tool::zoltanRIB}, {"zoltanMJ",ITI::Tool::zoltanMJ}, {"zoltanHsfc",ITI::Tool::zoltanSFC}
+		};
+
+		ITI::Tool tool = toolName[toolStr];
+		*/
+		//convert string to enum
+		//TODO: pass it as string and convert it later to Tool
+		ITI::Tool tool = ITI::toTool(toolStr);
+		
+		start_t = common::Walltime::get();
 #ifdef USE_GEOGRAPHER
-        dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
+        dist = Partitioning::graphPartition(config, commShot, coords, graph, weights, tool);
 #else
         HOST_PRINT(commAll, "useGraphPartitioning or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
         return (2);
 #endif
+		end_t = common::Walltime::get();
+        //HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << ") in " << end_t - start_t << " sec.\n");
+		HOST_PRINT(commShot, "Partitioning time " << end_t - start_t << std::endl) ;
 
         derivatives->redistributeMatrices(dist);
     }
@@ -206,6 +226,7 @@ int main(int argc, const char *argv[])
 
         end_t = common::Walltime::get();
         HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << ") in " << end_t - start_t << " sec.\n");
+		HOST_PRINT(commShot, "time " << end_t - start_t << std::endl) ;
 
         receivers.getSeismogramHandler().normalize();
 
@@ -217,5 +238,6 @@ int main(int argc, const char *argv[])
 
         solver->resetCPML();
     }
+    std::exit(0); //needed in supermuc
     return 0;
 }

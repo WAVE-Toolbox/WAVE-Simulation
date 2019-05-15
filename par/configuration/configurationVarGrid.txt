@@ -7,10 +7,11 @@ dimension=3D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
-useVariableGrid=1
+useVariableGrid=0
 useGraphPartitioning=1
-BoundaryWeights=2.0
+BoundaryWeights=1.5
 useVariableFDoperators=1
+c
 
 
 interfaceFilename=configuration/interfaces.txt
@@ -25,9 +26,9 @@ NZ=305                    # horizontal 2
 
 # define Partitioning
 UseCubePartitioning=0     # 1=ON, 0=OFF
-ProcNX=2
-ProcNY=1
-ProcNZ=2
+ProcNX=3
+ProcNY=3
+ProcNZ=3
 ProcNS=1                  # Number of shot domains
 
 # distance between two grid points

@@ -19,7 +19,8 @@ ITSTNAME := Test_integration
 SCAI_ROOT_DEFAULT := /data14/software/scai_lama/build_dev
 GTEST_DIR_DEFAULT := /data14/software/googletest/googletest
 
-CXX      := g++
+#for supermuc
+CXX      := /lrz/sys/compilers/gcc/7.3.0/bin/c++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
 CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall
 
@@ -144,6 +145,7 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
+#MPI_LINK_FLAGS = $(shell $(CXX))
 INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(GEOGRAPHER_ROOT)/src -I$(GEOGRAPHER_ROOT)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
@@ -153,11 +155,21 @@ LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -lscai_tracing -lscai_logging -lscai_common -lscai_solver \
 	    -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
 ifdef GEOGRAPHER_ROOT
-LDFLAGS  +=   -L$(GEOGRAPHER_ROOT) -lgeographer -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
-              -lboost_program_options -lboost_filesystem -lboost_system \
+supermucMetis = /lrz/sys/libraries/metis/5.1.0/i8r8/include
+supermucParmetis = /lrz/sys/libraries/parmetis/4.0.3/ibmmpi/i8r8/include
+include /home/hpc/pr87si/di36qin/Code/Trilinos/build/packages/zoltan2/Makefile.export.Zoltan2
+
+INCDIRS +=	  -I$(BOOST_INCDIR) $(MPI_INC) -I$(supermucMetis) -I$(supermucParmetis) \
+ 			  -I/home/hpc/pr87si/di36qin/Code/Trilinos/install/include -I${Zoltan2_INCLUDE_DIRS} -I${Zoltan2_TPL_INCLUDE_DIRS}
+LDFLAGS  +=   -L$(GEOGRAPHER_ROOT) -lgeographerWrappers -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
+              -L$(BOOST_LIBDIR) -lboost_program_options -lboost_filesystem -lboost_system \
+              ${Zoltan2_LIBRARY_DIRS} ${Zoltan2_TPL_LIBRARIES} ${Zoltan2_LIBRARIES} \
+              -L/lrz/sys/libraries/parmetis/4.0.3/ibmmpi/i8r8/lib -lparmetis \
+              -L/lrz/sys/libraries/metis/5.1.0/i8r8/lib -lmetis \
+              ${MPI_CXX_LIBRARIES} \
               -Wl,-rpath,$(GEOGRAPHER_ROOT)
 endif
-LDFLAGS += $(MPI_LINK_FLAGS)
+lDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr
 RM       := rm
