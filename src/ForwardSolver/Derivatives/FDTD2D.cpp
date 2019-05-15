@@ -33,18 +33,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
 
     this->setFDCoef();
 
-    auto useVariableGrid = config.get<bool>("useVariableGrid");
-    auto useGraphPartitioning = config.get<bool>("useGraphPartitioning");
-
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-    if ((useVariableGrid) || (useGraphPartitioning)) {
+    if (config.get<IndexType>("partitioning") != 1)
         useSparse = true;
-    }
+    useFreeSurface = config.get<IndexType>("FreeSurface");
 
-    if ((useVariableGrid || useGraphPartitioning) && config.get<bool>("useVariableFDoperators")) {
+    if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
         this->setFDOrder(config.get<std::string>("spatialFDorderFilename"));
     } else {
+        SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for grid distribution")
         this->setFDOrder(config.get<IndexType>("spatialFDorder"));
     }
 
@@ -170,16 +167,16 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     this->calcDxb(modelCoordinates, dist);
     this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
 
-    HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     DxfSparse.setContextPtr(ctx);
     DxbSparse.setContextPtr(ctx);
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
 
-    HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
     DxfSparse *= DT;
     DxbSparse *= DT;
     DyfSparse *= DT;

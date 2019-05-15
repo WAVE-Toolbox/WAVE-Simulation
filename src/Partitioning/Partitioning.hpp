@@ -9,7 +9,7 @@
 #include <vector>
 
 #ifdef USE_GEOGRAPHER
-#include <ParcoRepart.h>
+#include <geographer/ParcoRepart.h>
 #endif
 namespace KITGPI
 {
@@ -26,9 +26,8 @@ namespace KITGPI
         dmemo::DistributionPtr gridPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
         {
             common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
-            common::Grid3D procGrid(config.get<IndexType>("ProcNY"), config.get<IndexType>("ProcNZ"), config.get<IndexType>("ProcNX"));
             // distribute the grid onto available processors
-            return (std::make_shared<dmemo::GridDistribution>(grid, commShot, procGrid));
+            return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
         }
 
 #ifdef USE_GEOGRAPHER
@@ -75,17 +74,23 @@ namespace KITGPI
                 settings.print(std::cout);
             }
 
-            scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weights, settings, metrics);
-            partition.writeToFile("partitition.mtx");
+            std::vector<lama::DenseVector<ValueType>> weightVector;
+            weightVector.push_back(weights);
+
+            scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+
+            if (config.get<bool>("partitionWrite"))
+                partition.writeToFile(config.get<std::string>("partitionFilename") + ".mtx");
+
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
             //redistribute all data to get metrics
             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
             graph.redistribute(dist, noDistPtr);
             partition.redistribute(dist);
-            weights.redistribute(dist);
+            weightVector[0].redistribute(dist);
 
-            metrics.getAllMetrics(graph, partition, weights, settings);
+            metrics.getAllMetrics(graph, partition, weightVector, settings);
 
             if (commShot->getRank() == 0) {
                 metrics.print(std::cout);
@@ -100,7 +105,7 @@ namespace KITGPI
             \param modelCoordinates coordinate object
             */
         template <typename ValueType>
-        scai::lama::DenseVector<ValueType> BoundaryWeights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,ValueType weight)
+        scai::lama::DenseVector<ValueType> BoundaryWeights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType weight)
         {
 
             std::string dimension = config.get<std::string>("dimension");
@@ -156,9 +161,9 @@ namespace KITGPI
             weights.allocate(dist);
             weights = 1.0;
             weights.fillFromAssembly(assembly);
-            //    weights.setContextPtr(ctx);
-
-            weights.writeToFile("weights.mtx");
+            // weights.setContextPtr(ctx);
+            if (config.get<bool>("weightsWrite"))
+                weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");
 
             return (weights);
         }

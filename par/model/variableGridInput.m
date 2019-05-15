@@ -158,10 +158,10 @@ view(0,90)
 function [x,y,z,layer] = index2coordinate(index,nGridpointsPerLayer,layerStart,dh,nx,nz)
     
     for jj=1:length(dh)
+        layer=jj;
+        if (index>=nGridpointsPerLayer(jj))
         index=index-nGridpointsPerLayer(jj);
-        if index<0
-            index=index+nGridpointsPerLayer(jj);
-            layer=jj;
+        else
             break
         end
     end

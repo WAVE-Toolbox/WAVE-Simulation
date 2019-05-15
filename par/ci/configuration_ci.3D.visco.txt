@@ -9,10 +9,9 @@ NZ=100 # horizontal 2
 
 # define Partitioning
 UseVariableGrid=0
-UseGraphPartitioning=0
-ProcNX=2
-ProcNY=2
-ProcNZ=1
+partitioning=1
+useVariableFDoperators=0
+
 ProcNS=1                  # Number of shot domains
 
 # define distance between two grid points in meter

@@ -1,6 +1,6 @@
 clearvars; close all;
 
-OUTPUT_FILENAME='receiver.mtx';
+OUTPUT_FILENAME='receiver.txt';
 
 %% Requiered Parameters
 
@@ -39,5 +39,7 @@ end
 % Create Matrix
 RECEIVER_FILE=[X' Y' Z' RECEIVER_TYPE_vec'];
 
-% Write mtx file
-writeMatrix2mtx(OUTPUT_FILENAME,RECEIVER_FILE);
+% Write txt file
+dlmwrite(OUTPUT_FILENAME,RECEIVER_FILE,'delimiter',' ')
+% writematrix(SOURCE_FILE,OUTPUT_FILENAME,'Delimiter','space') % introduced
+% in Matlab 2019

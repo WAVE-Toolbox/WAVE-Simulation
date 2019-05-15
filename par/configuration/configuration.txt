@@ -8,15 +8,14 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=0
-useGraphPartitioning=0
+partitioning=1
+useVariableFDoperators=0
+
 NX=100                    # horizontal 1
 NY=100                    # depth
 NZ=100                    # horizontal 2
 
 # define Partitioning
-ProcNX=2                  # Number of processes in X direction
-ProcNY=2                  # Number of processes in Y direction
-ProcNZ=1                  # Number of processes in Z direction
 ProcNS=1                  # Number of shot domains
 
 # distance between two grid points
@@ -82,4 +81,4 @@ tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.5          # Time increment between snapshot in seconds
 
 # console output
-verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

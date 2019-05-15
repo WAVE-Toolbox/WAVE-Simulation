@@ -51,7 +51,7 @@ namespace KITGPI
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
-            Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh, std::vector<scai::IndexType> &dhFactor, std::vector<scai::IndexType> &interface);
+            Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh, std::vector<scai::IndexType> &dhFactor, std::vector<int> &interface);
 
             ValueType getDH() const;
             scai::IndexType getNX() const;
@@ -91,8 +91,8 @@ namespace KITGPI
             scai::IndexType NZ; //!< Number of gridpoints in z direction
             ValueType DH;       //!< Gridspacing in m
 
-            std::vector<scai::IndexType> dhFactor;  //!< factors of the gridspacing relativ to the finest gridspacing in the model (must be 3^n)
-            std::vector<scai::IndexType> interface; //!< interfaces of the variable grid relative to the aquidistant grid with the gridspacing 1*DH
+            std::vector<scai::IndexType> dhFactor; //!< factors of the gridspacing relativ to the finest gridspacing in the model (must be 3^n)
+            std::vector<int> interface;            //!< interfaces of the variable grid relative to the aquidistant grid with the gridspacing 1*DH
 
             std::vector<ValueType> varDH;       //!< DH values per layer
             std::vector<scai::IndexType> varNX; //!< Number of gridpoints in x direction per layer
@@ -108,7 +108,7 @@ namespace KITGPI
             std::vector<scai::IndexType> nGridpointsPerLayer; //!< number of gridpoints per layer
 
             void init();
-            void init(std::vector<scai::IndexType> &dhFactor, std::vector<scai::IndexType> &interface);
+            void init(std::vector<scai::IndexType> &dhFactor, std::vector<int> &interface);
 
             // Coordinate --> Index:
             scai::IndexType map3Dcoordinate2index(scai::IndexType X, scai::IndexType Y, scai::IndexType Z) const;

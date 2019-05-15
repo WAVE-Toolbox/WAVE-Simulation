@@ -26,7 +26,7 @@
 using namespace scai;
 using namespace KITGPI;
 
-bool verbose; // global variable definition
+extern bool verbose; // global variable definition
 
 int main(int argc, const char *argv[])
 {
@@ -74,13 +74,17 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     IndexType npS = config.get<IndexType>("ProcNS");
-    //number of processes inside a shot domain
-    IndexType npNpS = commAll->getSize() / npS;
+    IndexType npM = commAll->getSize() / npS;
+    if (commAll->getSize() != npS * npM) {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                                                                  << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
+        return (2);
+    }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
 
     // Build subsets of processors for the shots
-    common::Grid2D procAllGrid(npS, npNpS);
+    common::Grid2D procAllGrid(npS, npM);
     IndexType procAllGridRank[2];
     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
 
@@ -100,12 +104,14 @@ int main(int argc, const char *argv[])
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
     dmemo::DistributionPtr dist = nullptr;
-    dmemo::DistributionPtr blockDist = nullptr;
-    if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
-        //temporaray distribution (starting distribution for graph partitioner)
-        blockDist = std::make_shared<dmemo::BlockDistribution>(modelCoordinates.getNGridpoints(), commShot);
-    } else {
+    if ((config.get<IndexType>("partitioning") == 0) || (config.get<IndexType>("partitioning") == 2)) {
+        //Block distribution = starting distribution for graph partitioner
+        dist = std::make_shared<dmemo::BlockDistribution>(modelCoordinates.getNGridpoints(), commShot);
+    } else if (config.get<IndexType>("partitioning") == 1) {
+        SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
         dist = Partitioning::gridPartition<ValueType>(config, commShot);
+    } else {
+        COMMON_THROWEXCEPTION("unknown partioning method");
     }
 
     /* --------------------------------------- */
@@ -113,39 +119,34 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     start_t = common::Walltime::get();
     ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
-    if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
-        derivatives->init(blockDist, ctx, config, modelCoordinates, commShot);
-    } else {
-        derivatives->init(dist, ctx, config, modelCoordinates, commShot);
-    }
+    derivatives->init(dist, ctx, config, modelCoordinates, commShot);
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
-    /* Call partioner (only for variable Grids)*/
+    /* Call partioner */
     /* --------------------------------------- */
-    if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
-
-        auto graph = derivatives->getCombinedMatrix();
-        auto weights = Partitioning::BoundaryWeights(config, blockDist, modelCoordinates,config.get<ValueType>("BoundaryWeights"));
-        auto coords = modelCoordinates.getCoordinates(blockDist, ctx);
-        modelCoordinates.writeCoordinates(blockDist, ctx, config.get<std::string>("coordinateFilename"));
-
+    if (config.get<IndexType>("partitioning") == 2) {
 #ifdef USE_GEOGRAPHER
+        start_t = common::Walltime::get();
+        auto graph = derivatives->getCombinedMatrix();
+        auto &&weights = Partitioning::BoundaryWeights(config, dist, modelCoordinates, config.get<ValueType>("BoundaryWeights"));
+        auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
+
+        if (config.get<bool>("coordinateWrite"))
+            modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
+
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
+
         dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
-#else
-        HOST_PRINT(commAll, "useGraphPartitioning or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
-        return (2);
-#endif
 
         derivatives->redistributeMatrices(dist);
+#else
+        HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
+        return (2);
+#endif
     }
-
-    /* --------------------------------------- */
-    /* Wavefields                              */
-    /* --------------------------------------- */
-    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
-    wavefields->init(ctx, dist);
 
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -160,9 +161,30 @@ int main(int argc, const char *argv[])
     /* Modelparameter                          */
     /* --------------------------------------- */
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(config, ctx, dist);
-    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+    if ((config.get<IndexType>("ModelRead") == 2) && (config.get<bool>("useVariableGrid"))){
+        HOST_PRINT(commAll, "", "reading regular model ...\n")
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), commShot));
 
+        Modelparameter::Modelparameter<ValueType>::ModelparameterPtr regularModel(Modelparameter::Factory<ValueType>::Create(equationType));
+        regularModel->init(config, ctx, regularDist);
+        HOST_PRINT(commAll, "", "reading regular model finished\n\n")
+        
+        HOST_PRINT(commAll, "", "initialising model on discontineous grid ...\n")
+        model->init(*regularModel, dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(commAll, "", "initialising model on discontineous grid finished\n\n")
+    } else {
+        model->init(config, ctx, dist);
+    }
+    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+
+    /* --------------------------------------- */
+    /* Wavefields                              */
+    /* --------------------------------------- */
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
+    wavefields->init(ctx, dist);
+    
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
