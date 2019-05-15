@@ -23,12 +23,15 @@ CXX      := g++
 CPPFLAGS := -DSCAI_ASSERT_LEVEL_DEBUG -DSCAI_LOG_LEVEL_DEBUG -DSCAI_TRACE_OFF
 CXXFLAGS := -O2 -std=c++11 -fopenmp -Wall
 
+ifdef GEOGRAPHER_ROOT
+CXXFLAGS += -DUSE_GEOGRAPHER
+endif
+
 ################################################################################
 # Usually, there is no need to change anything below this line
 ################################################################################
 
 .SUFFIXES:
-.SECONDARY:
 
 MAKEFLAGS += -rR
 SHELL     := /bin/bash
@@ -38,7 +41,7 @@ wave.exe  := $(strip $(EXENAME))
 wave.lib  := $(strip $(LIBNAME))
 wave.utst := $(strip $(UTSTNAME))
 wave.itst := $(strip $(ITSTNAME))
-gtest     := $(strip $(shell gtest-config --version 2>/dev/null))
+gtest     := $(strip $(shell ls /usr/include/gtest))
 
 wave.blddir := $(realpath $(PWD))
 
@@ -78,8 +81,7 @@ endif
 
 ifndef GTEST_DIR
   ifeq ($(gtest),)   
-    GTEST_DIR := $(strip $(GTEST_DIR_DEFAULT))
-    $(warning GTEST: no local installation and no GTEST_DIR environment variable found; now set to $(GTEST_DIR))
+    $(warning GTEST: no local installation and no GTEST_DIR environment variable found;)
   endif
 endif
 
@@ -134,12 +136,6 @@ wave.liballhpp      := $(wildcard $(addsuffix */*.hpp,$(wave.srcsubdirs))) $(wil
 wave.liballinc      := $(subst $(wave.srcdir)/,$(wave.incdir)/,$(wave.liballhpp))
 wave.incdirs        := $(sort $(dir $(subst $(wave.srcdir)/,,$(wave.liballhpp))))
 
-# --External_libraries----#
-wave.libext      := $(addsuffix /ext/myLib,$(wave.dir)) -L/home/harry/geographer-dev/src/RBC/build/lib/
-#wave.libext += $(realpath, /home/harry/geographer-dev/src/RBC/build/lib/)
-wave.incext      := $(addsuffix /ext/myInclude,$(wave.dir))
-
-
 ifeq ($(wave.incdirs),)
   wave.incdirs  := . # to avoid error in dummy mkdir command
 endif
@@ -148,17 +144,19 @@ dummy := $(shell mkdir -p $(addprefix $(wave.incdir)/,$(wave.incdirs)))
 
 
 MPI_LINK_FLAGS = $(shell mpic++ --showme:link)
-INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(wave.incext)
+INCDIRS   = -I$(SCAI_ROOT)/include $(addprefix -I,$(wave.srcsubdirs)) -I$(GEOGRAPHER_ROOT)/src -I$(GEOGRAPHER_ROOT)
 CDEPEND   = -MMD -MP -MF .dep-$(subst /,-,$@)
 LD       := $(CXX)
 LDFLAGS  := -L$(wave.libdir) -l$(wave.lib) \
             -L$(SCAI_ROOT)/lib -lscai_lama -lscai_solver -lscai_dmemo -lscai_sparsekernel \
             -lscai_utilskernel -lscai_blaskernel -lscai_kregistry -lscai_hmemo -lscai_tasking \
-            -lscai_tracing -lscai_logging -lscai_common \
-            -L$(wave.libext) -lgeographer  -l_rbc \
-            -lboost_program_options -lboost_filesystem -lboost_system \
-            -lscai_solver \
-            -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir):$(wave.libext)
+            -lscai_tracing -lscai_logging -lscai_common -lscai_solver \
+	    -Wl,-rpath,$(SCAI_ROOT)/lib:$(wave.libdir) 
+ifdef GEOGRAPHER_ROOT
+LDFLAGS  +=   -L$(GEOGRAPHER_ROOT) -lgeographer -L$(GEOGRAPHER_ROOT)/src/RBC/build/lib/  -l_rbc \
+              -lboost_program_options -lboost_filesystem -lboost_system \
+              -Wl,-rpath,$(GEOGRAPHER_ROOT)
+endif
 LDFLAGS += $(MPI_LINK_FLAGS)
 AR       := ar
 ARFLAGS  := cr
@@ -183,7 +181,6 @@ help:
 	@echo "   itest     :: build integration tests"
 	@echo "   model     :: creates models from source in src/Tools/CreateModel"
 	@echo "   copyhpp   :: copy headers from source directories to $(wave.incdir)"
-
 	@echo "   clean     :: remove object files"
 	@echo "   distclean :: clean up entire build directory"
 	@echo "   vinfo     :: print version information stored in executable"

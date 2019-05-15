@@ -14,6 +14,28 @@ namespace KITGPI
     namespace CheckParameter
     {
 
+        /*! \brief check number of processes
+        *
+        \param config configuration class
+        \param commAll lama communicator
+        */
+        void checkNumberOfProcesses(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll)
+        {
+            IndexType npS = config.get<IndexType>("ProcNS");
+
+            if ((config.get<bool>("useVariableGrid")) || (config.get<bool>("useGraphPartitioning"))) {
+                IndexType npNpS = commAll->getSize() / npS;
+                SCAI_ASSERT_ERROR(floor(npNpS) == npNpS, "Number of processes must be (number of processes for one shot domain) * (number of shot domains)");
+            } else {
+                IndexType npX = config.get<IndexType>("ProcNX");
+                IndexType npY = config.get<IndexType>("ProcNY");
+                IndexType npZ = config.get<IndexType>("ProcNZ");
+
+                SCAI_ASSERT_ERROR(commAll->getSize() == npS * npX * npY * npZ, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in configuration"
+                                                                                                                     << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
+            }
+        }
+
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
         *
         \param dt Temporal sampling interval in seconds. 

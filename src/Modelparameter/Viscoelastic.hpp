@@ -55,7 +55,8 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
-
+            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) override {COMMON_THROWEXCEPTION("variable grid is not implemented in the viscoelastic case")}; 
+            
             void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
@@ -63,15 +64,17 @@ namespace KITGPI
             std::string getEquationType() const;
 
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
-
+            scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
-            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Viscoelastic<ValueType> operator*(ValueType rhs);

@@ -8,7 +8,8 @@ NY=100 # depth
 NZ=100 # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=0
+UseVariableGrid=0
+useGraphPartitioning=0
 ProcNX=2
 ProcNY=2
 ProcNZ=1

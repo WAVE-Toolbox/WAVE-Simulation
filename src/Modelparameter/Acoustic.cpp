@@ -87,6 +87,31 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
     }
 }
 
+/*! \brief initialisation function which creates a variable grid model on top of a regular model
+             \param config Configuration from configuration file
+             \param ctx Context
+             \param variableDist Distribution for a variable grid
+             \param regularDist Distribution for a regular grid
+             \param variableCoordinates Coordinate Class of a Variable Grid
+             \param regularCoordinates Coordinate Class of a regular Grid
+             */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates)
+{
+   auto const &regularDensity = model.getDensity();
+   auto const &regularVelocityP = model.getVelocityP();
+   this->initModelparameter(density, regularDensity.getContextPtr(), variableDist, 0);
+   this->initModelparameter(velocityP, regularDensity.getContextPtr(), variableDist, 0);
+   
+   
+    for (IndexType variableIndex=0;variableIndex<variableCoordinates.getNGridpoints();variableIndex++) {
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+        IndexType const &regularIndex=regularCoordinates.coordinate2index(coordinate);
+        density.setValue(variableIndex,regularDensity.getValue(regularIndex));
+        velocityP.setValue(variableIndex,regularVelocityP.getValue(regularIndex));
+    }
+
+}
 /*! \brief Constructor that is generating a homogeneous model
  *
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.

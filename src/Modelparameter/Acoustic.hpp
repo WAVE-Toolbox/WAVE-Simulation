@@ -55,6 +55,7 @@ namespace KITGPI
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
+            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) override; 
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
@@ -85,9 +86,9 @@ namespace KITGPI
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
-            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
-            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs);
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::Acoustic<ValueType> operator*(ValueType rhs);

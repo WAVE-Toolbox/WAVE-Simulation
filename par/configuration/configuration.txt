@@ -3,18 +3,19 @@
 # Use the hashtag "#" for comments
 
 # Type of forward simulation
-dimension=2D              # Dimension: 2D or 3D
+dimension=3D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
+useVariableGrid=0
+useGraphPartitioning=0
 NX=100                    # horizontal 1
 NY=100                    # depth
-NZ=1                    # horizontal 2
+NZ=100                    # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=0     # 1=ON, 0=OFF
-ProcNX=4                  # Number of processes in X direction
-ProcNY=3                  # Number of processes in Y direction
+ProcNX=2                  # Number of processes in X direction
+ProcNY=2                  # Number of processes in Y direction
 ProcNZ=1                  # Number of processes in Z direction
 ProcNS=1                  # Number of shot domains
 
@@ -26,7 +27,7 @@ DT=2.0e-03                   # temporal sampling in seconds
 T=2                          # total simulation time in seconds
 
 # define order of spatial FD operator
-spatialFDorder=8          # possible values 2, 4, 6, 8, 10 and 12
+spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
 ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
@@ -81,4 +82,4 @@ tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.5          # Time increment between snapshot in seconds
 
 # console output
-verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

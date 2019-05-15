@@ -59,7 +59,6 @@ void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration 
         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
         acquisition_temp = su.getAcquisition();
         std::cout << acquisition_temp << std::endl;
-        acquisition_temp.writeToFile("test.mtx");
     } else
         acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
 

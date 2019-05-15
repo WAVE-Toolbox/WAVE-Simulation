@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
     std::string filenameTest = config.get<std::string>("SeismogramFilename");
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
-    std::cout << pos << std::endl;
 
     receiversTest.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameTest);
     receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
