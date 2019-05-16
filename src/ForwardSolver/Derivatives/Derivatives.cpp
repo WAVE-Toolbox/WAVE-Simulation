@@ -43,10 +43,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
             spatialFDorder = spatialFDorderVec[layer];
         }
 
-        if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
+        if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == dhFactor / 3) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
 
-                X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                if (!modelCoordinates.locatedOnInterface(coordinate))
+                    X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                else
+                    X = coordinate.x - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
                     columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
@@ -177,10 +180,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
             spatialFDorder = spatialFDorderVec[layer];
         }
 
-        if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
+        if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == dhFactor / 3))) {
             for (j = 0; j < spatialFDorder; j++) {
 
-                Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                if (!modelCoordinates.locatedOnInterface(coordinate))
+                    Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                else
+                    Z = coordinate.z - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
@@ -300,7 +306,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
                 spatialFDorder = distance * 2;
         }
 
-
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
                 Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
@@ -359,7 +364,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
 
-                X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                if (!modelCoordinates.locatedOnInterface(coordinate))
+                    X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                else
+                    X = coordinate.x + dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
 
                 if ((X >= 0) && (X < modelCoordinates.getNX())) {
                     columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
@@ -462,7 +470,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
         if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == 0) && (coordinate.z % dhFactor == 0))) {
             for (j = 0; j < spatialFDorder; j++) {
 
-                Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                if (!modelCoordinates.locatedOnInterface(coordinate))
+                    Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                else
+                    Z = coordinate.z + dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
 
                 if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
                     columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
@@ -506,7 +517,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     IndexType modz = 0;
     ValueType value;
     IndexType index;
-
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
