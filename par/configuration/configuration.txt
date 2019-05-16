@@ -81,4 +81,4 @@ tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.5          # Time increment between snapshot in seconds
 
 # console output
-verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
