@@ -127,7 +127,15 @@ settings.minGainForNextRound = M/settings.numBlocks*0.01;
             std::vector<lama::DenseVector<ValueType>> weightVector;
             weightVector.push_back(weights);
 
-            scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+			scai::lama::DenseVector<IndexType> partition;
+
+			if( ITI::toString(tool).rfind("geo",0)==0 ){
+				partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+			}else{
+				bool nodeWeightsUse = true; //usign unit weights
+		    	partition = ITI::Wrappers<IndexType,ValueType>::partition( graph, coords, weightVector, nodeWeightsUse, tool, settings, metrics );
+    		}
+
 
             if (config.get<bool>("partitionWrite"))
                 partition.writeToFile(config.get<std::string>("partitionFilename") + ".mtx");
