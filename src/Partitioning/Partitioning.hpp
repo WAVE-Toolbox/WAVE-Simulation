@@ -41,7 +41,7 @@ namespace KITGPI
             \param weights DenseVector of node weights for each gridpoint
             */
         template <typename ValueType>
-        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, std::vector<scai::lama::DenseVector<ValueType>> &coords, scai::lama::CSRSparseMatrix<ValueType> &graph, scai::lama::DenseVector<ValueType> &weights)
+        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, std::vector<scai::lama::DenseVector<ValueType>> &coords, scai::lama::CSRSparseMatrix<ValueType> &graph, scai::lama::DenseVector<ValueType> &weights, ITI::Tool tool=ITI::Tool::geoKmeans)
         {
             std::string dimension = config.get<std::string>("dimension");
 
@@ -57,7 +57,7 @@ namespace KITGPI
                 dimensions = 3;
             }
 
-            struct Settings settings;
+            struct ITI::Settings settings;
             settings.dimensions = dimensions;
             settings.noRefinement = true;
             settings.verbose = false;
@@ -118,7 +118,7 @@ settings.minGainForNextRound = M/settings.numBlocks*0.01;
 				localStorage.swap( localIA, localJA, localValues);
 			}
 
-            struct Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+            struct ITI::Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
             if (commShot->getRank() == 0) {
                 settings.print(std::cout);

@@ -157,13 +157,16 @@ int main(int argc, const char *argv[])
 		
 		start_t = common::Walltime::get();
 
-        dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
+        dist = Partitioning::graphPartition(config, commShot, coords, graph, weights, tool);
 
         derivatives->redistributeMatrices(dist);
 #else
         HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
         return (2);
 #endif
+
+		end_t = common::Walltime::get();
+		HOST_PRINT(commShot, "Partitioning time " << end_t - start_t << std::endl) ;
     }
 
     /* --------------------------------------- */
@@ -257,5 +260,7 @@ int main(int argc, const char *argv[])
 
         solver->resetCPML();
     }
+
+    std::exit(0); //needed in supermuc
     return 0;
 }

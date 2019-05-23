@@ -81,6 +81,16 @@ if ( ${Geographer_FOUND} )
     include_directories( ${Geographer_INCLUDE_DIRS} )
     add_definitions( "-DUSE_GEOGRAPHER" )
     set( SOFI_used_libs ${Geographer_LIBRARIES} ${SOFI_used_libs} )
+
+	#paths for supermuc; TODO: turn them to inout arguments
+	set(METIS_BASE "/lrz/sys/libraries/metis/5.1.0/i8r8")
+	set(PARMETIS_BASE  "/lrz/sys/libraries/parmetis/4.0.3/ibmmpi/i8r8")
+
+	if(EXISTS ${METIS_BASE} AND EXISTS ${PARMETIS_BASE} )
+		### include parmetis and metis ###
+		#target_include_directories( prog PUBLIC "${METIS_BASE}/include" )
+		#target_include_directories( prog PUBLIC "${PARMETIS_BASE}/include" )
+	endif()
 endif ()
 
 ###################################################
