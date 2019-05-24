@@ -66,15 +66,15 @@ namespace KITGPI
             settings.numBlocks = commShot->getSize();
             settings.coarseningStepsBetweenRefinement = 1;
 
-//const IndexType N = graph.getNumRows();
-const IndexType M = graph.getNumValues(); 
-//set minimum gain to 1% of the average number of edges per block
-settings.minGainForNextRound = M/settings.numBlocks*0.01;    
+			//const IndexType N = graph.getNumRows();
+			const IndexType M = graph.getNumValues(); 
+			//set minimum gain to 1% of the average number of edges per block
+			settings.minGainForNextRound = M/settings.numBlocks*0.01;    
             //settings.maxKMeansIterations = 10;
 
             //settings.minSamplingNodes = -1;
             settings.writeInFile = true;
-	    //look at ITI Settings.h for the enum ITI::Tool
+		    //look at ITI Settings.h for the enum ITI::Tool
             settings.initialPartition = tool;
            
             if( tool==ITI::Tool::geographer ){
