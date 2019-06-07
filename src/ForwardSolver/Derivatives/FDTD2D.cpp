@@ -85,10 +85,14 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices
 {
     DxfSparse.redistribute(dist, dist);
     DyfSparse.redistribute(dist, dist);
+    DyfStaggeredXSparse.redistribute(dist, dist);
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
-    if (useVarGrid)
-        InterpolationP.redistribute(dist, dist);
+    DybStaggeredXSparse.redistribute(dist, dist);
+    if (useVarGrid) {
+        InterpolationFull.redistribute(dist, dist);
+        InterpolationStaggeredX.redistribute(dist, dist);
+    }
 }
 
 //! \brief Constructor of the derivative matrices
@@ -113,7 +117,6 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::Distr
  \param dist Distribution of the wavefield
  \param ctx Context
  \param DT Temporal sampling interval
- \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template <typename ValueType>
@@ -154,7 +157,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
  \param ctx Context
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Temporal sampling interval
- \param spatialFDorderInput FD-order of spatial stencils
  \param comm Communicator
  */
 template <typename ValueType>
@@ -167,23 +169,31 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
+    this->calcDyfStaggeredX(modelCoordinates, dist);
     HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     this->calcDxb(modelCoordinates, dist);
     this->calcDyb(modelCoordinates, dist);
+    this->calcDybStaggeredX(modelCoordinates, dist);
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
 
     DxfSparse.setContextPtr(ctx);
     DxbSparse.setContextPtr(ctx);
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
+    DyfStaggeredXSparse.setContextPtr(ctx);
+    DybStaggeredXSparse.setContextPtr(ctx);
 
     DxfSparse *= DT;
     DxbSparse *= DT;
     DyfSparse *= DT;
     DybSparse *= DT;
+    DyfStaggeredXSparse *= DT;
+    DybStaggeredXSparse *= DT;
 
-    if (modelCoordinates.isVariable())
-        this->calcInterpolationP(modelCoordinates, dist);
+    if (modelCoordinates.isVariable()) {
+        this->calcInterpolationFull(modelCoordinates, dist);
+        this->calcInterpolationStaggeredX(modelCoordinates, dist);
+    }
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

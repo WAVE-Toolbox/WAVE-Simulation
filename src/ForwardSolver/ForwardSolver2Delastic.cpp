@@ -133,9 +133,16 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
     lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
     lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &DyfStaggeredX = derivatives.getDyfStaggeredX();
+    lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();
 
-    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    //   lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
     lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+    lama::Matrix<ValueType> const &DybStaggeredXFreeSurface = derivatives.getDybStaggeredXFreeSurface();
+
+    /* Get pointers to required interpolation matrices (optional) */
+    lama::Matrix<ValueType> const *DinterpolateFull = derivatives.getInterFull();
+    lama::Matrix<ValueType> const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
@@ -153,9 +160,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     if (useFreeSurface == 1) {
         /* Apply image method */
-        update_temp = DybFreeSurface * Sxy;
+        update_temp = DybStaggeredXFreeSurface * Sxy;
     } else {
-        update_temp = Dyb * Sxy;
+        update_temp = DybStaggeredX * Sxy;
     }
 
     if (useConvPML) {
@@ -165,6 +172,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     update *= inverseDensityAverageX;
     vX += update;
+
+    if (DinterpolateStaggeredX) {
+        // interpolation for missing pressure points
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
 
     /* -------- */
     /*    vy    */
@@ -213,10 +226,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulus;
     Syy -= 2.0 * update;
 
+    if (DinterpolateFull) {
+        // interpolation for missing pressure points
+        update_temp.swap(Sxx);
+        Sxx = *DinterpolateFull * update_temp;
+
+        update_temp.swap(Syy);
+        Syy = *DinterpolateFull * update_temp;
+    }
+
     /* ------------------- */
     /* update shear stress */
     /* ------------------- */
-    update = Dyf * vX;
+    update = DyfStaggeredX * vX;
     if (useConvPML) {
         ConvPML.apply_vxy(update);
     }

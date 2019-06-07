@@ -94,23 +94,21 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
              \param regularCoordinates Coordinate Class of a regular Grid
              */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-   auto const &regularDensity = model.getDensity();
-   auto const &regularVelocityP = model.getVelocityP();
-   this->initModelparameter(density, regularDensity.getContextPtr(), variableDist, 0);
-   this->initModelparameter(velocityP, regularDensity.getContextPtr(), variableDist, 0);
-   
-   
-    for (IndexType variableIndex=0;variableIndex<variableCoordinates.getNGridpoints();variableIndex++) {
-        
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);    
-        IndexType const &regularIndex=regularCoordinates.coordinate2index(coordinate);
-        
-        density.setValue(variableIndex,regularDensity.getValue(regularIndex));
-        velocityP.setValue(variableIndex,regularVelocityP.getValue(regularIndex));
-    }
+    auto const &regularDensity = model.getDensity();
+    auto const &regularVelocityP = model.getVelocityP();
+    this->initModelparameter(density, regularDensity.getContextPtr(), variableDist, 0);
+    this->initModelparameter(velocityP, regularDensity.getContextPtr(), variableDist, 0);
 
+    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+        IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
+
+        density.setValue(variableIndex, regularDensity.getValue(regularIndex));
+        velocityP.setValue(variableIndex, regularVelocityP.getValue(regularIndex));
+    }
 }
 /*! \brief Constructor that is generating a homogeneous model
  *
@@ -284,7 +282,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauP() const
 {
-    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no tau parameter in an acoustic modelling")
     return (tauP);
 }
 
@@ -293,7 +291,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS() const
 {
-    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no tau parameter in an acoustic modelling")
     return (tauS);
 }
 
@@ -301,7 +299,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() const
 {
-    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an acoustic modelling")
     return (relaxationFrequency);
 }
 
@@ -309,7 +307,7 @@ ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() 
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms() const
 {
-    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an acoustic modelling")
     return (numRelaxationMechanisms);
 }
 
@@ -372,7 +370,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXY);
 }
 
@@ -381,7 +379,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXY);
 }
 
@@ -390,7 +388,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXZ);
 }
 
@@ -399,7 +397,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXZ);
 }
 
@@ -408,7 +406,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageYZ);
 }
 
@@ -417,7 +415,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageYZ);
 }
 

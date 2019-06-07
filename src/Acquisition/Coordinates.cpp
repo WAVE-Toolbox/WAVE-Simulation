@@ -358,9 +358,19 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType lay
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(coordinate3D coordinate) const
 {
+    return (locatedOnInterface(coordinate.y));
+}
+
+/*! \brief check if coordinate is on an variable grid interface
+ *
+  \param yCoordinate y coordinate IndexType
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Coordinates<ValueType>::locatedOnInterface(IndexType yCoordinate) const
+{
     bool isOnInterface = false;
     for (IndexType layer = 0; layer < numLayers; layer++) {
-        if (int(coordinate.y) == interface[layer]) {
+        if (int(yCoordinate) == interface[layer]) {
             isOnInterface = true;
         }
     }
@@ -390,9 +400,22 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::distToInterface(IndexType
 template <typename ValueType>
 bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
 {
+    return (getTransition(coordinate.y));
+}
+
+/*! \brief getter function for NZ
+  \param yCoordinate Y coordinate (indexed)
+ *
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(IndexType yCoordinate) const
+{
+    if (!locatedOnInterface(yCoordinate)) {
+        COMMON_THROWEXCEPTION("Y Coordinate Y=" << yCoordinate << " is not located on an variable grid interface");
+    }
     bool fineToCoarse = false;
     for (IndexType layer = 0; layer < numLayers; layer++) {
-        if (int(coordinate.y) == interface[layer + 1]) {
+        if (int(yCoordinate) == interface[layer + 1]) {
             fineToCoarse = transition[layer];
             // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
         }
