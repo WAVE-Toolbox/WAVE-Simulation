@@ -55,7 +55,7 @@ namespace KITGPI
                 dimensions = 3;
             }
 
-            struct Settings settings;
+            struct ITI::Settings settings;
             settings.dimensions = dimensions;
             settings.noRefinement = true;
             settings.verbose = false;
@@ -66,9 +66,9 @@ namespace KITGPI
             //settings.maxKMeansIterations = 10;
             //settings.minSamplingNodes = -1;
             settings.writeInFile = true;
-            settings.initialPartition = InitialPartitioningMethods::KMeans;
+            settings.initialPartition = ITI::Tool::geoKmeans;
 
-            struct Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+            struct ITI::Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
             if (commShot->getRank() == 0) {
                 settings.print(std::cout);
@@ -99,7 +99,7 @@ namespace KITGPI
             return (dist);
         }
 #endif
-        /*! \brief calculatio of the weights for the absorbing boundary
+        /*! \brief calculation of the weights for the absorbing boundary
             \param config configuration object
             \param dist distributionPtr of the model
             \param modelCoordinates coordinate object
