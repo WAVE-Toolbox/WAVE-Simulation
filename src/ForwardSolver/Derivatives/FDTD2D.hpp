@@ -65,6 +65,9 @@ namespace KITGPI
                 using Derivatives<ValueType>::DzfSparse;
                 using Derivatives<ValueType>::DzbSparse;
 
+                using Derivatives<ValueType>::DyfStaggeredXSparse;
+                using Derivatives<ValueType>::DybStaggeredXSparse;
+
                 using Derivatives<ValueType>::DyfFreeSurface;
                 using Derivatives<ValueType>::DybFreeSurface;
 
@@ -74,7 +77,8 @@ namespace KITGPI
 
                 using Derivatives<ValueType>::useVarFDorder;
 
-                using Derivatives<ValueType>::InterpolationP;
+                using Derivatives<ValueType>::InterpolationFull;
+                using Derivatives<ValueType>::InterpolationStaggeredX;
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */

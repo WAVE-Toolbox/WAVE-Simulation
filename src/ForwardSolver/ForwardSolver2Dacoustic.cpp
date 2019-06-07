@@ -103,12 +103,11 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const &Dyf = derivatives.getDyf();
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
-       /* Get pointers to required interpolation matrices (optional) */
-   lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterP();
+    /* Get pointers to required interpolation matrices (optional) */
+    lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterFull();
 
-    
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
-    
+
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -154,14 +153,12 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     if (useDampingBoundary) {
         DampingBoundary.apply(p, vX, vY);
     }
-    
-        if ( DinterpolateP )
-    {
+
+    if (DinterpolateP) {
         // interpolation for missing pressure points
-        update_temp.swap( p );
+        update_temp.swap(p);
         p = *DinterpolateP * update_temp;
     }
-
 
     /* Apply source and save seismogram */
     SourceReceiver.applySource(t);

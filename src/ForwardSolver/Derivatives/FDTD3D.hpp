@@ -57,6 +57,13 @@ namespace KITGPI
                 using Derivatives<ValueType>::DybSparse;
                 using Derivatives<ValueType>::DzbSparse;
 
+                using Derivatives<ValueType>::DyfStaggeredXSparse;
+                using Derivatives<ValueType>::DybStaggeredXSparse;
+                using Derivatives<ValueType>::DyfStaggeredZSparse;
+                using Derivatives<ValueType>::DybStaggeredZSparse;
+                using Derivatives<ValueType>::DyfStaggeredXZSparse;
+                using Derivatives<ValueType>::DybStaggeredXZSparse;
+
                 using Derivatives<ValueType>::DyfFreeSurface;
                 using Derivatives<ValueType>::DybFreeSurface;
 
@@ -65,7 +72,10 @@ namespace KITGPI
                 using Derivatives<ValueType>::useVarFDorder;
                 using Derivatives<ValueType>::useVarGrid;
 
-                using Derivatives<ValueType>::InterpolationP;
+                using Derivatives<ValueType>::InterpolationFull;
+                using Derivatives<ValueType>::InterpolationStaggeredX;
+                using Derivatives<ValueType>::InterpolationStaggeredZ;
+                using Derivatives<ValueType>::InterpolationStaggeredXZ;
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */
