@@ -69,14 +69,14 @@ namespace KITGPI
              */
             virtual void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
-             /*! \brief Abstract initialisation function
+            /*! \brief Abstract initialisation function
              *initialisation function which creates a variable grid model on top of a regular model
              \param variableDist Distribution for a variable grid
              \param variableCoordinates Coordinate Class of a Variable Grid
              \param regularCoordinates Coordinate Class of a regular Grid
              */
-            virtual void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) = 0;
-            
+            virtual void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates) = 0;
+
             /*! \brief Abstract write function
              *
              * Standard write function
@@ -218,6 +218,7 @@ namespace KITGPI
             void calcDensityAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcDensityAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
+            void calcSWaveModulusAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pz[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates);
             void calcSWaveModulusAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcSWaveModulusAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcSWaveModulusAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);

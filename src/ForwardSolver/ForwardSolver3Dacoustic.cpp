@@ -109,7 +109,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     /* Get pointers to required interpolation matrices (optional) */
-    lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterP();
+    lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterFull();
     
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 

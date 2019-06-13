@@ -67,10 +67,10 @@ int main(int argc, char *argv[])
         misfitSum += misfit;
     }
 
-    std::cout << "\n\nL2/max: " << misfitSum / max << std::endl;
+    std::cout << "\n\nL2/max: " << misfitSum / max *100 <<"%" << std::endl;
 
     if (misfitSum > 0.0001 * max) {
-        std::cout << "Seismogram does not match reference solution misfit/maxAmp < 0.01%.\n\n"
+        std::cout << "Seismogram does not match reference solution misfit/maxAmp > 0.01%.\n\n"
                   << std::endl;
         return (1);
     } else {

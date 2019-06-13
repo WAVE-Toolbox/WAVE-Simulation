@@ -81,8 +81,12 @@ namespace KITGPI
             bool locatedOnSurface(scai::IndexType index) const;
 
             scai::IndexType distToInterface(scai::IndexType Y) const;
+
+            bool locatedOnInterface(scai::IndexType yCoordinate) const;
             bool locatedOnInterface(coordinate3D coordinate) const;
+
             bool getTransition(coordinate3D coordinate) const;
+            bool getTransition(scai::IndexType yCoordinate) const;
             bool isVariable() const { return (VariableGrid); };
 
           private:
