@@ -85,22 +85,45 @@ namespace KITGPI
                 virtual scai::lama::Matrix<ValueType> const &getDxf() const;
                 //! \brief Getter method for derivative matrix Dyf
                 virtual scai::lama::Matrix<ValueType> const &getDyf() const;
+
                 //! \brief Getter method for derivative matrix Dzf
                 virtual scai::lama::Matrix<ValueType> const &getDzf() const;
                 //! \brief Getter method for derivative matrix Dxb
                 virtual scai::lama::Matrix<ValueType> const &getDxb() const;
                 //! \brief Getter method for derivative matrix Dyb
                 virtual scai::lama::Matrix<ValueType> const &getDyb() const;
+
                 //! \brief Getter method for derivative matrix Dzb
                 virtual scai::lama::Matrix<ValueType> const &getDzb() const;
+
+                //! \brief Getter method for derivative matrix DyfStaggeredX
+                virtual scai::lama::Matrix<ValueType> const &getDyfStaggeredX() const;
+                //! \brief Getter method for derivative matrix DybStaggeredX
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredX() const;
+                //! \brief Getter method for derivative matrix DyfStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const &getDyfStaggeredZ() const;
+                //! \brief Getter method for derivative matrix DybStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZ() const;
+                //! \brief Getter method for derivative matrix DyfStaggeredxZ
+                virtual scai::lama::Matrix<ValueType> const &getDyfStaggeredXZ() const;
+                //! \brief Getter method for derivative matrix DybStaggeredXZ
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredXZ() const;
 
                 //! \brief Getter method for derivative matrix DyfFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredXFreeSurface() const;
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZFreeSurface() const;
 
-                //! \brief Getter method for interpolation matrix interP
-                virtual scai::lama::Matrix<ValueType> const *getInterP() const;
+                //! \brief Getter method for interpolation matrix interFull
+                virtual scai::lama::Matrix<ValueType> const *getInterFull() const;
+                //! \brief Getter method for interpolation matrix interStaggeredX
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredX() const;
+                //! \brief Getter method for interpolation matrix interStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredZ() const;
+                //! \brief Getter method for interpolation matrix interStaggeredXZ
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredXZ() const;
 
                 virtual scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() = 0;
 
@@ -132,10 +155,21 @@ namespace KITGPI
                 void calcDyb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
                 void calcDzb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
+                void calcDyfStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDyfStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+
                 void calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
                 void calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredXFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredZFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-                void calcInterpolationP(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationFull(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+
                 void setFDOrder(std::string const &FDorderFilename);
 
                 void setFDOrder(std::vector<scai::IndexType> &FDorder);
@@ -157,10 +191,23 @@ namespace KITGPI
                 SparseFormat DybSparse; //!< Derivative matrix Dyb
                 SparseFormat DzbSparse; //!< Derivative matrix Dzb
 
+                SparseFormat DyfStaggeredXSparse;  //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DybStaggeredXSparse;  //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DyfStaggeredZSparse;  //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DybStaggeredZSparse;  //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DyfStaggeredXZSparse; //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DybStaggeredXZSparse; //!< Derivative matrix Dyf for points staggered in x direction
+
                 SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
                 SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
 
-                SparseFormat InterpolationP; //!< Interpolation matrix for P
+                SparseFormat DybStaggeredXFreeSurface; //!< Derivative matrix DybFreeSurface
+                SparseFormat DybStaggeredZFreeSurface; //!< Derivative matrix DybFreeSurface
+
+                SparseFormat InterpolationFull;        //!< Interpolation matrix for P
+                SparseFormat InterpolationStaggeredX;  //!< Interpolation matrix for staggerd points in x direction
+                SparseFormat InterpolationStaggeredZ;  //!< Interpolation matrix for staggerd points in z direction
+                SparseFormat InterpolationStaggeredXZ; //!< Interpolation matrix for staggerd points in x and in z direction
 
                 scai::IndexType useFreeSurface = 0; //!< Switch to use free surface or not
                 bool useSparse = false;             //!< Switch to use Sparse Matrices

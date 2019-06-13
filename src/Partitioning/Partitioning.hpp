@@ -73,7 +73,7 @@ namespace KITGPI
             //settings.maxKMeansIterations = 10;
 
             //settings.minSamplingNodes = -1;
-            settings.writeInFile = true;
+            settings.storeInfo = true;
 		    //look at ITI Settings.h for the enum ITI::Tool
             settings.initialPartition = tool;
            
@@ -106,7 +106,7 @@ namespace KITGPI
             //update, 30/04: change the weights anyway to get a correct cut
             {
             	//change all edge weights to 1
-				CSRStorage<ValueType>& localStorage = graph.getLocalStorage();
+				scai::lama::CSRStorage<ValueType>& localStorage = graph.getLocalStorage();
 				scai::hmemo::HArray<ValueType> localValues = localStorage.getValues();
 
 				for( unsigned int i=0; i<localValues.size(); i++ ){
@@ -129,13 +129,14 @@ namespace KITGPI
 
 			scai::lama::DenseVector<IndexType> partition;
 
-			if( ITI::toString(tool).rfind("geo",0)==0 ){
+			if( ITI::to_string(tool).rfind("geo",0)==0 ){
 				partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 			}else{
+#ifdef USE_GEOGRAPHER_WRAPPERS				
 				bool nodeWeightsUse = true; //usign unit weights
 		    	partition = ITI::Wrappers<IndexType,ValueType>::partition( graph, coords, weightVector, nodeWeightsUse, tool, settings, metrics );
+#endif	    	
     		}
-
 
             if (config.get<bool>("partitionWrite"))
                 partition.writeToFile(config.get<std::string>("partitionFilename") + ".mtx");
@@ -157,7 +158,7 @@ namespace KITGPI
             return (dist);
         }
 #endif
-        /*! \brief calculatio of the weights for the absorbing boundary
+        /*! \brief calculation of the weights for the absorbing boundary
             \param config configuration object
             \param dist distributionPtr of the model
             \param modelCoordinates coordinate object

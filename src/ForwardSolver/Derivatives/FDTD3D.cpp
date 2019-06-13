@@ -91,8 +91,20 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
     DzbSparse.redistribute(dist, dist);
-    if (useVarGrid)
-        InterpolationP.redistribute(dist, dist);
+
+    DyfStaggeredXSparse.redistribute(dist, dist);
+    DybStaggeredXSparse.redistribute(dist, dist);
+    DyfStaggeredZSparse.redistribute(dist, dist);
+    DybStaggeredZSparse.redistribute(dist, dist);
+    //     DyfStaggeredXZSparse.redistribute(dist, dist);
+    //     DybStaggeredXZSparse.redistribute(dist, dist);
+
+    if (useVarGrid) {
+        InterpolationFull.redistribute(dist, dist);
+        InterpolationStaggeredX.redistribute(dist, dist);
+        InterpolationStaggeredZ.redistribute(dist, dist);
+        InterpolationStaggeredXZ.redistribute(dist, dist);
+    }
 }
 
 //! \brief Constructor of the derivative matrices
@@ -203,6 +215,11 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     this->calcDyb(modelCoordinates, dist);
     this->calcDzb(modelCoordinates, dist);
 
+    this->calcDyfStaggeredX(modelCoordinates, dist);
+    this->calcDybStaggeredX(modelCoordinates, dist);
+    this->calcDyfStaggeredZ(modelCoordinates, dist);
+    this->calcDybStaggeredZ(modelCoordinates, dist);
+
     HOST_PRINT(comm, "", "Matrix Dxf, Dyf and Dzf finished.\n");
 
     DxfSparse.setContextPtr(ctx);
@@ -211,6 +228,11 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DybSparse.setContextPtr(ctx);
     DzfSparse.setContextPtr(ctx);
     DzbSparse.setContextPtr(ctx);
+
+    DyfStaggeredXSparse.setContextPtr(ctx);
+    DybStaggeredXSparse.setContextPtr(ctx);
+    DyfStaggeredZSparse.setContextPtr(ctx);
+    DybStaggeredZSparse.setContextPtr(ctx);
 
     lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
 
@@ -230,6 +252,11 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzfSparse.setCommunicationKind(syncKind);
     DzbSparse.setCommunicationKind(syncKind);
 
+    DyfStaggeredXSparse.setCommunicationKind(syncKind);
+    DybStaggeredXSparse.setCommunicationKind(syncKind);
+    DyfStaggeredZSparse.setCommunicationKind(syncKind);
+    DybStaggeredZSparse.setCommunicationKind(syncKind);
+
     HOST_PRINT(comm, "", "Matrix Dxb, Dyb and Dzb finished.\n");
 
     DxfSparse.scale(DT);
@@ -239,8 +266,17 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzfSparse.scale(DT);
     DzbSparse.scale(DT);
 
-    if (modelCoordinates.isVariable())
-        this->calcInterpolationP(modelCoordinates, dist);
+    DyfStaggeredXSparse *= DT;
+    DybStaggeredXSparse *= DT;
+    DyfStaggeredZSparse *= DT;
+    DybStaggeredZSparse *= DT;
+
+    if (modelCoordinates.isVariable()) {
+        this->calcInterpolationFull(modelCoordinates, dist);
+        this->calcInterpolationStaggeredX(modelCoordinates, dist);
+        this->calcInterpolationStaggeredZ(modelCoordinates, dist);
+        this->calcInterpolationStaggeredXZ(modelCoordinates, dist);
+    }
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }

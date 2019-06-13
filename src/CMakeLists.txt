@@ -79,29 +79,27 @@ find_package( Geographer CONFIG
 message( "Geographer_LIBRARIES= \t" ${Geographer_LIBRARIES}$ )
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+#paths for supermuc; TODO: turn them to input arguments
 FIND_PACKAGE( Zoltan2 PATHS "/home/hpc/pr87si/di36qin/Code/Trilinos/build/packages/zoltan2/")
 set(METIS_BASE "/lrz/sys/libraries/metis/5.1.0/i8r8")
 set(PARMETIS_BASE  "/lrz/sys/libraries/parmetis/4.0.3/ibmmpi/i8r8")
 find_library( METIS_LIB metis "${METIS_BASE}/lib" )
 find_library( PARMETIS_LIB parmetis "${PARMETIS_BASE}/lib" )
 
-link_directories( ${Zoltan2_LIBRARY_DIRS} ${METIS_BASE}/lib ${PARMETIS_BASE}/lib )
-message( "Zoltan2_LIBRARY_DIRS= " ${Zoltan2_LIBRARY_DIRS} )
-
 if ( ${Geographer_FOUND} )
     include_directories( ${Geographer_INCLUDE_DIRS} )
     add_definitions( "-DUSE_GEOGRAPHER" )
     set( SOFI_used_libs ${Geographer_LIBRARIES} ${SOFI_used_libs} )
 
-	#paths for supermuc; TODO: turn them to inout arguments
-#	set(METIS_BASE "/lrz/sys/libraries/metis/5.1.0/i8r8")
-#	set(PARMETIS_BASE  "/lrz/sys/libraries/parmetis/4.0.3/ibmmpi/i8r8")
-
-#	if(EXISTS ${METIS_BASE} AND EXISTS ${PARMETIS_BASE} )
+	if( Zoltan2_FOUND AND METIS_BASE AND PARMETIS_BASE  )
+		link_directories( ${Zoltan2_LIBRARY_DIRS} ${METIS_BASE}/lib ${PARMETIS_BASE}/lib )
+		message( "Zoltan2_LIBRARY_DIRS= " ${Zoltan2_LIBRARY_DIRS} )
+	    add_definitions( "-DUSE_GEOGRAPHER_WRAPPERS" )
 		### include parmetis and metis ###
 		#target_include_directories( prog PUBLIC "${METIS_BASE}/include" )
 		#target_include_directories( prog PUBLIC "${PARMETIS_BASE}/include" )
-#	endif()
+	endif()
 endif ()
 
 ###################################################
