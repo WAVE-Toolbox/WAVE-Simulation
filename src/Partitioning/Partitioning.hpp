@@ -118,6 +118,12 @@ namespace KITGPI
 				localStorage.swap( localIA, localJA, localValues);
 			}
 
+			try{
+				settings.mappingRenumbering = config.get<bool>("mappingRenumbering");
+			}catch(...){
+				settings.mappingRenumbering = false;
+			}
+
             struct ITI::Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
             if (commShot->getRank() == 0) {

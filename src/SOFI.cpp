@@ -139,19 +139,8 @@ int main(int argc, const char *argv[])
         end_t = common::Walltime::get();
         HOST_PRINT(commAll, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 	
-	std::string toolStr = config.get<std::string>("graphPartitionTool");
-		/*
-        
-		std::map<std::string,ITI::Tool> toolName = { 
-			{"geographer",ITI::Tool::geographer}, {"geoKmeans",ITI::Tool::geoKmeans}, {"geoSFC",ITI::Tool::geoSFC}, {"geoMS", ITI::Tool::geoMS},
-			{"geoHierKM", ITI::Tool::geoHierKM}, {"geoHierRepart", ITI::Tool::geoHierRepart},
-			{"parMetisSFC",ITI::Tool::parMetisSFC}, {"parMetisGeom",ITI::Tool::parMetisGeom}, {"parMetisGraph",ITI::Tool::parMetisGraph},
-			{"zoltanRcb",ITI::Tool::zoltanRCB}, {"zoltanRib",ITI::Tool::zoltanRIB}, {"zoltanMJ",ITI::Tool::zoltanMJ}, {"zoltanHsfc",ITI::Tool::zoltanSFC}
-		};
+		std::string toolStr = config.get<std::string>("graphPartitionTool");
 
-		ITI::Tool tool = toolName[toolStr];
-		*/
-		//convert string to enum
 		//TODO: pass it as string and convert it later to Tool
 		ITI::Tool tool = ITI::toTool(toolStr);
 		
