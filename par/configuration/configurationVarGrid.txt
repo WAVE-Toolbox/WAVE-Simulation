@@ -11,6 +11,7 @@ useVariableGrid=1
 partitioning=2 # 0=Block Distribution 1=Grid Distribution 2=Graph Partitioning
 useVariableFDoperators=1
 
+mappingRenumbering=1
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
