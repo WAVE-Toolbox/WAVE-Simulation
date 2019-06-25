@@ -28,6 +28,7 @@ spatialFDorder=4
 ModelRead=1
 ModelWrite=0
 ModelFilename=model/model
+coordinateWrite=0
 
 # parallel input-output
 PartitionedIn=0           # 1=Read files parallel, 0=serial 
