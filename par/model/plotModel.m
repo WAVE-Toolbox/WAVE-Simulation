@@ -1,7 +1,7 @@
 clearvars; close all;
 
 %% Define input parameter
-filename='../damping.mtx'; % File name of the model
+filename='../model.mtx'; % File name of the model
 NX=100;  % Number of grid points in X
 NY=100;  % Number of grid points in Y
 NZ=1;  % Number of grid points in Z
@@ -15,7 +15,7 @@ Y=0:DH:(NY*DH-DH);
 
 %% Plot
 figure
-imagesc(X,Y,model(:,:,LAYER))
+imagesc(X,Y,squeeze(model(:,:,LAYER)))
 colorbar
 xlabel('X in meter')
 ylabel('Y in meter')
