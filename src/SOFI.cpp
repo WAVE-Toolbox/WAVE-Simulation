@@ -133,9 +133,6 @@ int main(int argc, const char *argv[])
         auto &&weights = Partitioning::BoundaryWeights(config, dist, modelCoordinates, config.get<ValueType>("BoundaryWeights"));
         auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
 
-        if (config.get<bool>("coordinateWrite"))
-            modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
-
         end_t = common::Walltime::get();
         HOST_PRINT(commAll, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 
@@ -160,6 +157,9 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
+    if (config.get<bool>("coordinateWrite"))
+        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
+
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     if ((config.get<IndexType>("ModelRead") == 2) && (config.get<bool>("useVariableGrid"))){
         HOST_PRINT(commAll, "", "reading regular model ...\n")
