@@ -120,7 +120,7 @@ namespace KITGPI
                     allSettings.push_back(thisSettings);
                 }
                 allSettings.pop_back();
-                std::cout << fileName << " " << allSettings.size() << std::endl;
+          //      std::cout << fileName << " " << allSettings.size() << std::endl;
             }
             else {
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file")
@@ -137,7 +137,7 @@ namespace KITGPI
                     allSettings.push_back(thisSettings);
                 }
                 allSettings.pop_back();
-                std::cout << fileName << " " << allSettings.size() << std::endl;
+          //      std::cout << fileName << " " << allSettings.size() << std::endl;
             }
             else {
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file")
