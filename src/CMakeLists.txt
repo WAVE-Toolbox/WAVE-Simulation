@@ -81,7 +81,7 @@ foreach ( dir ${SOFI_LIB_DIRS} )
 
     file( GLOB_RECURSE files RELATIVE ${CMAKE_SOURCE_DIR}/${dir} ${dir}/*.hpp )
     foreach ( file ${files} )
-        configure_file( ${dir}/${file} include/${file} COPYONLY )
+	    configure_file( ${dir}/${file} include/${dir}/${file} COPYONLY )
     endforeach ()
 
 endforeach ()
