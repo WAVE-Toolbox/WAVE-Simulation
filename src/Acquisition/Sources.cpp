@@ -28,7 +28,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
 
     /* Generate Signals */
     std::vector<scai::IndexType> readrows;
-    for (IndexType i = 0; i < allSettings.size(); i++) {
+    for (unsigned long i = 0; i < allSettings.size(); i++) {
         readrows.push_back(allSettings[i].row);
     }
 
