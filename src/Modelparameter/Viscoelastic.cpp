@@ -91,7 +91,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 
     if (config.get<IndexType>("ModelWrite")) {
         write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
-        std::cout << "been here\n\n";
     }
 }
 
@@ -369,7 +368,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus() const
 {
-   SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
+    SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
     return (sWaveModulus);
 }
 

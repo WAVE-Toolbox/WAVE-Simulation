@@ -13,7 +13,8 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    init(dist, ctx, config, modelCoordinates, comm);
+    this->setup(config);
+    init(dist, ctx, modelCoordinates, comm);
 }
 
 //! \brief Initialisation to support Configuration
@@ -26,53 +27,16 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::Distr
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-    useVarGrid = modelCoordinates.isVariable();
-
-    this->setFDCoef();
-
-    if (config.get<IndexType>("partitioning") != 1)
-        useSparse = true;
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-
-    if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
-        useVarFDorder = true;
-        this->setFDOrder(config.get<std::string>("spatialFDorderFilename"));
-    } else {
-        SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for grid distribution")
-        this->setFDOrder(config.get<IndexType>("spatialFDorder"));
-    }
 
     if (useSparse)
-        initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), comm);
+        initializeMatrices(dist, ctx, modelCoordinates, comm);
     else
-        initializeMatrices(dist, ctx, modelCoordinates.getDH(), config.get<ValueType>("DT"), comm);
-}
+        initializeMatrices(dist, ctx, modelCoordinates.getDH(), comm);
 
-//! \brief Initialisation to support Configuration
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param config Configuration
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param comm Communicator
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm, std::vector<IndexType> &FDorder)
-{
-    useFreeSurface = config.get<IndexType>("FreeSurface");
-    useVarGrid = modelCoordinates.isVariable();
-    useSparse = true;
-    useVarFDorder = true;
-
-    this->setFDCoef();
-
-    this->setFDOrder(FDorder);
-
-    initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), comm);
+    if (useFreeSurface == 1)
+        initializeFreeSurfaceMatrices(dist, ctx, modelCoordinates, comm);
 }
 
 //! \brief redistribution of all matrices
@@ -85,30 +49,67 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices
 {
     DxfSparse.redistribute(dist, dist);
     DyfSparse.redistribute(dist, dist);
-    DyfStaggeredXSparse.redistribute(dist, dist);
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
-    DybStaggeredXSparse.redistribute(dist, dist);
+
     if (useVarGrid) {
         InterpolationFull.redistribute(dist, dist);
-        InterpolationStaggeredX.redistribute(dist, dist);
+        if (isElastic) {
+            DyfStaggeredXSparse.redistribute(dist, dist);
+            DybStaggeredXSparse.redistribute(dist, dist);
+            InterpolationStaggeredX.redistribute(dist, dist);
+        }
+    }
+
+    if (useFreeSurface == 1) {
+        DyfFreeSurface.redistribute(dist, dist);
+
+        if (isElastic) {
+            if (!useVarGrid) {
+                DybFreeSurface.redistribute(dist, dist);
+
+            } else {
+                DybStaggeredXFreeSurface.redistribute(dist, dist);
+            }
+        }
     }
 }
 
-//! \brief Constructor of the derivative matrices
-/*!
- *
- \param dist Distribution of the wavefield
- \param ctx Context
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param DT Temporal sampling interval#
- \param spatialFDorderInput FD-order of spatial derivative stencils
- \param comm Communicator
- */
 template <typename ValueType>
-KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    initializeMatrices(dist, ctx, modelCoordinates, DT, comm);
+    IndexType NumDMatrices = 4;
+    IndexType NumInterpMatrices = 0;
+    if (useVarGrid) {
+        NumInterpMatrices += 1;
+        if (isElastic) {
+            NumDMatrices += 2;
+            NumInterpMatrices += 1;
+        }
+    }
+
+    if (useFreeSurface == 1) {
+        NumDMatrices += 2;
+    }
+
+    if (useSparse) {
+        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of derivative matrices per core " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
+                                                                                             << "\n",
+                   "Memory of derivative Matrix: " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 << " MB, "
+                                                   << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumDMatrices << "\n");
+    } else {
+        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of derivative matrices per core " << this->getMemorySparseMatrix(dist) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
+                                                                                             << "\n",
+                   "Memory of derivative Matrix: " << this->getMemoryStencilMatrix(dist) / 1024 / 1024 << " MB, "
+                                                   << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumDMatrices << "\n");
+    }
+
+    if (useVarGrid) {
+        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of interpolation matrices per core " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 * NumInterpMatrices / dist->getNumPartitions() << " MB"
+                                                                                                << "\n",
+                   "Memory of interpolation Matrix: " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 << " MB, "
+                                                      << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumInterpMatrices << "\n");
+    }
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -116,11 +117,10 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::Distr
  *
  \param dist Distribution of the wavefield
  \param ctx Context
- \param DT Temporal sampling interval
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm)
 {
 
     SCAI_REGION("initializeMatrices")
@@ -142,10 +142,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     Dyb.scale(-1.0);
 
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
-    Dxf *= DT / DH;
-    Dxb *= DT / DH;
-    Dyf *= DT / DH;
-    Dyb *= DT / DH;
+    Dxf *= this->DT / DH;
+    Dxb *= this->DT / DH;
+    Dyf *= this->DT / DH;
+    Dyb *= this->DT / DH;
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
@@ -156,11 +156,10 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
  \param dist Distribution of the wavefield
  \param ctx Context
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param DT Temporal sampling interval
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::dmemo::CommunicatorPtr comm)
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
     SCAI_REGION("initializeMatrices")
@@ -169,33 +168,68 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     this->calcDxf(modelCoordinates, dist);
     this->calcDyf(modelCoordinates, dist);
-    this->calcDyfStaggeredX(modelCoordinates, dist);
     HOST_PRINT(comm, "", "Matrix Dxf and Dyf finished.\n");
     this->calcDxb(modelCoordinates, dist);
     this->calcDyb(modelCoordinates, dist);
-    this->calcDybStaggeredX(modelCoordinates, dist);
     HOST_PRINT(comm, "", "Matrix Dxb and Dyb finished.\n");
 
     DxfSparse.setContextPtr(ctx);
     DxbSparse.setContextPtr(ctx);
     DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
-    DyfStaggeredXSparse.setContextPtr(ctx);
-    DybStaggeredXSparse.setContextPtr(ctx);
 
-    DxfSparse *= DT;
-    DxbSparse *= DT;
-    DyfSparse *= DT;
-    DybSparse *= DT;
-    DyfStaggeredXSparse *= DT;
-    DybStaggeredXSparse *= DT;
+    DxfSparse *= this->DT;
+    DxbSparse *= this->DT;
+    DyfSparse *= this->DT;
+    DybSparse *= this->DT;
 
-    if (modelCoordinates.isVariable()) {
+    if ((isElastic) && (useVarGrid)) {
+        this->calcDyfStaggeredX(modelCoordinates, dist);
+        this->calcDybStaggeredX(modelCoordinates, dist);
+        DyfStaggeredXSparse.setContextPtr(ctx);
+        DybStaggeredXSparse.setContextPtr(ctx);
+        DyfStaggeredXSparse *= this->DT;
+        DybStaggeredXSparse *= this->DT;
+    }
+
+    if (useVarGrid) {
         this->calcInterpolationFull(modelCoordinates, dist);
-        this->calcInterpolationStaggeredX(modelCoordinates, dist);
+        if (isElastic) {
+            this->calcInterpolationStaggeredX(modelCoordinates, dist);
+        }
     }
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
+}
+
+//! \brief Initializsation of the derivative matrices
+/*!
+ *
+ \param dist Distribution of the wavefield
+ \param ctx Context
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param comm Communicator
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
+{
+    this->calcDyfFreeSurface(modelCoordinates, dist);
+    DyfFreeSurface.setContextPtr(ctx);
+    DyfFreeSurface *= this->DT;
+
+    if (isElastic) {
+        if (!useVarGrid) {
+            this->calcDybFreeSurface(modelCoordinates, dist);
+            DybFreeSurface *= this->DT;
+            DybFreeSurface.setContextPtr(ctx);
+
+        } else {
+
+            this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
+            DybStaggeredXFreeSurface.setContextPtr(ctx);
+            DybStaggeredXFreeSurface *= this->DT;
+        }
+    }
 }
 
 //! \brief Getter method for derivative matrix Dzb

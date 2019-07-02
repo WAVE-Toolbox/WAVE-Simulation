@@ -115,11 +115,31 @@ int main(int argc, const char *argv[])
     }
 
     /* --------------------------------------- */
+    /* Factories                               */
+    /* --------------------------------------- */
+
+    ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
+    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
+
+    /* --------------------------------------- */
+    /* Setup Main Objects                      */
+    /* --------------------------------------- */
+    derivatives->setup(config);
+
+    /* --------------------------------------- */
+    /* Memory estimation                       */
+    /* --------------------------------------- */
+    derivatives->estimateMemory(config, dist, modelCoordinates);
+
+    /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
-    derivatives->init(dist, ctx, config, modelCoordinates, commShot);
+
+    derivatives->init(dist, ctx, modelCoordinates, commShot);
+
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
@@ -160,16 +180,16 @@ int main(int argc, const char *argv[])
     if (config.get<bool>("coordinateWrite"))
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
 
-    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    if ((config.get<IndexType>("ModelRead") == 2) && (config.get<bool>("useVariableGrid"))){
+    if ((config.get<IndexType>("ModelRead") == 2) && (config.get<bool>("useVariableGrid"))) {
         HOST_PRINT(commAll, "", "reading regular model ...\n")
+
         Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), commShot));
-
         Modelparameter::Modelparameter<ValueType>::ModelparameterPtr regularModel(Modelparameter::Factory<ValueType>::Create(equationType));
+
         regularModel->init(config, ctx, regularDist);
         HOST_PRINT(commAll, "", "reading regular model finished\n\n")
-        
+
         HOST_PRINT(commAll, "", "initialising model on discontineous grid ...\n")
         model->init(*regularModel, dist, modelCoordinates, regularCoordinates);
         HOST_PRINT(commAll, "", "initialising model on discontineous grid finished\n\n")
@@ -182,15 +202,15 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
+
     wavefields->init(ctx, dist);
-    
+
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
 
     HOST_PRINT(commAll, "", "ForwardSolver ...\n")
-    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
+
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
     HOST_PRINT(commAll, "", "ForwardSolver prepared\n")

@@ -58,6 +58,7 @@ namespace KITGPI
             scai::IndexType getNY() const;
             scai::IndexType getNZ() const;
             scai::IndexType getNGridpoints() const;
+            scai::IndexType getNGridpoints(scai::IndexType layer) const;
             ValueType getDH(coordinate3D coordinate) const;
             ValueType getDH(scai::IndexType layer) const;
             scai::IndexType getLayer(coordinate3D coordinate) const;
@@ -85,8 +86,8 @@ namespace KITGPI
             bool locatedOnInterface(scai::IndexType yCoordinate) const;
             bool locatedOnInterface(coordinate3D coordinate) const;
 
-            bool getTransition(coordinate3D coordinate) const;
-            bool getTransition(scai::IndexType yCoordinate) const;
+            int getTransition(coordinate3D coordinate) const;
+            int getTransition(scai::IndexType yCoordinate) const;
             bool isVariable() const { return (VariableGrid); };
 
           private:
@@ -106,7 +107,7 @@ namespace KITGPI
             scai::IndexType numLayers;               //!< Number of layers of the variable grid
             std::vector<scai::IndexType> layerStart; //!< start position of each layer
             std::vector<scai::IndexType> layerEnd;   //!< end position of each layer
-            std::vector<scai::IndexType> transition; //!< transition of the interfaces 1= fine to coarse, 0 = coarse to fine
+            std::vector<int> transition;             //!< transition of the interfaces 1= fine to coarse, 0 = coarse to fine
 
             scai::IndexType nGridpoints;                      //!< total number of gridpoints
             std::vector<scai::IndexType> nGridpointsPerLayer; //!< number of gridpoints per layer
