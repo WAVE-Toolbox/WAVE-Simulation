@@ -68,7 +68,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
-
+    CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
     /* --------------------------------------- */
     /* communicator for shot parallelisation   */
     /* --------------------------------------- */

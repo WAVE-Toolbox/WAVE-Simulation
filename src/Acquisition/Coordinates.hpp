@@ -65,6 +65,7 @@ namespace KITGPI
             scai::IndexType getNumLayers() const;
             scai::IndexType getDHFactor(coordinate3D coordinate) const;
             scai::IndexType getDHFactor(scai::IndexType layer) const;
+            std::vector<int> getInterfaceVec() const;
 
             std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) const;
             void writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename) const;

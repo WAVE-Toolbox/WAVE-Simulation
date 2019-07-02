@@ -120,11 +120,11 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
         }
 
         if (NXmax != NX) {
-            std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
+            //reduce NX to fit the variable grid
             NX = NXmax;
         }
         if (NZmax != NZ) {
-            std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
+            //reduce NZ to fit the variable grid
             NZ = NZmax;
         }
 
@@ -134,7 +134,6 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1] - 1) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
@@ -145,12 +144,15 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1]) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
         }
     }
+
+    //set NY according to last interface (NY might be reduced to fit the variable Grid)
+    NY = interface[numLayers] + 1;
+
     /* loop over all layers in the variable grid 
      DH will be multiplied with the enlargement factor dhFactor.  dhFactor must be a multiple of 3.
      The begin and end of each layer will be estimated from the layer interfaces. 
@@ -372,6 +374,15 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType layer) const
 {
     return (dhFactor[layer]);
+}
+
+/*! \brief getter function for interface vector
+ *
+ */
+template <typename ValueType>
+std::vector<int> KITGPI::Acquisition::Coordinates<ValueType>::getInterfaceVec() const
+{
+    return (interface);
 }
 
 /*! \brief check if coordinate is on an variable grid interface
