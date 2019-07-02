@@ -68,6 +68,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
+    if (config.get<bool>("useVariableGrid"))
     CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
     /* --------------------------------------- */
     /* communicator for shot parallelisation   */
