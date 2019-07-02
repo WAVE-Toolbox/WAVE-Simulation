@@ -53,9 +53,10 @@ namespace KITGPI
             std::istream_iterator<IndexType> start(is), end;
             interface.assign(start, end);
 
-            for (unsigned int i = 0; i < interface.size(); i++)
+            for (unsigned int i = 0; i < interface.size(); i++) {
                 if (interface[i] != newInterfaces[i + 1])
                     HOST_PRINT(commAll, "In order to fit the variable grid, the interface Nr." << i + 1 << " has benn moved from Y=" << interface[i] << " to Y=" << newInterfaces[i + 1] << "\n\n")
+            }
         }
 
         /*! \brief check Courant-Friedrichs-Lewy-Criterion

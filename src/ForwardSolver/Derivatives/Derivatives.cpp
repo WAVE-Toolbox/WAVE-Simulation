@@ -93,12 +93,13 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
-        //     if (useVarFDorder) {
-        const auto layer = modelCoordinates.getLayer(coordinate);
-        const auto spatialFDorder = spatialFDorderVec[layer];
-        //     }
 
-        //   if ((!modelCoordinates.locatedOnInterface(coordinate)) || ((coordinate.x % dhFactor == dhFactor / 3) && (coordinate.z % dhFactor == 0))) {
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
+
         for (j = 0; j < spatialFDorder; j++) {
 
             if (!modelCoordinates.locatedOnInterface(coordinate))
@@ -110,9 +111,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
                 columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
-            //      }
         }
     }
+
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
 }
@@ -155,9 +156,12 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        layer = modelCoordinates.getLayer(coordinate);
 
-        auto spatialFDorder = spatialFDorderVec[layer];
+        layer = modelCoordinates.getLayer(coordinate);
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         /* reduce FDorder at the variable grid interfaces*/
         if (useVarGrid) {
@@ -228,9 +232,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
-
-        const auto layer = modelCoordinates.getLayer(coordinate);
-        const auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         for (j = 0; j < spatialFDorder; j++) {
 
@@ -284,8 +290,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
             dhFactor = modelCoordinates.getDHFactor(layer);
             DH = modelCoordinates.getDH(layer);
         }
-
-        auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if (useVarGrid) {
             /* reduce FDorder at the variable grid interfaces*/
@@ -342,7 +350,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
-        auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if (useVarGrid) {
             auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
@@ -409,7 +420,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
-        auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if (useVarGrid) {
             auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
@@ -491,7 +505,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
-        auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if (useVarGrid) {
             auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
@@ -570,8 +587,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
         Acquisition::coordinate3D const coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
-        const auto layer = modelCoordinates.getLayer(coordinate);
-        const auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec.at(0);
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         for (j = 0; j < spatialFDorder; j++) {
 
@@ -615,7 +635,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
 
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
-        auto spatialFDorder = spatialFDorderVec[layer];
+
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         if (useVarGrid) {
             auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
@@ -677,9 +701,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         layer = modelCoordinates.getLayer(coordinate);
-
-        auto spatialFDorder = spatialFDorderVec[layer];
-
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
         /* reduce FDorder at the variable grid interfaces*/
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
         if (distance == 0)
@@ -760,8 +785,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
         const IndexType &layer = modelCoordinates.getLayer(coordinate);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
-        auto spatialFDorder = spatialFDorderVec[layer];
-
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
         /* reduce FDorder at the variable grid interfaces*/
         if (distance == 0)
             spatialFDorder = 2;
@@ -833,8 +860,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         layer = modelCoordinates.getLayer(coordinate);
 
-        auto spatialFDorder = spatialFDorderVec[layer];
-
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
         /* reduce FDorder at the variable grid interfaces*/
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
         if (distance == 0)
@@ -916,8 +945,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
         auto distance = modelCoordinates.distToInterface(coordinate.y) / modelCoordinates.getDHFactor(layer);
-        auto spatialFDorder = spatialFDorderVec[layer];
 
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            spatialFDorder = spatialFDorderVec[layer];
+        }
         /* reduce FDorder at the variable grid interfaces*/
         if (distance == 0)
             spatialFDorder = 2;
@@ -986,8 +1018,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
 
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
-        const auto layer = modelCoordinates.getLayer(coordinate);
-        const auto spatialFDorder = spatialFDorderVec[layer];
+        auto spatialFDorder = spatialFDorderVec[0];
+        if (useVarFDorder) {
+            const auto layer = modelCoordinates.getLayer(coordinate);
+            spatialFDorder = spatialFDorderVec[layer];
+        }
 
         for (j = 0; j < spatialFDorder; j++) {
 
@@ -1467,6 +1502,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(Inde
     spatialFDorderVec.push_back(FDorder);
     if (stencilFDmap.find(FDorder) == stencilFDmap.end())
         COMMON_THROWEXCEPTION("spatialFDorder = " << FDorder << " Unsupported spatialFDorder value.");
+    std::cout << spatialFDorderVec.at(0) << std::endl;
+    ;
 }
 //! \brief calculate and return memory usage the of a stencil matrix
 /*!
@@ -1520,8 +1557,12 @@ ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryS
     /* size of a sparse Matrix = Number of non Zero Values + Indexes (numRows*spatialFDorder) + num rows (IA -> Indexes per row) +
      numRows * IndexType (halo) */
     ValueType size = 0;
+    auto spatialFDOrder = spatialFDorderVec.at(0);
     for (IndexType layer = 0; layer < modelCoordinates.getNumLayers(); layer++) {
-        size += modelCoordinates.getNGridpoints(layer) * spatialFDorderVec.at(layer) * (sizeof(ValueType) + sizeof(IndexType)) + 2 * modelCoordinates.getNGridpoints(layer) * sizeof(IndexType);
+        if (useVarFDorder) {
+            spatialFDOrder = spatialFDorderVec.at(layer);
+        }
+        size += modelCoordinates.getNGridpoints(layer) * spatialFDOrder * (sizeof(ValueType) + sizeof(IndexType)) + 2 * modelCoordinates.getNGridpoints(layer) * sizeof(IndexType);
     }
 
     return (size);
