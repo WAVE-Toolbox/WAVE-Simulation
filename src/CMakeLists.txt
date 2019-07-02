@@ -13,9 +13,7 @@
 
 project( SOFI )
 
-## cmake minimum version is 2.8.12 due to command 'target_include_directories' used here
-
-cmake_minimum_required ( VERSION 2.8.12 )
+cmake_minimum_required ( VERSION 3.0 )
 
 if ( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE "Release" CACHE STRING
@@ -39,25 +37,53 @@ set ( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE )
 set ( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 
 ####################################################
-#  Find LAMA library (mandatory)                   #
+#  Path hints for finding SCAI(Lama) / Geographer  #
 ####################################################
 
-## SCAI Lama library required, use SCAI_DIR or SCAI_ROOT (policy 0074) to find it
+set ( SCAI_PATH_HINTS "${SCAI_DIR}" "${SCAI_HOME}" "$ENV{SCAI_HOME}" )
+set ( Geographer_PATH_HINTS "${Geographer_DIR}" "${Geographer_HOME}" "$ENV{Geograhper_HOME}" )
 
 if ( ${CMAKE_VERSION} VERSION_GREATER 3.11)
     ## use new policy to configure with SCAI_ROOT, suppress warning
     cmake_policy( SET CMP0074 NEW )
+else ()
+    ## simulate new policy by adding SCAI_ROOT to hints
+    set ( SCAI_PATH_HINTS ${SCAI_PATH_HINTS} "${SCAI_ROOT}" "$ENV{SCAI_ROOT}" )
+    set ( Geograhper_PATH_HINTS ${Geographer_PATH_HINTS} "${Geographer_ROOT}" "$ENV{Geographer_ROOT}" )
 endif ()
+
+####################################################
+#  Find LAMA library (mandatory)                   #
+####################################################
 
 find_package( SCAI REQUIRED CONFIG 
               NO_CMAKE_PATH 
-              NO_SYSTEM_ENVIRONMENT_PATH )
+              NO_SYSTEM_ENVIRONMENT_PATH 
+              PATHS ${SCAI_PATH_HINTS} )
 
 ## take over compilfer flags as used by LAMA
 
+include_directories( ${SCAI_INCLUDE_DIRS} )
+
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${SCAI_CXX_FLAGS} )
+set( SOFI_used_libs ${SCAI_LIBRARIES} )
 
 ####################################################
+#  Find Geographer library (optional)              #
+####################################################
+
+find_package( Geographer CONFIG
+              NO_CMAKE_PATH
+              NO_SYSTEM_ENVIRONMENT_PATH 
+              PATHS ${Geographer_PATH_HINTS} )
+
+if ( ${Geographer_FOUND} )
+    include_directories( ${Geographer_INCLUDE_DIRS} )
+    add_definitions( "-DUSE_GEOGRAPHER" )
+    set( SOFI_used_libs ${Geographer_LIBRARIES} ${SOFI_used_libs} )
+endif ()
+
+###################################################
 #  Collect source files of SOFI library            #
 #  and copy header files to install                #
 ####################################################
@@ -90,13 +116,11 @@ endforeach ()
 #  SOFI library                                    #
 ####################################################
 
-include_directories( ${SCAI_INCLUDE_DIRS} )
-
 include_directories( Common Configuration Acquisition Modelparameter )
 
-add_library( SOFI SHARED ${SOFI_FILES} )
+add_library( SOFI ${SOFI_FILES} )
 
-target_link_libraries( SOFI ${SCAI_LIBRARIES} )
+target_link_libraries( SOFI ${SOFI_used_libs} )
 
 install( TARGETS SOFI DESTINATION lib )
 
@@ -106,7 +130,7 @@ install( TARGETS SOFI DESTINATION lib )
 
 add_executable( prog SOFI.cpp )
 
-target_link_libraries( prog SOFI ${SCAI_LIBRARIES} )
+target_link_libraries( prog SOFI ${SOFI_used_libs} )
 
 set_target_properties( prog PROPERTIES OUTPUT_NAME SOFI )
 
@@ -125,8 +149,7 @@ if ( ${GTEST_FOUND} )
    add_executable( utest ${SOFI_UNIT_TEST_SOURCES} )
 
    target_include_directories( utest PRIVATE ForwardSolver Configuration Acquisition Modelparameter ${GTEST_INCLUDE_DIR} )
-
-   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} SOFI ${SCAI_LIBRARIES} )
+   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} SOFI ${SOFI_used_libs} )
 
    set_target_properties( utest PROPERTIES OUTPUT_NAME Test_unit )
 
@@ -153,7 +176,7 @@ set ( SOFI_INTEGRATION_TEST_SOURCES
 
 add_executable( itest ${SOFI_INTEGRATION_TEST_SOURCES} )
 
-target_link_libraries( itest SOFI ${SCAI_LIBRARIES} )
+target_link_libraries( itest SOFI ${SOFI_used_libs} )
 
 set_target_properties( itest PROPERTIES OUTPUT_NAME Test_integration )
 
@@ -165,7 +188,7 @@ install( TARGETS itest DESTINATION bin )
 
 add_executable( model Tools/CreateModel/TwoLayer.cpp )
 
-target_link_libraries( model SOFI ${SCAI_LIBRARIES} )
+target_link_libraries( model SOFI ${SOFI_used_libs} )
 
 set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 

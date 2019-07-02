@@ -42,19 +42,13 @@ int main(int argc, char *argv[])
     IndexType NZ = config.get<IndexType>("NZ");
     common::Grid3D grid(NZ, NY, NX);
 
-    // construct model vectors
-    lama::GridVector<ValueType> vp(grid);
-    lama::GridVector<ValueType> vs(grid);
-    lama::GridVector<ValueType> rho(grid);
-    lama::GridVector<ValueType> tauP(grid);
-    lama::GridVector<ValueType> tauS(grid);
+    // construct model vectors and set velocities for first layer
 
-    //set velocities for first layer
-    vp = vp1;
-    vs = vs1;
-    rho = rho1;
-    tauP = tauP1;
-    tauS = tauS1;
+    lama::GridVector<ValueType> vp(grid, vp1);
+    lama::GridVector<ValueType> vs(grid, vs1);
+    lama::GridVector<ValueType> rho(grid, rho1);
+    lama::GridVector<ValueType> tauP(grid, tauP1);
+    lama::GridVector<ValueType> tauS(grid, tauS1);
 
     //set velocities for second layer
     for (IndexType y = depth; y < NY; ++y) {

@@ -8,10 +8,6 @@ NY=100 # depth
 NZ=1 # horizontal 2
 
 # define Partitioning
-UseCubePartitioning=0
-ProcNX=2
-ProcNY=2
-ProcNZ=1
 ProcNS=1                  # Number of shot domains
 
 # define distance between two grid points in meter
