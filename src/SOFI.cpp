@@ -71,11 +71,10 @@ int main(int argc, const char *argv[])
     IndexType npS = config.get<IndexType>("ProcNS");
     IndexType npM = commAll->getSize() / npS;
 
-    if (commAll->getSize() != npS * npM)
-    {
-        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() 
-                             << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
-        return(2);         
+    if (commAll->getSize() != npS * npM) {
+        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                                                                  << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
+        return (2);
     }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
@@ -126,7 +125,15 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
+    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+    // build Settings for SU?
+    //settings = su.getSourceSettings(shotNumber); // currently not working, expecting a sourceSettings struct and not a vector of sourceSettings structs
+    //         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
+    //         allSettings = su.getSourceSettingsVec();
+
+    Acquisition::Sources<ValueType> sources;
+
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
@@ -138,7 +145,7 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commShot);
 
     /* --------------------------------------- */
     /* Forward solver                          */
@@ -153,17 +160,25 @@ int main(int argc, const char *argv[])
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
 
-    dmemo::BlockDistribution shotDist(sources.getNumShots(), commInterShot);
+    // calculate vector with unique shot numbers and get number of shots
+    std::vector<scai::IndexType> uniqueShotNos;
+    calcuniqueShotNo(uniqueShotNos, sourceSettings);
+    IndexType numshots = uniqueShotNos.size();
+    dmemo::BlockDistribution shotDist(numshots, commInterShot);
 
-    for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
+    for (IndexType shotInd = shotDist.lb(); shotInd < shotDist.ub(); shotInd++) {
+        IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
-        if (!config.get<bool>("runSimultaneousShots"))
-            sources.init(config, modelCoordinates, ctx, dist, shotNumber);
+        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
+        Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+        sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\nTotal Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd + 1 << " of " << numshots << " (shot no: " << shotNumber << ")"
+                                                             << "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();
@@ -177,20 +192,16 @@ int main(int argc, const char *argv[])
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
             if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName"), tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
+                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
             }
         }
 
         end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << ") in " << end_t - start_t << " sec.\n");
+        HOST_PRINT(commShot, "Finished time stepping (shot: " << shotInd + 1 << " , shot no: " << shotNumber << ") in " << end_t - start_t << " sec.\n");
 
         receivers.getSeismogramHandler().normalize();
 
-        if (!config.get<bool>("runSimultaneousShots")) {
-            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-        } else {
-            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename"), modelCoordinates);
-        }
+        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
 
         solver->resetCPML();
     }

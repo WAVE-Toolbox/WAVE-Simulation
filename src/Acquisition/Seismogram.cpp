@@ -461,6 +461,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
 {
+
     scai::dmemo::DistributionPtr distTraces;
     scai::dmemo::DistributionPtr distSamples;
 
@@ -470,6 +471,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
     }
 
     data.readFromFile(addSeismogramTypeToName(filename));
+
+    if (copyDist == 1) {
+        SCAI_ASSERT_ERROR(getNumTracesGlobal() == data.getNumRows(), "Number of specified traces in receiver file (numTraces=" << getNumTracesGlobal() << ") doesn't match the number of traces in the input data: " << addSeismogramTypeToName(filename) << " (numTraces=" << data.getNumRows() << ")");
+    }
+
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 

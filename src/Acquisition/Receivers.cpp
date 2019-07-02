@@ -66,7 +66,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         allSettings = su.getReceiverSettingsVec();
     } else
         readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
-    
+
     if (config.get<bool>("useReceiversPerShot")) {
         useReceiversPerShot = true;
         shotNr = shotNumber;
@@ -105,23 +105,25 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration:
         allReceiverSettings = su.getReceiverSettingsVec();
     else {
         if (useReceiversPerShot) {
-            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".mtx"); }
-        else {
-            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".mtx"); }
+            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".txt");
+        } else {
+            readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".txt");
+        }
     }
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield) {
+void KITGPI::Acquisition::Receivers<ValueType>::acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield)
+{
     scai::IndexType nRows = acqMat.getNumRows();
     allSettings.reserve(nRows);
     if (dist_wavefield->getCommunicator().getRank() == 0) {
         auto read_acquisition_temp_HA = hostReadAccess(acqMat.getLocalStorage().getData());
         for (scai::IndexType row = 0; row < nRows; row++) {
-            allSettings[row].receiverCoords.x = read_acquisition_temp_HA[row*9+0];
-            allSettings[row].receiverCoords.y = read_acquisition_temp_HA[row*9+1];
-            allSettings[row].receiverCoords.z = read_acquisition_temp_HA[row*9+2];
-            allSettings[row].receiverType = read_acquisition_temp_HA[row*9+3];
+            allSettings[row].receiverCoords.x = read_acquisition_temp_HA[row * 9 + 0];
+            allSettings[row].receiverCoords.y = read_acquisition_temp_HA[row * 9 + 1];
+            allSettings[row].receiverCoords.z = read_acquisition_temp_HA[row * 9 + 2];
+            allSettings[row].receiverType = read_acquisition_temp_HA[row * 9 + 3];
         }
     }
 }

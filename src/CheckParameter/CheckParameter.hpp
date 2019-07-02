@@ -25,7 +25,7 @@ namespace KITGPI
             IndexType npM = commAll->getSize() / npS;
 
             SCAI_ASSERT_ERROR(commAll->getSize() == npS * npM, "\n Error: Number of MPI processes (" << commAll->getSize() << ") is not multiple of shot domains in configuration"
-                                                                                                                 << ": ProcNS = " << npS << "\n")
+                                                                                                     << ": ProcNS = " << npS << "\n")
         }
 
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
@@ -120,7 +120,7 @@ namespace KITGPI
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
                 ValueType vMaxTmp;
@@ -132,10 +132,19 @@ namespace KITGPI
                 KITGPI::Common::searchAndReplace<ValueType>(velocityTmp, 0.0, vMaxTmp, 5);
                 vMinTmp = velocityTmp.min();
 
-                scai::lama::DenseMatrix<ValueType> acquisition_temp;
+                //                 scai::lama::DenseMatrix<ValueType> acquisition_temp;
+                //                 scai::lama::DenseVector<ValueType> wavelet_fc;
+                //
+                //                 acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
+                //                 acquisition_temp.getColumn(wavelet_fc, 8);
+
                 scai::lama::DenseVector<ValueType> wavelet_fc;
-                acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
-                acquisition_temp.getColumn(wavelet_fc, 8);
+                wavelet_fc.allocate(sourceSettings.size());
+
+                for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                    wavelet_fc.setValue(i, sourceSettings[i].fc);
+                }
+
                 ValueType fcMax = wavelet_fc.max();
 
                 checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), config.get<ValueType>("DH"), vMaxTmp, config.get<std::string>("dimension"), config.get<scai::IndexType>("spatialFDorder"), comm);
@@ -151,25 +160,22 @@ namespace KITGPI
         */
 
         template <typename ValueType>
-        void checkSources(Configuration::Configuration const &config, Acquisition::Sources<ValueType> const &sources, scai::dmemo::CommunicatorPtr comm)
+        void checkSources(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings_temp, scai::dmemo::CommunicatorPtr comm)
         {
             scai::IndexType NX = config.get<scai::IndexType>("NX");
             scai::IndexType NY = config.get<scai::IndexType>("NY");
             scai::IndexType NZ = config.get<scai::IndexType>("NZ");
 
-            scai::lama::DenseMatrix<ValueType> acquisition_temp;
-            sources.getAcquisitionMat(config, acquisition_temp);
-            scai::IndexType numRows = acquisition_temp.getNumRows();
-            scai::lama::DenseVector<ValueType> row_temp;
+            scai::IndexType numRows = sourceSettings_temp.size();
             scai::IndexType X_temp;
             scai::IndexType Y_temp;
             scai::IndexType Z_temp;
 
             for (scai::IndexType row_ind = 0; row_ind < numRows; row_ind++) {
-                acquisition_temp.getRow(row_temp, row_ind);
-                X_temp = row_temp.getValue(0);
-                Y_temp = row_temp.getValue(1);
-                Z_temp = row_temp.getValue(2);
+                X_temp = sourceSettings_temp[row_ind].sourceCoords.x;
+                Y_temp = sourceSettings_temp[row_ind].sourceCoords.y;
+                Z_temp = sourceSettings_temp[row_ind].sourceCoords.z;
+
                 if (comm->getRank() == MASTERGPI) {
                     SCAI_ASSERT_ERROR(X_temp >= 0, "X coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be positive!")
                     SCAI_ASSERT_ERROR(Y_temp >= 0, "Y coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be positive!")
@@ -189,25 +195,24 @@ namespace KITGPI
         */
 
         template <typename ValueType>
-        void checkReceivers(Configuration::Configuration const &config, Acquisition::Receivers<ValueType> const &receiver, scai::dmemo::CommunicatorPtr comm)
+        void checkReceivers(Configuration::Configuration const &config, Acquisition::Receivers<ValueType> &receiver, scai::dmemo::CommunicatorPtr comm)
         {
             scai::IndexType NX = config.get<scai::IndexType>("NX");
             scai::IndexType NY = config.get<scai::IndexType>("NY");
             scai::IndexType NZ = config.get<scai::IndexType>("NZ");
 
-            scai::lama::DenseMatrix<ValueType> acquisition_temp;
+            //             scai::lama::DenseMatrix<ValueType> acquisition_temp;
+            std::vector<Acquisition::receiverSettings> acquisition_temp;
             receiver.getAcquisitionMat(config, acquisition_temp);
-            scai::IndexType numRows = acquisition_temp.getNumRows();
-            scai::lama::DenseVector<ValueType> row_temp;
+            scai::IndexType numRows = acquisition_temp.size();
             scai::IndexType X_temp;
             scai::IndexType Y_temp;
             scai::IndexType Z_temp;
 
             for (scai::IndexType row_ind = 0; row_ind < numRows; row_ind++) {
-                acquisition_temp.getRow(row_temp, row_ind);
-                X_temp = row_temp.getValue(0);
-                Y_temp = row_temp.getValue(1);
-                Z_temp = row_temp.getValue(2);
+                X_temp = acquisition_temp[row_ind].receiverCoords.x;
+                Y_temp = acquisition_temp[row_ind].receiverCoords.y;
+                Z_temp = acquisition_temp[row_ind].receiverCoords.z;
                 if (comm->getRank() == MASTERGPI) {
                     SCAI_ASSERT_ERROR(X_temp >= 0, "X coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be positive!")
                     SCAI_ASSERT_ERROR(Y_temp >= 0, "Y coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be positive!")
