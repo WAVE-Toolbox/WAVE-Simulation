@@ -1502,8 +1502,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(Inde
     spatialFDorderVec.push_back(FDorder);
     if (stencilFDmap.find(FDorder) == stencilFDmap.end())
         COMMON_THROWEXCEPTION("spatialFDorder = " << FDorder << " Unsupported spatialFDorder value.");
-    std::cout << spatialFDorderVec.at(0) << std::endl;
-    ;
 }
 //! \brief calculate and return memory usage the of a stencil matrix
 /*!

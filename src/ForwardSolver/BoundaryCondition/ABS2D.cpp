@@ -123,8 +123,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
     damping.setContextPtr(ctx);
     damping.fillFromAssembly(assembly);
 
-   damping.writeToFile("damping.mtx");
-
     HOST_PRINT(comm, "Finished with initialization of the Damping Boundary!\n\n");
 }
 

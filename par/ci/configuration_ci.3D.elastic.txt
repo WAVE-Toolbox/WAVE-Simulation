@@ -45,6 +45,9 @@ DampingBoundaryType=1
 BoundaryWidth=9
 
 DampingCoeff=8.0
+vmaxcpml=3500
+centerfrequencycpml=5
+npower=4
 
 velocityP=3500 # P-wave velocity in meter per seconds
 velocityS=2000 # S-wave velocity in meter per seconds

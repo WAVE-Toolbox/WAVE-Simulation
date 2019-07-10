@@ -40,6 +40,9 @@ FreeSurface=0
 DampingBoundary=0
 BoundaryWidth=10
 DampingCoeff=8.0
+vmaxcpml=3500
+npower=4
+centerfrequencycpml=5
 
 # Viscoelastic modelling
 numRelaxationMechanisms=0;

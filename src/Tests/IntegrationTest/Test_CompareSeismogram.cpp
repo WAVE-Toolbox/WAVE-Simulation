@@ -51,9 +51,14 @@ int main(int argc, char *argv[])
 
     ValueType misfit = 0, misfitSum = 0;
     ValueType max = 0;
+    IndexType numSamples = 0;
+    IndexType numTraces = 0;
     for (IndexType i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
         seismogramTest = receiversTest.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
         seismogramRef = receiversRef.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
+
+        numSamples += seismogramRef.getData().getNumColumns();
+        numTraces += seismogramRef.getData().getNumRows();
 
         if (seismogramRef.getData().maxNorm() > max) {
             max = seismogramRef.getData().maxNorm();
@@ -67,10 +72,12 @@ int main(int argc, char *argv[])
         misfitSum += misfit;
     }
 
-    std::cout << "\n\nL2/max: " << misfitSum / max *100 <<"%" << std::endl;
+    std::cout << "\n\n L2 = " << misfitSum << ", maximum amplitude = " << max << ", number of samples = " << numSamples << ", number of traces = " << numTraces << std::endl;
+    std::cout << "\n L2/max: " << misfitSum / (max)*100 << " %" << std::endl;
+    std::cout << "\n Average difference per sample: " << misfitSum / (max * numSamples * numTraces) << std::endl;
 
-    if (misfitSum > 0.0001 * max) {
-        std::cout << "Seismogram does not match reference solution misfit/maxAmp > 0.01%.\n\n"
+    if (misfitSum / (max * numSamples * numTraces) > 5e-7) {
+        std::cout << "Seismogram does not match reference solution average relative misfit per sample > 5e-7 %.\n\n"
                   << std::endl;
         return (1);
     } else {
