@@ -78,20 +78,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::init(s
 
     active = true;
 
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);
-
-    IndexType numLocalIndices = localIndices.size(); // Number of local indices
-
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
-    IndexType read_localIndices_temp;                             // Temporary storage, so we do not have to access the array
-
-    // 	update_PmlTemp.allocate ( dist );
-    // 	update_PmlTemp=0;
-
-    /* Distributed vectors */
-
     /* Distributed vectors */
     this->initVector(psi_vxx, ctx, dist);
     this->initVector(psi_vyy, ctx, dist);
