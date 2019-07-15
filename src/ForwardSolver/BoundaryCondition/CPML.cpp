@@ -14,7 +14,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai
 * This method will set the context, allocate the the wavefield and set the field to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist)
 {
     vector.setContextPtr(ctx);
     vector.setSameValue(dist, 0.0);
@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai:
  \f}
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::calcCoeffCPML(std::vector<ValueType> &a, std::vector<ValueType> &b, ValueType NPower, ValueType CenterFrequencyCPML, ValueType VMaxCPML, ValueType DT, ValueType DH, bool shiftGrid)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::calcCoeffCPML(std::vector<ValueType> &a, std::vector<ValueType> &b, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, ValueType const DT, ValueType const DH, bool const shiftGrid)
 {
     IndexType BoundaryWidth = a.size();
 
@@ -78,7 +78,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::calcCoeffCPML(st
  \param b CPML coefficient b
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector<ValueType> &Vec, lama::Vector<ValueType> &Psi, lama::Vector<ValueType> &a, lama::Vector<ValueType> &b)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::DenseVector<ValueType> &Vec, VectorType &Psi, VectorType const &a, VectorType const &b)
 {
     temp = a;
     Psi *= b;

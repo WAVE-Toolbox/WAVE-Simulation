@@ -28,126 +28,126 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::resetCPML()
 
 //! \brief application of cpml on the derivation of sxx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxx_x(scai::lama::Vector<ValueType> &sxx_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxx_x(scai::lama::DenseVector<ValueType> &sxx_x)
 {
     this->applyCPML(sxx_x, psi_sxx_x, a_x_half, b_x_half);
 }
 
 //! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxy_x(scai::lama::Vector<ValueType> &sxy_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxy_x(scai::lama::DenseVector<ValueType> &sxy_x)
 {
     this->applyCPML(sxy_x, psi_sxy_x, a_x, b_x);
 }
 
 //! \brief application of cpml on the derivation of sxz in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxz_x(scai::lama::Vector<ValueType> &sxz_x)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxz_x(scai::lama::DenseVector<ValueType> &sxz_x)
 {
     this->applyCPML(sxz_x, psi_sxz_x, a_x, b_x);
 }
 
 //! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxy_y(scai::lama::Vector<ValueType> &sxy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxy_y(scai::lama::DenseVector<ValueType> &sxy_y)
 {
     this->applyCPML(sxy_y, psi_sxy_y, a_y, b_y);
 }
 
 //! \brief application of cpml on the derivation of syy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syy_y(scai::lama::Vector<ValueType> &syy_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syy_y(scai::lama::DenseVector<ValueType> &syy_y)
 {
     this->applyCPML(syy_y, psi_syy_y, a_y_half, b_y_half);
 }
 
 //! \brief application of cpml on the derivation of syz in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syz_y(scai::lama::Vector<ValueType> &syz_y)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syz_y(scai::lama::DenseVector<ValueType> &syz_y)
 {
     this->applyCPML(syz_y, psi_syz_y, a_y, b_y);
 }
 
 //! \brief application of cpml on the derivation of sxz in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxz_z(scai::lama::Vector<ValueType> &sxz_z)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_sxz_z(scai::lama::DenseVector<ValueType> &sxz_z)
 {
     this->applyCPML(sxz_z, psi_sxz_z, a_z, b_z);
 }
 
 //! \brief application of cpml on the derivation of syz in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syz_z(scai::lama::Vector<ValueType> &syz_z)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_syz_z(scai::lama::DenseVector<ValueType> &syz_z)
 {
     this->applyCPML(syz_z, psi_syz_z, a_z, b_z);
 }
 
 //! \brief application of cpml on the derivation of szz in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_szz_z(scai::lama::Vector<ValueType> &szz_z)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_szz_z(scai::lama::DenseVector<ValueType> &szz_z)
 {
     this->applyCPML(szz_z, psi_szz_z, a_z_half, b_z_half);
 }
 
 //! \brief application of cpml on the derivation of vx in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxx(scai::lama::Vector<ValueType> &vxx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxx(scai::lama::DenseVector<ValueType> &vxx)
 {
     this->applyCPML(vxx, psi_vxx, a_x, b_x);
 }
 
 //! \brief application of cpml on the derivation of vy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyx(scai::lama::Vector<ValueType> &vyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyx(scai::lama::DenseVector<ValueType> &vyx)
 {
     this->applyCPML(vyx, psi_vyx, a_x_half, b_x_half);
 }
 
 //! \brief application of cpml on the derivation of vz in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzx(scai::lama::Vector<ValueType> &vzx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzx(scai::lama::DenseVector<ValueType> &vzx)
 {
     this->applyCPML(vzx, psi_vzx, a_x_half, b_x_half);
 }
 
 //! \brief application of cpml on the derivation of vx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxy(scai::lama::Vector<ValueType> &vxy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxy(scai::lama::DenseVector<ValueType> &vxy)
 {
     this->applyCPML(vxy, psi_vxy, a_y_half, b_y_half);
 }
 
 //! \brief application of cpml on the derivation of vy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyy(scai::lama::Vector<ValueType> &vyy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyy(scai::lama::DenseVector<ValueType> &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y);
 }
 
 //! \brief application of cpml on the derivation of vz in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzy(scai::lama::Vector<ValueType> &vzy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzy(scai::lama::DenseVector<ValueType> &vzy)
 {
     this->applyCPML(vzy, psi_vzy, a_y_half, b_y_half);
 }
 
 //! \brief application of cpml on the derivation of vx in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxz(scai::lama::Vector<ValueType> &vxz)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vxz(scai::lama::DenseVector<ValueType> &vxz)
 {
     this->applyCPML(vxz, psi_vxz, a_z_half, b_z_half);
 }
 
 //! \brief application of cpml on the derivation of vy in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyz(scai::lama::Vector<ValueType> &vyz)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vyz(scai::lama::DenseVector<ValueType> &vyz)
 {
     this->applyCPML(vyz, psi_vyz, a_z_half, b_z_half);
 }
 
 //! \brief application of cpml on the derivation of vz in z direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzz(scai::lama::Vector<ValueType> &vzz)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzz(scai::lama::DenseVector<ValueType> &vzz)
 {
     this->applyCPML(vzz, psi_vzz, a_z, b_z);
 }
@@ -166,7 +166,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::apply_vzz(scai
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, IndexType BoundaryWidth, ValueType NPower, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML3D<ValueType>::init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 

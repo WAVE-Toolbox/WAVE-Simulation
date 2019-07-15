@@ -28,18 +28,18 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML2D(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType BoundaryWidth, ValueType NPower, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface);
 
                 void resetCPML();
 
-                void apply_sxx_x(scai::lama::Vector<ValueType> &sxx_x);
-                void apply_sxy_x(scai::lama::Vector<ValueType> &sxy_x);
-                void apply_sxy_y(scai::lama::Vector<ValueType> &sxy_y);
-                void apply_syy_y(scai::lama::Vector<ValueType> &syy_y);
-                void apply_vxx(scai::lama::Vector<ValueType> &vxx);
-                void apply_vyx(scai::lama::Vector<ValueType> &vyx);
-                void apply_vxy(scai::lama::Vector<ValueType> &vxy);
-                void apply_vyy(scai::lama::Vector<ValueType> &vyy);
+                void apply_sxx_x(scai::lama::DenseVector<ValueType> &sxx_x);
+                void apply_sxy_x(scai::lama::DenseVector<ValueType> &sxy_x);
+                void apply_sxy_y(scai::lama::DenseVector<ValueType> &sxy_y);
+                void apply_syy_y(scai::lama::DenseVector<ValueType> &syy_y);
+                void apply_vxx(scai::lama::DenseVector<ValueType> &vxx);
+                void apply_vyx(scai::lama::DenseVector<ValueType> &vyx);
+                void apply_vxy(scai::lama::DenseVector<ValueType> &vxy);
+                void apply_vyy(scai::lama::DenseVector<ValueType> &vyy);
 
               private:
                 // For the CPML Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
