@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
     Acquisition::Receivers<ValueType> receiversRef;
     receiversRef.init(config, Coordinates, ctx, dist);
 
-    std::string filenameTest = config.get<std::string>("SeismogramFilename");
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
+    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+
+    std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(sourceSettings[0].sourceNo);
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
 

@@ -38,25 +38,24 @@ int main(int argc, const char *argv[])
     typedef double ValueType;
     double start_t, end_t; /* For timing */
 
-    /* inter node communicator */
-    dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
-    common::Settings::setRank(commAll->getNodeRank());
-
-    /* --------------------------------------- */
-    /* Read configuration from file            */
-    /* --------------------------------------- */
-
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
                   << std::endl;
         return (2);
     }
 
+    /* --------------------------------------- */
+    /* Read configuration from file            */
+    /* --------------------------------------- */
     Configuration::Configuration config(argv[1]);
     verbose = config.get<bool>("verbose");
 
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
+
+    /* inter node communicator */
+    dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+    common::Settings::setRank(commAll->getNodeRank());
 
     HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
     if (commAll->getRank() == MASTERGPI) {
@@ -68,8 +67,9 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
+
     if (config.get<bool>("useVariableGrid"))
-    CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+        CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
     /* --------------------------------------- */
     /* communicator for shot parallelisation   */
     /* --------------------------------------- */
@@ -169,7 +169,15 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
-    Acquisition::Sources<ValueType> sources(config, modelCoordinates, ctx, dist);
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
+    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+    // build Settings for SU?
+    //settings = su.getSourceSettings(shotNumber); // currently not working, expecting a sourceSettings struct and not a vector of sourceSettings structs
+    //         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
+    //         allSettings = su.getSourceSettingsVec();
+
+    Acquisition::Sources<ValueType> sources;
+
     Acquisition::Receivers<ValueType> receivers;
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
@@ -196,9 +204,9 @@ int main(int argc, const char *argv[])
         HOST_PRINT(commAll, "", "initialising model on discontineous grid finished\n\n")
     } else {
         model->init(config, ctx, dist);
+        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     }
-    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, *model, commShot);
+    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
 
     /* --------------------------------------- */
     /* Wavefields                              */
@@ -219,17 +227,24 @@ int main(int argc, const char *argv[])
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
 
-    dmemo::BlockDistribution shotDist(sources.getNumShots(), commInterShot);
+    // calculate vector with unique shot numbers and get number of shots
+    std::vector<scai::IndexType> uniqueShotNos;
+    calcuniqueShotNo(uniqueShotNos, sourceSettings);
+    IndexType numshots = uniqueShotNos.size();
+    dmemo::BlockDistribution shotDist(numshots, commInterShot);
 
-    for (IndexType shotNumber = shotDist.lb(); shotNumber < shotDist.ub(); shotNumber++) {
+    for (IndexType shotInd = shotDist.lb(); shotInd < shotDist.ub(); shotInd++) {
+        IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
-        if (!config.get<bool>("runSimultaneousShots"))
-            sources.init(config, modelCoordinates, ctx, dist, shotNumber);
+        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
+        Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+        sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotNumber + 1 << " of " << sources.getNumShots() << "\nTotal Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotDist.global2Local(shotInd) + 1 << " of " << shotDist.getLocalSize() << " (shot no: " << shotNumber << ")\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();
@@ -237,26 +252,22 @@ int main(int argc, const char *argv[])
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
             if (tStep % 100 == 0 && tStep != 0) {
-                HOST_PRINT(commShot, "Calculating time step " << tStep << "\n");
+                HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
             }
 
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
             if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName"), tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
+                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
             }
         }
 
         end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping (shot " << shotNumber << ") in " << end_t - start_t << " sec.\n");
+        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n");
 
         receivers.getSeismogramHandler().normalize();
 
-        if (!config.get<bool>("runSimultaneousShots")) {
-            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-        } else {
-            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename"), modelCoordinates);
-        }
+        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
 
         solver->resetCPML();
     }

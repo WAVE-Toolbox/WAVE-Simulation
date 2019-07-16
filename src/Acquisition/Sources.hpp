@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "AcquisitionGeometry.hpp"
+#include "AcquisitionSettings.hpp"
 #include "SourceSignal/all.hpp"
 #include "suHandler.hpp"
-#include "AcquisitionSettings.hpp"
 
 namespace KITGPI
 {
@@ -34,27 +34,14 @@ namespace KITGPI
         {
 
           public:
-            //! \brief Default constructor
-            Sources(){};
-
-            explicit Sources(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            explicit Sources(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
-
             //! \brief Default destructor
             ~Sources(){};
-            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
-
             void init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber);
             void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
-            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx);
-            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::IndexType shotNumber);
+            void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType>);
 
             void getAcquisitionMat(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings);
-
-            scai::IndexType getNumShots();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals
@@ -69,7 +56,6 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> wavelet_amp;         //!< Amplitude of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_tshift;      //!< Time shift of synthetic wavelet
 
-            scai::IndexType numShots;         //!< number of shots =1 for simultaneous execution =Number of Sources for serial execution
             bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
             bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used
 
