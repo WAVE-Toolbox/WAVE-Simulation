@@ -145,7 +145,7 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     model->init(config, ctx, dist);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commShot);
+    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
 
     /* --------------------------------------- */
     /* Forward solver                          */
@@ -177,8 +177,7 @@ int main(int argc, const char *argv[])
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd + 1 << " of " << numshots << " (shot no: " << shotNumber << ")"
-                                                             << "\nTotal Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotDist.global2Local(shotInd) + 1 << " of " << shotDist.getLocalSize() << " (shot no: " << shotNumber << ")\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();
@@ -186,7 +185,7 @@ int main(int argc, const char *argv[])
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
             if (tStep % 100 == 0 && tStep != 0) {
-                HOST_PRINT(commShot, "Calculating time step " << tStep << "\n");
+                HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
             }
 
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
@@ -197,7 +196,7 @@ int main(int argc, const char *argv[])
         }
 
         end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping (shot: " << shotInd + 1 << " , shot no: " << shotNumber << ") in " << end_t - start_t << " sec.\n");
+        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n");
 
         receivers.getSeismogramHandler().normalize();
 

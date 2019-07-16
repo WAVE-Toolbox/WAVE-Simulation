@@ -97,7 +97,7 @@ namespace KITGPI
                         allSettings.push_back(thisSettings);
                     }
                 }
-                std::cout << "Source acquisition file (" << fileName << ") read in." << std::endl;
+                //       std::cout << "Source acquisition file (" << fileName << ") read in." << std::endl;
             } else {
                 COMMON_THROWEXCEPTION("Could not open source acquisition file " << fileName)
             }
@@ -187,7 +187,7 @@ namespace KITGPI
                         allSettings.push_back(thisSettings);
                     }
                 }
-                std::cout << "Receiver acquisition file (" << fileName << ") read in." << std::endl;
+                //  std::cout << "Receiver acquisition file (" << fileName << ") read in." << std::endl;
             } else {
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file " << fileName)
             }

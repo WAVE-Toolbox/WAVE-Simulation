@@ -12,7 +12,7 @@ NY=100                    # depth
 NZ=100                    # horizontal 2
 
 # define Partitioning
-ProcNS=1                  # Number of shot domains
+ProcNS=2                  # Number of shot domains
 
 # distance between two grid points
 DH=50                     # in meter

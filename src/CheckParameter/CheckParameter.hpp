@@ -113,7 +113,7 @@ namespace KITGPI
                 }
 
                 if (DH > vMin / (2 * fcMax * N)) {
-                    std::cerr << "\nCriterion to avoid numerical dispersion is not met! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n";
+                    HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n");
                 }
             }
         }
