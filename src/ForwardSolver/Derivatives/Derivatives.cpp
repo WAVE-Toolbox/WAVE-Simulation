@@ -173,37 +173,50 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * spatialFDorder);
-    IndexType Y = 0;
-    ValueType fdCoeff = 0;
-    ;
-    IndexType ImageIndex = 0;
-    IndexType columnIndex = 0;
+
+    const ValueType ZERO = 0;  
+
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
         for (IndexType j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + (j - spatialFDorder / 2 + 1);
+            IndexType Y = coordinate.y + (j - spatialFDorder / 2 + 1);
 
-            fdCoeff = stencilFD.values()[j];
+            ValueType fdCoeff = stencilFD.values()[j];
+            ValueType diffCoeff = ZERO;
 
             //   ImageIndex = spatialFDorder - (2 + 2 * coordinate.y + j);
             if (spatialFDorder >= (2 + 2 * coordinate.y + j)) {
-                ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
-                fdCoeff -= stencilFD.values()[ImageIndex];
+                IndexType ImageIndex = spatialFDorder - 2 - 2 * coordinate.y - j;
+                diffCoeff = stencilFD.values()[ImageIndex];
             }
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff);
+                IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                if (useSparseFreeSurface)
+                    assembly.push(ownedIndex, columnIndex, fdCoeff - diffCoeff);
+                else if (ZERO != diffCoeff)
+                    assembly.push(ownedIndex, columnIndex, -diffCoeff );
             }
         }
     }
 
-    DyfFreeSurface = lama::zero<SparseFormat>(dist, dist);
-    DyfFreeSurface.fillFromAssembly(assembly);
-    DyfFreeSurface *= 1 / modelCoordinates.getDH();
+    DyfFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
+    DyfFreeSurfaceSparse.fillFromAssembly(assembly);
+    DyfFreeSurfaceSparse *= 1 / modelCoordinates.getDH();
+
+    if (!useSparseFreeSurface)
+    {
+        // define the stencil matrix for hybrid matrix
+        // ToDo: why not simply use the stencil matrix Dyb
+        common::Stencil1D<ValueType> stencilId(1);
+        common::Stencil3D<ValueType> stencil(stencilId, stencilFD, stencilId);
+        DyfFreeSurfaceStencil.define(dist, stencil);
+        DyfFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
+    }
+
+    // std::cout << "memory usage DyfFreeSurface = " << getDyfFreeSurface().getMemoryUsage() << std::endl;
 }
 
 //! \brief Calculate DyfFreeSurface matrix
@@ -220,35 +233,51 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
     lama::MatrixAssembly<ValueType> assembly;
     assembly.reserve(ownedIndexes.size() * spatialFDorder);
-    IndexType Y = 0;
-    ValueType fdCoeff = 0;
-    IndexType ImageIndex = 0;
-    IndexType columnIndex = 0;
-    IndexType j = 0;
+
+    const ValueType ZERO = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
 
-        for (j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + (j - spatialFDorder / 2);
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+            IndexType Y = coordinate.y + (j - spatialFDorder / 2);
 
-            fdCoeff = stencilFD.values()[j];
+            ValueType fdCoeff = stencilFD.values()[j];
+            ValueType diffCoeff = ZERO;
 
             if (spatialFDorder >= (1 + 2 * coordinate.y + j)) {
-                ImageIndex = spatialFDorder - (1 + 2 * coordinate.y + j);
-                fdCoeff -= stencilFD.values()[ImageIndex];
+                IndexType ImageIndex = spatialFDorder - (1 + 2 * coordinate.y + j);
+                diffCoeff = stencilFD.values()[ImageIndex];
             }
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff);
+                IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                if (useSparseFreeSurface)
+                    assembly.push(ownedIndex, columnIndex, fdCoeff - diffCoeff);  // push all coefficients
+                else if (ZERO != diffCoeff)
+                    assembly.push(ownedIndex, columnIndex, -diffCoeff );  // push only diffs to stencil matrix
             }
         }
     }
 
-    DybFreeSurface = lama::zero<SparseFormat>(dist, dist);
-    DybFreeSurface.fillFromAssembly(assembly);
-    DybFreeSurface *= 1 / modelCoordinates.getDH();
+    DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
+    DybFreeSurfaceSparse.fillFromAssembly(assembly);
+    DybFreeSurfaceSparse *= 1 / modelCoordinates.getDH();
+
+    if (!useSparseFreeSurface)
+    {
+        // define the stencil matrix for hybrid matrix
+        // ToDo: why not simply use the stencil matrix Dyb
+        common::Stencil1D<ValueType> stencilId(1);
+        common::Stencil1D<ValueType> stencilBD;
+        stencilBD.transpose( stencilFD );
+        stencilBD.scale( -1 );
+        common::Stencil3D<ValueType> stencil(stencilId, stencilBD, stencilId);
+        DybFreeSurfaceStencil.define(dist, stencil);
+        DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
+    }
+
+    // std::cout << "memory usage DybFreeSurface = " << getDybFreeSurface().getMemoryUsage() << std::endl;
 }
 
 //! \brief Getter method for the spatial FD-order
@@ -262,14 +291,38 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() const
 {
-    return (DybFreeSurface);
+    if (useSparseFreeSurface)
+        return DybFreeSurfaceSparse;
+    else
+        return DybFreeSurfaceHybrid;
+}
+
+template <typename ValueType>
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() 
+{
+    if (useSparseFreeSurface)
+        return DybFreeSurfaceSparse;
+    else
+        return DybFreeSurfaceHybrid;
 }
 
 //! \brief Getter method for derivative matrix DyfFreeSurface
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() const
 {
-    return (DyfFreeSurface);
+    if (useSparseFreeSurface)
+        return DyfFreeSurfaceSparse;
+    else
+        return DyfFreeSurfaceHybrid;
+}
+
+template <typename ValueType>
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface()
+{
+    if (useSparseFreeSurface)
+        return DyfFreeSurfaceSparse;
+    else
+        return DyfFreeSurfaceHybrid;
 }
 
 //! \brief Getter method for derivative matrix Dxf

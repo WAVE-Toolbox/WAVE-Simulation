@@ -32,6 +32,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::Di
 {
     useFreeSurface = config.get<IndexType>("FreeSurface");
     useSparse = false;
+    useSparseFreeSurface = false;
     if (useSparse)
         initializeMatrices(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<IndexType>("spatialFDorder"), comm);
     else

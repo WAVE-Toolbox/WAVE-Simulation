@@ -60,11 +60,12 @@ namespace KITGPI
                 using Derivatives<ValueType>::DzfSparse;
                 using Derivatives<ValueType>::DzbSparse;
 
-                using Derivatives<ValueType>::DyfFreeSurface;
-                using Derivatives<ValueType>::DybFreeSurface;
+                // using Derivatives<ValueType>::DyfFreeSurface;
+                // using Derivatives<ValueType>::DybFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
+                using Derivatives<ValueType>::useSparseFreeSurface;
                 using Derivatives<ValueType>::spatialFDorder;
             };
         } /* end namespace Derivatives */
