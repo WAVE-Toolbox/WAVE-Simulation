@@ -9,6 +9,7 @@ NZ=100 # horizontal 2
 
 # define Partitioning
 ProcNS=1                  # Number of shot domains
+ShotDomain=0
 
 # define distance between two grid points in meter
 DH=50
