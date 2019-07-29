@@ -152,7 +152,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
  \param kInv reciprocal of CPML coefficient k
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector<ValueType> &Vec, lama::Vector<ValueType> &Psi, lama::Vector<ValueType> &a, lama::Vector<ValueType> &b, lama::Vector<ValueType> &kInv)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector<ValueType> &Vec, lama::Vector<ValueType> &Psi, const lama::Vector<ValueType> &a, const lama::Vector<ValueType> &b, const lama::Vector<ValueType> &kInv)
 {
     // the following directive guarantees that two sparse vectors with same number of entries have the same pattern
 

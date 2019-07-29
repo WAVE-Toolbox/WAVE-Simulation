@@ -41,9 +41,9 @@ namespace KITGPI
                                            scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half,
                                            scai::IndexType i);
 
-                /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::Vector<ValueType> &Psi, scai::lama::Vector<ValueType> &a, scai::lama::Vector<ValueType> &b, scai::lama::Vector<ValueType> &kInv);
+                /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::Vector<ValueType> &Psi, const scai::lama::Vector<ValueType> &a, const scai::lama::Vector<ValueType> &b, const scai::lama::Vector<ValueType> &kInv);
 
-                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 VectorType temp; //!< temporary vector for pml application
 
