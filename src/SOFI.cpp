@@ -204,8 +204,8 @@ int main(int argc, const char *argv[])
         HOST_PRINT(commAll, "", "initialising model on discontineous grid finished\n\n")
     } else {
         model->init(config, ctx, dist);
-        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     }
+    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
 
     /* --------------------------------------- */
