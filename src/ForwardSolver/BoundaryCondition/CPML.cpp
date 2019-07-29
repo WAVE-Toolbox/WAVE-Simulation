@@ -154,6 +154,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::ResetCoeffFreeSu
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::Vector<ValueType> &Vec, lama::Vector<ValueType> &Psi, lama::Vector<ValueType> &a, lama::Vector<ValueType> &b, lama::Vector<ValueType> &kInv)
 {
+    // the following directive guarantees that two sparse vectors with same number of entries have the same pattern
+
+    SCAI_SPARSE_VECTOR_SAME_PATTERN
+
     temp = a;
     Psi *= b;
     temp *= Vec;
