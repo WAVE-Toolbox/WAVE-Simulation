@@ -12,7 +12,7 @@ gcc:
   script:
     - echo "g++ Version:" && g++ --version
     - mkdir build && cd "$_"
-    - SCAI_DIR=/data14/software/scai_lama/build_dev/ -Geographer_DIR=/data14/software/geographer/build cmake  -DSOFI_VALUE_TYPE=double ../src/ -DCMAKE_INSTALL_PREFIX=./
+    - SCAI_DIR=/data14/software/scai_lama/build_dev/ Geographer_DIR=/data14/software/geographer/build cmake  -DSOFI_VALUE_TYPE=double ../src/ -DCMAKE_INSTALL_PREFIX=./
     - make install -j 4 
   artifacts:
     when: on_success
