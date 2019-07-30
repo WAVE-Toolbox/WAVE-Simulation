@@ -62,11 +62,11 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices
     }
 
     if (useFreeSurface == 1) {
-        DyfFreeSurface.redistribute(dist, dist);
+        this->getDyfFreeSurface().redistribute(dist, dist);
 
         if (isElastic) {
             if (!useVarGrid) {
-                DybFreeSurface.redistribute(dist, dist);
+                this->getDybFreeSurface().redistribute(dist, dist);
 
             } else {
                 DybStaggeredXFreeSurface.redistribute(dist, dist);
@@ -93,21 +93,21 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(Confi
     }
 
     if (useSparse) {
-        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of derivative matrices per core " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
+        HOST_PRINT(dist->getCommunicatorPtr(), "size of derivative matrices per core " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
                                                                                              << "\n",
-                   "Memory of derivative Matrix: " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 << " MB, "
+                   "Memory of one derivative Matrix: " << this->getMemorySparseMatrix(dist, modelCoordinates) / 1024 / 1024 << " MB, "
                                                    << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumDMatrices << "\n");
     } else {
-        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of derivative matrices per core " << this->getMemorySparseMatrix(dist) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
+        HOST_PRINT(dist->getCommunicatorPtr(), "size of derivative matrices per core " << this->getMemoryStencilMatrix(dist) / 1024 / 1024 * NumDMatrices / dist->getNumPartitions() << " MB"
                                                                                              << "\n",
-                   "Memory of derivative Matrix: " << this->getMemoryStencilMatrix(dist) / 1024 / 1024 << " MB, "
+                   "Memory of one derivative Matrix: " << this->getMemoryStencilMatrix(dist) / 1024 / 1024 << " MB, "
                                                    << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumDMatrices << "\n");
     }
 
     if (useVarGrid) {
-        HOST_PRINT(dist->getCommunicatorPtr(), "Total size of interpolation matrices per core " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 * NumInterpMatrices / dist->getNumPartitions() << " MB"
+        HOST_PRINT(dist->getCommunicatorPtr(), "size of interpolation matrices per core " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 * NumInterpMatrices / dist->getNumPartitions() << " MB"
                                                                                                 << "\n",
-                   "Memory of interpolation Matrix: " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 << " MB, "
+                   "Memory of one interpolation Matrix: " << this->getMemoryInterpolationMatrix(dist) / 1024 / 1024 << " MB, "
                                                       << " partitions : " << dist->getNumPartitions() << ", Num matrices : " << NumInterpMatrices << "\n");
     }
 }
@@ -214,14 +214,14 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     this->calcDyfFreeSurface(modelCoordinates, dist);
-    DyfFreeSurface.setContextPtr(ctx);
-    DyfFreeSurface *= this->DT;
+    this->getDyfFreeSurface().setContextPtr(ctx);
+    this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
             this->calcDybFreeSurface(modelCoordinates, dist);
-            DybFreeSurface *= this->DT;
-            DybFreeSurface.setContextPtr(ctx);
+            this->getDybFreeSurface() *= this->DT;
+            this->getDybFreeSurface().setContextPtr(ctx);
 
         } else {
 

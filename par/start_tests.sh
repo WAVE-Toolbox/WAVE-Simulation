@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup test environment
-export OMP_NUM_THREADS=2
+export OMP_NUM_THREADS=1
 export NUM_MPI_PROCESSES=4
 export SCAI_UNSUPPORTED=IGNORE
 

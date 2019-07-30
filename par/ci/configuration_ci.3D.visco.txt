@@ -13,6 +13,7 @@ partitioning=1
 useVariableFDoperators=0
 
 ProcNS=1                  # Number of shot domains
+ShotDomain=0
 
 # define distance between two grid points in meter
 DH=50

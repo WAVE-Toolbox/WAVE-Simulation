@@ -25,6 +25,7 @@ NY=303                    # depth
 NZ=104                      # horizontal 2
 
 # define Partitioning
+ShotDomain=0
 ProcNS=1                  # Number of shot domains
 
 # distance between two grid points

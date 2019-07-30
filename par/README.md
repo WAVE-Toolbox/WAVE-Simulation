@@ -4,11 +4,12 @@ Since this finite-difference simulation code is based on the [LAMA framework](ww
 
 We successfully tested LAMA on different operating systems e.g. macOS (Sierra, El Capitan) and Linux (SUSE) as well as on a wide range of architectures e.g. HPC systems and GPUs.
 
-Before the modelling code can be started, you have to set the paths to the installation of the [LAMA framework](www.libama.org):
-- `export SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
+Before the modelling code can be started, you have compile the code using cmake. Following example shows how to compile with 4 tasks
+Further information can be found in `README.cmake` in the main directory
 
-You can also set the variable with the make command in the build directory
-- `make all SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
+- ``mkdir build && cd build``
+- ``SCAI_DIR="lama install directory" cmake -DSOFI_VALUE_TYPE=float ../src/ -DCMAKE_INSTALL_PREFIX=./``
+- ``make install -j 4``
 
 
 ## Start the simulation

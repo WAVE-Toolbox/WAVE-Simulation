@@ -19,6 +19,7 @@ NZ=100                    # horizontal 2
 
 # define Partitioning
 ProcNS=2                  # Number of shot domains
+ShotDomain=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
 
 # distance between two grid points
 DH=50                     # in meter

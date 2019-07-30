@@ -6,6 +6,7 @@
 #include <scai/lama.hpp>
 #include <scai/lama/matrix/MatrixAssembly.hpp>
 #include <scai/lama/matrix/StencilMatrix.hpp>
+#include <scai/lama/matrix/HybridMatrix.hpp>
 #include <scai/tracing.hpp>
 
 /* Forward declaration for friendship */
@@ -74,7 +75,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
 
                 //! \brief Default constructor
-                Derivatives(){};
+                Derivatives(): DyfFreeSurfaceHybrid(DyfFreeSurfaceStencil, DyfFreeSurfaceSparse),
+                               DybFreeSurfaceHybrid(DybFreeSurfaceStencil, DybFreeSurfaceSparse){};
 
                 //! \brief Default destructor
                 ~Derivatives(){};
@@ -108,8 +110,12 @@ namespace KITGPI
 
                 //! \brief Getter method for derivative matrix DyfFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
+                scai::lama::Matrix<ValueType> &getDyfFreeSurface();
+                
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
+                scai::lama::Matrix<ValueType> &getDybFreeSurface();
+                
                 virtual scai::lama::Matrix<ValueType> const &getDybStaggeredXFreeSurface() const;
                 virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZFreeSurface() const;
 
@@ -197,9 +203,18 @@ namespace KITGPI
                 SparseFormat DyfStaggeredZSparse; //!< Derivative matrix Dyf for points staggered in x direction
                 SparseFormat DybStaggeredZSparse; //!< Derivative matrix Dyf for points staggered in x direction
 
-                SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
-                SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
+//                 SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
+//                 SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
 
+                SparseFormat DyfFreeSurfaceSparse; //!< Derivative matrix DyfFreeSurface
+                scai::lama::StencilMatrix<ValueType> DyfFreeSurfaceStencil;  //!< stencil part if hybrid format is used
+                scai::lama::HybridMatrix<ValueType> DyfFreeSurfaceHybrid; // HybridMatrix( DyfFreeSurfaceSparse, DyfFreeSurfaceStencil );
+
+                SparseFormat DybFreeSurfaceSparse; //!< Derivative matrix DybFreeSurface
+                scai::lama::StencilMatrix<ValueType> DybFreeSurfaceStencil;  //!< stencil part if hybrid format is used
+                scai::lama::HybridMatrix<ValueType> DybFreeSurfaceHybrid; // HybridMatrix( DybFreeSurfaceSparse, DybFreeSurfaceStencil );
+
+                
                 SparseFormat DybStaggeredXFreeSurface; //!< Derivative matrix DybFreeSurface
                 SparseFormat DybStaggeredZFreeSurface; //!< Derivative matrix DybFreeSurface
 
@@ -212,10 +227,10 @@ namespace KITGPI
 
                 scai::IndexType useFreeSurface = 0; //!< Switch to use free surface or not
                 bool useSparse = false;             //!< Switch to use Sparse Matrices
+                bool useSparseFreeSurface = false; 
                 bool useVarFDorder = false;         //!< Switch to use variable FDorder (layered)
                 bool useVarGrid = false;            //!< Switch to use variable Grid
                 bool isElastic = false;             //!< Switch to use variable Grid
-
               private:
                 std::map<scai::IndexType, scai::common::Stencil1D<ValueType>> stencilFDmap; // FD-stencil
                                                                                             //     scai::IndexType spatialFDorder = 0;                                         //!< FD-Order of spatial derivative stencils

@@ -31,7 +31,8 @@ namespace KITGPI
 
               protected:
                 typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
-                                                                                 //     typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                                                                                //     ////
+//typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 void resetVector(scai::lama::Vector<ValueType> &vector);
 

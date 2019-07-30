@@ -67,13 +67,14 @@ namespace KITGPI
 
                 using Derivatives<ValueType>::DyfStaggeredXSparse;
                 using Derivatives<ValueType>::DybStaggeredXSparse;
-
-                using Derivatives<ValueType>::DyfFreeSurface;
-                using Derivatives<ValueType>::DybFreeSurface;
+/*
+                using Derivatives<ValueType>::DyfFreeSurfaceSparse;
+                using Derivatives<ValueType>::DybFreeSurfaceSparse;*/
                 using Derivatives<ValueType>::DybStaggeredXFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
+               using Derivatives<ValueType>::useSparseFreeSurface;
                 using Derivatives<ValueType>::useVarGrid;
                 using Derivatives<ValueType>::isElastic;
 

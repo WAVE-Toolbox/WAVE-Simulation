@@ -2,6 +2,7 @@
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/dmemo/GridDistribution.hpp>
+#include <scai/dmemo/GenBlockDistribution.hpp>
 #include <scai/lama.hpp>
 
 #include <iostream>
@@ -31,7 +32,7 @@ extern bool verbose; // global variable definition
 int main(int argc, const char *argv[])
 {
     // parse command line arguments to be set as environment variables, e.g.
-    // --SCAI_CONTEXT=CUDA
+    // --SCAI_CONTEXT=CUDA --SCAI_SETTINGS=domains.txt
 
     common::Settings::parseArgs(argc, argv);
 
@@ -62,6 +63,14 @@ int main(int argc, const char *argv[])
         config.print();
     }
 
+	    std::string settingsFilename;    // filename for processor specific settings
+	    if ( common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS") )
+	    {
+	        // each processor reads line of settings file that matches its node name and node rank
+	        common::Settings::readSettingsFile( settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank() );
+
+	    }
+	    
     /* --------------------------------------- */
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
@@ -74,28 +83,72 @@ int main(int argc, const char *argv[])
     /* communicator for shot parallelisation   */
     /* --------------------------------------- */
 
-    IndexType npS = config.get<IndexType>("ProcNS");
-    IndexType npM = commAll->getSize() / npS;
-    if (commAll->getSize() != npS * npM) {
-        HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                                                                  << ") is not multiple of shots in " << argv[1] << ": ProcNS = " << npS << "\n")
-        return (2);
+    /* Definition of shot domains */
+    int shotDomain = config.get<int>("ShotDomain");
+    
+    int domain;   // will contain the domain to which this processor belongs
+
+    if (shotDomain == 0)
+    {
+        // Definition by number of shot domains
+
+       IndexType numDomains = config.get<IndexType>("ProcNS");    // total number of shot domains
+       IndexType npDomain = commAll->getSize() / numDomains;      // number of processors for each shot domain
+
+       if (commAll->getSize() != numDomains * npDomain) {
+           HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                               << ") is not multiple of shot domains in " << argv[1] << ": ProcNS = " << numDomains << "\n")
+           return (2);
+       }
+ 
+       domain = commAll->getRank() / npDomain;
+    }
+    else if (shotDomain == 1 )
+    {
+        // All processors on one node build one domain
+
+        domain = commAll->getNodeId();
+    }
+    else 
+    {
+        bool set = common::Settings::getEnvironment( domain, "DOMAIN" );
+
+        if (!set)
+        {
+            std::cout << *commAll << ", node = " << commAll->getNodeName() 
+                      << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize()
+                      << ": environment variable DOMAIN not set" << std::endl;
+        }
+ 
+        set = commAll->all( set );   // make sure that all processors will terminate
+
+        if (!set)
+        {
+            return(2);
+        }
     }
 
     CheckParameter::checkNumberOfProcesses(config, commAll);
 
     // Build subsets of processors for the shots
-    common::Grid2D procAllGrid(npS, npM);
-    IndexType procAllGridRank[2];
-    procAllGrid.gridPos(procAllGridRank, commAll->getRank());
 
-    // communicator for set of processors that solve one shot
-    dmemo::CommunicatorPtr commShot = commAll->split(procAllGridRank[0]);
+    dmemo::CommunicatorPtr commShot = commAll->split(domain);
 
-    // this communicator is used for reducing the solutions of problems
     dmemo::CommunicatorPtr commInterShot = commAll->split(commShot->getRank());
-
+    
     SCAI_DMEMO_TASK(commShot)
+    
+
+//     // Build subsets of processors for the shots
+//     common::Grid2D procAllGrid(npS, npM);
+//     IndexType procAllGridRank[2];
+//     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
+
+ 
+    // this communicator is used for reducing the solutions of problems
+
+
+
 
     /* --------------------------------------- */
     /* Context and Distribution                */
@@ -231,9 +284,28 @@ int main(int argc, const char *argv[])
     std::vector<scai::IndexType> uniqueShotNos;
     calcuniqueShotNo(uniqueShotNos, sourceSettings);
     IndexType numshots = uniqueShotNos.size();
-    dmemo::BlockDistribution shotDist(numshots, commInterShot);
 
-    for (IndexType shotInd = shotDist.lb(); shotInd < shotDist.ub(); shotInd++) {
+
+    
+	    /* general block distribution of shot domains accorting to their weights */
+	    IndexType firstShot = 0;
+	    IndexType lastShot   = numshots - 1;
+
+	    float processorWeight = 1.0f;
+	    common::Settings::getEnvironment(processorWeight, "WEIGHT");
+	    float domainWeight = commShot->sum(processorWeight);
+
+	    if ( commShot->getRank() == 0)
+	    {
+	         // master processors of shot domains determine the load distribution
+	         auto shotDist = dmemo::genBlockDistributionByWeight(numshots, domainWeight, commInterShot );
+	         firstShot = shotDist->lb();
+	         lastShot = shotDist->ub();
+	    }
+	    commShot->bcast( &firstShot, 1, 0 );
+	    commShot->bcast( &lastShot, 1, 0 );
+
+	    for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
         IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
@@ -244,7 +316,9 @@ int main(int argc, const char *argv[])
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotDist.global2Local(shotInd) + 1 << " of " << shotDist.getLocalSize() << " (shot no: " << shotNumber << ")\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+
+       HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), domain = " << domain << "\n", 
+                                "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();

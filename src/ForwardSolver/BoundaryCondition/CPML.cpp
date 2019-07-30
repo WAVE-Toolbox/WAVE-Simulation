@@ -14,10 +14,12 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::resetVector(scai
 * This method will set the context, allocate the the wavefield and set the field to zero.
 */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist)
+void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     vector.setContextPtr(ctx);
-    vector.setSameValue(dist, 0.0);
+    vector.allocate(dist);
+
+    resetVector(vector);
 }
 
 /*! \brief set CPML coefficients
@@ -25,8 +27,8 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::initVector(scai:
  * method to set cpml coefficients for a given gridpoint
  *  
  \f{eqnarray*}{
-        a =& \frac{d}{d+\alpha} (b-1) \\
-        b =& e^{-\Delta t (d+\alpha)} \\
+        a =& \frac{d}{k(d+k\alpha)} (b-1) \\
+        b =& e^{-\Delta t (d/k+ \alpha)} \\
         d =& d_0 (\frac{w_b-g_d}{w_b})^N \\
         d_0 =& \frac{-(N+1)v_{max} \ln (8\cdot 10^{-4})}{2 w_b \Delta x} \\
         \alpha =& \pi f_c (1-(\frac{w_b-g_d}{w_b})^N)
@@ -80,6 +82,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::calcCoeffCPML(st
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::applyCPML(lama::DenseVector<ValueType> &Vec, VectorType &Psi, VectorType const &a, VectorType const &b)
 {
+    // the following directive guarantees that two sparse vectors with same number of entries have the same pattern
+
+    SCAI_SPARSE_VECTOR_SAME_PATTERN
+
     temp = a;
     Psi *= b;
     temp *= Vec;

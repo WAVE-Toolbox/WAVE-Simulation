@@ -23,6 +23,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
     if (config.get<IndexType>("partitioning") != 1)
         useSparse = true;
+        useSparseFreeSurface = true;
 
     if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
@@ -49,6 +50,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     DT = config.get<ValueType>("DT");
 
     useSparse = true;
+    useSparseFreeSurface = true;
     SCAI_ASSERT(config.get<IndexType>("partitioning") != 1, "grid partition is not available for varoable FDorders")
 
     useVarFDorder = true;
@@ -267,20 +269,17 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
-    IndexType Y = 0;
-    IndexType columnIndex = 0;
-    ValueType DH = 0;
-    IndexType dhFactor = 0;
-    IndexType layer = 0;
 
-    ValueType fdCoeff = 0;
-    IndexType ImageIndex = 0;
+    const ValueType ZERO = 0;  
+    
+    ValueType DH = ZERO;
+    IndexType dhFactor = ZERO;
+
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        layer = modelCoordinates.getLayer(coordinate);
+        IndexType layer = modelCoordinates.getLayer(coordinate);
 
         //Transition from coarse (layer) to fine grid (layer+1) uses fine operator for Dyf
         if ((modelCoordinates.locatedOnInterface(coordinate)) && (modelCoordinates.getTransition(coordinate) == -1)) {
@@ -305,23 +304,39 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         }
 
         for (IndexType j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
-            fdCoeff = stencilFDmap[spatialFDorder].values()[j];
-
+            IndexType Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
+            
+           ValueType fdCoeff = stencilFDmap[spatialFDorder].values()[j];
+           ValueType diffCoeff = ZERO;
+           
             if (spatialFDorder >= (2 + 2 * coordinate.y / dhFactor + j)) {
-                ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
-                fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
+                IndexType ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
+                diffCoeff = stencilFDmap[spatialFDorder].values()[ImageIndex];
             }
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff / DH);
+                IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
+                if (useSparseFreeSurface)
+                assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff)/ DH); // push all coefficients
+                else if (ZERO != diffCoeff)
+                    assembly.push(ownedIndex, columnIndex, -diffCoeff / DH); // push only diffs to stencil matrix
             }
         }
     }
 
-    DyfFreeSurface = lama::zero<SparseFormat>(dist, dist);
-    DyfFreeSurface.fillFromAssembly(assembly);
+    DyfFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
+    DyfFreeSurfaceSparse.fillFromAssembly(assembly);
+    
+    if (!useSparseFreeSurface)
+    {
+        // define the stencil matrix for hybrid matrix
+        // ToDo: why not simply use the stencil matrix Dyb
+        common::Stencil1D<ValueType> stencilId(1);
+        common::Stencil3D<ValueType> stencil(stencilId, stencilFDmap[spatialFDorderVec.at(0)], stencilId);
+        DyfFreeSurfaceStencil.define(dist, stencil);
+        DyfFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
+    }
+
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -337,13 +352,9 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
-    IndexType Y = 0;
-    ValueType fdCoeff = 0;
-    IndexType ImageIndex = 0;
-    IndexType columnIndex = 0;
-    IndexType j = 0;
 
+    const ValueType ZERO = 0;
+    
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
@@ -365,8 +376,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
                 spatialFDorder = distance * 2;
         }
 
-        for (j = 0; j < spatialFDorder; j++) {
-            Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
+        for (IndexType j = 0; j < spatialFDorder; j++) {
+           IndexType Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
 
             // apply coordinate correction in the fine staggered grid (staggered in y-direction, coordinates are only correct for full grid points)
             if (modelCoordinates.locatedOnInterface(coordinate)) {
@@ -377,22 +388,44 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
                     Y += modelCoordinates.getDHFactor(layer + 1);
             }
 
-            fdCoeff = stencilFDmap[spatialFDorder].values()[j];
-
+            ValueType fdCoeff = stencilFDmap[spatialFDorder].values()[j];
+            ValueType diffCoeff = ZERO;
+            
             if (spatialFDorder >= (1 + 2 * coordinate.y / dhFactor + j)) {
-                ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
-                fdCoeff -= stencilFDmap[spatialFDorder].values()[ImageIndex];
+                IndexType ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
+                diffCoeff = stencilFDmap[spatialFDorder].values()[ImageIndex];
             }
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
-                columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                assembly.push(ownedIndex, columnIndex, fdCoeff / modelCoordinates.getDH(coordinate));
+                IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z); // push all coefficients
+                if (useSparseFreeSurface)
+                   assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff)/ modelCoordinates.getDH(coordinate));
+               else if (ZERO != diffCoeff)
+                   assembly.push(ownedIndex, columnIndex, -diffCoeff / modelCoordinates.getDH(coordinate));  // push only diffs to stencil matrix
             }
         }
     }
 
-    DybFreeSurface = lama::zero<SparseFormat>(dist, dist);
-    DybFreeSurface.fillFromAssembly(assembly);
+
+        DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
+        DybFreeSurfaceSparse.fillFromAssembly(assembly);
+        
+        
+	    if (!useSparseFreeSurface)
+		
+	    {
+	        // define the stencil matrix for hybrid matrix
+	        // ToDo: why not simply use the stencil matrix Dyb
+		
+	        common::Stencil1D<ValueType> stencilId(1);
+	        common::Stencil1D<ValueType> stencilBD;
+	        stencilBD.transpose( stencilFDmap[spatialFDorderVec.at(0)] );
+	        stencilBD.scale( -1 );
+	        common::Stencil3D<ValueType> stencil(stencilId, stencilBD, stencilId);
+		
+	        DybFreeSurfaceStencil.define(dist, stencil);
+	        DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
+	    }
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -1577,34 +1610,65 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() const
 {
-    return (DybFreeSurface);
+    if (useSparseFreeSurface)
+        return DybFreeSurfaceSparse;
+    else
+        return DybFreeSurfaceHybrid;
 }
 
 //! \brief Getter method for derivative matrix DybFreeSurface
 template <typename ValueType>
+scai::lama::Matrix<ValueType>  &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() 
+{
+    if (useSparseFreeSurface)
+        return DybFreeSurfaceSparse;
+    else
+        return DybFreeSurfaceHybrid;
+}
+//! \brief Getter method for derivative matrix DybFreeSurface
+template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybStaggeredXFreeSurface() const
 {
-    if ((isElastic) && (useVarGrid))
+    if ((isElastic) && (useVarGrid)) {
         return (DybStaggeredXFreeSurface);
-    else
-        return (DybFreeSurface);
+    } else if (useSparseFreeSurface) {
+        return DybFreeSurfaceSparse;
+    } else {
+        return DybFreeSurfaceHybrid;
+    }
 }
 
 //! \brief Getter method for derivative matrix DybFreeSurface
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybStaggeredZFreeSurface() const
 {
-    if ((isElastic) && (useVarGrid))
+    if ((isElastic) && (useVarGrid)) {
         return (DybStaggeredZFreeSurface);
-    else
-        return (DybFreeSurface);
+    } else if (useSparseFreeSurface) {
+        return DybFreeSurfaceSparse;
+    } else {
+        return DybFreeSurfaceHybrid;
+    }
 }
 
 //! \brief Getter method for derivative matrix DyfFreeSurface
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() const
 {
-    return (DyfFreeSurface);
+    if (useSparseFreeSurface)
+        return DyfFreeSurfaceSparse;
+    else
+        return DyfFreeSurfaceHybrid;
+}
+
+//! \brief Getter method for derivative matrix DyfFreeSurface
+template <typename ValueType>
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() 
+{
+    if (useSparseFreeSurface)
+        return DyfFreeSurfaceSparse;
+    else
+        return DyfFreeSurfaceHybrid;
 }
 
 //! \brief Getter method for derivative matrix Dxf
