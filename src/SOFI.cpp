@@ -23,6 +23,8 @@
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
 
+#include "config.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -35,7 +37,7 @@ int main(int argc, const char *argv[])
 
     common::Settings::parseArgs(argc, argv);
 
-    typedef float ValueType;
+//    typedef float ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {

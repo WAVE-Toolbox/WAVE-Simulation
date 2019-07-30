@@ -11,7 +11,9 @@ gcc:
     - echo "LAMA Version:" && file ${SCAI_ROOT}/lib/libscai_lama.so | sed 's/.*libscai_lama\.so\.\([0-9]*\.[0-9]*\.[0.9]*\).*/\1/g'
   script:
     - echo "g++ Version:" && g++ --version
-    - cd build/ && make -j 8 prog && make utest -j 8  && make itest -j 8 && make model -j 8
+    - mkdir build && cd "$_"
+    - SCAI_DIR=/data14/software/scai_lama/build_dev/ cmake  -DSOFI_VALUE_TYPE=float ../src/ -DCMAKE_INSTALL_PREFIX=./
+    - make install -j 4 
   artifacts:
     when: on_success
     expire_in: 30 min
