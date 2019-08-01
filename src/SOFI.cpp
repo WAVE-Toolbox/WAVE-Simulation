@@ -36,7 +36,6 @@ int main(int argc, const char *argv[])
 
     common::Settings::parseArgs(argc, argv);
 
-    typedef double ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {
