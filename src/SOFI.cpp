@@ -23,6 +23,7 @@
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
 #include "Partitioning/Partitioning.hpp"
+#include "config.hpp"
 
 using namespace scai;
 using namespace KITGPI;
