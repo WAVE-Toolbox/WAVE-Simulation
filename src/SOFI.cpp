@@ -80,9 +80,12 @@ int main(int argc, const char *argv[])
     if (config.get<bool>("useVariableGrid"))
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
     /* --------------------------------------- */
-    /* communicator for shot parallelisation   */
+    /* context and communicator for shot parallelisation   */
     /* --------------------------------------- */
 
+    /* execution context */
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
+    
     /* Definition of shot domains */
     int shotDomain = config.get<int>("ShotDomain");
     
@@ -139,23 +142,9 @@ int main(int argc, const char *argv[])
     SCAI_DMEMO_TASK(commShot)
     
 
-//     // Build subsets of processors for the shots
-//     common::Grid2D procAllGrid(npS, npM);
-//     IndexType procAllGridRank[2];
-//     procAllGrid.gridPos(procAllGridRank, commAll->getRank());
-
- 
-    // this communicator is used for reducing the solutions of problems
-
-
-
-
     /* --------------------------------------- */
-    /* Context and Distribution                */
+    /* Distribution                */
     /* --------------------------------------- */
-
-    /* execution context */
-    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
     dmemo::DistributionPtr dist = nullptr;
     if ((config.get<IndexType>("partitioning") == 0) || (config.get<IndexType>("partitioning") == 2)) {
