@@ -33,6 +33,14 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     this->initWavefield(Syz, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD2Dsh<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 3 Wavefields in 2D sh modeling: Sxz, Syz, Vz */
+    IndexType numWavefields = 3;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *

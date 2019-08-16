@@ -52,11 +52,13 @@ namespace KITGPI
             //! Copy Constructor.
             Viscoelastic(const Viscoelastic &rhs);
 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const, ValueType tauP_const, ValueType tauS_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
-            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) override {COMMON_THROWEXCEPTION("variable grid is not implemented in the viscoelastic case")}; 
-            
+            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates) override{COMMON_THROWEXCEPTION("variable grid is not implemented in the viscoelastic case")};
+
             void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
             void write(std::string filename, scai::IndexType partitionedOut) const override;
@@ -67,7 +69,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
-            
+
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             void applyThresholds(Configuration::Configuration const &config) override;
@@ -108,12 +110,14 @@ namespace KITGPI
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
-            using Modelparameter<ValueType>::DensityAverageMatrixX;
-            using Modelparameter<ValueType>::DensityAverageMatrixY;
-            using Modelparameter<ValueType>::DensityAverageMatrixZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXY;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixYZ;
+            void purgeMatrices() override;
+
+            using Modelparameter<ValueType>::averageMatrixX;
+            using Modelparameter<ValueType>::averageMatrixY;
+            using Modelparameter<ValueType>::averageMatrixZ;
+            using Modelparameter<ValueType>::averageMatrixXY;
+            using Modelparameter<ValueType>::averageMatrixXZ;
+            using Modelparameter<ValueType>::averageMatrixYZ;
 
             using Modelparameter<ValueType>::inverseDensityAverageX;
             using Modelparameter<ValueType>::inverseDensityAverageY;

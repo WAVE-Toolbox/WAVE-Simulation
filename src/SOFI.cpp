@@ -1,8 +1,8 @@
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
-#include <scai/dmemo/GridDistribution.hpp>
 #include <scai/dmemo/GenBlockDistribution.hpp>
+#include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
 
 #include <iostream>
@@ -63,14 +63,12 @@ int main(int argc, const char *argv[])
         config.print();
     }
 
-	    std::string settingsFilename;    // filename for processor specific settings
-	    if ( common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS") )
-	    {
-	        // each processor reads line of settings file that matches its node name and node rank
-	        common::Settings::readSettingsFile( settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank() );
+    std::string settingsFilename; // filename for processor specific settings
+    if (common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS")) {
+        // each processor reads line of settings file that matches its node name and node rank
+        common::Settings::readSettingsFile(settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank());
+    }
 
-	    }
-	    
     /* --------------------------------------- */
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
@@ -79,55 +77,49 @@ int main(int argc, const char *argv[])
 
     if (config.get<bool>("useVariableGrid"))
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+
     /* --------------------------------------- */
     /* context and communicator for shot parallelisation   */
     /* --------------------------------------- */
 
     /* execution context */
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
-    
+
     /* Definition of shot domains */
     int shotDomain = config.get<int>("ShotDomain");
-    
-    int domain;   // will contain the domain to which this processor belongs
 
-    if (shotDomain == 0)
-    {
+    int domain; // will contain the domain to which this processor belongs
+
+    if (shotDomain == 0) {
         // Definition by number of shot domains
 
-       IndexType numDomains = config.get<IndexType>("ProcNS");    // total number of shot domains
-       IndexType npDomain = commAll->getSize() / numDomains;      // number of processors for each shot domain
+        IndexType numDomains = config.get<IndexType>("ProcNS"); // total number of shot domains
+        IndexType npDomain = commAll->getSize() / numDomains;   // number of processors for each shot domain
 
-       if (commAll->getSize() != numDomains * npDomain) {
-           HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                               << ") is not multiple of shot domains in " << argv[1] << ": ProcNS = " << numDomains << "\n")
-           return (2);
-       }
- 
-       domain = commAll->getRank() / npDomain;
-    }
-    else if (shotDomain == 1 )
-    {
+        if (commAll->getSize() != numDomains * npDomain) {
+            HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                                                                      << ") is not multiple of shot domains in " << argv[1] << ": ProcNS = " << numDomains << "\n")
+            return (2);
+        }
+
+        domain = commAll->getRank() / npDomain;
+    } else if (shotDomain == 1) {
         // All processors on one node build one domain
 
         domain = commAll->getNodeId();
-    }
-    else 
-    {
-        bool set = common::Settings::getEnvironment( domain, "DOMAIN" );
+    } else {
+        bool set = common::Settings::getEnvironment(domain, "DOMAIN");
 
-        if (!set)
-        {
-            std::cout << *commAll << ", node = " << commAll->getNodeName() 
+        if (!set) {
+            std::cout << *commAll << ", node = " << commAll->getNodeName()
                       << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize()
                       << ": environment variable DOMAIN not set" << std::endl;
         }
- 
-        set = commAll->all( set );   // make sure that all processors will terminate
 
-        if (!set)
-        {
-            return(2);
+        set = commAll->all(set); // make sure that all processors will terminate
+
+        if (!set) {
+            return (2);
         }
     }
 
@@ -138,9 +130,8 @@ int main(int argc, const char *argv[])
     dmemo::CommunicatorPtr commShot = commAll->split(domain);
 
     dmemo::CommunicatorPtr commInterShot = commAll->split(commShot->getRank());
-    
+
     SCAI_DMEMO_TASK(commShot)
-    
 
     /* --------------------------------------- */
     /* Distribution                */
@@ -167,15 +158,18 @@ int main(int argc, const char *argv[])
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
 
     /* --------------------------------------- */
-    /* Setup Main Objects                      */
-    /* --------------------------------------- */
-    derivatives->setup(config);
-
-    /* --------------------------------------- */
     /* Memory estimation                       */
     /* --------------------------------------- */
-    derivatives->estimateMemory(config, dist, modelCoordinates);
 
+    HOST_PRINT(commAll, " ============== Memory Estimation: (total / per partition)===============\n\n")
+    ValueType mem = 0;
+    mem += derivatives->estimateMemory(config, dist, modelCoordinates);
+    mem += wavefields->estimateMemory(dist);
+    mem += model->estimateMemory(dist);
+    mem += solver->estimateMemory(config, dist, modelCoordinates);
+    HOST_PRINT(commAll, "\n Total memory Usage: " << mem << " / " << mem / dist->getNumPartitions() << " MB  \n\n")
+
+    HOST_PRINT(commAll, " ========================================================================\n\n")
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -185,6 +179,9 @@ int main(int argc, const char *argv[])
 
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+
+    //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
+    // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
 
     /* --------------------------------------- */
     /* Call partioner */
@@ -202,6 +199,7 @@ int main(int argc, const char *argv[])
         dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
 
         derivatives->redistributeMatrices(dist);
+
 #else
         HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
         return (2);
@@ -255,7 +253,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     wavefields->init(ctx, dist);
-
+    //std::cout << wavefields->getRefVX().getMemoryUsage() << std::endl;
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
@@ -274,27 +272,24 @@ int main(int argc, const char *argv[])
     calcuniqueShotNo(uniqueShotNos, sourceSettings);
     IndexType numshots = uniqueShotNos.size();
 
+    /* general block distribution of shot domains accorting to their weights */
+    IndexType firstShot = 0;
+    IndexType lastShot = numshots - 1;
 
-    
-	    /* general block distribution of shot domains accorting to their weights */
-	    IndexType firstShot = 0;
-	    IndexType lastShot   = numshots - 1;
+    float processorWeight = 1.0f;
+    common::Settings::getEnvironment(processorWeight, "WEIGHT");
+    float domainWeight = commShot->sum(processorWeight);
 
-	    float processorWeight = 1.0f;
-	    common::Settings::getEnvironment(processorWeight, "WEIGHT");
-	    float domainWeight = commShot->sum(processorWeight);
+    if (commShot->getRank() == 0) {
+        // master processors of shot domains determine the load distribution
+        auto shotDist = dmemo::genBlockDistributionByWeight(numshots, domainWeight, commInterShot);
+        firstShot = shotDist->lb();
+        lastShot = shotDist->ub();
+    }
+    commShot->bcast(&firstShot, 1, 0);
+    commShot->bcast(&lastShot, 1, 0);
 
-	    if ( commShot->getRank() == 0)
-	    {
-	         // master processors of shot domains determine the load distribution
-	         auto shotDist = dmemo::genBlockDistributionByWeight(numshots, domainWeight, commInterShot );
-	         firstShot = shotDist->lb();
-	         lastShot = shotDist->ub();
-	    }
-	    commShot->bcast( &firstShot, 1, 0 );
-	    commShot->bcast( &lastShot, 1, 0 );
-
-	    for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
+    for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
         IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
@@ -305,9 +300,8 @@ int main(int argc, const char *argv[])
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-
-       HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), domain = " << domain << "\n", 
-                                "\nTotal Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), domain = " << domain << "\n",
+                   "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();

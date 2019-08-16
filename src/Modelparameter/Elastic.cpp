@@ -2,10 +2,26 @@
 
 using namespace scai;
 
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::Elastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 11 Parameter in elastic modeling: Vp, Vs, rho, invRhoX, invRhoY, invRhoZ, bulk modulus, sWaveModulus, sWaveModulusXY, sWaveModulusXZ, sWaveModulusYZ */
+    IndexType numParameter = 11;
+    return (this->printMemoryUsage(dist, numParameter));
+}
+
 /*! \brief Prepare modellparameter for modelling
  *
  * Refreshes the modulus, calculates inverseDensity and calculates average values on staggered grid
  *
+ \param modelCoordinates coordinate class object
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ \param comm Communicator pointer
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
@@ -16,9 +32,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition
     this->getPWaveModulus();
     this->getSWaveModulus();
     initializeMatrices(dist, ctx, modelCoordinates, comm);
-    this->getInverseDensity();
     calculateAveraging();
-
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -235,20 +250,32 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
     if (dirtyFlagAveraging) {
         SCAI_REGION("initializeMatrices")
 
-        this->calcDensityAverageMatrixX(modelCoordinates, dist);
-        this->calcDensityAverageMatrixY(modelCoordinates, dist);
-        this->calcDensityAverageMatrixZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXY(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixYZ(modelCoordinates, dist);
+        this->calcAverageMatrixX(modelCoordinates, dist);
+        this->calcAverageMatrixY(modelCoordinates, dist);
+        this->calcAverageMatrixZ(modelCoordinates, dist);
+        this->calcAverageMatrixXY(modelCoordinates, dist);
+        this->calcAverageMatrixXZ(modelCoordinates, dist);
+        this->calcAverageMatrixYZ(modelCoordinates, dist);
 
-        DensityAverageMatrixX.setContextPtr(ctx);
-        DensityAverageMatrixY.setContextPtr(ctx);
-        DensityAverageMatrixZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXY.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+        averageMatrixX.setContextPtr(ctx);
+        averageMatrixY.setContextPtr(ctx);
+        averageMatrixZ.setContextPtr(ctx);
+        averageMatrixXY.setContextPtr(ctx);
+        averageMatrixXZ.setContextPtr(ctx);
+        averageMatrixYZ.setContextPtr(ctx);
     }
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
+    averageMatrixZ.purge();
+    averageMatrixXY.purge();
+    averageMatrixXZ.purge();
+    averageMatrixYZ.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -258,12 +285,12 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, averageMatrixXY);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixXZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixYZ);
         dirtyFlagAveraging = false;
     }
 }

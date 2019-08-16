@@ -21,8 +21,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     active = true;
 
-    derivatives.Dyf.purge();
-
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }
 

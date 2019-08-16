@@ -38,6 +38,14 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
     this->initWavefield(Rxy, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD2Dvisco<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 8 Wavefields in 2D viscoelastic modeling: Sxx,Syy,Sxy,Rxx,Ryy,Rxy, Vx, Vy */
+    IndexType numWavefields = 8;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *

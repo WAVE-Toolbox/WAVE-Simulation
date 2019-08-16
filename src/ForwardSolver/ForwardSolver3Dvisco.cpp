@@ -1,8 +1,13 @@
 #include "ForwardSolver3Dvisco.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD3Dvisco<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
- *
  *
  \param config Configuration
  \param derivatives Derivatives matrices

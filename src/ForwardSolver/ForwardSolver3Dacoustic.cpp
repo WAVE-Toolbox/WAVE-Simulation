@@ -1,6 +1,12 @@
 #include "ForwardSolver3Dacoustic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -110,7 +116,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
     /* Get pointers to required interpolation matrices (optional) */
     lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterFull();
-    
+
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
@@ -181,13 +187,12 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
         DampingBoundary.apply(p, vX, vY, vZ);
     }
 
-    if ( DinterpolateP )
-    {
+    if (DinterpolateP) {
         // interpolation for missing pressure points
-        update_temp.swap( p );
+        update_temp.swap(p);
         p = *DinterpolateP * update_temp;
     }
-    
+
     /* Apply source and save seismogram */
     SourceReceiver.applySource(t);
     SourceReceiver.gatherSeismogram(t);

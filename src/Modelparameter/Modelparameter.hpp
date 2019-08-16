@@ -52,6 +52,13 @@ namespace KITGPI
             //! \brief Modelparameter pointer
             typedef std::shared_ptr<Modelparameter<ValueType>> ModelparameterPtr;
 
+            ValueType printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter);
+
+            //! \brief memory estimation
+            virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;
+
+            ValueType getMemoryModel(scai::dmemo::DistributionPtr dist);
+
             /*! \brief Abstract initialization function
              * Standard initialisation function
              \param ctx Context
@@ -213,23 +220,24 @@ namespace KITGPI
              \param comm Communicator
              */
             virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
+            virtual void purgeMatrices() = 0;
 
-            void calcDensityAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-            void calcSWaveModulusAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pz[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates);
-            void calcSWaveModulusAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calc4PointAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pz[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates);
+            void calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
-            SparseFormat DensityAverageMatrixX;                          //!< Averaging density matrix in x-direction
-            SparseFormat DensityAverageMatrixY;                          //!< Averaging density matrix in x-direction
-            SparseFormat DensityAverageMatrixZ;                          //!< Averaging density matrix in x-direction
-            SparseFormat sWaveModulusAverageMatrixXY;                    //!< Average S-wave Modulus in xy-plane
-            SparseFormat sWaveModulusAverageMatrixXZ;                    //!< Average S-wave Modulus in xz-plane
-            SparseFormat sWaveModulusAverageMatrixYZ;                    //!< Average S-wave Modulus in yz-plane
+            SparseFormat averageMatrixX;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixY;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixZ;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixXY;                                //!< Average S-wave Modulus in xy-plane
+            SparseFormat averageMatrixXZ;                                //!< Average S-wave Modulus in xz-plane
+            SparseFormat averageMatrixYZ;                                //!< Average S-wave Modulus in yz-plane
 
             void calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
             void calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);

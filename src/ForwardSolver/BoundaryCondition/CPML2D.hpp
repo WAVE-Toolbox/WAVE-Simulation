@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../../Common/HostPrint.hpp"
-
 #include "CPML.hpp"
 
 namespace KITGPI
@@ -27,6 +25,8 @@ namespace KITGPI
 
                 //! Default destructor
                 ~CPML2D(){};
+
+                ValueType estimateMemory(scai::IndexType BoundaryWidth, scai::IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
                 void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface);
 
@@ -56,11 +56,6 @@ namespace KITGPI
                 VectorType psi_sxy_x; //!< CPML memory Variable
                 VectorType psi_sxy_y; //!< CPML memory Variable
                 VectorType psi_syy_y; //!< CPML memory Variable
-
-                VectorType k_x;      //!< CPML coefficient
-                VectorType k_y;      //!< CPML coefficient
-                VectorType k_x_half; //!< CPML coefficient for staggered gridpoints
-                VectorType k_y_half; //!< CPML coefficient for staggered gridpoints
 
                 VectorType a_x;      //!< CPML coefficient
                 VectorType a_y;      //!< CPML coefficient

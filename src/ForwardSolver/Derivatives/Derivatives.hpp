@@ -1,6 +1,7 @@
 #pragma once
 #include "../../Acquisition/Coordinates.hpp"
 #include "../../Configuration/Configuration.hpp"
+#include "../../Common/HostPrint.hpp"
 #include <map>
 #include <scai/common/Stencil.hpp>
 #include <scai/lama.hpp>
@@ -110,11 +111,9 @@ namespace KITGPI
 
                 //! \brief Getter method for derivative matrix DyfFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
-                scai::lama::Matrix<ValueType> &getDyfFreeSurface();
                 
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
-                scai::lama::Matrix<ValueType> &getDybFreeSurface();
                 
                 virtual scai::lama::Matrix<ValueType> const &getDybStaggeredXFreeSurface() const;
                 virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZFreeSurface() const;
@@ -132,11 +131,15 @@ namespace KITGPI
 
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
-
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
+                
                 virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) = 0;
 
-                virtual void estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
-
+                virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+                virtual ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+                
+                ValueType printMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,scai::IndexType numDMatrices, scai::IndexType numInterpMatrices=0);
+                
                 //! \brief Getter method for spatial FD-order
                 scai::IndexType getSpatialFDorder() const;
 
@@ -145,6 +148,10 @@ namespace KITGPI
                 virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
                 virtual void initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
 
+                scai::lama::Matrix<ValueType> &getDyfFreeSurface();
+                scai::lama::Matrix<ValueType> &getDybFreeSurface();
+                scai::lama::Matrix<ValueType> &getDyf();
+                
                 void setFDCoef();
 
                 void calcDxf(scai::dmemo::DistributionPtr dist);
@@ -231,10 +238,12 @@ namespace KITGPI
                 bool useVarFDorder = false;         //!< Switch to use variable FDorder (layered)
                 bool useVarGrid = false;            //!< Switch to use variable Grid
                 bool isElastic = false;             //!< Switch to use variable Grid
+                bool isSetup=false;
               private:
                 std::map<scai::IndexType, scai::common::Stencil1D<ValueType>> stencilFDmap; // FD-stencil
                                                                                             //     scai::IndexType spatialFDorder = 0;                                         //!< FD-Order of spatial derivative stencils
                 std::vector<scai::IndexType> spatialFDorderVec;                             //!< std vector of variable FDordersof spatial derivative stencils  (layered)
+                
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */

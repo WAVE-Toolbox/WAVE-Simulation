@@ -10,6 +10,14 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
     this->initWavefield(P, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD2Dacoustic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 3 Wavefields in 2D acoustic modeling: P, Vx, Vy */
+    IndexType numWavefields = 3;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
 template <typename ValueType>

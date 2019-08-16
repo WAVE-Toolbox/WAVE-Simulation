@@ -34,6 +34,14 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
     this->initWavefield(P, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD3Dacoustic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 4 Wavefields in 3D acoustic modeling: P, Vx, Vy, Vz */
+    IndexType numWavefields = 4;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *

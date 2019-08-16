@@ -33,6 +33,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
         // Set FD-order to class member
         setFDOrder(config.get<IndexType>("spatialFDorder"));
     }
+    isSetup=true;
 }
 
 //! \brief Setup configuration of the derivative object
@@ -56,7 +57,33 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     useVarFDorder = true;
     setFDCoef();
     setFDOrder(FDorder);
+    isSetup=true;
 }
+
+
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,IndexType numDMatrices, IndexType numInterpMatrices)
+{
+    ValueType size=0;
+    ValueType sizeInterp=0;
+    IndexType numPartitions=dist->getNumPartitions();
+    ValueType mega=1024*1024;
+    
+    if (useSparse) {
+       size=getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
+        HOST_PRINT(dist->getCommunicatorPtr(), " -  Derivative Matrices  \t" << size  <<" / " <<size/numPartitions << " MB\n");
+    } else {
+        size=getMemoryStencilMatrix(dist) / mega * numDMatrices;
+        HOST_PRINT(dist->getCommunicatorPtr(), " -  Derivative Matrices \t" << size  <<" / " <<size/numPartitions << " MB\n");
+    }
+
+    if (useVarGrid) {
+        sizeInterp=getMemoryInterpolationMatrix(dist) / mega * numInterpMatrices;
+        HOST_PRINT(dist->getCommunicatorPtr(), " -  Interpolation Matrices  \t" << sizeInterp  <<" / " <<sizeInterp/numPartitions << " MB\n");
+    } 
+    return (size+sizeInterp);
+}
+
 
 //! \brief Calculate Dxf matrix
 /*!
@@ -1690,6 +1717,17 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
     else
         return (Dyf);
 }
+
+//! \brief Getter method for derivative matrix Dyf
+template <typename ValueType>
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() 
+{
+    if (useSparse)
+        return (DyfSparse);
+    else
+        return (Dyf);
+}
+
 //! \brief Getter method for derivative matrix DyfStaggeredX
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfStaggeredX() const

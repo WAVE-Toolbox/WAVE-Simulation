@@ -52,11 +52,13 @@ namespace KITGPI
             //! Copy Constructor.
             SH(const SH &rhs);
 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const);
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) override {COMMON_THROWEXCEPTION("variable grid is not implemented in the sh case")}; 
-            
+            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates) override{COMMON_THROWEXCEPTION("variable grid is not implemented in the sh case")};
+
             void write(std::string filename, scai::IndexType partitionedOut) const override;
 
             std::string getEquationType() const;
@@ -74,7 +76,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
-            
+
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
@@ -110,12 +112,14 @@ namespace KITGPI
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
-            using Modelparameter<ValueType>::DensityAverageMatrixX;
-            using Modelparameter<ValueType>::DensityAverageMatrixY;
-            using Modelparameter<ValueType>::DensityAverageMatrixZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXY;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixYZ;
+            void purgeMatrices() override;
+
+            using Modelparameter<ValueType>::averageMatrixX;
+            using Modelparameter<ValueType>::averageMatrixY;
+            using Modelparameter<ValueType>::averageMatrixZ;
+            using Modelparameter<ValueType>::averageMatrixXY;
+            using Modelparameter<ValueType>::averageMatrixXZ;
+            using Modelparameter<ValueType>::averageMatrixYZ;
 
             using Modelparameter<ValueType>::inverseDensityAverageX;
             using Modelparameter<ValueType>::inverseDensityAverageY;

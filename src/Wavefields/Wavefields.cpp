@@ -57,6 +57,24 @@ void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vecto
     }
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
+{
+    ValueType size = getMemoryWavefield(dist) / 1024 / 1024 * numWavefields;
+    HOST_PRINT(dist->getCommunicatorPtr(), " -  Wavefield  vectors\t\t" << size << " / " << size / dist->getNumPartitions() << " MB\n");
+    return size;
+}
+
+//! \brief calculate and return memory usage the of a Wavefield
+/*!
+ */
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryWavefield(scai::dmemo::DistributionPtr dist)
+{
+    /* size of a wavefield is the size of a densevector = numGridpoints*size of Valuetype*/
+    return (dist->getGlobalSize() * sizeof(ValueType));
+}
+
 //! \brief Getter routine for vX wavefield
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVX()

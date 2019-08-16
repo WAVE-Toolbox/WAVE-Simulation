@@ -45,6 +45,58 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::apply(scai::lam
     v5 *= damping;
 }
 
+//! \brief estimate memory for the absorbing boundary frame
+/*!
+ *
+ \param BoundaryWidth Width of damping boundary
+ \param useFreeSurface Indicator which free surface is in use
+  \param dist Distribution of the wavefield
+  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ */
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    /* Get local owned global indices */
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+
+    IndexType counter = 0;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+
+        IndexType temp = 0;
+        if (coordinatedist.x < coordinatedist.y) {
+            temp = coordinatedist.x;
+        } else {
+            temp = coordinatedist.y;
+        }
+        IndexType coordinateMin = temp;
+        if (useFreeSurface == 0) {
+            if (coordinateMin < BoundaryWidth) {
+                counter++;
+            }
+
+        } else {
+            if (coordinate.y < BoundaryWidth) {
+                if ((coordinatedist.x < BoundaryWidth)) {
+                    counter++;
+                }
+            } else if (coordinateMin < BoundaryWidth) {
+                counter++;
+            }
+        }
+    }
+
+    IndexType numPartitions = dist->getNumPartitions();
+    ValueType mega = 1024 * 1024;
+    ValueType size = counter * sizeof(ValueType) / mega;
+    HOST_PRINT(dist->getCommunicatorPtr(), " -  Absorbing Frame Vector  \t" << size << " / " << size / numPartitions << " MB\n");
+    return size;
+}
+
 //! \brief Initializsation of the absorbing coefficient matrix
 /*!
  *
@@ -105,9 +157,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::init(scai::dmem
         }
         coordinateMin = temp;
         if (useFreeSurface == 0) {
-        if (coordinateMin < BoundaryWidth) {
+            if (coordinateMin < BoundaryWidth) {
                 assembly.push(ownedIndex, coeff[coordinateMin]);
-        }
+            }
 
         } else {
             if (coordinate.y < BoundaryWidth) {

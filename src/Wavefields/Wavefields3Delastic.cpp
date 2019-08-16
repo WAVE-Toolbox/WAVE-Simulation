@@ -39,6 +39,14 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
     this->initWavefield(Sxy, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD3Delastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 9 Wavefields in 3D elastic modeling: Sxx,Syy,Szz,Sxy,Sxz,Syz, Vx, Vy,Vz */
+    IndexType numWavefields = 9;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *

@@ -66,6 +66,8 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
 
             void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);

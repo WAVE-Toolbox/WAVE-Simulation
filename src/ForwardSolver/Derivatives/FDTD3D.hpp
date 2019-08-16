@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Common/HostPrint.hpp"
 #include "Derivatives.hpp"
 
 namespace KITGPI
@@ -31,18 +30,23 @@ namespace KITGPI
                 FDTD3D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
+                
+                void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
 
-                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
-
-                virtual void estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
-
+                ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+                ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+                
                 scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() override;
 
               private:
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm) override;
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
                 void initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
-
+                
+                scai::IndexType getNumDMatrices();
+                scai::IndexType getNumInterpMatrices();
+                
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
                 using Derivatives<ValueType>::Dyf;
@@ -75,7 +79,8 @@ namespace KITGPI
                 using Derivatives<ValueType>::useVarFDorder;
                 using Derivatives<ValueType>::useVarGrid;
                 using Derivatives<ValueType>::isElastic;
-
+                using Derivatives<ValueType>::isSetup;
+                
                 using Derivatives<ValueType>::InterpolationFull;
                 using Derivatives<ValueType>::InterpolationStaggeredX;
                 using Derivatives<ValueType>::InterpolationStaggeredZ;

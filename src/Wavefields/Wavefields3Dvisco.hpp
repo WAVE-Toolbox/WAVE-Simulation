@@ -48,6 +48,8 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+
             /* Overloading Operators */
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(ValueType rhs);
             KITGPI::Wavefields::FD3Dvisco<ValueType> operator*=(ValueType rhs);

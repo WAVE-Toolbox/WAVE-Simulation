@@ -56,6 +56,59 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::apply_
     this->applyCPML(p_z, psi_p_z, a_z_half, b_z_half);
 }
 
+//! \brief estimate memory for the absorbing boundary frame
+/*!
+ *
+ \param BoundaryWidth Width of damping boundary
+ \param useFreeSurface Indicator which free surface is in use
+  \param dist Distribution of the wavefield
+  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ */
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML3DAcoustic<ValueType>::estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+
+    IndexType counter = 0;
+
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
+
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        IndexType layer = modelCoordinates.getLayer(coordinate);
+
+        Acquisition::coordinate3D gdist = modelCoordinates.edgeDistance(coordinate);
+
+        IndexType width = std::ceil((float)BoundaryWidth / modelCoordinates.getDHFactor(layer));
+        IndexType xDist = gdist.x / modelCoordinates.getDHFactor(layer);
+        IndexType yDist = gdist.y / modelCoordinates.getDHFactor(layer);
+        IndexType zDist = gdist.z / modelCoordinates.getDHFactor(layer);
+
+        if (xDist < width) {
+            counter++;
+        }
+
+        if (yDist < width) {
+            IndexType yCoord = coordinate.y / modelCoordinates.getDHFactor(layer);
+            if (yCoord < width) {
+                if (useFreeSurface == 0) {
+                    counter++;
+                }
+            } else {
+                counter++;
+            }
+        }
+
+        if (zDist < width) {
+            counter++;
+        }
+    }
+
+    IndexType numVectorsPerDim = 6;
+    return (this->printMemoryUsage(dist, numVectorsPerDim, counter));
+}
+
 //! \brief Initializsation of the absorbing coefficient matrix
 /*!
  *

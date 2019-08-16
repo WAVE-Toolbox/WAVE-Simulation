@@ -28,6 +28,8 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML3D(){};
 
+                ValueType estimateMemory(scai::IndexType BoundaryWidth, scai::IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+
                 void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface);
 
                 void resetCPML();
@@ -75,13 +77,6 @@ namespace KITGPI
                 VectorType psi_sxz_z; //!< CPML memory Variable
                 VectorType psi_syz_z; //!< CPML memory Variable
                 VectorType psi_szz_z; //!< CPML memory Variable
-
-                VectorType k_x;      //!< CPML coefficient
-                VectorType k_x_half; //!< CPML coefficient for staggered gridpoints
-                VectorType k_y;      //!< CPML coefficient
-                VectorType k_y_half; //!< CPML coefficient for staggered gridpoints
-                VectorType k_z;      //!< CPML coefficient
-                VectorType k_z_half; //!< CPML coefficient for staggered gridpoints
 
                 VectorType a_x;      //!< CPML coefficient
                 VectorType a_x_half; //!< CPML coefficient for staggered gridpoints

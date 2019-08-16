@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../../Acquisition/Coordinates.hpp"
+#include "../../Common/HostPrint.hpp"
 #include <scai/dmemo.hpp>
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
-
-#include "../../Acquisition/Coordinates.hpp"
 
 namespace KITGPI
 {
@@ -26,13 +26,17 @@ namespace KITGPI
                 //! \brief Default destructor
                 ~CPML(){};
 
+                virtual ValueType estimateMemory(scai::IndexType BoundaryWidth, scai::IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+
                 //! init CPML coefficient vectors and CPML memory variables
                 virtual void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface) = 0;
 
+                ValueType printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numVectors, scai::IndexType numValues);
+
               protected:
                 typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
-                                                                                //     ////
-//typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                                                                                 //     ////
+                                                                                 //typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
 
                 void resetVector(scai::lama::Vector<ValueType> &vector);
 

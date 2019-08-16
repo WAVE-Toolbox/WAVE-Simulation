@@ -2,11 +2,23 @@
 
 using namespace scai;
 
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::SH<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 6 Parameter in SH modeling:  rho, Vs, invRho, sWaveModulus, sWaveModulusXZ, sWaveModulus YZ */
+    IndexType numParameter = 6;
+    return (this->printMemoryUsage(dist, numParameter));
+}
+
 /*! \brief Prepare modellparameter for modelling
  *
  * Refreshes the modulus, calculates inverse density and average Values on staggered grid
  *
- \param config Configuration class
+ \param modelCoordinates Coordinate class object
  \param ctx Context for the Calculation
  \param dist Distribution
  \param comm Communicator pointer
@@ -14,13 +26,15 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "", "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n");
 
     // refreshModulus();
     this->getSWaveModulus();
+    //sWaveModulus is not needed after avereging. The memory should be freed after calculating the averaging.
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     this->getInverseDensity();
     calculateAveraging();
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -190,11 +204,19 @@ void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::Dist
 
     SCAI_REGION("initializeMatrices")
     // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-    this->calcDensityAverageMatrixX(modelCoordinates, dist);
-    this->calcDensityAverageMatrixY(modelCoordinates, dist);
+    this->calcAverageMatrixX(modelCoordinates, dist);
+    this->calcAverageMatrixY(modelCoordinates, dist);
 
-    sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+    averageMatrixX.setContextPtr(ctx);
+    averageMatrixY.setContextPtr(ctx);
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::SH<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -204,9 +226,9 @@ template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, DensityAverageMatrixX);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, DensityAverageMatrixY);
+        // sxz and syz are on the same spot as vx and vy in acoustic modeling
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }

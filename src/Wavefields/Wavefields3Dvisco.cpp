@@ -45,6 +45,14 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
     this->initWavefield(Rxy, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD3Dvisco<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 15 Wavefields in 2D acoustic modeling: Sxx,Syy,Szz,Sxy,Sxz,Syz,Rxx,Ryy,Rzz,Rxy,Rxz,Ryz, Vx, Vy, Vz */
+    IndexType numWavefields = 15;
+    return (this->printMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
