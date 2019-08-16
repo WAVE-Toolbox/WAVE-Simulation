@@ -52,7 +52,7 @@ namespace KITGPI
             //! \brief Modelparameter pointer
             typedef std::shared_ptr<Modelparameter<ValueType>> ModelparameterPtr;
 
-            ValueType printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter);
+            ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter);
 
             //! \brief memory estimation
             virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;

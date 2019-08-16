@@ -172,7 +172,7 @@ ValueType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::estimateMemory(
 {
 
  SCAI_ASSERT(isSetup, "call setup function before estimateMemory");
-return(this->printMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
+return(this->getMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
     
 }
 

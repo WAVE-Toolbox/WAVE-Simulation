@@ -11,7 +11,7 @@ ValueType KITGPI::Modelparameter::Elastic<ValueType>::estimateMemory(dmemo::Dist
 {
     /* 11 Parameter in elastic modeling: Vp, Vs, rho, invRhoX, invRhoY, invRhoZ, bulk modulus, sWaveModulus, sWaveModulusXY, sWaveModulusXZ, sWaveModulusYZ */
     IndexType numParameter = 11;
-    return (this->printMemoryUsage(dist, numParameter));
+    return (this->getMemoryUsage(dist, numParameter));
 }
 
 /*! \brief Prepare modellparameter for modelling

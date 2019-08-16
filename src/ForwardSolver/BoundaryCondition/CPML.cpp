@@ -1,23 +1,6 @@
 #include "CPML.hpp"
 using namespace scai;
 
-/*! \brief print memory estimation for cpmls
-
- \param dist distribution
- \param numVectors num CPML vectors 
- \param numValues num of no zeros values of CPML vectors
- */
-template <typename ValueType>
-ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numVectors, scai::IndexType numValues)
-{
-
-    IndexType numPartitions = dist->getNumPartitions();
-    ValueType mega = 1024 * 1024;
-
-    ValueType size = numValues * sizeof(ValueType) * numVectors / mega;
-    HOST_PRINT(dist->getCommunicatorPtr(), " -  CPML Frame Vectors  \t" << size << " / " << size / numPartitions << " MB\n");
-    return size;
-}
 
 /*! \brief Reset a single Vector to zero.
 */

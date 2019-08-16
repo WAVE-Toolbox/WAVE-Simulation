@@ -10,7 +10,7 @@ ValueType KITGPI::Modelparameter::Viscoelastic<ValueType>::estimateMemory(dmemo:
 {
     /* 15 Parameter in Viscoelastic modeling:  rho, Vp, Vs, invRhoX,invRhoY, invRhoZ,  bulk modulus, sWaveModulus, sWaveModulusXY, sWaveModulusXZ, sWaveModulus YZ, tauP, tauS, tauSXY, tauSXZ, tauSYZ*/
     IndexType numParameter = 15;
-    return (this->printMemoryUsage(dist, numParameter));
+    return (this->getMemoryUsage(dist, numParameter));
 }
 
 /*! \brief Prepare modellparameter for visco-elastic modelling

@@ -50,7 +50,7 @@ ValueType KITGPI::Wavefields::FD3Dvisco<ValueType>::estimateMemory(dmemo::Distri
 {
     /* 15 Wavefields in 2D acoustic modeling: Sxx,Syy,Szz,Sxy,Sxz,Syz,Rxx,Ryy,Rzz,Rxy,Rxz,Ryz, Vx, Vy, Vz */
     IndexType numWavefields = 15;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief override Methode tor write Wavefield Snapshot to file

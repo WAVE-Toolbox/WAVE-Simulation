@@ -148,7 +148,7 @@ ValueType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(
 {
     SCAI_ASSERT(isSetup, "call setup function before estimateMemory");
         
-    return(this->printMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
+    return(this->getMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
     
 }
 //! \brief Initializsation of the derivative matrices

@@ -15,7 +15,7 @@ ValueType KITGPI::Wavefields::FD2Dacoustic<ValueType>::estimateMemory(dmemo::Dis
 {
     /* 3 Wavefields in 2D acoustic modeling: P, Vx, Vy */
     IndexType numWavefields = 3;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief Returns hmemo::ContextPtr from this wavefields

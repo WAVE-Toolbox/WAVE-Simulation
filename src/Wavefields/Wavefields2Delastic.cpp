@@ -40,7 +40,7 @@ ValueType KITGPI::Wavefields::FD2Delastic<ValueType>::estimateMemory(dmemo::Dist
 {
     /* 5 Wavefields in 2D elastic modeling: Sxx,Syy,Sxy, Vx, Vy */
     IndexType numWavefields = 5;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief override Methode tor write Wavefield Snapshot to file

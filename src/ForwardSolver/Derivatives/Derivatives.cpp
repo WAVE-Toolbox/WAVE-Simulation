@@ -62,24 +62,19 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
 
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,IndexType numDMatrices, IndexType numInterpMatrices)
+ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,IndexType numDMatrices, IndexType numInterpMatrices)
 {
     ValueType size=0;
-    ValueType sizeInterp=0;
-    IndexType numPartitions=dist->getNumPartitions();
     ValueType mega=1024*1024;
-    
+    ValueType sizeInterp=0;
     if (useSparse) {
        size=getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
-        HOST_PRINT(dist->getCommunicatorPtr(), " -  Derivative Matrices  \t" << size  <<" / " <<size/numPartitions << " MB\n");
     } else {
         size=getMemoryStencilMatrix(dist) / mega * numDMatrices;
-        HOST_PRINT(dist->getCommunicatorPtr(), " -  Derivative Matrices \t" << size  <<" / " <<size/numPartitions << " MB\n");
     }
 
     if (useVarGrid) {
-        sizeInterp=getMemoryInterpolationMatrix(dist) / mega * numInterpMatrices;
-        HOST_PRINT(dist->getCommunicatorPtr(), " -  Interpolation Matrices  \t" << sizeInterp  <<" / " <<sizeInterp/numPartitions << " MB\n");
+       sizeInterp=getMemoryInterpolationMatrix(dist) / mega * numInterpMatrices;
     } 
     return (size+sizeInterp);
 }

@@ -43,7 +43,7 @@ ValueType KITGPI::Wavefields::FD2Dvisco<ValueType>::estimateMemory(dmemo::Distri
 {
     /* 8 Wavefields in 2D viscoelastic modeling: Sxx,Syy,Sxy,Rxx,Ryy,Rxy, Vx, Vy */
     IndexType numWavefields = 8;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief override Methode tor write Wavefield Snapshot to file

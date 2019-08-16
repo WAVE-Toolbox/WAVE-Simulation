@@ -38,7 +38,7 @@ ValueType KITGPI::Wavefields::FD2Dsh<ValueType>::estimateMemory(dmemo::Distribut
 {
     /* 3 Wavefields in 2D sh modeling: Sxz, Syz, Vz */
     IndexType numWavefields = 3;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief override Methode tor write Wavefield Snapshot to file

@@ -138,7 +138,7 @@ namespace KITGPI
                 virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
                 virtual ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
                 
-                ValueType printMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,scai::IndexType numDMatrices, scai::IndexType numInterpMatrices=0);
+                ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,scai::IndexType numDMatrices, scai::IndexType numInterpMatrices=0);
                 
                 //! \brief Getter method for spatial FD-order
                 scai::IndexType getSpatialFDorder() const;

@@ -58,10 +58,9 @@ void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vecto
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::Wavefields<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
 {
     ValueType size = getMemoryWavefield(dist) / 1024 / 1024 * numWavefields;
-    HOST_PRINT(dist->getCommunicatorPtr(), " -  Wavefield  vectors\t\t" << size << " / " << size / dist->getNumPartitions() << " MB\n");
     return size;
 }
 

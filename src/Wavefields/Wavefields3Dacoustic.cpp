@@ -39,7 +39,7 @@ ValueType KITGPI::Wavefields::FD3Dacoustic<ValueType>::estimateMemory(dmemo::Dis
 {
     /* 4 Wavefields in 3D acoustic modeling: P, Vx, Vy, Vz */
     IndexType numWavefields = 4;
-    return (this->printMemoryUsage(dist, numWavefields));
+    return (this->getMemoryUsage(dist, numWavefields));
 }
 
 /*! \brief override Methode tor write Wavefield Snapshot to file

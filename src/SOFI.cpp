@@ -89,11 +89,12 @@ int main(int argc, const char *argv[])
     int shotDomain = config.get<int>("ShotDomain");
 
     int domain; // will contain the domain to which this processor belongs
-
+    IndexType numDomains = config.get<IndexType>("ProcNS"); // total number of shot domains
+    
     if (shotDomain == 0) {
         // Definition by number of shot domains
 
-        IndexType numDomains = config.get<IndexType>("ProcNS"); // total number of shot domains
+        
         IndexType npDomain = commAll->getSize() / numDomains;   // number of processors for each shot domain
 
         if (commAll->getSize() != numDomains * npDomain) {
@@ -161,15 +162,24 @@ int main(int argc, const char *argv[])
     /* Memory estimation                       */
     /* --------------------------------------- */
 
-    HOST_PRINT(commAll, " ============== Memory Estimation: (total / per partition)===============\n\n")
-    ValueType mem = 0;
-    mem += derivatives->estimateMemory(config, dist, modelCoordinates);
-    mem += wavefields->estimateMemory(dist);
-    mem += model->estimateMemory(dist);
-    mem += solver->estimateMemory(config, dist, modelCoordinates);
-    HOST_PRINT(commAll, "\n Total memory Usage: " << mem << " / " << mem / dist->getNumPartitions() << " MB  \n\n")
+    HOST_PRINT(commAll, " ============== Memory Estimation: ===============\n\n")
 
-    HOST_PRINT(commAll, " ========================================================================\n\n")
+    ValueType memDerivatives = derivatives->estimateMemory(config, dist, modelCoordinates);
+    ValueType memWavefileds = wavefields->estimateMemory(dist);
+    ValueType memModel  = model->estimateMemory(dist);
+    ValueType memSolver = solver->estimateMemory(config, dist, modelCoordinates);
+    ValueType memTotal = memDerivatives + memWavefileds + memModel + memSolver;
+    
+    
+    HOST_PRINT(commAll, " -  Derivative Matrices \t" << memDerivatives  <<  " MB\n");
+    HOST_PRINT(commAll, " -  Wavefield vectors \t\t" << memWavefileds  << " MB\n");
+    HOST_PRINT(commAll, " -  Model Vectors \t\t" << memModel  << " MB\n");
+    HOST_PRINT(commAll, " -  Boundary Condition Vectors \t" << memSolver  << " MB\n");
+    HOST_PRINT(commAll, "\n Memory Usage (total / per partition): \n " << memTotal << " / " << memTotal / dist->getNumPartitions() << " MB ");
+    if (numDomains>1)
+    HOST_PRINT(commAll, "\n Total Memory Usage ("<<numDomains <<" shot Domains ): \n " << memTotal*numDomains <<  " MB  ");
+
+    HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */

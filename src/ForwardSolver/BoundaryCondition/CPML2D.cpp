@@ -117,7 +117,7 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::estimateM
     }
 
     IndexType numVectorsPerDim = 8;
-    return (this->printMemoryUsage(dist, numVectorsPerDim, counter));
+    return(counter * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix

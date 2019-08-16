@@ -85,7 +85,7 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::e
     }
 
     IndexType numVectorsPerDim = 6;
-    return (this->printMemoryUsage(dist, numVectorsPerDim, counter));
+    return(counter * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix

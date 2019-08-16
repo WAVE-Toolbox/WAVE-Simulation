@@ -11,7 +11,7 @@ ValueType KITGPI::Modelparameter::SH<ValueType>::estimateMemory(dmemo::Distribut
 {
     /* 6 Parameter in SH modeling:  rho, Vs, invRho, sWaveModulus, sWaveModulusXZ, sWaveModulus YZ */
     IndexType numParameter = 6;
-    return (this->printMemoryUsage(dist, numParameter));
+    return (this->getMemoryUsage(dist, numParameter));
 }
 
 /*! \brief Prepare modellparameter for modelling

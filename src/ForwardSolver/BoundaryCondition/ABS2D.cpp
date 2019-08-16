@@ -90,10 +90,8 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::estimateMe
         }
     }
 
-    IndexType numPartitions = dist->getNumPartitions();
     ValueType mega = 1024 * 1024;
     ValueType size = counter * sizeof(ValueType) / mega;
-    HOST_PRINT(dist->getCommunicatorPtr(), " -  Absorbing Frame Vector  \t" << size << " / " << size / numPartitions << " MB\n");
     return size;
 }
 

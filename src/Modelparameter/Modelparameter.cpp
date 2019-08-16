@@ -3,10 +3,9 @@ using namespace scai;
 using namespace KITGPI;
 
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::printMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter)
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter)
 {
     ValueType size = getMemoryModel(dist) / 1024 / 1024 * numParameter;
-    HOST_PRINT(dist->getCommunicatorPtr(), " -  Model  vectors\t\t" << size << " / " << size / dist->getNumPartitions() << " MB\n");
     return size;
 }
 

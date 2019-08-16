@@ -12,7 +12,7 @@ ValueType KITGPI::Modelparameter::Acoustic<ValueType>::estimateMemory(dmemo::Dis
 {
     /* 6 Parameter in acoustic modeling: Vp, rho, invRhoX, invRhoY, invRhoZ, bulk modulus */
     IndexType numParameter = 6;
-    return (this->printMemoryUsage(dist, numParameter));
+    return (this->getMemoryUsage(dist, numParameter));
 }
 
 /*! \brief Prepare modellparameter for modelling
