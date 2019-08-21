@@ -13,9 +13,9 @@ useVariableFDoperators=0
 
 coordinateWrite=0
 
-NX=100                    # horizontal 1
-NY=100                    # depth
-NZ=100                    # horizontal 2
+NX=133                    # horizontal 1
+NY=112                    # depth
+NZ=105                    # horizontal 2
 
 # define Partitioning
 ProcNS=2                  # Number of shot domains
@@ -76,11 +76,11 @@ NormalizeTraces=0                              # 1=Normalize Traces of the Seism
 useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
 
 # wavefield snapshots
-snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+snapType=2                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds
-tIncSnapshot=0.5          # Time increment between snapshot in seconds
+tIncSnapshot=0.1          # Time increment between snapshot in seconds
 
 # console output
 verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

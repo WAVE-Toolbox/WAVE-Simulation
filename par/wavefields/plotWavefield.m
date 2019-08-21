@@ -1,45 +1,42 @@
-clearvars; %close all;
+clearvars; close all;
+addpath('../model/');
 
 %% Define input parameter
-filename='wavefieldAcoustic2D.P'; % File name of the model
-NX=100;  % Number of grid points in X
-NY=100;  % Number of grid points in Y
-NZ=1;  % Number of grid points in Z
-NT=950;
+%filename='wavefield.shot_0.Acoustic3D.P'; % File name of the model
+filename='wavefield.shot_1.Acoustic3D.P'; % File name of the model
+NX=133;  % Number of grid points in X
+NY=112;  % Number of grid points in Y
+NZ=105;  % Number of grid points in Z
+NTFirst=0; % First Timestep
+NTLast=950; %Last Timestep
+NTint=50;  %Timestep Interval
 DH=50;   % Spatial grid sampling
 tIncSnapshot=0.002;
 
-receiverx=[151 151];
-receivery=[103 202];
-sourcex=[151];
-sourcey=[73];
+% receiverx=[151 151];
+% receivery=[103 202];
+% sourcex=[151];
+% sourcey=[73];
 
 
-
-LAYER=1; % Define layer of 3D model to display as 2D slice
+LAYER=50; % Define layer of 3D model to display as 2D slice
 
 %% Read model
 
 X=0:DH:(NX*DH-DH);
 Y=0:DH:(NY*DH-DH);
 
-figure('Position', [10 10 700 600])
+figure('Position', [200 200 700 600])
+%figure
 caxis_value=5.0e-2;
 load 'seismic.map'
 colorbar
 
 
-for ii=0:50:NT;
-%ii=500 
+for ii=NTFirst:NTint:NTLast
 
-fileID = fopen([filename '.' num2str(ii) '.mtx'] ,'r');
-HEADER = fgets(fileID);
-SIZE = fgets(fileID);
-size=str2num(SIZE);
-A=fscanf(fileID,'%e',[1 size(1)*size(2)]);
-model=reshape(A(:),[size(2), size(1)]);
-model=permute(reshape(A,[NX,NY,NZ]),[2 1 3 4]);
 
+model=readModelfromMtx([filename '.' num2str(ii) '.mtx'],NX,NY,NZ);
 
 
 %% Plot
@@ -52,7 +49,6 @@ caxis([-caxis_value caxis_value])
 title( ['t = ' num2str(ii*tIncSnapshot) ' s'])
 xlabel('X in gridpoints')
 ylabel('Y in gridpoints')
-axis square
 %saveas(gcf,'vgWavefield.epsc')
 pause(0.1)
 
