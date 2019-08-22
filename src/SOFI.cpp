@@ -200,7 +200,7 @@ int main(int argc, const char *argv[])
 #ifdef USE_GEOGRAPHER
         start_t = common::Walltime::get();
         auto graph = derivatives->getCombinedMatrix();
-        auto &&weights = Partitioning::BoundaryWeights(config, dist, modelCoordinates, config.get<ValueType>("BoundaryWeights"));
+        auto &&weights = Partitioning::Weights(config, dist, modelCoordinates);
         auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
 
         end_t = common::Walltime::get();

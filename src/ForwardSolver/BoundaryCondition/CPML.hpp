@@ -31,11 +31,8 @@ namespace KITGPI
                 //! init CPML coefficient vectors and CPML memory variables
                 virtual void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface) = 0;
 
-
               protected:
-                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
-                                                                                 //     ////
-                                                                                 //typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                typedef typename scai::lama::SparseVector<ValueType> VectorType;
 
                 void resetVector(scai::lama::Vector<ValueType> &vector);
 
