@@ -37,7 +37,7 @@ for ii=NTFirst:NTint:NTLast
 
 
 model=readModelfromMtx([filename '.' num2str(ii) '.mtx'],NX,NY,NZ);
-
+% model=readModelfromLMF([filename '.' num2str(ii) '.lmf'],NX,NY,NZ);
 
 %% Plot
 imagesc(model(:,:,LAYER))
