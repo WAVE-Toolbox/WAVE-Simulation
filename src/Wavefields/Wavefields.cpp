@@ -37,22 +37,35 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 template <typename ValueType>
 void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
 {
-    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
-
-    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t));
 
     switch (partitionedOut) {
-    case false:
-        vector.writeToFile(fileName);
+
+    case 0:
+        fileName += ".mtx";
+        // write ASCII file
+        vector.writeToFile(fileName, lama::FileMode::FORMATTED);
         HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
-    case true:
-        partitionOut.writeToDistributedFiles(vector, fileName);
+    case 1:
+        fileName += ".lmf";
+        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
+        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
+    case 2:
+        {
+            PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+            fileName += ".mtx";
+            // independent IO, each processor writes a local file
+            partitionOut.writeToDistributedFiles(vector, fileName);
+            break;
+       }
+
     default:
-        COMMON_THROWEXCEPTION("Unexpected output option!")
+        COMMON_THROWEXCEPTION("Unexpected output option, partitionedOut = " << partitionedOut)
         break;
     }
 }
