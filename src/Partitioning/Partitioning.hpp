@@ -277,7 +277,7 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 1000;
+            weights /= 100000000000000000;
 
             if (config.get<bool>("weightsWrite")) {
                 weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");

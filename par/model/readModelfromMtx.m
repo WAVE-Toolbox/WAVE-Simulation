@@ -10,11 +10,7 @@ function [model]=readModelfromMtx(filename,NX,NY,NZ)
 
 
 
-fileID = fopen(filename,'r');
-HEADER = fgets(fileID);
-SIZE = fgets(fileID);
-size=str2num(SIZE);
-A=fscanf(fileID,'%e',[1 size(1)]);
-model=permute((reshape(A(:),[NX, NZ, NY])),[3 1 2]);
-fclose(fileID);
+modelVec=readVectorfromMtx(filename);
+model=permute((reshape(modelVec(:),[NX, NZ, NY])),[3 1 2]);
+
 end
