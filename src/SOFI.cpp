@@ -211,8 +211,8 @@ int main(int argc, const char *argv[])
         derivatives->redistributeMatrices(dist);
 
 #else
-        HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
-        return (2);
+        HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
+        HOST_PRINT(commAll, "\nBlock Distribution will be used instead!\n\n")
 #endif
     }
 

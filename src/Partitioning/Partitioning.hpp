@@ -188,7 +188,16 @@ namespace KITGPI
             lama::DenseVector<ValueType> fdWeights;
             fdWeights.setSameValue(dist, referenceTotalWeight);
 
-            if ((config.get<bool>("useVariableFDoperators")) && (config.get<bool>("useNodeWeights"))) {
+            bool useNodeWeights=1;
+            try{
+                useNodeWeights=config.get<bool>("useNodeWeights");
+            }
+            catch(...)
+            {
+                //do nothing... use default useNodeWeights=1. useNodeWeights is only used for debugging
+            }
+            
+            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)){
                 lama::VectorAssembly<ValueType> assembly;
                 assembly.reserve(ownedIndexes.size());
 
@@ -223,7 +232,7 @@ namespace KITGPI
             lama::DenseVector<ValueType> pmlWeights;
             pmlWeights.setSameValue(dist, 0.0);
 
-            if ((config.get<IndexType>("DampingBoundary") == 2) && (config.get<bool>("useNodeWeights"))) {
+            if ((config.get<IndexType>("DampingBoundary") == 2) && (useNodeWeights)) {
                 lama::VectorAssembly<ValueType> assembly;
                 assembly.reserve(ownedIndexes.size());
                 auto BoundaryWidth = config.get<IndexType>("BoundaryWidth");
