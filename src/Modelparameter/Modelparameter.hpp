@@ -24,7 +24,6 @@
 #include "../Common/Common.hpp"
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include <iostream>
 
 namespace KITGPI

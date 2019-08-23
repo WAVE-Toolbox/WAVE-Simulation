@@ -107,8 +107,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
     allocateModelparameter(vector, ctx, dist);
 
     readModelparameter(vector, filename, dist, partitionedIn);
-
-    vector.redistribute(dist);
 }
 
 /*! \brief Write singe modelparameter to an external file
@@ -121,16 +119,20 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType partitionedOut) const
 {
-    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << ", partitionedOut = " << partitionedOut << "\n" )
 
     switch (partitionedOut) {
-    case false:
-        vector.writeToFile(filename);
-        HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << "\n");
+    case 0:
+        vector.writeToFile(filename + ".mtx", lama::FileMode::FORMATTED);
         break;
 
-    case true:
-        partitionOut.writeToDistributedFiles(vector, filename);
+    case 1:
+        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
+        vector.writeToFile(filename + ".lmf", lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        break;
+
+    case 2:
+        vector.writeToFile(filename + "%r.mtx", lama::FileMode::FORMATTED);
         break;
 
     default:
@@ -144,16 +146,17 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType partitionedIn)
 {
-
-    PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "readModelParameter " << filename << ", partitionedIn = " << partitionedIn << "\n");
 
     switch (partitionedIn) {
-    case false:
-        partitionIn.readFromOneFile(vector, filename, dist);
+    case 0:
+        vector.readFromFile(filename + ".mtx", dist );
         break;
-
-    case true:
-        partitionIn.readFromDistributedFiles(vector, filename, dist);
+    case 1:
+        vector.readFromFile(filename + ".lmf", dist );
+        break;
+    case 2:
+        vector.readFromFile(filename + "%r.mtx", dist );
         break;
 
     default:

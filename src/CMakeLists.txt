@@ -98,7 +98,6 @@ set ( SOFI_LIB_DIRS
         Acquisition 
         Configuration  
         ForwardSolver   
-        PartitionedInOut 
         Wavefields
         CheckParameter 
         Common

@@ -8,7 +8,6 @@
 #include "../Common/HostPrint.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 

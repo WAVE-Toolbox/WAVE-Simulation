@@ -182,8 +182,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
     std::string filenameVelocityP = filename + ".vp.mtx";
     std::string filenamedensity = filename + ".density.mtx";
 
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
+    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
 }
 
 //! \brief Copy constructor
@@ -207,11 +207,8 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", partitionedOut);
+    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
 };
 
 //! \brief Initializsation of the Averaging matrices

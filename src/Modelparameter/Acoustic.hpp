@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include "Modelparameter.hpp"
 
 namespace KITGPI
