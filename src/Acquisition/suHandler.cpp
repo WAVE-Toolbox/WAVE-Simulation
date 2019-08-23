@@ -380,9 +380,9 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
 
     tr.ntr = ntr; /* number of traces */
 
-    const char *filetemp = filename.c_str();
-    FILE *pFile;
-    pFile = fopen(filetemp, "wb");
+//     const char *filetemp = filename.c_str();
+//     FILE *pFile;
+
     scai::lama::DenseVector<ValueType> tempdata;
 
     coordinate3D coord3Dsrc;
@@ -398,7 +398,6 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     ZS = ZS * DH;
     
     
-    
     // method to write su pararllel
     // 1 redistribute matrix to block distribution
     auto colDist=data.getColDistributionPtr();
@@ -406,6 +405,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     auto comm=rowDistIn->getCommunicatorPtr();
     auto rowDist=std::make_shared<dmemo::BlockDistribution>(ntr,comm);
     lama::DenseMatrix<float> dataTemp;
+//     dataTemp.assign(data);
+//     dataTemp.redistribute(rowDist,colDist);
     dataTemp.assignDistribute(data, rowDist, colDist);
     // 1 get number of local traces
     auto numLocalTraces=dataTemp.getLocalNumRows();
@@ -425,6 +426,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         // fill Harray in loop over local! traces
         char* writePointer=writeLocalBuffer.get();
         const float* readPointer=localData.get();
+        
+        std::cout << "B" << std::endl;
     for (tracl1 = 0; tracl1 < numLocalTraces; tracl1++) {
         
         temp3 = (ValueType)(coordinates1D.getValue(tracl1));
@@ -473,62 +476,16 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     }
     writeLocalBuffer.release();
     localData.release();
-
+std::cout << "C" << std::endl;
     //get collective file to write with parall IO
-    comm->collectiveFile()->open("parallel.su","w");
+   auto cfile=comm->collectiveFile();
+    cfile->open("parallel.su","w");
     //find offset of the first local trace
-    auto offset=rowDist->local2Global(0)*ns;
-    comm->collectiveFile()->writeAll(localBuffer,offset);
-    comm->collectiveFile()->close();
 
-    for (tracl1 = 0; tracl1 < ntr; tracl1++) {
-        temp3 = (ValueType)(coordinates1D.getValue(tracl1));
-        temp2 = floor(temp3);
-        coord3Drec = modelCoordinates.index2coordinate(temp2);
-        xr = coord3Drec.x;
-        yr = coord3Drec.y;
-        zr = coord3Drec.z;
-        yr = yr * DH;
-        xr = xr * DH;
-        zr = zr * DH;
-        x = xr - XS; // Taking source position as reference point
-        y = yr - YS;
-        z = zr - ZS;
-
-        tr.tracl = (int)tracl1 + 1; // trace sequence number within line
-        tr.tracr = 1;               // trace sequence number within reel
-        tr.ep = 1;
-        tr.cdp = (int)ntr;
-        tr.trid = (short)1;
-        tr.offset = (signed int)round(sqrt((XS - xr) * (XS - xr) + (YS - yr) * (YS - yr) + (ZS - zr) * (ZS - zr)) * 1000.0);
-        tr.gelev = (signed int)round(yr * 1000.0);
-        tr.sdepth = (signed int)round(YS * 1000.0); /* source depth (positive) */
-        /* angle between receiver position and reference point
-            (sperical coordinate system: swdep=theta, gwdep=phi) */
-        tr.gdel = (signed int)round(atan2(-y, z) * 180 * 1000.0 / 3.1415926);
-        tr.gwdep = (signed int)round(sqrt(z * z + y * y) * 1000.0);
-        tr.swdep = (int)round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
-        tr.scalel = (signed short)-3;
-        tr.scalco = (signed short)-3;
-        tr.sx = (signed int)round(XS * 1000.0); /* X source coordinate */
-        tr.sy = (signed int)round(ZS * 1000.0); /* Y source coordinate */
-
-        /* group coordinates */
-        tr.gx = (signed int)round(xr * 1000.0);
-        tr.gy = (signed int)round(zr * 1000.0);
-        tr.ns = (unsigned short)ns;          /* number of samples in this trace */
-        tr.dt = (unsigned short)round(dtms); /* sample interval in micro-seconds */
-        tr.d1 = (float)tr.dt * 1.0e-6;       /* sample spacing for non-seismic data */
-
-        data.getRow(tempdata, tracl1);
-        for (scai::IndexType sample = 0; sample < tempdata.size(); sample++) {
-            tr.data[sample] = float(tempdata.getValue(sample));
-        }
-
-        fwrite(&tr, 240, 1, pFile);
-        fwrite(&tr.data[0], 4, ns, pFile);
-    }
-    fclose(pFile);
+    cfile->writeAll(localBuffer);
+    cfile->close();
+std::cout << "D" << std::endl;
+    
 }
 
 //! \brief Read all headers of a SU file and store them in a standard vector
