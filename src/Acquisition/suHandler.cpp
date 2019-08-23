@@ -366,24 +366,44 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
 {
     auto ns = data.getNumColumns();
     auto ntr = data.getNumRows();
-    
+
+    // write su pararllel
+    // 1 redistribute data matrix and coordinate vector to block distribution
+    auto colDist = data.getColDistributionPtr();
+    auto rowDistIn = data.getRowDistributionPtr();
+    auto comm = rowDistIn->getCommunicatorPtr();
+    auto rowDist = std::make_shared<dmemo::BlockDistribution>(ntr, comm);
+    lama::DenseMatrix<float> dataTemp;
+    lama::DenseVector<IndexType> coordinatesTemp;
+    dataTemp.assignDistribute(data, rowDist, colDist);
+    coordinatesTemp.assignDistribute(coordinates1D, rowDist);
+    auto readLocalCoordinates = hmemo::hostReadAccess(coordinatesTemp.getLocalValues());
+
+    // 1 get number of local traces
+    auto numLocalTraces = dataTemp.getLocalNumRows();
+    //read access
+
+    //get read access and pointer to the data
+    auto readLocalData = hmemo::hostReadAccess(dataTemp.getLocalStorage().getValues());
+    const float *readPointer = readLocalData.get();
+
+    // create local (byte) Harray with type char (1 char = 1 byte)
+    // size of array = numLocalTraces*(HeaderSize+Tracessize)
+    scai::hmemo::HArray<char> localBuffer(numLocalTraces * (240 + sizeof(float) * ns));
+    // get write access and pointer to the buffer
+    auto writeLocalBuffer = hmemo::hostWriteAccess(localBuffer);
+    char *writePointer = writeLocalBuffer.get();
+
+    // create Segy header
     Segy tr;
     initSegy(tr);
 
-    IndexType tracl1;
-    ValueType temp3;
-    scai::IndexType temp2;
     ValueType xr, yr, zr, x, y, z;
     ValueType XS = 0.0, YS = 0.0, ZS = 0.0;
     const ValueType xshift = 800.0, yshift = 800.0;
     ValueType dtms = (ValueType)(DT * 1000000);
 
     tr.ntr = ntr; /* number of traces */
-
-//     const char *filetemp = filename.c_str();
-//     FILE *pFile;
-
-    scai::lama::DenseVector<ValueType> tempdata;
 
     coordinate3D coord3Dsrc;
     coordinate3D coord3Drec;
@@ -396,46 +416,15 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     YS = YS * DH;
     XS = XS * DH;
     ZS = ZS * DH;
-    
-    
-    // method to write su pararllel
-    // 1 redistribute matrix to block distribution
-    auto colDist=data.getColDistributionPtr();
-    auto rowDistIn=data.getRowDistributionPtr();
-    auto comm=rowDistIn->getCommunicatorPtr();
-    auto rowDist=std::make_shared<dmemo::BlockDistribution>(ntr,comm);
-    lama::DenseMatrix<float> dataTemp;
-//     dataTemp.assign(data);
-//     dataTemp.redistribute(rowDist,colDist);
-    dataTemp.assignDistribute(data, rowDist, colDist);
-    // 1 get number of local traces
-    auto numLocalTraces=dataTemp.getLocalNumRows();
-        //read access
-    std::cout << numLocalTraces << std::endl;
-    auto localData=hmemo::hostReadAccess(dataTemp.getLocalStorage().getValues());
-    
-    // create local (byte) Harray with type char (1 char = 1 byte)
-    // size of array = numLocalTraces*(HeaderSize+Tracessize)
-    //               = numLocalTraces*(240+4*NS)
-    
-    scai::hmemo::HArray<char> localBuffer(numLocalTraces*(240+sizeof(float)*ns));
-    // get write access
-    auto writeLocalBuffer=hmemo::hostWriteAccess(localBuffer);
 
+    // loop over local traces
+    for (int localTrace = 0; localTrace < numLocalTraces; localTrace++) {
 
-        // fill Harray in loop over local! traces
-        char* writePointer=writeLocalBuffer.get();
-        const float* readPointer=localData.get();
-        
-        std::cout << "B" << std::endl;
-    for (tracl1 = 0; tracl1 < numLocalTraces; tracl1++) {
-        
-        temp3 = (ValueType)(coordinates1D.getValue(tracl1));
-        temp2 = floor(temp3);
-        coord3Drec = modelCoordinates.index2coordinate(temp2);
-        xr = coord3Drec.x;
-        yr = coord3Drec.y;
-        zr = coord3Drec.z;
+        IndexType coordinateIndex = readLocalCoordinates[localTrace];
+        coord3Drec = modelCoordinates.index2coordinate(coordinateIndex);
+        xr = (ValueType)coord3Drec.x;
+        yr = (ValueType)coord3Drec.y;
+        zr = (ValueType)coord3Drec.z;
         yr = yr * DH;
         xr = xr * DH;
         zr = zr * DH;
@@ -443,8 +432,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         y = yr - YS;
         z = zr - ZS;
 
-        tr.tracl = (int)tracl1 + 1; // trace sequence number within line
-        tr.tracr = 1;               // trace sequence number within reel
+        tr.tracl = (int)rowDist->local2Global(localTrace) + 1; // trace sequence number within line
+        tr.tracr = 1;                                          // trace sequence number within reel
         tr.ep = 1;
         tr.cdp = (int)ntr;
         tr.trid = (short)1;
@@ -468,24 +457,20 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         tr.dt = (unsigned short)round(dtms); /* sample interval in micro-seconds */
         tr.d1 = (float)tr.dt * 1.0e-6;       /* sample spacing for non-seismic data */
 
-        std::memcpy((void*) writePointer,&tr,240);
-        writePointer+=240;
-        std::memcpy((void*) writePointer,(void*)readPointer,sizeof(float)*ns);
-        writePointer+=sizeof(float)*ns;
-        readPointer+=ns;   // is float pointer
+        std::memcpy((void *)writePointer, &tr, 240);
+        writePointer += 240;
+        std::memcpy((void *)writePointer, (void *)readPointer, sizeof(float) * ns);
+        writePointer += sizeof(float) * ns;
+        readPointer += ns; // is float pointer
     }
     writeLocalBuffer.release();
-    localData.release();
-std::cout << "C" << std::endl;
-    //get collective file to write with parall IO
-   auto cfile=comm->collectiveFile();
-    cfile->open("parallel.su","w");
-    //find offset of the first local trace
 
+    //get collective file to write with parall IO
+    auto cfile = comm->collectiveFile();
+    const char *filetemp = filename.c_str();
+    cfile->open(filetemp, "w");
     cfile->writeAll(localBuffer);
     cfile->close();
-std::cout << "D" << std::endl;
-    
 }
 
 //! \brief Read all headers of a SU file and store them in a standard vector
