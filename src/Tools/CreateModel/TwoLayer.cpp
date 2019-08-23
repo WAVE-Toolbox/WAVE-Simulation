@@ -67,9 +67,10 @@ int main(int argc, char *argv[])
 
     std::string suffix = ".mtx";   // default output is matrix market
 
-    IndexType partitionedOut = config.get<IndexType>("PartitionedOut");
+    IndexType partitioned = config.get<IndexType>("PartitionedIn");
   
-    if (partitionedOut == 1) suffix = ".lmf";
+    if (partitioned == 1) suffix = ".lmf";
+    if (partitioned == 3) suffix = ".frv";
 
     rho.writeToFile(filename + ".density" + suffix);
 
