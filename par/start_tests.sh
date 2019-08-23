@@ -4,6 +4,7 @@
 export OMP_NUM_THREADS=1
 export NUM_MPI_PROCESSES=4
 export SCAI_UNSUPPORTED=IGNORE
+export SCAI_TRACE=OFF
 
 BINDIR="./../build/bin"
 
