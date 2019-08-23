@@ -405,8 +405,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     auto rowDistIn=data.getRowDistributionPtr();
     auto comm=rowDistIn->getCommunicatorPtr();
     auto rowDist=std::make_shared<dmemo::BlockDistribution>(ntr,comm);
-    lama::DenseMatrix<ValueType> dataTemp(data);
-    dataTemp.redistribute(rowDist,colDist);
+    lama::DenseMatrix<float> dataTemp;
+    dataTemp.assignDistribute(data, rowDist, colDist);
     // 1 get number of local traces
     auto numLocalTraces=dataTemp.getLocalNumRows();
         //read access
@@ -423,8 +423,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
 
 
         // fill Harray in loop over local! traces
-        auto writePointer=&writeLocalBuffer;
-        auto readPointer=&localData;
+        char* writePointer=writeLocalBuffer.get();
+        const float* readPointer=localData.get();
     for (tracl1 = 0; tracl1 < numLocalTraces; tracl1++) {
         
         temp3 = (ValueType)(coordinates1D.getValue(tracl1));
@@ -469,7 +469,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
         writePointer+=240;
         std::memcpy((void*) writePointer,(void*)readPointer,sizeof(float)*ns);
         writePointer+=sizeof(float)*ns;
-        readPointer+=sizeof(float)*ns;
+        readPointer+=ns;   // is float pointer
     }
     writeLocalBuffer.release();
     localData.release();
