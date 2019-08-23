@@ -1,5 +1,6 @@
 #include "suHandler.hpp"
-
+#include <scai/dmemo/BlockDistribution.hpp>
+#include <scai/dmemo/CollectiveFile.hpp>
 using namespace scai;
 
 //! \brief Build a Source Acquisition Matrix from all SU files
@@ -363,6 +364,9 @@ void KITGPI::Acquisition::suHandler<ValueType>::readSingleDataSU(std::string con
 template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates1D, ValueType DT, scai::IndexType sourceCoordinate1D, Coordinates<ValueType> const &modelCoordinates)
 {
+    auto ns = data.getNumColumns();
+    auto ntr = data.getNumRows();
+    
     Segy tr;
     initSegy(tr);
 
@@ -374,8 +378,6 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     const ValueType xshift = 800.0, yshift = 800.0;
     ValueType dtms = (ValueType)(DT * 1000000);
 
-    scai::IndexType ns = data.getNumColumns();
-    scai::IndexType ntr = data.getNumRows();
     tr.ntr = ntr; /* number of traces */
 
     const char *filetemp = filename.c_str();
@@ -394,6 +396,90 @@ void KITGPI::Acquisition::suHandler<ValueType>::writeSU(std::string const &filen
     YS = YS * DH;
     XS = XS * DH;
     ZS = ZS * DH;
+    
+    
+    
+    // method to write su pararllel
+    // 1 redistribute matrix to block distribution
+    auto colDist=data.getColDistributionPtr();
+    auto rowDistIn=data.getRowDistributionPtr();
+    auto comm=rowDistIn->getCommunicatorPtr();
+    auto rowDist=std::make_shared<dmemo::BlockDistribution>(ntr,comm);
+    lama::DenseMatrix<ValueType> dataTemp(data);
+    dataTemp.redistribute(rowDist,colDist);
+    // 1 get number of local traces
+    auto numLocalTraces=dataTemp.getLocalNumRows();
+        //read access
+    std::cout << numLocalTraces << std::endl;
+    auto localData=hmemo::hostReadAccess(dataTemp.getLocalStorage().getValues());
+    
+    // create local (byte) Harray with type char (1 char = 1 byte)
+    // size of array = numLocalTraces*(HeaderSize+Tracessize)
+    //               = numLocalTraces*(240+4*NS)
+    
+    scai::hmemo::HArray<char> localBuffer(numLocalTraces*(240+sizeof(float)*ns));
+    // get write access
+    auto writeLocalBuffer=hmemo::hostWriteAccess(localBuffer);
+
+
+        // fill Harray in loop over local! traces
+        auto writePointer=&writeLocalBuffer;
+        auto readPointer=&localData;
+    for (tracl1 = 0; tracl1 < numLocalTraces; tracl1++) {
+        
+        temp3 = (ValueType)(coordinates1D.getValue(tracl1));
+        temp2 = floor(temp3);
+        coord3Drec = modelCoordinates.index2coordinate(temp2);
+        xr = coord3Drec.x;
+        yr = coord3Drec.y;
+        zr = coord3Drec.z;
+        yr = yr * DH;
+        xr = xr * DH;
+        zr = zr * DH;
+        x = xr - XS; // Taking source position as reference point
+        y = yr - YS;
+        z = zr - ZS;
+
+        tr.tracl = (int)tracl1 + 1; // trace sequence number within line
+        tr.tracr = 1;               // trace sequence number within reel
+        tr.ep = 1;
+        tr.cdp = (int)ntr;
+        tr.trid = (short)1;
+        tr.offset = (signed int)round(sqrt((XS - xr) * (XS - xr) + (YS - yr) * (YS - yr) + (ZS - zr) * (ZS - zr)) * 1000.0);
+        tr.gelev = (signed int)round(yr * 1000.0);
+        tr.sdepth = (signed int)round(YS * 1000.0); /* source depth (positive) */
+        /* angle between receiver position and reference point
+            (sperical coordinate system: swdep=theta, gwdep=phi) */
+        tr.gdel = (signed int)round(atan2(-y, z) * 180 * 1000.0 / 3.1415926);
+        tr.gwdep = (signed int)round(sqrt(z * z + y * y) * 1000.0);
+        tr.swdep = (int)round(((360.0 / (2.0 * 3.1415926)) * atan2(x - xshift, y - yshift)) * 1000.0);
+        tr.scalel = (signed short)-3;
+        tr.scalco = (signed short)-3;
+        tr.sx = (signed int)round(XS * 1000.0); /* X source coordinate */
+        tr.sy = (signed int)round(ZS * 1000.0); /* Y source coordinate */
+
+        /* group coordinates */
+        tr.gx = (signed int)round(xr * 1000.0);
+        tr.gy = (signed int)round(zr * 1000.0);
+        tr.ns = (unsigned short)ns;          /* number of samples in this trace */
+        tr.dt = (unsigned short)round(dtms); /* sample interval in micro-seconds */
+        tr.d1 = (float)tr.dt * 1.0e-6;       /* sample spacing for non-seismic data */
+
+        std::memcpy((void*) writePointer,&tr,240);
+        writePointer+=240;
+        std::memcpy((void*) writePointer,(void*)readPointer,sizeof(float)*ns);
+        writePointer+=sizeof(float)*ns;
+        readPointer+=sizeof(float)*ns;
+    }
+    writeLocalBuffer.release();
+    localData.release();
+
+    //get collective file to write with parall IO
+    comm->collectiveFile()->open("parallel.su","w");
+    //find offset of the first local trace
+    auto offset=rowDist->local2Global(0)*ns;
+    comm->collectiveFile()->writeAll(localBuffer,offset);
+    comm->collectiveFile()->close();
 
     for (tracl1 = 0; tracl1 < ntr; tracl1++) {
         temp3 = (ValueType)(coordinates1D.getValue(tracl1));
