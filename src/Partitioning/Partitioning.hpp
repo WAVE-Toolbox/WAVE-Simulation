@@ -99,72 +99,189 @@ namespace KITGPI
             return (dist);
         }
 #endif
-        /*! \brief calculation of the weights for the absorbing boundary
+
+        /*! \brief calculation of the node weights (variable fd order + pml)
             \param config configuration object
             \param dist distributionPtr of the model
             \param modelCoordinates coordinate object
             */
         template <typename ValueType>
-        scai::lama::DenseVector<ValueType> BoundaryWeights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType weight)
+        scai::lama::DenseVector<ValueType> Weights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
 
+            // Weights of single operations; valid for all cases
+            ValueType MatrixVector2ndOrderWeight = 1.00;
+            ValueType VectorAssignmentWeight = 0.25;
+            ValueType VectorPlusVectorWeight = 0.43;
+            ValueType PMLWeight = 3.49;
+
+            IndexType NumMatrixVector = 0;
+            IndexType NumVectorAssignement = 0;
+            IndexType NumVectorPlusVector = 0;
+            IndexType NumPMLPerDim = 0;
+
             std::string dimension = config.get<std::string>("dimension");
+            std::string type = config.get<std::string>("equationType");
+
+            // transform to lower cases
+            std::transform(type.begin(), type.end(), type.begin(), ::tolower);
             std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);
 
-            auto BoundaryWidth = config.get<IndexType>("BoundaryWidth");
+            // Assert correctness of input values
+            SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
+            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("visco") == 0 || type.compare("sh") == 0, "Unkown type");
+
+            //Number of operations during the time stepping
+            // 2D
+            if (dimension.compare("2d") == 0 && type.compare("acoustic") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 7;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("elastic") == 0) {
+                NumMatrixVector = 8;
+                NumVectorAssignement = 20;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 4;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("visco") == 0) {
+                NumMatrixVector = 8;
+                NumVectorAssignement = 41;
+                NumVectorPlusVector = 8;
+                NumPMLPerDim = 4;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("sh") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 7;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
+
+            // 3D
+            if (dimension.compare("3d") == 0 && type.compare("acoustic") == 0) {
+                NumMatrixVector = 6;
+                NumVectorAssignement = 10;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
+            if (dimension.compare("3d") == 0 && type.compare("elastic") == 0) {
+                NumMatrixVector = 18;
+                NumVectorAssignement = 34;
+                NumVectorPlusVector = 3;
+                NumPMLPerDim = 6;
+            }
+            if (dimension.compare("3d") == 0 && type.compare("visco") == 0) {
+                NumMatrixVector = 18;
+                NumVectorAssignement = 72;
+                NumVectorPlusVector = 22;
+                NumPMLPerDim = 6;
+            }
+
+            //runtime of Vector Operations are not influenced by the FDorder;
+            ValueType constantWeight = NumVectorAssignement * VectorAssignmentWeight + NumVectorPlusVector * VectorPlusVectorWeight;
+            ValueType referenceTotalWeight = NumMatrixVector * MatrixVector2ndOrderWeight + constantWeight;
 
             hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
             dist->getOwnedIndexes(ownedIndexes);
 
-            lama::VectorAssembly<ValueType> assembly;
-            assembly.reserve(ownedIndexes.size());
-            if (config.get<IndexType>("DampingBoundary")) {
+            lama::DenseVector<ValueType> fdWeights;
+            fdWeights.setSameValue(dist, referenceTotalWeight);
+
+            bool useNodeWeights=1;
+            try{
+                useNodeWeights=config.get<bool>("useNodeWeights");
+            }
+            catch(...)
+            {
+                //do nothing... use default useNodeWeights=1. useNodeWeights is only used for debugging
+            }
+            
+            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)){
+                lama::VectorAssembly<ValueType> assembly;
+                assembly.reserve(ownedIndexes.size());
+
+                std::vector<scai::IndexType> spatialFDorderVec;
+                std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
+                if (!is)
+                    COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
+                std::istream_iterator<IndexType> start(is), end;
+                spatialFDorderVec.assign(start, end);
+                if (spatialFDorderVec.empty()) {
+                    COMMON_THROWEXCEPTION("FDorder file is empty");
+                }
+                // Weights of single Matrix vector Products with FDorder 2-12
+                ValueType FDWeights[6] = {MatrixVector2ndOrderWeight, 1.56, 2.06, 2.54, 3.00, 3.70};
+
+                //loop over all (local) indeces
                 for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
                     Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
                     Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
-                    scai::IndexType min = 0;
-                    if (coordinatedist.x < coordinatedist.y) {
-                        min = coordinatedist.x;
-                    } else {
-                        min = coordinatedist.y;
-                    }
+                    const auto layer = modelCoordinates.getLayer(coordinate);
 
-                    if (dimension.compare("3d") == 0) {
-                        min = coordinatedist.min();
-                    }
+                    //FDOrder Weights
+                    ValueType fdWeight = (NumMatrixVector * FDWeights[spatialFDorderVec[layer] / 2 - 1] + constantWeight);
 
-                    if (config.get<IndexType>("FreeSurface") == 0) {
-                        if (min < BoundaryWidth) {
-                            assembly.push(ownedIndex, weight);
-                        }
-                    } else {
-                        IndexType HorizontalMin = 0;
-                        if (dimension.compare("3d") == 0) {
-                            HorizontalMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
-                        } else {
-                            HorizontalMin = coordinatedist.x;
-                        }
-
-                        if (coordinate.y < BoundaryWidth) {
-                            if (HorizontalMin < BoundaryWidth) {
-                                assembly.push(ownedIndex, weight);
-                            }
-                        } else if (min < BoundaryWidth) {
-                            assembly.push(ownedIndex, weight);
-                        }
-                    }
+                    assembly.push(ownedIndex, fdWeight);
                 }
+
+                fdWeights.fillFromAssembly(assembly);
             }
 
-            lama::DenseVector<ValueType> weights;
-            weights.allocate(dist);
-            weights = 1.0;
-            weights.fillFromAssembly(assembly);
-            // weights.setContextPtr(ctx);
-            if (config.get<bool>("weightsWrite"))
-                weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");
+            lama::DenseVector<ValueType> pmlWeights;
+            pmlWeights.setSameValue(dist, 0.0);
 
+            if ((config.get<IndexType>("DampingBoundary") == 2) && (useNodeWeights)) {
+                lama::VectorAssembly<ValueType> assembly;
+                assembly.reserve(ownedIndexes.size());
+                auto BoundaryWidth = config.get<IndexType>("BoundaryWidth");
+                for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+                    Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
+
+                    const auto layer = modelCoordinates.getLayer(coordinate);
+
+                    ValueType pmlWeight = 0;
+
+                    IndexType width = std::ceil((float)BoundaryWidth / modelCoordinates.getDHFactor(layer));
+                    IndexType xDist = coordinatedist.x / modelCoordinates.getDHFactor(layer);
+                    IndexType yDist = coordinatedist.y / modelCoordinates.getDHFactor(layer);
+                    IndexType zDist = coordinatedist.z / modelCoordinates.getDHFactor(layer);
+
+                    if (xDist < width) {
+                        pmlWeight += NumPMLPerDim * PMLWeight;
+                    }
+
+                    if (yDist < width) {
+                        IndexType yCoord = coordinate.y / modelCoordinates.getDHFactor(layer);
+                        if (yCoord < width) {
+                            if (config.get<IndexType>("FreeSurface") == 0) {
+                                pmlWeight += NumPMLPerDim * PMLWeight;
+                            }
+                        } else {
+                            pmlWeight += NumPMLPerDim * PMLWeight;
+                        }
+                    }
+                    if (dimension.compare("3d") == 0) {
+                        if (zDist < width) {
+                            pmlWeight += NumPMLPerDim * PMLWeight;
+                        }
+                    }
+
+                    assembly.push(ownedIndex, pmlWeight);
+                }
+
+                pmlWeights.fillFromAssembly(assembly);
+            }
+
+            lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
+            weights /= referenceTotalWeight;
+            weights /= 100000000000000000;
+
+            if (config.get<bool>("weightsWrite")) {
+                weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");
+            }
             return (weights);
         }
     }

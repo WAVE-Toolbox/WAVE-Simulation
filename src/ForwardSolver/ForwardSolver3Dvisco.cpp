@@ -257,7 +257,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     vZ += update;
 
     /* ----------------*/
-    /* pressure update */
+    /* stress update */
     /* ----------------*/
 
     vxx = Dxb * vX;

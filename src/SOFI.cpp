@@ -200,7 +200,7 @@ int main(int argc, const char *argv[])
 #ifdef USE_GEOGRAPHER
         start_t = common::Walltime::get();
         auto graph = derivatives->getCombinedMatrix();
-        auto &&weights = Partitioning::BoundaryWeights(config, dist, modelCoordinates, config.get<ValueType>("BoundaryWeights"));
+        auto &&weights = Partitioning::Weights(config, dist, modelCoordinates);
         auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
 
         end_t = common::Walltime::get();
@@ -211,8 +211,8 @@ int main(int argc, const char *argv[])
         derivatives->redistributeMatrices(dist);
 
 #else
-        HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \n Use < make prog GEOGRAPHER_ROOT= > to compile the partitioner\n", "\n")
-        return (2);
+        HOST_PRINT(commAll, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
+        HOST_PRINT(commAll, "\nBlock Distribution will be used instead!\n\n")
 #endif
     }
 
