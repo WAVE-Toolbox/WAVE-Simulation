@@ -43,7 +43,9 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiver(std::stri
         filenameTmp = filename + "." + std::string(SeismogramTypeString[SeismogramType(iComponent)]) + ".SU";
         buildAcqMatrixReceiverComp(filenameTmp, receiverSettingsVecTmp, DH);
         nShots[iComponent] = receiverSettingsVecTmp.size();
+
         acqReceiver.insert(acqReceiver.end(), receiverSettingsVecTmp.begin(), receiverSettingsVecTmp.end());
+
     }
 }
 
@@ -64,13 +66,16 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSourceComp(std::st
     sourceSettingsVec.clear();
     sourceSettingsVec.reserve(header.size());
 
+    sourceSettings<ValueType> sourceSettingsTmp;
+    
     for (unsigned int i = 0; i < header.size(); i++) {
         thisHeader = header[i];
-        sourceSettingsVec[i].sourceCoords.x = static_cast<IndexType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
-        sourceSettingsVec[i].sourceCoords.y = static_cast<IndexType>(thisHeader.sdepth * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH + 0.5);
-        sourceSettingsVec[i].sourceCoords.z = static_cast<IndexType>(thisHeader.sy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
-        sourceSettingsVec[i].sourceType = component;
-        sourceSettingsVec[i].waveletType = 3; // each source signal should be read from file
+        sourceSettingsTmp.sourceCoords.x = static_cast<IndexType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
+        sourceSettingsTmp.sourceCoords.y = static_cast<IndexType>(thisHeader.sdepth * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH + 0.5);
+        sourceSettingsTmp.sourceCoords.z = static_cast<IndexType>(thisHeader.sy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
+        sourceSettingsTmp.sourceType = component;
+        sourceSettingsTmp.waveletType = 3; // each source signal should be read from file
+        sourceSettingsVec.push_back(sourceSettingsTmp);
     }
 }
 
@@ -91,12 +96,15 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiverComp(std::
     receiverSettingsVec.clear();
     receiverSettingsVec.reserve(header.size());
 
-    for (unsigned int i = 0; i < header.size() / 4; i++) {
+    receiverSettings receiverSettingsTmp;
+    
+    for (unsigned int i = 0; i < header.size() ; i++) {
         thisHeader = header[i];
-        receiverSettingsVec[i].receiverCoords.x = static_cast<IndexType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
-        receiverSettingsVec[i].receiverCoords.y = static_cast<IndexType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
-        receiverSettingsVec[i].receiverCoords.z = static_cast<IndexType>(thisHeader.gy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
-        receiverSettingsVec[i].receiverType = component;
+        receiverSettingsTmp.receiverCoords.x = static_cast<IndexType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
+        receiverSettingsTmp.receiverCoords.y = static_cast<IndexType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
+        receiverSettingsTmp.receiverCoords.z = static_cast<IndexType>(thisHeader.gy * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
+        receiverSettingsTmp.receiverType = component;
+        receiverSettingsVec.push_back(receiverSettingsTmp);
     }
 }
 
@@ -134,12 +142,12 @@ scai::IndexType KITGPI::Acquisition::suHandler<ValueType>::getComponentFromName(
 
     IndexType component = NUM_ELEMENTS_SEISMOGRAMTYPE + 2;
 
+    
     for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++)
         if (tmpString.compare(SeismogramTypeString[SeismogramType(i)]) == 0)
             component = i + 1; // +1 because components in acquisition matrix are defined as p := 1 ...
 
     SCAI_ASSERT(component < NUM_ELEMENTS_SEISMOGRAMTYPE + 2, "no component found in filename")
-
     return component;
 }
 
