@@ -232,6 +232,7 @@ int main(int argc, const char *argv[])
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
+    
 
     /* --------------------------------------- */
     /* Modelparameter                          */
@@ -301,6 +302,8 @@ int main(int argc, const char *argv[])
 
     for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
         IndexType shotNumber = uniqueShotNos[shotInd];
+        
+        
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
@@ -334,8 +337,17 @@ int main(int argc, const char *argv[])
 
         receivers.getSeismogramHandler().normalize();
 
+        std::cout << "write" << std::endl;
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+        receivers.getSeismogramHandler().resetData();
+         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".1st" , modelCoordinates);
+        std::cout << "read" << std::endl;
+        
+        receivers.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), 1);
+        std::cout << "rewrite" << receivers.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(0)).getData()<< std::endl;
 
+        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".2nd" , modelCoordinates);
+        
         solver->resetCPML();
     }
     return 0;

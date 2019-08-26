@@ -42,7 +42,7 @@ namespace KITGPI
             KITGPI::Acquisition::sourceSettings< ValueType >& getSourceSettings (scai::IndexType shotNumber );
 
             // following member functions are static because they are associated with the class rather than the objects
-            static void readDataSU(std::string const &filename, scai::lama::Matrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr);
+            static void readDataSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr);
             static void readSingleDataSU(std::string const &filename, scai::lama::Vector<ValueType> &data, scai::IndexType traceNumber);
             static void readHeaderSU(std::string const &filename, std::vector<Segy> &header);
 

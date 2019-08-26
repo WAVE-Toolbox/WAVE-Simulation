@@ -298,28 +298,51 @@ void KITGPI::Acquisition::suHandler<ValueType>::initSegy(Segy &tr)
 \param ntr number of traces
 */
 template <typename ValueType>
-void KITGPI::Acquisition::suHandler<ValueType>::readDataSU(std::string const &filename, scai::lama::Matrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr)
+void KITGPI::Acquisition::suHandler<ValueType>::readDataSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr)
 {
     Segy tr;
 
+    // write su pararllel
+    // 1 redistribute data matrix and coordinate vector to block distribution
+    auto colDistIn = data.getColDistributionPtr();
+    auto comm = data.getRowDistributionPtr()->getCommunicatorPtr();
+    auto rowDist = std::make_shared<dmemo::BlockDistribution>(ntr, comm);
+    
+    
+    data.redistribute(rowDist, colDistIn);
+
+    auto numLocalTraces = data.getLocalNumRows();
+    scai::hmemo::HArray<char> localBuffer(numLocalTraces * (240 + sizeof(float) * ns));
+    
+    auto cfile = comm->collectiveFile();
     const char *filetemp = filename.c_str();
-    FILE *pFile;
-    pFile = fopen(filetemp, "rb");
+    cfile->open(filetemp, "r");
+    cfile->readAll(localBuffer,numLocalTraces* (240 + sizeof(float) * ns));
+    cfile->close();
+    
+    scai::hmemo::HArray<float> localTraces(numLocalTraces*ns);
+    auto writeLocalData = hmemo::hostWriteAccess(localTraces);
+    float *writePointer = writeLocalData.get();
 
-    scai::hmemo::HArray<float> dataTmp;
-    scai::lama::DenseVector<float> traceTmp;
-    scai::lama::DenseVector<ValueType> trace;
-
-    for (scai::IndexType tracl1 = 0; tracl1 < ntr; tracl1++) {
-        fseek(pFile, 240, SEEK_CUR);
-        fread(&tr.data[0], 4, ns, pFile);
-
-        dataTmp.setRawData(ns, tr.data);
-        traceTmp.assign(dataTmp);
-        trace = scai::lama::cast<ValueType, float>(traceTmp);
-        data.setRow(trace, tracl1, scai::common::BinaryOp::COPY);
+    
+    // create local (byte) Harray with type char (1 char = 1 byte)
+    // size of array = numLocalTraces*(HeaderSize+Tracessize)
+    // get read access and pointer to the buffer
+    auto readLocalBuffer = hmemo::hostReadAccess(localBuffer);
+    const char *readPointer = readLocalBuffer.get();
+    
+    for (scai::IndexType localTrace = 0; localTrace < numLocalTraces; localTrace++) {
+        readPointer += 240;
+        std::memcpy((void *)writePointer, (void *)readPointer, sizeof(float)*ns);
+        writePointer += ns;
+        readPointer += sizeof(float)*ns; // is float pointer
     }
+writeLocalData.release();
+
+data.getLocalStorage().setRawDenseData(numLocalTraces,ns,hmemo::hostReadAccess(localTraces).get());
+
 }
+
 
 //! \brief Read a single trace without header form SU
 /*!
