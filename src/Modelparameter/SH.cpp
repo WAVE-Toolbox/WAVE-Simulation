@@ -159,8 +159,8 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     std::string filenameVelocityS = filename + ".vs.mtx";
     std::string filenamedensity = filename + ".density.mtx";
 
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
+    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
 }
 
 //! \brief Copy constructor
@@ -184,11 +184,8 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenameS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", partitionedOut);
+    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
 };
 
 //! \brief Initializsation of the Averaging matrices

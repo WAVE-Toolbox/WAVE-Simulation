@@ -195,13 +195,9 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
+    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
 }
 
 //! \brief Copy constructor
@@ -228,13 +224,9 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenameS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", partitionedOut);
+    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
+    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
 };
 
 //! \brief Initializsation of the Averaging matrices

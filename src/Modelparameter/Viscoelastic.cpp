@@ -181,17 +181,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-    std::string filenameTauP = filename + ".tauP.mtx";
-    std::string filenameTauS = filename + ".tauS.mtx";
-
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
-    this->initModelparameter(tauS, ctx, dist, filenameTauS, partitionedIn);
-    this->initModelparameter(tauP, ctx, dist, filenameTauP, partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
+    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
+    this->initModelparameter(tauS, ctx, dist, filename + ".tauS", partitionedIn);
+    this->initModelparameter(tauP, ctx, dist, filename + ".tauP", partitionedIn);
 }
 
 //! \brief Copy constructor
@@ -222,18 +216,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
 {
-
-    std::string filenamedensity = filename + ".density.mtx";
-    std::string filenameTauP = filename + ".tauP.mtx";
-    std::string filenameTauS = filename + ".tauS.mtx";
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenameS = filename + ".vs.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(tauP, filenameTauP, partitionedOut);
-    this->writeModelparameter(tauS, filenameTauS, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", partitionedOut);
+    this->writeModelparameter(tauP, filename + ".tauP", partitionedOut);
+    this->writeModelparameter(tauS, filename + ".tauS", partitionedOut);
+    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
+    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
 };
 
 //! \brief Initializsation of the Averaging matrices

@@ -65,18 +65,25 @@ int main(int argc, char *argv[])
     //write model to file specified in configuration
     std::string filename = config.get<std::string>("ModelFilename");
 
-    rho.writeToFile(filename + ".density.mtx");
+    std::string suffix = ".mtx";   // default output is matrix market
+
+    IndexType partitioned = config.get<IndexType>("PartitionedIn");
+  
+    if (partitioned == 1) suffix = ".lmf";
+    if (partitioned == 3) suffix = ".frv";
+
+    rho.writeToFile(filename + ".density" + suffix);
 
     if (type.compare("sh") != 0) {
-        vp.writeToFile(filename + ".vp.mtx");
+        vp.writeToFile(filename + ".vp" + suffix);
     }
 
     if (type.compare("acoustic") != 0) {
-        vs.writeToFile(filename + ".vs.mtx");
+        vs.writeToFile(filename + ".vs" + suffix);
     }
     if (type.compare("visco") == 0) {
-        tauP.writeToFile(filename + ".tauP.mtx");
-        tauS.writeToFile(filename + ".tauS.mtx");
+        tauP.writeToFile(filename + ".tauP" + suffix);
+        tauS.writeToFile(filename + ".tauS" + suffix);
     }
     return 0;
 }

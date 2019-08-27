@@ -56,13 +56,14 @@ void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vecto
         break;
 
     case 2:
-        {
-            PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
-            fileName += ".mtx";
-            // independent IO, each processor writes a local file
-            partitionOut.writeToDistributedFiles(vector, fileName);
-            break;
-       }
+        fileName += ".%r.mtx";   // independent IO, each processor writes a local file, so %r stands for rank
+        vector.writeToFile(fileName);
+        break;
+
+    case 3:
+        fileName += ".frv";   // write binary file with separate header file, done by master process
+        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        break;
 
     default:
         COMMON_THROWEXCEPTION("Unexpected output option, partitionedOut = " << partitionedOut)
