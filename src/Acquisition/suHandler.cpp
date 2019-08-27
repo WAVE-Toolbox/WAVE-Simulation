@@ -1,4 +1,5 @@
 #include "suHandler.hpp"
+#include "Common/HostPrint.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/dmemo/CollectiveFile.hpp>
 using namespace scai;
@@ -45,7 +46,6 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiver(std::stri
         nShots[iComponent] = receiverSettingsVecTmp.size();
 
         acqReceiver.insert(acqReceiver.end(), receiverSettingsVecTmp.begin(), receiverSettingsVecTmp.end());
-
     }
 }
 
@@ -67,7 +67,7 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixSourceComp(std::st
     sourceSettingsVec.reserve(header.size());
 
     sourceSettings<ValueType> sourceSettingsTmp;
-    
+
     for (unsigned int i = 0; i < header.size(); i++) {
         thisHeader = header[i];
         sourceSettingsTmp.sourceCoords.x = static_cast<IndexType>(thisHeader.sx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH + 0.5);
@@ -97,8 +97,8 @@ void KITGPI::Acquisition::suHandler<ValueType>::buildAcqMatrixReceiverComp(std::
     receiverSettingsVec.reserve(header.size());
 
     receiverSettings receiverSettingsTmp;
-    
-    for (unsigned int i = 0; i < header.size() ; i++) {
+
+    for (unsigned int i = 0; i < header.size(); i++) {
         thisHeader = header[i];
         receiverSettingsTmp.receiverCoords.x = static_cast<IndexType>(thisHeader.gx * common::Math::pow<ValueType>(10, thisHeader.scalco) / DH);
         receiverSettingsTmp.receiverCoords.y = static_cast<IndexType>(thisHeader.gelev * common::Math::pow<ValueType>(10, thisHeader.scalel) / DH);
@@ -142,7 +142,6 @@ scai::IndexType KITGPI::Acquisition::suHandler<ValueType>::getComponentFromName(
 
     IndexType component = NUM_ELEMENTS_SEISMOGRAMTYPE + 2;
 
-    
     for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++)
         if (tmpString.compare(SeismogramTypeString[SeismogramType(i)]) == 0)
             component = i + 1; // +1 because components in acquisition matrix are defined as p := 1 ...
@@ -315,42 +314,57 @@ void KITGPI::Acquisition::suHandler<ValueType>::readDataSU(std::string const &fi
     auto colDistIn = data.getColDistributionPtr();
     auto comm = data.getRowDistributionPtr()->getCommunicatorPtr();
     auto rowDist = std::make_shared<dmemo::BlockDistribution>(ntr, comm);
-    
-    
+
     data.redistribute(rowDist, colDistIn);
 
     auto numLocalTraces = data.getLocalNumRows();
     scai::hmemo::HArray<char> localBuffer(numLocalTraces * (240 + sizeof(float) * ns));
-    
+
     auto cfile = comm->collectiveFile();
     const char *filetemp = filename.c_str();
-    cfile->open(filetemp, "r");
-    cfile->readAll(localBuffer,numLocalTraces* (240 + sizeof(float) * ns));
+    try {
+        cfile->open(filetemp, "r");
+    } catch (scai::common::Exception &e) {
+        HOST_PRINT(comm, "\n Error: seismogram '" << filename << "' could not be opened! \n\n\n");
+        COMMON_THROWEXCEPTION("Error: collectiveFile->open called from readDataSU in suHandler.cpp" << e.what());
+    }
+
+    //readAll wont check the filesize. It would makes sense to read in the Header and check if ntr and ns is correct in the su file!
+    std::vector<Segy> header;
+    readHeaderSU(filename, header);
+    if (header.size() != ntr) {
+        HOST_PRINT(comm, "\n Error: seismogram '" << filename << "' has wrong number of traces " << header.size() << "(in) !=" << ntr << "\n\n\n");
+        COMMON_THROWEXCEPTION("Error: wrong number of traces in su file: " << filename);
+    }
+
+    if (header[0].ns != ns) {
+        HOST_PRINT(comm, "\n Error: seismogram '" << filename << "' has wrong number of samples " << header[0].ns << "(in) !=" << ns << "\n\n\n");
+        COMMON_THROWEXCEPTION("Error: wrong number of samples in su file: " << filename);
+    }
+
+    cfile->readAll(localBuffer, numLocalTraces * (240 + sizeof(float) * ns));
     cfile->close();
-    
-    scai::hmemo::HArray<float> localTraces(numLocalTraces*ns);
+
+    scai::hmemo::HArray<float> localTraces(numLocalTraces * ns);
     auto writeLocalData = hmemo::hostWriteAccess(localTraces);
     float *writePointer = writeLocalData.get();
 
-    
     // create local (byte) Harray with type char (1 char = 1 byte)
     // size of array = numLocalTraces*(HeaderSize+Tracessize)
     // get read access and pointer to the buffer
     auto readLocalBuffer = hmemo::hostReadAccess(localBuffer);
     const char *readPointer = readLocalBuffer.get();
-    
+
     for (scai::IndexType localTrace = 0; localTrace < numLocalTraces; localTrace++) {
         readPointer += 240;
-        std::memcpy((void *)writePointer, (void *)readPointer, sizeof(float)*ns);
+        std::memcpy((void *)writePointer, (void *)readPointer, sizeof(float) * ns);
         writePointer += ns;
-        readPointer += sizeof(float)*ns; // is float pointer
+        readPointer += sizeof(float) * ns; // is float pointer
     }
-writeLocalData.release();
+    writeLocalData.release();
 
-data.getLocalStorage().setRawDenseData(numLocalTraces,ns,hmemo::hostReadAccess(localTraces).get());
-
+    data.getLocalStorage().setRawDenseData(numLocalTraces, ns, hmemo::hostReadAccess(localTraces).get());
 }
-
 
 //! \brief Read a single trace without header form SU
 /*!
