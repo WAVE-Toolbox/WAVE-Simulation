@@ -14,18 +14,36 @@ namespace KITGPI
     namespace CheckParameter
     {
 
-        /*! \brief check number of processes
+
+        /*! \brief check variable grid
         *
         \param config configuration class
         \param commAll lama communicator
+        \param modelCoordinates modelCoordinates object
         */
-        void checkNumberOfProcesses(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll)
+        template <typename ValueType>
+        void checkVariableGrid(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
-            IndexType npS = config.get<IndexType>("ProcNS");
-            IndexType npM = commAll->getSize() / npS;
 
-            SCAI_ASSERT_ERROR(commAll->getSize() == npS * npM, "\n Error: Number of MPI processes (" << commAll->getSize() << ") is not multiple of shot domains in configuration"
-                                                                                                     << ": ProcNS = " << npS << "\n")
+            IndexType NX = config.get<IndexType>("NX");
+            IndexType NY = config.get<IndexType>("NY");
+            IndexType NZ = config.get<IndexType>("NZ");
+            IndexType newNX = modelCoordinates.getNX();
+            IndexType newNY = modelCoordinates.getNY();
+            IndexType newNZ = modelCoordinates.getNZ();
+            if ((NX != newNX) || (NY != newNY) || (NZ != newNZ)) {
+                HOST_PRINT(commAll, "\nIn order to fit the variable grid, the model dimension had been altered from:" << NX << " X " << NY << " X " << NZ << " to " << newNX << " X " << newNY << " X " << newNZ << " \n");
+            }
+            auto newInterfaces = modelCoordinates.getInterfaceVec();
+            std::vector<int> interface;
+            std::ifstream is(config.get<std::string>("interfaceFilename"));
+            std::istream_iterator<IndexType> start(is), end;
+            interface.assign(start, end);
+
+            for (unsigned int i = 0; i < interface.size(); i++) {
+                if (interface[i] != newInterfaces[i + 1])
+                    HOST_PRINT(commAll, "In order to fit the variable grid, the interface Nr." << i + 1 << " has benn moved from Y=" << interface[i] << " to Y=" << newInterfaces[i + 1] << "\n\n")
+            }
         }
 
         /*! \brief check Courant-Friedrichs-Lewy-Criterion

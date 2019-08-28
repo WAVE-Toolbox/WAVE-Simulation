@@ -4,6 +4,7 @@
 export OMP_NUM_THREADS=1
 export NUM_MPI_PROCESSES=4
 export SCAI_UNSUPPORTED=IGNORE
+export SCAI_TRACE=OFF
 
 BINDIR="./../build/bin"
 
@@ -11,6 +12,8 @@ SOFI_EXE="${BINDIR}/SOFI"
 UNITTEST_EXE="${BINDIR}/Test_unit"
 INTEGRATIONTEST_EXE="${BINDIR}/Test_integration"
 MODEL_EXE="${BINDIR}//tools/TwoLayer"
+
+export SCAI_LOG=OFF
 
 # Run unit tests
 ${UNITTEST_EXE}
@@ -35,6 +38,23 @@ if [ "$?" != "0" ]; then
 	echo "Test failed ! "
 	exit
 fi
+
+
+mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
+${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
+if [ "$?" != "0" ]; then
+	echo "Test failed ! "
+	exit
+fi
+
+
+mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.varGrid.txt
+${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.acoustic.varGrid.txt
+if [ "$?" != "0" ]; then
+	echo "Test failed ! "
+	exit
+fi
+
 
 ${MODEL_EXE} ci/configuration_ci.3D.acoustic.txt || { echo "Model creation failed !" ; exit 1; } 
 mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.txt

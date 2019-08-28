@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../../Acquisition/Coordinates.hpp"
+#include "../../Common/HostPrint.hpp"
 #include <scai/dmemo.hpp>
 #include <scai/hmemo.hpp>
 #include <scai/lama.hpp>
-
-#include "../../Acquisition/Coordinates.hpp"
 
 namespace KITGPI
 {
@@ -26,24 +26,21 @@ namespace KITGPI
                 //! \brief Default destructor
                 ~CPML(){};
 
+                virtual ValueType estimateMemory(scai::IndexType BoundaryWidth, scai::IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+
                 //! init CPML coefficient vectors and CPML memory variables
-                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface) = 0;
+                virtual void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface) = 0;
 
               protected:
+                typedef typename scai::lama::SparseVector<ValueType> VectorType;
+
                 void resetVector(scai::lama::Vector<ValueType> &vector);
 
-                void initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+                void initVector(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist);
 
-                void SetCoeffCPML(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv, scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half, scai::IndexType coord,
-                                  scai::IndexType gdist, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType i, ValueType DT, ValueType DH);
+                void calcCoeffCPML(std::vector<ValueType> &a, std::vector<ValueType> &b, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, ValueType const DT, ValueType const DH, bool const shiftGrid = false);
 
-                void ResetCoeffFreeSurface(scai::lama::DenseVector<ValueType> &a, scai::lama::DenseVector<ValueType> &b, scai::lama::DenseVector<ValueType> &kInv,
-                                           scai::lama::DenseVector<ValueType> &a_half, scai::lama::DenseVector<ValueType> &b_half, scai::lama::DenseVector<ValueType> &kInv_half,
-                                           scai::IndexType i);
-
-                /*inline*/ void applyCPML(scai::lama::Vector<ValueType> &Vec, scai::lama::Vector<ValueType> &Psi, const scai::lama::Vector<ValueType> &a, const scai::lama::Vector<ValueType> &b, const scai::lama::Vector<ValueType> &kInv);
-
-                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                /*inline*/ void applyCPML(scai::lama::DenseVector<ValueType> &Vec, VectorType &Psi, VectorType const &a, VectorType const &b);
 
                 VectorType temp; //!< temporary vector for pml application
 

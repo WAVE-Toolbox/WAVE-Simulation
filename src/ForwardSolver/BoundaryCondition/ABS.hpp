@@ -42,9 +42,11 @@ namespace KITGPI
                  */
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType BoundaryWidth, ValueType DampingCoeff, scai::IndexType useFreeSurface) = 0;
 
+                virtual ValueType estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+
               protected:
                 // For the ABS Boundaries Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
-                typedef typename scai::lama::DenseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
+                typedef typename scai::lama::SparseVector<ValueType> VectorType; //!< Define Vector Type as Dense vector. For big models switch to SparseVector
             };
         } /* end namespace BoundaryCondition  */
     }     /* end namespace ForwardSolver */

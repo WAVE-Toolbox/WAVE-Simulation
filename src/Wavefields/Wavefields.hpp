@@ -8,7 +8,6 @@
 #include "../Common/HostPrint.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 
@@ -68,7 +67,14 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
 
-            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) = 0;
+            ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields);
+
+            //! \brief memory estimation
+            virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;
+
+            ValueType getMemoryWavefield(scai::dmemo::DistributionPtr dist);
+
+            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) = 0;
 
             //! Operator overloading
             virtual void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
@@ -84,7 +90,7 @@ namespace KITGPI
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType partitionedOut);
+            void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType fileFormat);
 
             int numDimension;
             std::string equationType;

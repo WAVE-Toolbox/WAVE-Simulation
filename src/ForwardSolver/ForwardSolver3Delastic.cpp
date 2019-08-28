@@ -1,6 +1,12 @@
 #include "ForwardSolver3Delastic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD3Delastic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -146,9 +152,22 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     auto const &Dzb = derivatives.getDzb();
 
     auto const &Dyb = derivatives.getDyb();
-    auto const &DybFreeSurface = derivatives.getDybFreeSurface();
+    //   auto const &DybFreeSurface = derivatives.getDybFreeSurface();
+    auto const &DybStaggeredXFreeSurface = derivatives.getDybStaggeredXFreeSurface();
+    auto const &DybStaggeredZFreeSurface = derivatives.getDybStaggeredZFreeSurface();
+
     auto const &Dyf = derivatives.getDyf();
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+
+    auto const *DinterpolateFull = derivatives.getInterFull();
+    auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
+    auto const *DinterpolateStaggeredZ = derivatives.getInterStaggeredZ();
+    auto const *DinterpolateStaggeredXZ = derivatives.getInterStaggeredXZ();
+
+    lama::Matrix<ValueType> const &DyfStaggeredX = derivatives.getDyfStaggeredX();
+    lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();
+    lama::Matrix<ValueType> const &DyfStaggeredZ = derivatives.getDyfStaggeredZ();
+    lama::Matrix<ValueType> const &DybStaggeredZ = derivatives.getDybStaggeredZ();
 
     SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
@@ -166,9 +185,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     if (useFreeSurface == 1) {
         /* Apply image method */
-        update_temp = DybFreeSurface * Sxy;
+        update_temp = DybStaggeredXFreeSurface * Sxy;
     } else {
-        update_temp = Dyb * Sxy;
+        update_temp = DybStaggeredX * Sxy;
     }
 
     if (useConvPML) {
@@ -183,6 +202,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update += update_temp;
     update *= inverseDensityAverageX;
     vX += update;
+
+    if (DinterpolateStaggeredX) {
+        // interpolation for missing pressure points
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
 
     /* -------- */
     /*    vy    */
@@ -223,9 +248,9 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     if (useFreeSurface == 1) {
         /* Apply image method */
-        update_temp = DybFreeSurface * Syz;
+        update_temp = DybStaggeredZFreeSurface * Syz;
     } else {
-        update_temp = Dyb * Syz;
+        update_temp = DybStaggeredZ * Syz;
     }
 
     if (useConvPML) {
@@ -241,6 +266,12 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     update *= inverseDensityAverageZ;
     vZ += update;
+
+    if (DinterpolateStaggeredZ) {
+        // interpolation for missing pressure points
+        update_temp.swap(vZ);
+        vZ = *DinterpolateStaggeredZ * update_temp;
+    }
 
     /* -------------------- */
     /* update normal stress */
@@ -273,10 +304,22 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulus;
     Szz -= 2.0 * update;
 
+    if (DinterpolateFull) {
+        // interpolation for missing pressure points
+        update_temp.swap(Sxx);
+        Sxx = *DinterpolateFull * update_temp;
+
+        update_temp.swap(Syy);
+        Syy = *DinterpolateFull * update_temp;
+
+        update_temp.swap(Szz);
+        Szz = *DinterpolateFull * update_temp;
+    }
+
     /* ------------------- */
     /* update shear stress */
     /* ------------------- */
-    update = Dyf * vX;
+    update = DyfStaggeredX * vX;
     if (useConvPML) {
         ConvPML.apply_vxy(update);
     }
@@ -284,6 +327,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (useConvPML) {
         ConvPML.apply_vyx(update_temp);
     }
+
     update += update_temp;
     update *= sWaveModulusAverageXY;
     Sxy += update;
@@ -296,22 +340,34 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (useConvPML) {
         ConvPML.apply_vzx(update_temp);
     }
-    update += update_temp;
 
+    update += update_temp;
     update *= sWaveModulusAverageXZ;
     Sxz += update;
+
+    if (DinterpolateStaggeredXZ) {
+        // interpolation for missing shear stress xz points
+        update_temp.swap(Sxz);
+        Sxz = *DinterpolateStaggeredXZ * update_temp;
+    }
 
     update = Dzf * vY;
     if (useConvPML) {
         ConvPML.apply_vyz(update);
     }
-    update_temp = Dyf * vZ;
+    update_temp = DyfStaggeredZ * vZ;
     if (useConvPML) {
         ConvPML.apply_vzy(update_temp);
     }
     update += update_temp;
     update *= sWaveModulusAverageYZ;
     Syz += update;
+
+    if (DinterpolateStaggeredZ) {
+        // interpolation for missing pressure points
+        update_temp.swap(Syz);
+        Syz = *DinterpolateStaggeredZ * update_temp;
+    }
 
     /* Apply free surface to stress update */
     if (useFreeSurface == 1) {

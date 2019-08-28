@@ -85,15 +85,13 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
-            std::string addSeismogramTypeToName(std::string const &filename) const;
-
-            void writeToFileRaw(std::string const &filename) const;
+            void writeToFileRaw(std::string const &filename, scai::IndexType const seismogramFormat ) const;
             void writeToFileSU(std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
 
-            void readFromFileRaw(std::string const &filename, bool copyDist = 0);
+            void readFromFileRaw(std::string const &filename, scai::IndexType const seismogramFormat, bool copyDist = 0);
             void readFromFileSU(std::string const &filename, bool copyDist = 0);
 
-            void readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
+            void readFromFileRaw(std::string const &filename, scai::IndexType const seismogramFormat, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
             void readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             scai::IndexType numSamples;      //!< Number of samples of one trace

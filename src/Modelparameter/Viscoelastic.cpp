@@ -1,10 +1,26 @@
 #include "Viscoelastic.hpp"
 using namespace scai;
 
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::Viscoelastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 15 Parameter in Viscoelastic modeling:  rho, Vp, Vs, invRhoX,invRhoY, invRhoZ,  bulk modulus, sWaveModulus, sWaveModulusXY, sWaveModulusXZ, sWaveModulus YZ, tauP, tauS, tauSXY, tauSXZ, tauSYZ*/
+    IndexType numParameter = 15;
+    return (this->getMemoryUsage(dist, numParameter));
+}
+
 /*! \brief Prepare modellparameter for visco-elastic modelling
  *
  * Applies Equation 12 from Bohlen 2002 and refreshes the modulus
  *
+ \param modelCoordinates coordinate class object
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ \param comm Communicator pointer
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
@@ -15,10 +31,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Acquis
     this->getPWaveModulus();
     this->getSWaveModulus();
     initializeMatrices(dist, ctx, modelCoordinates, comm);
-
-    this->getInverseDensity();
     calculateAveraging();
-
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -61,10 +75,10 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "viscoelastic";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -74,24 +88,35 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Con
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoelastic) parameter from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
+
+    } else if (config.get<IndexType>("ModelRead") == 2) {
+
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
+
+        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
+
+        init(dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauP"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
-        std::cout << "been here\n\n";
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
 }
 
@@ -146,13 +171,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "viscoelastic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus
@@ -161,24 +186,18 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  *
  *  Calculates pWaveModulus with
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-    std::string filenameTauP = filename + ".tauP.mtx";
-    std::string filenameTauS = filename + ".tauS.mtx";
-
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
-    this->initModelparameter(tauS, ctx, dist, filenameTauS, partitionedIn);
-    this->initModelparameter(tauP, ctx, dist, filenameTauP, partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
+    this->initModelparameter(tauS, ctx, dist, filename + ".tauS", fileFormat);
+    this->initModelparameter(tauP, ctx, dist, filename + ".tauP", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -204,23 +223,16 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave velocity ".vp.mtx" is added, for the S-wave velocity ".vs.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-
-    std::string filenamedensity = filename + ".density.mtx";
-    std::string filenameTauP = filename + ".tauP.mtx";
-    std::string filenameTauS = filename + ".tauS.mtx";
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenameS = filename + ".vs.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(tauP, filenameTauP, partitionedOut);
-    this->writeModelparameter(tauS, filenameTauS, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(tauP, filename + ".tauP", fileFormat);
+    this->writeModelparameter(tauS, filename + ".tauS", fileFormat);
+    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -228,6 +240,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
  *
  \param dist Distribution of the wavefield
  \param ctx Context
+ \param modelCoordinates coordinate class object
  \param comm Communicator
  */
 template <typename ValueType>
@@ -236,20 +249,32 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::d
     if (dirtyFlagAveraging) {
         SCAI_REGION("initializeMatrices")
 
-        this->calcDensityAverageMatrixX(modelCoordinates, dist);
-        this->calcDensityAverageMatrixY(modelCoordinates, dist);
-        this->calcDensityAverageMatrixZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXY(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixYZ(modelCoordinates, dist);
+        this->calcAverageMatrixX(modelCoordinates, dist);
+        this->calcAverageMatrixY(modelCoordinates, dist);
+        this->calcAverageMatrixZ(modelCoordinates, dist);
+        this->calcAverageMatrixXY(modelCoordinates, dist);
+        this->calcAverageMatrixXZ(modelCoordinates, dist);
+        this->calcAverageMatrixYZ(modelCoordinates, dist);
 
-        DensityAverageMatrixX.setContextPtr(ctx);
-        DensityAverageMatrixY.setContextPtr(ctx);
-        DensityAverageMatrixZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXY.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+        averageMatrixX.setContextPtr(ctx);
+        averageMatrixY.setContextPtr(ctx);
+        averageMatrixZ.setContextPtr(ctx);
+        averageMatrixXY.setContextPtr(ctx);
+        averageMatrixXZ.setContextPtr(ctx);
+        averageMatrixYZ.setContextPtr(ctx);
     }
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
+    averageMatrixZ.purge();
+    averageMatrixXY.purge();
+    averageMatrixXZ.purge();
+    averageMatrixYZ.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -259,15 +284,15 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
-        this->calculateAveragedTauS(tauS, tauSAverageXY, sWaveModulusAverageMatrixXY);
-        this->calculateAveragedTauS(tauS, tauSAverageXZ, sWaveModulusAverageMatrixXZ);
-        this->calculateAveragedTauS(tauS, tauSAverageYZ, sWaveModulusAverageMatrixYZ);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, averageMatrixXY);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixXZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixYZ);
+        this->calculateAveragedTauS(tauS, tauSAverageXY, averageMatrixXY);
+        this->calculateAveragedTauS(tauS, tauSAverageXZ, averageMatrixXZ);
+        this->calculateAveragedTauS(tauS, tauSAverageYZ, averageMatrixYZ);
         dirtyFlagAveraging = false;
     }
 }
@@ -369,7 +394,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus() const
 {
-   SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
+    SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
     return (sWaveModulus);
 }
 

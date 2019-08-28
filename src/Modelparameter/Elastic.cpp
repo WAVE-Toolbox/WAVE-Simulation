@@ -2,10 +2,26 @@
 
 using namespace scai;
 
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::Elastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 11 Parameter in elastic modeling: Vp, Vs, rho, invRhoX, invRhoY, invRhoZ, bulk modulus, sWaveModulus, sWaveModulusXY, sWaveModulusXZ, sWaveModulusYZ */
+    IndexType numParameter = 11;
+    return (this->getMemoryUsage(dist, numParameter));
+}
+
 /*! \brief Prepare modellparameter for modelling
  *
  * Refreshes the modulus, calculates inverseDensity and calculates average values on staggered grid
  *
+ \param modelCoordinates coordinate class object
+ \param ctx Context for the Calculation
+ \param dist Distribution
+ \param comm Communicator pointer
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
@@ -16,9 +32,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition
     this->getPWaveModulus();
     this->getSWaveModulus();
     initializeMatrices(dist, ctx, modelCoordinates, comm);
-    this->getInverseDensity();
     calculateAveraging();
-
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -61,10 +76,10 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "elastic";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -74,23 +89,63 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (elastic) parameter from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
+
+    } else if (config.get<IndexType>("ModelRead") == 2) {
+
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
+
+        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
+
+        init(dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
+}
+
+/*! \brief initialisation function which creates a variable grid model on top of a regular model
+             \param model regular input model
+             \param variableDist Distribution for a variable grid
+             \param variableCoordinates Coordinate Class of a Variable Grid
+             \param regularCoordinates Coordinate Class of a regular Grid
+             */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
+{
+    lama::DenseVector<ValueType> densityTmp(variableDist, 0.0);
+    lama::DenseVector<ValueType> velocityPTmp(variableDist, 0.0);
+    lama::DenseVector<ValueType> velocitySTmp(variableDist, 0.0);
+
+    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+        IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
+
+        densityTmp.setValue(variableIndex, density.getValue(regularIndex));
+        velocityPTmp.setValue(variableIndex, velocityP.getValue(regularIndex));
+        velocityS.setValue(variableIndex, velocityS.getValue(regularIndex));
+    }
+
+    density = densityTmp;
+    velocityP = velocityPTmp;
+    velocityS = velocitySTmp;
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -132,13 +187,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "elastic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector
@@ -147,19 +202,15 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  \param ctx Context
  \param dist Distribution
  \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -181,18 +232,14 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenameS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -208,20 +255,32 @@ void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo:
     if (dirtyFlagAveraging) {
         SCAI_REGION("initializeMatrices")
 
-        this->calcDensityAverageMatrixX(modelCoordinates, dist);
-        this->calcDensityAverageMatrixY(modelCoordinates, dist);
-        this->calcDensityAverageMatrixZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXY(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixXZ(modelCoordinates, dist);
-        this->calcSWaveModulusAverageMatrixYZ(modelCoordinates, dist);
+        this->calcAverageMatrixX(modelCoordinates, dist);
+        this->calcAverageMatrixY(modelCoordinates, dist);
+        this->calcAverageMatrixZ(modelCoordinates, dist);
+        this->calcAverageMatrixXY(modelCoordinates, dist);
+        this->calcAverageMatrixXZ(modelCoordinates, dist);
+        this->calcAverageMatrixYZ(modelCoordinates, dist);
 
-        DensityAverageMatrixX.setContextPtr(ctx);
-        DensityAverageMatrixY.setContextPtr(ctx);
-        DensityAverageMatrixZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXY.setContextPtr(ctx);
-        sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-        sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+        averageMatrixX.setContextPtr(ctx);
+        averageMatrixY.setContextPtr(ctx);
+        averageMatrixZ.setContextPtr(ctx);
+        averageMatrixXY.setContextPtr(ctx);
+        averageMatrixXZ.setContextPtr(ctx);
+        averageMatrixYZ.setContextPtr(ctx);
     }
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
+    averageMatrixZ.purge();
+    averageMatrixXY.purge();
+    averageMatrixXZ.purge();
+    averageMatrixYZ.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -231,12 +290,12 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, sWaveModulusAverageMatrixXY);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, sWaveModulusAverageMatrixXZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, sWaveModulusAverageMatrixYZ);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, averageMatrixXY);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixXZ);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixYZ);
         dirtyFlagAveraging = false;
     }
 }

@@ -12,7 +12,7 @@ gcc:
   script:
     - echo "g++ Version:" && g++ --version
     - mkdir build && cd "$_"
-    - SCAI_DIR=/data14/software/scai_lama/build_dev/ cmake  -DSOFI_VALUE_TYPE=float ../src/ -DCMAKE_INSTALL_PREFIX=./
+    - SCAI_DIR=/data14/software/scai_lama/build_dev/ Geographer_DIR=/data14/software/geographer/build cmake  -DSOFI_VALUE_TYPE=double ../src/ -DCMAKE_INSTALL_PREFIX=./
     - make install -j 4 
   artifacts:
     when: on_success
@@ -35,6 +35,25 @@ acoustic2D-gcc:
     - cd par/
     - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.txt"
+
+acousticVarGrid2D-gcc:
+  stage: simulation
+  script:
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.varGrid.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.varGrid.txt"
+
+
+acousticVarGrid3D-gcc:
+
+  stage: simulation
+  script:
+    - OMP_NUM_THREADS=2
+    - cd par/
+    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.acoustic.varGrid.txt"
+    - ./../build/bin/Test_integration "ci/configuration_ci.3D.acoustic.varGrid.txt"
+
 
 acoustic3D-gcc:
   stage: simulation

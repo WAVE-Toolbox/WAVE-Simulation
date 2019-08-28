@@ -1,8 +1,8 @@
 #include <scai/common/Settings.hpp>
 #include <scai/common/Walltime.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
-#include <scai/dmemo/GridDistribution.hpp>
 #include <scai/dmemo/GenBlockDistribution.hpp>
+#include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
 
 #include <iostream>
@@ -22,7 +22,7 @@
 
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
-
+#include "Partitioning/Partitioning.hpp"
 #include "config.hpp"
 
 using namespace scai;
@@ -37,7 +37,6 @@ int main(int argc, const char *argv[])
 
     common::Settings::parseArgs(argc, argv);
 
-//    typedef float ValueType;
     double start_t, end_t; /* For timing */
 
     if (argc != 2) {
@@ -64,105 +63,106 @@ int main(int argc, const char *argv[])
         config.print();
     }
 
-    std::string settingsFilename;    // filename for processor specific settings
-
-    if ( common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS") )
-    {
+    std::string settingsFilename; // filename for processor specific settings
+    if (common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS")) {
         // each processor reads line of settings file that matches its node name and node rank
-        common::Settings::readSettingsFile( settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank() );
+        common::Settings::readSettingsFile(settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank());
     }
 
     /* --------------------------------------- */
-    /* Context and Distribution                */
+    /* coordinate mapping (3D<->1D)            */
+    /* --------------------------------------- */
+
+    Acquisition::Coordinates<ValueType> modelCoordinates(config);
+
+    if (config.get<bool>("useVariableGrid"))
+        CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+
+    /* --------------------------------------- */
+    /* context and communicator for shot parallelisation   */
     /* --------------------------------------- */
 
     /* execution context */
-
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr(); // default context, set by environment variable SCAI_CONTEXT
 
-    /* Definition of shot domains */
-
-    int shotDomain = config.get<int>("ShotDomain");
-
-    int domain;   // will contain the domain to which this processor belongs
-
-    if (shotDomain == 0)
-    {
-        // Definition by number of shot domains
-
-       IndexType numDomains = config.get<IndexType>("ProcNS");    // total number of shot domains
-       IndexType npDomain = commAll->getSize() / numDomains;      // number of processors for each shot domain
-
-       if (commAll->getSize() != numDomains * npDomain) {
-           HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                               << ") is not multiple of shot domains in " << argv[1] << ": ProcNS = " << numDomains << "\n")
-           return (2);
-       }
- 
-       domain = commAll->getRank() / npDomain;
-    }
-    else if (shotDomain == 1 )
-    {
-        // All processors on one node build one domain
-
-        domain = commAll->getNodeId();
-    }
-    else 
-    {
-        bool set = common::Settings::getEnvironment( domain, "DOMAIN" );
-
-        if (!set)
-        {
-            std::cout << *commAll << ", node = " << commAll->getNodeName() 
-                      << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize()
-                      << ": environment variable DOMAIN not set" << std::endl;
-        }
- 
-        set = commAll->all( set );   // make sure that all processors will terminate
-
-        if (!set)
-        {
-            return(2);
-        }
-    }
-
-    CheckParameter::checkNumberOfProcesses(config, commAll);
+    IndexType shotDomain = Partitioning::getShotDomain(config, commAll); // will contain the domain to which this processor belongs
 
     // Build subsets of processors for the shots
 
-    dmemo::CommunicatorPtr commShot = commAll->split(domain);
-
-    // this communicator is used for reducing the solutions of problems
+    dmemo::CommunicatorPtr commShot = commAll->split(shotDomain);
 
     dmemo::CommunicatorPtr commInterShot = commAll->split(commShot->getRank());
-
     SCAI_DMEMO_TASK(commShot)
 
-    // inter node distribution
-    // define the grid topology by sizes NX, NY, and NZ from configuration
-    // Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+    /* --------------------------------------- */
+    /* Distribution                */
+    /* --------------------------------------- */
 
-    common::Grid3D grid(config.get<IndexType>("NZ"), config.get<IndexType>("NY"), config.get<IndexType>("NX"));
-    // distribute the grid onto available processors
-    dmemo::DistributionPtr dist(new dmemo::GridDistribution(grid, commShot));
+    dmemo::DistributionPtr dist = nullptr;
+    if ((config.get<IndexType>("partitioning") == 0) || (config.get<IndexType>("partitioning") == 2)) {
+        //Block distribution = starting distribution for graph partitioner
+        dist = std::make_shared<dmemo::BlockDistribution>(modelCoordinates.getNGridpoints(), commShot);
+    } else if (config.get<IndexType>("partitioning") == 1) {
+        SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
+        dist = Partitioning::gridPartition<ValueType>(config, commShot);
+    } else {
+        COMMON_THROWEXCEPTION("unknown partioning method");
+    }
 
-    // Create an object of the mapping (3D-1D) class Coordinates
-    Acquisition::Coordinates<ValueType> modelCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+    if (config.get<bool>("coordinateWrite"))
+        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
+
+    /* --------------------------------------- */
+    /* Factories                               */
+    /* --------------------------------------- */
+
+    ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
+    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
+
+    /* --------------------------------------- */
+    /* Memory estimation                       */
+    /* --------------------------------------- */
+
+    HOST_PRINT(commAll, " ============== Memory Estimation: ===============\n\n")
+
+    ValueType memDerivatives = derivatives->estimateMemory(config, dist, modelCoordinates);
+    ValueType memWavefileds = wavefields->estimateMemory(dist);
+    ValueType memModel = model->estimateMemory(dist);
+    ValueType memSolver = solver->estimateMemory(config, dist, modelCoordinates);
+    ValueType memTotal = memDerivatives + memWavefileds + memModel + memSolver;
+
+    HOST_PRINT(commAll, " -  Derivative Matrices \t" << memDerivatives << " MB\n");
+    HOST_PRINT(commAll, " -  Wavefield vectors \t\t" << memWavefileds << " MB\n");
+    HOST_PRINT(commAll, " -  Model Vectors \t\t" << memModel << " MB\n");
+    HOST_PRINT(commAll, " -  Boundary Condition Vectors \t" << memSolver << " MB\n");
+    HOST_PRINT(commAll, "\n Memory Usage (total / per partition): \n " << memTotal << " / " << memTotal / dist->getNumPartitions() << " MB ");
+    IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
+    if (numShotDomains > 1)
+        HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot Domains ): \n " << memTotal * numShotDomains << " MB  ");
+
+    HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
 
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
-    derivatives->init(dist, ctx, config, modelCoordinates, commShot);
+
+    derivatives->init(dist, ctx, modelCoordinates, commShot);
+
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
+    //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
+    // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
+
     /* --------------------------------------- */
-    /* Wavefields                              */
+    /* Call partioner */
     /* --------------------------------------- */
-    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
-    wavefields->init(ctx, dist);
+    if (config.get<IndexType>("partitioning") == 2) {
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+    }
 
     /* --------------------------------------- */
     /* Acquisition geometry                    */
@@ -184,17 +184,23 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
-    model->init(config, ctx, dist);
+
+    model->init(config, ctx, dist, modelCoordinates);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
+    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
+
+    /* --------------------------------------- */
+    /* Wavefields                              */
+    /* --------------------------------------- */
+
+    wavefields->init(ctx, dist);
 
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
 
     HOST_PRINT(commAll, "", "ForwardSolver ...\n")
-    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
+
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
     HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
@@ -204,28 +210,29 @@ int main(int argc, const char *argv[])
 
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
-    calcuniqueShotNo(uniqueShotNos, sourceSettings);
+    Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
     IndexType numshots = uniqueShotNos.size();
 
     /* general block distribution of shot domains accorting to their weights */
-
     IndexType firstShot = 0;
-    IndexType lastShot   = numshots - 1;
+    IndexType lastShot = numshots - 1;
 
     float processorWeight = 1.0f;
     common::Settings::getEnvironment(processorWeight, "WEIGHT");
     float domainWeight = commShot->sum(processorWeight);
 
-    if ( commShot->getRank() == 0)
-    {
-         // master processors of shot domains determine the load distribution
-         auto shotDist = dmemo::genBlockDistributionByWeight(numshots, domainWeight, commInterShot );
-         firstShot = shotDist->lb();
-         lastShot = shotDist->ub();
+    if (commShot->getRank() == 0) {
+        // master processors of shot domains determine the load distribution
+        auto shotDist = dmemo::genBlockDistributionByWeight(numshots, domainWeight, commInterShot);
+        firstShot = shotDist->lb();
+        lastShot = shotDist->ub();
     }
+    commShot->bcast(&firstShot, 1, 0);
+    commShot->bcast(&lastShot, 1, 0);
 
-    commShot->bcast( &firstShot, 1, 0 );
-    commShot->bcast( &lastShot, 1, 0 );
+    /* --------------------------------------- */
+    /* Loop over shots                        */
+    /* --------------------------------------- */
 
     for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
         IndexType shotNumber = uniqueShotNos[shotInd];
@@ -238,12 +245,15 @@ int main(int argc, const char *argv[])
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
         }
 
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), domain = " << domain << "\n", 
-                             "\nTotal Number of time steps: " << tStepEnd << "\n");
+        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",
+                   "\nTotal Number of time steps: " << tStepEnd << "\n");
         wavefields->resetWavefields();
 
         start_t = common::Walltime::get();
 
+        /* --------------------------------------- */
+        /* Loop over time steps                        */
+        /* --------------------------------------- */
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
             if (tStep % 100 == 0 && tStep != 0) {
@@ -253,7 +263,7 @@ int main(int argc, const char *argv[])
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
             if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("PartitionedOut"));
+                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
             }
         }
 

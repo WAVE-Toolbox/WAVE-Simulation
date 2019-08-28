@@ -24,11 +24,11 @@ namespace KITGPI
             ValueType fc;
             ValueType amp;
             ValueType tShift;
-            coordinate3D getCoords() { return sourceCoords; }
-            scai::IndexType getType() { return sourceType; }
+            coordinate3D getCoords() {return sourceCoords;}
+            scai::IndexType getType() {return sourceType;}
             scai::IndexType row;
         };
-
+        
         /*! \brief Struct to save 3-D coordinates
          *
          * This struct saves the coordinates and parameters of a receiver
@@ -36,15 +36,15 @@ namespace KITGPI
         struct receiverSettings {
             coordinate3D receiverCoords;
             scai::IndexType receiverType;
-            coordinate3D getCoords() { return receiverCoords; }
-            scai::IndexType getType() { return receiverType; }
+            coordinate3D getCoords() {return receiverCoords;}
+            scai::IndexType getType() {return receiverType;}
         };
-
+        
         /*! \brief Read all source settings into vector of sourceSettings
-         *
+        *
          \param allSettings vector of sourceSettings structs
-         \param fileName Name of source file
-         */
+        \param fileName Name of source file
+        */
         template <typename ValueType>
         inline void readAllSettings(std::vector<sourceSettings<ValueType>> &allSettings, std::string fileName)
         {
@@ -67,11 +67,11 @@ namespace KITGPI
                         std::string tempStr;
                         while (strings >> tempStr) {
                             vecStrings.push_back(tempStr);
-                        }
-
+            }
+                
                         if (vecStrings.size() != 10) {
                             COMMON_THROWEXCEPTION("Wrong number of parameters in line of source acquisition file (" << fileName << ")")
-                        }
+            }
 
                         try {
                             thisSettings.sourceNo = std::stoi(vecStrings[0]);
@@ -84,11 +84,11 @@ namespace KITGPI
                             thisSettings.fc = std::stof(vecStrings[7]);
                             thisSettings.amp = std::stof(vecStrings[8]);
                             thisSettings.tShift = std::stof(vecStrings[9]);
-                        }
-
+        }
+        
                         catch (const std::invalid_argument &ia) {
                             COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
-                        }
+            }
 
                         catch (const std::out_of_range &oor) {
                             COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
@@ -102,7 +102,7 @@ namespace KITGPI
                 COMMON_THROWEXCEPTION("Could not open source acquisition file " << fileName)
             }
         }
-
+        
         /*! \brief Cut settings for all source settings into settings for one shot number
         *
         \param settings vector of sourceSettings structs corresponding to shotNumber
@@ -120,7 +120,7 @@ namespace KITGPI
                 }
             }
         }
-
+        
         /*! \brief compute vector of unique shot numbers
         *
         \param uniqueShotNo vector with all shot numbers, each included only once
@@ -139,7 +139,7 @@ namespace KITGPI
                 }
             }
         }
-
+        
         /*! \brief Read all receiver settings into vector of receiverSettings
          *
          \param allSettings vector of receiverSettings structs
@@ -164,29 +164,29 @@ namespace KITGPI
                         std::string tempStr;
                         while (strings >> tempStr) {
                             vecStrings.push_back(tempStr);
-                        }
+                }
 
                         if (vecStrings.size() != 4) {
                             COMMON_THROWEXCEPTION("Wrong number of parameters in line of receiver acquisition file (" << fileName << ")")
-                        }
+            }
 
                         try {
                             thisSettings.receiverCoords.x = std::stoi(vecStrings[0]);
                             thisSettings.receiverCoords.y = std::stoi(vecStrings[1]);
                             thisSettings.receiverCoords.z = std::stoi(vecStrings[2]);
                             thisSettings.receiverType = std::stoi(vecStrings[3]);
-                        }
+            }
 
                         catch (const std::invalid_argument &ia) {
                             COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
-                        }
-
+        }
+        
                         catch (const std::out_of_range &oor) {
                             COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
                         }
-                        allSettings.push_back(thisSettings);
-                    }
+                    allSettings.push_back(thisSettings);
                 }
+            }
                 //  std::cout << "Receiver acquisition file (" << fileName << ") read in." << std::endl;
             } else {
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file " << fileName)

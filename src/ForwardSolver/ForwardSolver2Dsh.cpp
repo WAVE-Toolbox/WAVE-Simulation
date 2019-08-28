@@ -1,6 +1,12 @@
 #include "ForwardSolver2Dsh.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD2Dsh<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
