@@ -14,19 +14,6 @@ namespace KITGPI
     namespace CheckParameter
     {
 
-        /*! \brief check number of processes
-        *
-        \param config configuration class
-        \param commAll lama communicator
-        */
-        void checkNumberOfProcesses(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll)
-        {
-            IndexType npS = config.get<IndexType>("ProcNS");
-            IndexType npM = commAll->getSize() / npS;
-
-            SCAI_ASSERT_ERROR(commAll->getSize() == npS * npM, "\n Error: Number of MPI processes (" << commAll->getSize() << ") is not multiple of shot domains in configuration"
-                                                                                                                 << ": ProcNS = " << npS << "\n")
-        }
 
         /*! \brief check variable grid
         *

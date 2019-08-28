@@ -67,10 +67,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "acoustic";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -80,15 +80,27 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (acoustic) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
+
+    } else if (config.get<IndexType>("ModelRead") == 2) {
+
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
+
+        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
+
+        init(dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("rho"));
@@ -106,21 +118,22 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
              \param regularCoordinates Coordinate Class of a regular Grid
              */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-    auto const &regularDensity = model.getDensity();
-    auto const &regularVelocityP = model.getVelocityP();
-    this->initModelparameter(density, regularDensity.getContextPtr(), variableDist, 0);
-    this->initModelparameter(velocityP, regularDensity.getContextPtr(), variableDist, 0);
+    lama::DenseVector<ValueType> densityTmp(variableDist, 0.0);
+    lama::DenseVector<ValueType> velocityPTmp(variableDist, 0.0);
 
     for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
 
         Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
         IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
 
-        density.setValue(variableIndex, regularDensity.getValue(regularIndex));
-        velocityP.setValue(variableIndex, regularVelocityP.getValue(regularIndex));
+        densityTmp.setValue(variableIndex, density.getValue(regularIndex));
+        velocityPTmp.setValue(variableIndex, velocityP.getValue(regularIndex));
     }
+
+    density = densityTmp;
+    velocityP = velocityPTmp;
 }
 /*! \brief Constructor that is generating a homogeneous model
  *

@@ -18,8 +18,8 @@ NY=112                    # depth
 NZ=105                    # horizontal 2
 
 # define Partitioning
-ProcNS=2                  # Number of shot domains
-ShotDomain=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
+ShotDomainDefinition=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
+NumShotDomains=2                  # Number of shot domains
 
 # distance between two grid points
 DH=50                     # in meter
@@ -93,4 +93,4 @@ tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.1                              # Time increment between snapshot in seconds
 
 # console output
-verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

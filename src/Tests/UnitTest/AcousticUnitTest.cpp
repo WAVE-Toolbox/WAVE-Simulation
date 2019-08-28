@@ -18,6 +18,9 @@ TEST(Acoustic, TestInit)
     dmemo::DistributionPtr no_dist_numParameter(new scai::dmemo::NoDistribution(numParameter));
     Modelparameter::Modelparameter<double>::ModelparameterPtr model(Modelparameter::Factory<double>::Create("acoustic"));
     Modelparameter::Acoustic<double> testObject;
+    
+    Acquisition::Coordinates<double> modelCoordinates(testConfig1);
 
-    ASSERT_ANY_THROW(testObject.init(testConfig1, testCtx, no_dist_numParameter));
+
+    ASSERT_ANY_THROW(testObject.init(testConfig1, testCtx, no_dist_numParameter,modelCoordinates));
 }

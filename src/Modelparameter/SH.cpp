@@ -68,10 +68,10 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "sh";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -81,15 +81,27 @@ KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &co
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (SH) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
+
+    } else if (config.get<IndexType>("ModelRead") == 2) {
+
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
+
+        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
+
+        init(dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));

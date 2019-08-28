@@ -12,8 +12,8 @@ NZ=1 # horizontal 2
 
 # define Partitioning
 partitioning=1
-ProcNS=1                  # Number of shot domains
-ShotDomain=0
+NumShotDomains=1                  # Number of shot domains
+ShotDomainDefinition=0
 
 # define distance between two grid points in meter
 DH=50

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
+
 #include <scai/hmemo/HArray.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
 #include <scai/lama.hpp>
@@ -17,6 +19,55 @@ namespace KITGPI
     namespace Partitioning
     {
 
+        //         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
+        //                *    Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+        //             \param config configuration object
+        //             \param commShot communicator of a shot domain
+        //             */
+        // template <typename ValueType>
+        IndexType getShotDomain(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll)
+        {
+
+            /* Definition of shot domains */
+            IndexType shotDomainDefinition = config.get<int>("ShotDomainDefinition");
+            IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
+            IndexType shotDomain = 0;                                           // will contain the domain to which this processor belongs
+            if (shotDomainDefinition == 0) {
+                // Definition by number of shot domains
+
+                /* Definition of shot domains */
+
+                IndexType npDomain = commAll->getSize() / numShotDomains; // number of processors for each shot domain
+
+                if (commAll->getSize() != numShotDomains * npDomain) {
+                    HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
+                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n")
+                    return (2);
+                }
+
+                shotDomain = commAll->getRank() / npDomain;
+            } else if (shotDomainDefinition == 1) {
+                // All processors on one node build one domain
+
+                shotDomain = commAll->getNodeId();
+            } else {
+                bool set = common::Settings::getEnvironment(shotDomain, "DOMAIN");
+
+                if (!set) {
+                    std::cout << *commAll << ", node = " << commAll->getNodeName()
+                              << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize()
+                              << ": environment variable DOMAIN not set" << std::endl;
+                }
+
+                set = commAll->all(set); // make sure that all processors will terminate
+
+                if (!set) {
+                    return (2);
+                }
+            }
+            return (shotDomain);
+        }
+
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
                *    Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
             \param config configuration object
@@ -28,6 +79,34 @@ namespace KITGPI
             common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
             // distribute the grid onto available processors
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
+        }
+
+        /*! \brief 
+            \param config configuration object
+            \param commShot communicator of a shot domain
+
+            */
+        template <typename ValueType>
+        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, scai::dmemo::DistributionPtr BlockDist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives)
+        {
+#ifdef USE_GEOGRAPHER
+            start_t = common::Walltime::get();
+            auto graph = derivatives->getCombinedMatrix();
+            auto &&weights = Weights(config, dist, modelCoordinates);
+            auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
+
+            end_t = common::Walltime::get();
+            HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
+
+            dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
+
+            derivatives->redistributeMatrices(dist);
+            return (dist);
+#else
+            HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
+            HOST_PRINT(commShot, "\nBlock Distribution will be used instead!\n\n")
+            return (BlockDist);
+#endif
         }
 
 #ifdef USE_GEOGRAPHER
@@ -188,16 +267,14 @@ namespace KITGPI
             lama::DenseVector<ValueType> fdWeights;
             fdWeights.setSameValue(dist, referenceTotalWeight);
 
-            bool useNodeWeights=1;
-            try{
-                useNodeWeights=config.get<bool>("useNodeWeights");
-            }
-            catch(...)
-            {
+            bool useNodeWeights = 1;
+            try {
+                useNodeWeights = config.get<bool>("useNodeWeights");
+            } catch (...) {
                 //do nothing... use default useNodeWeights=1. useNodeWeights is only used for debugging
             }
-            
-            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)){
+
+            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)) {
                 lama::VectorAssembly<ValueType> assembly;
                 assembly.reserve(ownedIndexes.size());
 

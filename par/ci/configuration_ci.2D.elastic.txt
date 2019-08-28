@@ -11,8 +11,9 @@ NZ=1 # horizontal 2
 UseVariableGrid=0
 useVariableFDoperators=0
 partitioning=1
-ProcNS=1                  # Number of shot domains
-ShotDomain=0
+
+NumShotDomains=1 
+ShotDomainDefinition=0
 
 # define distance between two grid points in meter
 DH=50
