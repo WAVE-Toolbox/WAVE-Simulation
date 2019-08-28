@@ -13,6 +13,7 @@
 #ifdef USE_GEOGRAPHER
 #include <geographer/ParcoRepart.h>
 #endif
+
 namespace KITGPI
 {
     //! \brief Partitioning namespace
@@ -81,35 +82,8 @@ namespace KITGPI
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
         }
 
-        /*! \brief 
-            \param config configuration object
-            \param commShot communicator of a shot domain
-
-            */
-        template <typename ValueType>
-        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, scai::dmemo::DistributionPtr BlockDist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives)
-        {
 #ifdef USE_GEOGRAPHER
-            start_t = common::Walltime::get();
-            auto graph = derivatives->getCombinedMatrix();
-            auto &&weights = Weights(config, dist, modelCoordinates);
-            auto &&coords = modelCoordinates.getCoordinates(dist, ctx);
 
-            end_t = common::Walltime::get();
-            HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
-
-            dist = Partitioning::graphPartition(config, commShot, coords, graph, weights);
-
-            derivatives->redistributeMatrices(dist);
-            return (dist);
-#else
-            HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
-            HOST_PRINT(commShot, "\nBlock Distribution will be used instead!\n\n")
-            return (BlockDist);
-#endif
-        }
-
-#ifdef USE_GEOGRAPHER
         /*! \brief 
             \param config configuration object
             \param commShot communicator of a shot domain
@@ -360,6 +334,31 @@ namespace KITGPI
                 weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");
             }
             return (weights);
+        }
+
+        template <typename ValueType>
+        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::CommunicatorPtr commShot, scai::dmemo::DistributionPtr BlockDist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+        {
+
+#ifdef USE_GEOGRAPHER
+            double start_t, end_t; /* For timing */
+            start_t = common::Walltime::get();
+            auto graph = derivatives.getCombinedMatrix();
+            auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
+            auto &&weights = Weights(config, BlockDist, modelCoordinates);
+
+            end_t = common::Walltime::get();
+            HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
+
+            auto dist = KITGPI::Partitioning::graphPartition(config, commShot, coords, graph, weights);
+
+            derivatives.redistributeMatrices(dist);
+            return (dist);
+            //#else
+            HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
+            HOST_PRINT(commShot, "\nBlock Distribution will be used instead!\n\n")
+            return (BlockDist);
+#endif
         }
     }
 }

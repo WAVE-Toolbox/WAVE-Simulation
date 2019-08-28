@@ -161,7 +161,7 @@ int main(int argc, const char *argv[])
     /* Call partioner */
     /* --------------------------------------- */
     if (config.get<IndexType>("partitioning") == 2) {
-        dist = Partitioning::graphPartition(config, commShot, dist, *derivatives);
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
     }
 
     /* --------------------------------------- */
