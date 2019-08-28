@@ -31,42 +31,39 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 /*! \brief Methode to Write Wavefield for timestep t
  *
  \param vector Vector written to file
- \param type Wavefield-type (acoustic, elastic, viscoelastic, sh)
+ \param component Wavefield component (vx,vy,vz,p,curl,div)
+ \param fileBaseName base name of the output file
  \param t Timestep
+ \param fileFormat Output file format 0=mtx 1=lmf 2=frv
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType fileFormat)
 {
     std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t));
 
-    switch (partitionedOut) {
+    switch (fileFormat) {
 
-    case 0:
+    case 1:
         fileName += ".mtx";
         // write ASCII file
         vector.writeToFile(fileName, lama::FileMode::FORMATTED);
         HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
-    case 1:
+    case 2:
         fileName += ".lmf";
         // write binary file, IndexType as int, ValueType as float, do it via collective I/O
         vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
-    case 2:
-        fileName += ".%r.mtx";   // independent IO, each processor writes a local file, so %r stands for rank
-        vector.writeToFile(fileName);
-        break;
-
     case 3:
-        fileName += ".frv";   // write binary file with separate header file, done by master process
+        fileName += ".frv"; // write binary file with separate header file, done by master process
         vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected output option, partitionedOut = " << partitionedOut)
+        COMMON_THROWEXCEPTION("Unexpected output option, fileFormat = " << fileFormat)
         break;
     }
 }

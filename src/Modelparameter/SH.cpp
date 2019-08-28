@@ -87,7 +87,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (SH) from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -96,7 +96,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
 }
 
@@ -136,13 +136,13 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  \param ctx Context
  \param dist Distribution
  \param filename For the S-wave modulus  ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "sh";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading models from external files
@@ -151,16 +151,16 @@ KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dme
  \param ctx Context
  \param dist Distribution
  \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     std::string filenameVelocityS = filename + ".vs.mtx";
     std::string filenamedensity = filename + ".density.mtx";
 
-    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
-    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -179,13 +179,13 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 /*! \brief Write model to an external file
  *
  \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", partitionedOut);
-    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

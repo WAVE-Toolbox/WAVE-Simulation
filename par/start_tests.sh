@@ -13,6 +13,8 @@ UNITTEST_EXE="${BINDIR}/Test_unit"
 INTEGRATIONTEST_EXE="${BINDIR}/Test_integration"
 MODEL_EXE="${BINDIR}//tools/TwoLayer"
 
+export SCAI_LOG=OFF
+
 # Run unit tests
 ${UNITTEST_EXE}
 if [ "$?" != "0" ]; then

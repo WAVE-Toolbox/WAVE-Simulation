@@ -49,8 +49,9 @@ int main(int argc, char *argv[])
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
 
+    IndexType referenceSeismogramFormat = 1; // mtx
     receiversTest.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameTest);
-    receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
+    receiversRef.getSeismogramHandler().read(referenceSeismogramFormat, filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
     ValueType max = 0;

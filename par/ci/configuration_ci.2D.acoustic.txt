@@ -32,9 +32,7 @@ ModelFilename=model/model
 ModelParametrisation=2    # 1=Lame, 2=Velocity
 coordinateWrite=0
 
-# parallel input-output
-PartitionedIn=0           # 1=Read files parallel, 0=serial 
-PartitionedOut=0          # 1=Write files parallel, 0=serial
+FileFormat=1
 
 # Apply the free surface condition
 FreeSurface=0
@@ -61,7 +59,7 @@ ReceiverFilename=ci/receiver_ci.2D
 SeismogramFilename=ci/seismogram.2D.acoustic.ci
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
 initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
-SeismogramFormat=1 # 1=MTX, 2=SU
+SeismogramFormat=4 # 1=MTX, 4=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0
 runSimultaneousShots=1 # 1=All sources specified in SourceFilename are triggerd simultaneously

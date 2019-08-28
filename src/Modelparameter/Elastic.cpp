@@ -95,7 +95,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (elastic) parameter from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -104,7 +104,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
 }
 
@@ -174,13 +174,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "elastic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector
@@ -189,15 +189,15 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  \param ctx Context
  \param dist Distribution
  \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
-    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
-    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -219,14 +219,14 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", partitionedOut);
-    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
-    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

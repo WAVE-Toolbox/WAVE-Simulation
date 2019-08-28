@@ -53,11 +53,11 @@ int main(int argc, char *argv[])
     //set velocities for second layer
     for (IndexType y = depth; y < NY; ++y) {
 
-        vp(y,lama::Range(), lama::Range()) = vp2;
-        vs(y,lama::Range(), lama::Range()) = vs2;
-        rho(y,lama::Range(), lama::Range()) = rho2;
-        tauP(y,lama::Range(), lama::Range()) = tauP2;
-        tauS(y,lama::Range(), lama::Range()) = tauS2;
+        vp(y, lama::Range(), lama::Range()) = vp2;
+        vs(y, lama::Range(), lama::Range()) = vs2;
+        rho(y, lama::Range(), lama::Range()) = rho2;
+        tauP(y, lama::Range(), lama::Range()) = tauP2;
+        tauS(y, lama::Range(), lama::Range()) = tauS2;
     }
 
     std::string type = config.get<std::string>("equationType");
@@ -65,25 +65,46 @@ int main(int argc, char *argv[])
     //write model to file specified in configuration
     std::string filename = config.get<std::string>("ModelFilename");
 
-    std::string suffix = ".mtx";   // default output is matrix market
+    std::string suffix = ".mtx"; // default output is matrix market
 
-    IndexType partitioned = config.get<IndexType>("PartitionedIn");
-  
-    if (partitioned == 1) suffix = ".lmf";
-    if (partitioned == 3) suffix = ".frv";
+    IndexType fileFormat = config.get<IndexType>("FileFormat");
+    if (fileFormat == 1) {
 
-    rho.writeToFile(filename + ".density" + suffix);
+        rho.writeToFile(filename + ".density" + suffix);
 
-    if (type.compare("sh") != 0) {
-        vp.writeToFile(filename + ".vp" + suffix);
+        if (type.compare("sh") != 0) {
+            vp.writeToFile(filename + ".vp" + suffix);
+        }
+
+        if (type.compare("acoustic") != 0) {
+            vs.writeToFile(filename + ".vs" + suffix);
+        }
+
+        if (type.compare("visco") == 0) {
+            tauP.writeToFile(filename + ".tauP" + suffix);
+            tauS.writeToFile(filename + ".tauS" + suffix);
+        }
+
+    } else {
+        if (fileFormat == 2)
+            suffix = ".lmf";
+        if (fileFormat == 3)
+            suffix = ".frv";
+
+        rho.writeToFile(filename + ".density" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+
+        if (type.compare("sh") != 0) {
+            vp.writeToFile(filename + ".vp" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        }
+
+        if (type.compare("acoustic") != 0) {
+            vs.writeToFile(filename + ".vs" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        }
+        if (type.compare("visco") == 0) {
+            tauP.writeToFile(filename + ".tauP" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+            tauS.writeToFile(filename + ".tauS" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        }
     }
 
-    if (type.compare("acoustic") != 0) {
-        vs.writeToFile(filename + ".vs" + suffix);
-    }
-    if (type.compare("visco") == 0) {
-        tauP.writeToFile(filename + ".tauP" + suffix);
-        tauS.writeToFile(filename + ".tauS" + suffix);
-    }
     return 0;
 }

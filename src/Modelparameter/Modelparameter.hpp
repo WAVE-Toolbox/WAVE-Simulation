@@ -63,9 +63,9 @@ namespace KITGPI
              \param ctx Context
              \param dist Distribution
              \param filename filename to read modelparameters (endings will be added by derived classes)
-             \param partitionedIn Partitioned input
+             \param fileFormat Input file format 0=mtx 1=lmf
              */
-            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) = 0;
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) = 0;
 
             /*! \brief Abstract initialisation function
              * Standard initialisation function
@@ -88,9 +88,9 @@ namespace KITGPI
              * Standard write function
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
-             \param partitionedOut Partitioned output
+             \param fileFormat Output file format 0=mtx 1=lmf
              */
-            virtual void write(std::string filename, scai::IndexType partitionedOut) const = 0;
+            virtual void write(std::string filename, scai::IndexType fileFormat) const = 0;
 
             virtual std::string getEquationType() const = 0;
 
@@ -165,8 +165,7 @@ namespace KITGPI
             bool dirtyFlagSWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
 
             scai::IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
-            scai::IndexType PartitionedIn;   //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
-            scai::IndexType PartitionedOut;  //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
+            scai::IndexType fileFormat;      //!< 0=mtx 1=lmf
 
             std::string equationType;
 
@@ -197,9 +196,9 @@ namespace KITGPI
             ValueType relaxationFrequency;           //!< Relaxation Frequency
 
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType value);
-            void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
+            void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
-            void writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, scai::IndexType partitionedOut) const;
+            void writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, scai::IndexType fileFormat) const;
 
             void calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vectorModulus);
 
@@ -209,8 +208,7 @@ namespace KITGPI
             virtual void calculateAveraging() = 0;
 
             scai::IndexType getParametrisation();
-            scai::IndexType getPartitionedIn();
-            scai::IndexType getPartitionedOut();
+
             //! \brief Initializsation of the aneraging matrices
             /*!
              *
@@ -245,7 +243,7 @@ namespace KITGPI
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
-            void readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, scai::IndexType partitionedIn);
+            void readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, scai::IndexType fileFormat);
         };
     }
 }

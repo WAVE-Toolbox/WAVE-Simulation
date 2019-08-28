@@ -21,3 +21,8 @@ RHO=density*ones(NY,NX,NZ);
 write3DModel2mtx([filename '.vp.mtx'],VP);
 write3DModel2mtx([filename '.vs.mtx'],VS);
 write3DModel2mtx([filename '.density.mtx'],RHO);
+
+% write to LMF file
+% write3DModel2LMF([filename '.vp.lmf'],VP);
+% write3DModel2LMF([filename '.vs.lmf'],VS);
+% write3DModel2LMF([filename '.density.lmf'],RHO);

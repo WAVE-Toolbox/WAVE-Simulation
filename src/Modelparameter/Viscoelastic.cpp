@@ -94,7 +94,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoelastic) parameter from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
@@ -104,7 +104,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
 }
 
@@ -159,13 +159,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "viscoelastic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector from an external files and calculates pWaveModulus
@@ -174,18 +174,18 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  *
  *  Calculates pWaveModulus with
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", partitionedIn);
-    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
-    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
-    this->initModelparameter(tauS, ctx, dist, filename + ".tauS", partitionedIn);
-    this->initModelparameter(tauP, ctx, dist, filename + ".tauP", partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
+    this->initModelparameter(tauS, ctx, dist, filename + ".tauS", fileFormat);
+    this->initModelparameter(tauP, ctx, dist, filename + ".tauP", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -211,16 +211,16 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave velocity ".vp.mtx" is added, for the S-wave velocity ".vs.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", partitionedOut);
-    this->writeModelparameter(tauP, filename + ".tauP", partitionedOut);
-    this->writeModelparameter(tauS, filename + ".tauS", partitionedOut);
-    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
-    this->writeModelparameter(velocityS, filename + ".vs", partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(tauP, filename + ".tauP", fileFormat);
+    this->writeModelparameter(tauS, filename + ".tauS", fileFormat);
+    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

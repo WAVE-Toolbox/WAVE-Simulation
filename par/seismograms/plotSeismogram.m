@@ -1,8 +1,10 @@
 clearvars; close all;
 
 %% Read seismogram
-filename='seismogram.shot_0.p.mtx';
-seismogram=readSeismogram(filename);
+filename='seismogram.shot_0.p';
+% readSeismogram 1=mtx 2=lmf
+seismogram=readSeismogram(filename,2);
+
 
 DT=2e-3;
 

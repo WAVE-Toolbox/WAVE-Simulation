@@ -36,9 +36,14 @@ ModelRead=0               # 1=Model will be read from file, 0=generated on the f
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
 
-# parallel input-output
-PartitionedIn=0           # 0=serial,formatted(mtx), 1=collective,binary(lmf), 2=parallel(mtx), 3=serial,binary(frv)
-PartitionedOut=0          # 0=serial,formatted(mtx), 1=collective,binary(lmf), 2=parallel(mtx), 3=serial,binary(frv)
+
+#input-output 
+FileFormat=1  # file format for input and output  of models and wavefields
+
+# Supported formats:
+# 1=mtx : formated ascii file - serial IO
+# 2=lmf : binary file - parallel IO - float - little endian - 5 int header (20 byte) 
+# 3=frv : binary file - serial IO - float - little endian - seperate header 
 
 # Apply the free surface condition
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
@@ -68,7 +73,12 @@ SourceFilename=acquisition/sources             # location of source file
 ReceiverFilename=acquisition/receiver          # location of receiver file
 SeismogramFilename=seismograms/seismogram      # target location of seismogram
 SourceSignalFilename=acquisition/signal        # location of the source signal file
-SeismogramFormat=1                             # 1=MTX, 2=SU
+SeismogramFormat=1                             # 1=MTX (ascii serial), 2=lmf(binary parallel) 3=frv (binary serial), 4=SU (parallel)
+# 1=mtx : formated ascii file - serial IO - 2 line ascii header
+# 2=lmf : binary file - parallel IO - float - little endian - 6 int header (24 byte) 
+# 3=frv : binary file - serial IO - float - little endian - seperate header 
+# 4=su  : binary file - parallel IO - float - little endian - 240 byte header per trace
+
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
 initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
 seismoDT=2.0e-03                               # Seismogram sampling in seconds

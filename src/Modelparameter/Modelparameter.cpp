@@ -19,20 +19,6 @@ ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryModel(scai
     return (dist->getGlobalSize() * sizeof(ValueType));
 }
 
-/*! \brief Getter method for partitionedIn */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedIn()
-{
-    return (PartitionedIn);
-}
-
-/*! \brief Getter method for partitionedOut */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedOut()
-{
-    return (PartitionedOut);
-}
-
 /*! \brief Getter method for parametrisation */
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation()
@@ -98,15 +84,15 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
  \param ctx Context
  \param dist Distribution
  \param filename Location of external file which will be read in
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     HOST_PRINT(dist->getCommunicatorPtr(), "", "initModelParameter from file " << filename << "\n")
     allocateModelparameter(vector, ctx, dist);
 
-    readModelparameter(vector, filename, dist, partitionedIn);
+    readModelparameter(vector, filename, dist, fileFormat);
 }
 
 /*! \brief Write singe modelparameter to an external file
@@ -114,29 +100,29 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
  *  Write a single model to an external file block.
  \param vector Single modelparameter which will be written to filename
  \param filename Name of file in which modelparameter will be written
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType fileFormat) const
 {
-    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << ", partitionedOut = " << partitionedOut << "\n" )
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << ", fileFormat = " << fileFormat << "\n")
 
-    switch (partitionedOut) {
-    case 0:
+    switch (fileFormat) {
+    case 1:
         vector.writeToFile(filename + ".mtx", lama::FileMode::FORMATTED);
         break;
 
-    case 1:
+    case 2:
         // write binary file, IndexType as int, ValueType as float, do it via collective I/O
         vector.writeToFile(filename + ".lmf", lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         break;
-
-    case 2:
-        vector.writeToFile(filename + "%r.mtx", lama::FileMode::FORMATTED);
+    case 3:
+        filename += ".frv"; // write binary file with separate header file, done by master process
+        vector.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected output option!")
+        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
         break;
     }
 };
@@ -144,23 +130,23 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai
 /*! \brief Read a modelparameter from file
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType fileFormat)
 {
-    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "readModelParameter " << filename << ", partitionedIn = " << partitionedIn << "\n");
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "readModelParameter " << filename << ", fileFormat = " << fileFormat << "\n");
 
-    switch (partitionedIn) {
-    case 0:
-        vector.readFromFile(filename + ".mtx", dist );
-        break;
+    switch (fileFormat) {
     case 1:
-        vector.readFromFile(filename + ".lmf", dist );
+        vector.readFromFile(filename + ".mtx", dist);
         break;
     case 2:
-        vector.readFromFile(filename + "%r.mtx", dist );
+        vector.readFromFile(filename + ".lmf", dist);
+        break;
+    case 3:
+        vector.readFromFile(filename + ".frv", dist);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected input option!")
+        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
         break;
     }
 };

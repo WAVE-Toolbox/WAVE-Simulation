@@ -86,7 +86,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (acoustic) from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -95,7 +95,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
     }
 
     if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
+        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
     }
 }
 
@@ -158,13 +158,13 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
  \param ctx Context
  \param dist Distribution
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "acoustic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector
@@ -173,17 +173,17 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ct
  \param ctx Context
  \param dist Distribution
  \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param fileFormat  input file format 0=mtx 1=lmf
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     std::string filenameVelocityP = filename + ".vp.mtx";
     std::string filenamedensity = filename + ".density.mtx";
 
-    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", partitionedIn);
-    this->initModelparameter(density, ctx, dist, filename + ".density", partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -202,13 +202,13 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 /*! \brief Write model to an external file
  *
  \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ \param fileFormat output file format mtx=0 lmf=1
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", partitionedOut);
-    this->writeModelparameter(velocityP, filename + ".vp", partitionedOut);
+    this->writeModelparameter(density, filename + ".density", fileFormat);
+    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
