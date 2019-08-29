@@ -22,7 +22,6 @@ partitionFilename=partition/partition
 coordinateWrite=0                                  # 1=coordinates will be written to disk, 0=not
 coordinateFilename=configuration/coordinates       
 
-BoundaryWeights=2.0
 weightsWrite=1                                  # 1=weigths will be written to disk, 0=not
 weightsFilename=partition/weights       
 
@@ -33,8 +32,8 @@ NY=305                    # depth
 NZ=305                    # horizontal 2
 
 # define Partitioning
-ProcNS=1                  # Number of shot domains
-ShotDomain=0  # =0: Number of shot domains will be taken from ProcNS
+numShotDomains=1                  # Number of shot domains
+ShotDomainDefinition=0  # =0: Number of shot domains will be taken from ProcNS
 
 # distance between two grid points
 DH=17                     # in meter
