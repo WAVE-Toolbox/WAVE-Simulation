@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
     }
     
     if (type.compare("visco") == 0) {
-    KITGPI::IO::writeVector(rho,filename + ".tauP",fileFormat);
-    KITGPI::IO::writeVector(rho,filename + ".tauS",fileFormat);
+    KITGPI::IO::writeVector(tauP,filename + ".tauP",fileFormat);
+    KITGPI::IO::writeVector(tauS,filename + ".tauS",fileFormat);
     }
 
 

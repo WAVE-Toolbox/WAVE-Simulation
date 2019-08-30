@@ -18,9 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     coordinates1D = rhs.coordinates1D;
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
-    resampleMatRight = rhs.resampleMatRight;
-    resampleMatLeft = rhs.resampleMatLeft;
-    resampleVec = rhs.resampleVec;
+    resampleMat = rhs.resampleMat;
     //   std::cout<< "copy seismogram data " << data << std::endl;
 }
 //! \brief swap function
@@ -258,12 +256,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType no
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setResampleCoeff(ValueType resampleCoeff)
 {
+    
     if (this->getNumSamples() != 0) {
-        Common::calcResampleMat<ValueType>(resampleMatLeft, numSamples, resampleCoeff, 0);
-        if (scai::common::Math::floor<ValueType>(resampleCoeff) != resampleCoeff) {
-            Common::calcResampleMat<ValueType>(resampleMatRight, numSamples, resampleCoeff, 1);
-            Common::calcResampleVec<ValueType>(resampleVec, numSamples, resampleCoeff);
-        }
+        Common::calcResampleMat<ValueType>(resampleMat, numSamples, resampleCoeff);
     }
 }
 
@@ -371,7 +366,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
     data.allocate(distTraces, no_dist_NT);
     coordinates1D.allocate(distTraces);
 
-    resampleMatLeft = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
+    resampleMat = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
 
 //! \brief Reset of the seismogram data
@@ -574,15 +569,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
 {
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
-        dataResample = data * resampleMatLeft;
-
-        if (resampleMatRight.getNumColumns() > 0) {
-            scai::lama::DenseMatrix<ValueType> dataResampleInt;
-            dataResampleInt = data * resampleMatRight;
-            dataResampleInt -= dataResample;
-            dataResampleInt.scaleColumns(resampleVec);
-            dataResample += dataResampleInt;
-        }
+        dataResample = data * resampleMat;
 
         std::string filenameTmp=filename+ "." + SeismogramTypeString[getTraceType()];
     switch (seismogramFormat) {

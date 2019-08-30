@@ -109,9 +109,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
 
             /* resampling */
-            scai::lama::CSRSparseMatrix<ValueType> resampleMatLeft;
-            scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
-            scai::lama::DenseVector<ValueType> resampleVec;
+            scai::lama::CSRSparseMatrix<ValueType> resampleMat;
         };
     }
 }
