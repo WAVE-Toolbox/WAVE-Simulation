@@ -110,7 +110,7 @@ int main(int argc, const char *argv[])
     }
 
     if (config.get<bool>("coordinateWrite"))
-        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
+        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"),config.get<IndexType>("FileFormat"));
 
     /* --------------------------------------- */
     /* Factories                               */

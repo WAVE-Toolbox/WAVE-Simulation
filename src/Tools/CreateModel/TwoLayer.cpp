@@ -9,6 +9,7 @@
 
 #include "Configuration.hpp"
 #include "HostPrint.hpp"
+#include "../../IO/IO.hpp"
 
 using namespace scai;
 /*------------------------------
@@ -68,43 +69,24 @@ int main(int argc, char *argv[])
     std::string suffix = ".mtx"; // default output is matrix market
 
     IndexType fileFormat = config.get<IndexType>("FileFormat");
-    if (fileFormat == 1) {
-
-        rho.writeToFile(filename + ".density" + suffix);
-
-        if (type.compare("sh") != 0) {
-            vp.writeToFile(filename + ".vp" + suffix);
-        }
-
-        if (type.compare("acoustic") != 0) {
-            vs.writeToFile(filename + ".vs" + suffix);
-        }
-
-        if (type.compare("visco") == 0) {
-            tauP.writeToFile(filename + ".tauP" + suffix);
-            tauS.writeToFile(filename + ".tauS" + suffix);
-        }
-
-    } else {
-        if (fileFormat == 2)
-            suffix = ".lmf";
-        if (fileFormat == 3)
-            suffix = ".frv";
-
-        rho.writeToFile(filename + ".density" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-
-        if (type.compare("sh") != 0) {
-            vp.writeToFile(filename + ".vp" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
-
-        if (type.compare("acoustic") != 0) {
-            vs.writeToFile(filename + ".vs" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
-        if (type.compare("visco") == 0) {
-            tauP.writeToFile(filename + ".tauP" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-            tauS.writeToFile(filename + ".tauS" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
+    
+    //write model to disc
+    
+    KITGPI::IO::writeVector(rho,filename + ".density",fileFormat);
+    
+    if (type.compare("sh") != 0) {
+    KITGPI::IO::writeVector(vp,filename + ".vp",fileFormat);
     }
+    
+    if (type.compare("acoustic") != 0) {
+    KITGPI::IO::writeVector(vs,filename + ".vs",fileFormat);
+    }
+    
+    if (type.compare("visco") == 0) {
+    KITGPI::IO::writeVector(rho,filename + ".tauP",fileFormat);
+    KITGPI::IO::writeVector(rho,filename + ".tauS",fileFormat);
+    }
+
 
     return 0;
 }

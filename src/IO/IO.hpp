@@ -3,6 +3,7 @@
 // #include <scai/hmemo/HArray.hpp>
 // #include <scai/hmemo/WriteAccess.hpp>
 // #include <scai/lama.hpp>
+#include "../Common/HostPrint.hpp"
 #include <scai/lama/Vector.hpp>
 //
 // #include <cmath>
