@@ -354,7 +354,7 @@ namespace KITGPI
 
             derivatives.redistributeMatrices(dist);
             return (dist);
-            //#else
+#else
             HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
             HOST_PRINT(commShot, "\nBlock Distribution will be used instead!\n\n")
             return (BlockDist);

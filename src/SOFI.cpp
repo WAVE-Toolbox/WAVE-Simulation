@@ -156,7 +156,7 @@ int main(int argc, const char *argv[])
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
-
+ 
     /* --------------------------------------- */
     /* Call partioner */
     /* --------------------------------------- */
@@ -173,10 +173,12 @@ int main(int argc, const char *argv[])
     //settings = su.getSourceSettings(shotNumber); // currently not working, expecting a sourceSettings struct and not a vector of sourceSettings structs
     //         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
     //         allSettings = su.getSourceSettingsVec();
+    
 
     Acquisition::Sources<ValueType> sources;
 
     Acquisition::Receivers<ValueType> receivers;
+
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
@@ -188,7 +190,6 @@ int main(int argc, const char *argv[])
     model->init(config, ctx, dist, modelCoordinates);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
-
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
