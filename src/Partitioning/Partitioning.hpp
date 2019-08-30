@@ -134,7 +134,7 @@ namespace KITGPI
             scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 
             if (config.get<bool>("partitionWrite"))
-                IO::writeVector(partition,config.get<std::string>("partitionFilename"),config.get<std::string>("fileFormat"));
+                IO::writeVector(partition,config.get<std::string>("partitionFilename"),config.get<IndexType>("fileFormat"));
 
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
@@ -332,7 +332,7 @@ namespace KITGPI
             weights /= 100000000000000000;
 
             if (config.get<bool>("weightsWrite")) {
-                IO::writeVector(weights,config.get<std::string>("weightsFilename"),config.get<std::string>("fileFormat"));
+                IO::writeVector(weights,config.get<std::string>("weightsFilename"),config.get<IndexType>("fileFormat"));
             }
             return (weights);
         }
