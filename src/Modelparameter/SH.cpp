@@ -1,4 +1,5 @@
 #include "SH.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -196,8 +197,8 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

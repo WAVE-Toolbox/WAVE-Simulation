@@ -1,5 +1,7 @@
 #include "Acoustic.hpp"
+#include "../IO/IO.hpp"
 #include <scai/lama/io/FileIO.hpp>
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -220,8 +222,8 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

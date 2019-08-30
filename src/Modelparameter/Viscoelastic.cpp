@@ -1,4 +1,5 @@
 #include "Viscoelastic.hpp"
+#include "../IO/IO.hpp"
 using namespace scai;
 
 /*! \brief estimate sum of the memory of all model parameters
@@ -228,11 +229,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(tauP, filename + ".tauP", fileFormat);
-    this->writeModelparameter(tauS, filename + ".tauS", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(tauP, filename + ".tauP", fileFormat);
+    IO::writeVector(tauS, filename + ".tauS", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices

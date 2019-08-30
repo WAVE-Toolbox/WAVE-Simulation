@@ -90,7 +90,6 @@ namespace KITGPI
           protected:
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-            void writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, scai::IndexType t, scai::IndexType fileFormat);
 
             int numDimension;
             std::string equationType;

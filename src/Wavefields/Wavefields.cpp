@@ -28,46 +28,6 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
     resetWavefield(vector);
 }
 
-/*! \brief Methode to Write Wavefield for timestep t
- *
- \param vector Vector written to file
- \param component Wavefield component (vx,vy,vz,p,curl,div)
- \param fileBaseName base name of the output file
- \param t Timestep
- \param fileFormat Output file format 0=mtx 1=lmf 2=frv
- */
-template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType fileFormat)
-{
-    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t));
-
-    switch (fileFormat) {
-
-    case 1:
-        fileName += ".mtx";
-        // write ASCII file
-        vector.writeToFile(fileName, lama::FileMode::FORMATTED);
-        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
-        break;
-
-    case 2:
-        fileName += ".lmf";
-        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
-        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
-        break;
-
-    case 3:
-        fileName += ".frv"; // write binary file with separate header file, done by master process
-        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        break;
-
-    default:
-        COMMON_THROWEXCEPTION("Unexpected output option, fileFormat = " << fileFormat)
-        break;
-    }
-}
-
 template <typename ValueType>
 ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
 {

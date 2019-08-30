@@ -432,7 +432,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename,IndexType const seismogramFormat, bool copyDist)
 {
-    std::cout << "been here" << std::endl;
     scai::dmemo::DistributionPtr distTraces;
     scai::dmemo::DistributionPtr distSamples;
 
@@ -448,7 +447,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
             break;
         case 2:
             filenameTmp+=".lmf";
-            std::cout << "been here" << filenameTmp << std::endl;
             break;
         case 3:
             filenameTmp+=".frv";
@@ -515,7 +513,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename,IndexType const seismogramFormat, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    std::cout << "been here" << std::endl;
     std::string filenameTmp=filename+ "." + SeismogramTypeString[getTraceType()];
     switch (seismogramFormat) {
         case 1:

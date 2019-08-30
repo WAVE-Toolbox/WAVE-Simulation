@@ -1,4 +1,5 @@
 #include "Elastic.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -237,9 +238,9 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
