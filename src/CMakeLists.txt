@@ -100,7 +100,8 @@ set ( SOFI_LIB_DIRS
         ForwardSolver   
         Wavefields
         CheckParameter 
-        Common
+	IO
+	Common
         Filter
         Modelparameter  
         Partitioning )
