@@ -68,7 +68,7 @@ namespace KITGPI
             std::vector<int> getInterfaceVec() const;
 
             std::vector<scai::lama::DenseVector<ValueType>> getCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) const;
-            void writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename,scai::IndexType fileFormat) const;
+            void writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename, scai::IndexType fileFormat) const;
 
             // Coordinate --> Index:
             // Interfaces 3-D

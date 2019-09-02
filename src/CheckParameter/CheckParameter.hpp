@@ -2,7 +2,6 @@
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
-#include "../Acquisition/suHandler.hpp"
 #include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
@@ -13,7 +12,6 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-
 
         /*! \brief check variable grid
         *
@@ -149,12 +147,6 @@ namespace KITGPI
                 velocityTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
                 KITGPI::Common::searchAndReplace<ValueType>(velocityTmp, 0.0, vMaxTmp, 5);
                 vMinTmp = velocityTmp.min();
-
-                //                 scai::lama::DenseMatrix<ValueType> acquisition_temp;
-                //                 scai::lama::DenseVector<ValueType> wavelet_fc;
-                //
-                //                 acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
-                //                 acquisition_temp.getColumn(wavelet_fc, 8);
 
                 scai::lama::DenseVector<ValueType> wavelet_fc;
                 wavelet_fc.allocate(sourceSettings.size());

@@ -1,4 +1,5 @@
 #include "SeismogramHandler.hpp"
+#include "../Common/HostPrint.hpp"
 using namespace scai;
 
 //! \brief Method to write all handled Seismogram to file
@@ -7,13 +8,14 @@ using namespace scai;
  * The #SeismogramType of each Seismogram will be added to the filename automaticly.
  * 
  *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename base filename of the seismogram
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
+
     for (auto const &i : seismo) {
         i.write(seismogramFormat, filename, modelCoordinates);
     }
@@ -24,7 +26,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const se
  * This method allows to read all handled Seismogram from file. 
  * The #SeismogramType of each Seismogram will be added to the filename automaticly.
  *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename base filename of the seismograms
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
@@ -34,24 +36,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType const sei
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0)
             i.read(seismogramFormat, filename, copyDist);
-    }
-}
-
-//! \brief Method to read all handled Seismograms from file
-/*!
- * This method allows to read all handled Seismogram from file. The SeismogramType of each Seismogram will be added to the filename automaticly.
- *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
- \param filename base filename of the seismogram
- \param distTraces distribution of the traces in the data matrix
- \param DistributionPtr distribution of the samples in the data matrix
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    for (auto &i : seismo) {
-        if (i.getNumTracesGlobal() > 0)
-            i.read(seismogramFormat, filename, distTraces, distSamples);
     }
 }
 
@@ -287,10 +271,10 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSourceCoordinate(Inde
  \param rMat Resampling matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSeismoDT(ValueType seismoDT)
 {
     for (auto &i : seismo) {
-        i.setResampleCoeff(resampleCoeff);
+        i.setSeismoDT(seismoDT);
     }
 }
 

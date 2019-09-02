@@ -11,7 +11,6 @@
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
-#include "Acquisition/suHandler.hpp"
 #include "Configuration/Configuration.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
 
@@ -274,7 +273,6 @@ int main(int argc, const char *argv[])
         receivers.getSeismogramHandler().normalize();
 
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-
         solver->resetCPML();
     }
     return 0;

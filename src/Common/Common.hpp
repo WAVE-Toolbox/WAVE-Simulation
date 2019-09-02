@@ -117,49 +117,45 @@ namespace KITGPI
             return temp;
         }
 
-        
         /*! \brief Calculate a matrix which resamples the columns.
         \param rMat resampling matrix
         \param numCols number of samples in one row
         \param resamplingCoeff resampling coefficient
-        \param shift number of columns the resampling should be shifted
         */
         template <typename ValueType>
         void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, ValueType resamplingCoeff)
         {
 
             scai::lama::MatrixAssembly<ValueType> assembly;
-            
-            scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
-            
 
-            scai::IndexType columnIndex=0;
-            ValueType value=0.0;
-            ValueType sampleCoeff=1.0;
-            for (scai::IndexType rowIndex=0; rowIndex<numColsNew;rowIndex++) {
-                
-                ValueType relativeIndex=rowIndex*resamplingCoeff;
+            scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
+
+            scai::IndexType columnIndex = 0;
+            ValueType value = 0.0;
+            ValueType sampleCoeff = 1.0;
+            for (scai::IndexType rowIndex = 0; rowIndex < numColsNew; rowIndex++) {
+
+                ValueType relativeIndex = rowIndex * resamplingCoeff;
                 //leftValue
-                columnIndex=scai::common::Math::floor<ValueType>(relativeIndex);
-                if (columnIndex<numCols){
-                value=1-fmod(relativeIndex,sampleCoeff);
-                assembly.push(columnIndex,rowIndex,value);
+                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex);
+                if (columnIndex < numCols) {
+                    value = 1 - fmod(relativeIndex, sampleCoeff);
+                    assembly.push(columnIndex, rowIndex, value);
                 }
                 //rightValue
-                columnIndex=scai::common::Math::floor<ValueType>(relativeIndex)+1;
-                if (columnIndex<numCols){
-                value=fmod(relativeIndex,sampleCoeff);
-                assembly.push(columnIndex,rowIndex,value);
+                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex) + 1;
+                if (columnIndex < numCols) {
+                    value = fmod(relativeIndex, sampleCoeff);
+                    assembly.push(columnIndex, rowIndex, value);
                 }
             }
-            
+
             scai::lama::CSRSparseMatrix<ValueType> csrMatrix;
-            csrMatrix.allocate(numCols,numColsNew);
+            csrMatrix.allocate(numCols, numColsNew);
             csrMatrix.fillFromAssembly(assembly);
-           
+
             rMat.swap(csrMatrix);
         }
-        
 
         /*! \brief Calculates the time step to a corresponding continous time
         \param time continous time in seconds
