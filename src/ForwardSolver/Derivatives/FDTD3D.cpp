@@ -256,13 +256,18 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb\n");
-
+    HOST_PRINT(comm, "Initialization of the matrices: \n");
+    HOST_PRINT(comm, "", "Dxf, ");
     this->calcDxf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dyf, ");
     this->calcDyf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dzf, ");
     this->calcDzf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dxb, ");
     this->calcDxb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dyb, ");
     this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dzb, ");
     this->calcDzb(modelCoordinates, dist);
 
 
@@ -281,9 +286,13 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzbSparse.scale(this->DT);
 
     if ((isElastic) && (useVarGrid)) {
+        HOST_PRINT(comm, "", "DyfStaggeredX, ");
         this->calcDyfStaggeredX(modelCoordinates, dist);
+        HOST_PRINT(comm, "", "DybStaggeredX, ");
         this->calcDybStaggeredX(modelCoordinates, dist);
+        HOST_PRINT(comm, "", "DyfStaggeredZ, ");
         this->calcDyfStaggeredZ(modelCoordinates, dist);
+        HOST_PRINT(comm, "", "DybStaggeredZ, ");
         this->calcDybStaggeredZ(modelCoordinates, dist);
 
         DyfStaggeredXSparse.setContextPtr(ctx);
@@ -306,7 +315,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
         }
     }
 
-    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
+    //HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -321,20 +330,22 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-
+    HOST_PRINT(comm, "", "DyfFreeSurface, ");
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
     this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
+            HOST_PRINT(comm, "", "DybFreeSurface, ");
             this->calcDybFreeSurface(modelCoordinates, dist);
             this->getDybFreeSurface().setContextPtr(ctx);
             this->getDybFreeSurface() *= this->DT;
 
         } else {
-
+            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface, ");
             this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
+            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface, ");
             this->calcDybStaggeredZFreeSurface(modelCoordinates, dist);
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredZFreeSurface.setContextPtr(ctx);

@@ -151,7 +151,7 @@ int main(int argc, const char *argv[])
     derivatives->init(dist, ctx, modelCoordinates, commShot);
 
     end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "\n", "\nFinished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
