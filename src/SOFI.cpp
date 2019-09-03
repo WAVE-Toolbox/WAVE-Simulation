@@ -37,7 +37,9 @@ int main(int argc, const char *argv[])
     common::Settings::parseArgs(argc, argv);
 
     double start_t, end_t; /* For timing */
-
+    double globalStart_t, globalEnd_t; /* For timing */
+    globalStart_t = common::Walltime::get();
+    
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
                   << std::endl;
@@ -275,5 +277,7 @@ int main(int argc, const char *argv[])
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
         solver->resetCPML();
     }
+    globalEnd_t = common::Walltime::get();
+    HOST_PRINT(commShot, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\n SOFI finished!");
     return 0;
 }
