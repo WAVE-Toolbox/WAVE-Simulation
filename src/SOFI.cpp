@@ -153,7 +153,7 @@ int main(int argc, const char *argv[])
     derivatives->init(dist, ctx, modelCoordinates, commShot);
 
     end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "\n", "\nFinished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "\n", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
@@ -162,12 +162,16 @@ int main(int argc, const char *argv[])
     /* Call partioner */
     /* --------------------------------------- */
     if (config.get<IndexType>("partitioning") == 2) {
+             start_t = common::Walltime::get();
         dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
     }
 
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    start_t = common::Walltime::get();
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
     Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
     // build Settings for SU?
@@ -183,29 +187,34 @@ int main(int argc, const char *argv[])
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
-
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing Acquisition in " << end_t - start_t << " sec.\n\n");
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-
+    start_t = common::Walltime::get();
     model->init(config, ctx, dist, modelCoordinates);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
     //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-
+    start_t = common::Walltime::get();
     wavefields->init(ctx, dist);
-
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
 
-    HOST_PRINT(commAll, "", "ForwardSolver ...\n")
 
+    start_t = common::Walltime::get();
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
-    HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
 
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
@@ -278,6 +287,6 @@ int main(int argc, const char *argv[])
         solver->resetCPML();
     }
     globalEnd_t = common::Walltime::get();
-    HOST_PRINT(commShot, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\n SOFI finished!");
+    HOST_PRINT(commAll, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\nSOFI finished!\n\n");
     return 0;
 }
