@@ -344,10 +344,12 @@ namespace KITGPI
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */
             start_t = common::Walltime::get();
-            auto graph = derivatives.getCombinedMatrix();
+            auto &&graph = derivatives.getCombinedMatrix();
+            HOST_PRINT(commShot, "", "caclulated graph for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
+            HOST_PRINT(commShot, "", "created coordinate vectors for partioner \n");
             auto &&weights = Weights(config, BlockDist, modelCoordinates);
-
+            HOST_PRINT(commShot, "", "calculated node weights for partioner \n");
             end_t = common::Walltime::get();
             HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 
