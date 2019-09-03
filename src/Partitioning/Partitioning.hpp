@@ -344,6 +344,7 @@ namespace KITGPI
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */
             start_t = common::Walltime::get();
+            HOST_PRINT(commShot, "", "creating partioner input... \n\n");
             auto &&graph = derivatives.getCombinedMatrix();
             HOST_PRINT(commShot, "", "caclulated graph for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);

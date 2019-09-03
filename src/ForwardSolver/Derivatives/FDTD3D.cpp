@@ -358,9 +358,13 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3
     auto temp = DxbSparse;
     temp+= DybSparse;
     temp+= DzbSparse;
-    auto temp2 = DxfSparse;
-    temp2 = transpose(temp);
-    temp-=temp2;
+    temp= transpose(temp);
+    temp-=DxbSparse;
+    temp-=DybSparse;
+    temp-=DzbSparse;
+//     auto temp2 = DxfSparse;
+//     temp2 = transpose(temp);
+//     temp-=temp2;
     return (temp);
 }
 
