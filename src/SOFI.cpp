@@ -241,6 +241,10 @@ int main(int argc, const char *argv[])
     commShot->bcast(&firstShot, 1, 0);
     commShot->bcast(&lastShot, 1, 0);
 
+    double end_tInit= common::Walltime::get();
+    double tInit=end_tInit-globalStart_t;
+    HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
+    
     /* --------------------------------------- */
     /* Loop over shots                        */
     /* --------------------------------------- */
@@ -262,17 +266,28 @@ int main(int argc, const char *argv[])
 
         start_t = common::Walltime::get();
 
+        double start_t2=0.0, end_t2=0.0;
+
+        
+        
         /* --------------------------------------- */
         /* Loop over time steps                        */
         /* --------------------------------------- */
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-            if (tStep % 100 == 0 && tStep != 0) {
-                HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
+            if ((tStep-1)% 100 == 0) {
+                 start_t2= common::Walltime::get();
+                //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
             }
-
+            
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
+            if (tStep % 100 == 0 && tStep != 0) {
+                 end_t2= common::Walltime::get();
+                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated total runtime: " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+            }
+            
+            
             if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
                 wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
             }
