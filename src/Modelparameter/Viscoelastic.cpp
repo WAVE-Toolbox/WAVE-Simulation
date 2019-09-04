@@ -171,8 +171,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -186,8 +186,8 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  *
  *  Calculates pWaveModulus with
  */
@@ -222,9 +222,8 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 }
 
 /*! \brief Write model to an external file
- *
- \param filename For the P-wave velocity ".vp.mtx" is added, for the S-wave velocity ".vs.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Output file format 0=mtx 1=lmf
+ *base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const

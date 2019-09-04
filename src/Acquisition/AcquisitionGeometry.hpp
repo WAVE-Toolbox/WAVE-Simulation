@@ -10,8 +10,8 @@
 
 #include "Coordinates.hpp"
 
-#include "SeismogramHandler.hpp"
 #include "AcquisitionSettings.hpp"
+#include "SeismogramHandler.hpp"
 
 namespace KITGPI
 {
@@ -65,7 +65,7 @@ namespace KITGPI
             /* Calculation of distribution for local  traces */
             scai::dmemo::DistributionPtr calcDistribution(scai::lama::DenseVector<scai::IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield) const;
         };
-        
+
         /*! \brief reads parameters from the acquisition matrix and redistributes 
         *
         * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
@@ -106,7 +106,7 @@ namespace KITGPI
                     write_seismogramTypes_LA[i] = allSettings[i].getType();
                 }
             }
-            
+
             /* Replicate coordinates on all processes */
             coordinates1D.redistribute(no_dist_numTracesGlobal);
 
@@ -121,9 +121,6 @@ namespace KITGPI
 
             coordinates1D.setContextPtr(ctx);
             seismogramTypes.setContextPtr(ctx);
-
         }
-        
-
     }
 }

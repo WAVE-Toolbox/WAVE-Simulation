@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
+#include "../../IO/IO.hpp"
 #include "Configuration.hpp"
 #include "HostPrint.hpp"
-#include "../../IO/IO.hpp"
 
 using namespace scai;
 /*------------------------------
@@ -66,27 +66,24 @@ int main(int argc, char *argv[])
     //write model to file specified in configuration
     std::string filename = config.get<std::string>("ModelFilename");
 
-    std::string suffix = ".mtx"; // default output is matrix market
-
     IndexType fileFormat = config.get<IndexType>("FileFormat");
-    
+
     //write model to disc
-    
-    KITGPI::IO::writeVector(rho,filename + ".density",fileFormat);
-    
+
+    KITGPI::IO::writeVector(rho, filename + ".density", fileFormat);
+
     if (type.compare("sh") != 0) {
-    KITGPI::IO::writeVector(vp,filename + ".vp",fileFormat);
-    }
-    
-    if (type.compare("acoustic") != 0) {
-    KITGPI::IO::writeVector(vs,filename + ".vs",fileFormat);
-    }
-    
-    if (type.compare("visco") == 0) {
-    KITGPI::IO::writeVector(tauP,filename + ".tauP",fileFormat);
-    KITGPI::IO::writeVector(tauS,filename + ".tauS",fileFormat);
+        KITGPI::IO::writeVector(vp, filename + ".vp", fileFormat);
     }
 
+    if (type.compare("acoustic") != 0) {
+        KITGPI::IO::writeVector(vs, filename + ".vs", fileFormat);
+    }
+
+    if (type.compare("visco") == 0) {
+        KITGPI::IO::writeVector(tauP, filename + ".tauP", fileFormat);
+        KITGPI::IO::writeVector(tauS, filename + ".tauS", fileFormat);
+    }
 
     return 0;
 }

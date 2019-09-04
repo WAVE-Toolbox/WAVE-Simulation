@@ -108,7 +108,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
 
     seismograms.setContextPtr(ctx);
 }
-        
+
 /*! \brief get number of parameters
  *
  * returns the number of parameters of the aquisition matrix eg. X,Y,Z,Seismogram Type
@@ -133,7 +133,7 @@ dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calc
 
     Global2Local(coordinates, localIndices, dist_wavefield);
 
-    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(coordinates.size(), localIndices, true, dist_wavefield->getCommunicatorPtr()) );
+    dmemo::DistributionPtr dist_temp(new dmemo::GeneralDistribution(coordinates.size(), localIndices, true, dist_wavefield->getCommunicatorPtr()));
 
     return (dist_temp);
 }
@@ -205,7 +205,7 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumTracesLocal
  \param filename Filename to write acquisition
  */
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::writeAcquisitionToFile(std::string const &/*filename*/) const
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::writeAcquisitionToFile(std::string const & /*filename*/) const
 {
 }
 

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "AcquisitionGeometry.hpp"
+#include "AcquisitionSettings.hpp"
 #include "suHandler.hpp"
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
-#include "AcquisitionSettings.hpp"
 
 namespace KITGPI
 {

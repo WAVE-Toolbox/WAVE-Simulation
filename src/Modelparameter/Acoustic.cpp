@@ -1,6 +1,5 @@
 #include "Acoustic.hpp"
 #include "../IO/IO.hpp"
-#include <scai/lama/io/FileIO.hpp>
 
 using namespace scai;
 using namespace KITGPI;
@@ -172,8 +171,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename For the P-wave modulus ".pWaveModulus.'suffix'" is added and for density ".density.'suffix'" is added.
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -187,16 +186,13 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
- \param fileFormat  input file format 0=mtx 1=lmf
+ \param filename For the first Velocity-Vector "filename".vp.'suffix'" is added and for density "filename+".density.'suffix'" is added.
+ \param fileFormat  input file format 1=mtx 2=lmf
  *
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
     this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
     this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
@@ -216,8 +212,8 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param fileFormat output file format mtx=0 lmf=1
+ \param filename base filename of the model
+ \param fileFormat output file format mtx=1 lmf=2
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const

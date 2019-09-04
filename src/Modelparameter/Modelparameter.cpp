@@ -81,7 +81,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
 
 /*! \brief Init a single modelparameter by reading a model from an external file
  *
- *  Reads a single model from an external mtx file.
+ *  Reads a single model from an external vector file.
  \param vector Singel modelparameter which will be initialized
  \param ctx Context
  \param dist Distribution

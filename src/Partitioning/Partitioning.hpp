@@ -15,6 +15,9 @@
 #include <geographer/ParcoRepart.h>
 #endif
 
+#include <scai/dmemo/CommunicatorStack.hpp>
+#include <scai/common/ContextType.hpp>
+
 namespace KITGPI
 {
     //! \brief Partitioning namespace
@@ -344,10 +347,23 @@ namespace KITGPI
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */
             start_t = common::Walltime::get();
-            auto graph = derivatives.getCombinedMatrix();
+//             typedef common::shared_ptr<Context> ContextPtr;
+//             
+//             ContextPtr loc = Context::getContextPtr( common::context::Host );
+             hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host); 
+            
+            HOST_PRINT(commShot, "", "creating partioner input... \n\n");
+            auto &&graph = derivatives.getCombinedMatrix();
+            graph.setContextPtr(loc);
+            HOST_PRINT(commShot, "", "caclulated graph for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
+            coords[0].setContextPtr(loc);
+            coords[1].setContextPtr(loc);
+            coords[2].setContextPtr(loc);
+            HOST_PRINT(commShot, "", "created coordinate vectors for partioner \n");
             auto &&weights = Weights(config, BlockDist, modelCoordinates);
-
+            weights.setContextPtr(loc);
+            HOST_PRINT(commShot, "", "calculated node weights for partioner \n");
             end_t = common::Walltime::get();
             HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 

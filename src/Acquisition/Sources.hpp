@@ -68,7 +68,7 @@ namespace KITGPI
 
             void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
             void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);
-            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead);
+            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType rowNumber);
         };
     }
 }

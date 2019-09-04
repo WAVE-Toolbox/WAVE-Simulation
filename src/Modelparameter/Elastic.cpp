@@ -187,8 +187,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -202,8 +202,8 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  *
  */
 template <typename ValueType>
@@ -232,8 +232,8 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param fileFormat Output file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
