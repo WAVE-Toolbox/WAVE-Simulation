@@ -25,10 +25,10 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD3Dvisco()
+            FD3Dvisco():EquationType("visco"),NumDimension(3)
             {
-                equationType = "viscoelastic";
-                numDimension = 3;
+                equationType = EquationType;
+                numDimension = NumDimension;
             };
 
             //! Default destructor
@@ -67,6 +67,8 @@ namespace KITGPI
             void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
             void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, scai::lama::Vector<ValueType> const &SWaveModulus);
 
+            std::string EquationType;
+            int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
 
@@ -90,7 +92,7 @@ namespace KITGPI
             /* non-required wavefields */
             using Wavefields<ValueType>::P; //!< Wavefield
 
-            std::string type = "Visco3D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }

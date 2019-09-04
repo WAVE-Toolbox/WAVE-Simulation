@@ -25,10 +25,10 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD3Delastic()
+            FD3Delastic():EquationType("elastic"),NumDimension(3)
             {
-                equationType = "elastic";
-                numDimension = 3;
+                equationType = EquationType;
+                numDimension = NumDimension;
             };
 
             //! Default destructor
@@ -72,7 +72,9 @@ namespace KITGPI
           private:
             void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
             void getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, scai::lama::Vector<ValueType> const &PWaveModulus);
-
+            
+            std::string EquationType;
+            int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
 
@@ -96,7 +98,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = "Elastic3D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }
