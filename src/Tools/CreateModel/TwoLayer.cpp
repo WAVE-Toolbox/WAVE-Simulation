@@ -8,9 +8,11 @@
 #include <vector>
 
 #include "../../IO/IO.hpp"
-#include "Configuration.hpp"
-#include "HostPrint.hpp"
+#include "../../Configuration/Configuration.hpp"
+#include "../../Common/HostPrint.hpp"
+#include "config.hpp"
 
+using namespace KITGPI;
 using namespace scai;
 /*------------------------------
      TwoLayer - Model Creation
@@ -19,8 +21,6 @@ using namespace scai;
 -------------------------------*/
 int main(int argc, char *argv[])
 {
-    typedef double ValueType;
-
     // parameter
     ValueType vp1 = 3500, vs1 = 2000, rho1 = 2000, tauP1 = 0.1, tauS1 = 0.1;
     ValueType vp2 = 4550, vs2 = 2600, rho2 = 2600, tauP2 = 0.1, tauS2 = 0.1;

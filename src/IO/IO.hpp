@@ -38,7 +38,7 @@ namespace KITGPI
             case 3:
                 filename += ".frv"; // write binary file with separate header file, done by master process
                 HOST_PRINT(comm, "", "writing " << filename << " (binary + separate header)\n")
-                vector.writeToFile(filename, lama::FileMode::BINARY );
+                vector.writeToFile(filename, lama::FileMode::BINARY);
                 break;
 
             default:
@@ -92,13 +92,16 @@ namespace KITGPI
             switch (fileFormat) {
             case 1:
                 filename += ".mtx";
+                matrix.writeToFile(filename, lama::FileMode::FORMATTED);
                 break;
             case 2:
                 // write binary file, IndexType as int, ValueType as float, do it via collective I/O
                 filename += ".lmf";
+                matrix.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
                 break;
             case 3:
                 filename += ".frv"; // write binary file with separate header file, done by master process
+                matrix.writeToFile(filename, lama::FileMode::BINARY);
                 break;
 
             default:
@@ -108,11 +111,6 @@ namespace KITGPI
 
             HOST_PRINT(matrix.getRowDistributionPtr()->getCommunicatorPtr(), "", "writing " << filename << "\n")
 
-            if (fileFormat == 1) {
-                matrix.writeToFile(filename, lama::FileMode::FORMATTED);
-            } else {
-                matrix.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-            }
         }
 
         /*! \brief Read a Matrix from file
