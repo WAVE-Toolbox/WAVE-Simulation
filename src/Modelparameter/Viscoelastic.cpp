@@ -324,6 +324,16 @@ std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() c
     return (equationType);
 }
 
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for elastic modelling")
+    return (inverseDensity);
+}
+
 /*! \brief Get const reference to P-wave modulus (viscoelastic case)
  *
  * if P-Wave Modulus is dirty (eg. because of changes in velocityP, the P-Wave modulus will be recalculated
@@ -514,20 +524,17 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoelastic<ValueType>::operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
-    sWaveModulus = rhs.sWaveModulus;
     velocityP = rhs.velocityP;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
     tauS = rhs.tauS;
     tauP = rhs.tauP;
     relaxationFrequency = rhs.relaxationFrequency;
     numRelaxationMechanisms = rhs.numRelaxationMechanisms;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -538,20 +545,17 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
-    sWaveModulus = rhs.getSWaveModulus();
     velocityP = rhs.getVelocityP();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
     tauS = rhs.getTauS();
     tauP = rhs.getTauP();
     relaxationFrequency = rhs.getRelaxationFrequency();
     numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

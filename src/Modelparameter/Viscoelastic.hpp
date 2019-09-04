@@ -62,7 +62,10 @@ namespace KITGPI
             void write(std::string filename, scai::IndexType fileFormat) const override;
 
             std::string getEquationType() const;
-
+            
+            /* Getter methods for not requiered parameters */
+            scai::lama::Vector<ValueType> const &getInverseDensity() override;
+            
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;

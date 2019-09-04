@@ -62,6 +62,7 @@ namespace KITGPI
             std::string getEquationType() const;
 
             /* Getter methods for not requiered parameters */
+            scai::lama::Vector<ValueType> const &getInverseDensity() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getVelocityS() const override;

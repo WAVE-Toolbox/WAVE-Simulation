@@ -281,6 +281,16 @@ std::string KITGPI::Modelparameter::Acoustic<ValueType>::getEquationType() const
     return (equationType);
 }
 
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for acoustic modelling")
+    return (inverseDensity);
+}
+
 /*! \brief Get reference to S-wave modulus
  *
  */
@@ -555,13 +565,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
     velocityP = rhs.velocityP;
-    inverseDensity = rhs.inverseDensity;
     density = rhs.density;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -572,13 +580,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
     velocityP = rhs.getVelocityP();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

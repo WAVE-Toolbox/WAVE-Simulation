@@ -160,7 +160,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
 {
-    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
+    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated, prepareForModelling before run forward simulation! ");
     return (inverseDensity);
 }
 
