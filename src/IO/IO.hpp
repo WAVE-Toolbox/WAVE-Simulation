@@ -20,18 +20,25 @@ namespace KITGPI
         template <typename ValueType>
         void writeVector(lama::Vector<ValueType> const &vector, std::string filename, IndexType fileFormat)
         {
+            auto comm = vector.getDistributionPtr()->getCommunicatorPtr();
 
             switch (fileFormat) {
             case 1:
                 filename += ".mtx";
+                HOST_PRINT(comm, "", "writing " << filename << " (MatrixMarket)\n")
+                vector.writeToFile(filename, lama::FileMode::FORMATTED);
                 break;
 
             case 2:
                 // write binary file, IndexType as int, ValueType as float, do it via collective I/O
                 filename += ".lmf";
+                HOST_PRINT(comm, "", "writing " << filename << " (LAMA proprietary binary, float)\n")
+                vector.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
                 break;
             case 3:
                 filename += ".frv"; // write binary file with separate header file, done by master process
+                HOST_PRINT(comm, "", "writing " << filename << " (binary + separate header)\n")
+                vector.writeToFile(filename, lama::FileMode::BINARY );
                 break;
 
             default:
@@ -39,13 +46,6 @@ namespace KITGPI
                 break;
             }
 
-            HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "", "writing " << filename << "\n")
-
-            if (fileFormat == 1) {
-                vector.writeToFile(filename, lama::FileMode::FORMATTED);
-            } else {
-                vector.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-            }
         }
 
         /*! \brief Read a Vector from file

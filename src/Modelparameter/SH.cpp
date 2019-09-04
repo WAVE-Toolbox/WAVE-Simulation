@@ -467,13 +467,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.sWaveModulus;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -484,13 +482,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.getSWaveModulus();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

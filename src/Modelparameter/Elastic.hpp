@@ -62,6 +62,7 @@ namespace KITGPI
             std::string getEquationType() const;
 
             /* Getter methods for not requiered parameters */
+            scai::lama::Vector<ValueType> const &getInverseDensity() override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
