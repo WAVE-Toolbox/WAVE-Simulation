@@ -90,8 +90,9 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS2D<ValueType>::estimateMe
         }
     }
 
+    IndexType sum=dist->getCommunicator().sum(counter);
     ValueType mega = 1024 * 1024;
-    ValueType size = counter * sizeof(ValueType) / mega;
+    ValueType size = sum * sizeof(ValueType) / mega;
     return size;
 }
 
