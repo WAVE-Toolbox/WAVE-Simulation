@@ -1,17 +1,28 @@
 clearvars; close all;
+
 addpath('../model/');
+addpath('../configuration')
+config=conf('../configuration/configuration.txt');
 
 %% Define input parameter
+component='P';
+shotnr=1;
+
+filename_base=config.getString('WavefieldFileName');
+equationtype=config.getString('equationType');
+dimension=config.getString('dimension');
+
 %filename='wavefield.shot_0.Acoustic3D.P'; % File name of the model
-filename='wavefield.shot_1.Acoustic3D.P'; % File name of the model
-NX=133;  % Number of grid points in X
-NY=112;  % Number of grid points in Y
-NZ=105;  % Number of grid points in Z
-NTFirst=0; % First Timestep
-NTLast=950; %Last Timestep
-NTint=50;  %Timestep Interval
-DH=50;   % Spatial grid sampling
-tIncSnapshot=0.002;
+filename=['../',filename_base,'.shot_',num2str(shotnr),'.',equationtype,dimension,'.',component]; % File name of the model
+NX=config.getValue('NX');  % Number of grid points in X
+NY=config.getValue('NY');  % Number of grid points in Y
+NZ=config.getValue('NZ');  % Number of grid points in Z
+DT=config.getValue('DT');
+NTFirst=floor(config.getValue('tFirstSnapshot')/DT+0.5); % First Timestep
+NTLast=floor(config.getValue('tLastSnapshot')/DT+0.5); %Last Timestep
+NTint=floor(config.getValue('tIncSnapshot')/DT+0.5);  %Timestep Interval
+DH=config.getValue('DH');   % Spatial grid sampling
+tIncSnapshot=config.getValue('tIncSnapshot');
 
 % receiverx=[151 151];
 % receivery=[103 202];
@@ -33,8 +44,7 @@ load 'seismic.map'
 colorbar
 
 
-for ii=NTFirst:NTint:NTLast
-
+for ii=NTFirst:NTint:NTLast-NTint
 
 model=readModelfromMtx([filename '.' num2str(ii) '.mtx'],NX,NY,NZ);
 % model=readModelfromLMF([filename '.' num2str(ii) '.lmf'],NX,NY,NZ);
@@ -46,7 +56,7 @@ hold on
 % plot(sourcex,sourcey,'m*')
 % plot(receiverx,receivery,'gv')
 caxis([-caxis_value caxis_value])
-title( ['t = ' num2str(ii*tIncSnapshot) ' s'])
+title( ['t = ' num2str(ii*DT) ' s'])
 xlabel('X in gridpoints')
 ylabel('Y in gridpoints')
 %saveas(gcf,'vgWavefield.epsc')

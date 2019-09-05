@@ -1,6 +1,8 @@
 clear all; close all; clc
 
 addpath("../model");
+addpath('../configuration')
+config=conf('../configuration/configuration.txt');
 %% Define input parameter
 filename='wavefieldAcoustic2D.P'; % File name of the model
 filename_x='../configuration/coordinatesX.mtx'; % File name of the model
@@ -11,12 +13,14 @@ x=readVectorfromMtx(filename_x);
 y=readVectorfromMtx(filename_y);
 z=readVectorfromMtx(filename_z);
 
-NX=305;  % Number of grid points in X
-NY=305;  % Number of grid points in Y
-NZ=1;  % Number of grid points in Z
-NT=950;
-DH=50;   % Spatial grid sampling
-tIncSnapshot=0.002;
+NX=config.getValue('NX');  % Number of grid points in X
+NY=config.getValue('NY');  % Number of grid points in Y
+NZ=config.getValue('NZ');  % Number of grid points in Z
+NTFirst=floor(config.getValue('tFirstSnapshot')/DT+0.5); % First Timestep
+NTLast=floor(config.getValue('tLastSnapshot')/DT+0.5); %Last Timestep
+NTint=floor(config.getValue('tIncSnapshot')/DT+0.5);  %Timestep Interval
+DH=config.getValue('DH');   % Spatial grid sampling
+tIncSnapshot=config.getValue('tIncSnapshot');
 
 % receiverx=[151 151];
 % receivery=[103 202];
@@ -39,7 +43,7 @@ load 'seismic.map'
 colorbar
 
 
-for ii=100:50:950
+for ii=NTFirst:NTint:NTLast-NTint
 %ii=500 
 
 filenameii = [filename '.' num2str(ii) '.mtx'];
@@ -55,7 +59,7 @@ hold on
 % plot(sourcex,sourcey,'m*')
 % plot(receiverx,receivery,'gv')
 caxis([-caxis_value caxis_value])
-title( ['t = ' num2str(ii*tIncSnapshot) ' s'])
+title( ['t = ' num2str(ii*DT) ' s'])
 xlabel('X in gridpoints')
 ylabel('Y in gridpoints')
 %axis square
