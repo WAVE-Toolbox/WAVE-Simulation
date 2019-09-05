@@ -133,7 +133,7 @@ namespace KITGPI
 
             std::vector<lama::DenseVector<ValueType>> weightVector;
             weightVector.push_back(weights);
-
+            
             scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 
             if (config.get<bool>("partitionWrite"))
@@ -332,7 +332,7 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= weights.sum();
+            weights /= 0.2*weights.sum();
 
             if (config.get<bool>("weightsWrite")) {
                 IO::writeVector(weights,config.get<std::string>("weightsFilename"),config.get<IndexType>("fileFormat"));
