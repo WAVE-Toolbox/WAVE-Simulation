@@ -145,8 +145,11 @@ namespace KITGPI
             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
             graph.redistribute(dist, noDistPtr);
             partition.redistribute(dist);
+            ValueType sum= scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
             weightVector[0].redistribute(dist);
-
+            ValueType sum2= scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
+            std::cout << "local sum weights before " << sum << "local sum weights after " << sum2 << std::endl;
+            
             metrics.getAllMetrics(graph, partition, weightVector, settings);
 
             if (commShot->getRank() == 0) {
@@ -332,9 +335,8 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 50*weights.sum();
+            weights /= 100000*weights.sum();
             
-             //HOST_PRINT(dist->getCommunicatorPtr(), ""," sum of weights = "<< weights.sum() <<  "\n")
 
             if (config.get<bool>("weightsWrite")) {
                 IO::writeVector(weights,config.get<std::string>("weightsFilename"),config.get<IndexType>("fileFormat"));

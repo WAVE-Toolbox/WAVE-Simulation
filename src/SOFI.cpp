@@ -76,8 +76,13 @@ int main(int argc, const char *argv[])
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
 
-    if (config.get<bool>("useVariableGrid"))
+    if (config.get<bool>("useVariableGrid")) {
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+        for (int layer=0;layer<modelCoordinates.getNumLayers();layer++){
+        HOST_PRINT(commAll, "\n num gripoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
+        }
+        HOST_PRINT(commAll, "\n num gripoints total: " << modelCoordinates.getNGridpoints()<< "\n\n"); 
+    }
 
     /* --------------------------------------- */
     /* context and communicator for shot parallelisation   */
@@ -284,7 +289,7 @@ int main(int argc, const char *argv[])
 
             if (tStep % 100 == 0 && tStep != 0) {
                  end_t2= common::Walltime::get();
-                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated total runtime: " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << "at t = " << end_t2 << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int) ((tStepEnd/100) * (end_t2 - start_t2)) << " / " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
             }
             
             
