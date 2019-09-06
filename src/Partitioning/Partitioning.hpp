@@ -15,8 +15,8 @@
 #include <geographer/ParcoRepart.h>
 #endif
 
-#include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/common/ContextType.hpp>
+#include <scai/dmemo/CommunicatorStack.hpp>
 
 namespace KITGPI
 {
@@ -133,11 +133,11 @@ namespace KITGPI
 
             std::vector<lama::DenseVector<ValueType>> weightVector;
             weightVector.push_back(weights);
-            
+
             scai::lama::DenseVector<IndexType> partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 
             if (config.get<bool>("partitionWrite"))
-                IO::writeVector(partition,config.get<std::string>("partitionFilename"),config.get<IndexType>("fileFormat"));
+                IO::writeVector(partition, config.get<std::string>("partitionFilename"), config.get<IndexType>("fileFormat"));
 
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
@@ -145,11 +145,11 @@ namespace KITGPI
             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
             graph.redistribute(dist, noDistPtr);
             partition.redistribute(dist);
-            ValueType sum= scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
+            ValueType sum = scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
             weightVector[0].redistribute(dist);
-            ValueType sum2= scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
+            ValueType sum2 = scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
             std::cout << "local sum weights before " << sum << "local sum weights after " << sum2 << std::endl;
-            
+
             metrics.getAllMetrics(graph, partition, weightVector, settings);
 
             if (commShot->getRank() == 0) {
@@ -173,7 +173,7 @@ namespace KITGPI
             ValueType MatrixVector2ndOrderWeight = 1.00;
             ValueType VectorAssignmentWeight = 0.25;
             ValueType VectorPlusVectorWeight = 0.43;
-            ValueType PMLWeight = 3.49;
+            ValueType PMLWeight = 2.25;
 
             IndexType NumMatrixVector = 0;
             IndexType NumVectorAssignement = 0;
@@ -255,19 +255,21 @@ namespace KITGPI
                 //do nothing... use default useNodeWeights=1. useNodeWeights is only used for debugging
             }
 
-            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)) {
+            if (useNodeWeights) {
                 lama::VectorAssembly<ValueType> assembly;
                 assembly.reserve(ownedIndexes.size());
-
                 std::vector<scai::IndexType> spatialFDorderVec;
-                std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
-                if (!is)
-                    COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
-                std::istream_iterator<IndexType> start(is), end;
-                spatialFDorderVec.assign(start, end);
-                if (spatialFDorderVec.empty()) {
-                    COMMON_THROWEXCEPTION("FDorder file is empty");
+                if (config.get<bool>("useVariableFDoperators")) {
+                    std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
+                    if (!is)
+                        COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
+                    std::istream_iterator<IndexType> start(is), end;
+                    spatialFDorderVec.assign(start, end);
+                    if (spatialFDorderVec.empty()) {
+                        COMMON_THROWEXCEPTION("FDorder file is empty");
+                    }
                 }
+
                 // Weights of single Matrix vector Products with FDorder 2-12
                 ValueType FDWeights[6] = {MatrixVector2ndOrderWeight, 1.56, 2.06, 2.54, 3.00, 3.70};
 
@@ -277,9 +279,16 @@ namespace KITGPI
                     Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
                     const auto layer = modelCoordinates.getLayer(coordinate);
+                    IndexType FDOrder = 0;
+                    if (config.get<bool>("useVariableFDoperators")) {
+                        FDOrder = spatialFDorderVec[layer];
+                    } else {
+                        FDOrder = config.get<IndexType>("spatialFDorder");
+                    }
 
                     //FDOrder Weights
-                    ValueType fdWeight = (NumMatrixVector * FDWeights[spatialFDorderVec[layer] / 2 - 1] + constantWeight);
+
+                    ValueType fdWeight = (NumMatrixVector * FDWeights[FDOrder / 2 - 1] + constantWeight);
 
                     assembly.push(ownedIndex, fdWeight);
                 }
@@ -335,11 +344,10 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 100000*weights.sum();
-            
+            weights /= 100000 * weights.sum();
 
             if (config.get<bool>("weightsWrite")) {
-                IO::writeVector(weights,config.get<std::string>("weightsFilename"),config.get<IndexType>("fileFormat"));
+                IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
             }
             return (weights);
         }
@@ -351,11 +359,11 @@ namespace KITGPI
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */
             start_t = common::Walltime::get();
-//             typedef common::shared_ptr<Context> ContextPtr;
-//             
-//             ContextPtr loc = Context::getContextPtr( common::context::Host );
-             hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host); 
-            
+            //             typedef common::shared_ptr<Context> ContextPtr;
+            //
+            //             ContextPtr loc = Context::getContextPtr( common::context::Host );
+            hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
+
             HOST_PRINT(commShot, "", "creating partioner input... \n\n");
             auto &&graph = derivatives.getCombinedMatrix();
             graph.setContextPtr(loc);
