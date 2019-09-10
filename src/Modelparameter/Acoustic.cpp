@@ -126,11 +126,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::dmemo::Distribution
 
     lama::MatrixAssembly<ValueType> assembly;
 
-    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(ownedIndex);
         IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
-        assembly.push(variableIndex, regularIndex, 1.0);
+        assembly.push(ownedIndex, regularIndex, 1.0);
     }
 
     lama::CSRSparseMatrix<ValueType> meshingMatrix;
