@@ -253,15 +253,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     SCAI_REGION("initializeMatrices")
 
     HOST_PRINT(comm, "Initialization of the matrices: \n");
-    HOST_PRINT(comm, "", "Dxf, ");
+    HOST_PRINT(comm, "", "Dxf,\n");
     this->calcDxf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzf, ");
+    HOST_PRINT(comm, "", "Dzf,\n");
     this->calcDzf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dxb, ");
+    HOST_PRINT(comm, "", "Dxb,\n");
     this->calcDxb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dyb, ");
+    HOST_PRINT(comm, "", "Dyb,\n");
     this->calcDyb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzb, ");
+    HOST_PRINT(comm, "", "Dzb,\n");
     this->calcDzb(modelCoordinates, dist);
 
     DxfSparse.setContextPtr(ctx);
@@ -277,17 +277,17 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzbSparse.scale(this->DT);
 
     if (useFreeSurface != 1) {
-        HOST_PRINT(comm, "", "Dyf, ");
+        HOST_PRINT(comm, "", "Dyf,\n");
         this->calcDyf(modelCoordinates, dist);
         DyfSparse.setContextPtr(ctx);
         DyfSparse.scale(this->DT);
     }
 
     if ((isElastic) && (useVarGrid)) {
-        HOST_PRINT(comm, "", "DyfStaggeredX, ");
+        HOST_PRINT(comm, "", "DyfStaggeredX,\n");
         this->calcDyfStaggeredX(modelCoordinates, dist);
 
-        HOST_PRINT(comm, "", "DyfStaggeredZ, ");
+        HOST_PRINT(comm, "", "DyfStaggeredZ,\n");
         this->calcDyfStaggeredZ(modelCoordinates, dist);
 
         DyfStaggeredXSparse.setContextPtr(ctx);
@@ -297,9 +297,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
         DyfStaggeredZSparse *= this->DT;
 
         if (useFreeSurface != 1) {
-            HOST_PRINT(comm, "", "DybStaggeredX, ");
+            HOST_PRINT(comm, "", "DybStaggeredX,\n");
             this->calcDybStaggeredX(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZ, ");
+            HOST_PRINT(comm, "", "DybStaggeredZ,\n");
             this->calcDybStaggeredZ(modelCoordinates, dist);
 
             DybStaggeredXSparse.setContextPtr(ctx);
@@ -333,23 +333,23 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-    HOST_PRINT(comm, "", "DyfFreeSurface, ");
+    HOST_PRINT(comm, "", "DyfFreeSurface,\n");
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
     this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
-            HOST_PRINT(comm, "", "DybFreeSurface, ");
+            HOST_PRINT(comm, "", "DybFreeSurface,\n");
             this->calcDybFreeSurface(modelCoordinates, dist);
             this->getDybFreeSurface().setContextPtr(ctx);
             this->getDybFreeSurface() *= this->DT;
 
         } else {
             //DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
-            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface, ");
+            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface,\n");
             this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface, ");
+            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface,\n");
             this->calcDybStaggeredZFreeSurface(modelCoordinates, dist);
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredZFreeSurface.setContextPtr(ctx);
@@ -366,7 +366,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfac
 template <typename ValueType>
 scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getCombinedMatrix()
 {
+    hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
     auto temp = DxbSparse;
+    temp.setContextPtr(loc);
     temp += DybSparse;
     temp += DzbSparse;
     temp = transpose(temp);
