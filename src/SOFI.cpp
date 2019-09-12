@@ -79,9 +79,11 @@ int main(int argc, const char *argv[])
     if (config.get<bool>("useVariableGrid")) {
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
         for (int layer=0;layer<modelCoordinates.getNumLayers();layer++){
-        HOST_PRINT(commAll, "\n num gripoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
+        HOST_PRINT(commAll, "\n Number of gridpoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
         }
-        HOST_PRINT(commAll, "\n num gripoints total: " << modelCoordinates.getNGridpoints()<< "\n\n"); 
+        auto numGridpointsRegular=config.get<IndexType>("NX")*config.get<IndexType>("NY")*config.get<IndexType>("NZ");
+        HOST_PRINT(commAll, "\n Number of gripoints total: " << modelCoordinates.getNGridpoints()<< "\n\n");
+        HOST_PRINT(commAll, "\n Percentage of gridpoints of the underlying regular grid given by NX,NY,NZ: " << modelCoordinates.getNGridpoints()/numGridpointsRegular << "\n\n");
     }
 
     /* --------------------------------------- */
