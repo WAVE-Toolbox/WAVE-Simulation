@@ -296,13 +296,27 @@ lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueT
 
 //! \brief Getter method for combined derivative matrix
 template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getCombinedMatrix()
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
+    SCAI_ASSERT(isSetup, "call setup function before init");
+    
+    if(DxbSparse.getNumRows()==0) {
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,\n");
+    this->calcDxb(modelCoordinates, dist);
+    }
+    
+    if(DybSparse.getNumRows()==0) {
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,\n");
+    this->calcDyb(modelCoordinates, dist);
+    }
+    
     auto temp = DxbSparse;
     temp+=DybSparse;
-    auto temp2 = DxfSparse;
-    temp2 = transpose(temp);  
-    temp -= temp2;        
+    temp = transpose(temp);  
+    temp -= DxbSparse; 
+    DxbSparse.purge();
+    temp -= DybSparse; 
+    DybSparse.purge();
 
     return (temp);
 }

@@ -23,7 +23,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
     if (config.get<IndexType>("partitioning") != 1)
         useSparse = true;
-        useSparseFreeSurface = true;
+    useSparseFreeSurface = true;
 
     if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
         // Set FD-order to class member
         setFDOrder(config.get<IndexType>("spatialFDorder"));
     }
-    isSetup=true;
+    isSetup = true;
 }
 
 //! \brief Setup configuration of the derivative object
@@ -57,28 +57,26 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     useVarFDorder = true;
     setFDCoef();
     setFDOrder(FDorder);
-    isSetup=true;
+    isSetup = true;
 }
 
-
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates,IndexType numDMatrices, IndexType numInterpMatrices)
+ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, IndexType numDMatrices, IndexType numInterpMatrices)
 {
-    ValueType size=0;
-    ValueType mega=1024*1024;
-    ValueType sizeInterp=0;
+    ValueType size = 0;
+    ValueType mega = 1024 * 1024;
+    ValueType sizeInterp = 0;
     if (useSparse) {
-       size=getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
+        size = getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
     } else {
-        size=getMemoryStencilMatrix(dist) / mega * numDMatrices;
+        size = getMemoryStencilMatrix(dist) / mega * numDMatrices;
     }
 
     if (useVarGrid) {
-       sizeInterp=getMemoryInterpolationMatrix(dist) / mega * numInterpMatrices;
-    } 
-    return (size+sizeInterp);
+        sizeInterp = getMemoryInterpolationMatrix(dist) / mega * numInterpMatrices;
+    }
+    return (size + sizeInterp);
 }
-
 
 //! \brief Calculate Dxf matrix
 /*!
@@ -108,7 +106,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -169,7 +167,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -246,7 +244,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    // assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -292,11 +290,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
     lama::MatrixAssembly<ValueType> assembly;
 
-    const ValueType ZERO = 0;  
-    
+    const ValueType ZERO = 0;
+
     ValueType DH = ZERO;
     IndexType dhFactor = ZERO;
-
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
@@ -327,10 +324,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
         for (IndexType j = 0; j < spatialFDorder; j++) {
             IndexType Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
-            
-           ValueType fdCoeff = stencilFDmap[spatialFDorder].values()[j];
-           ValueType diffCoeff = ZERO;
-           
+
+            ValueType fdCoeff = stencilFDmap[spatialFDorder].values()[j];
+            ValueType diffCoeff = ZERO;
+
             if (spatialFDorder >= (2 + 2 * coordinate.y / dhFactor + j)) {
                 IndexType ImageIndex = spatialFDorder - 2 - 2 * coordinate.y / dhFactor - j;
                 diffCoeff = stencilFDmap[spatialFDorder].values()[ImageIndex];
@@ -339,7 +336,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 if (useSparseFreeSurface)
-                assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff)/ DH); // push all coefficients
+                    assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff) / DH); // push all coefficients
                 else if (ZERO != diffCoeff)
                     assembly.push(ownedIndex, columnIndex, -diffCoeff / DH); // push only diffs to stencil matrix
             }
@@ -348,9 +345,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
     DyfFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
     DyfFreeSurfaceSparse.fillFromAssembly(assembly);
-    
-    if (!useSparseFreeSurface)
-    {
+
+    if (!useSparseFreeSurface) {
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
         common::Stencil1D<ValueType> stencilId(1);
@@ -358,7 +354,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         DyfFreeSurfaceStencil.define(dist, stencil);
         DyfFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
     }
-
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -376,7 +371,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     lama::MatrixAssembly<ValueType> assembly;
 
     const ValueType ZERO = 0;
-    
+
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
@@ -399,7 +394,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         }
 
         for (IndexType j = 0; j < spatialFDorder; j++) {
-           IndexType Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
+            IndexType Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
 
             // apply coordinate correction in the fine staggered grid (staggered in y-direction, coordinates are only correct for full grid points)
             if (modelCoordinates.locatedOnInterface(coordinate)) {
@@ -412,7 +407,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
             ValueType fdCoeff = stencilFDmap[spatialFDorder].values()[j];
             ValueType diffCoeff = ZERO;
-            
+
             if (spatialFDorder >= (1 + 2 * coordinate.y / dhFactor + j)) {
                 IndexType ImageIndex = spatialFDorder - 1 - 2 * coordinate.y / dhFactor - j;
                 diffCoeff = stencilFDmap[spatialFDorder].values()[ImageIndex];
@@ -421,33 +416,31 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z); // push all coefficients
                 if (useSparseFreeSurface)
-                   assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff)/ modelCoordinates.getDH(coordinate));
-               else if (ZERO != diffCoeff)
-                   assembly.push(ownedIndex, columnIndex, -diffCoeff / modelCoordinates.getDH(coordinate));  // push only diffs to stencil matrix
+                    assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff) / modelCoordinates.getDH(coordinate));
+                else if (ZERO != diffCoeff)
+                    assembly.push(ownedIndex, columnIndex, -diffCoeff / modelCoordinates.getDH(coordinate)); // push only diffs to stencil matrix
             }
         }
     }
 
+    DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
+    DybFreeSurfaceSparse.fillFromAssembly(assembly);
 
-        DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
-        DybFreeSurfaceSparse.fillFromAssembly(assembly);
-        
-        
-	    if (!useSparseFreeSurface)
-		
-	    {
-	        // define the stencil matrix for hybrid matrix
-	        // ToDo: why not simply use the stencil matrix Dyb
-		
-	        common::Stencil1D<ValueType> stencilId(1);
-	        common::Stencil1D<ValueType> stencilBD;
-	        stencilBD.transpose( stencilFDmap[spatialFDorderVec.at(0)] );
-	        stencilBD.scale( -1 );
-	        common::Stencil3D<ValueType> stencil(stencilId, stencilBD, stencilId);
-		
-	        DybFreeSurfaceStencil.define(dist, stencil);
-	        DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
-	    }
+    if (!useSparseFreeSurface)
+
+    {
+        // define the stencil matrix for hybrid matrix
+        // ToDo: why not simply use the stencil matrix Dyb
+
+        common::Stencil1D<ValueType> stencilId(1);
+        common::Stencil1D<ValueType> stencilBD;
+        stencilBD.transpose(stencilFDmap[spatialFDorderVec.at(0)]);
+        stencilBD.scale(-1);
+        common::Stencil3D<ValueType> stencil(stencilId, stencilBD, stencilId);
+
+        DybFreeSurfaceStencil.define(dist, stencil);
+        DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
+    }
 }
 
 //! \brief Calculate DybFreeSurface matrix
@@ -463,7 +456,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    // assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     ValueType fdCoeff = 0;
     IndexType ImageIndex = 0;
@@ -547,7 +540,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    // assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     ValueType fdCoeff = 0;
     IndexType ImageIndex = 0;
@@ -632,7 +625,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -679,7 +672,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -743,7 +736,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
 
     IndexType Y = 0;
     IndexType columnIndex = 0;
@@ -828,7 +821,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -901,7 +894,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
 
     IndexType Y = 0;
     IndexType columnIndex = 0;
@@ -987,7 +980,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -1062,7 +1055,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 6);
+    //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
@@ -1119,7 +1112,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
+    //assembly.reserve(ownedIndexes.size() * 2);
 
     ValueType denom = 0;
     IndexType dhFactorFineGrid = 0;
@@ -1221,7 +1214,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
+    // assembly.reserve(ownedIndexes.size() * 2);
 
     ValueType denom = 0;
     IndexType dhFactorFineGrid = 0;
@@ -1325,7 +1318,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
+    //assembly.reserve(ownedIndexes.size() * 2);
 
     ValueType denom = 0;
     IndexType dhFactorFineGrid = 0;
@@ -1429,7 +1422,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
     dist->getOwnedIndexes(ownedIndexes);
 
     lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
+    //assembly.reserve(ownedIndexes.size() * 2);
 
     ValueType denom = 0;
     IndexType dhFactorFineGrid = 0;
@@ -1640,7 +1633,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 
 //! \brief Getter method for derivative matrix DybFreeSurface
 template <typename ValueType>
-scai::lama::Matrix<ValueType>  &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() 
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface()
 {
     if (useSparseFreeSurface)
         return DybFreeSurfaceSparse;
@@ -1685,7 +1678,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 
 //! \brief Getter method for derivative matrix DyfFreeSurface
 template <typename ValueType>
-scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() 
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface()
 {
     if (useSparseFreeSurface)
         return DyfFreeSurfaceSparse;
@@ -1715,7 +1708,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
-scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() 
+scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf()
 {
     if (useSparse)
         return (DyfSparse);

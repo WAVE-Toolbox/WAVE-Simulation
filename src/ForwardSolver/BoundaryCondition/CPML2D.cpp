@@ -116,8 +116,9 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::estimateM
         }
     }
 
+     IndexType sum=dist->getCommunicator().sum(counter);
     IndexType numVectorsPerDim = 8;
-    return(counter * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
+    return(sum * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix

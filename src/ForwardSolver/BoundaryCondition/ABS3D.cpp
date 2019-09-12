@@ -76,7 +76,6 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::estimateMe
     Acquisition::coordinate3D coordinatedist;
 
     IndexType coordinateMin = 0;
-    IndexType coordinatexzMin = 0;
 
     IndexType counter = 0;
 
@@ -93,7 +92,6 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::estimateMe
             }
 
         } else {
-            coordinatexzMin = !((coordinatedist.x) < (coordinatedist.z)) ? (coordinatedist.z) : (coordinatedist.x);
             if (coordinate.y < BoundaryWidth) {
                 if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)) {
                     counter++;
@@ -104,8 +102,9 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::estimateMe
         }
     }
 
+     IndexType sum=dist->getCommunicator().sum(counter);
     ValueType mega = 1024 * 1024;
-    ValueType size = counter * sizeof(ValueType) / mega;
+    ValueType size = sum * sizeof(ValueType) / mega;
     return size;
 }
 

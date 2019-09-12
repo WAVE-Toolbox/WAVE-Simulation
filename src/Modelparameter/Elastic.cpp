@@ -130,23 +130,26 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-    lama::DenseVector<ValueType> densityTmp(variableDist, 0.0);
-    lama::DenseVector<ValueType> velocityPTmp(variableDist, 0.0);
-    lama::DenseVector<ValueType> velocitySTmp(variableDist, 0.0);
 
-    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    variableDist->getOwnedIndexes(ownedIndexes);
 
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+    lama::MatrixAssembly<ValueType> assembly;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(ownedIndex);
         IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
-
-        densityTmp.setValue(variableIndex, density.getValue(regularIndex));
-        velocityPTmp.setValue(variableIndex, velocityP.getValue(regularIndex));
-        velocityS.setValue(variableIndex, velocityS.getValue(regularIndex));
+        assembly.push(ownedIndex, regularIndex, 1.0);
     }
 
-    density = densityTmp;
-    velocityP = velocityPTmp;
-    velocityS = velocitySTmp;
+    lama::CSRSparseMatrix<ValueType> meshingMatrix;
+    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, velocityP.getDistributionPtr());
+    meshingMatrix.fillFromAssembly(assembly);
+
+    density = meshingMatrix * density;
+    velocityP = meshingMatrix * velocityP;
+    velocityS = meshingMatrix * velocityS;
 }
 
 /*! \brief Constructor that is generating a homogeneous model

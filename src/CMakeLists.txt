@@ -21,6 +21,7 @@ if ( NOT CMAKE_BUILD_TYPE )
         FORCE)
 endif ()
 
+
 ## Set default installation directory same as build directory
 
 if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
@@ -72,6 +73,7 @@ find_package( SCAI REQUIRED CONFIG
 include_directories( ${SCAI_INCLUDE_DIRS} )
 
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${SCAI_CXX_FLAGS} )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
 set( SOFI_used_libs ${SCAI_LIBRARIES} )
 
 ####################################################

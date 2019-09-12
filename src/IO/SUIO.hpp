@@ -283,7 +283,7 @@ void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> con
 template <typename ValueType>
 void readDataSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr)
 {
-    Segy tr;
+    //Segy tr;
 
     // write su pararllel
     // 1 redistribute data matrix and coordinate vector to block distribution
