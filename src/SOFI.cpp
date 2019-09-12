@@ -255,6 +255,11 @@ int main(int argc, const char *argv[])
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
         sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+        
+        if (config.get<bool>("writeSource")) {
+            lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
+            KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+        }
 
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);

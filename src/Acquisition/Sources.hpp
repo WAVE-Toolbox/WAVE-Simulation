@@ -42,6 +42,7 @@ namespace KITGPI
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType>);
 
             void getAcquisitionMat(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings);
+            scai::lama::DenseMatrix<ValueType> getsourcesignal();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals

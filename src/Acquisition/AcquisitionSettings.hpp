@@ -4,6 +4,7 @@
 #include "Coordinates.hpp"
 #include <fstream>
 #include <scai/lama.hpp>
+#include <scai/dmemo/GeneralDistribution.hpp>
 
 namespace KITGPI
 {
@@ -190,5 +191,79 @@ namespace KITGPI
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file " << fileName)
             }
         }
+        
+        /*! \brief Determination of local indices based on given global indeces
+        *
+        * Calculate the number of indeces within the local processing unit as well as
+        * the indeces of the local index.
+        *
+        \param coordinatesglobal DenseVector with global coordinates
+        \param localIndices DenseVector with local coordinates
+        \param dist Distribution of global grid
+        */
+        inline void Global2Local(scai::lama::Vector<scai::IndexType> const &coordinatesglobal, scai::hmemo::HArray<scai::IndexType> &localIndices, scai::dmemo::DistributionPtr dist)
+        {
+
+            scai::IndexType n_global = coordinatesglobal.size(); // Number of global entries
+
+            scai::IndexType coordinatetemp_int;
+
+            scai::IndexType i = 0;
+            for (scai::IndexType n = 0; n < n_global; n++) {
+
+                coordinatetemp_int = coordinatesglobal.getValue(n);
+
+                if (dist->isLocal(coordinatetemp_int)) {
+                    i++;
+                }
+            }
+
+            /* Determine coordinates of local receivers in the global coordinate vector */
+            localIndices.resize(i);
+            scai::hmemo::WriteAccess<scai::IndexType> write_localIndices(localIndices);
+            i = 0;
+            for (scai::IndexType n = 0; n < n_global; n++) {
+
+                coordinatetemp_int = coordinatesglobal.getValue(n);
+                if (dist->isLocal(coordinatetemp_int)) {
+                    write_localIndices[i] = n;
+                    i++;
+                }
+            }
+        }    
+        
+        /*! \brief Getter method for distribution of local traces 
+        *
+        \param coordinates coordinates
+        \param dist_wavefield Distribution of the wavefields
+        */
+        scai::dmemo::DistributionPtr static calcDistribution(scai::lama::DenseVector<scai::IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield)
+        {
+            SCAI_ASSERT_DEBUG(coordinates.size() > 0, "The vector coordinates does not contain any elements! ");
+
+            scai::hmemo::HArray<scai::IndexType> localIndices;
+
+            Global2Local(coordinates, localIndices, dist_wavefield);
+
+            scai::dmemo::DistributionPtr dist_temp(new scai::dmemo::GeneralDistribution(coordinates.size(), localIndices, true, dist_wavefield->getCommunicatorPtr()));
+
+            return (dist_temp);
+        }
+        
+        /*! \brief Getter method for source coordinates from sourceSettings 
+        *
+        \param sourceSettings sourceSettings
+        */
+        template <typename ValueType>
+        scai::lama::DenseVector<scai::IndexType> getsourcecoordinates(std::vector<sourceSettings<ValueType>> &sourceSettings, Coordinates<ValueType> const &modelCoordinates)
+        {
+            scai::lama::DenseVector<scai::IndexType> sourcecoords1D;
+            sourcecoords1D.allocate(sourceSettings.size());
+            for (unsigned i = 0; i<sourceSettings.size(); i++){
+                sourcecoords1D.setValue(i,modelCoordinates.Coordinates<ValueType>::coordinate2index(sourceSettings[i].getCoords()));
+            }
+            return (sourcecoords1D);
+        }
+        
     }
 }
