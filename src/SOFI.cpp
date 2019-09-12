@@ -59,7 +59,9 @@ int main(int argc, const char *argv[])
     dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
     common::Settings::setRank(commAll->getNodeRank());
 
-    HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
+    HOST_PRINT(commAll, "\n SOFI++ " << dimension << " " << equationType << " - LAMA Version\n");
+    HOST_PRINT(commAll, "","  - Running on " << commAll->getSize() << " mpi processes -\n\n");
+    
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
