@@ -173,7 +173,7 @@ namespace KITGPI
             ValueType MatrixVector2ndOrderWeight = 1.00;
             ValueType VectorAssignmentWeight = 0.25;
             ValueType VectorPlusVectorWeight = 0.43;
-            ValueType PMLWeight = 2.25;
+            ValueType PMLWeight = 1.5;
 
             IndexType NumMatrixVector = 0;
             IndexType NumVectorAssignement = 0;
