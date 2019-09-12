@@ -78,8 +78,15 @@ int main(int argc, const char *argv[])
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
 
-    if (config.get<bool>("useVariableGrid"))
+    if (config.get<bool>("useVariableGrid")) {
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+        for (int layer=0;layer<modelCoordinates.getNumLayers();layer++){
+            HOST_PRINT(commAll, "\n Number of gridpoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
+        }
+        auto numGridpointsRegular=config.get<IndexType>("NX")*config.get<IndexType>("NY")*config.get<IndexType>("NZ");
+        HOST_PRINT(commAll, "\n Number of gripoints total: " << modelCoordinates.getNGridpoints()<< "\n\n");
+        HOST_PRINT(commAll, "\n Percentage of gridpoints of the underlying regular grid given by NX,NY,NZ: " << modelCoordinates.getNGridpoints()/numGridpointsRegular << "\n\n");
+    }
 
     /* --------------------------------------- */
     /* context and communicator for shot parallelisation   */
@@ -148,6 +155,16 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
 
     /* --------------------------------------- */
+    /* Call partioner */
+    /* --------------------------------------- */
+    if (config.get<IndexType>("partitioning") == 2) {
+             start_t = common::Walltime::get();
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
+    }
+
+    /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
@@ -159,17 +176,6 @@ int main(int argc, const char *argv[])
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
- 
-    /* --------------------------------------- */
-    /* Call partioner */
-    /* --------------------------------------- */
-    if (config.get<IndexType>("partitioning") == 2) {
-             start_t = common::Walltime::get();
-        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
-        end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
-    }
-
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
@@ -297,7 +303,7 @@ int main(int argc, const char *argv[])
 
             if (tStep % 100 == 0 && tStep != 0) {
                  end_t2= common::Walltime::get();
-                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated total runtime: " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int) ((tStepEnd/100) * (end_t2 - start_t2)) << " / " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
             }
             
             
