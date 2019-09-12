@@ -237,7 +237,7 @@ namespace KITGPI
         \param coordinates coordinates
         \param dist_wavefield Distribution of the wavefields
         */
-        scai::dmemo::DistributionPtr static calcDistribution(scai::lama::DenseVector<scai::IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield)
+        scai::dmemo::DistributionPtr inline calcDistribution(scai::lama::DenseVector<scai::IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield)
         {
             SCAI_ASSERT_DEBUG(coordinates.size() > 0, "The vector coordinates does not contain any elements! ");
 
