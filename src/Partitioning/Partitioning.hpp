@@ -148,7 +148,6 @@ namespace KITGPI
             ValueType sum = scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
             weightVector[0].redistribute(dist);
             ValueType sum2 = scai::utilskernel::HArrayUtils::sum(weightVector[0].getLocalValues());
-            std::cout << "local sum weights before " << sum << "local sum weights after " << sum2 << std::endl;
 
             metrics.getAllMetrics(graph, partition, weightVector, settings);
 
