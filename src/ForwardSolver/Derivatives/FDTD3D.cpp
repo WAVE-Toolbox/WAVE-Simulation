@@ -253,15 +253,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     SCAI_REGION("initializeMatrices")
 
     HOST_PRINT(comm, "Initialization of the matrices: \n");
-    HOST_PRINT(comm, "", "Dxf,\n");
+    HOST_PRINT(comm, "", "Dxf,"<<std::flush);
     this->calcDxf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzf,\n");
+    HOST_PRINT(comm, "", "Dzf,"<<std::flush);
     this->calcDzf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dxb,\n");
+    HOST_PRINT(comm, "", "Dxb,"<<std::flush);
     this->calcDxb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dyb,\n");
+    HOST_PRINT(comm, "", "Dyb,"<<std::flush);
     this->calcDyb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzb,\n");
+    HOST_PRINT(comm, "", "Dzb,"<<std::flush);
     this->calcDzb(modelCoordinates, dist);
 
     DxfSparse.setContextPtr(ctx);
@@ -277,17 +277,17 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzbSparse.scale(this->DT);
 
     if (useFreeSurface != 1) {
-        HOST_PRINT(comm, "", "Dyf,\n");
+        HOST_PRINT(comm, "", "Dyf,"<<std::flush);
         this->calcDyf(modelCoordinates, dist);
         DyfSparse.setContextPtr(ctx);
         DyfSparse.scale(this->DT);
     }
 
     if ((isElastic) && (useVarGrid)) {
-        HOST_PRINT(comm, "", "DyfStaggeredX,\n");
+        HOST_PRINT(comm, "", "DyfStaggeredX,"<<std::flush);
         this->calcDyfStaggeredX(modelCoordinates, dist);
 
-        HOST_PRINT(comm, "", "DyfStaggeredZ,\n");
+        HOST_PRINT(comm, "", "DyfStaggeredZ,"<<std::flush);
         this->calcDyfStaggeredZ(modelCoordinates, dist);
 
         DyfStaggeredXSparse.setContextPtr(ctx);
@@ -297,9 +297,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
         DyfStaggeredZSparse *= this->DT;
 
         if (useFreeSurface != 1) {
-            HOST_PRINT(comm, "", "DybStaggeredX,\n");
+            HOST_PRINT(comm, "", "DybStaggeredX,"<<std::flush);
             this->calcDybStaggeredX(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZ,\n");
+            HOST_PRINT(comm, "", "DybStaggeredZ,"<<std::flush);
             this->calcDybStaggeredZ(modelCoordinates, dist);
 
             DybStaggeredXSparse.setContextPtr(ctx);
@@ -333,23 +333,23 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-    HOST_PRINT(comm, "", "DyfFreeSurface,\n");
+    HOST_PRINT(comm, "", "DyfFreeSurface,"<<std::flush);
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
     this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
-            HOST_PRINT(comm, "", "DybFreeSurface,\n");
+            HOST_PRINT(comm, "", "DybFreeSurface,"<<std::flush);
             this->calcDybFreeSurface(modelCoordinates, dist);
             this->getDybFreeSurface().setContextPtr(ctx);
             this->getDybFreeSurface() *= this->DT;
 
         } else {
             //DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
-            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface,\n");
+            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface,"<<std::flush);
             this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface,\n");
+            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface,"<<std::flush);
             this->calcDybStaggeredZFreeSurface(modelCoordinates, dist);
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredZFreeSurface.setContextPtr(ctx);
@@ -369,11 +369,11 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3
     SCAI_ASSERT(isSetup, "call setup function before init");
     
     if(DxbSparse.getNumRows()==0) {
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,"<<std::flush);
     this->calcDxb(modelCoordinates, dist);
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,"<<std::flush);
     this->calcDyb(modelCoordinates, dist);
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb,\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb,"<<std::flush);
     this->calcDzb(modelCoordinates, dist);
     }
     
