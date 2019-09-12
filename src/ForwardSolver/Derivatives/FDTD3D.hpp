@@ -37,7 +37,7 @@ namespace KITGPI
                 ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
                 ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
                 
-                scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() override;
+                scai::lama::CSRSparseMatrix<ValueType> getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
               private:
                 void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm) override;

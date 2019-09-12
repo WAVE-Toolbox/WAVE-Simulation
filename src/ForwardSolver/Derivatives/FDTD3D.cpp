@@ -364,17 +364,31 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfac
 
 //! \brief Getter method for combined derivative matrix
 template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getCombinedMatrix()
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
+    SCAI_ASSERT(isSetup, "call setup function before init");
+    
+    if(DxbSparse.getNumRows()==0) {
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,\n");
+    this->calcDxb(modelCoordinates, dist);
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,\n");
+    this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb,\n");
+    this->calcDzb(modelCoordinates, dist);
+    }
+    
     auto temp = DxbSparse;
-    temp.setContextPtr(loc);
     temp += DybSparse;
     temp += DzbSparse;
     temp = transpose(temp);
     temp -= DxbSparse;
+    DxbSparse.purge();
     temp -= DybSparse;
+    DybSparse.purge();
     temp -= DzbSparse;
+    DzbSparse.purge();
+    
+    
     //     auto temp2 = DxfSparse;
     //     temp2 = transpose(temp);
     //     temp-=temp2;

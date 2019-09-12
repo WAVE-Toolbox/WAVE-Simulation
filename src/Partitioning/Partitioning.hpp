@@ -365,7 +365,9 @@ namespace KITGPI
             hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
 
             HOST_PRINT(commShot, "", "creating partioner input... \n\n");
-            auto &&graph = derivatives.getCombinedMatrix();
+            
+            
+            auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
             graph.setContextPtr(loc);
             HOST_PRINT(commShot, "", "caclulated graph for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
@@ -381,7 +383,7 @@ namespace KITGPI
 
             auto dist = KITGPI::Partitioning::graphPartition(config, commShot, coords, graph, weights);
 
-            derivatives.redistributeMatrices(dist);
+           // derivatives.redistributeMatrices(dist);
             return (dist);
 #else
             HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")

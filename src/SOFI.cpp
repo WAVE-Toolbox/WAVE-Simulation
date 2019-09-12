@@ -150,6 +150,18 @@ int main(int argc, const char *argv[])
 
     HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
 
+    
+    /* --------------------------------------- */
+    /* Call partioner */
+    /* --------------------------------------- */
+    if (config.get<IndexType>("partitioning") == 2) {
+        start_t = common::Walltime::get();
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
+    }
+    
+    
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
@@ -163,15 +175,6 @@ int main(int argc, const char *argv[])
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
  
-    /* --------------------------------------- */
-    /* Call partioner */
-    /* --------------------------------------- */
-    if (config.get<IndexType>("partitioning") == 2) {
-             start_t = common::Walltime::get();
-        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
-        end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
-    }
 
     /* --------------------------------------- */
     /* Acquisition geometry                    */
