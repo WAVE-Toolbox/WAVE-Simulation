@@ -348,6 +348,18 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
 }
 
+
+/*! \brief get source signal
+ *
+ */
+template <typename ValueType>
+lama::DenseMatrix<ValueType> KITGPI::Acquisition::Sources<ValueType>::getsourcesignal()
+{
+    lama::DenseMatrix<ValueType> signal_out = signals.getData();
+    return(signal_out);
+}
+
+
 /*! \brief Allocation of the source signals matrix
  *
  * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.

@@ -63,7 +63,8 @@ initReceiverFromSU=0                           # 1=initialize receiver from SU f
 SeismogramFormat=3 # 1=MTX, 2=lmf 3=frv 4=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0
-runSimultaneousShots=1                         # 1=All sources specified in SourceFilename are triggerd simultaneously
+writeSource=0                                  # 1=Writes used source wavelet/s per shot, filename=WriteSourceFilename+_shot_+<ShotNumber>+extension (specified by FileFormat)
+writeSourceFilename=SourceSignal/Source
 seismoDT=2.0e-03                               # Seismogram sampling in seconds
 
 # wavefield snapshots
