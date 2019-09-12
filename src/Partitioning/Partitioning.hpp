@@ -276,7 +276,6 @@ namespace KITGPI
                 //loop over all (local) indeces
                 for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
                     Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-                    Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
                     const auto layer = modelCoordinates.getLayer(coordinate);
                     IndexType FDOrder = 0;
