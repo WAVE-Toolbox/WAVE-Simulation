@@ -360,20 +360,22 @@ namespace KITGPI
             //             ContextPtr loc = Context::getContextPtr( common::context::Host );
             hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
 
-            HOST_PRINT(commShot, "", "creating partioner input... \n\n");
+            HOST_PRINT(commShot, "", "creating partioner input... \n");
             
-            
+            HOST_PRINT(commShot, "", "caclulate graph for partioner \n");
             auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
             graph.setContextPtr(loc);
-            HOST_PRINT(commShot, "", "caclulated graph for partioner \n");
+            
+            HOST_PRINT(commShot, "", "get coordinate vectors for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
             coords[0].setContextPtr(loc);
             coords[1].setContextPtr(loc);
             coords[2].setContextPtr(loc);
-            HOST_PRINT(commShot, "", "created coordinate vectors for partioner \n");
+            
+            HOST_PRINT(commShot, "", "calculate node weights for partioner \n");
             auto &&weights = Weights(config, BlockDist, modelCoordinates);
             weights.setContextPtr(loc);
-            HOST_PRINT(commShot, "", "calculated node weights for partioner \n");
+            
             end_t = common::Walltime::get();
             HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 
