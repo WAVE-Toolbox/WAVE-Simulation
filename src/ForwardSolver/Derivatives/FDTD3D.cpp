@@ -276,7 +276,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzfSparse.scale(this->DT);
     DzbSparse.scale(this->DT);
 
-    if (useFreeSurface != 1) {
+    if (!((useFreeSurface == 1) && (useVarGrid))){
         HOST_PRINT(comm, "", "Dyf,\n");
         this->calcDyf(modelCoordinates, dist);
         DyfSparse.setContextPtr(ctx);
