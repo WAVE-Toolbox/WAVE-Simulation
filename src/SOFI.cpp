@@ -84,8 +84,8 @@ int main(int argc, const char *argv[])
             HOST_PRINT(commAll, "\n Number of gridpoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
         }
         auto numGridpointsRegular=config.get<IndexType>("NX")*config.get<IndexType>("NY")*config.get<IndexType>("NZ");
-        HOST_PRINT(commAll, "\n Number of gripoints total: " << modelCoordinates.getNGridpoints()<< "\n\n");
-        HOST_PRINT(commAll, "\n Percentage of gridpoints of the underlying regular grid given by NX,NY,NZ: " << modelCoordinates.getNGridpoints()/numGridpointsRegular << "\n\n");
+        HOST_PRINT(commAll, "\n Number of gripoints total: " << modelCoordinates.getNGridpoints());
+        HOST_PRINT(commAll, "\n Percentage of gridpoints of the underlying regular grid given by NX*NY*NZ: "  << (float) modelCoordinates.getNGridpoints()/numGridpointsRegular * 100 << "% \n\n");
     }
 
     /* --------------------------------------- */
