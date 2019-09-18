@@ -27,14 +27,15 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     /* On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
     * The original update,
-    * sxx = pi * ( vxx+vyy + vzz) - 2mu *vyy 
+    * sxx = pi * ( vxx+vyy+vzz ) - 2mu *(vzz+vyy )
     * will be exchanged with 
-    * sxx_new = 2mu * (2 - 2mu / pi )* (vxx + vzz)
+    * sxx_new = 2mu * (2vxx + vzz - 2mu / pi * (vxx+vzz))
     * The final update will be (last update has to be undone):
     * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
     *                      = scaleHorizontalUpdate*(vxx+vzz)  - scaleVerticalUpdate*Vyy 
     * the szz calculation is done analogous */
 
+    
     /* --------------------------------------- */
     /* Apply scaling for update of Sxx and Szz */
     /* --------------------------------------- */

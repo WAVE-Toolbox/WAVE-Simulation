@@ -26,7 +26,7 @@ namespace KITGPI
 
                 virtual ~FreeSurfaceElastic() = 0;
 
-                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
+                void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType /*DT*/) override;
 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model);
 
@@ -34,7 +34,7 @@ namespace KITGPI
                 using FreeSurface<ValueType>::active;
 
                 //  scai::lama::DenseVector<ValueType> setSurfaceZero;         //!< Vector, which sets the wavefields at the surface to zero
-                scai::lama::SparseVector<ValueType> selectHorizontalUpdate; //!< //!< Vector, which sets everything besides the free surface to zero
+                scai::lama::SparseVector<ValueType> selectFreeSurface; //!< //!< Vector, which sets everything besides the free surface to zero
                 scai::lama::SparseVector<ValueType> temp;
                 scai::lama::SparseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which scales the horizontal update on the free surface in order to exchange the horizontal main stresses.
                 scai::lama::SparseVector<ValueType> scaleVerticalUpdate;   //!< Vector, which scales the vertical updateon the free surface in order to exchange the horizontal main stresses.

@@ -19,11 +19,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::
     /* Apply horizontal update, which replaces the vertical one */
     /* The previous Sxx update on the free surface will be undone */
 
+    // scaleHorizontalUpdate is a sparse vector with non zeors at the free surface
     temp = scaleHorizontalUpdate;
     temp *= sumHorizonalDerivative;
 
     Sxx += temp;
-
+    
+    // scaleVerticalUpdate is a sparse vector with non zeors at the free surface
     temp = scaleVerticalUpdate;
     temp *= vyy;
 
