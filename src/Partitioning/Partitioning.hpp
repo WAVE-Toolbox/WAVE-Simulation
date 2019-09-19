@@ -10,8 +10,10 @@
 
 #ifdef USE_GEOGRAPHER
 #include <geographer/ParcoRepart.h>
-#include <geographer/Wrappers.h>
 #include <geographer/AuxiliaryFunctions.h>
+#ifdef USE_GEOGRAPHER_WRAPPERS
+#include <geographer/Wrappers.h>
+#endif
 #endif
 namespace KITGPI
 {
@@ -124,7 +126,7 @@ namespace KITGPI
 				settings.mappingRenumbering = false;
 			}
 
-            struct ITI::Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+            ITI::Metrics<ValueType> metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
             if (commShot->getRank() == 0) {
                 settings.print(std::cout);
@@ -138,7 +140,7 @@ namespace KITGPI
 			if( ITI::to_string(tool).rfind("geo",0)==0 ){
 				partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
 			}else{
-#ifdef USE_GEOGRAPHER_WRAPPERS				
+#ifdef USE_GEOGRAPHER_WRAPPERS
 				bool nodeWeightsUse = true; //usign unit weights
 		    	partition = ITI::Wrappers<IndexType,ValueType>::partition( graph, coords, weightVector, nodeWeightsUse, tool, settings, metrics );
 #endif	    	
