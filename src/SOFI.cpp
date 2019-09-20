@@ -205,7 +205,7 @@ int main(int argc, const char *argv[])
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
-    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
+    
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
@@ -264,6 +264,8 @@ int main(int argc, const char *argv[])
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
         sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
         
+        CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model,modelCoordinates,shotNumber);
+
         bool writeSource_bool;
         try { writeSource_bool = config.get<bool>("writeSource");
         }

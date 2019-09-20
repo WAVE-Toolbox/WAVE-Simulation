@@ -47,6 +47,9 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
  \param dist_wavefield Distribution of the wavefields
  \param signalMatrix Signal matrix
  */
+
+// this function can be removed acq matrix is no longer supported maybe someone still uses it?
+
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
 {

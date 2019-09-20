@@ -48,6 +48,12 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     useFreeSurface = config.get<IndexType>("FreeSurface");
     useVarGrid = config.get<bool>("useVariableGrid");
 
+    std::string type = config.get<std::string>("equationType");
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if ((type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
+        isElastic = true;
+    }
+    
     DT = config.get<ValueType>("DT");
 
     useSparse = true;
