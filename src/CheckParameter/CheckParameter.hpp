@@ -224,7 +224,7 @@ namespace KITGPI
                         COMMON_THROWEXCEPTION("FDorder file is empty");
                     }
                 } else {
-                    spatialFDorderVec.push_back(config.get<scai::IndexType>("spatialFDorder"));
+                    spatialFDorderVec.assign(numlayer,config.get<scai::IndexType>("spatialFDorder"));
                 }
 
                 for (IndexType layer = 0; layer < numlayer; layer++) {
