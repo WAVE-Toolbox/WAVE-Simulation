@@ -12,7 +12,7 @@
 ###########################################################################
 
 project( SOFI )
-
+include(CMakePackageConfigHelpers)
 cmake_minimum_required ( VERSION 3.0 )
 
 if ( NOT CMAKE_BUILD_TYPE )
@@ -287,3 +287,7 @@ else ()
     )
 
 endif ()
+
+### support for FindPackage ###
+configure_file(SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
+
