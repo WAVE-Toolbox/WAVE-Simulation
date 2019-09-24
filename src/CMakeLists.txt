@@ -121,7 +121,7 @@ foreach ( dir ${SOFI_LIB_DIRS} )
 endforeach ()
 
 ### set value type ###
-set(SOFI_VALUE_TYPE "double" CACHE STRING "variable type used for values")
+set(SOFI_VALUE_TYPE "float" CACHE STRING "variable type used for values")
 configure_file("config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp")
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/include")

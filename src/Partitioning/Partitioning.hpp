@@ -125,7 +125,7 @@ namespace KITGPI
             //settings.writeInFile = true;
             settings.initialPartition = ITI::Tool::geoKmeans;
 
-            struct ITI::Metrics metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
+            struct ITI::Metrics<ValueType> metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
             if (commShot->getRank() == 0) {
                 settings.print(std::cout);
@@ -141,17 +141,17 @@ namespace KITGPI
 
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
-            //redistribute all data to get metrics
-            scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
-            graph.redistribute(dist, noDistPtr);
-            partition.redistribute(dist);
-            weightVector[0].redistribute(dist);
-
-            metrics.getAllMetrics(graph, partition, weightVector, settings);
-
-            if (commShot->getRank() == 0) {
-                metrics.print(std::cout);
-            }
+            //redistribute all data to get metrics (uncommend for debugging or monitiring the partitioner results)
+//             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
+//             graph.redistribute(dist, noDistPtr);
+//             partition.redistribute(dist);
+//             weightVector[0].redistribute(dist);
+// 
+//             metrics.getAllMetrics(graph, partition, weightVector, settings);
+// 
+//             if (commShot->getRank() == 0) {
+//                 metrics.print(std::cout);
+//             }
 
             return (dist);
         }
