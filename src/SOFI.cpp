@@ -12,6 +12,7 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 #include "Configuration/Configuration.hpp"
+#include "Configuration/ValueType.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
@@ -22,7 +23,7 @@
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
 #include "Partitioning/Partitioning.hpp"
-#include "config.hpp"
+
 
 using namespace scai;
 using namespace KITGPI;
