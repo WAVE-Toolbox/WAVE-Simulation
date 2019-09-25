@@ -150,6 +150,7 @@ target_link_libraries( prog SOFI ${SOFI_used_libs} )
 set_target_properties( prog PROPERTIES OUTPUT_NAME SOFI )
 
 install( TARGETS prog DESTINATION bin )
+install( DIRECTORY ${CMAKE_BINARY_DIR}/include DESTINATION . )
 
 ####################################################
 #  Unit Test                                       #
@@ -289,5 +290,7 @@ else ()
 endif ()
 
 ### support for FindPackage ###
-configure_file(SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
+
+configure_file ( SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
+install ( FILES ${CMAKE_BINARY_DIR}/SOFIConfig.cmake DESTINATION share/cmake/SOFI )
 
