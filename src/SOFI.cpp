@@ -11,8 +11,8 @@
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
-#include "Acquisition/suHandler.hpp"
 #include "Configuration/Configuration.hpp"
+#include "Configuration/ValueType.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
 
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
@@ -23,7 +23,7 @@
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
 #include "Partitioning/Partitioning.hpp"
-#include "config.hpp"
+
 
 using namespace scai;
 using namespace KITGPI;
@@ -38,7 +38,9 @@ int main(int argc, const char *argv[])
     common::Settings::parseArgs(argc, argv);
 
     double start_t, end_t; /* For timing */
-
+    double globalStart_t, globalEnd_t; /* For timing */
+    globalStart_t = common::Walltime::get();
+    
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
                   << std::endl;
@@ -58,7 +60,9 @@ int main(int argc, const char *argv[])
     dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
     common::Settings::setRank(commAll->getNodeRank());
 
-    HOST_PRINT(commAll, "\nSOFI" << dimension << " " << equationType << " - LAMA Version\n\n");
+    HOST_PRINT(commAll, "\n SOFI++ " << dimension << " " << equationType << " - LAMA Version\n");
+    HOST_PRINT(commAll, "","  - Running on " << commAll->getSize() << " mpi processes -\n\n");
+    
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
@@ -75,8 +79,15 @@ int main(int argc, const char *argv[])
 
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
 
-    if (config.get<bool>("useVariableGrid"))
+    if (config.get<bool>("useVariableGrid")) {
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
+        for (int layer=0;layer<modelCoordinates.getNumLayers();layer++){
+            HOST_PRINT(commAll, "\n Number of gridpoints in layer: " << layer << " = " << modelCoordinates.getNGridpoints(layer)); 
+        }
+        auto numGridpointsRegular=config.get<IndexType>("NX")*config.get<IndexType>("NY")*config.get<IndexType>("NZ");
+        HOST_PRINT(commAll, "\n Number of gripoints total: " << modelCoordinates.getNGridpoints());
+        HOST_PRINT(commAll, "\n Percentage of gridpoints of the underlying regular grid given by NX*NY*NZ: "  << (float) modelCoordinates.getNGridpoints()/numGridpointsRegular * 100 << "% \n\n");
+    }
 
     /* --------------------------------------- */
     /* context and communicator for shot parallelisation   */
@@ -110,7 +121,7 @@ int main(int argc, const char *argv[])
     }
 
     if (config.get<bool>("coordinateWrite"))
-        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"));
+        modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"),config.get<IndexType>("FileFormat"));
 
     /* --------------------------------------- */
     /* Factories                               */
@@ -145,6 +156,16 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
 
     /* --------------------------------------- */
+    /* Call partioner */
+    /* --------------------------------------- */
+    if (config.get<IndexType>("partitioning") == 2) {
+             start_t = common::Walltime::get();
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
+    }
+
+    /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
@@ -152,58 +173,57 @@ int main(int argc, const char *argv[])
     derivatives->init(dist, ctx, modelCoordinates, commShot);
 
     end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "\n", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
-
-    /* --------------------------------------- */
-    /* Call partioner */
-    /* --------------------------------------- */
-    if (config.get<IndexType>("partitioning") == 2) {
-        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives, modelCoordinates);
-    }
-
     /* --------------------------------------- */
     /* Acquisition geometry                    */
     /* --------------------------------------- */
+    start_t = common::Walltime::get();
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
     Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
     // build Settings for SU?
     //settings = su.getSourceSettings(shotNumber); // currently not working, expecting a sourceSettings struct and not a vector of sourceSettings structs
     //         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
     //         allSettings = su.getSourceSettingsVec();
+    
 
     Acquisition::Sources<ValueType> sources;
 
     Acquisition::Receivers<ValueType> receivers;
+
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
-
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing Acquisition in " << end_t - start_t << " sec.\n\n");
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-
+    start_t = common::Walltime::get();
     model->init(config, ctx, dist, modelCoordinates);
     model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    //CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettings, *model, commAll);
-
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
+    
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-
+    start_t = common::Walltime::get();
     wavefields->init(ctx, dist);
-
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
 
-    HOST_PRINT(commAll, "", "ForwardSolver ...\n")
 
+    start_t = common::Walltime::get();
     solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
     solver->prepareForModelling(*model, config.get<ValueType>("DT"));
-    HOST_PRINT(commAll, "", "ForwardSolver prepared\n")
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
 
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
@@ -230,6 +250,10 @@ int main(int argc, const char *argv[])
     commShot->bcast(&firstShot, 1, 0);
     commShot->bcast(&lastShot, 1, 0);
 
+    double end_tInit= common::Walltime::get();
+    double tInit=end_tInit-globalStart_t;
+    HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
+    
     /* --------------------------------------- */
     /* Loop over shots                        */
     /* --------------------------------------- */
@@ -240,6 +264,19 @@ int main(int argc, const char *argv[])
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
         sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+        
+        CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model,modelCoordinates,shotNumber);
+
+        bool writeSource_bool;
+        try { writeSource_bool = config.get<bool>("writeSource");
+        }
+        catch (...) {
+            writeSource_bool = false;
+        }
+        if (writeSource_bool) {
+            lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
+            KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+        }
 
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
@@ -251,17 +288,28 @@ int main(int argc, const char *argv[])
 
         start_t = common::Walltime::get();
 
+        double start_t2=0.0, end_t2=0.0;
+
+        
+        
         /* --------------------------------------- */
         /* Loop over time steps                        */
         /* --------------------------------------- */
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-            if (tStep % 100 == 0 && tStep != 0) {
-                HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
+            if ((tStep-1)% 100 == 0) {
+                 start_t2= common::Walltime::get();
+                //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
             }
-
+            
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
 
+            if (tStep % 100 == 0 && tStep != 0) {
+                 end_t2= common::Walltime::get();
+                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int) ((tStepEnd/100) * (end_t2 - start_t2)) << " / " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+            }
+            
+            
             if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
                 wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
             }
@@ -273,8 +321,9 @@ int main(int argc, const char *argv[])
         receivers.getSeismogramHandler().normalize();
 
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-
         solver->resetCPML();
     }
+    globalEnd_t = common::Walltime::get();
+    HOST_PRINT(commAll, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\nSOFI finished!\n\n");
     return 0;
 }

@@ -3,16 +3,18 @@
 #include <scai/lama.hpp>
 
 #include "Acquisition.hpp"
+#include "Configuration/ValueType.hpp"
 #include "Configuration.hpp"
 #include "HostPrint.hpp"
 #include "Receivers.hpp"
+
 
 using namespace KITGPI;
 using namespace scai;
 
 int main(int argc, char *argv[])
 {
-    typedef double ValueType;
+   // typedef double ValueType;
 
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"

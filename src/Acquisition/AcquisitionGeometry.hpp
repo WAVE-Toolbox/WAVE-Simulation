@@ -10,8 +10,8 @@
 
 #include "Coordinates.hpp"
 
-#include "SeismogramHandler.hpp"
 #include "AcquisitionSettings.hpp"
+#include "SeismogramHandler.hpp"
 
 namespace KITGPI
 {
@@ -48,8 +48,6 @@ namespace KITGPI
             scai::IndexType numTracesGlobal; //!< Number of global traces
             scai::IndexType numTracesLocal;  //!< Number of local traces
 
-            void Global2Local(scai::lama::Vector<scai::IndexType> const &coordinatesglobal, scai::hmemo::HArray<scai::IndexType> &coordinateslocal, scai::dmemo::DistributionPtr dist) const;
-
             /* SeismogramHandler to store seismic data */
             SeismogramHandler<ValueType> seismograms; //!< SeismogramHandler to handle the #Seismogram's
 
@@ -62,10 +60,8 @@ namespace KITGPI
             virtual void checkRequiredNumParameter(scai::IndexType numParameterCheck) = 0;
             virtual void initOptionalAcquisitionParameter(scai::IndexType numParameter, scai::IndexType numTracesGlobal, scai::lama::DenseMatrix<ValueType> acquisition, scai::dmemo::DistributionPtr dist_wavefield_traces, scai::hmemo::ContextPtr ctx);
 
-            /* Calculation of distribution for local  traces */
-            scai::dmemo::DistributionPtr calcDistribution(scai::lama::DenseVector<scai::IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield) const;
         };
-        
+
         /*! \brief reads parameters from the acquisition matrix and redistributes 
         *
         * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
@@ -106,7 +102,7 @@ namespace KITGPI
                     write_seismogramTypes_LA[i] = allSettings[i].getType();
                 }
             }
-            
+
             /* Replicate coordinates on all processes */
             coordinates1D.redistribute(no_dist_numTracesGlobal);
 
@@ -121,9 +117,6 @@ namespace KITGPI
 
             coordinates1D.setContextPtr(ctx);
             seismogramTypes.setContextPtr(ctx);
-
         }
-        
-
     }
 }

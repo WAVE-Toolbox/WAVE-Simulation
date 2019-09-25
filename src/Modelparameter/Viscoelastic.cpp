@@ -1,4 +1,5 @@
 #include "Viscoelastic.hpp"
+#include "../IO/IO.hpp"
 using namespace scai;
 
 /*! \brief estimate sum of the memory of all model parameters
@@ -170,8 +171,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -185,8 +186,8 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  *
  *  Calculates pWaveModulus with
  */
@@ -221,18 +222,17 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
 }
 
 /*! \brief Write model to an external file
- *
- \param filename For the P-wave velocity ".vp.mtx" is added, for the S-wave velocity ".vs.mtx", for density ".density.mtx", for tauP ".tauP.mtx"  and for tauS ".tauS.mtx" is added.
- \param fileFormat Output file format 0=mtx 1=lmf
+ *base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(tauP, filename + ".tauP", fileFormat);
-    this->writeModelparameter(tauS, filename + ".tauS", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(tauP, filename + ".tauP", fileFormat);
+    IO::writeVector(tauS, filename + ".tauS", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -321,6 +321,16 @@ template <typename ValueType>
 std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() const
 {
     return (equationType);
+}
+
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for elastic modelling")
+    return (inverseDensity);
 }
 
 /*! \brief Get const reference to P-wave modulus (viscoelastic case)
@@ -513,20 +523,17 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoelastic<ValueType>::operator=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
-    sWaveModulus = rhs.sWaveModulus;
     velocityP = rhs.velocityP;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
     tauS = rhs.tauS;
     tauP = rhs.tauP;
     relaxationFrequency = rhs.relaxationFrequency;
     numRelaxationMechanisms = rhs.numRelaxationMechanisms;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -537,20 +544,17 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
-    sWaveModulus = rhs.getSWaveModulus();
     velocityP = rhs.getVelocityP();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
     tauS = rhs.getTauS();
     tauP = rhs.getTauP();
     relaxationFrequency = rhs.getRelaxationFrequency();
     numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

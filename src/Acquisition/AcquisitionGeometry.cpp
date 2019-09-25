@@ -2,47 +2,6 @@
 
 using namespace scai;
 
-/*! \brief Determination of local indices based on given global indeces
- *
- * Calculate the number of indeces within the local processing unit as well as
- * the indeces of the local index.
- *
- \param coordinatesglobal DenseVector with global coordinates
- \param localIndices DenseVector with local coordinates
- \param dist Distribution of global grid
- */
-template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::Global2Local(scai::lama::Vector<IndexType> const &coordinatesglobal, scai::hmemo::HArray<IndexType> &localIndices, scai::dmemo::DistributionPtr dist) const
-{
-
-    IndexType n_global = coordinatesglobal.size(); // Number of global entries
-
-    IndexType coordinatetemp_int;
-
-    IndexType i = 0;
-    for (IndexType n = 0; n < n_global; n++) {
-
-        coordinatetemp_int = coordinatesglobal.getValue(n);
-
-        if (dist->isLocal(coordinatetemp_int)) {
-            i++;
-        }
-    }
-
-    /* Determine coordinates of local receivers in the global coordinate vector */
-    localIndices.resize(i);
-    hmemo::WriteAccess<IndexType> write_localIndices(localIndices);
-    i = 0;
-    for (IndexType n = 0; n < n_global; n++) {
-
-        coordinatetemp_int = coordinatesglobal.getValue(n);
-        if (dist->isLocal(coordinatetemp_int)) {
-            write_localIndices[i] = n;
-            i++;
-        }
-    }
-}
-
 template <typename ValueType>
 void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initOptionalAcquisitionParameter(IndexType /*numParameter*/, IndexType /*numTracesGlobal*/, scai::lama::DenseMatrix<ValueType> /*acquisition*/, scai::dmemo::DistributionPtr /*dist_wavefield_traces*/, hmemo::ContextPtr /*ctx*/)
 {
@@ -108,7 +67,7 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
 
     seismograms.setContextPtr(ctx);
 }
-        
+
 /*! \brief get number of parameters
  *
  * returns the number of parameters of the aquisition matrix eg. X,Y,Z,Seismogram Type
@@ -119,24 +78,6 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
     return numParameter;
 }
 
-/*! \brief Getter method for distribution of local traces 
- *
- \param coordinates coordiantes
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-dmemo::DistributionPtr KITGPI::Acquisition::AcquisitionGeometry<ValueType>::calcDistribution(scai::lama::DenseVector<IndexType> const &coordinates, scai::dmemo::DistributionPtr const dist_wavefield) const
-{
-    SCAI_ASSERT_DEBUG(coordinates.size() > 0, " The vector coordinates does not contain any elements ! ");
-
-    hmemo::HArray<IndexType> localIndices;
-
-    Global2Local(coordinates, localIndices, dist_wavefield);
-
-    dmemo::DistributionPtr dist_temp( new dmemo::GeneralDistribution(coordinates.size(), localIndices, true, dist_wavefield->getCommunicatorPtr()) );
-
-    return (dist_temp);
-}
 
 /*! \brief Get reference to the #SeismogramHandler
  *
@@ -205,7 +146,7 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumTracesLocal
  \param filename Filename to write acquisition
  */
 template <typename ValueType>
-void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::writeAcquisitionToFile(std::string const &/*filename*/) const
+void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::writeAcquisitionToFile(std::string const & /*filename*/) const
 {
 }
 

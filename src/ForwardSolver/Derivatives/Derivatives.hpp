@@ -127,7 +127,7 @@ namespace KITGPI
                 //! \brief Getter method for interpolation matrix interStaggeredXZ
                 virtual scai::lama::Matrix<ValueType> const *getInterStaggeredXZ() const;
 
-                virtual scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() = 0;
+                virtual scai::lama::CSRSparseMatrix<ValueType> getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
 
                 //! \brief Initialization
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;

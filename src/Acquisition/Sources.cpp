@@ -1,4 +1,7 @@
+
 #include "Sources.hpp"
+#include "../IO/IO.hpp"
+#include "../IO/SUIO.hpp"
 
 using namespace scai;
 
@@ -44,6 +47,9 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
  \param dist_wavefield Distribution of the wavefields
  \param signalMatrix Signal matrix
  */
+
+// this function can be removed acq matrix is no longer supported maybe someone still uses it?
+
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
 {
@@ -194,32 +200,25 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
  *
  \param config Configuration file
  \param SourceLocal Number of the local source
- \param numSourceRead Number of the row to read in
+ \param rowNumber Number of the row to read in
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead)
+void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType rowNumber)
 {
     std::string signalFilename = config.get<std::string>("SourceSignalFilename");
 
     if (config.get<bool>("initSourcesFromSU")) {
         scai::lama::DenseVector<ValueType> singleSignal;
-        scai::IndexType numSourceReadLocal;
 
-        su.locateTrace(signalFilename, numSourceReadLocal, numSourceRead);
-        suHandler<ValueType>::readSingleDataSU(signalFilename, singleSignal, numSourceReadLocal);
+        SUIO::readSingleDataSU(signalFilename, singleSignal, rowNumber);
 
         SCAI_ASSERT(singleSignal.size() == signals.getData().getNumColumns(), "Source signal has invalid length");
 
+        hmemo::HArray<ValueType> localsignal = singleSignal.getLocalValues();
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
-        signalsMatrix.setRow(singleSignal, SourceLocal, scai::common::BinaryOp::COPY);
+        signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     } else {
-        signalFilename += ".mtx";
-        scai::lama::DenseStorage<ValueType> signalsMatrixTmp;
-
-        signalsMatrixTmp.readFromFile(signalFilename, numSourceRead, 1);
-        SCAI_ASSERT(signalsMatrixTmp.getNumColumns() == signals.getData().getNumColumns(), "Source signal has invalid length");
-
-        hmemo::HArray<ValueType> localsignal = signalsMatrixTmp.getValues();
+        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("fileFormat"));
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     }
@@ -352,6 +351,18 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
 }
 
+
+/*! \brief get source signal
+ *
+ */
+template <typename ValueType>
+lama::DenseMatrix<ValueType> KITGPI::Acquisition::Sources<ValueType>::getsourcesignal()
+{
+    lama::DenseMatrix<ValueType> signal_out = signals.getData();
+    return(signal_out);
+}
+
+
 /*! \brief Allocation of the source signals matrix
  *
  * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.
@@ -376,7 +387,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
 
 /*! \brief Gets the Acquisition Matrix
  *
- * Uses configuration to determine if sources are initialized by MTX or SU and then get the Acquisition Matrix
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
  *
  \param config Configuration
  \param acqMat Acquisition Matrix
@@ -385,9 +396,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings)
 {
     if (config.get<bool>("initSourcesFromSU"))
-        allSourceSettings = su.getSourceSettingsVec();
+        su.readAllSettingsFromSU(allSourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
     else
-        readAllSettings(allSourceSettings, config.get<std::string>("SourceFilename") + ".mtx");
+        readAllSettings(allSourceSettings, config.get<std::string>("SourceFilename") + ".txt");
 }
 
 template <typename ValueType>

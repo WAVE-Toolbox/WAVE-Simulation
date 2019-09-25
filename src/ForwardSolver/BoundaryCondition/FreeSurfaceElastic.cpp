@@ -18,12 +18,14 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
     * On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) (vxx+vzz) where mu = sWaveModulus and pi = pWaveModulus
     * The original update,
-    * sxx = pi * ( vxx+vyy+vzz ) - 2mu *vyy 
+    * sxx = pi * ( vxx+vyy+vzz ) - 2mu *( vzz+vyy )
     * will be exchanged with 
-    * sxx_new = 2mu * (2 - 2mu / pi )* (vxx+vzz)
+    * sxx_new = 2mu * (2vxx + vzz - 2mu / pi * (vxx+vzz))
     * The final update will be (last update has to be undone):
-    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
-    *                      = scaleHorizontalUpdate*(vxx + vzz)  - scaleVerticalUpdate*Vyy */
+    * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx + vzz)) - (pi-2mu)*vyy
+    *                      = scaleHorizontalUpdate*(vxx + vzz)  -  scaleVerticalUpdate*Vyy 
+    * The update of szz is calculated the same way   
+    */
 
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
@@ -32,14 +34,14 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
 
     auto temp = lama::eval<lama::DenseVector<ValueType>>(pWaveModulus - 2 * sWaveModulus);
 
-    scaleVerticalUpdate = selectHorizontalUpdate;
+    scaleVerticalUpdate = selectFreeSurface;
     scaleVerticalUpdate *= temp;
 
     temp *= temp;
     temp /= pWaveModulus;
     temp *= -1;
 
-    scaleHorizontalUpdate = selectHorizontalUpdate;
+    scaleHorizontalUpdate = selectFreeSurface;
 
     scaleHorizontalUpdate *= temp;
 }
@@ -53,7 +55,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
  \param DT Temporal Sampling
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType /*DT*/)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -71,7 +73,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
 
     lama::DenseVector<ValueType> temp(dist, 0.0);
     /* Get write access to local part of scaleHorizontalUpdate */
-    auto write_selectHorizontalUpdate = hostWriteAccess(temp.getLocalValues());
+    auto write_selectFreeSurface = hostWriteAccess(temp.getLocalValues());
 
     IndexType rowGlobal;
     IndexType rowLocal;
@@ -85,11 +87,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
         if (modelCoordinates.locatedOnSurface(rowGlobal)) {
 
             /* Set horizontal update to 1 at the surface and leave it zero else */
-            write_selectHorizontalUpdate[rowLocal] = 1.0;
+            write_selectFreeSurface[rowLocal] = 1.0;
         }
     }
-    write_selectHorizontalUpdate.release();
-    selectHorizontalUpdate = temp;
+    write_selectFreeSurface.release();
+    selectFreeSurface = temp;
 
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }

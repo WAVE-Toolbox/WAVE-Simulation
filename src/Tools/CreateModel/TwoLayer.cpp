@@ -7,9 +7,12 @@
 #include <string>
 #include <vector>
 
-#include "Configuration.hpp"
-#include "HostPrint.hpp"
+#include "../../IO/IO.hpp"
+#include "../../Configuration/Configuration.hpp"
+#include "../../Common/HostPrint.hpp"
+#include "Configuration/ValueType.hpp"
 
+using namespace KITGPI;
 using namespace scai;
 /*------------------------------
      TwoLayer - Model Creation
@@ -18,8 +21,6 @@ using namespace scai;
 -------------------------------*/
 int main(int argc, char *argv[])
 {
-    typedef double ValueType;
-
     // parameter
     ValueType vp1 = 3500, vs1 = 2000, rho1 = 2000, tauP1 = 0.1, tauS1 = 0.1;
     ValueType vp2 = 4550, vs2 = 2600, rho2 = 2600, tauP2 = 0.1, tauS2 = 0.1;
@@ -65,45 +66,23 @@ int main(int argc, char *argv[])
     //write model to file specified in configuration
     std::string filename = config.get<std::string>("ModelFilename");
 
-    std::string suffix = ".mtx"; // default output is matrix market
-
     IndexType fileFormat = config.get<IndexType>("FileFormat");
-    if (fileFormat == 1) {
 
-        rho.writeToFile(filename + ".density" + suffix);
+    //write model to disc
 
-        if (type.compare("sh") != 0) {
-            vp.writeToFile(filename + ".vp" + suffix);
-        }
+    KITGPI::IO::writeVector(rho, filename + ".density", fileFormat);
 
-        if (type.compare("acoustic") != 0) {
-            vs.writeToFile(filename + ".vs" + suffix);
-        }
+    if (type.compare("sh") != 0) {
+        KITGPI::IO::writeVector(vp, filename + ".vp", fileFormat);
+    }
 
-        if (type.compare("visco") == 0) {
-            tauP.writeToFile(filename + ".tauP" + suffix);
-            tauS.writeToFile(filename + ".tauS" + suffix);
-        }
+    if (type.compare("acoustic") != 0) {
+        KITGPI::IO::writeVector(vs, filename + ".vs", fileFormat);
+    }
 
-    } else {
-        if (fileFormat == 2)
-            suffix = ".lmf";
-        if (fileFormat == 3)
-            suffix = ".frv";
-
-        rho.writeToFile(filename + ".density" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-
-        if (type.compare("sh") != 0) {
-            vp.writeToFile(filename + ".vp" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
-
-        if (type.compare("acoustic") != 0) {
-            vs.writeToFile(filename + ".vs" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
-        if (type.compare("visco") == 0) {
-            tauP.writeToFile(filename + ".tauP" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-            tauS.writeToFile(filename + ".tauS" + suffix, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        }
+    if (type.compare("visco") == 0) {
+        KITGPI::IO::writeVector(tauP, filename + ".tauP", fileFormat);
+        KITGPI::IO::writeVector(tauS, filename + ".tauS", fileFormat);
     }
 
     return 0;

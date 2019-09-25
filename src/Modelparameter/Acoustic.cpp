@@ -1,5 +1,6 @@
 #include "Acoustic.hpp"
-#include <scai/lama/io/FileIO.hpp>
+#include "../IO/IO.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -120,20 +121,24 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-    lama::DenseVector<ValueType> densityTmp(variableDist, 0.0);
-    lama::DenseVector<ValueType> velocityPTmp(variableDist, 0.0);
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    variableDist->getOwnedIndexes(ownedIndexes);
 
-    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+    lama::MatrixAssembly<ValueType> assembly;
 
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(ownedIndex);
         IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
-
-        densityTmp.setValue(variableIndex, density.getValue(regularIndex));
-        velocityPTmp.setValue(variableIndex, velocityP.getValue(regularIndex));
+        assembly.push(ownedIndex, regularIndex, 1.0);
     }
 
-    density = densityTmp;
-    velocityP = velocityPTmp;
+    lama::CSRSparseMatrix<ValueType> meshingMatrix;
+    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, velocityP.getDistributionPtr());
+    meshingMatrix.fillFromAssembly(assembly);
+
+    density = meshingMatrix * density;
+    velocityP = meshingMatrix * velocityP;
 }
 /*! \brief Constructor that is generating a homogeneous model
  *
@@ -170,8 +175,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename For the P-wave modulus ".pWaveModulus.'suffix'" is added and for density ".density.'suffix'" is added.
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -185,16 +190,13 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
- \param fileFormat  input file format 0=mtx 1=lmf
+ \param filename For the first Velocity-Vector "filename".vp.'suffix'" is added and for density "filename+".density.'suffix'" is added.
+ \param fileFormat  input file format 1=mtx 2=lmf
  *
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
     this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
     this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
@@ -214,14 +216,14 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param fileFormat output file format mtx=0 lmf=1
+ \param filename base filename of the model
+ \param fileFormat output file format mtx=1 lmf=2
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -277,6 +279,16 @@ template <typename ValueType>
 std::string KITGPI::Modelparameter::Acoustic<ValueType>::getEquationType() const
 {
     return (equationType);
+}
+
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for acoustic modelling")
+    return (inverseDensity);
 }
 
 /*! \brief Get reference to S-wave modulus
@@ -553,13 +565,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
     velocityP = rhs.velocityP;
-    inverseDensity = rhs.inverseDensity;
     density = rhs.density;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -570,13 +580,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
     velocityP = rhs.getVelocityP();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

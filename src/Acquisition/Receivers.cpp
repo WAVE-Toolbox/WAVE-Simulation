@@ -19,7 +19,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
+    this->getSeismogramHandler().setSeismoDT(config.get<ValueType>("seismoDT"));
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -35,8 +35,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     std::vector<receiverSettings> allSettings;
 
     if (config.get<bool>("initReceiverFromSU")) {
-        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename"), modelCoordinates.getDH());
-        allSettings = su.getReceiverSettingsVec();
+        su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename"), modelCoordinates.getDH());
     } else
         readAllSettings(allSettings, std::string(config.get<std::string>("ReceiverFilename") + ".txt"));
 
@@ -47,7 +46,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
+    this->getSeismogramHandler().setSeismoDT(config.get<ValueType>("seismoDT"));
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
@@ -62,8 +61,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 {
     std::vector<receiverSettings> allSettings;
     if (config.get<bool>("initReceiverFromSU")) {
-        su.buildAcqMatrixReceiver(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates.getDH());
-        allSettings = su.getReceiverSettingsVec();
+        su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates.getDH());
     } else
         readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
 
@@ -79,7 +77,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setNormalizeTraces(config.get<scai::IndexType>("NormalizeTraces"));
-    this->getSeismogramHandler().setResampleCoeff(config.get<ValueType>("seismoDT") / config.get<ValueType>("DT"));
+    this->getSeismogramHandler().setSeismoDT(config.get<ValueType>("seismoDT"));
 }
 
 template <typename ValueType>
@@ -93,7 +91,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::
 
 /*! \brief Gets the Acquisition Matrix
  *
- * Uses configuration to determine if sources are initialized by MTX or SU and then get the Acquisition Matrix
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
  *
  \param config Configuration
  \param acqMat Acquisition Matrix
@@ -101,8 +99,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, std::vector<receiverSettings> &allReceiverSettings)
 {
-    if (config.get<bool>("initSourcesFromSU"))
-        allReceiverSettings = su.getReceiverSettingsVec();
+    if (config.get<bool>("initReceiverFromSU"))
+        su.readAllSettingsFromSU(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr), config.get<ValueType>("DH"));
     else {
         if (useReceiversPerShot) {
             readAllSettings(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr) + ".txt");

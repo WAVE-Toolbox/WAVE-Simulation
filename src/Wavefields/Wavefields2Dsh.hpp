@@ -24,10 +24,10 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD2Dsh()
+            FD2Dsh():EquationType("sh"),NumDimension(2)
             {
-                equationType = "sh";
-                numDimension = 2;
+                equationType = EquationType;
+                numDimension = NumDimension;
             };
 
             //! Default destructor
@@ -75,6 +75,8 @@ namespace KITGPI
             void timesAssign(ValueType rhs);
 
           private:
+            std::string EquationType;
+            int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
 
@@ -98,7 +100,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = "SH2D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }

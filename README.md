@@ -8,7 +8,7 @@ Get started:
 - See `README.md` in `par/`
 
 Documentation:
-- Type `make doc` in `build/`
+- Type `make doc` or ?make pdf` in build directory
 
 Contributing:
 - See the contributing guidelines provided in `CONTRIBUTING.md`

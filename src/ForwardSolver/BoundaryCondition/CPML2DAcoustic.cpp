@@ -85,7 +85,8 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPML2DAcoustic<ValueType>::e
     }
 
     IndexType numVectorsPerDim = 6;
-    return(counter * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
+    IndexType sum=dist->getCommunicator().sum(counter);
+    return(sum * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
 //! \brief Initializsation of the absorbing coefficient matrix

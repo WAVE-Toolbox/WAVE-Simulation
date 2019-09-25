@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
+#include "../IO/IO.hpp"
 
 #include <scai/hmemo/HArray.hpp>
 #include <scai/hmemo/WriteAccess.hpp>
@@ -17,6 +18,10 @@
 #include <geographer/Wrappers.h>
 #endif
 #endif
+
+#include <scai/common/ContextType.hpp>
+#include <scai/dmemo/CommunicatorStack.hpp>
+
 namespace KITGPI
 {
     //! \brief Partitioning namespace
@@ -86,6 +91,7 @@ namespace KITGPI
         }
 
 #ifdef USE_GEOGRAPHER
+
         /*! \brief 
             \param config configuration object
             \param commShot communicator of a shot domain
@@ -119,7 +125,7 @@ namespace KITGPI
             settings.numBlocks = commShot->getSize();
             settings.coarseningStepsBetweenRefinement = 1;
 
-			//const IndexType N = graph.getNumRows();
+	  		//const IndexType N = graph.getNumRows();
 			const IndexType M = graph.getNumValues(); 
 			//set minimum gain to 1% of the average number of edges per block
 			settings.minGainForNextRound = M/settings.numBlocks*0.01;    
@@ -198,21 +204,21 @@ namespace KITGPI
     		}
 
             if (config.get<bool>("partitionWrite"))
-                partition.writeToFile(config.get<std::string>("partitionFilename") + ".mtx");
+                IO::writeVector(partition, config.get<std::string>("partitionFilename"), config.get<IndexType>("fileFormat"));
 
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
-            //redistribute all data to get metrics
-            scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
-            graph.redistribute(dist, noDistPtr);
-            partition.redistribute(dist);
-            weightVector[0].redistribute(dist);
-
-            metrics.getEasyMetrics(graph, partition, weightVector, settings);
-
-            if (commShot->getRank() == 0) {
-                metrics.print(std::cout);
-            }
+            //redistribute all data to get metrics (uncommend for debugging or monitiring the partitioner results)
+//             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
+//             graph.redistribute(dist, noDistPtr);
+//             partition.redistribute(dist);
+//             weightVector[0].redistribute(dist);
+// 
+//             metrics.getEasyMetrics(graph, partition, weightVector, settings);
+// 
+//             if (commShot->getRank() == 0) {
+//                 metrics.print(std::cout);
+//             }
 
             return (dist);
         }
@@ -231,7 +237,7 @@ namespace KITGPI
             ValueType MatrixVector2ndOrderWeight = 1.00;
             ValueType VectorAssignmentWeight = 0.25;
             ValueType VectorPlusVectorWeight = 0.43;
-            ValueType PMLWeight = 3.49;
+            ValueType PMLWeight = 1.5;
 
             IndexType NumMatrixVector = 0;
             IndexType NumVectorAssignement = 0;
@@ -313,31 +319,40 @@ namespace KITGPI
                 //do nothing... use default useNodeWeights=1. useNodeWeights is only used for debugging
             }
 
-            if ((config.get<IndexType>("useVariableFDoperators")) && (useNodeWeights)) {
+            if (useNodeWeights) {
                 lama::VectorAssembly<ValueType> assembly;
                 assembly.reserve(ownedIndexes.size());
 
                 std::vector<scai::IndexType> spatialFDorderVec;
-                std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
-                if (!is)
-                    COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
-                std::istream_iterator<IndexType> start(is), end;
-                spatialFDorderVec.assign(start, end);
-                if (spatialFDorderVec.empty()) {
-                    COMMON_THROWEXCEPTION("FDorder file is empty");
+                if (config.get<bool>("useVariableFDoperators")) {
+                    std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
+                    if (!is)
+                        COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
+                    std::istream_iterator<IndexType> start(is), end;
+                    spatialFDorderVec.assign(start, end);
+                    if (spatialFDorderVec.empty()) {
+                        COMMON_THROWEXCEPTION("FDorder file is empty");
+                    }
                 }
+
                 // Weights of single Matrix vector Products with FDorder 2-12
                 ValueType FDWeights[6] = {MatrixVector2ndOrderWeight, 1.56, 2.06, 2.54, 3.00, 3.70};
 
                 //loop over all (local) indeces
                 for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
                     Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-                    Acquisition::coordinate3D coordinatedist = modelCoordinates.edgeDistance(coordinate);
 
                     const auto layer = modelCoordinates.getLayer(coordinate);
+                    IndexType FDOrder = 0;
+                    if (config.get<bool>("useVariableFDoperators")) {
+                        FDOrder = spatialFDorderVec[layer];
+                    } else {
+                        FDOrder = config.get<IndexType>("spatialFDorder");
+                    }
 
                     //FDOrder Weights
-                    ValueType fdWeight = (NumMatrixVector * FDWeights[spatialFDorderVec[layer] / 2 - 1] + constantWeight);
+
+                    ValueType fdWeight = (NumMatrixVector * FDWeights[FDOrder / 2 - 1] + constantWeight);
 
                     assembly.push(ownedIndex, fdWeight);
                 }
@@ -393,10 +408,10 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 100000000000000000;
+            weights /= 100000 * weights.sum();
 
             if (config.get<bool>("weightsWrite")) {
-                weights.writeToFile(config.get<std::string>("weightsFilename") + ".mtx");
+                IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
             }
             return (weights);
         }
@@ -408,13 +423,27 @@ namespace KITGPI
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */
             start_t = common::Walltime::get();
-            auto graph = derivatives.getCombinedMatrix();
-            auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
-            auto &&weights = Weights(config, BlockDist, modelCoordinates);
+            //             typedef common::shared_ptr<Context> ContextPtr;
+            //
+            //             ContextPtr loc = Context::getContextPtr( common::context::Host );
+            hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
 
-			if (config.get<bool>("coordinateWrite"))
-				modelCoordinates.writeCoordinates(BlockDist, ctx, config.get<std::string>("coordinateFilename"));
-			
+            HOST_PRINT(commShot, "", "creating partioner input... \n");
+            
+            HOST_PRINT(commShot, "", "caclulate graph for partioner \n");
+            auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
+            graph.setContextPtr(loc);
+            
+            HOST_PRINT(commShot, "", "get coordinate vectors for partioner \n");
+            auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
+            coords[0].setContextPtr(loc);
+            coords[1].setContextPtr(loc);
+            coords[2].setContextPtr(loc);
+            
+            HOST_PRINT(commShot, "", "calculate node weights for partioner \n");
+            auto &&weights = Weights(config, BlockDist, modelCoordinates);
+            weights.setContextPtr(loc);
+            
             end_t = common::Walltime::get();
             HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 
@@ -425,9 +454,9 @@ namespace KITGPI
 			
             auto dist = KITGPI::Partitioning::graphPartition(config, commShot, coords, graph, weights, tool);
 
-            derivatives.redistributeMatrices(dist);
+           // derivatives.redistributeMatrices(dist);
             return (dist);
-            //#else
+#else
             HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")
             HOST_PRINT(commShot, "\nBlock Distribution will be used instead!\n\n")
             return (BlockDist);

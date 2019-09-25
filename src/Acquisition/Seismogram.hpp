@@ -9,8 +9,6 @@
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
 #include "math.h"
-#include "segy.hpp"
-#include "suHandler.hpp"
 
 namespace KITGPI
 {
@@ -40,7 +38,7 @@ namespace KITGPI
             void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
             void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
-            void read(scai::IndexType const SeismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
+            //void read(scai::IndexType const SeismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, scai::IndexType NT);
 
@@ -74,7 +72,7 @@ namespace KITGPI
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
             void setNormalizeTraces(scai::IndexType normalizeTrace);
-            void setResampleCoeff(ValueType resampleCoeff = 1.0);
+            void setSeismoDT(ValueType seismoDT);
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -85,15 +83,6 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
-            void writeToFileRaw(std::string const &filename, scai::IndexType const seismogramFormat ) const;
-            void writeToFileSU(std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
-
-            void readFromFileRaw(std::string const &filename, scai::IndexType const seismogramFormat, bool copyDist = 0);
-            void readFromFileSU(std::string const &filename, bool copyDist = 0);
-
-            void readFromFileRaw(std::string const &filename, scai::IndexType const seismogramFormat, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
-            void readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
-
             scai::IndexType numSamples;      //!< Number of samples of one trace
             scai::IndexType numTracesGlobal; //!< Number of global traces
             scai::IndexType numTracesLocal;  //!< Number of local traces
@@ -101,6 +90,7 @@ namespace KITGPI
 
             /* header information */
             ValueType DT;                                           //!< Temporal sampling interval in seconds
+            ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds
             SeismogramType type;                                    //!< Type of trace as #SeismogramType
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
@@ -109,9 +99,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
 
             /* resampling */
-            scai::lama::CSRSparseMatrix<ValueType> resampleMatLeft;
-            scai::lama::CSRSparseMatrix<ValueType> resampleMatRight;
-            scai::lama::DenseVector<ValueType> resampleVec;
+            scai::lama::CSRSparseMatrix<ValueType> resampleMat;
         };
     }
 }

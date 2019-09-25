@@ -1,4 +1,5 @@
 #include "Wavefields2Dsh.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -54,15 +55,16 @@ ValueType KITGPI::Wavefields::FD2Dsh<ValueType>::estimateMemory(dmemo::Distribut
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType fileFormat)
 {
-    std::string fileBaseName = baseName + type;
+    std::string fileName = baseName + type;
+    std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VZ", fileBaseName, t, fileFormat);
+        IO::writeVector(VZ, fileName + ".VZ." + timeStep, fileFormat);
         break;
     case 2:
-        this->writeWavefield(Syy, "Syz", fileBaseName, t, fileFormat);
-        this->writeWavefield(Sxy, "Sxz", fileBaseName, t, fileFormat);
+        IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
+        IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
         break;
     case 3: {
         COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dsh.");

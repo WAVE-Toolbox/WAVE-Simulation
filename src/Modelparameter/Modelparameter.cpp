@@ -1,4 +1,6 @@
 #include "Modelparameter.hpp"
+#include "../IO/IO.hpp"
+
 using namespace scai;
 using namespace KITGPI;
 
@@ -79,7 +81,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
 
 /*! \brief Init a single modelparameter by reading a model from an external file
  *
- *  Reads a single model from an external mtx file.
+ *  Reads a single model from an external vector file.
  \param vector Singel modelparameter which will be initialized
  \param ctx Context
  \param dist Distribution
@@ -92,64 +94,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
     HOST_PRINT(dist->getCommunicatorPtr(), "", "initModelParameter from file " << filename << "\n")
     allocateModelparameter(vector, ctx, dist);
 
-    readModelparameter(vector, filename, dist, fileFormat);
+    IO::readVector(vector, filename, fileFormat);
 }
-
-/*! \brief Write singe modelparameter to an external file
- *
- *  Write a single model to an external file block.
- \param vector Single modelparameter which will be written to filename
- \param filename Name of file in which modelparameter will be written
- \param fileFormat Output file format 0=mtx 1=lmf
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType fileFormat) const
-{
-    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << ", fileFormat = " << fileFormat << "\n")
-
-    switch (fileFormat) {
-    case 1:
-        vector.writeToFile(filename + ".mtx", lama::FileMode::FORMATTED);
-        break;
-
-    case 2:
-        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
-        vector.writeToFile(filename + ".lmf", lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        break;
-    case 3:
-        filename += ".frv"; // write binary file with separate header file, done by master process
-        vector.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
-        break;
-
-    default:
-        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
-        break;
-    }
-};
-
-/*! \brief Read a modelparameter from file
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType fileFormat)
-{
-    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "readModelParameter " << filename << ", fileFormat = " << fileFormat << "\n");
-
-    switch (fileFormat) {
-    case 1:
-        vector.readFromFile(filename + ".mtx", dist);
-        break;
-    case 2:
-        vector.readFromFile(filename + ".lmf", dist);
-        break;
-    case 3:
-        vector.readFromFile(filename + ".frv", dist);
-        break;
-
-    default:
-        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
-        break;
-    }
-};
 
 /*! \brief Allocate a single modelparameter
  */
@@ -214,7 +160,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getInverseDensity() const
 {
-    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated! ");
+    SCAI_ASSERT(dirtyFlagInverseDensity == false, "Inverse density has to be recalculated, prepareForModelling before run forward simulation! ");
     return (inverseDensity);
 }
 

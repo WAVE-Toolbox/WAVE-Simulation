@@ -42,6 +42,7 @@ namespace KITGPI
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType>);
 
             void getAcquisitionMat(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings);
+            scai::lama::DenseMatrix<ValueType> getsourcesignal();
 
           private:
             Seismogram<ValueType> signals; //!< Source signals
@@ -68,7 +69,7 @@ namespace KITGPI
 
             void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
             void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);
-            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead);
+            void readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType rowNumber);
         };
     }
 }

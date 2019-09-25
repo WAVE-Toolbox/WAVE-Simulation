@@ -1,4 +1,5 @@
 #include "Elastic.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -129,23 +130,26 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-    lama::DenseVector<ValueType> densityTmp(variableDist, 0.0);
-    lama::DenseVector<ValueType> velocityPTmp(variableDist, 0.0);
-    lama::DenseVector<ValueType> velocitySTmp(variableDist, 0.0);
 
-    for (IndexType variableIndex = 0; variableIndex < variableCoordinates.getNGridpoints(); variableIndex++) {
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    variableDist->getOwnedIndexes(ownedIndexes);
 
-        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(variableIndex);
+    lama::MatrixAssembly<ValueType> assembly;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(ownedIndex);
         IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
-
-        densityTmp.setValue(variableIndex, density.getValue(regularIndex));
-        velocityPTmp.setValue(variableIndex, velocityP.getValue(regularIndex));
-        velocityS.setValue(variableIndex, velocityS.getValue(regularIndex));
+        assembly.push(ownedIndex, regularIndex, 1.0);
     }
 
-    density = densityTmp;
-    velocityP = velocityPTmp;
-    velocityS = velocitySTmp;
+    lama::CSRSparseMatrix<ValueType> meshingMatrix;
+    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, velocityP.getDistributionPtr());
+    meshingMatrix.fillFromAssembly(assembly);
+
+    density = meshingMatrix * density;
+    velocityP = meshingMatrix * velocityP;
+    velocityS = meshingMatrix * velocityS;
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -186,8 +190,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -201,8 +205,8 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the Velocity-Vector "filename".vp.mtx" and "filename".vs.mtx" is added and for density "filename+".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  *
  */
 template <typename ValueType>
@@ -231,15 +235,15 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added, for the second ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param fileFormat Output file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityP, filename + ".vp", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -306,6 +310,16 @@ template <typename ValueType>
 std::string KITGPI::Modelparameter::Elastic<ValueType>::getEquationType() const
 {
     return (equationType);
+}
+
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for elastic modelling")
+    return (inverseDensity);
 }
 
 /*! \brief Get reference to tauP
@@ -505,16 +519,13 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
-    sWaveModulus = rhs.sWaveModulus;
     velocityP = rhs.velocityP;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -525,16 +536,13 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
-    sWaveModulus = rhs.getSWaveModulus();
     velocityP = rhs.getVelocityP();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

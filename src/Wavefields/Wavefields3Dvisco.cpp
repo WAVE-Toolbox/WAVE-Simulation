@@ -1,4 +1,5 @@
 #include "Wavefields3Dvisco.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -66,21 +67,22 @@ ValueType KITGPI::Wavefields::FD3Dvisco<ValueType>::estimateMemory(dmemo::Distri
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType fileFormat)
 {
-    std::string fileBaseName = baseName + type;
+    std::string fileName = baseName + type;
+    std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VX", fileBaseName, t, fileFormat);
-        this->writeWavefield(VY, "VY", fileBaseName, t, fileFormat);
-        this->writeWavefield(VZ, "VZ", fileBaseName, t, fileFormat);
+        IO::writeVector(VX, fileName + ".VX." + timeStep, fileFormat);
+        IO::writeVector(VY, fileName + ".VY." + timeStep, fileFormat);
+        IO::writeVector(VZ, fileName + ".VZ." + timeStep, fileFormat);
         break;
     case 2:
-        this->writeWavefield(Sxx, "Sxx", fileBaseName, t, fileFormat);
-        this->writeWavefield(Syy, "Syy", fileBaseName, t, fileFormat);
-        this->writeWavefield(Szz, "Szz", fileBaseName, t, fileFormat);
-        this->writeWavefield(Sxy, "Sxy", fileBaseName, t, fileFormat);
-        this->writeWavefield(Sxz, "Sxz", fileBaseName, t, fileFormat);
-        this->writeWavefield(Syz, "Syz", fileBaseName, t, fileFormat);
+        IO::writeVector(Sxx, fileName + ".Sxx." + timeStep, fileFormat);
+        IO::writeVector(Syy, fileName + ".Syy." + timeStep, fileFormat);
+        IO::writeVector(Szz, fileName + ".Szz." + timeStep, fileFormat);
+        IO::writeVector(Sxy, fileName + ".Sxy." + timeStep, fileFormat);
+        IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
+        IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector());
@@ -91,8 +93,8 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::write(IndexType snapType, std::st
         this->getCurl(derivatives, curl, model.getSWaveModulus());
         this->getDiv(derivatives, div, model.getPWaveModulus());
 
-        this->writeWavefield(curl, "CURL", fileBaseName, t, fileFormat);
-        this->writeWavefield(div, "DIV", fileBaseName, t, fileFormat);
+        IO::writeVector(curl, fileName + ".CURL." + timeStep, fileFormat);
+        IO::writeVector(div, fileName + ".DIV." + timeStep, fileFormat);
     } break;
     default:
         COMMON_THROWEXCEPTION("Invalid snapType.")

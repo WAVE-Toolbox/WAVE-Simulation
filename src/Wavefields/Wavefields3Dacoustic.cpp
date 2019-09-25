@@ -1,4 +1,5 @@
 #include "Wavefields3Dacoustic.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -55,16 +56,17 @@ ValueType KITGPI::Wavefields::FD3Dacoustic<ValueType>::estimateMemory(dmemo::Dis
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType fileFormat)
 {
-    std::string fileBaseName = baseName + type;
+    std::string fileName = baseName + type;
+    std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VX", fileBaseName, t, fileFormat);
-        this->writeWavefield(VY, "VY", fileBaseName, t, fileFormat);
-        this->writeWavefield(VZ, "VZ", fileBaseName, t, fileFormat);
+        IO::writeVector(VX, fileName + ".VX." + timeStep, fileFormat);
+        IO::writeVector(VY, fileName + ".VY." + timeStep, fileFormat);
+        IO::writeVector(VZ, fileName + ".VZ." + timeStep, fileFormat);
         break;
     case 2:
-        this->writeWavefield(P, "P", fileBaseName, t, fileFormat);
+        IO::writeVector(P, fileName + ".P." + timeStep, fileFormat);
         break;
     case 3:
         COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 3D acoustic case.")

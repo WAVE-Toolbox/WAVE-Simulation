@@ -25,10 +25,10 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD3Dacoustic()
+            FD3Dacoustic():EquationType("acoustic"),NumDimension(3)
             {
-                equationType = "acoustic";
-                numDimension = 3;
+                equationType = EquationType;
+                numDimension = NumDimension;
             };
 
             //! Default destructor
@@ -75,8 +75,11 @@ namespace KITGPI
             void timesAssign(ValueType rhs);
 
           private:
+              std::string EquationType;
+              int NumDimension;
+            using Wavefields<ValueType>::equationType; 
             using Wavefields<ValueType>::numDimension;
-            using Wavefields<ValueType>::equationType;
+
 
             /* required wavefields */
             using Wavefields<ValueType>::VX;
@@ -98,7 +101,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = "Acoustic3D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }

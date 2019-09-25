@@ -1,4 +1,5 @@
 #include "Coordinates.hpp"
+#include "../IO/IO.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -454,7 +455,6 @@ int KITGPI::Acquisition::Coordinates<ValueType>::getTransition(IndexType yCoordi
     for (IndexType layer = 0; layer < numLayers; layer++) {
         if (int(yCoordinate) == interface[layer + 1]) {
             fineToCoarse = transition[layer];
-            // std::cout << layer << " " << fineToCoarse << "  "<< interface[layer+1] << " " << coordinate.y << std::endl;
         }
     }
 
@@ -506,12 +506,12 @@ std::vector<scai::lama::DenseVector<ValueType>> KITGPI::Acquisition::Coordinates
  \param filename string with the filename to write the coordinates
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename) const
+void KITGPI::Acquisition::Coordinates<ValueType>::writeCoordinates(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, std::string filename, IndexType fileFormat) const
 {
     auto coords = getCoordinates(dist, ctx);
-    coords[0].writeToFile(filename + "X.mtx");
-    coords[1].writeToFile(filename + "Y.mtx");
-    coords[2].writeToFile(filename + "Z.mtx");
+    IO::writeVector(coords[0], filename + "X", fileFormat);
+    IO::writeVector(coords[1], filename + "Y", fileFormat);
+    IO::writeVector(coords[2], filename + "Z", fileFormat);
 }
 /*! \brief Returns bool if given coordinate is located on the surface
  *

@@ -31,14 +31,13 @@ KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::FDTD3D(scai::dmemo::Distr
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    if(isSetup){
+    if (isSetup) {
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Warning from init in FDTD3D.cpp : Existing Derivative Setup will be overwritten\n");
     }
     this->setup(config);
-    
-    init(dist,ctx,modelCoordinates,comm);
-}
 
+    init(dist, ctx, modelCoordinates, comm);
+}
 
 //! \brief Initialisation to support Configuration
 /*!
@@ -51,7 +50,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::Di
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
- SCAI_ASSERT(isSetup, "call setup function before init");
+    SCAI_ASSERT(isSetup, "call setup function before init");
     if (useSparse) {
         initializeMatrices(dist, ctx, modelCoordinates, comm);
     } else {
@@ -70,15 +69,15 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices(scai::dmemo::DistributionPtr dist)
 {
     HOST_PRINT(dist->getCommunicatorPtr(), "", "started redistribution of the derivative matrices.\n");
-    
-    SCAI_ASSERT_ERROR(Dxf.getNumRows()==0, "redistribute isn't implemented for stencil matrices")
-   
+
+    SCAI_ASSERT_ERROR(Dxf.getNumRows() == 0, "redistribute isn't implemented for stencil matrices")
+
     DxfSparse.redistribute(dist, dist);
-    
+
     // if acoustic && useFreesurface==1 or if elastic && varGrid && useFreesurface==1, Dyf is not used
-    if(DyfSparse.getNumRows()!=0)
-    DyfSparse.redistribute(dist, dist);
-    
+    if (DyfSparse.getNumRows() != 0)
+        DyfSparse.redistribute(dist, dist);
+
     DzfSparse.redistribute(dist, dist);
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
@@ -88,12 +87,12 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
         if (isElastic) {
             DyfStaggeredXSparse.redistribute(dist, dist);
             DyfStaggeredZSparse.redistribute(dist, dist);
-            
-            if(useFreeSurface != 1) {// if elastic && varGrid && useFreesurface==1, DybStaggeredXSparse nad DybStaggeredZSparse are not used
-            DybStaggeredXSparse.redistribute(dist, dist);
-            DybStaggeredZSparse.redistribute(dist, dist);
+
+            if (useFreeSurface != 1) { // if elastic && varGrid && useFreesurface==1, DybStaggeredXSparse nad DybStaggeredZSparse are not used
+                DybStaggeredXSparse.redistribute(dist, dist);
+                DybStaggeredZSparse.redistribute(dist, dist);
             }
-            
+
             InterpolationStaggeredX.redistribute(dist, dist);
             InterpolationStaggeredZ.redistribute(dist, dist);
             InterpolationStaggeredXZ.redistribute(dist, dist);
@@ -115,7 +114,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
             }
         }
     }
-       HOST_PRINT(dist->getCommunicatorPtr(), "", "finished redistribution of the derivative matrices.\n");
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "finished redistribution of the derivative matrices.\n");
 }
 
 template <typename ValueType>
@@ -128,14 +127,14 @@ scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getNumDMa
             or with free surface:
             +DyfFreeSurface - Dyf +  DyfStaggeredX + DyfStaggeredZ + DybStaggeredXFreeSurface + DybStaggeredZFreeSurface
             */
-            numDMatrices += 4;
+        numDMatrices += 4;
     }
-    
-    if ((useFreeSurface == 1) && (isElastic) && (!useVarGrid)){
+
+    if ((useFreeSurface == 1) && (isElastic) && (!useVarGrid)) {
         // + DyfFreeSurface and DybFreeSurface/StaggeredX -
         numDMatrices += 2;
     }
-return numDMatrices;
+    return numDMatrices;
 }
 
 template <typename ValueType>
@@ -151,29 +150,26 @@ scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getNumInt
         }
     }
 
-
     return numInterpMatrices;
 }
 
 template <typename ValueType>
 ValueType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-   if(isSetup){
+    if (isSetup) {
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Warning from estimateMemory FDTD3D.cpp : Existing Derivative Setup will be overwritten\n");
     }
-    this->setup(config);   
-    
-return(estimateMemory(dist,modelCoordinates));
-    
+    this->setup(config);
+
+    return (estimateMemory(dist, modelCoordinates));
 }
 
 template <typename ValueType>
 ValueType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
 
- SCAI_ASSERT(isSetup, "call setup function before estimateMemory");
-return(this->getMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
-    
+    SCAI_ASSERT(isSetup, "call setup function before estimateMemory");
+    return (this->getMemoryUsage(dist, modelCoordinates, getNumDMatrices(), getNumInterpMatrices()));
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -256,45 +252,61 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     SCAI_REGION("initializeMatrices")
 
-    HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dzf, Dxb, Dyb, Dzb\n");
-
+    HOST_PRINT(comm, "Initialization of the matrices: \n");
+    HOST_PRINT(comm, "", "Dxf,"<<std::flush);
     this->calcDxf(modelCoordinates, dist);
-    this->calcDyf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dzf,"<<std::flush);
     this->calcDzf(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dxb,"<<std::flush);
     this->calcDxb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dyb,"<<std::flush);
     this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(comm, "", "Dzb,"<<std::flush);
     this->calcDzb(modelCoordinates, dist);
-
 
     DxfSparse.setContextPtr(ctx);
     DxbSparse.setContextPtr(ctx);
-    DyfSparse.setContextPtr(ctx);
     DybSparse.setContextPtr(ctx);
     DzfSparse.setContextPtr(ctx);
     DzbSparse.setContextPtr(ctx);
 
     DxfSparse.scale(this->DT);
     DxbSparse.scale(this->DT);
-    DyfSparse.scale(this->DT);
     DybSparse.scale(this->DT);
     DzfSparse.scale(this->DT);
     DzbSparse.scale(this->DT);
 
+    if (!((useFreeSurface == 1) && (useVarGrid))){
+        HOST_PRINT(comm, "", "Dyf,"<<std::flush);
+        this->calcDyf(modelCoordinates, dist);
+        DyfSparse.setContextPtr(ctx);
+        DyfSparse.scale(this->DT);
+    }
+
     if ((isElastic) && (useVarGrid)) {
+        HOST_PRINT(comm, "", "DyfStaggeredX,"<<std::flush);
         this->calcDyfStaggeredX(modelCoordinates, dist);
-        this->calcDybStaggeredX(modelCoordinates, dist);
+
+        HOST_PRINT(comm, "", "DyfStaggeredZ,"<<std::flush);
         this->calcDyfStaggeredZ(modelCoordinates, dist);
-        this->calcDybStaggeredZ(modelCoordinates, dist);
 
         DyfStaggeredXSparse.setContextPtr(ctx);
-        DybStaggeredXSparse.setContextPtr(ctx);
         DyfStaggeredZSparse.setContextPtr(ctx);
-        DybStaggeredZSparse.setContextPtr(ctx);
 
         DyfStaggeredXSparse *= this->DT;
-        DybStaggeredXSparse *= this->DT;
         DyfStaggeredZSparse *= this->DT;
-        DybStaggeredZSparse *= this->DT;
+
+        if (useFreeSurface != 1) {
+            HOST_PRINT(comm, "", "DybStaggeredX,"<<std::flush);
+            this->calcDybStaggeredX(modelCoordinates, dist);
+            HOST_PRINT(comm, "", "DybStaggeredZ,"<<std::flush);
+            this->calcDybStaggeredZ(modelCoordinates, dist);
+
+            DybStaggeredXSparse.setContextPtr(ctx);
+            DybStaggeredZSparse.setContextPtr(ctx);
+            DybStaggeredXSparse *= this->DT;
+            DybStaggeredZSparse *= this->DT;
+        }
     }
 
     if (useVarGrid) {
@@ -306,7 +318,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
         }
     }
 
-    HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
+    //HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
 //! \brief Initializsation of the derivative matrices
@@ -321,46 +333,65 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-
+    HOST_PRINT(comm, "", "DyfFreeSurface,"<<std::flush);
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
     this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
+            HOST_PRINT(comm, "", "DybFreeSurface,"<<std::flush);
             this->calcDybFreeSurface(modelCoordinates, dist);
             this->getDybFreeSurface().setContextPtr(ctx);
             this->getDybFreeSurface() *= this->DT;
 
         } else {
-
+            //DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
+            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface,"<<std::flush);
             this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
+            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface,"<<std::flush);
             this->calcDybStaggeredZFreeSurface(modelCoordinates, dist);
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredZFreeSurface.setContextPtr(ctx);
             DybStaggeredXFreeSurface *= this->DT;
             DybStaggeredZFreeSurface *= this->DT;
-            DybStaggeredXSparse.purge(); // DybStaggeredX won't be used with  varGrid+FreeSurface
-            DybStaggeredZSparse.purge(); // DybStaggeredZ won't be used with  varGrid+FreeSurface
-            DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
         }
     } else {
         //In acoustic modelling Dyf wont be used when free surface is used (see forwardsolver 2D/3D acoustic)
         this->getDyf().purge();
     }
-    
 }
 
 //! \brief Getter method for combined derivative matrix
 template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getCombinedMatrix()
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
+    SCAI_ASSERT(isSetup, "call setup function before init");
+    
+    if(DxbSparse.getNumRows()==0) {
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,"<<std::flush);
+    this->calcDxb(modelCoordinates, dist);
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,"<<std::flush);
+    this->calcDyb(modelCoordinates, dist);
+    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb,"<<std::flush);
+    this->calcDzb(modelCoordinates, dist);
+    }
+    
     auto temp = DxbSparse;
-    temp+= DybSparse;
-    temp+= DzbSparse;
-    auto temp2 = DxfSparse;
-    temp2 = transpose(temp);
-    temp-=temp2;
+    temp += DybSparse;
+    temp += DzbSparse;
+    temp = transpose(temp);
+    temp -= DxbSparse;
+    DxbSparse.purge();
+    temp -= DybSparse;
+    DybSparse.purge();
+    temp -= DzbSparse;
+    DzbSparse.purge();
+    
+    
+    //     auto temp2 = DxfSparse;
+    //     temp2 = transpose(temp);
+    //     temp-=temp2;
     return (temp);
 }
 

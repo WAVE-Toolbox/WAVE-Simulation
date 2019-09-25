@@ -1,7 +1,5 @@
 function writeVector2mtx(filename,vector)
 
-n=size(vector,1);
-
 fileID = fopen(filename,'w');
 fprintf(fileID,['%%']);
 fprintf(fileID,['%%MatrixMarket vector array real general\n']);

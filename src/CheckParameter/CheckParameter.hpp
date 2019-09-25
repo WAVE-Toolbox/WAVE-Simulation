@@ -2,7 +2,6 @@
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
-#include "../Acquisition/suHandler.hpp"
 #include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
@@ -13,7 +12,6 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-
 
         /*! \brief check variable grid
         *
@@ -55,9 +53,9 @@ namespace KITGPI
         \param spFDo Spatial FD order
         */
         template <typename ValueType>
-        void checkStabilityCriterion(ValueType dt, ValueType DH, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkStabilityCriterion(ValueType dt, ValueType DH, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm, IndexType shotNumber = -1, IndexType layer = -1)
         {
-            if (comm->getRank() == MASTERGPI) {
+            if (comm->getRank() == 0) {
                 scai::IndexType D;
                 if (dimension.compare("2D") == 0) {
                     D = 2;
@@ -92,7 +90,21 @@ namespace KITGPI
                 }
 
                 //Assess stability criterion
-                SCAI_ASSERT_ERROR(dt <= DH / (h * sqrt(D) * vpMax), "\nCourant-Friedrichs-Lewy-Criterion is not met! \ndt is " << dt << " but should be less than DH/(h*sqrt(D)*vpMax=" << DH / (h * sqrt(D) * vpMax) << "\n\n");
+
+                if (dt > DH / (h * sqrt(D) * vpMax)) {
+                    std::stringstream message;
+                    message << "! \ndt is " << dt << " but should be less than DH/(h*sqrt(D)*vpMax"
+                            << "=" << DH << "/ (" << h << "* sqrt(" << D << ") * " << vpMax << ") =" << DH / (h * sqrt(D) * vpMax);
+
+                    if ((shotNumber >= 0) && (layer >= 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                    if ((shotNumber >= 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                    if ((shotNumber < 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met" << message.str() << "\n\n");
+                }
+
+                SCAI_ASSERT_ERROR(dt <= DH / (h * sqrt(D) * vpMax), "\n\nCourant-Friedrichs-Lewy-Criterion is not met! \n\n");
             }
         }
 
@@ -103,9 +115,9 @@ namespace KITGPI
         \param spFDo Spatial FD order.
         */
         template <typename ValueType>
-        void checkNumericalDispersion(ValueType DH, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalDispersion(ValueType DH, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm, IndexType shotNumber = -1, IndexType layer = -1)
         {
-            if (comm->getRank() == MASTERGPI) {
+            if (comm->getRank() == 0) {
                 scai::IndexType N;
                 switch (spFDo) {
                 case 2:
@@ -131,42 +143,99 @@ namespace KITGPI
                 }
 
                 if (DH > vMin / (2 * fcMax * N)) {
-                    HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n");
+                    std::stringstream message;
+                    message << "! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin << " / (2 * " << fcMax << " * " << N << ") = " << vMin / (2 * fcMax * N);
+
+                    if ((shotNumber >= 0) && (layer >= 0))
+                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                    if ((shotNumber >= 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                    if ((shotNumber < 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
                 }
             }
         }
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
-                ValueType vMaxTmp;
-                vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS().max() : model.getVelocityP().max();
+                auto dist = model.getDensity().getDistributionPtr();
+                auto commShot = dist->getCommunicatorPtr();
+                hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+                dist->getOwnedIndexes(ownedIndexes);
 
-                ValueType vMinTmp;
-                scai::lama::DenseVector<ValueType> velocityTmp;
-                velocityTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
-                KITGPI::Common::searchAndReplace<ValueType>(velocityTmp, 0.0, vMaxTmp, 5);
-                vMinTmp = velocityTmp.min();
+                IndexType numlayer = modelCoordinates.getNumLayers();
 
-                //                 scai::lama::DenseMatrix<ValueType> acquisition_temp;
-                //                 scai::lama::DenseVector<ValueType> wavelet_fc;
-                //
-                //                 acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
-                //                 acquisition_temp.getColumn(wavelet_fc, 8);
+                ValueType vMax[numlayer] = {0};
+                ValueType vMin[numlayer] = {0};
+                std::fill_n(vMin, numlayer, 3e8);
 
-                scai::lama::DenseVector<ValueType> wavelet_fc;
-                wavelet_fc.allocate(sourceSettings.size());
+                IndexType localIndex = 0;
 
-                for (unsigned i = 0; i < sourceSettings.size(); i++) {
-                    wavelet_fc.setValue(i, sourceSettings[i].fc);
+                scai::lama::DenseVector<ValueType> vMaxTmp;
+                vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
+                auto read_vMaxTmp = hmemo::hostReadAccess(vMaxTmp.getLocalValues());
+
+                scai::lama::DenseVector<ValueType> vMinTmp;
+                vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
+                auto read_vMinTmp = hmemo::hostReadAccess(vMinTmp.getLocalValues());
+
+                for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+                    auto layer = modelCoordinates.getLayer(coordinate);
+
+                    if ((config.get<std::string>("equationType").compare("elastic") == 0) || (config.get<std::string>("equationType").compare("visco") == 0)) {
+                        SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= 1, "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < 1 at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
+                    }
+                    if (read_vMaxTmp[localIndex] > vMax[layer]) {
+                        vMax[layer] = read_vMaxTmp[localIndex];
+                    }
+
+                    if ((read_vMinTmp[localIndex] < vMin[layer]) && (read_vMinTmp[localIndex] > 0.0)) {
+                        vMin[layer] = read_vMinTmp[localIndex];
+                    }
+
+                    localIndex++;
                 }
 
-                ValueType fcMax = wavelet_fc.max();
+                // communicate vMin and vMax and find the minimu and maximum of all processes
+                commShot->minImpl(vMin, vMin, numlayer, common::TypeTraits<ValueType>::stype);
+                commShot->maxImpl(vMax, vMax, numlayer, common::TypeTraits<ValueType>::stype);
 
-                checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), config.get<ValueType>("DH"), vMaxTmp, config.get<std::string>("dimension"), config.get<scai::IndexType>("spatialFDorder"), comm);
-                checkNumericalDispersion<ValueType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<scai::IndexType>("spatialFDorder"), comm);
+                ValueType fcMax = 0;
+                for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                    if (sourceSettings[i].fc > fcMax)
+                        fcMax = sourceSettings[i].fc;
+                }
+
+                std::vector<IndexType> spatialFDorderVec;
+
+                if (config.get<bool>("useVariableFDoperators")) {
+
+                    std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
+                    if (!is)
+                        COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
+                    std::istream_iterator<IndexType> start(is), end;
+                    spatialFDorderVec.assign(start, end);
+                    if (spatialFDorderVec.empty()) {
+                        COMMON_THROWEXCEPTION("FDorder file is empty");
+                    }
+                } else {
+                    spatialFDorderVec.assign(numlayer,config.get<scai::IndexType>("spatialFDorder"));
+                }
+
+                for (IndexType layer = 0; layer < numlayer; layer++) {
+                    if (config.get<bool>("useVariableGrid")) {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber, layer);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber, layer);
+                    } else {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber);
+                    }
+                }
             }
         }
 

@@ -1,4 +1,5 @@
 #include "SH.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -147,8 +148,8 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the S-wave modulus  ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filenam of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
@@ -162,15 +163,12 @@ KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dme
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param fileFormat Input file format 0=mtx 1=lmf
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
     this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
     this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
@@ -189,15 +187,14 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 }
 
 /*! \brief Write model to an external file
- *
- \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param fileFormat Output file format 0=mtx 1=lmf
+ *base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    this->writeModelparameter(density, filename + ".density", fileFormat);
-    this->writeModelparameter(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -470,13 +467,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.sWaveModulus;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -487,13 +482,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.getSWaveModulus();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
