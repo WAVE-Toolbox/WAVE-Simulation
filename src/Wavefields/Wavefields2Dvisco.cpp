@@ -38,26 +38,38 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
     this->initWavefield(Rxy, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD2Dvisco<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 8 Wavefields in 2D viscoelastic modeling: Sxx,Syy,Sxy,Rxx,Ryy,Rxy, Vx, Vy */
+    IndexType numWavefields = 8;
+    return (this->getMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- \param type Type of the Seismogram
+ \param snapType Type of the wavefield snapshots 1=Velocities 2=pressure 3=div + curl
+ \param baseName base name of the output file
  \param t Current Timestep
+ \param derivatives derivatives object only used to output div/curl
+ \param model model object only used to output div/curl
+ \param fileFormat Output file format 
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType fileFormat)
 {
     std::string fileBaseName = baseName + type;
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-        this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
+        this->writeWavefield(VX, "VX", fileBaseName, t, fileFormat);
+        this->writeWavefield(VY, "VY", fileBaseName, t, fileFormat);
         break;
     case 2:
-        this->writeWavefield(Sxx, "Sxx", fileBaseName, t, partitionedOut);
-        this->writeWavefield(Syy, "Syy", fileBaseName, t, partitionedOut);
-        this->writeWavefield(Sxy, "Sxy", fileBaseName, t, partitionedOut);
+        this->writeWavefield(Sxx, "Sxx", fileBaseName, t, fileFormat);
+        this->writeWavefield(Syy, "Syy", fileBaseName, t, fileFormat);
+        this->writeWavefield(Sxy, "Sxy", fileBaseName, t, fileFormat);
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector());
@@ -68,8 +80,8 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::write(IndexType snapType, std::st
         this->getCurl(derivatives, curl, model.getSWaveModulus());
         this->getDiv(derivatives, div, model.getPWaveModulus());
 
-        this->writeWavefield(curl, "CURL", fileBaseName, t, partitionedOut);
-        this->writeWavefield(div, "DIV", fileBaseName, t, partitionedOut);
+        this->writeWavefield(curl, "CURL", fileBaseName, t, fileFormat);
+        this->writeWavefield(div, "DIV", fileBaseName, t, fileFormat);
         break;
     }
     default:

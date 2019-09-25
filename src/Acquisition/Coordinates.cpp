@@ -29,6 +29,13 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
         std::istream_iterator<IndexType> start2(is2);
         dhFactor.assign(start2, end);
         init(dhFactor, interface);
+    } else if ((!config.get<bool>("useVariableGrid")) && (config.get<bool>("useVariableFDoperators"))) {
+        std::vector<int> interface;
+        std::ifstream is(config.get<std::string>("interfaceFilename"));
+        std::istream_iterator<IndexType> start(is), end;
+        interface.assign(start, end);
+        std::vector<IndexType> dhFactor(interface.size() + 1, 1);
+        init(dhFactor, interface);
     } else {
         VariableGrid = false;
         init();
@@ -113,11 +120,11 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
         }
 
         if (NXmax != NX) {
-            std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
+            //reduce NX to fit the variable grid
             NX = NXmax;
         }
         if (NZmax != NZ) {
-            std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
+            //reduce NZ to fit the variable grid
             NZ = NZmax;
         }
 
@@ -127,7 +134,6 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1] - 1) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
@@ -138,12 +144,15 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1]) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
         }
     }
+
+    //set NY according to last interface (NY might be reduced to fit the variable Grid)
+    NY = interface[numLayers] + 1;
+
     /* loop over all layers in the variable grid 
      DH will be multiplied with the enlargement factor dhFactor.  dhFactor must be a multiple of 3.
      The begin and end of each layer will be estimated from the layer interfaces. 
@@ -155,7 +164,12 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             transition[layer] = 1;
             layerEnd[layer] = interface[layer + 1];
             layerStart[layer + 1] = interface[layer + 1] + dhFactor[layer + 1];
-        } else {
+        } else if (dhFactor[layer] > dhFactor[layer + 1]) {
+            transition[layer] = -1;
+            layerEnd[layer] = interface[layer + 1] - dhFactor[layer];
+            layerStart[layer + 1] = interface[layer + 1];
+        } else if (dhFactor[layer] == dhFactor[layer + 1]) {
+            //not sure if this right (this case is for variable fd operators without variable grid) transition=-1 mean no transition
             transition[layer] = 0;
             layerEnd[layer] = interface[layer + 1] - dhFactor[layer];
             layerStart[layer + 1] = interface[layer + 1];
@@ -283,6 +297,16 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() co
     return (nGridpoints);
 }
 
+/*! \brief getter function for numberOfGridpointsPerLayer
+ *
+ *
+ */
+template <typename ValueType>
+scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints(IndexType layer) const
+{
+    return (nGridpointsPerLayer[layer]);
+}
+
 /*! \brief getter function for the layer
  *
  *  coarse grids contain the interface at the fine<->coarse and coarse<->fine transition 
@@ -296,7 +320,8 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getLayer(coordinate3D coo
         if ((int(coordinate.y) < interface[layer + 1]) && (int(coordinate.y) > interface[layer])) {
             break;
         } else if (int(coordinate.y) == interface[layer + 1]) {
-            layer += transition.at(layer);
+            if (transition.at(layer) > 0)
+                layer += 1;
             break;
         }
     }
@@ -351,6 +376,15 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getDHFactor(IndexType lay
     return (dhFactor[layer]);
 }
 
+/*! \brief getter function for interface vector
+ *
+ */
+template <typename ValueType>
+std::vector<int> KITGPI::Acquisition::Coordinates<ValueType>::getInterfaceVec() const
+{
+    return (interface);
+}
+
 /*! \brief check if coordinate is on an variable grid interface
  *
   \param coordinate 3D coordinate struct
@@ -398,7 +432,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::distToInterface(IndexType
  *
  */
 template <typename ValueType>
-bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
+int KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coordinate) const
 {
     return (getTransition(coordinate.y));
 }
@@ -408,12 +442,12 @@ bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(coordinate3D coo
  *
  */
 template <typename ValueType>
-bool KITGPI::Acquisition::Coordinates<ValueType>::getTransition(IndexType yCoordinate) const
+int KITGPI::Acquisition::Coordinates<ValueType>::getTransition(IndexType yCoordinate) const
 {
     if (!locatedOnInterface(yCoordinate)) {
         COMMON_THROWEXCEPTION("Y Coordinate Y=" << yCoordinate << " is not located on an variable grid interface");
     }
-    bool fineToCoarse = false;
+    int fineToCoarse = 0;
     for (IndexType layer = 0; layer < numLayers; layer++) {
         if (int(yCoordinate) == interface[layer + 1]) {
             fineToCoarse = transition[layer];

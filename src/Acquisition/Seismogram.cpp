@@ -42,27 +42,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     data.swap(rhs.data);
 }
 
-//! \brief Adding ending to the seismogram-filename-string
-/*!
- *
- * This member function adds the #SeismogramType to the filname ending.
- \param filename Filename of output
- */
-template <typename ValueType>
-std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(std::string const &filename) const
-{
-    SCAI_ASSERT_DEBUG(type >= 0 && type <= (NUM_ELEMENTS_SEISMOGRAMTYPE - 1), "Wrong Trace Type: " << getTraceType());
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::P], "p") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VX], "vx") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VY], "vy") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VZ], "vz") == 0, "Error in mapping of SeismogramType to std::string");
 
-    std::size_t found = filename.find_last_of(".");
-    std::string beforeEnding = filename.substr(0, found);
-    std::string afterEnding = filename.substr(found);
-    std::string traceTypeString = SeismogramTypeString[getTraceType()];
-    return (beforeEnding + "." + traceTypeString + afterEnding);
-}
 
 //! \brief Setter method for the context ptr
 /*!
@@ -77,7 +57,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
     coordinates1D.setContextPtr(ctx);
 }
 
-//! \brief  Read the seismogram from disk
+//! \brief  writes the seismogram to disk
 /*!
  *
  * This method writes the seismogram data to disk. \n
@@ -90,14 +70,11 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
     switch (seismogramFormat) {
-    case 1:
-        writeToFileRaw(filename + ".mtx");
-        break;
-    case 2:
-        writeToFileSU(filename + ".SU", modelCoordinates);
+    case 4:
+        writeToFileSU(filename, modelCoordinates);
         break;
     default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        writeToFileRaw(filename, seismogramFormat);
         break;
     }
 }
@@ -114,14 +91,11 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
     switch (seismogramFormat) {
-    case 1:
-        readFromFileRaw(filename + ".mtx", copyDist);
-        break;
-    case 2:
-        readFromFileSU(filename + ".SU", copyDist);
+    case 4:
+        readFromFileSU(filename, copyDist);
         break;
     default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        readFromFileRaw(filename , seismogramFormat, copyDist);
         break;
     }
 }
@@ -139,14 +113,11 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     switch (seismogramFormat) {
-    case 1:
-        readFromFileRaw(filename + ".mtx", distTraces, distSamples);
-        break;
-    case 2:
-        readFromFileSU(filename + ".SU", distTraces, distSamples);
+    case 4:
+        readFromFileSU(filename, distTraces, distSamples);
         break;
     default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        readFromFileRaw(filename, seismogramFormat,distTraces, distSamples);
         break;
     }
 }
@@ -459,8 +430,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename,IndexType const seismogramFormat, bool copyDist)
 {
+    std::cout << "been here" << std::endl;
     scai::dmemo::DistributionPtr distTraces;
     scai::dmemo::DistributionPtr distSamples;
 
@@ -469,7 +441,30 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
         distSamples = data.getColDistributionPtr();
     }
 
-    data.readFromFile(addSeismogramTypeToName(filename));
+    std::string filenameTmp=filename + "." + SeismogramTypeString[getTraceType()];
+    switch (seismogramFormat) {
+        case 1:
+            filenameTmp+=".mtx";
+            break;
+        case 2:
+            filenameTmp+=".lmf";
+            std::cout << "been here" << filenameTmp << std::endl;
+            break;
+        case 3:
+            filenameTmp+=".frv";
+            break;
+        default:
+            COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
+            break;
+    }
+    
+    
+    data.readFromFile(filenameTmp);
+
+    if (copyDist == 1) {
+        SCAI_ASSERT_ERROR(getNumTracesGlobal() == data.getNumRows(), "Number of specified traces in receiver file (numTraces=" << getNumTracesGlobal() << ") doesn't match the number of traces in the input data: " << filenameTmp << " (numTraces=" << data.getNumRows() << ")");
+    }
+
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
@@ -500,7 +495,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
         distSamples = data.getColDistributionPtr();
     }
 
-    std::string tempstr = addSeismogramTypeToName(filename);
+    std::string tempstr = filename+ "." + SeismogramTypeString[getTraceType()]+".SU";
     suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
 
     if (copyDist == 0) {
@@ -518,9 +513,27 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
  \param distSamples Distribution of temporal samples
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
+void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename,IndexType const seismogramFormat, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    data.readFromFile(addSeismogramTypeToName(filename));
+    std::cout << "been here" << std::endl;
+    std::string filenameTmp=filename+ "." + SeismogramTypeString[getTraceType()];
+    switch (seismogramFormat) {
+        case 1:
+            filenameTmp+=".mtx";
+            break;
+        case 2:
+            filenameTmp+=".lmf";
+            break;
+        case 3:
+            filenameTmp+=".frv";
+            break;
+        default:
+            COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
+            break;
+    }
+    
+    
+    data.readFromFile(filenameTmp);
     IndexType nrow_temp = data.getNumRows();
     IndexType ncolumn_temp = data.getNumColumns();
 
@@ -544,7 +557,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string con
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
-    std::string tempstr = addSeismogramTypeToName(filename);
+    std::string tempstr = filename+ "." + SeismogramTypeString[getTraceType()]+".SU";
     suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
 
     if (distTraces == NULL && distSamples == NULL) {
@@ -560,7 +573,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string cons
  \param filename Filename to write seismogram
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const &filename) const
+void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const &filename, IndexType const seismogramFormat) const
 {
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
@@ -573,7 +586,28 @@ void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string cons
             dataResampleInt.scaleColumns(resampleVec);
             dataResample += dataResampleInt;
         }
-        dataResample.writeToFile(addSeismogramTypeToName(filename));
+
+        std::string filenameTmp=filename+ "." + SeismogramTypeString[getTraceType()];
+    switch (seismogramFormat) {
+        case 1:
+            filenameTmp+=".mtx";
+            break;
+        case 2:
+            filenameTmp+=".lmf";
+            break;
+        case 3:
+            filenameTmp+=".frv";
+            break;
+        default:
+            COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
+            break;
+    }
+        
+        if (seismogramFormat==1) {
+        dataResample.writeToFile(filenameTmp);
+        } else {
+         dataResample.writeToFile(filenameTmp, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT); 
+        }
     }
 }
 
@@ -656,7 +690,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
     if (data.getNumValues() > 0) {
-        std::string tempstr = addSeismogramTypeToName(filename);
+        std::string tempstr = filename+ "." + SeismogramTypeString[getTraceType()]+".SU";
         suHandler<ValueType>::writeSU(tempstr, data, coordinates1D, DT, sourceIndex, modelCoordinates);
     }
 }

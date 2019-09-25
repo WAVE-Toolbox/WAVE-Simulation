@@ -1,5 +1,23 @@
 #include "ForwardSolver.hpp"
 
+/*! \brief memory estimation wrapper for the boundarie conditions
+             *
+             *
+             \param config Configuration
+             \param dist Distribution of the wave fields
+             \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+             */
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::ForwardSolver<ValueType>::estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPML<ValueType> &ConvPML)
+{
+    if (config.get<IndexType>("DampingBoundary") == 1) {
+        return (DampingBoundary.estimateMemory(config.get<scai::IndexType>("BoundaryWidth"), config.get<scai::IndexType>("FreeSurface"), dist, modelCoordinates));
+    } else if (config.get<IndexType>("DampingBoundary") == 2) {
+        return (ConvPML.estimateMemory(config.get<scai::IndexType>("BoundaryWidth"), config.get<scai::IndexType>("FreeSurface"), dist, modelCoordinates));
+    }
+    return 0;
+}
+
 /*! \brief Initialitation of the boundary conditions
  *
  *
@@ -31,7 +49,7 @@ void KITGPI::ForwardSolver::ForwardSolver<ValueType>::prepareBoundaries(Configur
 
     if (config.get<IndexType>("DampingBoundary") == 2) {
         useConvPML = true;
-        ConvPML.init(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("KMaxCPML"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
+        ConvPML.init(dist, ctx, modelCoordinates, config.get<ValueType>("DT"), config.get<scai::IndexType>("BoundaryWidth"), config.get<ValueType>("NPower"), config.get<ValueType>("CenterFrequencyCPML"), config.get<ValueType>("VMaxCPML"), useFreeSurface);
     }
 }
 

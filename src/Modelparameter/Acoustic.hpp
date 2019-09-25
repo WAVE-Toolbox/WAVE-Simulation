@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include "Modelparameter.hpp"
 
 namespace KITGPI
@@ -45,19 +44,20 @@ namespace KITGPI
             //! Destructor, releases all allocated resources.
             ~Acoustic(){};
 
-            explicit Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
             explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
-            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
+            explicit Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             //! Copy Constructor.
             Acoustic(const Acoustic &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
-            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
-            void init(KITGPI::Modelparameter::Modelparameter<ValueType> const &model, scai::dmemo::DistributionPtr variableDist,Acquisition::Coordinates<ValueType> const &variableCoordinates,Acquisition::Coordinates<ValueType> const &regularCoordinates) override; 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
-            void write(std::string filename, scai::IndexType partitionedOut) const override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType rho_const);
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) override;
+
+            void write(std::string filename, scai::IndexType fileFormat) const override;
 
             std::string getEquationType() const;
 
@@ -100,6 +100,7 @@ namespace KITGPI
             KITGPI::Modelparameter::Acoustic<ValueType> &operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs);
 
           private:
+            void init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates);
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::equationType;
@@ -113,10 +114,11 @@ namespace KITGPI
             using Modelparameter<ValueType>::velocityP;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
+            void purgeMatrices() override;
 
-            using Modelparameter<ValueType>::DensityAverageMatrixX;
-            using Modelparameter<ValueType>::DensityAverageMatrixY;
-            using Modelparameter<ValueType>::DensityAverageMatrixZ;
+            using Modelparameter<ValueType>::averageMatrixX;
+            using Modelparameter<ValueType>::averageMatrixY;
+            using Modelparameter<ValueType>::averageMatrixZ;
 
             using Modelparameter<ValueType>::inverseDensityAverageX;
             using Modelparameter<ValueType>::inverseDensityAverageY;

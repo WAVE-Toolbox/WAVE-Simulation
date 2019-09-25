@@ -1,6 +1,12 @@
 #include "ForwardSolver2Delastic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD2Delastic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -131,14 +137,15 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Get references to required derivatives matrixes */
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+
     lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
-    lama::Matrix<ValueType> const &DyfStaggeredX = derivatives.getDyfStaggeredX();
     lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();
+    lama::Matrix<ValueType> const &DybStaggeredXFreeSurface = derivatives.getDybStaggeredXFreeSurface();
 
     //   lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfStaggeredX = derivatives.getDyfStaggeredX();
     lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
-    lama::Matrix<ValueType> const &DybStaggeredXFreeSurface = derivatives.getDybStaggeredXFreeSurface();
 
     /* Get pointers to required interpolation matrices (optional) */
     lama::Matrix<ValueType> const *DinterpolateFull = derivatives.getInterFull();

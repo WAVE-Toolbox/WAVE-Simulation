@@ -31,30 +31,58 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
 /*! \brief Methode to Write Wavefield for timestep t
  *
  \param vector Vector written to file
- \param type Wavefield-type (acoustic, elastic, viscoelastic, sh)
+ \param component Wavefield component (vx,vy,vz,p,curl,div)
+ \param fileBaseName base name of the output file
  \param t Timestep
+ \param fileFormat Output file format 0=mtx 1=lmf 2=frv
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
+void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType fileFormat)
 {
-    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
+    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t));
 
-    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+    switch (fileFormat) {
 
-    switch (partitionedOut) {
-    case false:
-        vector.writeToFile(fileName);
+    case 1:
+        fileName += ".mtx";
+        // write ASCII file
+        vector.writeToFile(fileName, lama::FileMode::FORMATTED);
         HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
         break;
 
-    case true:
-        partitionOut.writeToDistributedFiles(vector, fileName);
+    case 2:
+        fileName += ".lmf";
+        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
+        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
+        break;
+
+    case 3:
+        fileName += ".frv"; // write binary file with separate header file, done by master process
+        vector.writeToFile(fileName, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected output option!")
+        COMMON_THROWEXCEPTION("Unexpected output option, fileFormat = " << fileFormat)
         break;
     }
+}
+
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
+{
+    ValueType size = getMemoryWavefield(dist) / 1024 / 1024 * numWavefields;
+    return size;
+}
+
+//! \brief calculate and return memory usage the of a Wavefield
+/*!
+ */
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryWavefield(scai::dmemo::DistributionPtr dist)
+{
+    /* size of a wavefield is the size of a densevector = numGridpoints*size of Valuetype*/
+    return (dist->getGlobalSize() * sizeof(ValueType));
 }
 
 //! \brief Getter routine for vX wavefield

@@ -18,5 +18,5 @@ Requirement:
 - Compiler with C++11 support
 
 Tested with:
-- Compiler: g++ (4.9.3), clang++ (3.9)
-- MPI: OpenMPI (1.7.2, 1.10.0)
+- Compiler: g++ (7.3.1)
+- MPI: OpenMPI (1.7.2, 1.10.7)

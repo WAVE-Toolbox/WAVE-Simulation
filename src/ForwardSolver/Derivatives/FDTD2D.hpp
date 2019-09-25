@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../Common/HostPrint.hpp"
 #include "Derivatives.hpp"
 
 namespace KITGPI
@@ -28,14 +27,16 @@ namespace KITGPI
                 //! Default destructor
                 ~FDTD2D(){};
 
-                FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType spatialFDorderInput, scai::dmemo::CommunicatorPtr comm);
                 FDTD2D(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm);
 
+                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm, std::vector<scai::IndexType> &FDorder) override;
+                
+                void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
 
-                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
-
+                ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+                ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+                
                 /* non-requiered matrixes */
                 scai::lama::Matrix<ValueType> const &getDzf() const override;
                 scai::lama::Matrix<ValueType> const &getDzb() const override;
@@ -43,10 +44,13 @@ namespace KITGPI
                 scai::lama::CSRSparseMatrix<ValueType> getCombinedMatrix() override;
 
               private:
-                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
+                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm) override;
+                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
+                void initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
-                void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::dmemo::CommunicatorPtr comm) override;
-
+                scai::IndexType getNumDMatrices();
+                scai::IndexType getNumInterpMatrices();
+                
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
                 using Derivatives<ValueType>::Dyf;
@@ -67,16 +71,20 @@ namespace KITGPI
 
                 using Derivatives<ValueType>::DyfStaggeredXSparse;
                 using Derivatives<ValueType>::DybStaggeredXSparse;
-
-                using Derivatives<ValueType>::DyfFreeSurface;
-                using Derivatives<ValueType>::DybFreeSurface;
+/*
+                using Derivatives<ValueType>::DyfFreeSurfaceSparse;
+                using Derivatives<ValueType>::DybFreeSurfaceSparse;*/
+                using Derivatives<ValueType>::DybStaggeredXFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
+                using Derivatives<ValueType>::useSparseFreeSurface;
                 using Derivatives<ValueType>::useVarGrid;
+                using Derivatives<ValueType>::isElastic;
 
                 using Derivatives<ValueType>::useVarFDorder;
-
+                using Derivatives<ValueType>::isSetup;
+                
                 using Derivatives<ValueType>::InterpolationFull;
                 using Derivatives<ValueType>::InterpolationStaggeredX;
             };

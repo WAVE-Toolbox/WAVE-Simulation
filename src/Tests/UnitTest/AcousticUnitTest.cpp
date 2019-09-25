@@ -19,5 +19,7 @@ TEST(Acoustic, TestInit)
     Modelparameter::Modelparameter<double>::ModelparameterPtr model(Modelparameter::Factory<double>::Create("acoustic"));
     Modelparameter::Acoustic<double> testObject;
 
-    ASSERT_ANY_THROW(testObject.init(testConfig1, testCtx, no_dist_numParameter));
+    Acquisition::Coordinates<double> modelCoordinates(testConfig2.get<IndexType>("NX"), testConfig2.get<IndexType>("NY"), testConfig2.get<IndexType>("NZ"), testConfig2.get<double>("DH"));
+
+    ASSERT_ANY_THROW(testObject.init(testConfig1, testCtx, no_dist_numParameter, modelCoordinates));
 }

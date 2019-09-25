@@ -1,9 +1,9 @@
 #pragma once
 
-#include <scai/lama.hpp>
-#include "Coordinates.hpp"
 #include "Acquisition.hpp"
+#include "Coordinates.hpp"
 #include <fstream>
+#include <scai/lama.hpp>
 
 namespace KITGPI
 {
@@ -16,6 +16,7 @@ namespace KITGPI
          */
         template <typename ValueType>
         struct sourceSettings {
+            scai::IndexType sourceNo;
             coordinate3D sourceCoords;
             scai::IndexType sourceType;
             scai::IndexType waveletType;
@@ -25,6 +26,7 @@ namespace KITGPI
             ValueType tShift;
             coordinate3D getCoords() {return sourceCoords;}
             scai::IndexType getType() {return sourceType;}
+            scai::IndexType row;
         };
         
         /*! \brief Struct to save 3-D coordinates
@@ -38,112 +40,157 @@ namespace KITGPI
             scai::IndexType getType() {return receiverType;}
         };
         
-        /*! \brief Read the settings of a source into sourceSettings
+        /*! \brief Read all source settings into vector of sourceSettings
         *
-        \param settings sourceSettings struct
+         \param allSettings vector of sourceSettings structs
         \param fileName Name of source file
-        \param i number of source to read (which line of source file)
         */
         template <typename ValueType>
-        inline void readSettings(sourceSettings<ValueType> &settings, std::string fileName, scai::IndexType i) {
+        inline void readAllSettings(std::vector<sourceSettings<ValueType>> &allSettings, std::string fileName)
+        {
             std::ifstream istream(fileName, std::ios::binary);
-            if (istream.is_open()) {
-                istream.seekg(i * sizeof(settings));
-                istream >> settings.sourceCoords.x;
-                istream >> settings.sourceCoords.y;
-                istream >> settings.sourceCoords.z;
-                istream >> settings.sourceType;
-                istream >> settings.waveletType;
-                istream >> settings.waveletShape;
-                istream >> settings.fc;
-                istream >> settings.amp;
-                istream >> settings.tShift;
-            }
-            else {
-                COMMON_THROWEXCEPTION("Could not open source acquisition file")
-                
-            }
-        }
-        
-        inline void readSettings(receiverSettings &settings, std::string fileName, scai::IndexType i) {
-            std::ifstream istream(fileName, std::ios::binary);
-            if (istream.is_open()) {
-                istream.seekg(i * sizeof(settings));
-                istream >> settings.receiverCoords.x;
-                istream >> settings.receiverCoords.y;
-                istream >> settings.receiverCoords.z;
-                istream >> settings.receiverType;
-            }
-            else {
-                COMMON_THROWEXCEPTION("Could not open receiver acquisition file")
-            }
-        }
-        
-        /*! \brief Read the settings of a source into sourceSettingssd
-        *
-        \param settings sourceSettings struct
-        \param istream Input file stream
-        */
-        template <typename ValueType>
-        inline void readSettings(sourceSettings<ValueType> &settings, std::ifstream &istream) {
-            istream >> settings.sourceCoords.x;
-            istream >> settings.sourceCoords.y;
-            istream >> settings.sourceCoords.z;
-            istream >> settings.sourceType;
-            istream >> settings.waveletType;
-            istream >> settings.waveletShape;
-            istream >> settings.fc;
-            istream >> settings.amp;
-            istream >> settings.tShift;
-        }
-        
-        /*! \brief Read the settings of a receiver into receiverSettings
-        *
-        \param settings receiverSettings struct
-        \param istream Input file stream
-        */
-        inline void readSettings(receiverSettings &settings, std::ifstream &istream) {
-            istream >> settings.receiverCoords.x;
-            istream >> settings.receiverCoords.y;
-            istream >> settings.receiverCoords.z;
-            istream >> settings.receiverType;
-        }
-        
-        template <typename ValueType>
-        inline void readAllSettings(std::vector<sourceSettings<ValueType>> &allSettings, std::string fileName) {
-            std::ifstream istream(fileName, std::ios::binary);
+
             allSettings.clear();
             sourceSettings<ValueType> thisSettings;
+            scai::IndexType row_index = -1;
             if (istream.is_open()) {
-                while (!istream.eof()) {
-                    readSettings(thisSettings, istream);
-                    allSettings.push_back(thisSettings);
-                }
-                allSettings.pop_back();
-                //std::cout << fileName << " " << allSettings.size() << std::endl;
+                std::string line;
+                while (getline(istream, line)) {
+                    std::stringstream strings(line);
+                    std::vector<std::string> vecStrings;
+
+                    char firstChar = strings.peek();
+                    if (firstChar == '#') {
+                        continue;
+                    } else {
+                        row_index++;
+                        std::string tempStr;
+                        while (strings >> tempStr) {
+                            vecStrings.push_back(tempStr);
             }
-            else {
-                COMMON_THROWEXCEPTION("Could not open receiver acquisition file")
+                
+                        if (vecStrings.size() != 10) {
+                            COMMON_THROWEXCEPTION("Wrong number of parameters in line of source acquisition file (" << fileName << ")")
+            }
+
+                        try {
+                            thisSettings.sourceNo = std::stoi(vecStrings[0]);
+                            thisSettings.sourceCoords.x = std::stoi(vecStrings[1]);
+                            thisSettings.sourceCoords.y = std::stoi(vecStrings[2]);
+                            thisSettings.sourceCoords.z = std::stoi(vecStrings[3]);
+                            thisSettings.sourceType = std::stoi(vecStrings[4]);
+                            thisSettings.waveletType = std::stoi(vecStrings[5]);
+                            thisSettings.waveletShape = std::stoi(vecStrings[6]);
+                            thisSettings.fc = std::stof(vecStrings[7]);
+                            thisSettings.amp = std::stof(vecStrings[8]);
+                            thisSettings.tShift = std::stof(vecStrings[9]);
+        }
+        
+                        catch (const std::invalid_argument &ia) {
+                            COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
+            }
+
+                        catch (const std::out_of_range &oor) {
+                            COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
+                        }
+                        thisSettings.row = row_index;
+                        allSettings.push_back(thisSettings);
+                    }
+                }
+                //       std::cout << "Source acquisition file (" << fileName << ") read in." << std::endl;
+            } else {
+                COMMON_THROWEXCEPTION("Could not open source acquisition file " << fileName)
             }
         }
         
-        inline void readAllSettings(std::vector<receiverSettings> &allSettings, std::string fileName) {
+        /*! \brief Cut settings for all source settings into settings for one shot number
+        *
+        \param settings vector of sourceSettings structs corresponding to shotNumber
+        \param allSettings vector of sourceSettings structs with settings for all shots
+        \param shotNumber shotNumber to extract corresponding source settings
+        
+        */
+        template <typename ValueType>
+        inline void createSettingsForShot(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &settings, std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> allSettings, scai::IndexType shotNumber)
+        {
+            settings.clear();
+            for (unsigned i = 0; i < allSettings.size(); i++) {
+                if (allSettings[i].sourceNo == shotNumber) {
+                    settings.push_back(allSettings[i]);
+                }
+            }
+        }
+        
+        /*! \brief compute vector of unique shot numbers
+        *
+        \param uniqueShotNo vector with all shot numbers, each included only once
+        \param sourceSettings vector of sourceSettings structs
+        */
+        template <typename ValueType>
+        inline void calcuniqueShotNo(std::vector<scai::IndexType> &uniqueShotNo, std::vector<sourceSettings<ValueType>> sourceSettings)
+        {
+            uniqueShotNo.clear();
+            uniqueShotNo.push_back(sourceSettings[0].sourceNo);
+            for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                if (std::find(uniqueShotNo.begin(), uniqueShotNo.end(), sourceSettings[i].sourceNo) != uniqueShotNo.end()) {
+                    // shotNo already included
+                } else {
+                    uniqueShotNo.push_back(sourceSettings[i].sourceNo);
+                }
+            }
+        }
+        
+        /*! \brief Read all receiver settings into vector of receiverSettings
+         *
+         \param allSettings vector of receiverSettings structs
+         \param fileName Name of receiver file
+         */
+        inline void readAllSettings(std::vector<receiverSettings> &allSettings, std::string fileName)
+        {
             std::ifstream istream(fileName, std::ios::binary);
+
             allSettings.clear();
             receiverSettings thisSettings;
             if (istream.is_open()) {
-                while (!istream.eof()) {
-                    readSettings(thisSettings, istream);
+                std::string line;
+                while (getline(istream, line)) {
+                    std::stringstream strings(line);
+                    std::vector<std::string> vecStrings;
+
+                    char firstChar = strings.peek();
+                    if (firstChar == '#') {
+                        continue;
+                    } else {
+                        std::string tempStr;
+                        while (strings >> tempStr) {
+                            vecStrings.push_back(tempStr);
+                }
+
+                        if (vecStrings.size() != 4) {
+                            COMMON_THROWEXCEPTION("Wrong number of parameters in line of receiver acquisition file (" << fileName << ")")
+            }
+
+                        try {
+                            thisSettings.receiverCoords.x = std::stoi(vecStrings[0]);
+                            thisSettings.receiverCoords.y = std::stoi(vecStrings[1]);
+                            thisSettings.receiverCoords.z = std::stoi(vecStrings[2]);
+                            thisSettings.receiverType = std::stoi(vecStrings[3]);
+            }
+
+                        catch (const std::invalid_argument &ia) {
+                            COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
+        }
+        
+                        catch (const std::out_of_range &oor) {
+                            COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
+                        }
                     allSettings.push_back(thisSettings);
                 }
-                allSettings.pop_back();
-                //std::cout << fileName << " " << allSettings.size() << std::endl;
             }
-            else {
-                COMMON_THROWEXCEPTION("Could not open receiver acquisition file")
+                //  std::cout << "Receiver acquisition file (" << fileName << ") read in." << std::endl;
+            } else {
+                COMMON_THROWEXCEPTION("Could not open receiver acquisition file " << fileName)
             }
         }
     }
 }
-
-

@@ -11,12 +11,15 @@ useVariableGrid=0
 partitioning=1
 useVariableFDoperators=0
 
-NX=100                    # horizontal 1
-NY=100                    # depth
-NZ=100                    # horizontal 2
+coordinateWrite=0
+
+NX=133                    # horizontal 1
+NY=112                    # depth
+NZ=105                    # horizontal 2
 
 # define Partitioning
-ProcNS=1                  # Number of shot domains
+ShotDomainDefinition=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
+NumShotDomains=2                  # Number of shot domains
 
 # distance between two grid points
 DH=50                     # in meter
@@ -33,9 +36,14 @@ ModelRead=0               # 1=Model will be read from file, 0=generated on the f
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
 
-# parallel input-output
-PartitionedIn=0           # 1=Read files parallel, 0=serial 
-PartitionedOut=0          # 1=Write files parallel, 0=serial
+
+#input-output 
+FileFormat=1  # file format for input and output  of models and wavefields
+
+# Supported formats:
+# 1=mtx : formated ascii file - serial IO
+# 2=lmf : binary file - parallel IO - float - little endian - 5 int header (20 byte) 
+# 3=frv : binary file - serial IO - float - little endian - seperate header 
 
 # Apply the free surface condition
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
@@ -65,20 +73,24 @@ SourceFilename=acquisition/sources             # location of source file
 ReceiverFilename=acquisition/receiver          # location of receiver file
 SeismogramFilename=seismograms/seismogram      # target location of seismogram
 SourceSignalFilename=acquisition/signal        # location of the source signal file
-SeismogramFormat=1                             # 1=MTX, 2=SU
+SeismogramFormat=1                             # 1=MTX (ascii serial), 2=lmf(binary parallel) 3=frv (binary serial), 4=SU (parallel)
+# 1=mtx : formated ascii file - serial IO - 2 line ascii header
+# 2=lmf : binary file - parallel IO - float - little endian - 6 int header (24 byte) 
+# 3=frv : binary file - serial IO - float - little endian - seperate header 
+# 4=su  : binary file - parallel IO - float - little endian - 240 byte header per trace
+
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
 initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
 seismoDT=2.0e-03                               # Seismogram sampling in seconds
 NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
-runSimultaneousShots=0                         # 1=All sources specified in SourceFilename are triggerd simultaneously
 
 # wavefield snapshots
-snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+snapType=2                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds
-tIncSnapshot=0.5          # Time increment between snapshot in seconds
+tIncSnapshot=0.1                              # Time increment between snapshot in seconds
 
 # console output
 verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

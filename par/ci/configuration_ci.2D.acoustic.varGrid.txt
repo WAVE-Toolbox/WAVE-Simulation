@@ -25,7 +25,8 @@ NY=303                    # depth
 NZ=1                      # horizontal 2
 
 # define Partitioning
-ProcNS=1                  # Number of shot domains
+NumShotDomains=1 
+ShotDomainDefinition=0
 
 # distance between two grid points
 DH=17                     # in meter
@@ -41,10 +42,9 @@ spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
+coordinateWrite=0
 
-# parallel input-output
-PartitionedIn=0           # 1=Read files parallel, 0=serial 
-PartitionedOut=0          # 1=Write files parallel, 0=serial
+FileFormat=1
 
 # Apply the free surface condition
 FreeSurface=1             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
@@ -74,7 +74,7 @@ SourceFilename=ci/sources_ci.2D.varGrid           # location of source file
 ReceiverFilename=ci/receiver_ci.2D.varGrid          # location of receiver file
 SeismogramFilename=ci/seismogram.2D.acoustic.varGrid.ci     # target location of seismogram
 SourceSignalFilename=acquisition/signal        # location of the source signal file
-SeismogramFormat=1                             # 1=MTX, 2=SU
+SeismogramFormat=1                             # 1=MTX, 4=SU
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
 initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
 seismoDT=2.0e-03                               # Seismogram sampling in seconds

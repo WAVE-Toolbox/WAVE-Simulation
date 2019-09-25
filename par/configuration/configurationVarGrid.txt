@@ -29,7 +29,7 @@ coordinateWrite=0                                  # 1=coordinates will be writt
 coordinateFilename=configuration/coordinates       
 
 BoundaryWeights=2.0
-weightsWrite=0                                  # 1=weigths will be written to disk, 0=not
+weightsWrite=1                                  # 1=weigths will be written to disk, 0=not
 weightsFilename=partition/weights       
 
 
@@ -40,6 +40,8 @@ NZ=107                    # horizontal 2
 
 # define Partitioning
 ProcNS=1                  # Number of shot domains
+ShotDomainDefinition=0  # =0: Number of shot domains will be taken from ProcNS
+NumShotDomains=2
 
 # distance between two grid points
 DH=17                     # in meter

@@ -36,6 +36,12 @@ set ( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set ( CMAKE_BUILD_WITH_INSTALL_RPATH FALSE )
 set ( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
 
+
+### get git commit ###
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GIT_COMMIT OUTPUT_STRIP_TRAILING_WHITESPACE)
+add_definitions("-DBUILD_COMMIT=${GIT_COMMIT}")
+
+
 ####################################################
 #  Path hints for finding SCAI(Lama) / Geographer  #
 ####################################################
@@ -111,7 +117,6 @@ set ( SOFI_LIB_DIRS
         Acquisition 
         Configuration  
         ForwardSolver   
-        PartitionedInOut 
         Wavefields
         CheckParameter 
         Common
@@ -126,10 +131,17 @@ foreach ( dir ${SOFI_LIB_DIRS} )
 
     file( GLOB_RECURSE files RELATIVE ${CMAKE_SOURCE_DIR}/${dir} ${dir}/*.hpp )
     foreach ( file ${files} )
-        configure_file( ${dir}/${file} include/${file} COPYONLY )
+	    configure_file( ${dir}/${file} include/${dir}/${file} COPYONLY )
     endforeach ()
 
 endforeach ()
+
+### set value type ###
+set(SOFI_VALUE_TYPE "double" CACHE STRING "variable type used for values")
+configure_file("config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp")
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/include")
+
 
 ####################################################
 #  SOFI library                                    #

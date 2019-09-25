@@ -2,18 +2,21 @@
 using namespace scai;
 using namespace KITGPI;
 
-/*! \brief Getter method for partitionedIn */
 template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedIn()
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter)
 {
-    return (PartitionedIn);
+    ValueType size = getMemoryModel(dist) / 1024 / 1024 * numParameter;
+    return size;
 }
 
-/*! \brief Getter method for partitionedOut */
+//! \brief calculate and return memory usage the of a single ModelParameter
+/*!
+ */
 template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getPartitionedOut()
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryModel(scai::dmemo::DistributionPtr dist)
 {
-    return (PartitionedOut);
+    /* size of a wavefield is the size of a densevector = numGridpoints*size of Valuetype*/
+    return (dist->getGlobalSize() * sizeof(ValueType));
 }
 
 /*! \brief Getter method for parametrisation */
@@ -81,17 +84,15 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
  \param ctx Context
  \param dist Distribution
  \param filename Location of external file which will be read in
- \param partitionedIn Partitioned input
+ \param fileFormat Input file format
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     HOST_PRINT(dist->getCommunicatorPtr(), "", "initModelParameter from file " << filename << "\n")
     allocateModelparameter(vector, ctx, dist);
 
-    readModelparameter(vector, filename, dist, partitionedIn);
-
-    vector.redistribute(dist);
+    readModelparameter(vector, filename, dist, fileFormat);
 }
 
 /*! \brief Write singe modelparameter to an external file
@@ -99,25 +100,29 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::initModelparameter(scai:
  *  Write a single model to an external file block.
  \param vector Single modelparameter which will be written to filename
  \param filename Name of file in which modelparameter will be written
- \param partitionedOut Partitioned output
+ \param fileFormat Output file format 0=mtx 1=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, IndexType fileFormat) const
 {
-    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << ", fileFormat = " << fileFormat << "\n")
 
-    switch (partitionedOut) {
-    case false:
-        vector.writeToFile(filename);
-        HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "writing " << filename << "\n");
+    switch (fileFormat) {
+    case 1:
+        vector.writeToFile(filename + ".mtx", lama::FileMode::FORMATTED);
         break;
 
-    case true:
-        partitionOut.writeToDistributedFiles(vector, filename);
+    case 2:
+        // write binary file, IndexType as int, ValueType as float, do it via collective I/O
+        vector.writeToFile(filename + ".lmf", lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
+        break;
+    case 3:
+        filename += ".frv"; // write binary file with separate header file, done by master process
+        vector.writeToFile(filename, lama::FileMode::BINARY, common::ScalarType::FLOAT, common::ScalarType::INT);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected output option!")
+        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
         break;
     }
 };
@@ -125,22 +130,23 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::writeModelparameter(scai
 /*! \brief Read a modelparameter from file
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType partitionedIn)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, IndexType fileFormat)
 {
+    HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "readModelParameter " << filename << ", fileFormat = " << fileFormat << "\n");
 
-    PartitionedInOut::PartitionedInOut<ValueType> partitionIn;
-
-    switch (partitionedIn) {
-    case false:
-        partitionIn.readFromOneFile(vector, filename, dist);
+    switch (fileFormat) {
+    case 1:
+        vector.readFromFile(filename + ".mtx", dist);
         break;
-
-    case true:
-        partitionIn.readFromDistributedFiles(vector, filename, dist);
+    case 2:
+        vector.readFromFile(filename + ".lmf", dist);
+        break;
+    case 3:
+        vector.readFromFile(filename + ".frv", dist);
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unexpected input option!")
+        COMMON_THROWEXCEPTION("Unexpected fileFormat option!")
         break;
     }
 };
@@ -359,13 +365,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setTauS(scai::lama::Vect
     dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
 }
 
-//! \brief Calculate density averaging matrix in x-direction
+//! \brief Calculate averaging matrix in x-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -391,17 +397,17 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
         }
     }
 
-    DensityAverageMatrixX = lama::zero<SparseFormat>(dist, dist);
-    DensityAverageMatrixX.fillFromAssembly(assembly);
+    averageMatrixX = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixX.fillFromAssembly(assembly);
 }
 
-//! \brief Calculate density averaging matrix in y-direction
+//! \brief Calculate averaging matrix in y-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
@@ -434,17 +440,17 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
         }
     }
 
-    DensityAverageMatrixY = lama::zero<SparseFormat>(dist, dist);
-    DensityAverageMatrixY.fillFromAssembly(assembly);
+    averageMatrixY = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixY.fillFromAssembly(assembly);
 }
 
-//! \brief Calculate density averaging matrix in z-direction
+//! \brief Calculate averaging matrix in z-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -471,12 +477,12 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcDensityAverageMatrix
         }
     }
 
-    DensityAverageMatrixZ = lama::zero<SparseFormat>(dist, dist);
-    DensityAverageMatrixZ.fillFromAssembly(assembly);
+    averageMatrixZ = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixZ.fillFromAssembly(assembly);
 }
 
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pZ[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calc4PointAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pZ[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     IndexType columnIndex;
     /*Points
@@ -509,6 +515,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
     //bottom side
     if ((maxX < modelCoordinates.getNX()) && (maxY >= modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
         columnIndex = modelCoordinates.coordinate2index(maxX, pY[1], maxZ);
+        // Point 2
         assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
         // Point 1
         assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
@@ -517,6 +524,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
     // right side
     if ((maxX >= modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
         columnIndex = modelCoordinates.coordinate2index(pX[1], maxY, maxZ);
+        //Point 3
         assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
         // Point 1
         assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
@@ -525,6 +533,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
     // back side
     if ((maxX < modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ >= modelCoordinates.getNZ())) {
         columnIndex = modelCoordinates.coordinate2index(maxX, maxY, pZ[1]);
+        // Point 3
         assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
         // Point 1
         assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
@@ -552,13 +561,13 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
     }
 }
 
-//! \brief Calculate s-wave modulus averaging matrix in x-direction
+//! \brief Calculate averaging matrix in x and y-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -576,20 +585,20 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
         IndexType pY[] = {0, coordinate.y, coordinate.y, coordinate.y + dhFactor, coordinate.y + dhFactor};
         IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z, coordinate.z};
 
-        calcSWaveModulusAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
+        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
     }
 
-    sWaveModulusAverageMatrixXY = lama::zero<SparseFormat>(dist, dist);
-    sWaveModulusAverageMatrixXY.fillFromAssembly(assembly);
+    averageMatrixXY = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixXY.fillFromAssembly(assembly);
 }
 
-//! \brief Calculate s-wave modulus averaging matrix in y-direction
+//! \brief Calculate averaging matrix in x and y-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
     //     calcAverageMatrix(sWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ, modelCoordinates, dist);
 
@@ -609,20 +618,20 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
         IndexType pY[] = {0, coordinate.y, coordinate.y, coordinate.y, coordinate.y};
         IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z + dhFactor, coordinate.z + dhFactor};
 
-        calcSWaveModulusAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
+        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
     }
 
-    sWaveModulusAverageMatrixXZ = lama::zero<SparseFormat>(dist, dist);
-    sWaveModulusAverageMatrixXZ.fillFromAssembly(assembly);
+    averageMatrixXZ = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixXZ.fillFromAssembly(assembly);
 }
 
-//! \brief Calculate s-wave modulus averaging matrix in z-direction
+//! \brief Calculate averaging matrix in y and z-direction
 /*!
  *
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -640,11 +649,11 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcSWaveModulusAverageM
         IndexType pY[] = {0, coordinate.y, coordinate.y + dhFactor, coordinate.y, coordinate.y + dhFactor};
         IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z + dhFactor, coordinate.z + dhFactor};
 
-        calcSWaveModulusAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
+        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
     }
 
-    sWaveModulusAverageMatrixYZ = lama::zero<SparseFormat>(dist, dist);
-    sWaveModulusAverageMatrixYZ.fillFromAssembly(assembly);
+    averageMatrixYZ = lama::zero<SparseFormat>(dist, dist);
+    averageMatrixYZ.fillFromAssembly(assembly);
 }
 
 /*! \brief calculate averaged inverse density modulus

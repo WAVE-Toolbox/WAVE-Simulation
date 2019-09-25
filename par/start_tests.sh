@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Setup test environment
-export OMP_NUM_THREADS=2
+export OMP_NUM_THREADS=1
 export NUM_MPI_PROCESSES=4
 export SCAI_UNSUPPORTED=IGNORE
+export SCAI_TRACE=OFF
 
 BINDIR="./../build/bin"
 
@@ -11,6 +12,8 @@ SOFI_EXE="${BINDIR}/SOFI"
 UNITTEST_EXE="${BINDIR}/Test_unit"
 INTEGRATIONTEST_EXE="${BINDIR}/Test_integration"
 MODEL_EXE="${BINDIR}//tools/TwoLayer"
+
+export SCAI_LOG=OFF
 
 # Run unit tests
 ${UNITTEST_EXE}

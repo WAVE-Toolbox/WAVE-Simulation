@@ -13,7 +13,9 @@ UseVariableGrid=0
 partitioning=1
 useVariableFDoperators=0
 
-ProcNS=1                  # Number of shot domains
+NumShotDomains=1 
+ShotDomainDefinition=0
+
 
 # define distance between two grid points in meter
 DH=50
@@ -29,6 +31,7 @@ spatialFDorder=2
 ModelRead=0
 ModelWrite=0
 ModelFilename=model/model
+coordinateWrite=0
 
 # Viscoelastic modelling
 numRelaxationMechanisms=0;
@@ -39,6 +42,8 @@ FreeSurface=0
 DampingBoundary=0
 BoundaryWidth=10
 DampingCoeff=8.0
+
+fileFormat=1
 
 velocityP=3500 # P-wave velocity in meter per seconds
 velocityS=2000 # S-wave velocity in meter per seconds
@@ -52,7 +57,7 @@ ReceiverFilename=ci/receiver_ci.2D.sh
 SeismogramFilename=ci/seismogram.2D.sh.ci
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
 initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
-SeismogramFormat=1 # 1=MTX, 2=SU
+SeismogramFormat=2 # 1=MTX, 2=SU
 NormalizeTraces=0 # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 useReceiversPerShot=0
 seismoDT=2.0e-03                               # Seismogram sampling in seconds
@@ -60,10 +65,9 @@ seismoDT=2.0e-03                               # Seismogram sampling in seconds
 saveSnapshots=0
 snapType=0
 
-PartitionedIn=0
-PartitionedOut=0
+FileFormat=0
 
 runSimultaneousShots=1
 
 # console output
-verbose=0                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
