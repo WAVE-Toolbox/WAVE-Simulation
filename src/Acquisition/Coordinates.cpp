@@ -3,6 +3,9 @@
 #include <cmath>
 #include <iterator>
 #include <vector>
+
+#include <scai/common/Settings.hpp>
+
 using namespace scai;
 
 /* ------- */
@@ -119,6 +122,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             NZmax--;
         }
 
+<<<<<<< HEAD
         if (NXmax != NX) {
             //reduce NX to fit the variable grid
             NX = NXmax;
@@ -127,6 +131,22 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             //reduce NZ to fit the variable grid
             NZ = NZmax;
         }
+=======
+        {	//adding communicator so not all PEs print the messages
+			dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
+			common::Settings::setRank(commAll->getNodeRank());
+			if (commAll->getRank() == 0) {
+				if (NXmax != NX) {
+					std::cout << "NX for the variable grid has been changed from " << NX << " to " << NXmax << std::endl;
+					NX = NXmax;
+				}
+				if (NZmax != NZ) {
+					std::cout << "NZ for the variable grid has been changed from " << NZ << " to " << NZmax << std::endl;
+					NZ = NZmax;
+				}
+			}
+		}
+>>>>>>> 3ce6df8c26c125190f2cd3b0efecee291c46233a
 
         /* This has to be fixed: Because interface[0]=-1 (should be changed to 0) interface 1 has to be checked seperately */
         IndexType layer = 0;
