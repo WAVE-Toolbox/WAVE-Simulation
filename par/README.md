@@ -8,7 +8,7 @@ Before the modelling code can be started, you have compile the code using cmake.
 Further information can be found in `README.cmake` in the main directory
 
 - ``mkdir build && cd build``
-- ``SCAI_DIR="lama install directory" cmake -DSOFI_VALUE_TYPE=float ../src/ -DCMAKE_INSTALL_PREFIX=./``
+- ``SCAI_DIR="lama install directory" cmake ../src/ -DCMAKE_INSTALL_PREFIX=./``
 - ``make install -j 4``
 
 
@@ -16,6 +16,11 @@ Further information can be found in `README.cmake` in the main directory
 The simulation can be started by the example start file:
 
  ``source start_FDSimulation.sh``
+
+Switch of Lama warnings and Tracing
+
+`export SCAI_UNSUPPORTED=IGNORE`
+` export SCAI_TRACE=OFF`
 
 Different kinds of parallelization are possible:
 
@@ -26,6 +31,12 @@ Different kinds of parallelization are possible:
 
 The standard configuration of `start_FDSimulation.sh` is using both kinds of parallelization.
 
+Run Code on GPUs
+`export SCAI_ASYNCHRONOUS=2`
+`export SCAI_DEVICE=0,1,2,3 (...)` (Comma seperated list of GPU devices on one node
+`export SCAI_CONTEXT=CUDA`
+
+
 ## Run the tests
 To test the proper functionality of the installation, you can run the build in unit and integration tests.
 Since the [Google Test framework](https://github.com/google/googletest) is used for the unit tests, the environment variable `GTEST_DIR` has to be set to the location of the compiled Google Test library (`libgtest.*` and `libgtest_main.*`). The integration test has no special requirements apart the LAMA framework and MPI.
@@ -34,12 +45,5 @@ Since the [Google Test framework](https://github.com/google/googletest) is used 
 
 If one of the test cases fails, the script will give an error message and will abort.
 
-## Data processing for parallel I/O
-
-Since the modelling code supports parallel I/O operations some pre- and post-processing steps maybe required to split or merge data. In order to use the binaries mentioned below, you have to build [LAMA](www.libama.org) with the option `BUILD_EXAMPLES=ON`.
-
-#### Data pre-processing
-- to partition a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.mtx 1 filename.%r.mtx {NProcessors}`
-
-#### Data post-processing
-- Merge to a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.%r.mtx {NProcessors} filename.mtx 1`
+# Parallel IO
+specify .lmf or .su as file type in the configuration file to use parallel in and output. 
