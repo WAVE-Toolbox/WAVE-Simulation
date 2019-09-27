@@ -2,6 +2,10 @@ set ( SOFI_CXX_FLAGS "@CMAKE_CXX_FLAGS@" )
 
 set ( SOFI_ROOT @CMAKE_INSTALL_PREFIX@ )
 
+set ( SOFI_SCAI_ROOT @SCAI_ROOT@ )
+
+set ( SOFI_Geographer_ROOT @Geographer_ROOT@ )
+
 set ( SOFI_INCLUDE_DIRS ${SOFI_ROOT}/include )
 
 find_library ( SOFI_LIB

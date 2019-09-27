@@ -3,10 +3,11 @@
 #include <scai/lama.hpp>
 
 #include "Acquisition.hpp"
+#include "Configuration/ValueType.hpp"
 #include "Configuration.hpp"
 #include "HostPrint.hpp"
 #include "Receivers.hpp"
-#include "config.hpp"
+
 
 using namespace KITGPI;
 using namespace scai;

@@ -44,11 +44,10 @@ add_definitions("-DBUILD_COMMIT=${GIT_COMMIT}")
 
 
 ####################################################
-#  Path hints for finding SCAI(Lama) / Geographer  #
+#  Find LAMA library (mandatory)                   #
 ####################################################
 
 set ( SCAI_PATH_HINTS "${SCAI_DIR}" "${SCAI_HOME}" "$ENV{SCAI_HOME}" )
-set ( Geographer_PATH_HINTS "${Geographer_DIR}" "${Geographer_HOME}" "$ENV{Geograhper_HOME}" )
 
 if ( ${CMAKE_VERSION} VERSION_GREATER 3.11)
     ## use new policy to configure with SCAI_ROOT, suppress warning
@@ -56,12 +55,8 @@ if ( ${CMAKE_VERSION} VERSION_GREATER 3.11)
 else ()
     ## simulate new policy by adding SCAI_ROOT to hints
     set ( SCAI_PATH_HINTS ${SCAI_PATH_HINTS} "${SCAI_ROOT}" "$ENV{SCAI_ROOT}" )
-    set ( Geograhper_PATH_HINTS ${Geographer_PATH_HINTS} "${Geographer_ROOT}" "$ENV{Geographer_ROOT}" )
 endif ()
 
-####################################################
-#  Find LAMA library (mandatory)                   #
-####################################################
 
 find_package( SCAI REQUIRED CONFIG 
               NO_CMAKE_PATH 
@@ -73,12 +68,22 @@ find_package( SCAI REQUIRED CONFIG
 include_directories( ${SCAI_INCLUDE_DIRS} )
 
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${SCAI_CXX_FLAGS} )
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
 set( SOFI_used_libs ${SCAI_LIBRARIES} )
+
 
 ####################################################
 #  Find Geographer library (optional)              #
 ####################################################
+
+set ( Geographer_PATH_HINTS "${Geographer_DIR}" "${Geographer_HOME}" "$ENV{Geograhper_HOME}" )
+
+if ( ${CMAKE_VERSION} VERSION_GREATER 3.11)
+    ## use new policy to configure with SCAI_ROOT, suppress warning
+    cmake_policy( SET CMP0074 NEW )
+else ()
+    ## simulate new policy by adding SCAI_ROOT to hints
+    set ( Geograhper_PATH_HINTS ${Geographer_PATH_HINTS} "${Geographer_ROOT}" "$ENV{Geographer_ROOT}" )
+endif ()
 
 find_package( Geographer CONFIG
               NO_CMAKE_PATH
@@ -91,6 +96,12 @@ if ( ${Geographer_FOUND} )
     set( SOFI_used_libs ${Geographer_LIBRARIES} ${SOFI_used_libs} )
 endif ()
 
+####################################################
+#  Add CXX Flags                                   #
+####################################################
+
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
+
 ###################################################
 #  Collect source files of SOFI library            #
 #  and copy header files to install                #
@@ -102,8 +113,8 @@ set ( SOFI_LIB_DIRS
         ForwardSolver   
         Wavefields
         CheckParameter 
-	IO
-	Common
+        IO
+        Common
         Filter
         Modelparameter  
         Partitioning )
@@ -120,11 +131,8 @@ foreach ( dir ${SOFI_LIB_DIRS} )
 
 endforeach ()
 
-### set value type ###
-set(SOFI_VALUE_TYPE "float" CACHE STRING "variable type used for values")
-configure_file("config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp")
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/config.hpp" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 
 ####################################################
@@ -150,6 +158,7 @@ target_link_libraries( prog SOFI ${SOFI_used_libs} )
 set_target_properties( prog PROPERTIES OUTPUT_NAME SOFI )
 
 install( TARGETS prog DESTINATION bin )
+install( DIRECTORY ${CMAKE_BINARY_DIR}/include DESTINATION . )
 
 ####################################################
 #  Unit Test                                       #
@@ -209,9 +218,9 @@ set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 
 install( TARGETS model DESTINATION bin/tools )
 
-####################################################
-#  Doxygen documentation                           #
-####################################################
+#####################################################
+##  Doxygen documentation                           #
+#####################################################
 
 find_package( Doxygen )
 
@@ -289,5 +298,7 @@ else ()
 endif ()
 
 ### support for FindPackage ###
-configure_file(SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
+
+configure_file ( SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
+install ( FILES ${CMAKE_BINARY_DIR}/SOFIConfig.cmake DESTINATION share/cmake/SOFI )
 

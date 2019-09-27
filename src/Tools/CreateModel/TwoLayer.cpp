@@ -10,7 +10,7 @@
 #include "../../IO/IO.hpp"
 #include "../../Configuration/Configuration.hpp"
 #include "../../Common/HostPrint.hpp"
-#include "config.hpp"
+#include "Configuration/ValueType.hpp"
 
 using namespace KITGPI;
 using namespace scai;
