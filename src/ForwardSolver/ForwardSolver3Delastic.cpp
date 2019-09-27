@@ -372,6 +372,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     /* Apply free surface to stress update */
     if (useFreeSurface == 1) {
         update = vxx + vzz;
+        FreeSurface.setSurfaceZero(Syy);
         FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz);
     }
 

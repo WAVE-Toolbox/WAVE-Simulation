@@ -30,8 +30,7 @@ namespace KITGPI
 
               protected:
                 using FreeSurface<ValueType>::active;
-
-                scai::lama::DenseVector<ValueType> setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
+                using FreeSurface<ValueType>::setZeroFreeSurface;
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

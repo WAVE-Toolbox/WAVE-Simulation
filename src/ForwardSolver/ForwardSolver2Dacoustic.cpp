@@ -166,6 +166,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         p = *DinterpolateP * update_temp;
     }
 
+    if (useFreeSurface == 1) {
+        FreeSurface.setSurfaceZero(p);
+    }
+
     /* Apply source and save seismogram */
     SourceReceiver.applySource(t);
     SourceReceiver.gatherSeismogram(t);

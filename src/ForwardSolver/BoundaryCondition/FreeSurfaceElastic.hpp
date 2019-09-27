@@ -32,10 +32,8 @@ namespace KITGPI
 
               protected:
                 using FreeSurface<ValueType>::active;
-
-                //  scai::lama::DenseVector<ValueType> setSurfaceZero;         //!< Vector, which sets the wavefields at the surface to zero
+                using FreeSurface<ValueType>::setZeroFreeSurface;
                 scai::lama::SparseVector<ValueType> selectFreeSurface; //!< //!< Vector, which sets everything besides the free surface to zero
-                scai::lama::SparseVector<ValueType> setZeroFreeSurface; //!< //!< Vector, which sets everything besides the free surface to zero
                 scai::lama::SparseVector<ValueType> temp;
                 scai::lama::SparseVector<ValueType> scaleHorizontalUpdate; //!< Vector, which scales the horizontal update on the free surface in order to exchange the horizontal main stresses.
                 scai::lama::SparseVector<ValueType> scaleVerticalUpdate;   //!< Vector, which scales the vertical updateon the free surface in order to exchange the horizontal main stresses.

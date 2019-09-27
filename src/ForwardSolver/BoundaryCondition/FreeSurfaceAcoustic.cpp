@@ -21,6 +21,22 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     active = true;
 
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+
+    lama::VectorAssembly<ValueType> assemblyZeros;
+
+    setZeroFreeSurface.setSameValue(dist, 1.0);
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
+
+        if (modelCoordinates.locatedOnSurface(ownedIndex)) {
+            assemblyZeros.push(ownedIndex, 0);
+        }
+    }
+
+    setZeroFreeSurface.fillFromAssembly(assemblyZeros);
+
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }
 

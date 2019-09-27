@@ -26,11 +26,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::ex
     *                      = scaleHorizontalUpdate*(vxx+vzz)  - scaleVerticalUpdate*Vyy 
     * the szz calculation is done analogous */
 
-    
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Undo Update of the relaxation parameter at the free surface */
-    temp = selectHorizontalUpdate;
+    temp = selectFreeSurface;
     temp *= Rxx;
     Sxx -= DThalf * temp;
 
@@ -55,7 +54,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco<ValueType>::ex
     Rxx -= temp;
 
     /* Apply update of the relaxation parameter to Sxx at the free surface */
-    temp = selectHorizontalUpdate;
+    temp = selectFreeSurface;
     temp *= Rxx;
     Sxx += DThalf * temp;
 }

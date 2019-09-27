@@ -26,12 +26,9 @@ namespace KITGPI
                 ~FreeSurface2Delastic(){};
 
                 void exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx);
-                void setSurfaceZero(scai::lama::Vector<ValueType> &Syy);
 
               private:
-                //   using FreeSurfaceElastic<ValueType>::setSurfaceZero;
                 using FreeSurfaceElastic<ValueType>::scaleHorizontalUpdate;
-                using FreeSurfaceElastic<ValueType>::setZeroFreeSurface;
                 using FreeSurfaceElastic<ValueType>::scaleVerticalUpdate;
                 using FreeSurfaceElastic<ValueType>::temp;
                 using FreeSurfaceElastic<ValueType>::active;
