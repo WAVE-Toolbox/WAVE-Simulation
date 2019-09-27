@@ -45,5 +45,22 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::
     Sxx -= temp;
 }
 
+/*! \brief set Syy zero at the free Surdace
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param Syy Sxx wavefield
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::setSurfaceZero(scai::lama::Vector<ValueType> &Syy)
+{
+    /* this function is actually unnecessary because syy will be set implicitly to zero during the update of the velocities. Nethertheless for further use of the wavefields (i.e. in FWI) its better to
+    set the values to zero because they have abitrary< high values which disturb the gradient */
+    
+    Syy*=setZeroFreeSurface;
+    
+}
+
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<float>;
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<double>;

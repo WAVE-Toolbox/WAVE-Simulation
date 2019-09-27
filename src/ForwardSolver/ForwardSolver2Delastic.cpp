@@ -262,6 +262,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Apply free surface to horizontal stress update */
     if (useFreeSurface == 1) {
         FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
+        FreeSurface.setSurfaceZero(Syy);
     }
 
     /* Apply the damping boundary */

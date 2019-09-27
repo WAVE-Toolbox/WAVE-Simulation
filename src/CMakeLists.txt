@@ -131,6 +131,7 @@ foreach ( dir ${SOFI_LIB_DIRS} )
 
 endforeach ()
 
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 
@@ -217,9 +218,9 @@ set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 
 install( TARGETS model DESTINATION bin/tools )
 
-####################################################
-#  Doxygen documentation                           #
-####################################################
+#####################################################
+##  Doxygen documentation                           #
+#####################################################
 
 find_package( Doxygen )
 
