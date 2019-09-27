@@ -74,8 +74,15 @@ namespace KITGPI
                 break;
             }
 
+            IndexType numelements_exp=vector.size();
+            
             HOST_PRINT(vector.getDistributionPtr()->getCommunicatorPtr(), "", "reading " << filename << "\n");
             vector.readFromFile(filename, vector.getDistributionPtr());
+            
+            IndexType numelements_read=vector.size();
+            
+            SCAI_ASSERT(numelements_exp == numelements_read, "Read " << numelements_read << " elements from file: " << filename << ", expected " << numelements_exp << " elements!");
+            
         }
 
         /*! \brief Write lama Matrix to an external file
@@ -140,8 +147,18 @@ namespace KITGPI
             }
             HOST_PRINT(matrix.getRowDistributionPtr()->getCommunicatorPtr(), "", "reading " << filename << "\n");
 
+            IndexType numrows_exp=matrix.getNumRows();
+            IndexType numcols_exp=matrix.getNumColumns();
+            
             matrix.readFromFile(filename, matrix.getRowDistributionPtr());
             matrix.redistribute(matrix.getRowDistributionPtr(), matrix.getColDistributionPtr());
+            
+            IndexType numrows_read=matrix.getNumRows();
+            IndexType numcols_read=matrix.getNumColumns();           
+            
+            SCAI_ASSERT(numrows_exp == numrows_read, "Read " << numrows_read << " rows from file: " << filename << " expected " << numrows_exp << " rows!");
+            SCAI_ASSERT(numcols_exp == numcols_read, "Read " << numcols_read << " columns from file: " << filename << " expected " << numcols_exp << " columns!");
+
         }
 
         /*! \brief Read single row of a Matrix from file
