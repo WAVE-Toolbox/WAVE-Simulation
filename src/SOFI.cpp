@@ -231,6 +231,7 @@ int main(int argc, const char *argv[])
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
+    CheckParameter::checkSources(sourceSettings,modelCoordinates,commAll);
     IndexType numshots = uniqueShotNos.size();
 
     /* general block distribution of shot domains accorting to their weights */
@@ -263,8 +264,9 @@ int main(int argc, const char *argv[])
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+
         sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-        
+
         CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model,modelCoordinates,shotNumber);
 
         bool writeSource_bool;
