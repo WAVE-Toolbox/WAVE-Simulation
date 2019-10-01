@@ -18,6 +18,24 @@ namespace KITGPI
             scai::IndexType y; //!< y Position in Y-direction in grid points (Depth)
             scai::IndexType z; //!< z Position in Z-direction in grid points (Horizontal 2)
 
+            friend std::ostream& operator<< (std::ostream &out, const  coordinate3D &coordinate3D) {
+                out << "(x,y,z) = (" << coordinate3D.x << ", " << coordinate3D.y << ", " << coordinate3D.z << ")";
+                return out;
+            }
+
+            bool operator==(const coordinate3D& other) const
+            {
+                if((other.x==x) && (other.y==y) && (other.z==z))
+                    return (true);
+                else
+                    return (false);
+            }
+
+            bool operator!=(const coordinate3D& other) const
+            {
+                    return (!(*this==other));
+            }
+
             /*! \brief Return the minimum of all three values */
             scai::IndexType min()
             {

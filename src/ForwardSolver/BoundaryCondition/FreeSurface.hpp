@@ -36,6 +36,8 @@ namespace KITGPI
                  */
                 virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) = 0;
 
+                void setSurfaceZero(scai::lama::Vector<ValueType> &vector);
+
                 /*! \brief Getter method for active bool
                  *
                  *
@@ -43,7 +45,8 @@ namespace KITGPI
                 virtual bool getActive() const;
 
               protected:
-                bool active; //!< Bool if this free surface is active and initialized (==ready-to use)
+                scai::lama::SparseVector<ValueType> setZeroFreeSurface; //!< Vector, which sets everything besides the free surface to zero
+                bool active;                                            //!< Bool if this free surface is active and initialized (==ready-to use)
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

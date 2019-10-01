@@ -393,7 +393,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings)
 {
     if (config.get<bool>("initSourcesFromSU"))
         su.readAllSettingsFromSU(allSourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));

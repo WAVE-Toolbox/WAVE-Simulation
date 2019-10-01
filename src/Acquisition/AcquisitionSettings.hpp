@@ -213,6 +213,7 @@ namespace KITGPI
 
                 coordinatetemp_int = coordinatesglobal.getValue(n);
 
+                SCAI_ASSERT(coordinatetemp_int>=0 && coordinatetemp_int < dist->getGlobalSize(),"Message from AcquisitionSettings.hpp function Global2Local : Index " << coordinatetemp_int << " is not inside the model grid");
                 if (dist->isLocal(coordinatetemp_int)) {
                     i++;
                 }

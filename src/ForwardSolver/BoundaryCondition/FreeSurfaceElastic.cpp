@@ -65,30 +65,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
 
     derivatives.useFreeSurface = true;
 
-
     hmemo::HArray<IndexType> ownedIndeces;
     dist->getOwnedIndexes(ownedIndeces);
-    
+
     lama::VectorAssembly<ValueType> assemblyZeros;
     lama::VectorAssembly<ValueType> assemblyOnes;
-    
-setZeroFreeSurface.setSameValue(dist, 1.0);
-selectFreeSurface.setSameValue(dist, 0.0);
+
+    setZeroFreeSurface.setSameValue(dist, 1.0);
+    selectFreeSurface.setSameValue(dist, 0.0);
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
 
-       // coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        
         if (modelCoordinates.locatedOnSurface(ownedIndex)) {
-            assemblyZeros.push(ownedIndex,0);
-            assemblyOnes.push(ownedIndex,1);
-        } 
+            assemblyZeros.push(ownedIndex, 0);
+            assemblyOnes.push(ownedIndex, 1);
+        }
     }
     selectFreeSurface.fillFromAssembly(assemblyOnes);
     setZeroFreeSurface.fillFromAssembly(assemblyZeros);
 
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }
+
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<float>;
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<double>;
