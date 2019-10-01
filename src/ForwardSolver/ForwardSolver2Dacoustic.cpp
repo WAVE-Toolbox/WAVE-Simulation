@@ -110,7 +110,8 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
     /* Get pointers to required interpolation matrices (optional) */
-    lama::Matrix<ValueType> const *DinterpolateP = derivatives.getInterFull();
+    auto const *DinterpolateFull = derivatives.getInterFull();
+    auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
 
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
@@ -125,6 +126,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     update *= inverseDensityAverageX;
     vX += update;
 
+    if (DinterpolateStaggeredX) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
+
     if (useFreeSurface == 1) {
         /* Apply image method */
         update = DyfFreeSurface * p;
@@ -137,6 +147,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     }
     update *= inverseDensityAverageY;
     vY += update;
+
+    if (DinterpolateFull) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vY);
+        vY = *DinterpolateFull * update_temp;
+    }
 
     /* --------------- */
     /* update pressure */
@@ -160,10 +179,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         DampingBoundary.apply(p, vX, vY);
     }
 
-    if (DinterpolateP) {
+    if (DinterpolateFull) {
         // interpolation for missing pressure points
         update_temp.swap(p);
-        p = *DinterpolateP * update_temp;
+        p = *DinterpolateFull * update_temp;
     }
 
     if (useFreeSurface == 1) {

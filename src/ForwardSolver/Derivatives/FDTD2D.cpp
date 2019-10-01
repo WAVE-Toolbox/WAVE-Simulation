@@ -29,12 +29,12 @@ KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::FDTD2D(scai::dmemo::Distr
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    if(isSetup){
+    if (isSetup) {
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Warning from init in FDTD2D.cpp : Existing Derivative Setup will be overwritten\n");
     }
     this->setup(config);
-    
-    init(dist,ctx,modelCoordinates,comm);
+
+    init(dist, ctx, modelCoordinates, comm);
 }
 
 //! \brief Initialisation to support Configuration
@@ -48,7 +48,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-     SCAI_ASSERT(isSetup, "call setup function before init");
+    SCAI_ASSERT(isSetup, "call setup function before init");
     if (useSparse)
         initializeMatrices(dist, ctx, modelCoordinates, comm);
     else
@@ -58,7 +58,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
         initializeFreeSurfaceMatrices(dist, ctx, modelCoordinates, comm);
 }
 
-//! \brief redistribution of all matrices 
+//! \brief redistribution of all matrices
 /*!
  * Only implemented for non stencil matrices. 
  * stencil matrices are only working with grid distribution. No redistribute is necessary
@@ -68,25 +68,25 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::Di
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::redistributeMatrices(scai::dmemo::DistributionPtr dist)
 {
-    SCAI_ASSERT_ERROR(Dxf.getNumRows()==0, "redistribute isn't implemented for stencil matrices")
-        
+    SCAI_ASSERT_ERROR(Dxf.getNumRows() == 0, "redistribute isn't implemented for stencil matrices")
+
     DxfSparse.redistribute(dist, dist);
     DxbSparse.redistribute(dist, dist);
     DybSparse.redistribute(dist, dist);
-    
+
     // if acoustic && useFreesurface==1 or if elastic && varGrid && useFreesurface==1, Dyf is not used
-    if(DyfSparse.getNumRows()!=0){
-    DyfSparse.redistribute(dist, dist);
+    if (DyfSparse.getNumRows() != 0) {
+        DyfSparse.redistribute(dist, dist);
     }
-    
+
     if (useVarGrid) {
         InterpolationFull.redistribute(dist, dist);
+        InterpolationStaggeredX.redistribute(dist, dist);
         if (isElastic) {
             DyfStaggeredXSparse.redistribute(dist, dist);
-            if(useFreeSurface != 1) {// if elastic && varGrid && useFreesurface==1, DybStaggeredXSparse is not used
-            DybStaggeredXSparse.redistribute(dist, dist);
+            if (useFreeSurface != 1) { // if elastic && varGrid && useFreesurface==1, DybStaggeredXSparse is not used
+                DybStaggeredXSparse.redistribute(dist, dist);
             }
-            InterpolationStaggeredX.redistribute(dist, dist);
         }
     }
 
@@ -108,9 +108,9 @@ template <typename ValueType>
 scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getNumDMatrices()
 {
     IndexType numDMatrices = 4;
-    if (((useVarGrid) ||(useFreeSurface == 1)) && (isElastic)) {
-            numDMatrices += 2;
-        }
+    if (((useVarGrid) || (useFreeSurface == 1)) && (isElastic)) {
+        numDMatrices += 2;
+    }
     // in acoustic modelling Dyf will be exchanged by DyfFreesurface no extra matrix is needed
     return numDMatrices;
 }
@@ -119,13 +119,9 @@ template <typename ValueType>
 scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getNumInterpMatrices()
 {
     IndexType numInterpMatrices = 0;
-    if (useVarGrid){
-        // acoustic: only p will be interpolated at the interface
-        numInterpMatrices += 1;
-        if (isElastic) {
+    if (useVarGrid) {
         // elastic: p and vx will be interpolated at the interface
-        numInterpMatrices += 1;
-    } 
+        numInterpMatrices += 2;
     }
 
     return numInterpMatrices;
@@ -134,22 +130,20 @@ scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getNumInt
 template <typename ValueType>
 ValueType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-   if(isSetup){
+    if (isSetup) {
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Warning from estimateMemory in FDTD2D.cpp : Existing Derivative Setup will be overwritten\n");
     }
-    this->setup(config);   
-    
-return(estimateMemory(dist,modelCoordinates));
-    
+    this->setup(config);
+
+    return (estimateMemory(dist, modelCoordinates));
 }
 
 template <typename ValueType>
 ValueType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     SCAI_ASSERT(isSetup, "call setup function before estimateMemory");
-        
-    return(this->getMemoryUsage(dist,modelCoordinates,getNumDMatrices(),getNumInterpMatrices()));
-    
+
+    return (this->getMemoryUsage(dist, modelCoordinates, getNumDMatrices(), getNumInterpMatrices()));
 }
 //! \brief Initializsation of the derivative matrices
 /*!
@@ -233,9 +227,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 
     if (useVarGrid) {
         this->calcInterpolationFull(modelCoordinates, dist);
-        if (isElastic) {
-            this->calcInterpolationStaggeredX(modelCoordinates, dist);
-        }
+        this->calcInterpolationStaggeredX(modelCoordinates, dist);
     }
 
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
@@ -269,7 +261,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeFreeSurfac
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredXFreeSurface *= this->DT;
             DybStaggeredXSparse.purge(); // DybStaggeredX won't be used with  varGrid+FreeSurface
-            DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
+            DyfSparse.purge();           // DyfSparse won't be used with varGrid+FreeSurface
         }
     } else {
         //In acoustic modelling Dyf wont be used when free surface is used (see forwardsolver 2D/3D acoustic)
@@ -299,23 +291,23 @@ template <typename ValueType>
 scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     SCAI_ASSERT(isSetup, "call setup function before init");
-    
-    if(DxbSparse.getNumRows()==0) {
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,\n");
-    this->calcDxb(modelCoordinates, dist);
+
+    if (DxbSparse.getNumRows() == 0) {
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,\n");
+        this->calcDxb(modelCoordinates, dist);
     }
-    
-    if(DybSparse.getNumRows()==0) {
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,\n");
-    this->calcDyb(modelCoordinates, dist);
+
+    if (DybSparse.getNumRows() == 0) {
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,\n");
+        this->calcDyb(modelCoordinates, dist);
     }
-    
+
     auto temp = DxbSparse;
-    temp+=DybSparse;
-    temp = transpose(temp);  
-    temp -= DxbSparse; 
+    temp += DybSparse;
+    temp = transpose(temp);
+    temp -= DxbSparse;
     DxbSparse.purge();
-    temp -= DybSparse; 
+    temp -= DybSparse;
     DybSparse.purge();
 
     return (temp);
