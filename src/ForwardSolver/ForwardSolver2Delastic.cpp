@@ -208,6 +208,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     update *= inverseDensityAverageY;
     vY += update;
+    
+    if (DinterpolateFull) {
+    // interpolation for missing pressure points
+    update_temp.swap(vY);
+    vY = *DinterpolateFull * update_temp;
+    }
 
     /* -------------------- */
     /* update normal stress */
@@ -259,6 +265,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulusAverageXY;
     Sxy += update;
 
+    if (DinterpolateStaggeredX) {
+        // interpolation for missing pressure points
+        update_temp.swap(Sxy);
+        Sxy = *DinterpolateStaggeredX * update_temp;
+    }
+    
     /* Apply free surface to horizontal stress update */
     if (useFreeSurface == 1) {
         FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
