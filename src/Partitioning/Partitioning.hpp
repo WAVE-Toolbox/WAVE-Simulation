@@ -168,7 +168,7 @@ namespace KITGPI
 				scai::lama::CSRStorage<ValueType>& localStorage = graph.getLocalStorage();
 				scai::hmemo::HArray<ValueType> localValues = localStorage.getValues();
 
-				for( unsigned int i=0; i<localValues.size(); i++ ){
+				for( scai::IndexType i=0; i<localValues.size(); i++ ){
 					localValues[i] = 1.0;
 				}
 				
@@ -408,7 +408,7 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 100000 * weights.sum();
+            weights /= weights.sum();
 
             if (config.get<bool>("weightsWrite")) {
                 IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
