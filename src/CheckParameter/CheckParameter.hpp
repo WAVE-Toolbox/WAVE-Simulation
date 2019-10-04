@@ -147,11 +147,11 @@ namespace KITGPI
                     message << "! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin << " / (2 * " << fcMax << " * " << N << ") = " << vMin / (2 * fcMax * N);
 
                     if ((shotNumber >= 0) && (layer >= 0))
-                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
                     if ((shotNumber >= 0) && (layer < 0))
-                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
                     if ((shotNumber < 0) && (layer < 0))
-                        HOST_PRINT(comm, "\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
+                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
                 }
             }
         }
