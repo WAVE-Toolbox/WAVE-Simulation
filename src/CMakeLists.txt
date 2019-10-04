@@ -89,7 +89,6 @@ find_package( Geographer CONFIG
               NO_CMAKE_PATH
               NO_SYSTEM_ENVIRONMENT_PATH 
               PATHS ${Geographer_PATH_HINTS} )
-message( "Geographer_LIBRARIES= \t" ${Geographer_LIBRARIES}$ )
 
 
 #paths for supermuc; TODO: turn them to input arguments

@@ -12,8 +12,8 @@
 #include <vector>
 
 #ifdef USE_GEOGRAPHER
-#include <geographer/ParcoRepart.h>
 #include <geographer/AuxiliaryFunctions.h>
+#include <geographer/ParcoRepart.h>
 #ifdef USE_GEOGRAPHER_WRAPPERS
 #include <geographer/Wrappers.h>
 #endif
@@ -100,7 +100,7 @@ namespace KITGPI
             \param weights DenseVector of node weights for each gridpoint
             */
         template <typename ValueType>
-        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, std::vector<scai::lama::DenseVector<ValueType>> &coords, scai::lama::CSRSparseMatrix<ValueType> &graph, scai::lama::DenseVector<ValueType> &weights, ITI::Tool tool=ITI::Tool::geoKmeans)
+        dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, std::vector<scai::lama::DenseVector<ValueType>> &coords, scai::lama::CSRSparseMatrix<ValueType> &graph, scai::lama::DenseVector<ValueType> &weights, ITI::Tool tool = ITI::Tool::geoKmeans)
         {
             std::string dimension = config.get<std::string>("dimension");
 
@@ -125,63 +125,63 @@ namespace KITGPI
             settings.numBlocks = commShot->getSize();
             settings.coarseningStepsBetweenRefinement = 1;
 
-	  		//const IndexType N = graph.getNumRows();
-			const IndexType M = graph.getNumValues(); 
-			//set minimum gain to 1% of the average number of edges per block
-			settings.minGainForNextRound = M/settings.numBlocks*0.01;    
+            //const IndexType N = graph.getNumRows();
+            const IndexType M = graph.getNumValues();
+            //set minimum gain to 1% of the average number of edges per block
+            settings.minGainForNextRound = M / settings.numBlocks * 0.01;
             //settings.maxKMeansIterations = 10;
 
             //settings.minSamplingNodes = -1;
             settings.storeInfo = true;
-		    //look at ITI Settings.h for the enum ITI::Tool
+            //look at ITI Settings.h for the enum ITI::Tool
             settings.initialPartition = tool;
-           
-            if( tool==ITI::Tool::geographer ){
-            	settings.noRefinement = false;
-            	settings.initialPartition = ITI::Tool::geoKmeans;
+
+            if (tool == ITI::Tool::geographer) {
+                settings.noRefinement = false;
+                settings.initialPartition = ITI::Tool::geoKmeans;
             }
-            
+
             //if hierarchical kmeans, read hierarchy levels
-			if( tool==ITI::Tool::geoHierKM or tool==ITI::Tool::geoHierRepart ){
-				std::string hL= config.get<std::string>("hierLevels");
-				std::vector<std::string> vhl = ITI::aux<IndexType,ValueType>::split( hL, ',');
-				for( unsigned int i=0; i<vhl.size(); i++)
-					settings.hierLevels.push_back( std::stoi(vhl[i]) );
-			}
+            if (tool == ITI::Tool::geoHierKM or tool == ITI::Tool::geoHierRepart) {
+                std::string hL = config.get<std::string>("hierLevels");
+                std::vector<std::string> vhl = ITI::aux<IndexType, ValueType>::split(hL, ',');
+                for (unsigned int i = 0; i < vhl.size(); i++)
+                    settings.hierLevels.push_back(std::stoi(vhl[i]));
+            }
 
-			//if multisection, read cuts per dimension
-			if( tool==ITI::Tool::geoMS ){
-				std::string cpd = config.get<std::string>("cutsPerDim");
-				std::vector<std::string> vcpd = ITI::aux<IndexType,ValueType>::split( cpd, ',');
-				for( unsigned int i=0; i<vcpd.size(); i++){
-					settings.cutsPerDim.push_back( std::stoi(vcpd[i]) );
-				}
+            //if multisection, read cuts per dimension
+            if (tool == ITI::Tool::geoMS) {
+                std::string cpd = config.get<std::string>("cutsPerDim");
+                std::vector<std::string> vcpd = ITI::aux<IndexType, ValueType>::split(cpd, ',');
+                for (unsigned int i = 0; i < vcpd.size(); i++) {
+                    settings.cutsPerDim.push_back(std::stoi(vcpd[i]));
+                }
 
-				SCAI_ASSERT_EQ_ERROR( settings.cutsPerDim.size(), (unsigned long) settings.dimensions, "Dimensions and cuts per dimensions must agree" );
-			}
+                SCAI_ASSERT_EQ_ERROR(settings.cutsPerDim.size(), (unsigned long)settings.dimensions, "Dimensions and cuts per dimensions must agree");
+            }
 
             //in case we do local refinement, we change the edge weights to 1
             //if( not settings.noRefinement)
             //update, 30/04: change the weights anyway to get a correct cut
             {
-            	//change all edge weights to 1
-				scai::lama::CSRStorage<ValueType>& localStorage = graph.getLocalStorage();
-				scai::hmemo::HArray<ValueType> localValues = localStorage.getValues();
+                //change all edge weights to 1
+                scai::lama::CSRStorage<ValueType> &localStorage = graph.getLocalStorage();
+                scai::hmemo::HArray<ValueType> localValues = localStorage.getValues();
 
-				for( scai::IndexType i=0; i<localValues.size(); i++ ){
-					localValues[i] = 1.0;
-				}
-				
-				scai::hmemo::HArray<IndexType> localIA = localStorage.getIA();
-				scai::hmemo::HArray<IndexType> localJA = localStorage.getJA();
-				localStorage.swap( localIA, localJA, localValues);
-			}
+                for (scai::IndexType i = 0; i < localValues.size(); i++) {
+                    localValues[i] = 1.0;
+                }
 
-			try{
-				settings.mappingRenumbering = config.get<bool>("mappingRenumbering");
-			}catch(...){
-				settings.mappingRenumbering = false;
-			}
+                scai::hmemo::HArray<IndexType> localIA = localStorage.getIA();
+                scai::hmemo::HArray<IndexType> localJA = localStorage.getJA();
+                localStorage.swap(localIA, localJA, localValues);
+            }
+
+            try {
+                settings.mappingRenumbering = config.get<bool>("mappingRenumbering");
+            } catch (...) {
+                settings.mappingRenumbering = false;
+            }
 
             ITI::Metrics<ValueType> metrics(settings); //by default, settings.numBlocks = p (where p is: mpirun -np p ...)
 
@@ -192,16 +192,16 @@ namespace KITGPI
             std::vector<lama::DenseVector<ValueType>> weightVector;
             weightVector.push_back(weights);
 
-			scai::lama::DenseVector<IndexType> partition;
+            scai::lama::DenseVector<IndexType> partition;
 
-			if( ITI::to_string(tool).rfind("geo",0)==0 ){
-				partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
-			}else{
+            if (ITI::to_string(tool).rfind("geo", 0) == 0) {
+                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+            } else {
 #ifdef USE_GEOGRAPHER_WRAPPERS
-				bool nodeWeightsUse = true; //usign unit weights
-		    	partition = ITI::Wrappers<IndexType,ValueType>::partition( graph, coords, weightVector, nodeWeightsUse, tool, settings, metrics );
-#endif	    	
-    		}
+                bool nodeWeightsUse = true; //usign unit weights
+                partition = ITI::Wrappers<IndexType, ValueType>::partition(graph, coords, weightVector, nodeWeightsUse, tool, settings, metrics);
+#endif
+            }
 
             if (config.get<bool>("partitionWrite"))
                 IO::writeVector(partition, config.get<std::string>("partitionFilename"), config.get<IndexType>("fileFormat"));
@@ -209,16 +209,16 @@ namespace KITGPI
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
             //redistribute all data to get metrics (uncommend for debugging or monitiring the partitioner results)
-//             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
-//             graph.redistribute(dist, noDistPtr);
-//             partition.redistribute(dist);
-//             weightVector[0].redistribute(dist);
-// 
-//             metrics.getEasyMetrics(graph, partition, weightVector, settings);
-// 
-//             if (commShot->getRank() == 0) {
-//                 metrics.print(std::cout);
-//             }
+            //             scai::dmemo::DistributionPtr noDistPtr(new scai::dmemo::NoDistribution(graph.getNumRows()));
+            //             graph.redistribute(dist, noDistPtr);
+            //             partition.redistribute(dist);
+            //             weightVector[0].redistribute(dist);
+            //
+            //             metrics.getEasyMetrics(graph, partition, weightVector, settings);
+            //
+            //             if (commShot->getRank() == 0) {
+            //                 metrics.print(std::cout);
+            //             }
 
             return (dist);
         }
@@ -429,32 +429,32 @@ namespace KITGPI
             hmemo::ContextPtr loc = hmemo::Context::getContextPtr(scai::common::ContextType::Host);
 
             HOST_PRINT(commShot, "", "creating partioner input... \n");
-            
+
             HOST_PRINT(commShot, "", "caclulate graph for partioner \n");
-            auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
+            auto &&graph = derivatives.getGraph(BlockDist, modelCoordinates);
             graph.setContextPtr(loc);
-            
+
             HOST_PRINT(commShot, "", "get coordinate vectors for partioner \n");
             auto &&coords = modelCoordinates.getCoordinates(BlockDist, ctx);
             coords[0].setContextPtr(loc);
             coords[1].setContextPtr(loc);
             coords[2].setContextPtr(loc);
-            
+
             HOST_PRINT(commShot, "", "calculate node weights for partioner \n");
             auto &&weights = Weights(config, BlockDist, modelCoordinates);
             weights.setContextPtr(loc);
-            
+
             end_t = common::Walltime::get();
             HOST_PRINT(commShot, "", "created partioner input  in " << end_t - start_t << " sec.\n\n");
 
-			//which tool to use to partition with, 
-			std::string toolStr = config.get<std::string>("graphPartitionTool");
-			//get the enum from string
-			ITI::Tool tool = ITI::toTool(toolStr);
-			
+            //which tool to use to partition with,
+            std::string toolStr = config.get<std::string>("graphPartitionTool");
+            //get the enum from string
+            ITI::Tool tool = ITI::toTool(toolStr);
+
             auto dist = KITGPI::Partitioning::graphPartition(config, commShot, coords, graph, weights, tool);
 
-           // derivatives.redistributeMatrices(dist);
+            // derivatives.redistributeMatrices(dist);
             return (dist);
 #else
             HOST_PRINT(commShot, "partitioning=2 or useVariableGrid was set, but geographer was not compiled. \nUse < make prog GEOGRAPHER_ROOT= > to compile the partitioner")

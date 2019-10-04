@@ -136,7 +136,6 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1] - 1) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
@@ -147,7 +146,6 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
             layer++;
             ValueType test = ValueType(interface[layer] - interface[layer - 1]) / dhFactor[layer - 1];
             if (floor(test) != test) {
-                std::cout << "interface[" << layer << "] has been changed from " << interface[layer] << " to " << interface[layer] - 1 << std::endl;
                 interface[layer]--;
                 layer--;
             }
