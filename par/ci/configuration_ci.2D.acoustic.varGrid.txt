@@ -11,8 +11,6 @@ useVariableGrid=1
 partitioning=2
 
 graphPartitionTool=geoKmeans 
-mappingRenumbering=0
-
 
 BoundaryWeights=2.0
 useVariableFDoperators=1
