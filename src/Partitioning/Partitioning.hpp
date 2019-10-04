@@ -340,7 +340,7 @@ namespace KITGPI
 
             lama::DenseVector<ValueType> weights = lama::eval<lama::DenseVector<ValueType>>(fdWeights + pmlWeights);
             weights /= referenceTotalWeight;
-            weights /= 100000 * weights.sum();
+            weights /= weights.sum();
 
             if (config.get<bool>("weightsWrite")) {
                 IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));

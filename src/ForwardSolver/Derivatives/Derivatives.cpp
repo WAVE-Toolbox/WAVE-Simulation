@@ -26,7 +26,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     } else {
     useHybridFreeSurface = true;
     }
-
+    
     if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
         setFDOrder(config.get<std::string>("spatialFDorderFilename"));
@@ -358,7 +358,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
         common::Stencil1D<ValueType> stencilId(1);
-        common::Stencil3D<ValueType> stencil(stencilId, stencilFDmap[spatialFDorderVec.at(0)], stencilId);
+        common::Stencil3D<ValueType> stencil(stencilFDmap[spatialFDorderVec.at(0)],stencilId, stencilId);
         DyfFreeSurfaceStencil.define(dist, stencil);
         DyfFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
     }
@@ -435,7 +435,6 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     DybFreeSurfaceSparse.fillFromAssembly(assembly);
 
     if (useHybridFreeSurface)
-
     {
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
@@ -444,7 +443,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         common::Stencil1D<ValueType> stencilBD;
         stencilBD.transpose(stencilFDmap[spatialFDorderVec.at(0)]);
         stencilBD.scale(-1);
-        common::Stencil3D<ValueType> stencil(stencilId, stencilBD, stencilId);
+        common::Stencil3D<ValueType> stencil(stencilBD,stencilId, stencilId);
 
         DybFreeSurfaceStencil.define(dist, stencil);
         DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
