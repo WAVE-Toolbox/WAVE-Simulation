@@ -21,9 +21,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     DT = config.get<ValueType>("DT");
     setFDCoef();
 
-    if (config.get<IndexType>("partitioning") != 1)
+    if (config.get<IndexType>("partitioning") != 1){
         useSparse = true;
-    useSparseFreeSurface = true;
+    } else {
+    useHybridFreeSurface = true;
+    }
 
     if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
@@ -57,7 +59,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     DT = config.get<ValueType>("DT");
 
     useSparse = true;
-    useSparseFreeSurface = true;
+
     SCAI_ASSERT(config.get<IndexType>("partitioning") != 1, "grid partition is not available for varoable FDorders")
 
     useVarFDorder = true;
@@ -341,7 +343,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-                if (useSparseFreeSurface)
+                if (!useHybridFreeSurface)
                     assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff) / DH); // push all coefficients
                 else if (ZERO != diffCoeff)
                     assembly.push(ownedIndex, columnIndex, -diffCoeff / DH); // push only diffs to stencil matrix
@@ -352,7 +354,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
     DyfFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
     DyfFreeSurfaceSparse.fillFromAssembly(assembly);
 
-    if (!useSparseFreeSurface) {
+    if (useHybridFreeSurface) {
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
         common::Stencil1D<ValueType> stencilId(1);
@@ -421,7 +423,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 
             if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
                 IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z); // push all coefficients
-                if (useSparseFreeSurface)
+                if (!useHybridFreeSurface)
                     assembly.push(ownedIndex, columnIndex, (fdCoeff - diffCoeff) / modelCoordinates.getDH(coordinate));
                 else if (ZERO != diffCoeff)
                     assembly.push(ownedIndex, columnIndex, -diffCoeff / modelCoordinates.getDH(coordinate)); // push only diffs to stencil matrix
@@ -432,7 +434,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
     DybFreeSurfaceSparse.fillFromAssembly(assembly);
 
-    if (!useSparseFreeSurface)
+    if (useHybridFreeSurface)
 
     {
         // define the stencil matrix for hybrid matrix
@@ -1631,7 +1633,7 @@ IndexType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getSpatial
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface() const
 {
-    if (useSparseFreeSurface)
+    if (!useHybridFreeSurface)
         return DybFreeSurfaceSparse;
     else
         return DybFreeSurfaceHybrid;
@@ -1641,7 +1643,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 template <typename ValueType>
 scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDybFreeSurface()
 {
-    if (useSparseFreeSurface)
+    if (!useHybridFreeSurface)
         return DybFreeSurfaceSparse;
     else
         return DybFreeSurfaceHybrid;
@@ -1652,7 +1654,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid)) {
         return (DybStaggeredXFreeSurface);
-    } else if (useSparseFreeSurface) {
+    } else if (!useHybridFreeSurface) {
         return DybFreeSurfaceSparse;
     } else {
         return DybFreeSurfaceHybrid;
@@ -1665,7 +1667,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid)) {
         return (DybStaggeredZFreeSurface);
-    } else if (useSparseFreeSurface) {
+    } else if (!useHybridFreeSurface) {
         return DybFreeSurfaceSparse;
     } else {
         return DybFreeSurfaceHybrid;
@@ -1676,7 +1678,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface() const
 {
-    if (useSparseFreeSurface)
+    if (!useHybridFreeSurface)
         return DyfFreeSurfaceSparse;
     else
         return DyfFreeSurfaceHybrid;
@@ -1686,7 +1688,7 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 template <typename ValueType>
 scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyfFreeSurface()
 {
-    if (useSparseFreeSurface)
+    if (!useHybridFreeSurface)
         return DyfFreeSurfaceSparse;
     else
         return DyfFreeSurfaceHybrid;
