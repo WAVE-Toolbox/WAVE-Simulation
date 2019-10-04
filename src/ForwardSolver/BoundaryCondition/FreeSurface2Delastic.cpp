@@ -14,7 +14,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonalDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx)
 {
 
-/* Apply horizontal update, which replaces the vertical one 
+    /* Apply horizontal update, which replaces the vertical one 
     * On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) (vxx) where mu = sWaveModulus and pi = pWaveModulus
     * The original update,
@@ -26,7 +26,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::
     *                      = scaleHorizontalUpdate*(vxx)  -  scaleVerticalUpdate*Vyy 
     * The update of szz is calculated the same way   
     */
-    
+
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Apply horizontal update, which replaces the vertical one */
@@ -37,7 +37,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Delastic<ValueType>::
     temp *= sumHorizonalDerivative;
 
     Sxx += temp;
-    
+
     // scaleVerticalUpdate is a sparse vector with non zeors at the free surface
     temp = scaleVerticalUpdate;
     temp *= vyy;

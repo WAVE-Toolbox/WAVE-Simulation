@@ -32,8 +32,8 @@ namespace KITGPI
                 using FreeSurfaceVisco<ValueType>::scaleRelaxationHorizontalUpdate; //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
                 using FreeSurfaceVisco<ValueType>::scaleStressVerticalUpdate;       //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
                 using FreeSurfaceVisco<ValueType>::scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
-                using FreeSurfaceVisco<ValueType>::selectHorizontalUpdate;          //!< Vector, which sets everything besides the free surface to zero
-                using FreeSurfaceVisco<ValueType>::temp;                            //!< temporary Sparse Vector (lives as long as the forward solver)
+                using FreeSurfaceVisco<ValueType>::selectFreeSurface;
+                using FreeSurfaceVisco<ValueType>::temp; //!< temporary Sparse Vector (lives as long as the forward solver)
                 using FreeSurfaceVisco<ValueType>::active;
             };
         } /* end namespace BoundaryCondition */

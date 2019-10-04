@@ -65,36 +65,28 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::in
 
     derivatives.useFreeSurface = true;
 
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);                          /* get local indices based on used distribution */
-    IndexType numLocalIndices = localIndices.size();              // Number of local indices
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
 
-    lama::DenseVector<ValueType> temp(dist, 0.0);
-    /* Get write access to local part of scaleHorizontalUpdate */
-    auto write_selectFreeSurface = hostWriteAccess(temp.getLocalValues());
+    lama::VectorAssembly<ValueType> assemblyZeros;
+    lama::VectorAssembly<ValueType> assemblyOnes;
 
-    IndexType rowGlobal;
-    IndexType rowLocal;
+    setZeroFreeSurface.setSameValue(dist, 1.0);
+    selectFreeSurface.setSameValue(dist, 0.0);
 
-    for (IndexType i = 0; i < numLocalIndices; i++) {
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
 
-        rowGlobal = read_localIndices[i];
-        rowLocal = dist->global2Local(rowGlobal);
-
-        /* Determine if the current grid point is located on the surface */
-        if (modelCoordinates.locatedOnSurface(rowGlobal)) {
-
-            /* Set horizontal update to 1 at the surface and leave it zero else */
-            write_selectFreeSurface[rowLocal] = 1.0;
+        if (modelCoordinates.locatedOnSurface(ownedIndex)) {
+            assemblyZeros.push(ownedIndex, 0);
+            assemblyOnes.push(ownedIndex, 1);
         }
     }
-    write_selectFreeSurface.release();
-    selectFreeSurface = temp;
+    selectFreeSurface.fillFromAssembly(assemblyOnes);
+    setZeroFreeSurface.fillFromAssembly(assemblyZeros);
 
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }
+
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<float>;
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<double>;

@@ -1,4 +1,5 @@
 #include "Receivers.hpp"
+#include "../CheckParameter/CheckParameter.hpp"
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
@@ -36,9 +37,11 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
     if (config.get<bool>("initReceiverFromSU")) {
         su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename"), modelCoordinates.getDH());
-    } else
+    } else {
         readAllSettings(allSettings, std::string(config.get<std::string>("ReceiverFilename") + ".txt"));
+    }
 
+    CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
@@ -62,8 +65,16 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     std::vector<receiverSettings> allSettings;
     if (config.get<bool>("initReceiverFromSU")) {
         su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates.getDH());
-    } else
+    } else {
         readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
+    }
+
+    try {
+        CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
+    } catch (scai::common::Exception &e) {
+        HOST_PRINT(dist_wavefield->getCommunicatorPtr(), "Message from receiver.cpp init: Error while reading receiver settings for shot " << shotNumber);
+        COMMON_THROWEXCEPTION("e.what()");
+    }
 
     if (config.get<bool>("useReceiversPerShot")) {
         useReceiversPerShot = true;
@@ -97,7 +108,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, std::vector<receiverSettings> &allReceiverSettings)
+void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allReceiverSettings)
 {
     if (config.get<bool>("initReceiverFromSU"))
         su.readAllSettingsFromSU(allReceiverSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNr), config.get<ValueType>("DH"));

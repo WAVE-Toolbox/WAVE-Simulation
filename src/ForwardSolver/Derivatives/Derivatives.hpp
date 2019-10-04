@@ -234,7 +234,7 @@ namespace KITGPI
 
                 scai::IndexType useFreeSurface = 0; //!< Switch to use free surface or not
                 bool useSparse = false;             //!< Switch to use Sparse Matrices
-                bool useSparseFreeSurface = false; 
+                bool useHybridFreeSurface = false; 
                 bool useVarFDorder = false;         //!< Switch to use variable FDorder (layered)
                 bool useVarGrid = false;            //!< Switch to use variable Grid
                 bool isElastic = false;             //!< Switch to use variable Grid

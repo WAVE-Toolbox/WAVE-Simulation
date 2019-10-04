@@ -231,6 +231,7 @@ int main(int argc, const char *argv[])
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
+    CheckParameter::checkSources(sourceSettings,modelCoordinates,commAll);
     IndexType numshots = uniqueShotNos.size();
 
     /* general block distribution of shot domains accorting to their weights */
@@ -263,8 +264,9 @@ int main(int argc, const char *argv[])
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
         Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+
         sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-        
+
         CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model,modelCoordinates,shotNumber);
 
         bool writeSource_bool;
@@ -306,7 +308,7 @@ int main(int argc, const char *argv[])
 
             if (tStep % 100 == 0 && tStep != 0) {
                  end_t2= common::Walltime::get();
-                HOST_PRINT(commShot, " ", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int) ((tStepEnd/100) * (end_t2 - start_t2)) << " / " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int) ((tStepEnd/100) * (end_t2 - start_t2)) << " / " << (int) ((tStepEnd/100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
             }
             
             
@@ -316,7 +318,7 @@ int main(int argc, const char *argv[])
         }
 
         end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n");
+        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n","");
 
         receivers.getSeismogramHandler().normalize();
 

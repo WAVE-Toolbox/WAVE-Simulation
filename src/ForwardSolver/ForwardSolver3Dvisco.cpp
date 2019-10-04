@@ -416,7 +416,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     if (useFreeSurface == 1) {
         update = vxx + vzz;
         FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
-        FreeSurface.setMemoryVariableToZero(Ryy);
+        FreeSurface.setSurfaceZero(Syy);
+        FreeSurface.setSurfaceZero(Ryy);
     }
 
     /* Apply the damping boundary */

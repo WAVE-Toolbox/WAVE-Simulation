@@ -84,6 +84,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
     DzbSparse.redistribute(dist, dist);
 
     if (useVarGrid) {
+        InterpolationStaggeredX.redistribute(dist, dist);
+        InterpolationStaggeredZ.redistribute(dist, dist);
+        InterpolationFull.redistribute(dist, dist);
         if (isElastic) {
             DyfStaggeredXSparse.redistribute(dist, dist);
             DyfStaggeredZSparse.redistribute(dist, dist);
@@ -93,12 +96,8 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::redistributeMatrices
                 DybStaggeredZSparse.redistribute(dist, dist);
             }
 
-            InterpolationStaggeredX.redistribute(dist, dist);
-            InterpolationStaggeredZ.redistribute(dist, dist);
             InterpolationStaggeredXZ.redistribute(dist, dist);
         }
-
-        InterpolationFull.redistribute(dist, dist);
     }
 
     if (useFreeSurface == 1) {
@@ -142,11 +141,11 @@ scai::IndexType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getNumInt
 {
     IndexType numInterpMatrices = 0;
     if (useVarGrid) {
-        // + interpolation for Sxx,Syy,Szz,P
-        numInterpMatrices += 1;
+        // + interpolation for (a^  Sxx,Syy,Szz,P),Vx,Vz,
+        numInterpMatrices += 3;
         if (isElastic) {
-            // + Interpolation for Vx,Vz,Sxz
-            numInterpMatrices += 3;
+            // + Interpolation for Sxz
+            numInterpMatrices += 1;
         }
     }
 
@@ -201,24 +200,6 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     Dyf.setContextPtr(ctx);
     Dyb.setContextPtr(ctx);
 
-    lama::SyncKind syncKind = lama::SyncKind::SYNCHRONOUS;
-
-    // by default do matrix-vector operations synchronously, but can be set via environment
-    bool isSet;
-
-    if (common::Settings::getEnvironment(isSet, "SCAI_ASYNCHRONOUS")) {
-        if (isSet) {
-            syncKind = lama::SyncKind::ASYNC_COMM;
-        }
-    }
-
-    Dxf.setCommunicationKind(syncKind);
-    Dzf.setCommunicationKind(syncKind);
-    Dxb.setCommunicationKind(syncKind);
-    Dzb.setCommunicationKind(syncKind);
-    Dyf.setCommunicationKind(syncKind);
-    Dyb.setCommunicationKind(syncKind);
-
     Dxb.assignTranspose(Dxf);
     Dxb *= -1.0;
     Dzb.assignTranspose(Dzf);
@@ -253,15 +234,15 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     SCAI_REGION("initializeMatrices")
 
     HOST_PRINT(comm, "Initialization of the matrices: \n");
-    HOST_PRINT(comm, "", "Dxf,"<<std::flush);
+    HOST_PRINT(comm, "", "Dxf," << std::flush);
     this->calcDxf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzf,"<<std::flush);
+    HOST_PRINT(comm, "", "Dzf," << std::flush);
     this->calcDzf(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dxb,"<<std::flush);
+    HOST_PRINT(comm, "", "Dxb," << std::flush);
     this->calcDxb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dyb,"<<std::flush);
+    HOST_PRINT(comm, "", "Dyb," << std::flush);
     this->calcDyb(modelCoordinates, dist);
-    HOST_PRINT(comm, "", "Dzb,"<<std::flush);
+    HOST_PRINT(comm, "", "Dzb," << std::flush);
     this->calcDzb(modelCoordinates, dist);
 
     DxfSparse.setContextPtr(ctx);
@@ -276,18 +257,18 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     DzfSparse.scale(this->DT);
     DzbSparse.scale(this->DT);
 
-    if (!((useFreeSurface == 1) && (useVarGrid))){
-        HOST_PRINT(comm, "", "Dyf,"<<std::flush);
+    if (!((useFreeSurface == 1) && (useVarGrid))) {
+        HOST_PRINT(comm, "", "Dyf," << std::flush);
         this->calcDyf(modelCoordinates, dist);
         DyfSparse.setContextPtr(ctx);
         DyfSparse.scale(this->DT);
     }
 
     if ((isElastic) && (useVarGrid)) {
-        HOST_PRINT(comm, "", "DyfStaggeredX,"<<std::flush);
+        HOST_PRINT(comm, "", "DyfStaggeredX," << std::flush);
         this->calcDyfStaggeredX(modelCoordinates, dist);
 
-        HOST_PRINT(comm, "", "DyfStaggeredZ,"<<std::flush);
+        HOST_PRINT(comm, "", "DyfStaggeredZ," << std::flush);
         this->calcDyfStaggeredZ(modelCoordinates, dist);
 
         DyfStaggeredXSparse.setContextPtr(ctx);
@@ -297,9 +278,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
         DyfStaggeredZSparse *= this->DT;
 
         if (useFreeSurface != 1) {
-            HOST_PRINT(comm, "", "DybStaggeredX,"<<std::flush);
+            HOST_PRINT(comm, "", "DybStaggeredX," << std::flush);
             this->calcDybStaggeredX(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZ,"<<std::flush);
+            HOST_PRINT(comm, "", "DybStaggeredZ," << std::flush);
             this->calcDybStaggeredZ(modelCoordinates, dist);
 
             DybStaggeredXSparse.setContextPtr(ctx);
@@ -311,9 +292,9 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
 
     if (useVarGrid) {
         this->calcInterpolationFull(modelCoordinates, dist);
+        this->calcInterpolationStaggeredX(modelCoordinates, dist);
+        this->calcInterpolationStaggeredZ(modelCoordinates, dist);
         if (isElastic) {
-            this->calcInterpolationStaggeredX(modelCoordinates, dist);
-            this->calcInterpolationStaggeredZ(modelCoordinates, dist);
             this->calcInterpolationStaggeredXZ(modelCoordinates, dist);
         }
     }
@@ -333,23 +314,23 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-    HOST_PRINT(comm, "", "DyfFreeSurface,"<<std::flush);
+    HOST_PRINT(comm, "", "DyfFreeSurface," << std::flush);
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
     this->getDyfFreeSurface() *= this->DT;
 
     if (isElastic) {
         if (!useVarGrid) {
-            HOST_PRINT(comm, "", "DybFreeSurface,"<<std::flush);
+            HOST_PRINT(comm, "", "DybFreeSurface," << std::flush);
             this->calcDybFreeSurface(modelCoordinates, dist);
             this->getDybFreeSurface().setContextPtr(ctx);
             this->getDybFreeSurface() *= this->DT;
 
         } else {
             //DyfSparse.purge(); // DyfSparse won't be used with varGrid+FreeSurface
-            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface,"<<std::flush);
+            HOST_PRINT(comm, "", "DybStaggeredXFreeSurface," << std::flush);
             this->calcDybStaggeredXFreeSurface(modelCoordinates, dist);
-            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface,"<<std::flush);
+            HOST_PRINT(comm, "", "DybStaggeredZFreeSurface," << std::flush);
             this->calcDybStaggeredZFreeSurface(modelCoordinates, dist);
             DybStaggeredXFreeSurface.setContextPtr(ctx);
             DybStaggeredZFreeSurface.setContextPtr(ctx);
@@ -367,16 +348,16 @@ template <typename ValueType>
 scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     SCAI_ASSERT(isSetup, "call setup function before init");
-    
-    if(DxbSparse.getNumRows()==0) {
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb,"<<std::flush);
-    this->calcDxb(modelCoordinates, dist);
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb,"<<std::flush);
-    this->calcDyb(modelCoordinates, dist);
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb,"<<std::flush);
-    this->calcDzb(modelCoordinates, dist);
+
+    if (DxbSparse.getNumRows() == 0) {
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Dxb," << std::flush);
+        this->calcDxb(modelCoordinates, dist);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Dyb," << std::flush);
+        this->calcDyb(modelCoordinates, dist);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "Dzb," << std::flush);
+        this->calcDzb(modelCoordinates, dist);
     }
-    
+
     auto temp = DxbSparse;
     temp += DybSparse;
     temp += DzbSparse;
@@ -387,11 +368,7 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD3
     DybSparse.purge();
     temp -= DzbSparse;
     DzbSparse.purge();
-    
-    
-    //     auto temp2 = DxfSparse;
-    //     temp2 = transpose(temp);
-    //     temp-=temp2;
+
     return (temp);
 }
 

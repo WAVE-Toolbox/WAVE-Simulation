@@ -181,7 +181,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     vX += update;
 
     if (DinterpolateStaggeredX) {
-        // interpolation for missing pressure points
+        /* interpolation for vx ghost points at the variable grid interfaces*/
         update_temp.swap(vX);
         vX = *DinterpolateStaggeredX * update_temp;
     }
@@ -209,6 +209,15 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= inverseDensityAverageY;
     vY += update;
 
+    if (DinterpolateFull) {
+        /* interpolation for vy ghost pointsa t the variable grid interfaces.
+         This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vY);
+        vY = *DinterpolateFull * update_temp;
+    }
+
     /* -------------------- */
     /* update normal stress */
     /* -------------------- */
@@ -234,7 +243,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     Syy -= 2.0 * update;
 
     if (DinterpolateFull) {
-        // interpolation for missing pressure points
+        // interpolation for Sxx/Sxx ghost points at the variable grid interfaces.
         update_temp.swap(Sxx);
         Sxx = *DinterpolateFull * update_temp;
 
@@ -259,9 +268,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulusAverageXY;
     Sxy += update;
 
+    if (DinterpolateStaggeredX) {
+        /* interpolation for Sxy ghost points at the variable grid interfaces.
+         This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(Sxy);
+        Sxy = *DinterpolateStaggeredX * update_temp;
+    }
+
     /* Apply free surface to horizontal stress update */
     if (useFreeSurface == 1) {
         FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
+        FreeSurface.setSurfaceZero(Syy);
     }
 
     /* Apply the damping boundary */

@@ -31,13 +31,10 @@ namespace KITGPI
 
                 void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT);
 
-                void setMemoryVariableToZero(scai::lama::Vector<ValueType> &Ryy);
-
               protected:
                 using FreeSurface<ValueType>::active;
-
-                scai::lama::SparseVector<ValueType> setSurfaceZero;                  //!< Vector, which sets the wavefields at the surface to zero
-                scai::lama::SparseVector<ValueType> selectHorizontalUpdate;          //!< Vector, which sets everything besides the free surface to zero
+                using FreeSurface<ValueType>::setZeroFreeSurface;
+                scai::lama::SparseVector<ValueType> selectFreeSurface;               //!< Vector, which sets everything besides the free surface to zero
                 scai::lama::SparseVector<ValueType> scaleStressVerticalUpdate;       //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
                 scai::lama::SparseVector<ValueType> scaleStressHorizontalUpdate;     //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
                 scai::lama::SparseVector<ValueType> scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives

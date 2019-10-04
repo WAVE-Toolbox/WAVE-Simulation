@@ -78,7 +78,6 @@ namespace KITGPI
 
                 using Derivatives<ValueType>::useFreeSurface;
                 using Derivatives<ValueType>::useSparse;
-                using Derivatives<ValueType>::useSparseFreeSurface;
                 using Derivatives<ValueType>::useVarGrid;
                 using Derivatives<ValueType>::isElastic;
 

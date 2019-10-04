@@ -288,7 +288,8 @@ void KITGPI::ForwardSolver::FD2Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     /* Apply free surface to stress update */
     if (useFreeSurface) {
         FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx, Rxx, DThalf);
-        FreeSurface.setMemoryVariableToZero(Ryy);
+        FreeSurface.setSurfaceZero(Syy);
+        FreeSurface.setSurfaceZero(Ryy);
     }
 
     /* Apply the damping boundary */
