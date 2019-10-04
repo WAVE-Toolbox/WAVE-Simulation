@@ -91,7 +91,6 @@ find_package( Geographer CONFIG
               PATHS ${Geographer_PATH_HINTS} )
 message( "Geographer_LIBRARIES= \t" ${Geographer_LIBRARIES}$ )
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #paths for supermuc; TODO: turn them to input arguments
 FIND_PACKAGE( Zoltan2 PATHS "/home/hpc/pr87si/di36qin/Code/Trilinos/build/packages/zoltan2/")
