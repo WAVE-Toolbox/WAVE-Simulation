@@ -8,8 +8,14 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # Variable grid configuration
 useVariableGrid=1
-partitioning=2 # 0=Block Distribution 1=Grid Distribution 2=Graph Partitioning
-useVariableFDoperators=1
+partitioning=2 
+useGraphPartitioning=1
+useVariableFDoperators=0
+
+#possible tool options: geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom, parMetisGraph
+graphPartitionTool=geoKmeans
+
+mappingRenumbering=0
 
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
@@ -22,6 +28,7 @@ partitionFilename=partition/partition
 coordinateWrite=0                                  # 1=coordinates will be written to disk, 0=not
 coordinateFilename=configuration/coordinates       
 
+BoundaryWeights=2.0
 weightsWrite=1                                  # 1=weigths will be written to disk, 0=not
 weightsFilename=partition/weights       
 
@@ -34,6 +41,7 @@ NZ=305                    # horizontal 2
 # define Partitioning
 numShotDomains=1                  # Number of shot domains
 ShotDomainDefinition=0  # =0: Number of shot domains will be taken from ProcNS
+
 
 # distance between two grid points
 DH=17                     # in meter

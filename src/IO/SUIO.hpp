@@ -358,14 +358,17 @@ void readSingleDataSU(std::string const &filename, scai::lama::Vector<ValueType>
     const char *filetemp = filename.c_str();
     FILE *pFile;
     pFile = fopen(filetemp, "rb");
-    fread(&tr, 1, 240, pFile);
+	
+	size_t notUsed=0;
+    notUsed = fread(&tr, 1, 240, pFile);
 
     scai::hmemo::HArray<float> dataTmp;
     scai::lama::DenseVector<float> traceTmp;
 
     scai::IndexType nSkip = (240 + tr.ns * 4) * traceNumber;
     fseek(pFile, nSkip, SEEK_CUR);
-    fread(&tr.data[0], 4, tr.ns, pFile);
+    notUsed = fread(&tr.data[0], 4, tr.ns, pFile);
+	(void) notUsed;
 
     dataTmp.setRawData(tr.ns, tr.data);
     traceTmp.assign(dataTmp);
@@ -398,7 +401,8 @@ void readHeaderSU(std::string const &filename, std::vector<Segy> &header)
         int c;
         while ((c = fgetc(pFile)) != EOF) {
             ungetc(c, pFile);
-            fread(&tr, 1, 240, pFile);
+            size_t notUsed=fread(&tr, 1, 240, pFile);
+			(void) notUsed;
             header.push_back(tr);
             fseek(pFile, 4 * tr.ns, SEEK_CUR);
         }
