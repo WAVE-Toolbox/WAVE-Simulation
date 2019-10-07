@@ -319,6 +319,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setTauS(scai::lama::Vect
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Modelparameter.calcAverageMatrixX")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -355,7 +356,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixX(Acqui
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
-
+    SCAI_REGION("Modelparameter.calcAverageMatrixY")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -398,6 +399,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixY(Acqui
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Modelparameter.calcAverageMatrixZ")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -515,6 +517,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calc4PointAverageMatrixR
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Modelparameter.calcAverageMatrixXY")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -546,6 +549,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXY(Acqu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Modelparameter.calcAverageMatrixXZ")
     //     calcAverageMatrix(sWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::calcNumberRowElements_SWaveModulusAverageMatrixXZ, &Modelparameter<ValueType>::setRowElements_SWaveModulusAverageMatrixXZ, modelCoordinates, dist);
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
@@ -579,6 +583,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixXZ(Acqu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Modelparameter.calcAverageMatrixYZ")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 

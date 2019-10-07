@@ -233,7 +233,7 @@ namespace KITGPI
         template <typename ValueType>
         scai::lama::DenseVector<ValueType> Weights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
-
+            SCAI_REGION("KITGPI.Weights")
             // Weights of single operations; valid for all cases
             ValueType MatrixVector2ndOrderWeight = 1.00;
             ValueType VectorAssignmentWeight = 0.25;
@@ -420,6 +420,7 @@ namespace KITGPI
         template <typename ValueType>
         dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::CommunicatorPtr commShot, scai::dmemo::DistributionPtr BlockDist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
+            SCAI_REGION("KITGPI.graphPartitionAll")
 
 #ifdef USE_GEOGRAPHER
             double start_t, end_t; /* For timing */

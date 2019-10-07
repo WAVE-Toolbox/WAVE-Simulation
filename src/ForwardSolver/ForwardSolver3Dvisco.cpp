@@ -20,6 +20,8 @@ ValueType KITGPI::ForwardSolver::FD3Dvisco<ValueType>::estimateMemory(Configurat
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, const Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
+    SCAI_REGION("ForwardSolver.init3Dvisco");
+
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
@@ -123,8 +125,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareForModelling(Modelparam
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
-
-    SCAI_REGION("timestep");
+    SCAI_REGION("ForwardSolver.timestep3Dvisco");
 
     /* Get references to required modelparameter */
     auto const &pWaveModulus = model.getPWaveModulus();

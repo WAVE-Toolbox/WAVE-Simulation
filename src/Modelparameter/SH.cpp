@@ -208,7 +208,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
 
-    SCAI_REGION("initializeMatrices")
+    SCAI_REGION("Modelparameter.SH.initializeMatrices")
     // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
     this->calcAverageMatrixX(modelCoordinates, dist);
     this->calcAverageMatrixY(modelCoordinates, dist);
@@ -232,6 +232,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
+        SCAI_REGION("Modelparameter.SH.calculateAveraging")
         // sxz and syz are on the same spot as vx and vy in acoustic modeling
         this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
         this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);

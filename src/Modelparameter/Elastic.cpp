@@ -257,7 +257,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
     if (dirtyFlagAveraging) {
-        SCAI_REGION("initializeMatrices")
+        SCAI_REGION("Modelparameter.Elastic.initializeMatrices")
 
         this->calcAverageMatrixX(modelCoordinates, dist);
         this->calcAverageMatrixY(modelCoordinates, dist);
@@ -294,6 +294,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
+        SCAI_REGION("Modelparameter.Elastic.calculateAveraging")
         this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
         this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
         this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
