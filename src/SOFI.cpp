@@ -4,6 +4,7 @@
 #include <scai/dmemo/GenBlockDistribution.hpp>
 #include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
+#include <scai/tracing.hpp>
 
 #include <iostream>
 #define _USE_MATH_DEFINES
@@ -54,7 +55,7 @@ int main(int argc, const char *argv[])
     verbose = config.get<bool>("verbose");
 
     std::string dimension = config.get<std::string>("dimension");
-    std::string equationType = config.get<std::string>("equationType");
+	std::string equationType = config.get<std::string>("equationType");
 
     /* inter node communicator */
     dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
@@ -66,6 +67,8 @@ int main(int argc, const char *argv[])
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
+
+    SCAI_REGION("SOFI.main")
 
     std::string settingsFilename; // filename for processor specific settings
     if (common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS")) {
@@ -110,14 +113,21 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     dmemo::DistributionPtr dist = nullptr;
-    if ((config.get<IndexType>("partitioning") == 0) || (config.get<IndexType>("partitioning") == 2)) {
-        //Block distribution = starting distribution for graph partitioner
-        dist = std::make_shared<dmemo::BlockDistribution>(modelCoordinates.getNGridpoints(), commShot);
-    } else if (config.get<IndexType>("partitioning") == 1) {
-        SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
-        dist = Partitioning::gridPartition<ValueType>(config, commShot);
-    } else {
-        COMMON_THROWEXCEPTION("unknown partioning method");
+    IndexType configPartitioning = config.get<IndexType>("partitioning");
+    switch( configPartitioning )
+    {
+        case 0: 
+        case 2: 
+        case 3: 
+            //Block distribution = starting distribution for graph partitioner
+            dist = std::make_shared<dmemo::BlockDistribution>(modelCoordinates.getNGridpoints(), commShot);
+            break;
+        case 1:
+            SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
+            dist = Partitioning::gridPartition<ValueType>(config, commShot);
+            break;
+        default:
+            COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
     if (config.get<bool>("coordinateWrite"))
@@ -156,24 +166,37 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, "\n\n ========================================================================\n\n")
 
     /* --------------------------------------- */
-    /* Call partioner */
+    /* Call partitioner                        */
     /* --------------------------------------- */
-    if (config.get<IndexType>("partitioning") == 2) {
-             start_t = common::Walltime::get();
-        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives,modelCoordinates);
+    if (configPartitioning == 2) {
+        SCAI_REGION("SOFI.partitioningGEO")
+        start_t = common::Walltime::get();
+        dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives, modelCoordinates);
         end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished graph partitioning in " << end_t - start_t << " sec.\n\n");
+        HOST_PRINT(commAll, "", "Finished Geographer graph partitioning in " << end_t - start_t << " sec.\n\n");
+    }
+
+    if (configPartitioning == 3) {
+        SCAI_REGION("SOFI.partitioningMetis")
+        start_t = common::Walltime::get();
+        dist = Partitioning::metisPartition(config, ctx, commShot, dist, *derivatives, modelCoordinates);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished ParMetis graph partitioning in " << end_t - start_t << " sec.\n\n");
     }
 
     /* --------------------------------------- */
     /* Calculate derivative matrizes           */
     /* --------------------------------------- */
-    start_t = common::Walltime::get();
 
-    derivatives->init(dist, ctx, modelCoordinates, commShot);
+    {
+        SCAI_REGION("SOFI.initMatrices")
 
-    end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "\n", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+        start_t = common::Walltime::get();
+        derivatives->init(dist, ctx, modelCoordinates, commShot);
+        end_t = common::Walltime::get();
+
+        HOST_PRINT(commAll, "\n", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    }
 
     //snapshot of the memory count (freed memory doesn't reduce maxAllocatedBytes())
     // std::cout << "+derivatives "  << hmemo::Context::getHostPtr()->getMemoryPtr()->maxAllocatedBytes() << std::endl;
@@ -201,29 +224,37 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Modelparameter                          */
     /* --------------------------------------- */
-    start_t = common::Walltime::get();
-    model->init(config, ctx, dist, modelCoordinates);
-    model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-    end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
+    {
+        SCAI_REGION("SOFI.initModel")
+        start_t = common::Walltime::get();
+        model->init(config, ctx, dist, modelCoordinates);
+        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
+    }
     
     /* --------------------------------------- */
     /* Wavefields                              */
     /* --------------------------------------- */
-    start_t = common::Walltime::get();
-    wavefields->init(ctx, dist);
-    end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
+    {
+        SCAI_REGION("SOFI.initWavefields")
+        start_t = common::Walltime::get();
+        wavefields->init(ctx, dist);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
+    }
+
     /* --------------------------------------- */
     /* Forward solver                          */
     /* --------------------------------------- */
-
-
-    start_t = common::Walltime::get();
-    solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
-    solver->prepareForModelling(*model, config.get<ValueType>("DT"));
-    end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
+    {
+        SCAI_REGION("SOFI.initForwardSolver")
+        start_t = common::Walltime::get();
+        solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
+        solver->prepareForModelling(*model, config.get<ValueType>("DT"));
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
+    }
 
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
@@ -260,6 +291,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
+        SCAI_REGION("SOFI.shotLoop")
         IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
@@ -299,6 +331,7 @@ int main(int argc, const char *argv[])
         /* --------------------------------------- */
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
+            SCAI_REGION("SOFI.timeLoop")
             if ((tStep-1)% 100 == 0) {
                  start_t2= common::Walltime::get();
                 //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");

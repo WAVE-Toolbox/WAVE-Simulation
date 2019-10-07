@@ -21,6 +21,7 @@
 
 #include <scai/common/ContextType.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
+#include <scai/partitioning/Partitioning.hpp>
 
 namespace KITGPI
 {
@@ -462,5 +463,51 @@ namespace KITGPI
             return (BlockDist);
 #endif
         }
+
+        template <typename ValueType>
+        dmemo::DistributionPtr metisPartition(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::CommunicatorPtr commShot, scai::dmemo::DistributionPtr BlockDist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+        {
+            SCAI_REGION("KITGPI.metisPartitionAll")
+
+            auto loc = hmemo::Context::getHostPtr();
+
+            HOST_PRINT(commShot, "", "caclulate graph for ParMetis \n");
+            auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
+
+            HOST_PRINT(commShot, "", "caclulate weights for ParMetis \n");
+
+            auto &&weights = Weights(config, BlockDist, modelCoordinates);
+
+            HOST_PRINT(commShot, "", "create partitioning by ParMetis \n");
+
+            graph.setContextPtr(loc);
+
+            scai::dmemo::DistributionPtr newDist = BlockDist;
+
+            if (scai::partitioning::Partitioning::canCreate("PARMETIS")) {
+
+                auto myPartitioning = scai::partitioning::Partitioning::create("PARMETIS");
+
+                scai::hmemo::HArray<IndexType> newLocalOwners;
+
+                float procWeight = 1.0f;
+   
+                scai::hmemo::HArray<float> vertexWeights;    // currently only float is supported
+
+                weights.buildLocalValues(vertexWeights);                
+
+                myPartitioning->squarePartitioningW(newLocalOwners, graph, vertexWeights, procWeight);
+    
+                auto plan = dmemo::redistributePlanByNewOwners(newLocalOwners, BlockDist);
+
+                newDist = plan.getTargetDistributionPtr();
+            }
+            else {
+                HOST_PRINT(commShot, "", "ATTENTION: PARMETIS partitioning not supported, will use BLOCK distribution")
+            }
+
+            return newDist;
+        }
+
     }
 }

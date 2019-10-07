@@ -94,6 +94,7 @@ ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryU
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDxfStencil")
     // Attention: keep in mind topology NZ x NY x NX
 
     common::Stencil1D<ValueType> stencilId(1);
@@ -110,6 +111,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(scai::d
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDxfSparse")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -156,6 +158,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDyfStencil")
     common::Stencil1D<ValueType> stencilId(1);
     common::Stencil3D<ValueType> stencil(stencilFDmap[spatialFDorderVec.at(0)], stencilId, stencilId);
     // use dist for distribution
@@ -171,6 +174,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(scai::d
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDyfSparse")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -233,6 +237,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDzfStencil")
     common::Stencil1D<ValueType> stencilId(1);
     common::Stencil3D<ValueType> stencil(stencilId, stencilFDmap[spatialFDorderVec.at(0)], stencilId);
     // use dist for distribution
@@ -248,6 +253,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(scai::d
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDzfSparse")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -293,6 +299,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDyfFreeSurface")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -372,6 +379,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybFreeSurface")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -458,6 +466,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggeredXFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybStaggeredXFreeSurface")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -542,6 +551,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggeredZFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybStaggeredZFreeSurface")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -628,6 +638,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDxbSparse")
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -674,6 +685,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybSparse")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -739,6 +751,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDyfStaggeredX")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -823,6 +837,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybStaggeredX")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -897,6 +912,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDyfStaggeredZ")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -982,6 +999,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDybStaggeredZ")
 
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -1058,6 +1076,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybStaggere
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcDzbSparse")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
 
@@ -1114,6 +1134,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolationFull(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcInterpolationFull")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
 
     dist->getOwnedIndexes(ownedIndexes);
@@ -1216,6 +1238,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolationStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcInterpolationStaggeredX")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
 
     dist->getOwnedIndexes(ownedIndexes);
@@ -1320,6 +1344,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolationStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcInterpolationStaggeredZ")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
 
     dist->getOwnedIndexes(ownedIndexes);
@@ -1424,6 +1450,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolationStaggeredXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
 {
+    SCAI_REGION("Derivatives.calcInterpolationStaggeredXZ")
+
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
 
     dist->getOwnedIndexes(ownedIndexes);
