@@ -156,7 +156,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm)
 {
 
-    SCAI_REGION("Derivatives.FDTD2D_initializeMatricesConst")
+    SCAI_REGION("Derivatives.FDTD2D.initializeMatricesConst")
 
     HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
 
@@ -194,7 +194,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    SCAI_REGION("Derivatives.FDTD2D_initializeMatricesVar")
+    SCAI_REGION("Derivatives.FDTD2D.initializeMatricesVar")
 
     HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
 
@@ -243,8 +243,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-    SCAI_REGION("Derivatives.FDTD2D_initializeFreeSurfaceMatrices")
-
+    SCAI_REGION("Derivatives.FDTD2D.initializeFreeSurfaceMatrices")
     HOST_PRINT(comm, "", "Initialization of the free surface matrices  \n");
     this->calcDyfFreeSurface(modelCoordinates, dist);
     this->getDyfFreeSurface().setContextPtr(ctx);
@@ -291,6 +290,7 @@ lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueT
 template <typename ValueType>
 scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
+    SCAI_REGION("Derivatives.FDTD2D.getGraph")
     SCAI_ASSERT(isSetup, "call setup function before init");
 
     if (DxbSparse.getNumRows() == 0) {
@@ -303,7 +303,8 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2
         this->calcDyb(modelCoordinates, dist);
     }
 
-    auto temp = DxbSparse;
+    decltype(DxbSparse) temp( scai::hmemo::Context::getHostPtr() );
+    temp = DxbSparse;
     temp += DybSparse;
     temp = transpose(temp);
     temp -= DxbSparse;
