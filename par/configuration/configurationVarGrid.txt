@@ -54,7 +54,7 @@ T=2                          # total simulation time in seconds
 spatialFDorder=4          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
-ModelRead=0               # 1=Model will be read from file, 2=regular Model will be read from file and meshed onto the disconitinous grid 0=generated on the fly
+ModelRead=0               # 1=Regular model will be read from file and meshed onto discontinuous grid if UseVariableGrid=1, 2=Variable grid model will be read from file,  0=generated on the fly
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
 

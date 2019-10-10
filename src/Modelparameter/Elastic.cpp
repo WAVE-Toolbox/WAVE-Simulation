@@ -91,8 +91,10 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(Configuration::Configuration
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
-{
-    if (config.get<IndexType>("ModelRead") == 1) {
+{    
+    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2 || config.get<IndexType>("UseVariableGrid") == 1, "Read variable model (ModelRead=2) not available if regular grid is chosen!")
+
+    if ((config.get<IndexType>("ModelRead") == 1 && config.get<IndexType>("UseVariableGrid") == 0) || (config.get<IndexType>("ModelRead") == 2)) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (elastic) parameter from file...\n");
 
@@ -100,7 +102,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
-    } else if (config.get<IndexType>("ModelRead") == 2) {
+    } else if (config.get<IndexType>("ModelRead") == 1 && config.get<IndexType>("UseVariableGrid") == 1) {
 
         Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));

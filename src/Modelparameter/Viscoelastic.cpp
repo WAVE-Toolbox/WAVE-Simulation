@@ -91,6 +91,8 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(Configuration::Con
 template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
+    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for Viscoelastic, variable grid is not available here!")
+
     if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoelastic) parameter from file...\n");
@@ -99,18 +101,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
         initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
-
-    } else if (config.get<IndexType>("ModelRead") == 2) {
-
-        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
-        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
-
-        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
-
-        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
-
-        init(dist, modelCoordinates, regularCoordinates);
-        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauP"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
