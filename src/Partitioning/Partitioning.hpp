@@ -204,9 +204,6 @@ namespace KITGPI
 #endif
             }
 
-            if (config.get<bool>("partitionWrite"))
-                IO::writeVector(partition, config.get<std::string>("partitionFilename"), config.get<IndexType>("fileFormat"));
-
             dmemo::DistributionPtr dist = scai::dmemo::generalDistributionByNewOwners(partition.getDistribution(), partition.getLocalValues());
 
             //redistribute all data to get metrics (uncommend for debugging or monitiring the partitioner results)
