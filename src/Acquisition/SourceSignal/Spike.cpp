@@ -42,6 +42,9 @@ void KITGPI::Acquisition::SourceSignal::Spike<ValueType>::calc(scai::lama::Dense
     /* this is for source[i] = 1.0 when t=tshift/dt; */
     temp_spike = 1.0;
     time_index = floor(Tshift / DT);
+    
+    SCAI_ASSERT(time_index<signal.size(),"Signal is shifted to Tshift > Tsimulation");
+    
     help.setValue(time_index, temp_spike);
 
     signal = AMP * help;
