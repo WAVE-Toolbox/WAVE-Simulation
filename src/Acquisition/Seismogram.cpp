@@ -11,12 +11,9 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
-    numSamples = rhs.numSamples;
-    numTracesGlobal = rhs.numTracesGlobal;
-    numTracesLocal = rhs.numTracesLocal;
     outputDT = rhs.outputDT;
     DT = rhs.DT;
-    type = rhs.type;
+    seismoType = rhs.seismoType;
     coordinates1D = rhs.coordinates1D;
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
@@ -31,12 +28,9 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    std::swap(numSamples, rhs.numSamples);
-    std::swap(numTracesGlobal, rhs.numTracesGlobal);
-    std::swap(numTracesLocal, rhs.numTracesLocal);
     std::swap(DT, rhs.DT);
     std::swap(outputDT, rhs.outputDT);
-    std::swap(type, rhs.type);
+    std::swap(seismoType, rhs.seismoType);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
     data.swap(rhs.data);
@@ -116,13 +110,14 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
     if (normalizeTraces == 1) {
 
-        SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+      //  SCAI_ASSERT(data.getNumRows() != 0, " seismogram data matrix has 0 rows (global traces). " << seismoType);
 
         scai::lama::DenseVector<ValueType> tempRow;
         ValueType tempMax;
         ValueType tempInverseMax;
 
-        for (IndexType i = 0; i < numTracesGlobal; i++) {
+        // why not loop over local traces (more efficient)?
+        for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             tempMax = 0.0;
             data.getRow(tempRow, i);
             tempMax = tempRow.max();
@@ -142,11 +137,12 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
 
-    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
+    //SCAI_ASSERT(data.getNumRows() != 0, " seismogram data matrix has 0 rows (global traces).  ");
 
     scai::lama::DenseVector<ValueType> tempRow;
-
-    for (IndexType i = 0; i < numTracesGlobal; i++) {
+    
+    // why not loop over local traces (more efficient)?
+    for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
         data.getRow(tempRow, i);
         for (IndexType j = 0; j < tempRow.size() - 1; j++) {
             tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
@@ -204,7 +200,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType s
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType trace)
 {
-    type = trace;
+    seismoType = trace;
 };
 
 //! \brief Setter function for the 1D coordinates of the traces
@@ -217,7 +213,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::DenseVector<IndexType> const &indeces)
 {
-    SCAI_ASSERT_ERROR(indeces.size() == numTracesGlobal, "Given traceType vector has wrong format");
+    SCAI_ASSERT_ERROR(indeces.size() == getNumTracesGlobal(), "Given traceType vector has wrong format");
     coordinates1D = indeces;
 };
 
@@ -245,7 +241,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSeismoDT(ValueType seismoDT)
     ValueType resampleCoeff = seismoDT / DT;
 
     if (this->getNumSamples() != 0) {
-        Common::calcResampleMat<ValueType>(resampleMat, numSamples, resampleCoeff);
+        Common::calcResampleMat<ValueType>(resampleMat, getNumSamples(), resampleCoeff);
     }
 }
 
@@ -261,7 +257,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSeismoDT(ValueType seismoDT)
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
 {
-    return (type);
+    return (seismoType);
 }
 
 //! \brief Getter method for reference to coordinates1D vector
@@ -274,7 +270,7 @@ KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::get1DCoordinates() const
 {
-    SCAI_ASSERT_DEBUG(coordinates1D.size() == numTracesGlobal, "Size mismatch ");
+    SCAI_ASSERT(coordinates1D.size() == getNumTracesGlobal(), "Size mismatch ");
     return (coordinates1D);
 }
 
@@ -290,7 +286,7 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getData()
 {
-    SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+   // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -306,7 +302,7 @@ lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDat
 template <typename ValueType>
 lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getData() const
 {
-    SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+   // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -317,8 +313,8 @@ lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 {
-    dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(numSamples));
-    dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(numTracesGlobal));
+    dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(getNumSamples()));
+    dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(getNumTracesGlobal()));
 
     redistribute(no_dist_Traces, no_dist_numSamples);
 }
@@ -339,10 +335,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
-
-    numSamples = NT;
-    numTracesGlobal = distTraces->getGlobalSize();
-    numTracesLocal = distTraces->getLocalSize();
 
     dmemo::DistributionPtr no_dist_NT(new scai::dmemo::NoDistribution(NT));
 
@@ -374,12 +366,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
 {
-    numTracesGlobal = 0;
-    numTracesLocal = 0;
     data.clear();
     coordinates1D = lama::DenseVector<scai::IndexType>();
     sourceIndex = 0;
-    numSamples = 0;
     DT = 0.0;
     normalizeTraces = 0;
 }
@@ -395,8 +384,8 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     if (distSamples == NULL) {
-        SCAI_ASSERT_DEBUG(numSamples >= 0, "numSamples not set");
-        dmemo::DistributionPtr distSamplestmp(new scai::dmemo::NoDistribution(numSamples));
+        SCAI_ASSERT_DEBUG(getNumSamples() >= 0, "data has 0 collumns");
+        dmemo::DistributionPtr distSamplestmp(new scai::dmemo::NoDistribution(getNumSamples()));
         distSamples = distSamplestmp;
     }
 
@@ -435,7 +424,7 @@ ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 {
-    return (numSamples);
+    return (data.getNumColumns());
 }
 
 /*! \brief Getter method for the number of local traces
@@ -446,7 +435,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 {
-    return (numTracesLocal);
+    return (data.getRowDistribution().getLocalSize());
 }
 
 /*! \brief Getter method for the number of global traces
@@ -457,7 +446,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 {
-    return (numTracesGlobal);
+    return (data.getNumRows());
 }
 
 /*! \brief Getter method for the source Index

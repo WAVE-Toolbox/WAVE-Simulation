@@ -27,7 +27,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : numSamples(0), numTracesGlobal(0), numTracesLocal(0), normalizeTraces(0), DT(0.0), type(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : normalizeTraces(0), DT(0.0), seismoType(KITGPI::Acquisition::SeismogramType::P){};
 
             //! Default destructor
             ~Seismogram(){};
@@ -83,15 +83,12 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
-            scai::IndexType numSamples;      //!< Number of samples of one trace
-            scai::IndexType numTracesGlobal; //!< Number of global traces
-            scai::IndexType numTracesLocal;  //!< Number of local traces
             scai::IndexType normalizeTraces; //!< L2 Norm of seismogram is calculated
 
             /* header information */
             ValueType DT;                                           //!< Temporal sampling interval in seconds
             ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds
-            SeismogramType type;                                    //!< Type of trace as #SeismogramType
+            SeismogramType seismoType;                                    //!< Type of trace as #SeismogramType
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
 
