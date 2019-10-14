@@ -1,6 +1,8 @@
 #include "Seismogram.hpp"
 #include "../IO/IO.hpp"
 #include "../IO/SUIO.hpp"
+
+#include <scai/utilskernel/HArrayUtils.hpp>
 using namespace scai;
 
 //! \brief copy constructor
@@ -110,20 +112,12 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
     if (normalizeTraces == 1) {
 
-      //  SCAI_ASSERT(data.getNumRows() != 0, " seismogram data matrix has 0 rows (global traces). " << seismoType);
-
-        scai::lama::DenseVector<ValueType> tempRow;
-        ValueType tempMax;
-        ValueType tempInverseMax;
-
-        // why not loop over local traces (more efficient)?
-        for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
-            tempMax = 0.0;
-            data.getRow(tempRow, i);
-            tempMax = tempRow.max();
-            tempInverseMax = 1 / tempMax;
-            tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
+            scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
+            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
     }
 }
@@ -137,17 +131,13 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
 
-    //SCAI_ASSERT(data.getNumRows() != 0, " seismogram data matrix has 0 rows (global traces).  ");
-
-    scai::lama::DenseVector<ValueType> tempRow;
-    
-    // why not loop over local traces (more efficient)?
-    for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
-        data.getRow(tempRow, i);
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
         for (IndexType j = 0; j < tempRow.size() - 1; j++) {
             tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
         }
-        data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
