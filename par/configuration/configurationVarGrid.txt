@@ -15,23 +15,15 @@ useVariableFDoperators=0
 #possible tool options: geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom, parMetisGraph
 graphPartitionTool=geoKmeans
 
-mappingRenumbering=0
-
 interfaceFilename=configuration/interfaces.txt
 dhFactorFilename=configuration/dhFactors.txt
 spatialFDorderFilename=configuration/FDorders.txt
-
 
 partitionWrite=0                                   # 1=partition will be written to disk, 0=not
 partitionFilename=partition/partition
 
 coordinateWrite=0                                  # 1=coordinates will be written to disk, 0=not
 coordinateFilename=configuration/coordinates       
-
-BoundaryWeights=2.0
-weightsWrite=1                                  # 1=weigths will be written to disk, 0=not
-weightsFilename=partition/weights       
-
 
 # define spatial sampling: number of grid points in direction
 NX=305                    # horizontal 1
@@ -55,7 +47,6 @@ spatialFDorder=4          # possible values 2, 4, 6, 8, 10 and 12
 
 # define material parameter
 ModelRead=0               # 1=Regular model will be read from file and meshed onto discontinuous grid if UseVariableGrid=1, 2=Variable grid model will be read from file,  0=generated on the fly
-ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
 
 # parallel input-output

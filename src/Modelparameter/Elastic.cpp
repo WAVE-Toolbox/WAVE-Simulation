@@ -118,9 +118,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(Configuration::Configurati
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
-    }
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model

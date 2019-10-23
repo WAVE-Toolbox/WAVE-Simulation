@@ -98,9 +98,6 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
         init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
-    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model

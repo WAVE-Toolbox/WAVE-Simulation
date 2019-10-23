@@ -109,9 +109,6 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configurat
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("rho"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
-    }
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model

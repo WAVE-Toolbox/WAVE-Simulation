@@ -106,9 +106,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauP"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("FileFormat"));
-    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model
