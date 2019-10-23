@@ -129,7 +129,8 @@ int main(int argc, const char *argv[])
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
-    if (config.get<bool>("coordinateWrite")) {
+    if ((config.get<bool>("coordinateWrite")) && (shotDomain==0)) {
+        // every shotdomain owns the same coordinates
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"), config.get<IndexType>("FileFormat"));
     }
 
@@ -193,7 +194,7 @@ int main(int argc, const char *argv[])
 
     if (writePartition) {
         scai::lama::DenseVector<IndexType> partition(dist, commShot->getRank());
-        IO::writeVector(partition, config.get<std::string>("partitionFilename"), config.get<IndexType>("fileFormat"));
+        IO::writeVector(partition, config.get<std::string>("partitionFilename") + std::to_string(shotDomain), config.get<IndexType>("fileFormat"));
     }
 
     /* --------------------------------------- */

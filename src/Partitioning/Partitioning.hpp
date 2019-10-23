@@ -408,9 +408,9 @@ namespace KITGPI
             weights /= referenceTotalWeight;
             weights /= weights.sum();
 
-            if (config.get<bool>("weightsWrite")) {
-                IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
-            }
+//             if (config.get<bool>("weightsWrite")) {
+//                 IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
+//             }
             return (weights);
         }
 
