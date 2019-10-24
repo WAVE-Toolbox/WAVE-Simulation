@@ -11,6 +11,8 @@
 #include <cmath>
 #include <vector>
 
+#include <scai/dmemo/RedistributePlan.hpp>
+
 #ifdef USE_GEOGRAPHER
 #include <geographer/AuxiliaryFunctions.h>
 #include <geographer/ParcoRepart.h>
