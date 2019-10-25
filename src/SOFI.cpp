@@ -5,8 +5,6 @@
 #include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
 #include <scai/tracing.hpp>
-#include <scai/dmemo/mpi/MPISyncToken.hpp>
-
 
 #include <iostream>
 #define _USE_MATH_DEFINES
