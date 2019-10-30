@@ -369,6 +369,9 @@ int main(int argc, const char *argv[])
         solver->resetCPML();
     }
     globalEnd_t = common::Walltime::get();
+    
+    commAll->synchronize();
+
     HOST_PRINT(commAll, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\nSOFI finished!\n\n");
     return 0;
 }
