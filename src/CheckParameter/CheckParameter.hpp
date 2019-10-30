@@ -34,9 +34,15 @@ namespace KITGPI
             }
             auto newInterfaces = modelCoordinates.getInterfaceVec();
             std::vector<int> interface;
-            std::ifstream is(config.get<std::string>("interfaceFilename"));
-            std::istream_iterator<scai::IndexType> start(is), end;
-            interface.assign(start, end);
+            std::string gridConfigFileName = config.get<std::string>("gridConfigurationFilename");
+
+            unsigned int column = 0;
+            Common::readColumnFromFile(gridConfigFileName, interface, column);
+            if (interface.at(0) == 0) {
+                interface.erase(interface.begin());
+            } else {
+                COMMON_THROWEXCEPTION("First interface must by at y=0 ");
+            }
 
             for (unsigned int i = 0; i < interface.size(); i++) {
                 if (interface[i] != newInterfaces[i + 1])
@@ -147,11 +153,11 @@ namespace KITGPI
                     message << "! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin << " / (2 * " << fcMax << " * " << N << ") = " << vMin / (2 * fcMax * N);
 
                     if ((shotNumber >= 0) && (layer >= 0))
-                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
                     if ((shotNumber >= 0) && (layer < 0))
-                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
                     if ((shotNumber < 0) && (layer < 0))
-                        HOST_PRINT(comm, "","\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
                 }
             }
         }
@@ -215,14 +221,8 @@ namespace KITGPI
 
                 if (config.get<bool>("useVariableFDoperators")) {
 
-                    std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
-                    if (!is)
-                        COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
-                    std::istream_iterator<scai::IndexType> start(is), end;
-                    spatialFDorderVec.assign(start, end);
-                    if (spatialFDorderVec.empty()) {
-                        COMMON_THROWEXCEPTION("FDorder file is empty");
-                    }
+                    unsigned int column = 2;
+                    Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), spatialFDorderVec, column);
                 } else {
                     spatialFDorderVec.assign(numlayer, config.get<scai::IndexType>("spatialFDorder"));
                 }

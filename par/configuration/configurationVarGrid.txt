@@ -15,9 +15,7 @@ useVariableFDoperators=0
 #possible tool options: geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom, parMetisGraph
 graphPartitionTool=geoKmeans
 
-interfaceFilename=configuration/interfaces.txt
-dhFactorFilename=configuration/dhFactors.txt
-spatialFDorderFilename=configuration/FDorders.txt
+gridConfigurationFilename=configuration/gridConfig.txt
 
 partitionWrite=0                                   # 1=partition will be written to disk, 0=not
 partitionFilename=partition/partition
