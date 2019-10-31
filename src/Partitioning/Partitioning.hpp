@@ -199,7 +199,7 @@ namespace KITGPI
             scai::lama::DenseVector<IndexType> partition;
 
             if (ITI::to_string(tool).rfind("geo", 0) == 0) {
-                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector,commShot, settings, metrics);
             } else {
 #ifdef USE_GEOGRAPHER_WRAPPERS
                 bool nodeWeightsUse = true; //usign unit weights
