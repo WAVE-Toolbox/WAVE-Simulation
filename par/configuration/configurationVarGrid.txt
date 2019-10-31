@@ -29,7 +29,7 @@ NY=305                    # depth
 NZ=305                    # horizontal 2
 
 # define Partitioning
-numShotDomains=1                  # Number of shot domains
+numShotDomains=2                  # Number of shot domains
 ShotDomainDefinition=0  # =0: Number of shot domains will be taken from ProcNS
 
 
