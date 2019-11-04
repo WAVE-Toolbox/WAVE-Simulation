@@ -54,8 +54,8 @@ namespace KITGPI
 
                 if (commAll->getSize() != numShotDomains * npDomain) {
                     HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n")
-                    return (2);
+                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n\n\n")
+                    COMMON_THROWEXCEPTION("Number of MPI processes is not multiple of shot domains in the configuration: numShotDomains");
                 }
 
                 shotDomain = commAll->getRank() / npDomain;
@@ -75,7 +75,7 @@ namespace KITGPI
                 set = commAll->all(set); // make sure that all processors will terminate
 
                 if (!set) {
-                    return (2);
+                    COMMON_THROWEXCEPTION("set is false for process with Rank " << commAll->getRank());
                 }
             }
             return (shotDomain);
