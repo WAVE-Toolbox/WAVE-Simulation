@@ -101,7 +101,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = equationType+std::to_string(numDimension)+"D";
+            std::string type = equationType+std::to_string(NumDimension)+"D";
         };
     }
 }
