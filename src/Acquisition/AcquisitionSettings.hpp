@@ -3,8 +3,8 @@
 #include "Acquisition.hpp"
 #include "Coordinates.hpp"
 #include <fstream>
-#include <scai/lama.hpp>
 #include <scai/dmemo/GeneralDistribution.hpp>
+#include <scai/lama.hpp>
 
 namespace KITGPI
 {
@@ -61,7 +61,7 @@ namespace KITGPI
                     std::vector<std::string> vecStrings;
 
                     char firstChar = strings.peek();
-                    if (firstChar == '#') {
+                    if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
                         continue;
                     } else {
                         row_index++;
@@ -158,7 +158,7 @@ namespace KITGPI
                     std::vector<std::string> vecStrings;
 
                     char firstChar = strings.peek();
-                    if (firstChar == '#') {
+                    if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
                         continue;
                     } else {
                         std::string tempStr;
@@ -191,7 +191,7 @@ namespace KITGPI
                 COMMON_THROWEXCEPTION("Could not open receiver acquisition file " << fileName)
             }
         }
-        
+
         /*! \brief Determination of local indices based on given global indeces
         *
         * Calculate the number of indeces within the local processing unit as well as
@@ -213,7 +213,7 @@ namespace KITGPI
 
                 coordinatetemp_int = coordinatesglobal.getValue(n);
 
-                SCAI_ASSERT(coordinatetemp_int>=0 && coordinatetemp_int < dist->getGlobalSize(),"Message from AcquisitionSettings.hpp function Global2Local : Index " << coordinatetemp_int << " is not inside the model grid");
+                SCAI_ASSERT(coordinatetemp_int >= 0 && coordinatetemp_int < dist->getGlobalSize(), "Message from AcquisitionSettings.hpp function Global2Local : Index " << coordinatetemp_int << " is not inside the model grid");
                 if (dist->isLocal(coordinatetemp_int)) {
                     i++;
                 }
@@ -231,8 +231,8 @@ namespace KITGPI
                     i++;
                 }
             }
-        }    
-        
+        }
+
         /*! \brief Getter method for distribution of local traces 
         *
         \param coordinates coordinates
@@ -250,7 +250,7 @@ namespace KITGPI
 
             return (dist_temp);
         }
-        
+
         /*! \brief Getter method for source coordinates from sourceSettings 
         *
         \param sourceSettings sourceSettings
@@ -260,11 +260,10 @@ namespace KITGPI
         {
             scai::lama::DenseVector<scai::IndexType> sourcecoords1D;
             sourcecoords1D.allocate(sourceSettings.size());
-            for (unsigned i = 0; i<sourceSettings.size(); i++){
-                sourcecoords1D.setValue(i,modelCoordinates.Coordinates<ValueType>::coordinate2index(sourceSettings[i].getCoords()));
+            for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                sourcecoords1D.setValue(i, modelCoordinates.Coordinates<ValueType>::coordinate2index(sourceSettings[i].getCoords()));
             }
             return (sourcecoords1D);
         }
-        
     }
 }

@@ -1,4 +1,5 @@
 #include "Coordinates.hpp"
+#include "../Common/Common.hpp"
 #include "../IO/IO.hpp"
 #include <algorithm>
 #include <cmath>
@@ -24,18 +25,41 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
         VariableGrid = true;
         std::vector<IndexType> dhFactor;
         std::vector<int> interface;
-        std::ifstream is(config.get<std::string>("interfaceFilename"));
-        std::istream_iterator<IndexType> start(is), end;
-        interface.assign(start, end);
-        std::ifstream is2(config.get<std::string>("dhFactorFilename"));
-        std::istream_iterator<IndexType> start2(is2);
-        dhFactor.assign(start2, end);
+        std::string gridConfigFileName = config.get<std::string>("gridConfigurationFilename");
+
+        unsigned int column = 0;
+        Common::readColumnFromFile(gridConfigFileName, interface, column);
+        if (interface.at(0) == 0) {
+            interface.erase(interface.begin());
+        } else {
+            COMMON_THROWEXCEPTION("First interface must by at y=0 ");
+        }
+
+        column = 1;
+        Common::readColumnFromFile(gridConfigFileName, dhFactor, column);
+
+        //check grid config
+
+        for (unsigned int i = 1; i < interface.size(); ++i) {
+            SCAI_ASSERT_ERROR(interface[i] > interface[i - 1], "interface coordinates must increase. Interface " << i << " value: " << interface[i] << " is smaller than  Interface " << i - 1 << " value: " << interface[i - 1]);
+        }
+
+        for (unsigned int i = 1; i < dhFactor.size(); ++i) {
+            if ((dhFactor[i] != dhFactor[i - 1] * 3) && (dhFactor[i] != dhFactor[i - 1] / 3) && (dhFactor[i] != dhFactor[i - 1]))
+                COMMON_THROWEXCEPTION("Only gridspacing changes with factor 3 eg: 1<->3 or 9<->3 are alowed");
+        }
+
         init(dhFactor, interface);
+
     } else if ((!config.get<bool>("useVariableGrid")) && (config.get<bool>("useVariableFDoperators"))) {
-        std::vector<int> interface;
-        std::ifstream is(config.get<std::string>("interfaceFilename"));
-        std::istream_iterator<IndexType> start(is), end;
-        interface.assign(start, end);
+        unsigned int column = 0;
+        Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), interface, column);
+        if (interface.at(0) == 0) {
+            interface.erase(interface.begin());
+        } else {
+            COMMON_THROWEXCEPTION("First interface must by at y=0 ");
+        }
+
         std::vector<IndexType> dhFactor(interface.size() + 1, 1);
         init(dhFactor, interface);
     } else {

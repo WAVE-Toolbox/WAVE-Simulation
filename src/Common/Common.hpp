@@ -9,15 +9,48 @@
 #include <scai/lama/matrix/MatrixAssembly.hpp>
 // #include <scai/lama/matrix/StencilMatrix.hpp>
 // #include <scai/lama/matrix/HybridMatrix.hpp>
-#include <scai/tracing.hpp>
-
 #include <cmath>
+#include <scai/tracing.hpp>
 
 namespace KITGPI
 {
     //! \brief Common namespace
     namespace Common
     {
+
+        template <typename T>
+        void readColumnFromFile(std::string filename, std::vector<T> &values, unsigned int column)
+        {
+            std::ifstream is(filename);
+
+            if (is.is_open()) {
+                std::string line;
+                int lineNumber = 0;
+                while (getline(is, line)) {
+                    std::vector<int> vec;
+                    lineNumber++;
+                    std::stringstream strings(line);
+
+                    char firstChar = strings.peek();
+                    // check for comment or empty lines or lines with only whitespace or tabs
+                    if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
+                        continue;
+                    } else {
+                        T tempStr;
+                        while (strings >> tempStr) {
+                            vec.push_back(tempStr);
+                        }
+                        if (vec.size() < column + 1) {
+                            COMMON_THROWEXCEPTION("line " << lineNumber << " in file " << filename << " has no column Nr. " << column);
+                        }
+                        values.push_back(vec[column]);
+                    }
+                }
+
+            } else {
+                COMMON_THROWEXCEPTION("Could not open grid configuration ");
+            }
+        }
 
         /*! \brief Searches for all values in searchVector which are related to threshold by relation compareType and replaces them with replaceValue.
         *

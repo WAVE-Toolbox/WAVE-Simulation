@@ -1,4 +1,6 @@
 #include "Derivatives.hpp"
+#include "../Common/Common.hpp"
+
 using namespace scai;
 
 //! \brief Setup configuration of the derivative object
@@ -21,15 +23,15 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     DT = config.get<ValueType>("DT");
     setFDCoef();
 
-    if (config.get<IndexType>("partitioning") != 1){
+    if (config.get<IndexType>("partitioning") != 1) {
         useSparse = true;
     } else {
-    useHybridFreeSurface = true;
+        useHybridFreeSurface = true;
     }
-    
+
     if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
-        setFDOrder(config.get<std::string>("spatialFDorderFilename"));
+        setFDOrder(config.get<std::string>("gridConfigurationFilename"));
     } else {
         SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for grid distribution")
         // Set FD-order to class member
@@ -55,7 +57,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     if ((type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
         isElastic = true;
     }
-    
+
     DT = config.get<ValueType>("DT");
 
     useSparse = true;
@@ -365,7 +367,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
         common::Stencil1D<ValueType> stencilId(1);
-        common::Stencil3D<ValueType> stencil(stencilFDmap[spatialFDorderVec.at(0)],stencilId, stencilId);
+        common::Stencil3D<ValueType> stencil(stencilFDmap[spatialFDorderVec.at(0)], stencilId, stencilId);
         DyfFreeSurfaceStencil.define(dist, stencil);
         DyfFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
     }
@@ -442,8 +444,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
     DybFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
     DybFreeSurfaceSparse.fillFromAssembly(assembly);
 
-    if (useHybridFreeSurface)
-    {
+    if (useHybridFreeSurface) {
         // define the stencil matrix for hybrid matrix
         // ToDo: why not simply use the stencil matrix Dyb
 
@@ -451,7 +452,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDybFreeSurf
         common::Stencil1D<ValueType> stencilBD;
         stencilBD.transpose(stencilFDmap[spatialFDorderVec.at(0)]);
         stencilBD.scale(-1);
-        common::Stencil3D<ValueType> stencil(stencilBD,stencilId, stencilId);
+        common::Stencil3D<ValueType> stencil(stencilBD, stencilId, stencilId);
 
         DybFreeSurfaceStencil.define(dist, stencil);
         DybFreeSurfaceStencil *= 1 / modelCoordinates.getDH();
@@ -1543,17 +1544,11 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcInterpolati
 \param FDorderFilename Filename of the FDorder File. This File contains the FDorder for every layer in the variable grid.
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(std::string const &FDorderFilename)
+void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDOrder(std::string const &gridConfigFileName)
 {
 
-    std::ifstream is(FDorderFilename);
-    if (!is)
-        COMMON_THROWEXCEPTION(" could not open " << FDorderFilename);
-    std::istream_iterator<IndexType> start(is), end;
-    spatialFDorderVec.assign(start, end);
-    if (spatialFDorderVec.empty()) {
-        COMMON_THROWEXCEPTION("FDorder file is empty");
-    }
+    unsigned int column = 2;
+    Common::readColumnFromFile(gridConfigFileName, spatialFDorderVec, column);
 
     for (auto i : spatialFDorderVec) {
         if (stencilFDmap.find(i) == stencilFDmap.end())

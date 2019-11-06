@@ -21,6 +21,7 @@
 #endif
 #endif
 
+#include "../Common/Common.hpp"
 #include <scai/common/ContextType.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/partitioning/Partitioning.hpp>
@@ -53,8 +54,8 @@ namespace KITGPI
 
                 if (commAll->getSize() != numShotDomains * npDomain) {
                     HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n")
-                    return (2);
+                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n\n\n")
+                    COMMON_THROWEXCEPTION("Number of MPI processes is not multiple of shot domains in the configuration: numShotDomains");
                 }
 
                 shotDomain = commAll->getRank() / npDomain;
@@ -74,7 +75,7 @@ namespace KITGPI
                 set = commAll->all(set); // make sure that all processors will terminate
 
                 if (!set) {
-                    return (2);
+                    COMMON_THROWEXCEPTION("set is false for process with Rank " << commAll->getRank());
                 }
             }
             return (shotDomain);
@@ -198,7 +199,7 @@ namespace KITGPI
             scai::lama::DenseVector<IndexType> partition;
 
             if (ITI::to_string(tool).rfind("geo", 0) == 0) {
-                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, settings, metrics);
+                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector,commShot, settings, metrics);
             } else {
 #ifdef USE_GEOGRAPHER_WRAPPERS
                 bool nodeWeightsUse = true; //usign unit weights
@@ -325,14 +326,8 @@ namespace KITGPI
 
                 std::vector<scai::IndexType> spatialFDorderVec;
                 if (config.get<bool>("useVariableFDoperators")) {
-                    std::ifstream is(config.get<std::string>("spatialFDorderFilename"));
-                    if (!is)
-                        COMMON_THROWEXCEPTION(" could not open " << config.get<std::string>("spatialFDorderFilename"));
-                    std::istream_iterator<IndexType> start(is), end;
-                    spatialFDorderVec.assign(start, end);
-                    if (spatialFDorderVec.empty()) {
-                        COMMON_THROWEXCEPTION("FDorder file is empty");
-                    }
+                    unsigned int column = 2;
+                    Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), spatialFDorderVec, column);
                 }
 
                 // Weights of single Matrix vector Products with FDorder 2-12
@@ -410,9 +405,9 @@ namespace KITGPI
             weights /= referenceTotalWeight;
             weights /= weights.sum();
 
-//             if (config.get<bool>("weightsWrite")) {
-//                 IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
-//             }
+            //             if (config.get<bool>("weightsWrite")) {
+            //                 IO::writeVector(weights, config.get<std::string>("weightsFilename"), config.get<IndexType>("fileFormat"));
+            //             }
             return (weights);
         }
 
@@ -479,7 +474,7 @@ namespace KITGPI
             auto loc = hmemo::Context::getHostPtr();
 
             HOST_PRINT(commShot, "", "caclulate graph for ParMetis \n");
-            auto &&graph = derivatives.getGraph(BlockDist,modelCoordinates);
+            auto &&graph = derivatives.getGraph(BlockDist, modelCoordinates);
 
             HOST_PRINT(commShot, "", "caclulate weights for ParMetis \n");
 
@@ -498,23 +493,21 @@ namespace KITGPI
                 scai::hmemo::HArray<IndexType> newLocalOwners;
 
                 float procWeight = 1.0f;
-   
-                scai::hmemo::HArray<float> vertexWeights;    // currently only float is supported
 
-                weights.buildLocalValues(vertexWeights);                
+                scai::hmemo::HArray<float> vertexWeights; // currently only float is supported
+
+                weights.buildLocalValues(vertexWeights);
 
                 myPartitioning->squarePartitioningW(newLocalOwners, graph, vertexWeights, procWeight);
-    
+
                 auto plan = dmemo::redistributePlanByNewOwners(newLocalOwners, BlockDist);
 
                 newDist = plan.getTargetDistributionPtr();
-            }
-            else {
+            } else {
                 HOST_PRINT(commShot, "", "ATTENTION: PARMETIS partitioning not supported, will use BLOCK distribution")
             }
 
             return newDist;
         }
-
     }
 }

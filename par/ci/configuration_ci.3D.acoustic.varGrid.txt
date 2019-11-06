@@ -19,9 +19,7 @@ partitionWrite=0
 coordinateWrite=0 
 weightsWrite=0 
 
-interfaceFilename=ci/interfacesVarGrid.txt
-dhFactorFilename=ci/dhFactorsVarGrid.txt
-spatialFDorderFilename=ci/FDordersVarGrid.txt
+gridConfigurationFilename=ci/gridConfig.txt
 
 NX=104                    # horizontal 1
 NY=303                    # depth

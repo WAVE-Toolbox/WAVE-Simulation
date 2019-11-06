@@ -15,9 +15,7 @@ graphPartitionTool=geoKmeans
 BoundaryWeights=2.0
 useVariableFDoperators=1
 
-interfaceFilename=ci/interfacesVarGrid.txt
-dhFactorFilename=ci/dhFactorsVarGrid.txt
-spatialFDorderFilename=ci/FDordersVarGrid.txt
+gridConfigurationFilename=ci/gridConfig.txt
 
 partitionWrite=0  
 coordinateWrite=0 
