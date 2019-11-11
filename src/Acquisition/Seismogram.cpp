@@ -110,15 +110,13 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
-    if (normalizeTraces == 1) {
 
-        scai::hmemo::HArray<ValueType> tempRow;
-        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-            data.getLocalStorage().getRow(tempRow, i);
-            ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
-            scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
-            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
-        }
+    scai::hmemo::HArray<ValueType> tempRow;
+    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+        data.getLocalStorage().getRow(tempRow, i);
+        ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
+        scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
+        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -131,9 +129,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
 
-        scai::hmemo::HArray<ValueType> tempRow;
-        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-            data.getLocalStorage().getRow(tempRow, i);
+    scai::hmemo::HArray<ValueType> tempRow;
+    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+        data.getLocalStorage().getRow(tempRow, i);
         for (IndexType j = 0; j < tempRow.size() - 1; j++) {
             tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
         }
@@ -207,19 +205,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::Dens
     coordinates1D = indeces;
 };
 
-//! \brief Setter methode to set Index for trace-normalization.
-/*!
- *
- * This method sets the index for trace-normalization.
- \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalize)
-{
-    SCAI_ASSERT(normalize >= 0 && normalize <= 1, " Index has to be 1 or 0 ");
-    normalizeTraces = normalize;
-}
-
 //! \brief Setter methode to set matrix for resampling this seismogram.
 /*!
  \param rMat Resampling matrix
@@ -276,7 +261,7 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getData()
 {
-   // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -292,7 +277,7 @@ lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDat
 template <typename ValueType>
 lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getData() const
 {
-   // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -360,7 +345,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
     coordinates1D = lama::DenseVector<scai::IndexType>();
     sourceIndex = 0;
     DT = 0.0;
-    normalizeTraces = 0;
 }
 
 //! \brief Redistribute the seismogram data
@@ -381,17 +365,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::Distr
 
     data.redistribute(distTraces, distSamples);
     coordinates1D.redistribute(distTraces);
-}
-
-/*! \brief Getter method for reference normalization index
- *
- *
- \return NormalizeTraces Index 
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
-{
-    return (normalizeTraces);
 }
 
 /*! \brief Getter method for the temporal sampling

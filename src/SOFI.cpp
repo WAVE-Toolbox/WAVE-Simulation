@@ -129,7 +129,7 @@ int main(int argc, const char *argv[])
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
-    if ((config.get<bool>("coordinateWrite")) && (shotDomain==0)) {
+    if ((config.get<bool>("coordinateWrite")) && (shotDomain == 0)) {
         // every shotdomain owns the same coordinates
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"), config.get<IndexType>("FileFormat"));
     }
@@ -363,13 +363,15 @@ int main(int argc, const char *argv[])
         end_t = common::Walltime::get();
         HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
 
-        receivers.getSeismogramHandler().normalize();
+        if (config.get<bool>("NormalizeTraces")) {
+            receivers.getSeismogramHandler().normalize();
+        }
 
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
         solver->resetCPML();
     }
     globalEnd_t = common::Walltime::get();
-    
+
     commAll->synchronize();
 
     HOST_PRINT(commAll, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\nSOFI finished!\n\n");
