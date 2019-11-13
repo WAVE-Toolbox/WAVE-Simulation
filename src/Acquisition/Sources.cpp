@@ -27,7 +27,6 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
     std::vector<scai::IndexType> readrows;
@@ -65,7 +64,6 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
     allocateSeismogram(NT, this->getSeismogramTypes().getDistributionPtr(), ctx);
@@ -351,7 +349,6 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
 }
 
-
 /*! \brief get source signal
  *
  */
@@ -359,9 +356,8 @@ template <typename ValueType>
 lama::DenseMatrix<ValueType> KITGPI::Acquisition::Sources<ValueType>::getsourcesignal()
 {
     lama::DenseMatrix<ValueType> signal_out = signals.getData();
-    return(signal_out);
+    return (signal_out);
 }
-
 
 /*! \brief Allocation of the source signals matrix
  *
