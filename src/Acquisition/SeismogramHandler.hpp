@@ -44,6 +44,7 @@ namespace KITGPI
             scai::IndexType getNumTracesGlobal(SeismogramType type) const;
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramType type) const;
+            bool isFinite();
 
           private:
             void setTraceType();

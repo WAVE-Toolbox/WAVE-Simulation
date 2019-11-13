@@ -278,5 +278,21 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSeismoDT(ValueType se
     }
 }
 
+//! \brief Check seismograms for inf or NaN
+/*!
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
+{
+    bool isfinite=true;
+    for (auto &i : seismo) {
+        isfinite = i.isFinite();
+            if (isfinite==false){
+                break;
+            }
+    }
+    return(isfinite);
+}
+
 template class KITGPI::Acquisition::SeismogramHandler<double>;
 template class KITGPI::Acquisition::SeismogramHandler<float>;

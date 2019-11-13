@@ -1,4 +1,5 @@
 #include "Wavefields.hpp"
+#include <math.h>
 
 using namespace scai;
 
@@ -26,6 +27,50 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
     vector.allocate(dist);
 
     resetWavefield(vector);
+}
+
+/*! \brief Check wavefield
+ *
+ * Check wavefield for infs and nans
+ *
+ */
+template <typename ValueType>
+bool KITGPI::Wavefields::Wavefields<ValueType>::isFinite(scai::dmemo::DistributionPtr dist)
+{
+    bool result_isfinite=true;
+    
+    /* Get local owned global indices */
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+    
+    auto read_VX = VX.getLocalValues();
+    auto read_VY = VY.getLocalValues();
+    auto read_VZ = VZ.getLocalValues();
+
+    for (IndexType localIndex=0;localIndex<ownedIndeces.size();localIndex++) {
+        if (read_VX.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VX[localIndex]),"Infinite or NaN value in VX wavefield!" << localIndex);
+            if (isfinite(read_VX[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
+        
+        if (read_VY.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VY[localIndex]),"Infinite or NaN value in VY wavefield!" << localIndex);
+            if (isfinite(read_VY[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
+        
+        if (read_VZ.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VZ[localIndex]),"Infinite or NaN value in VZ wavefield!" << localIndex);
+            if (isfinite(read_VZ[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
+    }
+
+    return(result_isfinite);
 }
 
 template <typename ValueType>
