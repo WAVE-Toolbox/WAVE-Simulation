@@ -365,7 +365,7 @@ int main(int argc, const char *argv[])
         HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
         
         // check wavefield and seismogram for NaNs or infinite values
-        SCAI_ASSERT_ERROR(commAll->all(wavefields->isFinite(dist)) && commAll->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
+        SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
         
         if (config.get<bool>("NormalizeTraces")) {
             receivers.getSeismogramHandler().normalize();
