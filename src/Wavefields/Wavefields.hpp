@@ -66,6 +66,8 @@ namespace KITGPI
 
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+            
+            bool isFinite(scai::dmemo::DistributionPtr dist);
 
             ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields);
 

@@ -52,6 +52,8 @@ namespace KITGPI
             void integrateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
+            bool isFinite();
+
             /* Getter functions */
             scai::IndexType getNumTracesGlobal() const;
             scai::IndexType getNumTracesLocal() const;

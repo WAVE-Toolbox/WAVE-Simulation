@@ -5,6 +5,7 @@
 #include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
 #include <scai/tracing.hpp>
+#include <scai/common/macros/assert.hpp>
 
 #include <iostream>
 #define _USE_MATH_DEFINES
@@ -348,7 +349,7 @@ int main(int argc, const char *argv[])
             }
 
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-
+            
             if (tStep % 100 == 0 && tStep != 0) {
                 end_t2 = common::Walltime::get();
                 HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps"
@@ -362,12 +363,16 @@ int main(int argc, const char *argv[])
 
         end_t = common::Walltime::get();
         HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
-
+        
+        // check wavefield and seismogram for NaNs or infinite values
+        SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
+        
         if (config.get<bool>("NormalizeTraces")) {
             receivers.getSeismogramHandler().normalize();
         }
 
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+        
         solver->resetCPML();
     }
     globalEnd_t = common::Walltime::get();

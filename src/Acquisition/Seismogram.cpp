@@ -153,6 +153,28 @@ void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<Val
     }
 }
 
+
+
+//! \brief Filter the seismogram-traces
+/*!
+ *
+ * This methode filters the traces of the seismogram.
+ \param freqFilter filter object
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Seismogram<ValueType>::isFinite()
+{
+    bool result_isfinite=true;
+    for (IndexType loc_vals=0;loc_vals<data.getLocalStorage().getData().size();loc_vals++) {
+        if (isfinite(data.getLocalStorage().getData()[loc_vals])==false){
+            result_isfinite=false;
+            break;
+        }
+    }
+    return(result_isfinite);
+}
+
+
 //! \brief Setter method for the temporal sampling DT
 /*!
  *
