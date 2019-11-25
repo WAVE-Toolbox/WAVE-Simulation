@@ -49,10 +49,10 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     SCAI_ASSERT(isSetup, "call setup function before init");
-    if (useSparse)
-        initializeMatrices(dist, ctx, modelCoordinates, comm);
-    else
+    if (useStencilMatrix)
         initializeMatrices(dist, ctx, modelCoordinates.getDH(), comm);
+    else
+        initializeMatrices(dist, ctx, modelCoordinates, comm);
 
     if (useFreeSurface == 1)
         initializeFreeSurfaceMatrices(dist, ctx, modelCoordinates, comm);
@@ -303,7 +303,7 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::ForwardSolver::Derivatives::FDTD2
         this->calcDyb(modelCoordinates, dist);
     }
 
-    decltype(DxbSparse) temp( scai::hmemo::Context::getHostPtr() );
+    decltype(DxbSparse) temp(scai::hmemo::Context::getHostPtr());
     temp = DxbSparse;
     temp += DybSparse;
     temp = transpose(temp);

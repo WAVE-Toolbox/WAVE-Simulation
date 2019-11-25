@@ -8,7 +8,9 @@ equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
 # define spatial sampling: number of grid points in direction
 useVariableGrid=0
-partitioning=1
+partitioning=0
+useStencilMatrix=0 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1) 
+useHybridFreeSurface=0 #faster on GPUs, saves memory, only available when using stencil matrices
 useVariableFDoperators=0
 
 coordinateWrite=0

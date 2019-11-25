@@ -12,6 +12,8 @@ NZ=1 # horizontal 2
 
 # define Partitioning
 partitioning=1
+useStencilMatrix=1 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1)
+useHybridFreeSurface=1 #faster on GPUs, saves memory, only available when using stencil matrices
 NumShotDomains=1                  # Number of shot domains
 ShotDomainDefinition=0
 
