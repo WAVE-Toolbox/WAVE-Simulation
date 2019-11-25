@@ -36,9 +36,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     try {
         useHybridFreeSurface = config.get<bool>("useHybridFreeSurface");
     } catch (...) {
-        if (useStencilMatrix) {
-            useHybridFreeSurface = true;
-        }
+        useHybridFreeSurface = false;
     }
 
     if (useStencilMatrix == false && useHybridFreeSurface == true) {
