@@ -453,7 +453,7 @@ namespace KITGPI
             }
 
             //get the enum from string
-            ITI::Tool tool = ITI::toTool(toolStr);
+            ITI::Tool tool = ITI::to_tool(toolStr);
 
             auto dist = KITGPI::Partitioning::graphPartition(config, commShot, coords, graph, weights, tool);
 

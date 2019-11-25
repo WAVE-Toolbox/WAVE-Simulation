@@ -9,7 +9,7 @@ gcc:
   before_script:
     - SCAI_ROOT=/data14/software/scai_lama/build_dev
     - git clone https://github.com/hu-macsy/geographer.git && cd geographer
-    - git checkout 8540e9fdd15f6acb04fc15ed1023218d6a4f331b
+    - git checkout dc0175d626f4fa2b524
     - mkdir build && cd "$_"
     - SCAI_DIR=/data14/software/scai_lama/build_dev/ cmake ../ -DCMAKE_INSTALL_PREFIX=./
     - cd ../../
