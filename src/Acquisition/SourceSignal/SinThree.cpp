@@ -47,6 +47,11 @@ void KITGPI::Acquisition::SourceSignal::SinThree<ValueType>::calc(scai::lama::De
 
     time_index1 = floor(Tshift / DT);
     time_index2 = time_index1 + floor(1.0 / FC / DT);
+    
+    SCAI_ASSERT(time_index1<signal.size(),"Signal is shifted to Tshift > Tsimulation");
+    if (time_index2>signal.size()){
+        time_index2=signal.size()-1;
+    }
 
     /* this is for source[i] = (sin(PI*(t-Tshift)*FC))^3 when t>=tshift && t<=tshift+1.0/FC; */
     count = 0;

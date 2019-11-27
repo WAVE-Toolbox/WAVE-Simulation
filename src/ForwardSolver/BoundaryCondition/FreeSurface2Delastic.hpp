@@ -28,7 +28,6 @@ namespace KITGPI
                 void exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx);
 
               private:
-                //   using FreeSurfaceElastic<ValueType>::setSurfaceZero;
                 using FreeSurfaceElastic<ValueType>::scaleHorizontalUpdate;
                 using FreeSurfaceElastic<ValueType>::scaleVerticalUpdate;
                 using FreeSurfaceElastic<ValueType>::temp;

@@ -1,122 +1,19 @@
+
 #include "Sources.hpp"
+#include "../IO/IO.hpp"
+#include "../IO/SUIO.hpp"
 
 using namespace scai;
 
-/*! \brief Constructor based on the configuration class and the distribution of the wavefields. This constructor will call an initialisation function
- *
- * If runSimultaneousShots is true all sources are initialized. 
- * 
- \param config Configuration class, which is used to derive all requiered parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-KITGPI::Acquisition::Sources<ValueType>::Sources(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
-{
-    init(config, modelCoordinates, ctx, dist_wavefield);
-}
-
-/*! \brief Init based on the configuration class and the distribution of the wavefields. This Init will read the acquistion of a single source from the Sourcefile or from SU. If the acquisition should be read from SU all sources have to be initialized from SU first.
- *
- \param config Configuration class, which is used to derive all requiered parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- \param shotNumber Number of the source in the Source File
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, IndexType shotNumber)
-{
-    /* Read shotNumber row of acquisition matrix */
-    scai::lama::DenseMatrix<ValueType> acquisition_temp;
-    if (!config.get<bool>("initSourcesFromSU")) {
-        scai::lama::DenseStorage<ValueType> test;
-        test.readFromFile(config.get<std::string>("SourceFilename") + ".mtx", shotNumber, 1);
-        acquisition_temp.assign(test);
-    } else {
-        su.getAcquisitionRow(acquisition_temp, shotNumber);
-    }
-
-    this->init(acquisition_temp, config, modelCoordinates, ctx, dist_wavefield);
-}
-
-/*! \brief Init of all sources based on the configuration class and the distribution of the wavefields. This function will read the acquistion from the Sourcefile or from SU.
- * If SU is selected the following header words have to be set: sx, sy, sdepth, scalco and scalel.
- *
- \param config Configuration class, which is used to derive all requiered parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
-{
-    /* Read acquisition matrix */
-    scai::lama::DenseMatrix<ValueType> acquisition_temp;
-
-    if (config.get<bool>("initSourcesFromSU")) {
-        su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
-        acquisition_temp = su.getAcquisition();
-        std::cout << acquisition_temp << std::endl;
-        acquisition_temp.writeToFile("test.mtx");
-    } else
-        acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
-
-    this->init(acquisition_temp, config, modelCoordinates, ctx, dist_wavefield);
-
-    if (config.get<bool>("runSimultaneousShots")) {
-        numShots = 1;
-    } else {
-        numShots = acquisition_temp.getNumRows();
-    }
-}
-
-/*! \brief Init of all shots based on the configuration class and the distribution of the wavefields
- *
- * acquistion matrix:
- * |           | X | Y | Z | SOURCE_TYPE | WAVELET_TYPE | WAVELET_SHAPE | FC | AMP | TShift |
- * | ----------| --| --| --| ----------- | -------------| --------------| ---| ----| ------ |
- * | 1. source |   |   |   |             |              |               |    |     |        |
- *
- * 
- \param config Configuration class, which is used to derive all requiered parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
-{
-    /*reset seismograms. This is necessary when init will be called multiple times*/
-    this->getSeismogramHandler().resetSeismograms();
-
-    IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
-
-    /* Read acquisition from file */
-    this->setAcquisition(acquisition_matrix, modelCoordinates, dist_wavefield, ctx);
-
-    /* init seismogram handler */
-    this->initSeismogramHandler(NT, ctx, dist_wavefield);
-    this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
-
-    /* Generate Signals */
-    generateSignals(config, ctx);
-    copySignalsToSeismogramHandler();
-}
-
 /*! \brief Init of a single shot based on the configuration class and the distribution of the wavefields
+ \param allSettings vector of sourceSettings structs with settings for all shots
  \param config Configuration class, which is used to derive all requiered parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
- \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
- \param shotNumber Shot number
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
+void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
@@ -124,26 +21,34 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
     /* Read acquisition from file */
-    this->setAcquisition(acquisition_matrix, modelCoordinates, dist_wavefield, ctx);
+    this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
+    initOptionalAcquisitionParameter(allSettings, dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
-    generateSignals(config, ctx, shotNumber);
+    std::vector<scai::IndexType> readrows;
+    for (unsigned long i = 0; i < allSettings.size(); i++) {
+        readrows.push_back(allSettings[i].row);
+    }
+
+    generateSignals(config, ctx, readrows);
     copySignalsToSeismogramHandler();
 }
 
 /*! \brief Init with a signal matrix
+ \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
  \param config Configuration class, which is used to derive all requiered parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
- \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
  \param signalMatrix Signal matrix
  */
+
+// this function can be removed acq matrix is no longer supported maybe someone still uses it?
+
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
 {
@@ -151,12 +56,14 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
 
     /* Read acquisition from file */
-    this->setAcquisition(acquisition_matrix, modelCoordinates, dist_wavefield, ctx);
+    std::vector<sourceSettings<ValueType>> allSettings;
+    acqMat2settings(acquisition_matrix, allSettings, dist_wavefield);
+    this->setAcquisition(allSettings, modelCoordinates, dist_wavefield, ctx);
+    initOptionalAcquisitionParameter(allSettings, dist_wavefield, ctx);
 
     /* init seismogram handler */
     this->initSeismogramHandler(NT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
-    this->getSeismogramHandler().setNormalizeTraces(config.get<IndexType>("NormalizeTraces"));
 
     /* Generate Signals */
     allocateSeismogram(NT, this->getSeismogramTypes().getDistributionPtr(), ctx);
@@ -166,31 +73,21 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     copySignalsToSeismogramHandler();
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields
- *
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Sources<ValueType>::getNumShots()
-{
-    return numShots;
-}
-
-/*! \brief Generation of the source signals for all shots
+/*! \brief Generation of the source signal for a single shot
  *
  * Allocation and calculation of the source signals accordingly to the source parameter vectors.
  * The calculation is performed locally on each node.
  *
- \param NT Number of time steps
- \param DT Time step interval
+ \param config Configuration file
  \param ctx context
+ \param rowinds vector with rows to read from source signal file corresponding to lines in sources.txt
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx)
+void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType> rowinds)
 {
     ValueType DT = config.get<ValueType>("DT");
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
 
-    SCAI_ASSERT(this->getNumParameter() >= 5, "Number of source parameters < 5. Cannot generate signals. ");
     SCAI_ASSERT_GT_DEBUG(NT, 0, "NT must be positive");
     SCAI_ASSERT_GT_DEBUG(DT, 0, "DT must be positive");
 
@@ -202,10 +99,14 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Con
 
     IndexType wavelet_type_i;
 
-    for (IndexType i = 0; i < this->getNumTracesLocal(); i++) {
+    scai::dmemo::DistributionPtr shotdist = this->getSeismogramTypes().getDistributionPtr();
 
+    for (IndexType i = 0; i < this->getNumTracesLocal(); i++) {
         /* Cast to IndexType */
         wavelet_type_i = read_wavelet_type_LA[i];
+
+        // get global indices for local ones
+        IndexType glob_i = shotdist->local2Global(i);
 
         switch (wavelet_type_i) {
         case 1:
@@ -220,60 +121,13 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Con
         case 3:
             wavelet_type_flag_3 = true; // read a source signal for each source
             SCAI_ASSERT(!wavelet_type_flag_2, "Combination of wavelet type 2 and 3 not supported");
-            readSignalFromFile(config, i, i);
+            readSignalFromFile(config, i, rowinds[glob_i]);
             break;
 
         default:
-            COMMON_THROWEXCEPTION("Unkown wavelet type ")
+            COMMON_THROWEXCEPTION("Unknown wavelet type ")
             break;
         }
-    }
-}
-
-/*! \brief Generation of the source signal for a single shot
- *
- * Allocation and calculation of the source signals accordingly to the source parameter vectors.
- * The calculation is performed locally on each node.
- *
- \param NT Number of time steps
- \param DT Time step interval
- \param ctx context
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::IndexType shotNumber)
-{
-    ValueType DT = config.get<ValueType>("DT");
-    IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
-
-    SCAI_ASSERT(this->getNumParameter() >= 5, "Number of source parameters < 5. Cannot generate signals. ");
-    SCAI_ASSERT_GT_DEBUG(NT, 0, "NT must be positive");
-    SCAI_ASSERT_GT_DEBUG(DT, 0, "DT must be positive");
-
-    allocateSeismogram(NT, this->getSeismogramTypes().getDistributionPtr(), ctx);
-
-    signals.setDT(DT);
-
-    IndexType wavelet_type_i = wavelet_type[0];
-
-    switch (wavelet_type_i) {
-    case 1:
-        /* Synthetic wavelet */
-        generateSyntheticSignal(0, NT, DT);
-        break;
-    case 2: // read one source signal for all sources
-        wavelet_type_flag_2 = true;
-        SCAI_ASSERT(!wavelet_type_flag_3, "Combination of wavelet type 2 and 3 not supported");
-        readSignalFromFile(config, 0, 0);
-        break;
-    case 3:
-        wavelet_type_flag_3 = true; // read a source signal for each source
-        SCAI_ASSERT(!wavelet_type_flag_2, "Combination of wavelet type 2 and 3 not supported");
-        readSignalFromFile(config, 0, shotNumber);
-        break;
-
-    default:
-        COMMON_THROWEXCEPTION("Unkown wavelet type ")
-        break;
     }
 }
 
@@ -289,8 +143,6 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Con
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT)
 {
-
-    SCAI_ASSERT(this->getNumParameter() >= 9, "Number of source parameters <= 9. Cannot generate synthetic signals. ");
 
     lama::DenseVector<ValueType> signalVector;
     signalVector.allocate(NT);
@@ -330,7 +182,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         break;
 
     default:
-        COMMON_THROWEXCEPTION("Unkown wavelet shape ")
+        COMMON_THROWEXCEPTION("Unknown wavelet shape ")
         break;
     }
 
@@ -340,30 +192,31 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
 }
 
+/*! \brief Read source signal from file
+ *
+ * Read source signal from file
+ *
+ \param config Configuration file
+ \param SourceLocal Number of the local source
+ \param rowNumber Number of the row to read in
+ */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType numSourceRead)
+void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::Configuration const &config, scai::IndexType SourceLocal, scai::IndexType rowNumber)
 {
     std::string signalFilename = config.get<std::string>("SourceSignalFilename");
 
     if (config.get<bool>("initSourcesFromSU")) {
         scai::lama::DenseVector<ValueType> singleSignal;
-        scai::IndexType numSourceReadLocal;
 
-        su.locateTrace(signalFilename, numSourceReadLocal, numSourceRead);
-        suHandler<ValueType>::readSingleDataSU(signalFilename, singleSignal, numSourceReadLocal);
+        SUIO::readSingleDataSU(signalFilename, singleSignal, rowNumber);
 
         SCAI_ASSERT(singleSignal.size() == signals.getData().getNumColumns(), "Source signal has invalid length");
 
+        hmemo::HArray<ValueType> localsignal = singleSignal.getLocalValues();
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
-        signalsMatrix.setRow(singleSignal, SourceLocal, scai::common::BinaryOp::COPY);
+        signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     } else {
-        signalFilename += ".mtx";
-        scai::lama::DenseStorage<ValueType> signalsMatrixTmp;
-        signalsMatrixTmp.readFromFile(signalFilename, numSourceRead, 1);
-
-        SCAI_ASSERT(signalsMatrixTmp.getNumColumns() == signals.getData().getNumColumns(), "Source signal has invalid length");
-
-        hmemo::HArray<ValueType> localsignal = signalsMatrixTmp.getValues();
+        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("fileFormat"));
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     }
@@ -373,8 +226,8 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::checkRequiredNumParameter(IndexType numParameterCheck)
 {
 
-    if (numParameterCheck < 5 || numParameterCheck > 9) {
-        COMMON_THROWEXCEPTION("Source acquisition file has an unkown format ")
+    if (numParameterCheck < 6 || numParameterCheck > 10) {
+        COMMON_THROWEXCEPTION("Source acquisition file has an unknown format ")
     }
 }
 
@@ -383,7 +236,7 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(I
 {
     /* Allocate source parameter vectors on all processes */
     wavelet_type.allocate(numTracesGlobal);
-    if (numParameter > 5) {
+    if (numParameter > 4) {
         wavelet_shape.allocate(numTracesGlobal);
         wavelet_fc.allocate(numTracesGlobal);
         wavelet_amp.allocate(numTracesGlobal);
@@ -395,7 +248,7 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(I
     /* Save source configurations from acquisition matrix in vectors */
     acquisition.getRow(tmp, 4);
     wavelet_type = lama::cast<IndexType>(tmp);
-    if (numParameter > 5) {
+    if (numParameter > 4) {
         acquisition.getRow(tmp, 5);
         wavelet_shape = lama::cast<IndexType>(tmp);
         acquisition.getRow(wavelet_fc, 6);
@@ -406,7 +259,7 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(I
     /* Redistribute source parameter vectors to corresponding processes */
     wavelet_type.redistribute(dist_wavefield_traces);
     wavelet_type.setContextPtr(ctx);
-    if (numParameter > 5) {
+    if (numParameter > 4) {
         wavelet_shape.redistribute(dist_wavefield_traces);
         wavelet_fc.redistribute(dist_wavefield_traces);
         wavelet_amp.redistribute(dist_wavefield_traces);
@@ -417,6 +270,58 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(I
         wavelet_amp.setContextPtr(ctx);
         wavelet_tshift.setContextPtr(ctx);
     }
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(std::vector<sourceSettings<ValueType>> allSettings, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+{
+    /* Allocate source parameter vectors on all processes */
+    scai::IndexType numTracesGlobal = this->getNumTracesGlobal();
+    scai::dmemo::DistributionPtr dist_master_numTracesGlobal(new scai::dmemo::CyclicDistribution(numTracesGlobal, numTracesGlobal, dist_wavefield->getCommunicatorPtr()));
+    scai::dmemo::DistributionPtr dist_wavefield_traces = this->getSeismogramTypes().getDistributionPtr();
+
+    wavelet_type.allocate(dist_master_numTracesGlobal);
+    wavelet_shape.allocate(dist_master_numTracesGlobal);
+    wavelet_fc.allocate(dist_master_numTracesGlobal);
+    wavelet_amp.allocate(dist_master_numTracesGlobal);
+    wavelet_tshift.allocate(dist_master_numTracesGlobal);
+
+    if (dist_wavefield->getCommunicator().getRank() == 0) {
+        /* Get writeAccess to coordinates vector (local) */
+        auto write_waveletType_LA = hostWriteAccess(wavelet_type.getLocalValues());
+        auto write_waveletShape_LA = hostWriteAccess(wavelet_shape.getLocalValues());
+        auto write_waveletFc_LA = hostWriteAccess(wavelet_fc.getLocalValues());
+        auto write_amp_LA = hostWriteAccess(wavelet_amp.getLocalValues());
+        auto write_tshift_LA = hostWriteAccess(wavelet_tshift.getLocalValues());
+
+        /* 2. Calculate 1-D coordinates from 3-D coordinates */
+        for (scai::IndexType i = 0; i < numTracesGlobal; i++) {
+            write_waveletType_LA[i] = allSettings[i].waveletType;
+            write_waveletShape_LA[i] = allSettings[i].waveletShape;
+            write_waveletFc_LA[i] = allSettings[i].fc;
+            write_amp_LA[i] = allSettings[i].amp;
+            write_tshift_LA[i] = allSettings[i].tShift;
+        }
+
+        write_waveletType_LA.release();
+        write_waveletShape_LA.release();
+        write_waveletFc_LA.release();
+        write_amp_LA.release();
+        write_tshift_LA.release();
+    }
+
+    /* Redistribute source parameter vectors to corresponding processes */
+    wavelet_type.redistribute(dist_wavefield_traces);
+    wavelet_shape.redistribute(dist_wavefield_traces);
+    wavelet_fc.redistribute(dist_wavefield_traces);
+    wavelet_amp.redistribute(dist_wavefield_traces);
+    wavelet_tshift.redistribute(dist_wavefield_traces);
+
+    wavelet_type.setContextPtr(ctx);
+    wavelet_shape.setContextPtr(ctx);
+    wavelet_fc.setContextPtr(ctx);
+    wavelet_amp.setContextPtr(ctx);
+    wavelet_tshift.setContextPtr(ctx);
 }
 
 template <typename ValueType>
@@ -444,6 +349,16 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
 }
 
+/*! \brief get source signal
+ *
+ */
+template <typename ValueType>
+lama::DenseMatrix<ValueType> KITGPI::Acquisition::Sources<ValueType>::getsourcesignal()
+{
+    lama::DenseMatrix<ValueType> signal_out = signals.getData();
+    return (signal_out);
+}
+
 /*! \brief Allocation of the source signals matrix
  *
  * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.
@@ -468,18 +383,40 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
 
 /*! \brief Gets the Acquisition Matrix
  *
- * Uses configuration to determine if sources are initialized by MTX or SU and then get the Acquisition Matrix
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
  *
  \param config Configuration
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionMat(Configuration::Configuration const &config, scai::lama::DenseMatrix<ValueType> &acqMat) const
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings)
 {
     if (config.get<bool>("initSourcesFromSU"))
-        acqMat = su.getAcquisition();
+        su.readAllSettingsFromSU(allSourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
     else
-        acqMat.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
+        readAllSettings(allSourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<sourceSettings<ValueType>> &allSettings, scai::dmemo::DistributionPtr dist_wavefield)
+{
+    scai::IndexType nRows = acqMat.getNumRows();
+    allSettings.reserve(nRows);
+    if (dist_wavefield->getCommunicator().getRank() == 0) {
+        auto read_acquisition_temp_HA = hostReadAccess(acqMat.getLocalStorage().getData());
+        for (IndexType row = 0; row < nRows; row++) {
+            allSettings[row].sourceNo = read_acquisition_temp_HA[row * 10 + 0];
+            allSettings[row].sourceCoords.x = read_acquisition_temp_HA[row * 10 + 1];
+            allSettings[row].sourceCoords.y = read_acquisition_temp_HA[row * 10 + 2];
+            allSettings[row].sourceCoords.z = read_acquisition_temp_HA[row * 10 + 3];
+            allSettings[row].sourceType = read_acquisition_temp_HA[row * 10 + 4];
+            allSettings[row].waveletType = read_acquisition_temp_HA[row * 10 + 5];
+            allSettings[row].waveletShape = read_acquisition_temp_HA[row * 10 + 6];
+            allSettings[row].fc = read_acquisition_temp_HA[row * 10 + 7];
+            allSettings[row].amp = read_acquisition_temp_HA[row * 10 + 8];
+            allSettings[row].tShift = read_acquisition_temp_HA[row * 10 + 9];
+        }
+    }
 }
 
 template class KITGPI::Acquisition::Sources<double>;

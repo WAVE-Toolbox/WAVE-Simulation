@@ -28,14 +28,16 @@ namespace KITGPI
                 //! Default destructor
                 ~CPML2DAcoustic(){};
 
-                void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType BoundaryWidth, ValueType NPower, ValueType KMaxCPML, ValueType CenterFrequencyCPML, ValueType VMaxCPML, scai::IndexType useFreeSurface);
+                ValueType estimateMemory(scai::IndexType BoundaryWidth, scai::IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+
+                void init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, scai::IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface);
 
                 void resetCPML();
 
-                void apply_vxx(scai::lama::Vector<ValueType> &vxx);
-                void apply_vyy(scai::lama::Vector<ValueType> &vyy);
-                void apply_p_x(scai::lama::Vector<ValueType> &p_x);
-                void apply_p_y(scai::lama::Vector<ValueType> &p_y);
+                void apply_vxx(scai::lama::DenseVector<ValueType> &vxx);
+                void apply_vyy(scai::lama::DenseVector<ValueType> &vyy);
+                void apply_p_x(scai::lama::DenseVector<ValueType> &p_x);
+                void apply_p_y(scai::lama::DenseVector<ValueType> &p_y);
 
               private:
                 using CPML<ValueType>::active;
@@ -46,11 +48,6 @@ namespace KITGPI
 
                 VectorType psi_p_x; //!< CPML memory Variable
                 VectorType psi_p_y; //!< CPML memory Variable
-
-                VectorType k_x;      //!< CPML coefficient
-                VectorType k_y;      //!< CPML coefficient
-                VectorType k_x_half; //!< CPML coefficient for staggered gridpoints
-                VectorType k_y_half; //!< CPML coefficient for staggered gridpoints
 
                 VectorType a_x;      //!< CPML coefficient
                 VectorType a_y;      //!< CPML coefficient

@@ -10,21 +10,18 @@ typedef float ValueType;
 
 TEST(CoordinateTest, TestLocatedOnSurface)
 {
-
-    int NX = 5;
-    int NY = 10;
-    int NZ = 15;
-    double DH = 1.0;
+    IndexType NX = 5;
+    IndexType NY = 10;
+    IndexType NZ = 15;
+    ValueType DH = 1.0;
 
     Acquisition::Coordinates<ValueType> test(NX, NY, NZ, DH);
 
-    int coord1 = 2;
+    IndexType coord1 = 2;
     EXPECT_TRUE(test.locatedOnSurface(coord1));
-
-    int coord2 = 52;
+    IndexType coord2 = 52;
     EXPECT_TRUE(test.locatedOnSurface(coord2));
-
-    int coord3 = 70;
+    IndexType coord3 = 80;
     EXPECT_FALSE(test.locatedOnSurface(coord3));
 }
 
@@ -32,25 +29,25 @@ TEST(CoordinateTest, TestIndex2coordinate)
 {
 
     // Grid
-    int NX = 5;
-    int NY = 10;
-    int NZ = 15;
+    IndexType NX = 5;
+    IndexType NY = 15;
+    IndexType NZ = 10;
 
     // Test coordinates
-    int testX = 2;
-    int testY = 2;
-    int testZ = 2;
+    IndexType testX = 2;
+    IndexType testY = 2;
+    IndexType testZ = 2;
     double DH = 1.0;
 
     // index of test coordinates
-    int testCoord = 112;
+    IndexType testIndex= 112;
 
     Acquisition::coordinate3D sampleSolution;
     Acquisition::coordinate3D result;
 
     Acquisition::Coordinates<ValueType> test(NX, NY, NZ, DH);
 
-    result = test.index2coordinate(testCoord);
+    result = test.index2coordinate(testIndex);
 
     sampleSolution.x = testX;
     sampleSolution.y = testY;
@@ -66,13 +63,13 @@ TEST(CoordinateTest, TestCoordinate2index)
 
     // Grid
     int NX = 5;
-    int NY = 10;
-    int NZ = 15;
+    int NY = 15;
+    int NZ = 10;
 
     // Test coordinates
     int testX = 4;
-    int testY = 3;
-    int testZ = 2;
+    int testY = 2;
+    int testZ = 3;
     double DH = 1.0;
 
     // index of test coordinates
@@ -91,7 +88,7 @@ TEST(CoordinateTest, TestCoordinate2index)
 
     // Test if interface throws if wrong input parameters are given
     EXPECT_ANY_THROW(test1.coordinate2index(testX, testY, 10 * testZ));
-    EXPECT_ANY_THROW(test1.coordinate2index(testX, 4 * testY, testZ));
+    EXPECT_ANY_THROW(test1.coordinate2index(testX, 8 * testY, testZ));
     EXPECT_ANY_THROW(test1.coordinate2index(2 * testX, testY, testZ));
     EXPECT_ANY_THROW(test1.coordinate2index(-testX, testY, testZ));
     EXPECT_ANY_THROW(test1.coordinate2index(testX, -testY, testZ));

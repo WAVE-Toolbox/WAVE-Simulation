@@ -1,4 +1,5 @@
 #include "Wavefields2Dsh.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -33,24 +34,37 @@ void KITGPI::Wavefields::FD2Dsh<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     this->initWavefield(Syz, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD2Dsh<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 3 Wavefields in 2D sh modeling: Sxz, Syz, Vz */
+    IndexType numWavefields = 3;
+    return (this->getMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- \param type Type of the Seismogram
+ \param snapType Type of the wavefield snapshots 1=Velocities 2=pressure 3=div + curl
+ \param baseName base name of the output file
  \param t Current Timestep
+ \param derivatives derivatives object only used to output div/curl
+ \param model model object only used to output div/curl
+ \param fileFormat Output file format 
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD2Dsh<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType fileFormat)
 {
-    std::string fileBaseName = baseName + type;
+    std::string fileName = baseName + type;
+    std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VZ", fileBaseName, t, partitionedOut);
+        IO::writeVector(VZ, fileName + ".VZ." + timeStep, fileFormat);
         break;
     case 2:
-        this->writeWavefield(Syy, "Syz", fileBaseName, t, partitionedOut);
-        this->writeWavefield(Sxy, "Sxz", fileBaseName, t, partitionedOut);
+        IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
+        IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
         break;
     case 3: {
         COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dsh.");

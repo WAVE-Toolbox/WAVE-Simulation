@@ -1,11 +1,19 @@
 clearvars; close all;
 
+addpath('../configuration')
+config=conf('../configuration/configuration.txt');
+
 %% Read seismogram
-filename='seismogram.shot_0.p.mtx';
-seismogram=readSeismogram(filename);
+component='p';
+shotnr=1;
 
-DT=2e-3;
+format=config.getValue('FileFormat');
+filename_base=config.getString('SeismogramFilename');
+filename=['../',filename_base,'.shot_',num2str(shotnr),'.',component];
+% readSeismogram 1=mtx 2=lmf
+seismogram=readSeismogram(filename,format);
 
+DT=config.getValue('seismoDT');
 
 T=1*DT:DT:size(seismogram,2)*DT;
 

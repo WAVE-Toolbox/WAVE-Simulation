@@ -3,16 +3,18 @@
 #include <scai/lama.hpp>
 
 #include "Acquisition.hpp"
+#include "Configuration/ValueType.hpp"
 #include "Configuration.hpp"
 #include "HostPrint.hpp"
 #include "Receivers.hpp"
+
 
 using namespace KITGPI;
 using namespace scai;
 
 int main(int argc, char *argv[])
 {
-    typedef double ValueType;
+   // typedef double ValueType;
 
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
@@ -42,18 +44,27 @@ int main(int argc, char *argv[])
     Acquisition::Receivers<ValueType> receiversRef;
     receiversRef.init(config, Coordinates, ctx, dist);
 
-    std::string filenameTest = config.get<std::string>("SeismogramFilename");
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
+    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+
+    std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(sourceSettings[0].sourceNo);
     std::size_t pos = filenameTest.find(".ci");
     std::string filenameRef = filenameTest.substr(0, pos) + ".ref";
 
+    IndexType referenceSeismogramFormat = 1; // mtx
     receiversTest.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameTest);
-    receiversRef.getSeismogramHandler().read(config.get<IndexType>("SeismogramFormat"), filenameRef, 1);
+    receiversRef.getSeismogramHandler().read(referenceSeismogramFormat, filenameRef, 1);
 
     ValueType misfit = 0, misfitSum = 0;
     ValueType max = 0;
-    for (int i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
+    IndexType numSamples = 0;
+    IndexType numTraces = 0;
+    for (IndexType i = 0; i < KITGPI::Acquisition::NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
         seismogramTest = receiversTest.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
         seismogramRef = receiversRef.getSeismogramHandler().getSeismogram(static_cast<KITGPI::Acquisition::SeismogramType>(i));
+
+        numSamples += seismogramRef.getData().getNumColumns();
+        numTraces += seismogramRef.getData().getNumRows();
 
         if (seismogramRef.getData().maxNorm() > max) {
             max = seismogramRef.getData().maxNorm();
@@ -67,10 +78,12 @@ int main(int argc, char *argv[])
         misfitSum += misfit;
     }
 
-    std::cout << "\n\nL2/max: " << misfitSum / max << std::endl;
+    std::cout << "\n\n L2 = " << misfitSum << ", maximum amplitude = " << max << ", number of samples = " << numSamples << ", number of traces = " << numTraces << std::endl;
+    std::cout << "\n L2/max: " << misfitSum / (max)*100 << " %" << std::endl;
+    std::cout << "\n Average difference per sample: " << misfitSum / (max * numSamples * numTraces) << std::endl;
 
-    if (misfitSum > 0.0001 * max) {
-        std::cout << "Seismogram does not match reference solution misfit/maxAmp < 0.01%.\n\n"
+    if (misfitSum / (max * numSamples * numTraces) > 5e-7) {
+        std::cout << "Seismogram does not match reference solution average relative misfit per sample > 5e-7 %.\n\n"
                   << std::endl;
         return (1);
     } else {

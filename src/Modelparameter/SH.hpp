@@ -21,7 +21,6 @@
 
 #include <iostream>
 
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include "Modelparameter.hpp"
 
 namespace KITGPI
@@ -45,18 +44,20 @@ namespace KITGPI
             //! Destructor, releases all allocated resources.
             ~SH(){};
 
-            explicit SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
             explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho);
-            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
+            explicit SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             //! Copy Constructor.
             SH(const SH &rhs);
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const);
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) override;
-            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
-            void write(std::string filename, scai::IndexType partitionedOut) const override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) override;
+            void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
+
+            void write(std::string filename, scai::IndexType fileFormat) const override;
 
             std::string getEquationType() const;
 
@@ -73,7 +74,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
-            
+
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
 
@@ -95,6 +96,7 @@ namespace KITGPI
             KITGPI::Modelparameter::SH<ValueType> &operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs);
 
           private:
+            void init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates){COMMON_THROWEXCEPTION("variable grid is not implemented in the sh case")};
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::equationType;
@@ -109,12 +111,14 @@ namespace KITGPI
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
-            using Modelparameter<ValueType>::DensityAverageMatrixX;
-            using Modelparameter<ValueType>::DensityAverageMatrixY;
-            using Modelparameter<ValueType>::DensityAverageMatrixZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXY;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixXZ;
-            using Modelparameter<ValueType>::sWaveModulusAverageMatrixYZ;
+            void purgeMatrices() override;
+
+            using Modelparameter<ValueType>::averageMatrixX;
+            using Modelparameter<ValueType>::averageMatrixY;
+            using Modelparameter<ValueType>::averageMatrixZ;
+            using Modelparameter<ValueType>::averageMatrixXY;
+            using Modelparameter<ValueType>::averageMatrixXZ;
+            using Modelparameter<ValueType>::averageMatrixYZ;
 
             using Modelparameter<ValueType>::inverseDensityAverageX;
             using Modelparameter<ValueType>::inverseDensityAverageY;

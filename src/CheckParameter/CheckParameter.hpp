@@ -2,7 +2,6 @@
 
 #include "../Acquisition/Receivers.hpp"
 #include "../Acquisition/Sources.hpp"
-#include "../Acquisition/suHandler.hpp"
 #include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
@@ -14,20 +13,41 @@ namespace KITGPI
     namespace CheckParameter
     {
 
-        /*! \brief check number of processes
+        /*! \brief check variable grid
         *
         \param config configuration class
         \param commAll lama communicator
+        \param modelCoordinates modelCoordinates object
         */
-        void checkNumberOfProcesses(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll)
+        template <typename ValueType>
+        void checkVariableGrid(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
-            IndexType npS = config.get<IndexType>("ProcNS");
-            IndexType npX = config.get<IndexType>("ProcNX");
-            IndexType npY = config.get<IndexType>("ProcNY");
-            IndexType npZ = config.get<IndexType>("ProcNZ");
 
-            SCAI_ASSERT_ERROR(commAll->getSize() == npS * npX * npY * npZ, "\n Error: Number of MPI processes (" << commAll->getSize() << ") doesn't match the number of processes specified in configuration"
-                                                                                                                 << ": ProcNS * ProcNX * ProcNY * ProcNZ = " << npS * npX * npY * npZ << "\n")
+            scai::IndexType NX = config.get<scai::IndexType>("NX");
+            scai::IndexType NY = config.get<scai::IndexType>("NY");
+            scai::IndexType NZ = config.get<scai::IndexType>("NZ");
+            scai::IndexType newNX = modelCoordinates.getNX();
+            scai::IndexType newNY = modelCoordinates.getNY();
+            scai::IndexType newNZ = modelCoordinates.getNZ();
+            if ((NX != newNX) || (NY != newNY) || (NZ != newNZ)) {
+                HOST_PRINT(commAll, "\nIn order to fit the variable grid, the model dimension had been altered from:" << NX << " X " << NY << " X " << NZ << " to " << newNX << " X " << newNY << " X " << newNZ << " \n");
+            }
+            auto newInterfaces = modelCoordinates.getInterfaceVec();
+            std::vector<int> interface;
+            std::string gridConfigFileName = config.get<std::string>("gridConfigurationFilename");
+
+            unsigned int column = 0;
+            Common::readColumnFromFile(gridConfigFileName, interface, column);
+            if (interface.at(0) == 0) {
+                interface.erase(interface.begin());
+            } else {
+                COMMON_THROWEXCEPTION("First interface must by at y=0 ");
+            }
+
+            for (unsigned int i = 0; i < interface.size(); i++) {
+                if (interface[i] != newInterfaces[i + 1])
+                    HOST_PRINT(commAll, "In order to fit the variable grid, the interface Nr." << i + 1 << " has benn moved from Y=" << interface[i] << " to Y=" << newInterfaces[i + 1] << "\n\n")
+            }
         }
 
         /*! \brief check Courant-Friedrichs-Lewy-Criterion
@@ -39,9 +59,9 @@ namespace KITGPI
         \param spFDo Spatial FD order
         */
         template <typename ValueType>
-        void checkStabilityCriterion(ValueType dt, ValueType DH, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkStabilityCriterion(ValueType dt, ValueType DH, ValueType vpMax, std::string dimension, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm, scai::IndexType shotNumber = -1, scai::IndexType layer = -1)
         {
-            if (comm->getRank() == MASTERGPI) {
+            if (comm->getRank() == 0) {
                 scai::IndexType D;
                 if (dimension.compare("2D") == 0) {
                     D = 2;
@@ -76,7 +96,21 @@ namespace KITGPI
                 }
 
                 //Assess stability criterion
-                SCAI_ASSERT_ERROR(dt <= DH / (h * sqrt(D) * vpMax), "\nCourant-Friedrichs-Lewy-Criterion is not met! \ndt is " << dt << " but should be less than DH/(h*sqrt(D)*vpMax=" << DH / (h * sqrt(D) * vpMax) << "\n\n");
+
+                if (dt > DH / (h * sqrt(D) * vpMax)) {
+                    std::stringstream message;
+                    message << "! \ndt is " << dt << " but should be less than DH/(h*sqrt(D)*vpMax"
+                            << "=" << DH << "/ (" << h << "* sqrt(" << D << ") * " << vpMax << ") =" << DH / (h * sqrt(D) * vpMax);
+
+                    if ((shotNumber >= 0) && (layer >= 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                    if ((shotNumber >= 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                    if ((shotNumber < 0) && (layer < 0))
+                        HOST_PRINT(comm, "\nCourant-Friedrichs-Lewy-Criterion is not met" << message.str() << "\n\n");
+                }
+
+                SCAI_ASSERT_ERROR(dt <= DH / (h * sqrt(D) * vpMax), "\n\nCourant-Friedrichs-Lewy-Criterion is not met! \n\n");
             }
         }
 
@@ -87,9 +121,9 @@ namespace KITGPI
         \param spFDo Spatial FD order.
         */
         template <typename ValueType>
-        void checkNumericalDispersion(ValueType DH, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalDispersion(ValueType DH, ValueType vMin, ValueType fcMax, scai::IndexType spFDo, scai::dmemo::CommunicatorPtr comm, scai::IndexType shotNumber = -1, scai::IndexType layer = -1)
         {
-            if (comm->getRank() == MASTERGPI) {
+            if (comm->getRank() == 0) {
                 scai::IndexType N;
                 switch (spFDo) {
                 case 2:
@@ -115,33 +149,93 @@ namespace KITGPI
                 }
 
                 if (DH > vMin / (2 * fcMax * N)) {
-                    std::cerr << "\nCriterion to avoid numerical dispersion is not met! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin / (2 * fcMax * N) << "\n\n";
+                    std::stringstream message;
+                    message << "! \nDH is " << DH << " but should be less than vMin/(2*fcMax*N)=" << vMin << " / (2 * " << fcMax << " * " << N << ") = " << vMin / (2 * fcMax * N);
+
+                    if ((shotNumber >= 0) && (layer >= 0))
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << " in layer: " << layer << message.str() << "\n\n");
+                    if ((shotNumber >= 0) && (layer < 0))
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met for shot number: " << shotNumber << message.str() << "\n\n");
+                    if ((shotNumber < 0) && (layer < 0))
+                        HOST_PRINT(comm, "", "\nCriterion to avoid numerical dispersion is not met" << message.str() << "\n\n");
                 }
             }
         }
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, Modelparameter::Modelparameter<ValueType> &model, scai::dmemo::CommunicatorPtr comm)
+        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
-                ValueType vMaxTmp;
-                vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS().max() : model.getVelocityP().max();
+                auto dist = model.getDensity().getDistributionPtr();
+                auto commShot = dist->getCommunicatorPtr();
+                scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
+                dist->getOwnedIndexes(ownedIndexes);
 
-                ValueType vMinTmp;
-                scai::lama::DenseVector<ValueType> velocityTmp;
-                velocityTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
-                KITGPI::Common::searchAndReplace<ValueType>(velocityTmp, 0.0, vMaxTmp, 5);
-                vMinTmp = velocityTmp.min();
+                scai::IndexType numlayer = modelCoordinates.getNumLayers();
 
-                scai::lama::DenseMatrix<ValueType> acquisition_temp;
-                scai::lama::DenseVector<ValueType> wavelet_fc;
-                acquisition_temp.readFromFile(config.get<std::string>("SourceFilename") + ".mtx");
-                acquisition_temp.getColumn(wavelet_fc, 8);
-                ValueType fcMax = wavelet_fc.max();
+                ValueType vMax[numlayer] = {0};
+                ValueType vMin[numlayer] = {0};
+                std::fill_n(vMin, numlayer, 3e8);
 
-                checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), config.get<ValueType>("DH"), vMaxTmp, config.get<std::string>("dimension"), config.get<scai::IndexType>("spatialFDorder"), comm);
-                checkNumericalDispersion<ValueType>(config.get<ValueType>("DH"), vMinTmp, fcMax, config.get<scai::IndexType>("spatialFDorder"), comm);
+                scai::IndexType localIndex = 0;
+
+                scai::lama::DenseVector<ValueType> vMaxTmp;
+                vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
+                auto read_vMaxTmp = scai::hmemo::hostReadAccess(vMaxTmp.getLocalValues());
+
+                scai::lama::DenseVector<ValueType> vMinTmp;
+                vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
+                auto read_vMinTmp = scai::hmemo::hostReadAccess(vMinTmp.getLocalValues());
+
+                for (scai::IndexType ownedIndex : scai::hmemo::hostReadAccess(ownedIndexes)) {
+
+                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+                    auto layer = modelCoordinates.getLayer(coordinate);
+
+                    if ((config.get<std::string>("equationType").compare("elastic") == 0) || (config.get<std::string>("equationType").compare("visco") == 0)) {
+                        SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= 1, "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < 1 at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
+                    }
+                    if (read_vMaxTmp[localIndex] > vMax[layer]) {
+                        vMax[layer] = read_vMaxTmp[localIndex];
+                    }
+
+                    if ((read_vMinTmp[localIndex] < vMin[layer]) && (read_vMinTmp[localIndex] > 0.0)) {
+                        vMin[layer] = read_vMinTmp[localIndex];
+                    }
+
+                    localIndex++;
+                }
+
+                // communicate vMin and vMax and find the minimu and maximum of all processes
+                commShot->minImpl(vMin, vMin, numlayer, scai::common::TypeTraits<ValueType>::stype);
+                commShot->maxImpl(vMax, vMax, numlayer, scai::common::TypeTraits<ValueType>::stype);
+
+                ValueType fcMax = 0;
+                for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                    if (sourceSettings[i].fc > fcMax)
+                        fcMax = sourceSettings[i].fc;
+                }
+
+                std::vector<scai::IndexType> spatialFDorderVec;
+
+                if (config.get<bool>("useVariableFDoperators")) {
+
+                    unsigned int column = 2;
+                    Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), spatialFDorderVec, column);
+                } else {
+                    spatialFDorderVec.assign(numlayer, config.get<scai::IndexType>("spatialFDorder"));
+                }
+
+                for (scai::IndexType layer = 0; layer < numlayer; layer++) {
+                    if (config.get<bool>("useVariableGrid")) {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber, layer);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber, layer);
+                    } else {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber);
+                    }
+                }
             }
         }
 
@@ -153,32 +247,23 @@ namespace KITGPI
         */
 
         template <typename ValueType>
-        void checkSources(Configuration::Configuration const &config, Acquisition::Sources<ValueType> const &sources, scai::dmemo::CommunicatorPtr comm)
+        void checkSources(std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings_temp, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
         {
-            scai::IndexType NX = config.get<scai::IndexType>("NX");
-            scai::IndexType NY = config.get<scai::IndexType>("NY");
-            scai::IndexType NZ = config.get<scai::IndexType>("NZ");
 
-            scai::lama::DenseMatrix<ValueType> acquisition_temp;
-            sources.getAcquisitionMat(config, acquisition_temp);
-            scai::IndexType numRows = acquisition_temp.getNumRows();
-            scai::lama::DenseVector<ValueType> row_temp;
-            scai::IndexType X_temp;
-            scai::IndexType Y_temp;
-            scai::IndexType Z_temp;
+            for (auto const &source : sourceSettings_temp) {
 
-            for (scai::IndexType row_ind = 0; row_ind < numRows; row_ind++) {
-                acquisition_temp.getRow(row_temp, row_ind);
-                X_temp = row_temp.getValue(0);
-                Y_temp = row_temp.getValue(1);
-                Z_temp = row_temp.getValue(2);
-                if (comm->getRank() == MASTERGPI) {
-                    SCAI_ASSERT_ERROR(X_temp >= 0, "X coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(Y_temp >= 0, "Y coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(Z_temp >= 0, "Z coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(X_temp < NX, "X coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be smaller than NX!")
-                    SCAI_ASSERT_ERROR(Y_temp < NY, "Y coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be smaller than NY!")
-                    SCAI_ASSERT_ERROR(Z_temp < NZ, "Z coordinate (defined as gridpoint) of source #" << row_ind + 1 << " must be smaller than NZ!")
+                if ((source.sourceCoords.x >= modelCoordinates.getNX() || source.sourceCoords.x < 0 || source.sourceCoords.y >= modelCoordinates.getNY() || source.sourceCoords.y < 0 || source.sourceCoords.z >= modelCoordinates.getNZ() || source.sourceCoords.z < 0)) {
+                    HOST_PRINT(comm, "\nsource Nr. " << source.sourceNo << " with coordinate: " << source.sourceCoords << " is not located on the grid \n\n");
+                    COMMON_THROWEXCEPTION("source Nr. " << source.sourceNo << " with coordinate: " << source.sourceCoords << " is not located on the grid");
+                }
+
+                int index = modelCoordinates.coordinate2index(source.sourceCoords);
+                Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(index);
+
+                //check for the variable grid
+                if (coordinate != source.sourceCoords) {
+                    HOST_PRINT(comm, "\nsource Nr. " << source.sourceNo << " with coordinate: " << source.sourceCoords << " is not located on the grid \n\n");
+                    COMMON_THROWEXCEPTION("source Nr. " << source.sourceNo << " with coordinate: " << source.sourceCoords << " is not located on the grid");
                 }
             }
         }
@@ -191,32 +276,24 @@ namespace KITGPI
         */
 
         template <typename ValueType>
-        void checkReceivers(Configuration::Configuration const &config, Acquisition::Receivers<ValueType> const &receiver, scai::dmemo::CommunicatorPtr comm)
+        void checkReceivers(std::vector<Acquisition::receiverSettings> receiverSettings_temp, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
         {
-            scai::IndexType NX = config.get<scai::IndexType>("NX");
-            scai::IndexType NY = config.get<scai::IndexType>("NY");
-            scai::IndexType NZ = config.get<scai::IndexType>("NZ");
+            int i = 0;
+            for (auto const &receiver : receiverSettings_temp) {
+                i++;
 
-            scai::lama::DenseMatrix<ValueType> acquisition_temp;
-            receiver.getAcquisitionMat(config, acquisition_temp);
-            scai::IndexType numRows = acquisition_temp.getNumRows();
-            scai::lama::DenseVector<ValueType> row_temp;
-            scai::IndexType X_temp;
-            scai::IndexType Y_temp;
-            scai::IndexType Z_temp;
+                if ((receiver.receiverCoords.x >= modelCoordinates.getNX() || receiver.receiverCoords.x < 0 || receiver.receiverCoords.y >= modelCoordinates.getNY() || receiver.receiverCoords.y < 0 || receiver.receiverCoords.z >= modelCoordinates.getNZ() || receiver.receiverCoords.z < 0)) {
+                    HOST_PRINT(comm, "\nreceiver Nr. " << i << " with coordinate: " << receiver.receiverCoords << " is not located on the model grid \n\n");
+                    COMMON_THROWEXCEPTION("\nreceiver Nr. " << i << " with coordinate: " << receiver.receiverCoords << " is not located on the model grid \n\n");
+                }
 
-            for (scai::IndexType row_ind = 0; row_ind < numRows; row_ind++) {
-                acquisition_temp.getRow(row_temp, row_ind);
-                X_temp = row_temp.getValue(0);
-                Y_temp = row_temp.getValue(1);
-                Z_temp = row_temp.getValue(2);
-                if (comm->getRank() == MASTERGPI) {
-                    SCAI_ASSERT_ERROR(X_temp >= 0, "X coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(Y_temp >= 0, "Y coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(Z_temp >= 0, "Z coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be positive!")
-                    SCAI_ASSERT_ERROR(X_temp < NX, "X coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be smaller than NX!")
-                    SCAI_ASSERT_ERROR(Y_temp < NY, "Y coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be smaller than NY!")
-                    SCAI_ASSERT_ERROR(Z_temp < NZ, "Z coordinate (defined as gridpoint) of receiver #" << row_ind + 1 << " must be smaller than NZ!")
+                int index = modelCoordinates.coordinate2index(receiver.receiverCoords);
+                Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(index);
+
+                //check for the variable grid
+                if (coordinate != receiver.receiverCoords) {
+                    HOST_PRINT(comm, "\nreceiver Nr. " << i << " with coordinate: " << receiver.receiverCoords << " is not located on the model grid \n\n");
+                    COMMON_THROWEXCEPTION("\nreceiver Nr. " << i << " with coordinate: " << receiver.receiverCoords << " is not located on the model grid \n\n");
                 }
             }
         }

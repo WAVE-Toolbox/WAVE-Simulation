@@ -1,0 +1,18 @@
+set ( WAVE-Simulation_CXX_FLAGS "@CMAKE_CXX_FLAGS@" )
+
+set ( WAVE-Simulation_ROOT @CMAKE_INSTALL_PREFIX@ )
+
+set ( WAVE-Simulation_SCAI_ROOT @SCAI_ROOT@ )
+
+set ( WAVE-Simulation_Geographer_ROOT @Geographer_ROOT@ )
+
+set ( WAVE-Simulation_INCLUDE_DIRS ${SOFI_ROOT}/include )
+
+find_library ( WAVE-Simulation_LIB
+               NAMES WAVE-Simulation
+               PATHS ${WAVE-Simulation_ROOT}/lib )
+
+
+set ( WAVE-Simulation_LIBRARIES ${SOFI_LIB} )
+
+set ( WAVE-Simulation_FOUND true )

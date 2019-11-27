@@ -7,9 +7,12 @@
 #include <string>
 #include <vector>
 
-#include "Configuration.hpp"
-#include "HostPrint.hpp"
+#include "../../IO/IO.hpp"
+#include "../../Configuration/Configuration.hpp"
+#include "../../Common/HostPrint.hpp"
+#include "Configuration/ValueType.hpp"
 
+using namespace KITGPI;
 using namespace scai;
 /*------------------------------
      TwoLayer - Model Creation
@@ -18,8 +21,6 @@ using namespace scai;
 -------------------------------*/
 int main(int argc, char *argv[])
 {
-    typedef double ValueType;
-
     // parameter
     ValueType vp1 = 3500, vs1 = 2000, rho1 = 2000, tauP1 = 0.1, tauS1 = 0.1;
     ValueType vp2 = 4550, vs2 = 2600, rho2 = 2600, tauP2 = 0.1, tauS2 = 0.1;
@@ -37,33 +38,27 @@ int main(int argc, char *argv[])
     KITGPI::Configuration::Configuration config(argv[1]);
 
     // estimate grid with parameters out of the configuration
-    int NX = config.get<IndexType>("NX");
-    int NY = config.get<IndexType>("NY");
-    int NZ = config.get<IndexType>("NZ");
-    common::Grid3D grid(NZ, NY, NX);
+    IndexType NX = config.get<IndexType>("NX");
+    IndexType NY = config.get<IndexType>("NY");
+    IndexType NZ = config.get<IndexType>("NZ");
+    common::Grid3D grid(NY, NZ, NX);
 
-    // construct model vectors
-    lama::GridVector<ValueType> vp(grid);
-    lama::GridVector<ValueType> vs(grid);
-    lama::GridVector<ValueType> rho(grid);
-    lama::GridVector<ValueType> tauP(grid);
-    lama::GridVector<ValueType> tauS(grid);
+    // construct model vectors and set velocities for first layer
 
-    //set velocities for first layer
-    vp = vp1;
-    vs = vs1;
-    rho = rho1;
-    tauP = tauP1;
-    tauS = tauS1;
+    lama::GridVector<ValueType> vp(grid, vp1);
+    lama::GridVector<ValueType> vs(grid, vs1);
+    lama::GridVector<ValueType> rho(grid, rho1);
+    lama::GridVector<ValueType> tauP(grid, tauP1);
+    lama::GridVector<ValueType> tauS(grid, tauS1);
 
     //set velocities for second layer
     for (IndexType y = depth; y < NY; ++y) {
 
-        vp(lama::Range(), y, lama::Range()) = vp2;
-        vs(lama::Range(), y, lama::Range()) = vs2;
-        rho(lama::Range(), y, lama::Range()) = rho2;
-        tauP(lama::Range(), y, lama::Range()) = tauP2;
-        tauS(lama::Range(), y, lama::Range()) = tauS2;
+        vp(y, lama::Range(), lama::Range()) = vp2;
+        vs(y, lama::Range(), lama::Range()) = vs2;
+        rho(y, lama::Range(), lama::Range()) = rho2;
+        tauP(y, lama::Range(), lama::Range()) = tauP2;
+        tauS(y, lama::Range(), lama::Range()) = tauS2;
     }
 
     std::string type = config.get<std::string>("equationType");
@@ -71,18 +66,24 @@ int main(int argc, char *argv[])
     //write model to file specified in configuration
     std::string filename = config.get<std::string>("ModelFilename");
 
-    rho.writeToFile(filename + ".density.mtx");
+    IndexType fileFormat = config.get<IndexType>("FileFormat");
+
+    //write model to disc
+
+    KITGPI::IO::writeVector(rho, filename + ".density", fileFormat);
 
     if (type.compare("sh") != 0) {
-        vp.writeToFile(filename + ".vp.mtx");
+        KITGPI::IO::writeVector(vp, filename + ".vp", fileFormat);
     }
 
     if (type.compare("acoustic") != 0) {
-        vs.writeToFile(filename + ".vs.mtx");
+        KITGPI::IO::writeVector(vs, filename + ".vs", fileFormat);
     }
+
     if (type.compare("visco") == 0) {
-        tauP.writeToFile(filename + ".tauP.mtx");
-        tauS.writeToFile(filename + ".tauS.mtx");
+        KITGPI::IO::writeVector(tauP, filename + ".tauP", fileFormat);
+        KITGPI::IO::writeVector(tauS, filename + ".tauS", fileFormat);
     }
+
     return 0;
 }

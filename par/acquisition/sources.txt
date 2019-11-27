@@ -1,0 +1,4 @@
+# shotNr:  x  y  z    sourceType  WAVELET_TYPE  WAVELET_SHAPE  FC  AMP  TShift
+  0        50 50 50   3           1             1              5   5    0
+  1        40 40 40   1           1             1              5   5    0
+  1        80 80 80   1           1             1              5   5    0

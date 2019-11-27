@@ -21,40 +21,21 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::i
 
     active = true;
 
-    derivatives.useFreeSurface = true;
-    derivatives.calcDyfFreeSurface(modelCoordinates, dist);
-    derivatives.DyfFreeSurface *= DT;
-    derivatives.Dyf.purge();
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
 
-    /* Distributed vectors */
-    setSurfaceZero.allocate(dist); // Vector to set elements on surface to zero
-    setSurfaceZero = 1.0;
+    lama::VectorAssembly<ValueType> assemblyZeros;
 
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);             /* get local indices based on used distribution */
-    IndexType numLocalIndices = localIndices.size(); // Number of local indices
+    setZeroFreeSurface.setSameValue(dist, 1.0);
 
-    auto read_localIndices = hostReadAccess(localIndices); // Get read access to localIndices
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
 
-    /* Get write access to local part of setSurfaceZero */
-    auto write_setSurfaceZero = hostWriteAccess(setSurfaceZero.getLocalValues());
-
-    IndexType rowGlobal;
-    IndexType rowLocal;
-
-    for (IndexType i = 0; i < numLocalIndices; i++) {
-
-        rowGlobal = read_localIndices[i];
-        rowLocal = dist->global2Local(rowGlobal);
-
-        /* Determine if the current grid point is located on the surface */
-        if (modelCoordinates.locatedOnSurface(rowGlobal)) {
-
-            /* Set elements at the surface to zero */
-            write_setSurfaceZero[rowLocal] = 0.0;
+        if (modelCoordinates.locatedOnSurface(ownedIndex)) {
+            assemblyZeros.push(ownedIndex, 0);
         }
     }
+
+    setZeroFreeSurface.fillFromAssembly(assemblyZeros);
 
     HOST_PRINT(comm, "", "Finished initializing of the free surface\n\n");
 }

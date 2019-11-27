@@ -4,14 +4,53 @@
 #include <scai/hmemo/WriteAccess.hpp>
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
-
+// #include <scai/common/Stencil.hpp>
+// #include <scai/lama.hpp>
+#include <scai/lama/matrix/MatrixAssembly.hpp>
+// #include <scai/lama/matrix/StencilMatrix.hpp>
+// #include <scai/lama/matrix/HybridMatrix.hpp>
 #include <cmath>
+#include <scai/tracing.hpp>
 
 namespace KITGPI
 {
     //! \brief Common namespace
     namespace Common
     {
+
+        template <typename T>
+        void readColumnFromFile(std::string filename, std::vector<T> &values, unsigned int column)
+        {
+            std::ifstream is(filename);
+
+            if (is.is_open()) {
+                std::string line;
+                int lineNumber = 0;
+                while (getline(is, line)) {
+                    std::vector<int> vec;
+                    lineNumber++;
+                    std::stringstream strings(line);
+
+                    char firstChar = strings.peek();
+                    // check for comment or empty lines or lines with only whitespace or tabs
+                    if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
+                        continue;
+                    } else {
+                        T tempStr;
+                        while (strings >> tempStr) {
+                            vec.push_back(tempStr);
+                        }
+                        if (vec.size() < column + 1) {
+                            COMMON_THROWEXCEPTION("line " << lineNumber << " in file " << filename << " has no column Nr. " << column);
+                        }
+                        values.push_back(vec[column]);
+                    }
+                }
+
+            } else {
+                COMMON_THROWEXCEPTION("Could not open grid configuration ");
+            }
+        }
 
         /*! \brief Searches for all values in searchVector which are related to threshold by relation compareType and replaces them with replaceValue.
         *
@@ -111,100 +150,44 @@ namespace KITGPI
             return temp;
         }
 
-        /*! \brief Calculate the row indices needed for CSR resampling matrix.
-        \param csrIA row indices
-        \param read_tInt Read Access to query point vector
-        \param numCols number of samples before resampling
-        \param numColsNew number of samples after resampling
-        \param shift number of columns the resampling should be shifted
-        */
-        template <typename ValueType>
-        void calcResampleIA(scai::hmemo::HArray<scai::IndexType> &csrIA, scai::hmemo::ReadAccess<ValueType> &read_tInt, scai::IndexType numCols, scai::IndexType numColsNew, scai::IndexType shift)
-        {
-            scai::IndexType rawIA[numCols + 1];
-            scai::IndexType rawIAProto[numCols + 1]; // number of entries per row
-
-            for (scai::IndexType i = 0; i < numCols + 1; ++i) {
-                rawIA[i] = 0;
-                rawIAProto[i] = 0;
-            }
-
-            scai::IndexType counter;
-            for (scai::IndexType i = 0; i < numColsNew; ++i) {
-                counter = scai::IndexType(read_tInt[i]) + 1;
-                rawIAProto[counter]++;
-            }
-
-            rawIA[1 + shift] = rawIAProto[1];
-
-            for (scai::IndexType i = 2 + shift; i < numCols + 1; ++i)
-                rawIA[i] = rawIAProto[i - shift] + rawIA[i - 1];
-
-            rawIA[numCols] += numColsNew - rawIA[numCols]; // in some cases add additional ones to last row to prevent size mismatch
-
-            csrIA.setRawData(numCols + 1, rawIA);
-        }
-
-        /*! \brief Calculate the column indices needed for CSR resampling matrix.
-        \param csrJA column indices
-        \param numColsNew number of samples after resampling
-        */
-        template <typename ValueType>
-        void calcResampleJA(scai::hmemo::HArray<scai::IndexType> &csrJA, scai::IndexType numColsNew)
-        {
-            scai::IndexType rawJA[numColsNew];
-
-            for (scai::IndexType i = 0; i < numColsNew; ++i) {
-                rawJA[i] = i;
-            }
-            csrJA.setRawData(numColsNew, rawJA);
-        }
-
         /*! \brief Calculate a matrix which resamples the columns.
         \param rMat resampling matrix
         \param numCols number of samples in one row
         \param resamplingCoeff resampling coefficient
-        \param shift number of columns the resampling should be shifted
         */
         template <typename ValueType>
-        void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, ValueType resamplingCoeff, scai::IndexType shift)
+        void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, ValueType resamplingCoeff)
         {
 
-            SCAI_ASSERT(shift >= 0, "negative shifts are not allowed.")
+            scai::lama::MatrixAssembly<ValueType> assembly;
 
             scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
 
-            scai::lama::DenseVector<ValueType> tInt(scai::lama::linearDenseVector<ValueType>(numColsNew, 0.0, resamplingCoeff));
-            scai::hmemo::HArray<ValueType> *tInt_Ptr = &tInt.getLocalValues();
-            scai::hmemo::ReadAccess<ValueType> read_tInt(*tInt_Ptr);
+            scai::IndexType columnIndex = 0;
+            ValueType value = 0.0;
+            ValueType sampleCoeff = 1.0;
+            for (scai::IndexType rowIndex = 0; rowIndex < numColsNew; rowIndex++) {
 
-            scai::hmemo::HArray<scai::IndexType> csrIA;
-            calcResampleIA<ValueType>(csrIA, read_tInt, numCols, numColsNew, shift);
-            read_tInt.release();
+                ValueType relativeIndex = rowIndex * resamplingCoeff;
+                //leftValue
+                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex);
+                if (columnIndex < numCols) {
+                    value = 1 - fmod(relativeIndex, sampleCoeff);
+                    assembly.push(columnIndex, rowIndex, value);
+                }
+                //rightValue
+                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex) + 1;
+                if (columnIndex < numCols) {
+                    value = fmod(relativeIndex, sampleCoeff);
+                    assembly.push(columnIndex, rowIndex, value);
+                }
+            }
 
-            scai::hmemo::HArray<scai::IndexType> csrJA;
-            calcResampleJA<ValueType>(csrJA, numColsNew);
-
-            scai::hmemo::HArray<ValueType> csrValues(numColsNew, 1.0);
-
-            scai::lama::CSRStorage<ValueType> csrStorage(numCols, numColsNew, csrIA, csrJA, csrValues);
-            scai::lama::CSRSparseMatrix<ValueType> csrMatrix(csrStorage);
+            scai::lama::CSRSparseMatrix<ValueType> csrMatrix;
+            csrMatrix.allocate(numCols, numColsNew);
+            csrMatrix.fillFromAssembly(assembly);
 
             rMat.swap(csrMatrix);
-        }
-
-        /*! \brief Calculate a vector which contains the query points for interpolation.
-        \param resampleVec Result vector
-        \param numCols number of samples in one row before interpolation
-        \param resamplingCoeff resampling coefficient
-        */
-        template <typename ValueType>
-        void calcResampleVec(scai::lama::DenseVector<ValueType> &resampleVec, scai::IndexType numCols, ValueType resamplingCoeff)
-        {
-            scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
-            resampleVec = scai::lama::linearDenseVector<ValueType>(numColsNew, 0.0, resamplingCoeff);
-            resampleVec.binaryOpScalar(resampleVec, 1.0, scai::common::BinaryOp::MODULO, false);
-            resampleVec.replicate();
         }
 
         /*! \brief Calculates the time step to a corresponding continous time

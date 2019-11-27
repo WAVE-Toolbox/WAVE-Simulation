@@ -1,8 +1,11 @@
 #pragma once
 #include "../../Acquisition/Coordinates.hpp"
+#include "../../Common/HostPrint.hpp"
 #include "../../Configuration/Configuration.hpp"
+#include <map>
 #include <scai/common/Stencil.hpp>
 #include <scai/lama.hpp>
+#include <scai/lama/matrix/HybridMatrix.hpp>
 #include <scai/lama/matrix/MatrixAssembly.hpp>
 #include <scai/lama/matrix/StencilMatrix.hpp>
 #include <scai/tracing.hpp>
@@ -23,8 +26,8 @@ namespace KITGPI
             template <typename Type>
             class FreeSurface2Dvisco;
 
-            //            template <typename Type>
-            //            class FreeSurface2Dsh;
+            template <typename Type>
+            class FreeSurface2Dsh;
 
             template <typename Type>
             class FreeSurfaceElastic;
@@ -62,8 +65,8 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
-                //                template <typename>
-                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dsh;
+                template <typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dsh;
 
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic;
@@ -71,45 +74,85 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
-                //                template <typename>
-                //                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH;
 
                 //! \brief Default constructor
-                Derivatives() : spatialFDorder(0), useFreeSurface(false){};
+                Derivatives() : DyfFreeSurfaceHybrid(DyfFreeSurfaceStencil, DyfFreeSurfaceSparse),
+                                DybFreeSurfaceHybrid(DybFreeSurfaceStencil, DybFreeSurfaceSparse){};
 
                 //! \brief Default destructor
                 ~Derivatives(){};
+
+                void setup(Configuration::Configuration const &config);
+                void setup(Configuration::Configuration const &config, std::vector<scai::IndexType> &FDorder);
 
                 //! \brief Getter method for derivative matrix Dxf
                 virtual scai::lama::Matrix<ValueType> const &getDxf() const;
                 //! \brief Getter method for derivative matrix Dyf
                 virtual scai::lama::Matrix<ValueType> const &getDyf() const;
+
                 //! \brief Getter method for derivative matrix Dzf
                 virtual scai::lama::Matrix<ValueType> const &getDzf() const;
                 //! \brief Getter method for derivative matrix Dxb
                 virtual scai::lama::Matrix<ValueType> const &getDxb() const;
                 //! \brief Getter method for derivative matrix Dyb
                 virtual scai::lama::Matrix<ValueType> const &getDyb() const;
+
                 //! \brief Getter method for derivative matrix Dzb
                 virtual scai::lama::Matrix<ValueType> const &getDzb() const;
 
+                //! \brief Getter method for derivative matrix DyfStaggeredX
+                virtual scai::lama::Matrix<ValueType> const &getDyfStaggeredX() const;
+                //! \brief Getter method for derivative matrix DybStaggeredX
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredX() const;
+                //! \brief Getter method for derivative matrix DyfStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const &getDyfStaggeredZ() const;
+                //! \brief Getter method for derivative matrix DybStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZ() const;
+
                 //! \brief Getter method for derivative matrix DyfFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDyfFreeSurface() const;
+
                 //! \brief Getter method for derivative matrix DybFreeSurface
                 virtual scai::lama::Matrix<ValueType> const &getDybFreeSurface() const;
 
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredXFreeSurface() const;
+                virtual scai::lama::Matrix<ValueType> const &getDybStaggeredZFreeSurface() const;
+
+                //! \brief Getter method for interpolation matrix interFull
+                virtual scai::lama::Matrix<ValueType> const *getInterFull() const;
+                //! \brief Getter method for interpolation matrix interStaggeredX
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredX() const;
+                //! \brief Getter method for interpolation matrix interStaggeredZ
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredZ() const;
+                //! \brief Getter method for interpolation matrix interStaggeredXZ
+                virtual scai::lama::Matrix<ValueType> const *getInterStaggeredXZ() const;
+
+                virtual scai::lama::CSRSparseMatrix<ValueType> getGraph(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+
                 //! \brief Initialization
+                virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
                 virtual void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
+
+                virtual void redistributeMatrices(scai::dmemo::DistributionPtr dist) = 0;
+
+                virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+                virtual ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
+
+                ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType numDMatrices, scai::IndexType numInterpMatrices = 0);
 
                 //! \brief Getter method for spatial FD-order
                 scai::IndexType getSpatialFDorder() const;
 
               protected:
-                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, ValueType DT, scai::IndexType spatialFDorder, scai::dmemo::CommunicatorPtr comm) = 0;
+                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm) = 0;
+                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
+                virtual void initializeFreeSurfaceMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
 
-                virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT, scai::IndexType spatialFDorder, scai::dmemo::CommunicatorPtr comm) = 0;
+                scai::lama::Matrix<ValueType> &getDyfFreeSurface();
+                scai::lama::Matrix<ValueType> &getDybFreeSurface();
+                scai::lama::Matrix<ValueType> &getDyf();
 
-                void setFDCoef(scai::IndexType spFDo);
+                void setFDCoef();
 
                 void calcDxf(scai::dmemo::DistributionPtr dist);
                 void calcDxf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
@@ -117,9 +160,35 @@ namespace KITGPI
                 void calcDyf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
                 void calcDzf(scai::dmemo::DistributionPtr dist);
                 void calcDzf(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDxb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDyb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDzb(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+
+                void calcDyfStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDyfStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
                 void calcDyfFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
                 void calcDybFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredXFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcDybStaggeredZFreeSurface(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+
+                void calcInterpolationFull(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+                void calcInterpolationStaggeredXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+
+                void setFDOrder(std::string const &FDorderFilename);
+
+                void setFDOrder(std::vector<scai::IndexType> &FDorder);
+
+                void setFDOrder(scai::IndexType FDorder);
+
+                ValueType getMemoryStencilMatrix(scai::dmemo::DistributionPtr dist);
+                ValueType getMemorySparseMatrix(scai::dmemo::DistributionPtr dist);
+                ValueType getMemorySparseMatrix(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
+                ValueType getMemoryInterpolationMatrix(scai::dmemo::DistributionPtr dist);
 
                 typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
                 scai::lama::StencilMatrix<ValueType> Dxf;                    //!< Derivative matrix Dxf
@@ -136,18 +205,44 @@ namespace KITGPI
                 SparseFormat DybSparse; //!< Derivative matrix Dyb
                 SparseFormat DzbSparse; //!< Derivative matrix Dzb
 
-                SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
-                SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
+                SparseFormat DyfStaggeredXSparse; //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DybStaggeredXSparse; //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DyfStaggeredZSparse; //!< Derivative matrix Dyf for points staggered in x direction
+                SparseFormat DybStaggeredZSparse; //!< Derivative matrix Dyf for points staggered in x direction
 
-                scai::IndexType spatialFDorder; //!< FD-Order of spatial derivative stencils
+                //                 SparseFormat DyfFreeSurface; //!< Derivative matrix DyfFreeSurface
+                //                 SparseFormat DybFreeSurface; //!< Derivative matrix DybFreeSurface
 
-                scai::IndexType useFreeSurface; //!< Switch to use free surface or not
+                SparseFormat DyfFreeSurfaceSparse;                          //!< Derivative matrix DyfFreeSurface
+                scai::lama::StencilMatrix<ValueType> DyfFreeSurfaceStencil; //!< stencil part if hybrid format is used
+                scai::lama::HybridMatrix<ValueType> DyfFreeSurfaceHybrid;   // HybridMatrix( DyfFreeSurfaceSparse, DyfFreeSurfaceStencil );
 
-                scai::common::Stencil1D<ValueType> stencilFD; // FD-stencil
+                SparseFormat DybFreeSurfaceSparse;                          //!< Derivative matrix DybFreeSurface
+                scai::lama::StencilMatrix<ValueType> DybFreeSurfaceStencil; //!< stencil part if hybrid format is used
+                scai::lama::HybridMatrix<ValueType> DybFreeSurfaceHybrid;   // HybridMatrix( DybFreeSurfaceSparse, DybFreeSurfaceStencil );
 
-                bool useSparse;
+                SparseFormat DybStaggeredXFreeSurface; //!< Derivative matrix DybFreeSurface
+                SparseFormat DybStaggeredZFreeSurface; //!< Derivative matrix DybFreeSurface
+
+                SparseFormat InterpolationFull;        //!< Interpolation matrix for P
+                SparseFormat InterpolationStaggeredX;  //!< Interpolation matrix for staggerd points in x direction
+                SparseFormat InterpolationStaggeredZ;  //!< Interpolation matrix for staggerd points in z direction
+                SparseFormat InterpolationStaggeredXZ; //!< Interpolation matrix for staggerd points in x and in z direction
+
+                ValueType DT;
+
+                scai::IndexType useFreeSurface = 0; //!< Switch to use free surface or not
+                bool useStencilMatrix = false;      //!< Switch to use Stencil Matrices
+                bool useHybridFreeSurface = false;
+                bool useVarFDorder = false; //!< Switch to use variable FDorder (layered)
+                bool useVarGrid = false;    //!< Switch to use variable Grid
+                bool isElastic = false;     //!< Switch to use variable Grid
+                bool isSetup = false;
 
               private:
+                std::map<scai::IndexType, scai::common::Stencil1D<ValueType>> stencilFDmap; // FD-stencil
+                                                                                            //     scai::IndexType spatialFDorder = 0;                                         //!< FD-Order of spatial derivative stencils
+                std::vector<scai::IndexType> spatialFDorderVec;                             //!< std vector of variable FDordersof spatial derivative stencils  (layered)
             };
         } /* end namespace Derivatives */
     }     /* end namespace ForwardSolver */

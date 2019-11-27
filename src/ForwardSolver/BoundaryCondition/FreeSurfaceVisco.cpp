@@ -27,9 +27,9 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     /* On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
     * The original update,
-    * sxx = pi * ( vxx+vyy + vzz) - 2mu *vyy 
+    * sxx = pi * ( vxx+vyy+vzz ) - 2mu *(vzz+vyy )
     * will be exchanged with 
-    * sxx_new = 2mu * (2 - 2mu / pi )* (vxx + vzz)
+    * sxx_new = 2mu * (2vxx + vzz - 2mu / pi * (vxx+vzz))
     * The final update will be (last update has to be undone):
     * sxx += sxx_new - sxx = -(pi-2mu)*(pi-2mu)/pi*(vxx+vzz)) - (pi-2mu)*vyy
     *                      = scaleHorizontalUpdate*(vxx+vzz)  - scaleVerticalUpdate*Vyy 
@@ -44,10 +44,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     temp += temp2;
     temp2 = 1 / temp2;
 
-    scaleStressVerticalUpdate = selectHorizontalUpdate;
+    scaleStressVerticalUpdate = selectFreeSurface;
     scaleStressVerticalUpdate *= temp;
 
-    scaleStressHorizontalUpdate = -1 * selectHorizontalUpdate;
+    scaleStressHorizontalUpdate = -1 * selectFreeSurface;
     scaleStressHorizontalUpdate *= temp;
     scaleStressHorizontalUpdate *= temp;
     scaleStressHorizontalUpdate *= temp2;
@@ -76,7 +76,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     auto temp3 = lama::eval<lama::DenseVector<ValueType>>(temp * tauS);
     temp3 -= lama::eval<lama::DenseVector<ValueType>>(temp2 * tauP);
 
-    scaleRelaxationVerticalUpdate = selectHorizontalUpdate;
+    scaleRelaxationVerticalUpdate = selectFreeSurface;
     scaleRelaxationVerticalUpdate *= temp3;
     scaleRelaxationVerticalUpdate *= viscoCoeff2;
     scaleRelaxationVerticalUpdate /= relaxationTime;
@@ -86,7 +86,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
     temp /= temp2;
     temp -= 1;
 
-    scaleRelaxationHorizontalUpdate = selectHorizontalUpdate; // set to zero everywhere besides the surface
+    scaleRelaxationHorizontalUpdate = selectFreeSurface; // set to zero everywhere besides the surface
     scaleRelaxationHorizontalUpdate *= temp3;
     scaleRelaxationHorizontalUpdate *= temp;
     scaleRelaxationHorizontalUpdate *= viscoCoeff2;
@@ -112,68 +112,31 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
     derivatives.useFreeSurface = true;
     derivatives.calcDyfFreeSurface(modelCoordinates, dist);
     derivatives.calcDybFreeSurface(modelCoordinates, dist);
-    derivatives.DybFreeSurface *= DT;
-    derivatives.DyfFreeSurface *= DT;
+    derivatives.getDybFreeSurface() *= DT;
+    derivatives.getDyfFreeSurface() *= DT;
 
-    selectHorizontalUpdate.setSameValue(dist, 0.0);
-    setSurfaceZero.setSameValue(dist, 1.0);
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
 
-    /* Get local "global" indices */
-    hmemo::HArray<IndexType> localIndices;
-    dist->getOwnedIndexes(localIndices);                          /* get local indices based on used distribution */
-    IndexType numLocalIndices = localIndices.size();              // Number of local indices
-    hmemo::ReadAccess<IndexType> read_localIndices(localIndices); // Get read access to localIndices
+    lama::VectorAssembly<ValueType> assemblyZeros;
+    lama::VectorAssembly<ValueType> assemblyOnes;
 
-    scai::lama::DenseVector<ValueType> temp2(dist, 0.0);
-    /* Get write access to local part of temp2 */
-    auto write_selectHorizontalUpdate = hmemo::hostWriteAccess(temp2.getLocalValues());
+    setZeroFreeSurface.setSameValue(dist, 1.0);
+    selectFreeSurface.setSameValue(dist, 0.0);
 
-    scai::lama::DenseVector<ValueType> temp(dist, 1.0);
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
 
-    /* Get write access to local part of temp */
-    auto write_setSurfaceZero = hmemo::hostWriteAccess(temp.getLocalValues());
-
-    IndexType rowGlobal;
-    IndexType rowLocal;
-
-    for (IndexType i = 0; i < numLocalIndices; i++) {
-
-        rowGlobal = read_localIndices[i];
-        rowLocal = dist->global2Local(rowGlobal);
-
-        /* Determine if the current grid point is located on the surface */
-        if (modelCoordinates.locatedOnSurface(rowGlobal)) {
-
-            /* Set horizontal update to +1 at the surface and leave it zero else */
-            write_selectHorizontalUpdate[rowLocal] = 1.0;
-
-            /* Set vector at surface to zero  */
-            write_setSurfaceZero[rowLocal] = 0.0;
+        if (modelCoordinates.locatedOnSurface(ownedIndex)) {
+            assemblyZeros.push(ownedIndex, 0);
+            assemblyOnes.push(ownedIndex, 1);
         }
     }
-    write_setSurfaceZero.release();
-    write_selectHorizontalUpdate.release();
-    setSurfaceZero = temp;
-    selectHorizontalUpdate = temp2;
+    selectFreeSurface.fillFromAssembly(assemblyOnes);
+    setZeroFreeSurface.fillFromAssembly(assemblyZeros);
 
     HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished initializing of the free surface\n\n");
 }
 
-/*! \brief Set Ryy at the free surface to zero
- *
- * THIS METHOD IS CALLED DURING TIME STEPPING
- * DO NOT WASTE RUNTIME HERE
- *
- \param Ryy Ryy wavefield (relaxation)
- */
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setMemoryVariableToZero(scai::lama::Vector<ValueType> &Ryy)
-{
-
-    SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
-
-    Ryy *= setSurfaceZero; // Set at the free surface to zero
-}
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<float>;
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<double>;

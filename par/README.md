@@ -4,11 +4,12 @@ Since this finite-difference simulation code is based on the [LAMA framework](ww
 
 We successfully tested LAMA on different operating systems e.g. macOS (Sierra, El Capitan) and Linux (SUSE) as well as on a wide range of architectures e.g. HPC systems and GPUs.
 
-Before the modelling code can be started, you have to set the paths to the installation of the [LAMA framework](www.libama.org):
-- `export SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
+Before the modelling code can be started, you have compile the code using cmake. Following example shows how to compile with 4 tasks
+Further information can be found in `README.cmake` in the main directory
 
-You can also set the variable with the make command in the build directory
-- `make all SCAI_ROOT=[PATH_TO_LAMA_BUILD]`
+- ``mkdir build && cd build``
+- ``SCAI_DIR="lama install directory" cmake ../src/ -DCMAKE_INSTALL_PREFIX=./``
+- ``make install -j 4``
 
 
 ## Start the simulation
@@ -16,14 +17,25 @@ The simulation can be started by the example start file:
 
  ``source start_FDSimulation.sh``
 
+Switch of Lama warnings and Tracing
+
+`export SCAI_UNSUPPORTED=IGNORE`
+` export SCAI_TRACE=OFF`
+
 Different kinds of parallelization are possible:
 
 - Using OpenMP (shared-memory parallel):
  - Set `export OMP_NUM_THREADS=2`
 - Using OpenMPI/IntelMPI (distributed-memory parallel):
- - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 2 ./../bin/SOFI`
+ - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 2 ./../bin/WAVE-Simulation`
 
 The standard configuration of `start_FDSimulation.sh` is using both kinds of parallelization.
+
+Run Code on GPUs
+`export SCAI_ASYNCHRONOUS=2`
+`export SCAI_DEVICE=0,1,2,3 (...)` (Comma seperated list of GPU devices on one node
+`export SCAI_CONTEXT=CUDA`
+
 
 ## Run the tests
 To test the proper functionality of the installation, you can run the build in unit and integration tests.
@@ -33,12 +45,5 @@ Since the [Google Test framework](https://github.com/google/googletest) is used 
 
 If one of the test cases fails, the script will give an error message and will abort.
 
-## Data processing for parallel I/O
-
-Since the modelling code supports parallel I/O operations some pre- and post-processing steps maybe required to split or merge data. In order to use the binaries mentioned below, you have to build [LAMA](www.libama.org) with the option `BUILD_EXAMPLES=ON`.
-
-#### Data pre-processing
-- to partition a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.mtx 1 filename.%r.mtx {NProcessors}`
-
-#### Data post-processing
-- Merge to a single vector-file `${SCAI_ROOT}/lama/examples/io/vectorRepartition.exe filename.%r.mtx {NProcessors} filename.mtx 1`
+# Parallel IO
+specify .lmf or .su as file type in the configuration file to use parallel in and output. 

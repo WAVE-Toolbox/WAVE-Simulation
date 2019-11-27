@@ -1,8 +1,13 @@
 #include "ForwardSolver3Dvisco.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD3Dvisco<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
- *
  *
  \param config Configuration
  \param derivatives Derivatives matrices
@@ -15,6 +20,8 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, const Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
+    SCAI_REGION("ForwardSolver.init3Dvisco");
+
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
@@ -118,8 +125,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareForModelling(Modelparam
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
-
-    SCAI_REGION("timestep");
+    SCAI_REGION("ForwardSolver.timestep3Dvisco");
 
     /* Get references to required modelparameter */
     auto const &pWaveModulus = model.getPWaveModulus();
@@ -252,7 +258,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     vZ += update;
 
     /* ----------------*/
-    /* pressure update */
+    /* stress update */
     /* ----------------*/
 
     vxx = Dxb * vX;
@@ -411,7 +417,8 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGe
     if (useFreeSurface == 1) {
         update = vxx + vzz;
         FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
-        FreeSurface.setMemoryVariableToZero(Ryy);
+        FreeSurface.setSurfaceZero(Syy);
+        FreeSurface.setSurfaceZero(Ryy);
     }
 
     /* Apply the damping boundary */

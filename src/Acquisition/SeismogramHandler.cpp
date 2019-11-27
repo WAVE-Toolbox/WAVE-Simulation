@@ -1,4 +1,5 @@
 #include "SeismogramHandler.hpp"
+#include "../Common/HostPrint.hpp"
 using namespace scai;
 
 //! \brief Method to write all handled Seismogram to file
@@ -7,13 +8,14 @@ using namespace scai;
  * The #SeismogramType of each Seismogram will be added to the filename automaticly.
  * 
  *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename base filename of the seismogram
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
+
     for (auto const &i : seismo) {
         i.write(seismogramFormat, filename, modelCoordinates);
     }
@@ -24,7 +26,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const se
  * This method allows to read all handled Seismogram from file. 
  * The #SeismogramType of each Seismogram will be added to the filename automaticly.
  *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename base filename of the seismograms
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
@@ -37,24 +39,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType const sei
     }
 }
 
-//! \brief Method to read all handled Seismograms from file
-/*!
- * This method allows to read all handled Seismogram from file. The SeismogramType of each Seismogram will be added to the filename automaticly.
- *
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
- \param filename base filename of the seismogram
- \param distTraces distribution of the traces in the data matrix
- \param DistributionPtr distribution of the samples in the data matrix
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    for (auto &i : seismo) {
-        if (i.getNumTracesGlobal() > 0)
-            i.read(seismogramFormat, filename, distTraces, distSamples);
-    }
-}
-
 //! \brief Method to normalize Seismogram-traces
 /*!
  *
@@ -63,7 +47,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
 {
     for (auto &i : seismo) {
-        i.getNormalizeTraces();
         i.normalizeTrace();
     }
 }
@@ -255,20 +238,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
-//! \brief Setter methode to set Index for trace-normalization.
-/*!
- *
- * This method sets the index for trace-normalization.
- \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setNormalizeTraces(IndexType normalize)
-{
-    for (auto &i : seismo) {
-        i.setNormalizeTraces(normalize);
-    }
-}
-
 //! \brief Setter methode to set source coordinate
 /*!
  * This method sets the source coordinate to all handled Seismogram.
@@ -287,11 +256,27 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSourceCoordinate(Inde
  \param rMat Resampling matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSeismoDT(ValueType seismoDT)
 {
     for (auto &i : seismo) {
-        i.setResampleCoeff(resampleCoeff);
+        i.setSeismoDT(seismoDT);
     }
+}
+
+//! \brief Check seismograms for inf or NaN
+/*!
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
+{
+    bool isfinite=true;
+    for (auto &i : seismo) {
+        isfinite = i.isFinite();
+            if (isfinite==false){
+                break;
+            }
+    }
+    return(isfinite);
 }
 
 template class KITGPI::Acquisition::SeismogramHandler<double>;

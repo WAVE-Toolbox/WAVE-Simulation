@@ -1,6 +1,12 @@
 #include "ForwardSolver3Dacoustic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -108,6 +114,11 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const &Dyf = derivatives.getDyf();
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
+    /* Get pointers to required interpolation matrices (optional) */
+    auto const *DinterpolateFull = derivatives.getInterFull();
+    auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
+    auto const *DinterpolateStaggeredZ = derivatives.getInterStaggeredZ();
+
     SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
@@ -124,6 +135,14 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     update *= inverseDensityAverageX;
     vX += update;
 
+    if (DinterpolateStaggeredX) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
     /* -------- */
     /*    vy    */
     /* -------- */
@@ -140,6 +159,14 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     update *= inverseDensityAverageY;
     vY += update;
 
+    if (DinterpolateFull) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vY);
+        vY = *DinterpolateFull * update_temp;
+    }
     /* -------- */
     /*    vz    */
     /* -------- */
@@ -149,6 +176,15 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     }
     update *= inverseDensityAverageZ;
     vZ += update;
+
+    if (DinterpolateStaggeredZ) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vZ);
+        vZ = *DinterpolateStaggeredZ * update_temp;
+    }
 
     /* --------------- */
     /* update pressure */
@@ -176,6 +212,16 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     /* Apply the damping boundary */
     if (useDampingBoundary) {
         DampingBoundary.apply(p, vX, vY, vZ);
+    }
+
+    if (DinterpolateFull) {
+        // interpolation for missing pressure points
+        update_temp.swap(p);
+        p = *DinterpolateFull * update_temp;
+    }
+
+    if (useFreeSurface == 1) {
+        FreeSurface.setSurfaceZero(p);
     }
 
     /* Apply source and save seismogram */

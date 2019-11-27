@@ -1,0 +1,93 @@
+
+# Type of forward simulation
+dimension=2D              # Dimension: 2D or 3D
+equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
+
+# define spatial sampling: number of grid points in direction
+useVariableGrid=1
+partitioning=2
+
+graphPartitionTool=geoKmeans 
+
+BoundaryWeights=2.0
+useVariableFDoperators=1
+
+gridConfigurationFilename=ci/gridConfig.txt
+
+partitionWrite=0  
+coordinateWrite=0 
+weightsWrite=0  
+
+NX=305                    # horizontal 1
+NY=303                    # depth
+NZ=1                      # horizontal 2
+
+# define Partitioning
+NumShotDomains=1 
+ShotDomainDefinition=0
+
+# distance between two grid points
+DH=17                     # in meter
+
+# define temporal sampling
+DT=2.0e-03                   # temporal sampling in seconds
+T=2                          # total simulation time in seconds
+
+# define order of spatial FD operator
+spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
+
+# define material parameter
+ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
+ModelWrite=0              # 1=Model will be written to disk, 0=not
+ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
+coordinateWrite=0
+
+FileFormat=1
+
+# Apply the free surface condition
+FreeSurface=1             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
+
+# Damping Boundary
+DampingBoundary=2         # Type of damping boundary: 0=OFF 1=ABS 2=CPML
+BoundaryWidth=30          # Width of damping boundary in grid points
+DampingCoeff=8.0          # Damping coefficient 
+VMaxCPML=3500.0           # Maximum velocity of the CPML
+CenterFrequencyCPML=5.0   # Center frequency inside the boundaries
+NPower=4.0
+KMaxCPML=1.0
+    
+# Viscoelastic modelling
+numRelaxationMechanisms=0 # Number of relaxation mechanisms 
+relaxationFrequency=0     # Relaxation frequency
+
+# generate homogeneous model
+velocityP=3500            # P-wave velocity in meter per seconds
+velocityS=2000               # S-wave velocity in meter per seconds
+rho=2000                  # Density in kilo gramms per cubic meter
+tauP=0.0                  # Tau value for P-waves
+tauS=0.0                  # Tau value for S-waves
+
+# Acquisition
+SourceFilename=ci/sources_ci.2D.varGrid           # location of source file
+ReceiverFilename=ci/receiver_ci.2D.varGrid          # location of receiver file
+SeismogramFilename=ci/seismogram.2D.acoustic.varGrid.ci     # target location of seismogram
+SourceSignalFilename=acquisition/signal        # location of the source signal file
+SeismogramFormat=1                             # 1=MTX, 4=SU
+initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .SU)
+initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .SU)
+seismoDT=2.0e-03                               # Seismogram sampling in seconds
+NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
+writeSource=0                                  # 1=Writes used source wavelet/s per shot, filename=WriteSourceFilename+_shot_+<ShotNumber>+extension (specified by FileFormat)
+writeSourceFilename=SourceSignal/Source
+
+
+# wavefield snapshots
+snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+WavefieldFileName=wavefields/wavefieldVar        # location of wavefields
+tFirstSnapshot=0       			              # Time of first snapshot in seconds
+tLastSnapshot=2         		              # Time of last snapshot in seconds
+tIncSnapshot=0.05          # Time increment between snapshot in seconds
+
+# console output
+verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)

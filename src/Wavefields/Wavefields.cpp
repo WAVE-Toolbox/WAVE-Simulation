@@ -1,4 +1,5 @@
 #include "Wavefields.hpp"
+#include <math.h>
 
 using namespace scai;
 
@@ -28,33 +29,65 @@ void KITGPI::Wavefields::Wavefields<ValueType>::initWavefield(scai::lama::DenseV
     resetWavefield(vector);
 }
 
-/*! \brief Methode to Write Wavefield for timestep t
+/*! \brief Check wavefield
  *
- \param vector Vector written to file
- \param type Wavefield-type (acoustic, elastic, viscoelastic, sh)
- \param t Timestep
+ * Check wavefield for infs and nans
+ *
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::writeWavefield(scai::lama::Vector<ValueType> &vector, std::string component, std::string fileBaseName, IndexType t, IndexType partitionedOut)
+bool KITGPI::Wavefields::Wavefields<ValueType>::isFinite(scai::dmemo::DistributionPtr dist)
 {
-    std::string fileName = fileBaseName + "." + component + "." + std::to_string(static_cast<long long>(t)) + ".mtx";
+    bool result_isfinite=true;
+    
+    /* Get local owned global indices */
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+    
+    auto read_VX = VX.getLocalValues();
+    auto read_VY = VY.getLocalValues();
+    auto read_VZ = VZ.getLocalValues();
 
-    PartitionedInOut::PartitionedInOut<ValueType> partitionOut;
-
-    switch (partitionedOut) {
-    case false:
-        vector.writeToFile(fileName);
-        HOST_PRINT(vector.getDistribution().getCommunicatorPtr(), "writing " << fileName << "\n");
-        break;
-
-    case true:
-        partitionOut.writeToDistributedFiles(vector, fileName);
-        break;
-
-    default:
-        COMMON_THROWEXCEPTION("Unexpected output option!")
-        break;
+    for (IndexType localIndex=0;localIndex<ownedIndeces.size();localIndex++) {
+        if (read_VX.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VX[localIndex]),"Infinite or NaN value in VX wavefield!" << localIndex);
+            if (isfinite(read_VX[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
+        
+        if (read_VY.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VY[localIndex]),"Infinite or NaN value in VY wavefield!" << localIndex);
+            if (isfinite(read_VY[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
+        
+        if (read_VZ.size()!=0){
+            //SCAI_ASSERT_ERROR(isfinite(read_VZ[localIndex]),"Infinite or NaN value in VZ wavefield!" << localIndex);
+            if (isfinite(read_VZ[localIndex])==false){
+                result_isfinite=false;
+            }
+        }
     }
+
+    return(result_isfinite);
+}
+
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields)
+{
+    ValueType size = getMemoryWavefield(dist) / 1024 / 1024 * numWavefields;
+    return size;
+}
+
+//! \brief calculate and return memory usage the of a Wavefield
+/*!
+ */
+template <typename ValueType>
+ValueType KITGPI::Wavefields::Wavefields<ValueType>::getMemoryWavefield(scai::dmemo::DistributionPtr dist)
+{
+    /* size of a wavefield is the size of a densevector = numGridpoints*size of Valuetype*/
+    return (dist->getGlobalSize() * sizeof(ValueType));
 }
 
 //! \brief Getter routine for vX wavefield

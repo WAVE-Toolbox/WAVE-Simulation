@@ -1,4 +1,8 @@
 #include "Seismogram.hpp"
+#include "../IO/IO.hpp"
+#include "../IO/SUIO.hpp"
+
+#include <scai/utilskernel/HArrayUtils.hpp>
 using namespace scai;
 
 //! \brief copy constructor
@@ -9,19 +13,13 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 {
-    //   std::cout<< "copy seismogram" << std::endl;
-    numSamples = rhs.numSamples;
-    numTracesGlobal = rhs.numTracesGlobal;
-    numTracesLocal = rhs.numTracesLocal;
+    outputDT = rhs.outputDT;
     DT = rhs.DT;
-    type = rhs.type;
+    seismoType = rhs.seismoType;
     coordinates1D = rhs.coordinates1D;
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
-    resampleMatRight = rhs.resampleMatRight;
-    resampleMatLeft = rhs.resampleMatLeft;
-    resampleVec = rhs.resampleVec;
-    //   std::cout<< "copy seismogram data " << data << std::endl;
+    resampleMat = rhs.resampleMat;
 }
 //! \brief swap function
 /*!
@@ -32,36 +30,12 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs)
 {
-    std::swap(numSamples, rhs.numSamples);
-    std::swap(numTracesGlobal, rhs.numTracesGlobal);
-    std::swap(numTracesLocal, rhs.numTracesLocal);
     std::swap(DT, rhs.DT);
-    std::swap(type, rhs.type);
+    std::swap(outputDT, rhs.outputDT);
+    std::swap(seismoType, rhs.seismoType);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
     data.swap(rhs.data);
-}
-
-//! \brief Adding ending to the seismogram-filename-string
-/*!
- *
- * This member function adds the #SeismogramType to the filname ending.
- \param filename Filename of output
- */
-template <typename ValueType>
-std::string KITGPI::Acquisition::Seismogram<ValueType>::addSeismogramTypeToName(std::string const &filename) const
-{
-    SCAI_ASSERT_DEBUG(type >= 0 && type <= (NUM_ELEMENTS_SEISMOGRAMTYPE - 1), "Wrong Trace Type: " << getTraceType());
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::P], "p") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VX], "vx") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VY], "vy") == 0, "Error in mapping of SeismogramType to std::string");
-    SCAI_ASSERT_DEBUG(strcmp(SeismogramTypeString[SeismogramType::VZ], "vz") == 0, "Error in mapping of SeismogramType to std::string");
-
-    std::size_t found = filename.find_last_of(".");
-    std::string beforeEnding = filename.substr(0, found);
-    std::string afterEnding = filename.substr(found);
-    std::string traceTypeString = SeismogramTypeString[getTraceType()];
-    return (beforeEnding + "." + traceTypeString + afterEnding);
 }
 
 //! \brief Setter method for the context ptr
@@ -77,28 +51,32 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
     coordinates1D.setContextPtr(ctx);
 }
 
-//! \brief  Read the seismogram from disk
+//! \brief  writes the seismogram to disk
 /*!
  *
  * This method writes the seismogram data to disk. \n
  * The output format is determined by the input parameter `SeismogramFormat` \n
  \param filename base filename of the seismogram
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+ \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
-    switch (seismogramFormat) {
-    case 1:
-        writeToFileRaw(filename + ".mtx");
-        break;
-    case 2:
-        writeToFileSU(filename + ".SU", modelCoordinates);
-        break;
-    default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
-        break;
+    if (data.getNumValues() > 0) {
+        scai::lama::DenseMatrix<ValueType> dataResample;
+        dataResample = data * resampleMat;
+
+        std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+
+        switch (seismogramFormat) {
+        case 4:
+            SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
+            break;
+        default:
+            IO::writeMatrix(dataResample, filenameTmp, seismogramFormat);
+            break;
+        }
     }
 }
 
@@ -106,47 +84,20 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
 /*!
  *
  * This method reads the seismogram data from disk. \n
-\param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
+\param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename Filename to read seismogram
  \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
+    std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
     switch (seismogramFormat) {
-    case 1:
-        readFromFileRaw(filename + ".mtx", copyDist);
-        break;
-    case 2:
-        readFromFileSU(filename + ".SU", copyDist);
+    case 4:
+        SUIO::readDataSU(filenameTmp, data, this->getNumSamples(), this->getNumTracesGlobal());
         break;
     default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
-        break;
-    }
-}
-
-//! \brief Read the seismogram from disk
-/*!
- *
- * This method reads the seismogram data from disk. \n
-\param seismogramFormat =1 MTX: MatrixMaker format, =2 SU: SeismicUnix format
- \param filename Filename to read seismogram
- \param distTraces Distribution of traces
- \param distSamples Distribution of temporal samples
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    switch (seismogramFormat) {
-    case 1:
-        readFromFileRaw(filename + ".mtx", distTraces, distSamples);
-        break;
-    case 2:
-        readFromFileSU(filename + ".SU", distTraces, distSamples);
-        break;
-    default:
-        COMMON_THROWEXCEPTION(" Unkown SeismogramFormat ")
+        IO::readMatrix(data, filenameTmp, seismogramFormat);
         break;
     }
 }
@@ -159,22 +110,13 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
-    if (normalizeTraces == 1) {
 
-        SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
-
-        scai::lama::DenseVector<ValueType> tempRow;
-        ValueType tempMax;
-        ValueType tempInverseMax;
-
-        for (IndexType i = 0; i < numTracesGlobal; i++) {
-            tempMax = 0.0;
-            data.getRow(tempRow, i);
-            tempMax = tempRow.max();
-            tempInverseMax = 1 / tempMax;
-            tempRow *= tempInverseMax;
-            data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
-        }
+    scai::hmemo::HArray<ValueType> tempRow;
+    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+        data.getLocalStorage().getRow(tempRow, i);
+        ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
+        scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
+        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -186,18 +128,14 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
-    std::cout << "integrate traces, data = " << data << std::endl;
 
-    SCAI_ASSERT(data.getNumRows() == numTracesGlobal, " Size of matrix is not matching with number of traces. ");
-
-    scai::lama::DenseVector<ValueType> tempRow;
-
-    for (IndexType i = 0; i < numTracesGlobal; i++) {
-        data.getRow(tempRow, i);
+    scai::hmemo::HArray<ValueType> tempRow;
+    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+        data.getLocalStorage().getRow(tempRow, i);
         for (IndexType j = 0; j < tempRow.size() - 1; j++) {
             tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
         }
-        data.setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -214,6 +152,28 @@ void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<Val
         freqFilter.apply(data);
     }
 }
+
+
+
+//! \brief Filter the seismogram-traces
+/*!
+ *
+ * This methode filters the traces of the seismogram.
+ \param freqFilter filter object
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Seismogram<ValueType>::isFinite()
+{
+    bool result_isfinite=true;
+    for (IndexType loc_vals=0;loc_vals<data.getLocalStorage().getData().size();loc_vals++) {
+        if (isfinite(data.getLocalStorage().getData()[loc_vals])==false){
+            result_isfinite=false;
+            break;
+        }
+    }
+    return(result_isfinite);
+}
+
 
 //! \brief Setter method for the temporal sampling DT
 /*!
@@ -250,7 +210,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType s
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType trace)
 {
-    type = trace;
+    seismoType = trace;
 };
 
 //! \brief Setter function for the 1D coordinates of the traces
@@ -263,36 +223,22 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::DenseVector<IndexType> const &indeces)
 {
-    SCAI_ASSERT_ERROR(indeces.size() == numTracesGlobal, "Given traceType vector has wrong format");
+    SCAI_ASSERT_ERROR(indeces.size() == getNumTracesGlobal(), "Given traceType vector has wrong format");
     coordinates1D = indeces;
 };
-
-//! \brief Setter methode to set Index for trace-normalization.
-/*!
- *
- * This method sets the index for trace-normalization.
- \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setNormalizeTraces(IndexType normalize)
-{
-    SCAI_ASSERT(normalize >= 0 && normalize <= 1, " Index has to be 1 or 0 ");
-    normalizeTraces = normalize;
-}
 
 //! \brief Setter methode to set matrix for resampling this seismogram.
 /*!
  \param rMat Resampling matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setResampleCoeff(ValueType resampleCoeff)
+void KITGPI::Acquisition::Seismogram<ValueType>::setSeismoDT(ValueType seismoDT)
 {
+    outputDT = seismoDT;
+    ValueType resampleCoeff = seismoDT / DT;
+
     if (this->getNumSamples() != 0) {
-        Common::calcResampleMat<ValueType>(resampleMatLeft, numSamples, resampleCoeff, 0);
-        if (scai::common::Math::floor<ValueType>(resampleCoeff) != resampleCoeff) {
-            Common::calcResampleMat<ValueType>(resampleMatRight, numSamples, resampleCoeff, 1);
-            Common::calcResampleVec<ValueType>(resampleVec, numSamples, resampleCoeff);
-        }
+        Common::calcResampleMat<ValueType>(resampleMat, getNumSamples(), resampleCoeff);
     }
 }
 
@@ -308,7 +254,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setResampleCoeff(ValueType resa
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
 {
-    return (type);
+    return (seismoType);
 }
 
 //! \brief Getter method for reference to coordinates1D vector
@@ -321,7 +267,7 @@ KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::get1DCoordinates() const
 {
-    SCAI_ASSERT_DEBUG(coordinates1D.size() == numTracesGlobal, "Size mismatch ");
+    SCAI_ASSERT(coordinates1D.size() == getNumTracesGlobal(), "Size mismatch ");
     return (coordinates1D);
 }
 
@@ -337,7 +283,7 @@ lama::DenseVector<IndexType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getData()
 {
-    SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -353,7 +299,7 @@ lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDat
 template <typename ValueType>
 lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getData() const
 {
-    SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
 }
 
@@ -364,8 +310,8 @@ lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 {
-    dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(numSamples));
-    dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(numTracesGlobal));
+    dmemo::DistributionPtr no_dist_numSamples(new scai::dmemo::NoDistribution(getNumSamples()));
+    dmemo::DistributionPtr no_dist_Traces(new scai::dmemo::NoDistribution(getNumTracesGlobal()));
 
     redistribute(no_dist_Traces, no_dist_numSamples);
 }
@@ -383,14 +329,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::replicate()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distTraces, IndexType NT)
 {
-    //       std::cout << "Seismogram allocate dist = " << *distTraces << " x NT = " << NT << std::endl;
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No Seismogram allocation ");
     SCAI_ASSERT_ERROR(distTraces != NULL, "No valid distribution");
-
-    numSamples = NT;
-    numTracesGlobal = distTraces->getGlobalSize();
-    numTracesLocal = distTraces->getLocalSize();
 
     dmemo::DistributionPtr no_dist_NT(new scai::dmemo::NoDistribution(NT));
 
@@ -400,7 +341,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
     data.allocate(distTraces, no_dist_NT);
     coordinates1D.allocate(distTraces);
 
-    resampleMatLeft = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
+    resampleMat = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }
 
 //! \brief Reset of the seismogram data
@@ -422,14 +363,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
 {
-    numTracesGlobal = 0;
-    numTracesLocal = 0;
     data.clear();
     coordinates1D = lama::DenseVector<scai::IndexType>();
     sourceIndex = 0;
-    numSamples = 0;
     DT = 0.0;
-    normalizeTraces = 0;
 }
 
 //! \brief Redistribute the seismogram data
@@ -443,149 +380,13 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     if (distSamples == NULL) {
-        SCAI_ASSERT_DEBUG(numSamples >= 0, "numSamples not set");
-        dmemo::DistributionPtr distSamplestmp(new scai::dmemo::NoDistribution(numSamples));
+        SCAI_ASSERT_DEBUG(getNumSamples() >= 0, "data has 0 collumns");
+        dmemo::DistributionPtr distSamplestmp(new scai::dmemo::NoDistribution(getNumSamples()));
         distSamples = distSamplestmp;
     }
 
     data.redistribute(distTraces, distSamples);
     coordinates1D.redistribute(distTraces);
-}
-
-//! \brief Read a seismogram from disk without header
-/*!
- *
- \param filename Filename to read seismogram
- \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, bool copyDist)
-{
-    scai::dmemo::DistributionPtr distTraces;
-    scai::dmemo::DistributionPtr distSamples;
-
-    if (copyDist == 1) {
-        distTraces = data.getRowDistributionPtr();
-        distSamples = data.getColDistributionPtr();
-    }
-
-    data.readFromFile(addSeismogramTypeToName(filename));
-    IndexType nrow_temp = data.getNumRows();
-    IndexType ncolumn_temp = data.getNumColumns();
-
-    numSamples = ncolumn_temp;
-    numTracesGlobal = nrow_temp;
-
-    if (copyDist == 0) {
-        replicate();
-    } else if (copyDist == 1) {
-        redistribute(distTraces, distSamples);
-    }
-}
-
-//! \brief Read a seismogram from disk without header
-/*!
- *
- \param filename Filename to read seismogram
- \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, bool copyDist)
-{
-    scai::dmemo::DistributionPtr distTraces;
-    scai::dmemo::DistributionPtr distSamples;
-
-    if (copyDist == 1) {
-        distTraces = data.getRowDistributionPtr();
-        distSamples = data.getColDistributionPtr();
-    }
-
-    std::string tempstr = addSeismogramTypeToName(filename);
-    suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
-
-    if (copyDist == 0) {
-        replicate();
-    } else if (copyDist == 1) {
-        redistribute(distTraces, distSamples);
-    }
-}
-
-//! \brief Read a seismogram from disk without header
-/*!
- *
- \param filename Filename to read seismogram
- \param distTraces Distribution of traces
- \param distSamples Distribution of temporal samples
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileRaw(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    data.readFromFile(addSeismogramTypeToName(filename));
-    IndexType nrow_temp = data.getNumRows();
-    IndexType ncolumn_temp = data.getNumColumns();
-
-    numSamples = ncolumn_temp;
-    numTracesGlobal = nrow_temp;
-
-    if (distTraces == NULL && distSamples == NULL) {
-        replicate();
-    } else {
-        redistribute(distTraces, distSamples);
-    }
-}
-
-//! \brief Read a seismogram from disk without header
-/*!
- *
- \param filename Filename to read seismogram
- \param distTraces Distribution of traces
- \param distSamples Distribution of temporal samples
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::readFromFileSU(std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
-{
-    std::string tempstr = addSeismogramTypeToName(filename);
-    suHandler<ValueType>::readDataSU(tempstr, data, this->getNumSamples(), this->getNumTracesGlobal());
-
-    if (distTraces == NULL && distSamples == NULL) {
-        replicate();
-    } else {
-        redistribute(distTraces, distSamples);
-    }
-}
-
-//! \brief Write a seismogram to disk without header
-/*!
- *
- \param filename Filename to write seismogram
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileRaw(std::string const &filename) const
-{
-    if (data.getNumValues() > 0) {
-        scai::lama::DenseMatrix<ValueType> dataResample;
-        dataResample = data * resampleMatLeft;
-
-        if (resampleMatRight.getNumColumns() > 0) {
-            scai::lama::DenseMatrix<ValueType> dataResampleInt;
-            dataResampleInt = data * resampleMatRight;
-            dataResampleInt -= dataResample;
-            dataResampleInt.scaleColumns(resampleVec);
-            dataResample += dataResampleInt;
-        }
-        dataResample.writeToFile(addSeismogramTypeToName(filename));
-    }
-}
-
-/*! \brief Getter method for reference normalization index
- *
- *
- \return NormalizeTraces Index 
- */
-template <typename ValueType>
-IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNormalizeTraces() const
-{
-    return (normalizeTraces);
 }
 
 /*! \brief Getter method for the temporal sampling
@@ -608,7 +409,7 @@ ValueType KITGPI::Acquisition::Seismogram<ValueType>::getDT() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 {
-    return (numSamples);
+    return (data.getNumColumns());
 }
 
 /*! \brief Getter method for the number of local traces
@@ -619,7 +420,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumSamples() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 {
-    return (numTracesLocal);
+    return (data.getRowDistribution().getLocalSize());
 }
 
 /*! \brief Getter method for the number of global traces
@@ -630,7 +431,7 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesLocal() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 {
-    return (numTracesGlobal);
+    return (data.getNumRows());
 }
 
 /*! \brief Getter method for the source Index
@@ -642,23 +443,6 @@ template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getSourceCoordinate() const
 {
     return (sourceIndex);
-}
-
-//! \brief Write a seismogram to disk in Seismic Unix (SEG-Y) format
-/*!
- *
- * This method writes the seismogram in the Seismic Unix format to disk.
- * Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
- \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::writeToFileSU(std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
-{
-    if (data.getNumValues() > 0) {
-        std::string tempstr = addSeismogramTypeToName(filename);
-        suHandler<ValueType>::writeSU(tempstr, data, coordinates1D, DT, sourceIndex, modelCoordinates);
-    }
 }
 
 /*! \brief Overloading *= Operation

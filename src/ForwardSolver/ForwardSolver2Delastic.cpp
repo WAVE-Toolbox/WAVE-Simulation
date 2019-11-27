@@ -1,6 +1,12 @@
 #include "ForwardSolver2Delastic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD2Delastic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -14,6 +20,7 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
+    SCAI_REGION("ForwardSolver.init2Delastic");
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
@@ -109,8 +116,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareForModelling(Modelpar
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
-
-    SCAI_REGION("timestep");
+    SCAI_REGION("ForwardSolver.timestep2Delastic");
 
     /* Get references to required modelparameter */
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
@@ -131,11 +137,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     /* Get references to required derivatives matrixes */
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
-    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
-    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
 
-    lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
+    lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();
+    lama::Matrix<ValueType> const &DybStaggeredXFreeSurface = derivatives.getDybStaggeredXFreeSurface();
+
+    //   lama::Matrix<ValueType> const &DybFreeSurface = derivatives.getDybFreeSurface();
+    lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
+    lama::Matrix<ValueType> const &DyfStaggeredX = derivatives.getDyfStaggeredX();
     lama::Matrix<ValueType> const &DyfFreeSurface = derivatives.getDyfFreeSurface();
+
+    /* Get pointers to required interpolation matrices (optional) */
+    lama::Matrix<ValueType> const *DinterpolateFull = derivatives.getInterFull();
+    lama::Matrix<ValueType> const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
 
     SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
@@ -153,9 +167,9 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     if (useFreeSurface == 1) {
         /* Apply image method */
-        update_temp = DybFreeSurface * Sxy;
+        update_temp = DybStaggeredXFreeSurface * Sxy;
     } else {
-        update_temp = Dyb * Sxy;
+        update_temp = DybStaggeredX * Sxy;
     }
 
     if (useConvPML) {
@@ -165,6 +179,12 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     update *= inverseDensityAverageX;
     vX += update;
+
+    if (DinterpolateStaggeredX) {
+        /* interpolation for vx ghost points at the variable grid interfaces*/
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
 
     /* -------- */
     /*    vy    */
@@ -188,6 +208,15 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     update *= inverseDensityAverageY;
     vY += update;
+
+    if (DinterpolateFull) {
+        /* interpolation for vy ghost pointsa t the variable grid interfaces.
+         This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vY);
+        vY = *DinterpolateFull * update_temp;
+    }
 
     /* -------------------- */
     /* update normal stress */
@@ -213,10 +242,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulus;
     Syy -= 2.0 * update;
 
+    if (DinterpolateFull) {
+        // interpolation for Sxx/Sxx ghost points at the variable grid interfaces.
+        update_temp.swap(Sxx);
+        Sxx = *DinterpolateFull * update_temp;
+
+        update_temp.swap(Syy);
+        Syy = *DinterpolateFull * update_temp;
+    }
+
     /* ------------------- */
     /* update shear stress */
     /* ------------------- */
-    update = Dyf * vX;
+    update = DyfStaggeredX * vX;
     if (useConvPML) {
         ConvPML.apply_vxy(update);
     }
@@ -230,9 +268,19 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     update *= sWaveModulusAverageXY;
     Sxy += update;
 
+    if (DinterpolateStaggeredX) {
+        /* interpolation for Sxy ghost points at the variable grid interfaces.
+         This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(Sxy);
+        Sxy = *DinterpolateStaggeredX * update_temp;
+    }
+
     /* Apply free surface to horizontal stress update */
     if (useFreeSurface == 1) {
         FreeSurface.exchangeHorizontalUpdate(vxx, vyy, Sxx);
+        FreeSurface.setSurfaceZero(Syy);
     }
 
     /* Apply the damping boundary */

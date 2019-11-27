@@ -1,13 +1,26 @@
 #include "Acoustic.hpp"
-#include <scai/lama/io/FileIO.hpp>
+#include "../IO/IO.hpp"
+
 using namespace scai;
 using namespace KITGPI;
+
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::Acoustic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 6 Parameter in acoustic modeling: Vp, rho, invRhoX, invRhoY, invRhoZ, bulk modulus */
+    IndexType numParameter = 6;
+    return (this->getMemoryUsage(dist, numParameter));
+}
 
 /*! \brief Prepare modellparameter for modelling
  *
  * Refreshes the modulus, calculates inverse density and average Values on staggered grid
  *
- \param config Configuration class
+ \param modelCoordinates coordinate class object
  \param ctx Context for the Calculation
  \param dist Distribution
  \param comm Communicator pointer
@@ -20,8 +33,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Acquisitio
     // refreshModulus();
     this->getPWaveModulus();
     initializeMatrices(dist, ctx, modelCoordinates, comm);
-    this->getInverseDensity();
     calculateAveraging();
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -55,10 +68,10 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "acoustic";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -68,25 +81,64 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(Configuration::Configurati
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2 || config.get<IndexType>("UseVariableGrid") == 1, "Read variable model (ModelRead=2) not available if regular grid is chosen!")
+
+    if ((config.get<IndexType>("ModelRead") == 1 && config.get<IndexType>("UseVariableGrid") == 0) || (config.get<IndexType>("ModelRead") == 2)) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (acoustic) from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
+
+    } else if (config.get<IndexType>("ModelRead") == 1 && config.get<IndexType>("UseVariableGrid") == 1) {
+
+        Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
+        dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
+
+        init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
+
+        init(dist, modelCoordinates, regularCoordinates);
+        HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("rho"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
-    }
 }
 
+/*! \brief initialisation function which creates a variable grid model on top of a regular model
+             \param model regular input model
+             \param variableDist Distribution for a variable grid
+             \param variableCoordinates Coordinate Class of a Variable Grid
+             \param regularCoordinates Coordinate Class of a regular Grid
+             */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
+{
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    variableDist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assembly;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+
+        Acquisition::coordinate3D coordinate = variableCoordinates.index2coordinate(ownedIndex);
+        IndexType const &regularIndex = regularCoordinates.coordinate2index(coordinate);
+        assembly.push(ownedIndex, regularIndex, 1.0);
+    }
+
+    lama::CSRSparseMatrix<ValueType> meshingMatrix;
+    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, velocityP.getDistributionPtr());
+    meshingMatrix.fillFromAssembly(assembly);
+
+    density = meshingMatrix * density;
+    velocityP = meshingMatrix * velocityP;
+}
 /*! \brief Constructor that is generating a homogeneous model
  *
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
@@ -122,14 +174,14 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param filename For the P-wave modulus ".pWaveModulus.'suffix'" is added and for density ".density.'suffix'" is added.
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "acoustic";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading Velocity-Vector
@@ -137,18 +189,15 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(scai::hmemo::ContextPtr ct
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the first Velocity-Vector "filename".vp.mtx" is added and for density "filename+".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param filename For the first Velocity-Vector "filename".vp.'suffix'" is added and for density "filename+".density.'suffix'" is added.
+ \param fileFormat  input file format 1=mtx 2=lmf
  *
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityP = filename + ".vp.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->initModelparameter(velocityP, ctx, dist, filenameVelocityP, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -166,17 +215,14 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
 
 /*! \brief Write model to an external file
  *
- \param filename For the P-wave modulus ".pWaveModulus.mtx" is added and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ \param filename base filename of the model
+ \param fileFormat output file format mtx=1 lmf=2
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    std::string filenameP = filename + ".vp.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityP, filenameP, partitionedOut);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityP, filename + ".vp", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -184,22 +230,32 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, In
  *
  \param dist Distribution of the wavefield
  \param ctx Context
+ \param modelCoordinates coordinate object
  \param comm Communicator
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
     if (dirtyFlagAveraging) {
-        SCAI_REGION("initializeMatrices")
+        SCAI_REGION("Modelparameter.Acoustic.initializeMatrices")
 
-        this->calcDensityAverageMatrixX(modelCoordinates, dist);
-        this->calcDensityAverageMatrixY(modelCoordinates, dist);
-        this->calcDensityAverageMatrixZ(modelCoordinates, dist);
+        this->calcAverageMatrixX(modelCoordinates, dist);
+        this->calcAverageMatrixY(modelCoordinates, dist);
+        this->calcAverageMatrixZ(modelCoordinates, dist);
 
-        DensityAverageMatrixX.setContextPtr(ctx);
-        DensityAverageMatrixY.setContextPtr(ctx);
-        DensityAverageMatrixZ.setContextPtr(ctx);
+        averageMatrixX.setContextPtr(ctx);
+        averageMatrixY.setContextPtr(ctx);
+        averageMatrixZ.setContextPtr(ctx);
     }
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
+    averageMatrixZ.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -209,9 +265,10 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, DensityAverageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, DensityAverageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, DensityAverageMatrixZ);
+        SCAI_REGION("Modelparameter.Acoustic.calculateAveraging")
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
+        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
         dirtyFlagAveraging = false;
     }
 }
@@ -222,6 +279,16 @@ template <typename ValueType>
 std::string KITGPI::Modelparameter::Acoustic<ValueType>::getEquationType() const
 {
     return (equationType);
+}
+
+/*! \brief Get reference to inverse density
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getInverseDensity()
+{
+    COMMON_THROWEXCEPTION("Inverse density is not set for acoustic modelling")
+    return (inverseDensity);
 }
 
 /*! \brief Get reference to S-wave modulus
@@ -259,7 +326,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauP() const
 {
-    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no tau parameter in an acoustic modelling")
     return (tauP);
 }
 
@@ -268,7 +335,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauS() const
 {
-    COMMON_THROWEXCEPTION("There is no tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no tau parameter in an acoustic modelling")
     return (tauS);
 }
 
@@ -276,7 +343,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() const
 {
-    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an acoustic modelling")
     return (relaxationFrequency);
 }
 
@@ -284,7 +351,7 @@ ValueType KITGPI::Modelparameter::Acoustic<ValueType>::getRelaxationFrequency() 
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Acoustic<ValueType>::getNumRelaxationMechanisms() const
 {
-    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no numRelaxationMechanisms parameter in an acoustic modelling")
     return (numRelaxationMechanisms);
 }
 
@@ -347,7 +414,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXY);
 }
 
@@ -356,7 +423,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXY() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXY);
 }
 
@@ -365,7 +432,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXZ);
 }
 
@@ -374,7 +441,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageXZ() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageXZ);
 }
 
@@ -383,7 +450,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ()
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageYZ);
 }
 
@@ -392,7 +459,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getTauSAverageYZ() const
 {
-    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an elastic modelling")
+    COMMON_THROWEXCEPTION("There is no averaged tau parameter in an acoustic modelling")
     return (tauSAverageYZ);
 }
 
@@ -498,13 +565,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<ValueType>::operator=(KITGPI::Modelparameter::Acoustic<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.pWaveModulus;
     velocityP = rhs.velocityP;
-    inverseDensity = rhs.inverseDensity;
     density = rhs.density;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -515,13 +580,11 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    pWaveModulus = rhs.getPWaveModulus();
     velocityP = rhs.getVelocityP();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagPWaveModulus = rhs.getDirtyFlagPWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagPWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

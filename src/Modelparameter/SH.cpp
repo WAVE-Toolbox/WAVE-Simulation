@@ -1,12 +1,25 @@
 #include "SH.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
+
+/*! \brief estimate sum of the memory of all model parameters
+ * 
+ \param dist Distribution
+ */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::SH<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 6 Parameter in SH modeling:  rho, Vs, invRho, sWaveModulus, sWaveModulusXZ, sWaveModulus YZ */
+    IndexType numParameter = 6;
+    return (this->getMemoryUsage(dist, numParameter));
+}
 
 /*! \brief Prepare modellparameter for modelling
  *
  * Refreshes the modulus, calculates inverse density and average Values on staggered grid
  *
- \param config Configuration class
+ \param modelCoordinates Coordinate class object
  \param ctx Context for the Calculation
  \param dist Distribution
  \param comm Communicator pointer
@@ -14,13 +27,15 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm)
 {
-    HOST_PRINT(comm, "", "Preparation of the model parameters…\n");
+    HOST_PRINT(comm, "", "Preparation of the model parameters\n");
 
     // refreshModulus();
     this->getSWaveModulus();
+    //sWaveModulus is not needed after avereging. The memory should be freed after calculating the averaging.
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     this->getInverseDensity();
     calculateAveraging();
+    purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -54,10 +69,10 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     equationType = "sh";
-    init(config, ctx, dist);
+    init(config, ctx, dist, modelCoordinates);
 }
 
 /*! \brief Initialisation that is using the Configuration class
@@ -67,13 +82,15 @@ KITGPI::Modelparameter::SH<ValueType>::SH(Configuration::Configuration const &co
  \param dist Distribution
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    if (config.get<IndexType>("ModelRead")) {
+    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for SH, variable grid is not available here!")
+    
+    if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (SH) from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("PartitionedIn"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -81,9 +98,6 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
         init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"));
     }
 
-    if (config.get<IndexType>("ModelWrite")) {
-        write(config.get<std::string>("ModelFilename") + ".out", config.get<IndexType>("PartitionedOut"));
-    }
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -121,14 +135,14 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the S-wave modulus  ".sWaveModulus.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param filename base filenam of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
     equationType = "sh";
-    init(ctx, dist, filename, partitionedIn);
+    init(ctx, dist, filename, fileFormat);
 }
 
 /*! \brief Initialisator that is reading models from external files
@@ -136,17 +150,14 @@ KITGPI::Modelparameter::SH<ValueType>::SH(scai::hmemo::ContextPtr ctx, scai::dme
  *  Reads a model from an external file.
  \param ctx Context
  \param dist Distribution
- \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param partitionedIn Partitioned input
+ \param filename base filename of the model
+ \param fileFormat Input file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType partitionedIn)
+void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    std::string filenameVelocityS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->initModelparameter(velocityS, ctx, dist, filenameVelocityS, partitionedIn);
-    this->initModelparameter(density, ctx, dist, filenamedensity, partitionedIn);
+    this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
+    this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
 }
 
 //! \brief Copy constructor
@@ -163,18 +174,14 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
 }
 
 /*! \brief Write model to an external file
- *
- \param filename For the S-wave velocity ".vs.mtx" and for density ".density.mtx" is added.
- \param partitionedOut Partitioned output
+ *base filename of the model
+ \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType partitionedOut) const
+void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType fileFormat) const
 {
-    std::string filenameS = filename + ".vs.mtx";
-    std::string filenamedensity = filename + ".density.mtx";
-
-    this->writeModelparameter(density, filenamedensity, partitionedOut);
-    this->writeModelparameter(velocityS, filenameS, partitionedOut);
+    IO::writeVector(density, filename + ".density", fileFormat);
+    IO::writeVector(velocityS, filename + ".vs", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -188,13 +195,21 @@ template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
 {
 
-    SCAI_REGION("initializeMatrices")
+    SCAI_REGION("Modelparameter.SH.initializeMatrices")
     // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-    this->calcDensityAverageMatrixX(modelCoordinates, dist);
-    this->calcDensityAverageMatrixY(modelCoordinates, dist);
+    this->calcAverageMatrixX(modelCoordinates, dist);
+    this->calcAverageMatrixY(modelCoordinates, dist);
 
-    sWaveModulusAverageMatrixXZ.setContextPtr(ctx);
-    sWaveModulusAverageMatrixYZ.setContextPtr(ctx);
+    averageMatrixX.setContextPtr(ctx);
+    averageMatrixY.setContextPtr(ctx);
+}
+
+//! \brief Purge Averaging matrices to free memory
+template <typename ValueType>
+void KITGPI::Modelparameter::SH<ValueType>::purgeMatrices()
+{
+    averageMatrixX.purge();
+    averageMatrixY.purge();
 }
 
 /*! \brief calculate averaged vectors
@@ -204,9 +219,10 @@ template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, DensityAverageMatrixX);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, DensityAverageMatrixY);
+        SCAI_REGION("Modelparameter.SH.calculateAveraging")
+        // sxz and syz are on the same spot as vx and vy in acoustic modeling
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
+        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }
@@ -439,13 +455,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator=(KITGPI::Modelparameter::SH<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.sWaveModulus;
     velocityS = rhs.velocityS;
     density = rhs.density;
-    inverseDensity = rhs.inverseDensity;
-    dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
-    dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
-    dirtyFlagAveraging = rhs.dirtyFlagAveraging;
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
     return *this;
 }
 
@@ -456,13 +470,11 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
-    sWaveModulus = rhs.getSWaveModulus();
     velocityS = rhs.getVelocityS();
-    inverseDensity = rhs.getInverseDensity();
     density = rhs.getDensity();
-    dirtyFlagInverseDensity = rhs.getDirtyFlagInverseDensity();
-    dirtyFlagSWaveModulus = rhs.getDirtyFlagSWaveModulus();
-    dirtyFlagAveraging = rhs.getDirtyFlagAveraging();
+    dirtyFlagInverseDensity = true;
+    dirtyFlagSWaveModulus = true;
+    dirtyFlagAveraging = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

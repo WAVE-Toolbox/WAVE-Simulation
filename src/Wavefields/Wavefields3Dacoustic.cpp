@@ -1,4 +1,5 @@
 #include "Wavefields3Dacoustic.hpp"
+#include "../IO/IO.hpp"
 
 using namespace scai;
 
@@ -34,25 +35,38 @@ void KITGPI::Wavefields::FD3Dacoustic<ValueType>::init(scai::hmemo::ContextPtr c
     this->initWavefield(P, ctx, dist);
 }
 
+template <typename ValueType>
+ValueType KITGPI::Wavefields::FD3Dacoustic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+{
+    /* 4 Wavefields in 3D acoustic modeling: P, Vx, Vy, Vz */
+    IndexType numWavefields = 4;
+    return (this->getMemoryUsage(dist, numWavefields));
+}
+
 /*! \brief override Methode tor write Wavefield Snapshot to file
  *
  *
- \param type Type of the Seismogram
+ \param snapType Type of the wavefield snapshots 1=Velocities 2=pressure 3=div + curl
+ \param baseName base name of the output file
  \param t Current Timestep
+ \param derivatives derivatives object only used to output div/curl
+ \param model model object only used to output div/curl
+ \param fileFormat Output file format 
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType partitionedOut)
+void KITGPI::Wavefields::FD3Dacoustic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const & /*derivatives*/, Modelparameter::Modelparameter<ValueType> const & /*model*/, IndexType fileFormat)
 {
-    std::string fileBaseName = baseName + type;
+    std::string fileName = baseName + type;
+    std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
     case 1:
-        this->writeWavefield(VX, "VX", fileBaseName, t, partitionedOut);
-        this->writeWavefield(VY, "VY", fileBaseName, t, partitionedOut);
-        this->writeWavefield(VZ, "VZ", fileBaseName, t, partitionedOut);
+        IO::writeVector(VX, fileName + ".VX." + timeStep, fileFormat);
+        IO::writeVector(VY, fileName + ".VY." + timeStep, fileFormat);
+        IO::writeVector(VZ, fileName + ".VZ." + timeStep, fileFormat);
         break;
     case 2:
-        this->writeWavefield(P, "P", fileBaseName, t, partitionedOut);
+        IO::writeVector(P, fileName + ".P." + timeStep, fileFormat);
         break;
     case 3:
         COMMON_THROWEXCEPTION("There is no curl or div of wavefield in the 3D acoustic case.")

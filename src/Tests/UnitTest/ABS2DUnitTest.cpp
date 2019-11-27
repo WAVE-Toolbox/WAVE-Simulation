@@ -7,8 +7,6 @@
 using namespace scai;
 using namespace KITGPI;
 
-bool verbose; // global variable definition (needed in only one unit test)
-
 TEST(ABS2DTest, TestApplyThrows)
 {
     int N = 10;

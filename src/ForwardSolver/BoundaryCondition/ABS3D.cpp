@@ -57,6 +57,56 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
     v8 *= damping;
     v9 *= damping;
 }
+//! \brief estimate memory for the absorbing boundary frame
+/*!
+ *
+ \param BoundaryWidth Width of damping boundary
+ \param useFreeSurface Indicator which free surface is in use
+  \param dist Distribution of the wavefield
+  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ */
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    /* Get local owned global indices */
+    hmemo::HArray<IndexType> ownedIndeces;
+    dist->getOwnedIndexes(ownedIndeces);
+
+    Acquisition::coordinate3D coordinate;
+    Acquisition::coordinate3D coordinatedist;
+
+    IndexType coordinateMin = 0;
+
+    IndexType counter = 0;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndeces)) {
+
+        coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        coordinatedist = modelCoordinates.edgeDistance(coordinate);
+
+        coordinateMin = coordinatedist.min();
+
+        if (useFreeSurface == 0) {
+            if (coordinateMin < BoundaryWidth) {
+                counter++;
+            }
+
+        } else {
+            if (coordinate.y < BoundaryWidth) {
+                if ((coordinatedist.z < BoundaryWidth) || (coordinatedist.x < BoundaryWidth)) {
+                    counter++;
+                }
+            } else if (coordinateMin < BoundaryWidth) {
+                counter++;
+            }
+        }
+    }
+
+     IndexType sum=dist->getCommunicator().sum(counter);
+    ValueType mega = 1024 * 1024;
+    ValueType size = sum * sizeof(ValueType) / mega;
+    return size;
+}
 
 //! \brief Initializsation of the absorbing coefficient matrix
 /*!

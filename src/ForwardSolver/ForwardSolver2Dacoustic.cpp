@@ -1,6 +1,12 @@
 #include "ForwardSolver2Dacoustic.hpp"
 using namespace scai;
 
+template <typename ValueType>
+ValueType KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+{
+    return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
+}
+
 /*! \brief Initialitation of the ForwardSolver
  *
  *
@@ -14,6 +20,7 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
 {
+    SCAI_REGION("ForwardSolver.init2Dacoustic");
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVX().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
@@ -83,8 +90,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
 {
-
-    SCAI_REGION("timestep");
+    SCAI_REGION("ForwardSolver.timestep2Dacoustic");
 
     /* Get references to required modelparameter */
     auto const &pWaveModulus = model.getPWaveModulus();
@@ -103,6 +109,10 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const &Dyf = derivatives.getDyf();
     auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
 
+    /* Get pointers to required interpolation matrices (optional) */
+    auto const *DinterpolateFull = derivatives.getInterFull();
+    auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
+
     SourceReceiverImpl::FDTD2Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
@@ -116,6 +126,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     update *= inverseDensityAverageX;
     vX += update;
 
+    if (DinterpolateStaggeredX) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vX);
+        vX = *DinterpolateStaggeredX * update_temp;
+    }
+
     if (useFreeSurface == 1) {
         /* Apply image method */
         update = DyfFreeSurface * p;
@@ -128,6 +147,15 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     }
     update *= inverseDensityAverageY;
     vY += update;
+
+    if (DinterpolateFull) {
+        /* interpolation for vz ghost points at the variable grid interfaces
+        This interpolation has no effect on the simulation.
+         Nethertheless it will be done to avoid abitrary values.
+         This is helpful for applications like FWI*/
+        update_temp.swap(vY);
+        vY = *DinterpolateFull * update_temp;
+    }
 
     /* --------------- */
     /* update pressure */
@@ -149,6 +177,16 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
     /* Apply the damping boundary */
     if (useDampingBoundary) {
         DampingBoundary.apply(p, vX, vY);
+    }
+
+    if (DinterpolateFull) {
+        // interpolation for missing pressure points
+        update_temp.swap(p);
+        p = *DinterpolateFull * update_temp;
+    }
+
+    if (useFreeSurface == 1) {
+        FreeSurface.setSurfaceZero(p);
     }
 
     /* Apply source and save seismogram */

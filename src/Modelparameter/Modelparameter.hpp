@@ -24,7 +24,6 @@
 #include "../Common/Common.hpp"
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
-#include "../PartitionedInOut/PartitionedInOut.hpp"
 #include <iostream>
 
 namespace KITGPI
@@ -52,14 +51,21 @@ namespace KITGPI
             //! \brief Modelparameter pointer
             typedef std::shared_ptr<Modelparameter<ValueType>> ModelparameterPtr;
 
+            ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter);
+
+            //! \brief memory estimation
+            virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;
+
+            ValueType getMemoryModel(scai::dmemo::DistributionPtr dist);
+
             /*! \brief Abstract initialization function
              * Standard initialisation function
              \param ctx Context
              \param dist Distribution
              \param filename filename to read modelparameters (endings will be added by derived classes)
-             \param partitionedIn Partitioned input
+             \param fileFormat Input file format 1=mtx 2=lmf
              */
-            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn) = 0;
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) = 0;
 
             /*! \brief Abstract initialisation function
              * Standard initialisation function
@@ -67,16 +73,16 @@ namespace KITGPI
              \param ctx Context
              \param dist Distribution
              */
-            virtual void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+            virtual void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
 
             /*! \brief Abstract write function
              *
              * Standard write function
              *
              \param filename filename to write modelparameters (endings will be added by derived classes)
-             \param partitionedOut Partitioned output
+             \param fileFormat Output file format 1=mtx 2=lmf
              */
-            virtual void write(std::string filename, scai::IndexType partitionedOut) const = 0;
+            virtual void write(std::string filename, scai::IndexType fileFormat) const = 0;
 
             virtual std::string getEquationType() const = 0;
 
@@ -151,8 +157,7 @@ namespace KITGPI
             bool dirtyFlagSWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
 
             scai::IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
-            scai::IndexType PartitionedIn;   //!< ==1 If Modulus is read from partitioned fileblock; ==0 if modulus is in single files
-            scai::IndexType PartitionedOut;  //!< ==1 If Modulus is written to partitioned fileblock; ==0 if modulus is written to single files
+            scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             std::string equationType;
 
@@ -183,9 +188,7 @@ namespace KITGPI
             ValueType relaxationFrequency;           //!< Relaxation Frequency
 
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType value);
-            void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType partitionedIn);
-
-            void writeModelparameter(scai::lama::Vector<ValueType> const &vector, std::string filename, scai::IndexType partitionedOut) const;
+            void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             void calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vectorModulus);
 
@@ -195,8 +198,7 @@ namespace KITGPI
             virtual void calculateAveraging() = 0;
 
             scai::IndexType getParametrisation();
-            scai::IndexType getPartitionedIn();
-            scai::IndexType getPartitionedOut();
+
             //! \brief Initializsation of the aneraging matrices
             /*!
              *
@@ -205,22 +207,24 @@ namespace KITGPI
              \param comm Communicator
              */
             virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
+            virtual void purgeMatrices() = 0;
 
-            void calcDensityAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcDensityAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-            void calcSWaveModulusAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-            void calcSWaveModulusAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calc4PointAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pz[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates);
+            void calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
+            void calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
-            SparseFormat DensityAverageMatrixX;                          //!< Averaging density matrix in x-direction
-            SparseFormat DensityAverageMatrixY;                          //!< Averaging density matrix in x-direction
-            SparseFormat DensityAverageMatrixZ;                          //!< Averaging density matrix in x-direction
-            SparseFormat sWaveModulusAverageMatrixXY;                    //!< Average S-wave Modulus in xy-plane
-            SparseFormat sWaveModulusAverageMatrixXZ;                    //!< Average S-wave Modulus in xz-plane
-            SparseFormat sWaveModulusAverageMatrixYZ;                    //!< Average S-wave Modulus in yz-plane
+            SparseFormat averageMatrixX;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixY;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixZ;                                 //!< Averaging density matrix in x-direction
+            SparseFormat averageMatrixXY;                                //!< Average S-wave Modulus in xy-plane
+            SparseFormat averageMatrixXZ;                                //!< Average S-wave Modulus in xz-plane
+            SparseFormat averageMatrixYZ;                                //!< Average S-wave Modulus in yz-plane
 
             void calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
             void calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);
@@ -228,8 +232,6 @@ namespace KITGPI
 
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
-
-            void readModelparameter(scai::lama::Vector<ValueType> &vector, std::string filename, scai::dmemo::DistributionPtr dist, scai::IndexType partitionedIn);
         };
     }
 }

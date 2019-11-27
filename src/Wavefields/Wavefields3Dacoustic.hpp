@@ -25,10 +25,10 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            FD3Dacoustic()
+            FD3Dacoustic():EquationType("acoustic"),NumDimension(3)
             {
-                equationType = "acoustic";
-                numDimension = 3;
+                equationType = EquationType;
+                numDimension = NumDimension;
             };
 
             //! Default destructor
@@ -59,13 +59,15 @@ namespace KITGPI
 
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
 
+            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+
             /* Overloading Operators */
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(ValueType rhs);
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*=(ValueType rhs);
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
             KITGPI::Wavefields::FD3Dacoustic<ValueType> operator*=(KITGPI::Wavefields::FD3Dacoustic<ValueType> rhs);
 
-            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType partitionedOut) override;
+            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) override;
 
             void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
@@ -73,8 +75,11 @@ namespace KITGPI
             void timesAssign(ValueType rhs);
 
           private:
+              std::string EquationType;
+              int NumDimension;
+            using Wavefields<ValueType>::equationType; 
             using Wavefields<ValueType>::numDimension;
-            using Wavefields<ValueType>::equationType;
+
 
             /* required wavefields */
             using Wavefields<ValueType>::VX;
@@ -96,7 +101,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = "Acoustic3D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }
