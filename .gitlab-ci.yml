@@ -7,13 +7,12 @@ stages:
 gcc:
   stage: build
   before_script:
-    - SCAI_ROOT=/data14/software/scai_lama/build_dev
     - git clone https://github.com/hu-macsy/geographer.git && cd geographer
     - git checkout dc0175d626f4fa2b524
     - mkdir build && cd "$_"
     - SCAI_DIR=/data14/software/scai_lama/build_dev/ cmake ../ -DCMAKE_INSTALL_PREFIX=./
+    - make install -j 4
     - cd ../../
-    - echo "LAMA Version:" && file ${SCAI_ROOT}/lib/libscai_lama.so | sed 's/.*libscai_lama\.so\.\([0-9]*\.[0-9]*\.[0.9]*\).*/\1/g'
   script:
     - echo "g++ Version:" && g++ --version
     - mkdir build && cd "$_"
