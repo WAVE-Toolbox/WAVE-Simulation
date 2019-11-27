@@ -2,7 +2,7 @@
 % This script can be used to convert model that are saved as
 % raw floating number in binary format to the mtx format.
 
-% The major order used in SOFI++ is X,Z,Y With Y=depth
+% The major order used in WAVE-Simulation is X,Z,Y With Y=depth
 % if your binary input model has a different major order. this script has
 % to be modified 
 

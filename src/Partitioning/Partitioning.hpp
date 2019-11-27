@@ -33,7 +33,7 @@ namespace KITGPI
     {
 
         //         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
-        //                *    Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+        //             *Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
         //             \param config configuration object
         //             \param commShot communicator of a shot domain
         //             */
@@ -82,7 +82,7 @@ namespace KITGPI
         }
 
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
-               *    Attention: LAMA uses row-major indexing while SOFI-3D uses column-major, so switch dimensions, x-dimension has stride 1
+               *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride, 1 z-dimension has stride 2 y-dimension has stride 3
             \param config configuration object
             \param commShot communicator of a shot domain
             */

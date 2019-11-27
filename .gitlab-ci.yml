@@ -38,7 +38,7 @@ acoustic2D-gcc:
   script:
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.2D.acoustic.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.txt"
 
 acousticVarGrid2D-gcc:
@@ -46,7 +46,7 @@ acousticVarGrid2D-gcc:
   script:
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.acoustic.varGrid.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.2D.acoustic.varGrid.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.acoustic.varGrid.txt"
 
 
@@ -56,7 +56,7 @@ acousticVarGrid3D-gcc:
   script:
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.acoustic.varGrid.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.3D.acoustic.varGrid.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.3D.acoustic.varGrid.txt"
 
 
@@ -66,7 +66,7 @@ acoustic3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - ./../build/bin/tools/TwoLayer "ci/configuration_ci.3D.acoustic.txt"
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.acoustic.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.3D.acoustic.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.3D.acoustic.txt"
 
 
@@ -76,7 +76,7 @@ elastic2D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - ./../build/bin/tools/TwoLayer "ci/configuration_ci.2D.elastic.txt"
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.elastic.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.2D.elastic.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.elastic.txt"
 
 elastic3D-gcc:
@@ -85,7 +85,7 @@ elastic3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - ./../build/bin/tools/TwoLayer "ci/configuration_ci.3D.elastic.txt"
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.elastic.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.3D.elastic.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.3D.elastic.txt"
 
 
@@ -95,7 +95,7 @@ visco2D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - ./../build/bin/tools/TwoLayer "ci/configuration_ci.2D.visco.txt"
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.visco.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.2D.visco.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.visco.txt"
 
 visco3D-gcc:
@@ -104,7 +104,7 @@ visco3D-gcc:
     - OMP_NUM_THREADS=2
     - cd par/
     - ./../build/bin/tools/TwoLayer "ci/configuration_ci.3D.visco.txt"
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.3D.visco.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.3D.visco.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.3D.visco.txt"
 
 sh2D-gcc:
@@ -112,6 +112,6 @@ sh2D-gcc:
   script:
     - OMP_NUM_THREADS=2
     - cd par/
-    - mpirun -np 4 ./../build/bin/SOFI "ci/configuration_ci.2D.sh.txt"
+    - mpirun -np 4 ./../build/bin/WAVE-Simulation "ci/configuration_ci.2D.sh.txt"
     - ./../build/bin/Test_integration "ci/configuration_ci.2D.sh.txt"
 
