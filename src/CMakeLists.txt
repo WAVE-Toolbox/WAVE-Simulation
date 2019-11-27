@@ -68,7 +68,7 @@ find_package( SCAI REQUIRED CONFIG
 include_directories( ${SCAI_INCLUDE_DIRS} )
 
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${SCAI_CXX_FLAGS} )
-set( WAVE-Simulation_used_libs ${SCAI_LIBRARIES} )
+set( Simulation_used_libs ${SCAI_LIBRARIES} )
 
 
 ####################################################
@@ -101,7 +101,7 @@ find_library( PARMETIS_LIB parmetis "${PARMETIS_BASE}/lib" )
 if ( ${Geographer_FOUND} )
     include_directories( ${Geographer_INCLUDE_DIRS} )
     add_definitions( "-DUSE_GEOGRAPHER" )
-    set( WAVE-Simulation_used_libs ${Geographer_LIBRARIES} ${WAVE-Simulation_used_libs} )
+    set( Simulation_used_libs ${Geographer_LIBRARIES} ${Simulation_used_libs} )
 
 	if( Zoltan2_FOUND AND METIS_BASE AND PARMETIS_BASE  )
 		link_directories( ${Zoltan2_LIBRARY_DIRS} ${METIS_BASE}/lib ${PARMETIS_BASE}/lib )
@@ -124,7 +124,7 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
 #  and copy header files to install                #
 ####################################################
 
-set ( WAVE-Simulation_LIB_DIRS 
+set ( Simulation_LIB_DIRS 
         Acquisition 
         Configuration  
         ForwardSolver   
@@ -136,10 +136,10 @@ set ( WAVE-Simulation_LIB_DIRS
         Modelparameter  
         Partitioning )
 
-foreach ( dir ${WAVE-Simulation_LIB_DIRS} ) 
+foreach ( dir ${Simulation_LIB_DIRS} ) 
 
     file( GLOB_RECURSE files ${dir}/*.cpp ${dir}/*.hpp )
-    set ( WAVE-Simulation_FILES ${WAVE-Simulation_FILES} ${files} )
+    set ( Simulation_FILES ${Simulation_FILES} ${files} )
 
     file( GLOB_RECURSE files RELATIVE ${CMAKE_SOURCE_DIR}/${dir} ${dir}/*.hpp )
     foreach ( file ${files} )
@@ -158,11 +158,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 include_directories( Common Configuration Acquisition Modelparameter )
 
-add_library( WAVE-Simulation ${WAVE-Simulation_FILES} )
+add_library( Simulation ${Simulation_FILES} )
 
-target_link_libraries( WAVE-Simulation ${WAVE-Simulation_used_libs} )
+target_link_libraries( Simulation ${Simulation_used_libs} )
 
-install( TARGETS WAVE-Simulation DESTINATION lib )
+install( TARGETS Simulation DESTINATION lib )
 
 ####################################################
 #  WAVE-Simulation executable                                 #
@@ -170,9 +170,9 @@ install( TARGETS WAVE-Simulation DESTINATION lib )
 
 add_executable( prog main.cpp )
 
-target_link_libraries( prog WAVE-Simulation ${WAVE-Simulation_used_libs} )
+target_link_libraries( prog Simulation ${Simulation_used_libs} )
 
-set_target_properties( prog PROPERTIES OUTPUT_NAME WAVE-Simulation )
+set_target_properties( prog PROPERTIES OUTPUT_NAME Simulation )
 
 install( TARGETS prog DESTINATION bin )
 install( DIRECTORY ${CMAKE_BINARY_DIR}/include DESTINATION . )
@@ -185,12 +185,12 @@ find_package( GTest )
 
 if ( ${GTEST_FOUND} )
 
-   file( GLOB WAVE-Simulation_UNIT_TEST_SOURCES Tests/UnitTest/*.cpp )
+   file( GLOB Simulation_UNIT_TEST_SOURCES Tests/UnitTest/*.cpp )
 
-   add_executable( utest ${WAVE-Simulation_UNIT_TEST_SOURCES} )
+   add_executable( utest ${Simulation_UNIT_TEST_SOURCES} )
 
    target_include_directories( utest PRIVATE ForwardSolver Configuration Acquisition Modelparameter ${GTEST_INCLUDE_DIR} )
-   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} WAVE-Simulation ${WAVE-Simulation_used_libs} )
+   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} Simulation ${Simulation_used_libs} )
 
    set_target_properties( utest PROPERTIES OUTPUT_NAME Test_unit )
 
@@ -211,13 +211,13 @@ endif ()
 #  Integration Test                                #
 ####################################################
 
-set ( WAVE-Simulation_INTEGRATION_TEST_SOURCES
+set ( Simulation_INTEGRATION_TEST_SOURCES
     Tests/IntegrationTest/Test_CompareSeismogram.cpp
 )
 
-add_executable( itest ${WAVE-Simulation_INTEGRATION_TEST_SOURCES} )
+add_executable( itest ${Simulation_INTEGRATION_TEST_SOURCES} )
 
-target_link_libraries( itest WAVE-Simulation ${WAVE-Simulation_used_libs} )
+target_link_libraries( itest Simulation ${Simulation_used_libs} )
 
 set_target_properties( itest PROPERTIES OUTPUT_NAME Test_integration )
 
@@ -229,7 +229,7 @@ install( TARGETS itest DESTINATION bin )
 
 add_executable( model Tools/CreateModel/TwoLayer.cpp )
 
-target_link_libraries( model WAVE-Simulation ${WAVE-Simulation_used_libs} )
+target_link_libraries( model Simulation ${Simulation_used_libs} )
 
 set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 
@@ -316,6 +316,6 @@ endif ()
 
 ### support for FindPackage ###
 
-configure_file ( WAVE-SimulationConfig.cmake.in ${CMAKE_BINARY_DIR}/WAVE-SimulationConfig.cmake @ONLY)
-install ( FILES ${CMAKE_BINARY_DIR}/WAVE-SimulationConfig.cmake DESTINATION share/cmake/WAVE-Simulation )
+configure_file ( SimulationConfig.cmake.in ${CMAKE_BINARY_DIR}/SimulationConfig.cmake @ONLY)
+install ( FILES ${CMAKE_BINARY_DIR}/SimulationConfig.cmake DESTINATION share/cmake/Simulation )
 
