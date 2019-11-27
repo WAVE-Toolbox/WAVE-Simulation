@@ -2,8 +2,6 @@
 
 Master:  [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)
  Develop: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
- variableGrid: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/variableGrid/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/variableGrid)
-
 
 *Finite-Difference wavefield modelling developed by the [WAVE-Project](http://wave-toolbox.org).*
 
