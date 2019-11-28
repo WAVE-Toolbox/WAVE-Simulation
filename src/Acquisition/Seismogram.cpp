@@ -163,7 +163,7 @@ template <typename ValueType>
 bool KITGPI::Acquisition::Seismogram<ValueType>::isFinite()
 {
     bool result_isfinite=true;
-    for (IndexType loc_vals=this->getNumSamples()-1;loc_vals<data.getLocalStorage().getData().size();loc_vals=loc_vals+this->getNumSamples()) {
+    for (IndexType loc_vals=this->getNumSamples()-1;loc_vals<data.getLocalStorage().getData().size()-1;loc_vals=loc_vals+this->getNumSamples()) {
         if (isfinite(data.getLocalStorage().getData()[loc_vals])==false){
             result_isfinite=false;
             break;
