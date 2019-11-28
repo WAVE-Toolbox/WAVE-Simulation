@@ -154,18 +154,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<Val
 }
 
 
-
-//! \brief Filter the seismogram-traces
+//! \brief Check seismogram for infinite/NaN value
 /*!
  *
- * This methode filters the traces of the seismogram.
- \param freqFilter filter object
+ * Check last sample of each trace of seismogram for infinite/NaN value
  */
 template <typename ValueType>
 bool KITGPI::Acquisition::Seismogram<ValueType>::isFinite()
 {
     bool result_isfinite=true;
-    for (IndexType loc_vals=0;loc_vals<data.getLocalStorage().getData().size();loc_vals++) {
+    for (IndexType loc_vals=this->getNumSamples()-1;loc_vals<data.getLocalStorage().getData().size();loc_vals=loc_vals+this->getNumSamples()) {
         if (isfinite(data.getLocalStorage().getData()[loc_vals])==false){
             result_isfinite=false;
             break;

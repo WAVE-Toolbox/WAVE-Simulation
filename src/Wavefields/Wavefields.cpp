@@ -44,20 +44,12 @@ bool KITGPI::Wavefields::Wavefields<ValueType>::isFinite(scai::dmemo::Distributi
     dist->getOwnedIndexes(ownedIndeces);
     
     auto read_VX = VX.getLocalValues();
-    auto read_VY = VY.getLocalValues();
     auto read_VZ = VZ.getLocalValues();
 
-    for (IndexType localIndex=0;localIndex<ownedIndeces.size();localIndex++) {
+        IndexType localIndex=floor(ownedIndeces.size()/2);
         if (read_VX.size()!=0){
             //SCAI_ASSERT_ERROR(isfinite(read_VX[localIndex]),"Infinite or NaN value in VX wavefield!" << localIndex);
             if (isfinite(read_VX[localIndex])==false){
-                result_isfinite=false;
-            }
-        }
-        
-        if (read_VY.size()!=0){
-            //SCAI_ASSERT_ERROR(isfinite(read_VY[localIndex]),"Infinite or NaN value in VY wavefield!" << localIndex);
-            if (isfinite(read_VY[localIndex])==false){
                 result_isfinite=false;
             }
         }
@@ -68,7 +60,6 @@ bool KITGPI::Wavefields::Wavefields<ValueType>::isFinite(scai::dmemo::Distributi
                 result_isfinite=false;
             }
         }
-    }
 
     return(result_isfinite);
 }
