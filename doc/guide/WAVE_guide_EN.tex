@@ -35,6 +35,7 @@
 \usepackage{adjustbox}
 \usepackage{nicefrac}
 \usepackage{physics}
+%\usepackage{underscore}
 \KOMAoptions{twoside}
 \setcounter{MaxMatrixCols}{50}
 
@@ -1132,9 +1133,10 @@ As a first test, run the default example by following the commands to obtain the
 \end{figure}
 
 \section{Configuration}\label{sec:config}
+As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file input variables can be added or changed. A list of all variables and config parameters that can be added and changed can be found in tables \ref{tab:config_grid} to \ref{tab:config_snapshots}.
 
 \begin{table}[h!]
-\caption[List of all configuration parameters.]{List of all configuration parameters, that can be added and changed in the config-file.}\label{tab:config}
+\caption[List of simulation/grid configuration parameters.]{List of simulation/grid configuration parameters, that can be added and changed in the config-file.}\label{tab:config_grid}
 \centering
 \begin{adjustbox}{width=1\textwidth,center=\textwidth}
 	\begin{tabular}{llll}
@@ -1146,71 +1148,27 @@ As a first test, run the default example by following the commands to obtain the
 	NX & Number of grid points in $x$-direction & int & \num{100} \\
 	NY & Number of grid points in $y$-direction & int & \num{100} \\
 	NZ & Number of grid points in $z$-direction & int & \num{100} \\
-	UseCubePartitioning & Use cubes to partition the wave fields & int & \num{0}\\
-	ProcNX & Number of cores in $x$-direction & int & \num{2}\\
-	ProcNY & Number of cores in $y$-direction & int & \num{1}\\
-	ProcNZ & Number of cores in $z$-direction & int & \num{1}\\
 	DH & Distance between two grid points & double & \SI{50}{m}\\
 	DT & Temporal sampling & double & \SI{2.0e-3}{s}\\
 	T & Total simulation time & double & \SI{2}{s}\\
 	spatialFDorder & Define order of spatial FD operator & int & \num{2}\\
-	\midrule	 
-	ModelRead& Read model from File  & int & \num{0}\\
-	ModelWrite& Write model to file  & int & \num{0}\\
-	ModelFilename& Filename-prefix to read model & int & \shellcmd{model/model}\\
-	PartitionedIn&  Read model from distributed file & int & \num{0}\\
-	PartitionedOut& Write model to distributed file-block & int & \num{0}\\
 	\midrule
-	FreeSurface& Use the free surface & int & \num{0}\\
-	DampingBoundary& Use the Damping Boundary & int & \num{0}\\
-	DampingBoundaryType& Type of damping boundary & int & \num{1}\\
-	BoundaryWidth& Width of damping boundary & int & \num{10}\\
-	DampingCoeff& Damping coefficient & double & \num{8.0}\\
-	VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
-	CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
-	NPower& Degree of the damping profile & int &\num{4}\\
-	KMaxCPML&  & double &\num{1.0}\\
-	\midrule
-	numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
-	relaxationFrequency& Relaxation frequency& double & \SI{0}{Hz}\\
-	\midrule
-	velocityP& P-wave velocity $v_p$ & double & \SI{3500}{m\per s} \\
-	velocityS& S-wave velocity $v_s$ & double  &  \SI{0}{m\per s}\\
-	rho& Density $\rho$ & double &  \SI{2000}{kg\per\cubic\metre}\\
-	tauP& $\tau$ value for P-waves & double & \num{0.0}\\
-	tauS& $\tau$ value for S-waves & double & \num{0.0}\\
+	useVariableGrid & Use the variable Grid & int & \num{0} \\
+	partitioning & Number of partitions & int & \num{1} \\
+	useVariableFDoperators & Usage of variable FD operators & int & \num{0} \\
+	graphPartitionTool & Partition Tool & string & geoKmeans\\
+	gridConfigurationFilename & Filename to read grid configuration & string & \shellcmd{configuration/gridConfig.txt}\\
+	partitionWrite & Write partition to disk & int & \num{0} \\
+	partitionFilename& Filename of the partition & string & \shellcmd{partition/partition}\\
+	coordinateWrite & Write coordinates to disk & int & \num{0} \\
+	coordinateFilename & Filename of the coordinates & string & \shellcmd{configuration/coordinates}\\
+	ShotDomainDefinition & Define domains by ProcNS, node id or var \shellcmd{DOMAIN}  & int & \num{0} \\
+	NumShotDomains & Define number of shot domains & int & \num{1} \\
 	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
-\end{table}	
-	 \begin{table}[h!]
-\centering
-\begin{adjustbox}{width=1\textwidth,center=\textwidth}
-	\begin{tabular}{llll}
-	\toprule
-	Variable & Short description & Type &Example value\;\;\;\\
-	\midrule
-	SourceFilename& Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources}\end{tabular}  \\
-	ReceiverFilename	 & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
-	SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram}\end{tabular}  \\
-	SeismogramFormat & Seismogram format & int & \num{1}\\
-	NormalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
-	useReceiversPerShot & Use an individual receiver file for each shot & int & \num{0} \\
-	runSimultaneousShots & Run all shots simultaneously & int & \num{0} \\
-	\midrule
-	snapType & type of wavefield snapshots to save & int & \num{1} \\
-	WavefieldFilename & Name and location where to save snapshots & string & \begin{tabular}{@{}l@{}}\shellcmd{wavefields/} \\\shellcmd{wavefield}\end{tabular}  \\
-	tFirstSnapshot & time of first snapshot in seconds & double & \num{0.1} \\
-	tLastSnapshot & time of last snapshot in seconds & double & \num{2.2} \\
-	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
-	\bottomrule
-	\end{tabular}
-	\end{adjustbox}
-\end{table}	
-
-As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file Input variables can be added or changed. A list of all variables and config parameters that can be added and changed can be found in table \ref{tab:config}.
-
-The parameters can be divided in seven main groups. The first group contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\textit{NX}, \textit{NY}, \textit{NZ} and \textit{DH}) and temporal parameters (\textit{DT} and \textit{T}). The total number of gridpoints is given by 
+\end{table}
+The parameters can be divided in seven main groups. The first group which can be found in \ref{tab:config_grid} contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\textit{NX}, \textit{NY}, \textit{NZ} and \textit{DH}) and temporal parameters (\textit{DT} and \textit{T}). The total number of gridpoints is given by 
 \begin{equation*}
 	N=NX\times NY\times NZ
 \end{equation*}
@@ -1218,18 +1176,108 @@ The total Number of time-steps can be calculated by
 \begin{equation*}
 	NT = round\left(\frac{T}{DT}+0.5\right)
 \end{equation*}
-The parameter \textit{UseCubePartitioning} characterises whether the model is partitioned into cubes and then distributed to the CPUs/GPUs. If \textit{UseCubePartitioning} $=1$ the model is partitioned in cubes, else it is partitioned automatically. The number of CPUs/GPUs available in each spatial direction is given by \textit{ProcNX}, \textit{ProcNY} and \textit{ProcNZ}. The product has to be equal to the total number of used CPUs/GPUs. 
-The last parameter of the first section, \textit{spatialFDorder}, defines the order of the spatial FD-operator and therefore, influences the accuracy of the simulation significantly.
+Furthermore, the parameter \textit{spatialFDorder} defines the order of the spatial FD-operator and therefore influences the accuracy of the simulation significantly.
+The following parameter \textit{useVariableGrid} characterises whether the model uses a variable grid spacing for the calculation of the wavefield ($1=$ yes, else $=$ no). 
+The type of partition can be chosen in \textit{partitioning} where you can opt for a block distribution ($=0$), grid distribution ($=1$) parallel graph distribution by geographer ($=2$) or parallel graph distribution by ParMETIS ($=3$).
+The block distribution divides the model vector evenly which creates a layered grid, the grid distribution divides the grid into equally large regions and the two graph distribution divides the grid based on optimal load balance and communication.
+Variable FD operators can be used by \textit{useVariableFDoperators} $=1$.
 
-The second section contains all parameters to manage input and output of the model. The first four parameters \textit{ModelRead}, \textit{ModelWrite}, \textit{PartitioningIn} and  \textit{PartitioningOut} can be set with ($1=$ yes) or (else $=$ no). The values for partitioned input and output are only needed when \textit{ModelRead} and \textit{ModelWrite} are set to 1. Make sure, that if you are using partitioning-input, the data is distributed properly. The partitioning and repartitioning of files has to be done during pre- and post-processing (section \ref{sec:process}).
-\textit{ModelFilename} is given to determine the location and filename of the model. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}).
+If a graph distribution is used (\textit{partitioning} $=2$), you can choose in \textit{graphPartitionTool} other partitioning tools (geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom or parMetisGraph).
+The grid configuration can be read from a file and partitions and used coordinates can be written to disk if needed for plotting.
 
-The third part handles and the boundary conditions. Free surface can turned off by setting (\textit{FreeSurface} $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\textit{FreeSurface} $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\textit{FreeSurface} $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardles of your choise of \textit{FreeSurface} but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\textit{FreeSurface} $=0$) and (\textit{FreeSurface} $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\textit{FreeSurface} $=0$) and introduce additional grid points equal to the thickness of your boundary. The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. The usage of damping boundaries can be set by (\textit{DampingBoundary} $=1$), with the \textit{DampingBoundaryType} options (ABS$=1$ or CPML$=2$). Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
-If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML}, \textit{NPower} and \textit{KMaxCPML} also have to be set. 
+The last two parameters configure the shot domain parallelisation where two shot domains can be computed simultaneously. 
+\textit{ShotDomainDefinition} defines the domains by either ProcNS ($=0$), node id ($=1$) or an environment variable \shellcmd{DOMAIN} ($=2$).
+If set to 0, the number of simultaneously computed shots is set by \textit{NumShotDomains}. If set to 1, the shot domains are set by nodes. Each node processes one domain. If set to 2, an environment variable called \shellcmd{DOMAIN} defines the domains.
+Heterogenous clusters benefit if \textit{ShotDomainDefinition} is set to 1 or 2. If set to 2, the load balance can be adjusted by another environment variable called \shellcmd{WEIGHT} (1.0 is default) which weights each domain. 
+The weight of a domain is the sum of the weights of the corresponding processors for each domain. Depending on the weight, a domain is assigned to certain number of shots.
+\shellcmd{DOMAIN} and \shellcmd{WEIGHT} can be set by a settings file where its name is set as an environment variable, e.g. by export SCAISETTINGS=mySettings.txt.
+The file can look like this 
+\begin{verbatim}
+computer_name1 0-1 DOMAIN=0 WEIGHT=2
+computer_name1 2-3 DOMAIN=1 WEIGHT=2
+computer_name2 0 DOMAIN=2 WEIGHT=5 SCAI_CONTEXT=CUDA SCAI_DEVICE=0
+computer_name2 1 DOMAIN=3 WEIGHT=5 SCAI_CONTEXT=CUDA SCAI_DEVICE=1
+\end{verbatim}
+where the first value represents the computer or node name, the second value the processors or node rank which can be set as an interval. In addition, GPUs can also be used if SCAI\_CONTEXT is set to CUDA.
 
-The fourth section are the parameters relevant for viscoelastic modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
-In the fifth section all variables can be set to create a homogeneous model on-the-fly. The variable \textit{velocityP} ($v_p$) is only needed in elastic and viscoelastic calculations and  \textit{tauP} ($\tau_p$) and \textit{tauS} ($\tau_s$) are solely needed in the viscoelastic case. 
+\begin{table}[h!]
+\caption[List of input/output configuration parameters.]{List of input/output configuration parameters, that can be added and changed in the config-file.}\label{tab:config_inputoutput}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule	 
+	ModelRead& Read model from File  & int & \num{0}\\
+	ModelFilename& Filename-prefix to read model & string & \shellcmd{model/model}\\
+	FileFormat&  File format of models and wavefields & int & \num{0}\\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+The second section in table \ref{tab:config_inputoutput} contains parameters to manage input and output of the model. The first parameter \textit{ModelRead} can be set with ($1=$ yes) or (else $=$ no).  
+\textit{ModelFilename} is given to determine the location and filename of the model. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. 
+The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}) while the file format is configured in \textit{FileFormat} with either $1=$mtx, a formated ascii file with serial IO, $2=$lmf, a binary file with parallel IO, little endian and a 5 int header (20 byte) or $3=$frv, a binary file with serial IO,  little endian and seperate header.
+
+\begin{table}[h!]
+\caption[List of boundary conditions configuration parameters.]{List of boundary conditions configuration parameters, that can be added and changed in the config-file.}\label{tab:config_boundary}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	FreeSurface& Use the free surface & int & \num{0}\\
+	DampingBoundary& Use the damping Boundary & int & \num{0}\\
+	BoundaryWidth& Width of damping boundary & int & \num{10}\\
+	DampingCoeff& Damping coefficient & double & \num{8.0}\\
+	VMaxCPML& Maximum velocity of the CPML & double &\SI{3500}{m\per s}\\
+	CenterFrequencyCPML\;\;\;\;& Center frequency inside the boundaries\;\;\;  & double &\SI{5}{Hz}\\
+	NPower& Degree of the damping profile & int &\num{4}\\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+The third part in table \ref{tab:config_boundary} handles and the boundary conditions. Free surface can turned off by setting (\textit{FreeSurface} $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\textit{FreeSurface} $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\textit{FreeSurface} $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardles of your choise of \textit{FreeSurface} but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\textit{FreeSurface} $=0$) and (\textit{FreeSurface} $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\textit{FreeSurface} $=0$) and introduce additional grid points equal to the thickness of your boundary. 
+The model boundaries are characterised by \textit{DampingBoundary}, \textit{BoundaryWidth} and \textit{DampingCoeff}. 
+The usage of damping boundaries can be turned off (\textit{DampingBoundary} $=0$) or set as ABS $=1$ or CPML $=2$. Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
+If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML} and \textit{NPower} also have to be set. 
+
+\begin{table}[h!]
+\caption[List of viscoelastic modelling configuration parameters.]{List of viscoelastic modelling configuration parameters, that can be added and changed in the config-file.}\label{tab:config_visco}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	numRelaxationMechanisms & Number of relaxation mechanisms & int & \num{0}\\
+	relaxationFrequency& Relaxation frequency& double & \SI{0}{Hz}\\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+The fourth section in \ref{tab:config_visco} are the parameters relevant for viscoelastic modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
+
+\begin{table}[h!]
+\caption[List of on-the-fly model configuration parameters.]{List of on-the-fly model configuration parameters, that can be added and changed in the config-file.}\label{tab:config_onthefly}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	velocityP & P-wave velocity $v_p$ in meter per seconds & double & \SI{3500}{m\per s} \\
+	velocityS& S-wave velocity $v_s$ in meter per seconds & double  & \SI{2000}{m\per s}\\
+	rho& Density $\rho$ in kilogram per cubic meter & double &  \SI{2000}{kg\per\cubic\metre}\\
+	tauP& $\tau$ value for P-waves & double & \num{0.0}\\
+	tauS& $\tau$ value for S-waves & double & \num{0.0}\\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+In the fifth section in \ref{tab:config_onthefly} all variables can be set to create a homogeneous model on-the-fly. The variable \textit{velocityP} ($v_p$) is only needed in elastic and viscoelastic calculations and  \textit{tauP} ($\tau_p$) and \textit{tauS} ($\tau_s$) are solely needed in the viscoelastic case. 
 The S-wave ($M$) and P-wave ($\mu$) moduli can be calculated by:
 \begin{align*}
 	M&=\rho\cdot v_s^2\\
@@ -1241,9 +1289,58 @@ To verify the models stability  the courant can be calculated:
 	v_{max} \cdot \frac{DT}{DH} \leq 0.43
 \end{equation*}
 
-The sixth section handles the acquisition geometry. SourceFilename and ReceiverFilename must be set to the files where source and receiver properties are specified respectively. The ending .mtx has to be omitted in the config-file. SeismogramFilename gives the location where the modelled seismograms are stored. These seismograms can be saved in SU or mtx format depending on the value of SeismogramFormat. If useReceiversPerShot is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending .shot\_<shot number>.mtx. SourceSignalFilename specifies the location of th file where the source signals are stored in case you want to use your own. If runSimultaneousShots is set to 1, all shots are triggered simultaneously.
+\begin{table}[h!]
+\caption[List of aquisition geometry configuration parameters.]{List of aquisition geometry configuration parameters, that can be added and changed in the config-file.}\label{tab:config_aquisition}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	SourceFilename & Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources}\end{tabular}  \\
+	ReceiverFilename & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
+	SourceSignalFilename & Filename to read source signal & string & \begin{tabular}{@{}l@{}}\shellcmd{aquisition/} \\\shellcmd{signal}\end{tabular}  \\
+	useReceiversPerShot & Use an individual receiver file for each shot & int & \num{0} \\
+	writeSource & Write used sourcewavelet per shot & int & \num{0}\\	
+	writeSourceFilename & Filename to write source wavelet & string & \begin{tabular}{@{}l@{}}\shellcmd{SourceSignal/} \\\shellcmd{Source}\end{tabular}  \\
+	SeismogramFilename & Filename to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram}\end{tabular}  \\
+	seismoDT & Seismogram sampling in seconds & double & \num{0.002} \\
+	NormalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
+	SeismogramFormat & Seismogram format & int & \num{1}\\
+	initSourcesFromSU & Initialize sources from SU file & int & \num{0}\\
+	initReceiverFromSU & Initialize receivers from SU file & int & \num{0}\\
+	\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+The sixth section in \ref{tab:config_aquisition} handles the acquisition geometry. \textit{SourceFilename} and \textit{ReceiverFilename} must be set to the files where source and receiver properties are specified respectively. The ending .txt has to be omitted in the config-file. 
+\textit{SourceSignalFilename} specifies the location of the file where the source signals are stored in case you want to use your own.
+If useReceiversPerShot is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending .shot\_<shot number>.txt.
+The used source wavelet per shot can be written to disk by setting \textit{writeSource} to 1 and specifying a filename.
+\textit{SeismogramFilename} gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \textit{seismoDT} and their traces can be normalized by setting \textit{NormalizeTraces} to 1.
+These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \textit{SeismogramFormat}.  
+Furthermore, the sources or receivers can be initialized from SU files if \textit{initSourcesFromSU} and \textit{initReceiverFromSU} is set to 1.
 
-In the last section you can set the properties of the wavefield snapshots to save. snapType sets the wavefield type that should be shaved. The snapshots are stored in the directory chosen in WavefieldFilename. Snapshots start at itme tFirstSnapshot, end at time tLastSnapshot and have an interval of tIncSnapshot.
+
+\begin{table}[h!]
+\caption[List of wavefield snapshots configuration parameters.]{List of wavefield snapshots configuration parameters, that can be added and changed in the config-file.}\label{tab:config_snapshots}
+\centering
+\begin{adjustbox}{width=1\textwidth,center=\textwidth}
+	\begin{tabular}{llll}
+	\toprule
+	Variable & Short description & Type & Example value \\
+	\midrule
+	snapType & Type of wavefield snapshots to save & int & \num{1} \\
+	WavefieldFilename & Name and location where to save snapshots & string & \begin{tabular}{@{}l@{}}\shellcmd{wavefields/} \\\shellcmd{wavefield}\end{tabular}  \\
+	tFirstSnapshot & Time of first snapshot in seconds & double & \num{0.1} \\
+	tLastSnapshot & Time of last snapshot in seconds & double & \num{2.2} \\
+	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}	
+In the last section in \ref{tab:config_snapshots} you can set the properties of the wavefield snapshots to save. \textit{snapType} sets the wavefield type that should be saved ($0=$ no save, $1=$ save velocities, $2=$ save pressure/stress, $3=$ save energy). 
+The snapshots are stored in the directory chosen in \textit{WavefieldFilename}. Snapshots start at time \textit{tFirstSnapshot}, end at time \textit{tLastSnapshot} and have an interval of \textit{tIncSnapshot}.
 
 \subsection{Source Signal}
 There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal and a spike signal. The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
