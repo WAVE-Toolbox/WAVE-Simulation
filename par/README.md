@@ -27,7 +27,7 @@ Different kinds of parallelization are possible:
 - Using OpenMP (shared-memory parallel):
  - Set `export OMP_NUM_THREADS=2`
 - Using OpenMPI/IntelMPI (distributed-memory parallel):
- - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 2 ./../bin/SOFI`
+ - Modify `start_FDSimulation.sh` to e.g. `mpirun -np 2 ./../bin/WAVE-Simulation`
 
 The standard configuration of `start_FDSimulation.sh` is using both kinds of parallelization.
 

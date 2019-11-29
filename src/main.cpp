@@ -5,6 +5,7 @@
 #include <scai/dmemo/GridDistribution.hpp>
 #include <scai/lama.hpp>
 #include <scai/tracing.hpp>
+#include <scai/common/macros/assert.hpp>
 
 #include <iostream>
 #define _USE_MATH_DEFINES
@@ -61,14 +62,14 @@ int main(int argc, const char *argv[])
     dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
     common::Settings::setRank(commAll->getNodeRank());
 
-    HOST_PRINT(commAll, "\n SOFI++ " << dimension << " " << equationType << " - LAMA Version\n");
+    HOST_PRINT(commAll, "\n WAVE-Simulation " << dimension << " " << equationType << " - LAMA Version\n");
     HOST_PRINT(commAll, "", "  - Running on " << commAll->getSize() << " mpi processes -\n\n");
 
     if (commAll->getRank() == MASTERGPI) {
         config.print();
     }
 
-    SCAI_REGION("SOFI.main")
+    SCAI_REGION("WAVE-Simulation.main")
 
     std::string settingsFilename; // filename for processor specific settings
     if (common::Settings::getEnvironment(settingsFilename, "SCAI_SETTINGS")) {
@@ -129,7 +130,7 @@ int main(int argc, const char *argv[])
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
-    if ((config.get<bool>("coordinateWrite")) && (shotDomain==0)) {
+    if ((config.get<bool>("coordinateWrite")) && (shotDomain == 0)) {
         // every shotdomain owns the same coordinates
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"), config.get<IndexType>("FileFormat"));
     }
@@ -170,7 +171,7 @@ int main(int argc, const char *argv[])
     /* Call partitioner                        */
     /* --------------------------------------- */
     if (configPartitioning == 2) {
-        SCAI_REGION("SOFI.partitioningGEO")
+        SCAI_REGION("WAVE-Simulation.partitioningGEO")
         start_t = common::Walltime::get();
         dist = Partitioning::graphPartition(config, ctx, commShot, dist, *derivatives, modelCoordinates);
         end_t = common::Walltime::get();
@@ -178,7 +179,7 @@ int main(int argc, const char *argv[])
     }
 
     if (configPartitioning == 3) {
-        SCAI_REGION("SOFI.partitioningMetis")
+        SCAI_REGION("WAVE-Simulation.partitioningMetis")
         start_t = common::Walltime::get();
         dist = Partitioning::metisPartition(config, ctx, commShot, dist, *derivatives, modelCoordinates);
         end_t = common::Walltime::get();
@@ -202,7 +203,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     {
-        SCAI_REGION("SOFI.initMatrices")
+        SCAI_REGION("WAVE-Simulation.initMatrices")
 
         start_t = common::Walltime::get();
         derivatives->init(dist, ctx, modelCoordinates, commShot);
@@ -237,7 +238,7 @@ int main(int argc, const char *argv[])
     /* Modelparameter                          */
     /* --------------------------------------- */
     {
-        SCAI_REGION("SOFI.initModel")
+        SCAI_REGION("WAVE-Simulation.initModel")
         start_t = common::Walltime::get();
         model->init(config, ctx, dist, modelCoordinates);
         model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
@@ -249,7 +250,7 @@ int main(int argc, const char *argv[])
     /* Wavefields                              */
     /* --------------------------------------- */
     {
-        SCAI_REGION("SOFI.initWavefields")
+        SCAI_REGION("WAVE-Simulation.initWavefields")
         start_t = common::Walltime::get();
         wavefields->init(ctx, dist);
         end_t = common::Walltime::get();
@@ -260,7 +261,7 @@ int main(int argc, const char *argv[])
     /* Forward solver                          */
     /* --------------------------------------- */
     {
-        SCAI_REGION("SOFI.initForwardSolver")
+        SCAI_REGION("WAVE-Simulation.initForwardSolver")
         start_t = common::Walltime::get();
         solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
         solver->prepareForModelling(*model, config.get<ValueType>("DT"));
@@ -303,7 +304,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
 
     for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
-        SCAI_REGION("SOFI.shotLoop")
+        SCAI_REGION("WAVE-Simulation.shotLoop")
         IndexType shotNumber = uniqueShotNos[shotInd];
         /* Update Source */
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
@@ -341,14 +342,14 @@ int main(int argc, const char *argv[])
         /* --------------------------------------- */
         for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
-            SCAI_REGION("SOFI.timeLoop")
+            SCAI_REGION("WAVE-Simulation.timeLoop")
             if ((tStep - 1) % 100 == 0) {
                 start_t2 = common::Walltime::get();
                 //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
             }
 
             solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-
+            
             if (tStep % 100 == 0 && tStep != 0) {
                 end_t2 = common::Walltime::get();
                 HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps"
@@ -362,16 +363,22 @@ int main(int argc, const char *argv[])
 
         end_t = common::Walltime::get();
         HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
-
-        receivers.getSeismogramHandler().normalize();
+        
+        // check wavefield and seismogram for NaNs or infinite values
+        SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
+        
+        if (config.get<bool>("NormalizeTraces")) {
+            receivers.getSeismogramHandler().normalize();
+        }
 
         receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+        
         solver->resetCPML();
     }
     globalEnd_t = common::Walltime::get();
-    
+
     commAll->synchronize();
 
-    HOST_PRINT(commAll, "\nTotal runtime of SOFI: " << globalEnd_t - globalStart_t << " sec.\nSOFI finished!\n\n");
+    HOST_PRINT(commAll, "\nTotal runtime of WAVE-Simulation: " << globalEnd_t - globalStart_t << " sec.\nWAVE-Simulation finished!\n\n");
     return 0;
 }

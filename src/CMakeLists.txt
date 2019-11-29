@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#     Start the build of SOFI by the following command:
+#     Start the build of WAVE-Simulation by the following command:
 # 
 #     SCAI_DIR=<path_to_lama> GTEST_ROOT=<path_to_googletest> cmake ../src 
 #
@@ -11,7 +11,7 @@
 #    
 ###########################################################################
 
-project( SOFI )
+project( WAVE-Simulation )
 include(CMakePackageConfigHelpers)
 cmake_minimum_required ( VERSION 3.0 )
 
@@ -68,7 +68,7 @@ find_package( SCAI REQUIRED CONFIG
 include_directories( ${SCAI_INCLUDE_DIRS} )
 
 set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${SCAI_CXX_FLAGS} )
-set( SOFI_used_libs ${SCAI_LIBRARIES} )
+set( Simulation_used_libs ${SCAI_LIBRARIES} )
 
 
 ####################################################
@@ -101,7 +101,7 @@ find_library( PARMETIS_LIB parmetis "${PARMETIS_BASE}/lib" )
 if ( ${Geographer_FOUND} )
     include_directories( ${Geographer_INCLUDE_DIRS} )
     add_definitions( "-DUSE_GEOGRAPHER" )
-    set( SOFI_used_libs ${Geographer_LIBRARIES} ${SOFI_used_libs} )
+    set( Simulation_used_libs ${Geographer_LIBRARIES} ${Simulation_used_libs} )
 
 	if( Zoltan2_FOUND AND METIS_BASE AND PARMETIS_BASE  )
 		link_directories( ${Zoltan2_LIBRARY_DIRS} ${METIS_BASE}/lib ${PARMETIS_BASE}/lib )
@@ -120,11 +120,11 @@ endif ()
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
 
 ###################################################
-#  Collect source files of SOFI library            #
+#  Collect source files of WAVE-Simulation library            #
 #  and copy header files to install                #
 ####################################################
 
-set ( SOFI_LIB_DIRS 
+set ( Simulation_LIB_DIRS 
         Acquisition 
         Configuration  
         ForwardSolver   
@@ -136,10 +136,10 @@ set ( SOFI_LIB_DIRS
         Modelparameter  
         Partitioning )
 
-foreach ( dir ${SOFI_LIB_DIRS} ) 
+foreach ( dir ${Simulation_LIB_DIRS} ) 
 
     file( GLOB_RECURSE files ${dir}/*.cpp ${dir}/*.hpp )
-    set ( SOFI_FILES ${SOFI_FILES} ${files} )
+    set ( Simulation_FILES ${Simulation_FILES} ${files} )
 
     file( GLOB_RECURSE files RELATIVE ${CMAKE_SOURCE_DIR}/${dir} ${dir}/*.hpp )
     foreach ( file ${files} )
@@ -153,26 +153,26 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 
 ####################################################
-#  SOFI library                                    #
+#  WAVE-Simulation library                                    #
 ####################################################
 
 include_directories( Common Configuration Acquisition Modelparameter )
 
-add_library( SOFI ${SOFI_FILES} )
+add_library( Simulation ${Simulation_FILES} )
 
-target_link_libraries( SOFI ${SOFI_used_libs} )
+target_link_libraries( Simulation ${Simulation_used_libs} )
 
-install( TARGETS SOFI DESTINATION lib )
+install( TARGETS Simulation DESTINATION lib )
 
 ####################################################
-#  SOFI executable                                 #
+#  WAVE-Simulation executable                                 #
 ####################################################
 
-add_executable( prog SOFI.cpp )
+add_executable( prog main.cpp )
 
-target_link_libraries( prog SOFI ${SOFI_used_libs} )
+target_link_libraries( prog Simulation ${Simulation_used_libs} )
 
-set_target_properties( prog PROPERTIES OUTPUT_NAME SOFI )
+set_target_properties( prog PROPERTIES OUTPUT_NAME Simulation )
 
 install( TARGETS prog DESTINATION bin )
 install( DIRECTORY ${CMAKE_BINARY_DIR}/include DESTINATION . )
@@ -185,12 +185,12 @@ find_package( GTest )
 
 if ( ${GTEST_FOUND} )
 
-   file( GLOB SOFI_UNIT_TEST_SOURCES Tests/UnitTest/*.cpp )
+   file( GLOB Simulation_UNIT_TEST_SOURCES Tests/UnitTest/*.cpp )
 
-   add_executable( utest ${SOFI_UNIT_TEST_SOURCES} )
+   add_executable( utest ${Simulation_UNIT_TEST_SOURCES} )
 
    target_include_directories( utest PRIVATE ForwardSolver Configuration Acquisition Modelparameter ${GTEST_INCLUDE_DIR} )
-   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} SOFI ${SOFI_used_libs} )
+   target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} Simulation ${Simulation_used_libs} )
 
    set_target_properties( utest PROPERTIES OUTPUT_NAME Test_unit )
 
@@ -211,13 +211,13 @@ endif ()
 #  Integration Test                                #
 ####################################################
 
-set ( SOFI_INTEGRATION_TEST_SOURCES
+set ( Simulation_INTEGRATION_TEST_SOURCES
     Tests/IntegrationTest/Test_CompareSeismogram.cpp
 )
 
-add_executable( itest ${SOFI_INTEGRATION_TEST_SOURCES} )
+add_executable( itest ${Simulation_INTEGRATION_TEST_SOURCES} )
 
-target_link_libraries( itest SOFI ${SOFI_used_libs} )
+target_link_libraries( itest Simulation ${Simulation_used_libs} )
 
 set_target_properties( itest PROPERTIES OUTPUT_NAME Test_integration )
 
@@ -229,7 +229,7 @@ install( TARGETS itest DESTINATION bin )
 
 add_executable( model Tools/CreateModel/TwoLayer.cpp )
 
-target_link_libraries( model SOFI ${SOFI_used_libs} )
+target_link_libraries( model Simulation ${Simulation_used_libs} )
 
 set_target_properties( model PROPERTIES OUTPUT_NAME TwoLayer )
 
@@ -316,6 +316,6 @@ endif ()
 
 ### support for FindPackage ###
 
-configure_file ( SOFIConfig.cmake.in ${CMAKE_BINARY_DIR}/SOFIConfig.cmake @ONLY)
-install ( FILES ${CMAKE_BINARY_DIR}/SOFIConfig.cmake DESTINATION share/cmake/SOFI )
+configure_file ( SimulationConfig.cmake.in ${CMAKE_BINARY_DIR}/SimulationConfig.cmake @ONLY)
+install ( FILES ${CMAKE_BINARY_DIR}/SimulationConfig.cmake DESTINATION share/cmake/Simulation )
 

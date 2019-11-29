@@ -1,7 +1,7 @@
-CMAKE and SOFI
+CMAKE and WAVE-Simulation
 ==============
 
-You can now use the CMake utility to build SOFI instead of using the Makefile as before.
+You can now use the CMake utility to build WAVE-Simulation instead of using the Makefile as before.
 
 Step 1: Configuration
 ---------------------
@@ -24,7 +24,7 @@ cmake ../src -DSCAI_ROOT=<lama-install-dir> -DGTEST_ROOT=<googletest-install-dir
 Step 2: Build
 -------------
 
-make       ! generates library, SOFI executable, utest, itest
+make       ! generates library, WAVE-Simulation executable, utest, itest
 make doc   ! generates doxygen documentation
 make pdf   ! generates pdf latex guide
 

@@ -1,14 +1,11 @@
-## Seismic Finite-Difference modelling
+## Finite-Difference wavefield simulation
 
 Master: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/master/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/master)  Develop: [![build status](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/badges/develop/build.svg)](https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/commits/develop)
 
-*Seismic Finite-Difference modelling developed by the [WAVE-Project](http://wave-toolbox.org).*
+*Finite-Difference wavefield modelling developed by the [WAVE-Project](http://wave-toolbox.org).*
 
 Get started:
 - See `README.md` in `par/`
-
-Documentation:
-- Type `make doc` or ?make pdf` in build directory
 
 Contributing:
 - See the contributing guidelines provided in `CONTRIBUTING.md`

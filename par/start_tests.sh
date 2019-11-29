@@ -8,7 +8,7 @@ export SCAI_TRACE=OFF
 
 BINDIR="./../build/bin"
 
-SOFI_EXE="${BINDIR}/SOFI"
+SOFI_EXE="${BINDIR}/Simulation"
 UNITTEST_EXE="${BINDIR}/Test_unit"
 INTEGRATIONTEST_EXE="${BINDIR}/Test_integration"
 MODEL_EXE="${BINDIR}//tools/TwoLayer"

@@ -1,4 +1,4 @@
-# Input file SOFI
+# Input file WAVE-Simulation
 # The format has to be name=value (without any white spaces)
 # Use the hashtag "#" for comments
 
@@ -27,6 +27,7 @@ spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 # Define Partitioning
 useVariableGrid=0
 partitioning=1
+useStencilMatrix=0 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1)
 useGraphPartitioning=1
 useVariableFDoperators=0
 
@@ -54,6 +55,7 @@ ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be ad
 
 # Define format
 FileFormat=1  # file format for input and output  of models and wavefields
+
 # Supported formats:
 # 1=mtx : formated ascii file - serial IO
 # 2=lmf : binary file - parallel IO - float - little endian - 5 int header (20 byte) 

@@ -1,0 +1,18 @@
+set ( Simulation_CXX_FLAGS "@CMAKE_CXX_FLAGS@" )
+
+set ( Simulation_ROOT @CMAKE_INSTALL_PREFIX@ )
+
+set ( Simulation_SCAI_ROOT @SCAI_ROOT@ )
+
+set ( Simulation_Geographer_ROOT @Geographer_ROOT@ )
+
+set ( Simulation_INCLUDE_DIRS ${Simulation_ROOT}/include )
+
+find_library ( Simulation_LIB
+               NAMES Simulation
+               PATHS ${Simulation_ROOT}/lib )
+
+
+set ( Simulation_LIBRARIES ${Simulation_LIB} )
+
+set ( Simulation_FOUND true )

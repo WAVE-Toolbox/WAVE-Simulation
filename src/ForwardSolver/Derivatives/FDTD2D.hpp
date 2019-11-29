@@ -31,12 +31,12 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
                 void init(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
-                
+
                 void redistributeMatrices(scai::dmemo::DistributionPtr dist) override;
 
                 ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
                 ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
-                
+
                 /* non-requiered matrixes */
                 scai::lama::Matrix<ValueType> const &getDzf() const override;
                 scai::lama::Matrix<ValueType> const &getDzb() const override;
@@ -50,7 +50,7 @@ namespace KITGPI
 
                 scai::IndexType getNumDMatrices();
                 scai::IndexType getNumInterpMatrices();
-                
+
                 /* D*f: f=forward */
                 using Derivatives<ValueType>::Dxf;
                 using Derivatives<ValueType>::Dyf;
@@ -71,19 +71,19 @@ namespace KITGPI
 
                 using Derivatives<ValueType>::DyfStaggeredXSparse;
                 using Derivatives<ValueType>::DybStaggeredXSparse;
-/*
+                /*
                 using Derivatives<ValueType>::DyfFreeSurfaceSparse;
                 using Derivatives<ValueType>::DybFreeSurfaceSparse;*/
                 using Derivatives<ValueType>::DybStaggeredXFreeSurface;
 
                 using Derivatives<ValueType>::useFreeSurface;
-                using Derivatives<ValueType>::useSparse;
+                using Derivatives<ValueType>::useStencilMatrix;
                 using Derivatives<ValueType>::useVarGrid;
                 using Derivatives<ValueType>::isElastic;
 
                 using Derivatives<ValueType>::useVarFDorder;
                 using Derivatives<ValueType>::isSetup;
-                
+
                 using Derivatives<ValueType>::InterpolationFull;
                 using Derivatives<ValueType>::InterpolationStaggeredX;
             };

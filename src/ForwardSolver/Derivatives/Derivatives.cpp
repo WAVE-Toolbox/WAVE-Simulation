@@ -23,17 +23,31 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
     DT = config.get<ValueType>("DT");
     setFDCoef();
 
-    if (config.get<IndexType>("partitioning") != 1) {
-        useSparse = true;
-    } else {
-        useHybridFreeSurface = true;
+    try {
+        useStencilMatrix = config.get<bool>("useStencilMatrix");
+    } catch (...) {
+        useStencilMatrix = false;
     }
 
-    if ((useSparse) && (config.get<bool>("useVariableFDoperators"))) {
+    if (config.get<IndexType>("partitioning") != 1 && useStencilMatrix == true) {
+        COMMON_THROWEXCEPTION("It is not possible to use the stencil matrix without grid distribution (partitioning=1)!")
+    }
+
+    try {
+        useHybridFreeSurface = config.get<bool>("useHybridFreeSurface");
+    } catch (...) {
+        useHybridFreeSurface = false;
+    }
+
+    if (useStencilMatrix == false && useHybridFreeSurface == true) {
+        COMMON_THROWEXCEPTION("It is not possible to use the hybrid matrix without stencil matrix!")
+    }
+
+    if ((!useStencilMatrix) && (config.get<bool>("useVariableFDoperators"))) {
         useVarFDorder = true;
         setFDOrder(config.get<std::string>("gridConfigurationFilename"));
     } else {
-        SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for grid distribution")
+        SCAI_ASSERT(!config.get<bool>("useVariableFDoperators"), "Variable FD operators are not available for stencil matrices")
         // Set FD-order to class member
         setFDOrder(config.get<IndexType>("spatialFDorder"));
     }
@@ -60,9 +74,10 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
     DT = config.get<ValueType>("DT");
 
-    useSparse = true;
+    useStencilMatrix = false;
+    useHybridFreeSurface = false;
 
-    SCAI_ASSERT(config.get<IndexType>("partitioning") != 1, "grid partition is not available for varoable FDorders")
+    SCAI_ASSERT(config.get<IndexType>("partitioning") != 1, "grid partition is not available for variable FDorders")
 
     useVarFDorder = true;
     setFDCoef();
@@ -76,10 +91,10 @@ ValueType KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getMemoryU
     ValueType size = 0;
     ValueType mega = 1024 * 1024;
     ValueType sizeInterp = 0;
-    if (useSparse) {
-        size = getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
-    } else {
+    if (useStencilMatrix) {
         size = getMemoryStencilMatrix(dist) / mega * numDMatrices;
+    } else {
+        size = getMemorySparseMatrix(dist, modelCoordinates) / mega * numDMatrices;
     }
 
     if (useVarGrid) {
@@ -1720,30 +1735,30 @@ scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<V
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxf() const
 {
-    if (useSparse)
-        return (DxfSparse);
-    else
+    if (useStencilMatrix)
         return (Dxf);
+    else
+        return (DxfSparse);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf() const
 {
-    if (useSparse)
-        return (DyfSparse);
-    else
+    if (useStencilMatrix)
         return (Dyf);
+    else
+        return (DyfSparse);
 }
 
 //! \brief Getter method for derivative matrix Dyf
 template <typename ValueType>
 scai::lama::Matrix<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyf()
 {
-    if (useSparse)
-        return (DyfSparse);
-    else
+    if (useStencilMatrix)
         return (Dyf);
+    else
+        return (DyfSparse);
 }
 
 //! \brief Getter method for derivative matrix DyfStaggeredX
@@ -1752,10 +1767,10 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid))
         return (DyfStaggeredXSparse);
-    else if (useSparse)
-        return (DyfSparse);
-    else
+    else if (useStencilMatrix)
         return (Dyf);
+    else
+        return (DyfSparse);
 }
 
 //! \brief Getter method for derivative matrix DybStaggeredX
@@ -1764,10 +1779,10 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid))
         return (DybStaggeredXSparse);
-    else if (useSparse)
-        return (DybSparse);
-    else
+    else if (useStencilMatrix)
         return (Dyb);
+    else
+        return (DybSparse);
 }
 //! \brief Getter method for derivative matrix DyfStaggeredZ
 template <typename ValueType>
@@ -1775,10 +1790,10 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid))
         return (DyfStaggeredZSparse);
-    else if (useSparse)
-        return (DyfSparse);
-    else
+    else if (useStencilMatrix)
         return (Dyf);
+    else
+        return (DyfSparse);
 }
 
 //! \brief Getter method for derivative matrix DybStaggeredX
@@ -1787,50 +1802,50 @@ scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivat
 {
     if ((isElastic) && (useVarGrid))
         return (DybStaggeredZSparse);
-    else if (useSparse)
-        return (DybSparse);
-    else
+    else if (useStencilMatrix)
         return (Dyb);
+    else
+        return (DybSparse);
 }
 
 //! \brief Getter method for derivative matrix Dzf
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzf() const
 {
-    if (useSparse)
-        return (DzfSparse);
-    else
+    if (useStencilMatrix)
         return (Dzf);
+    else
+        return (DzfSparse);
 }
 
 //! \brief Getter method for derivative matrix Dxb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDxb() const
 {
-    if (useSparse)
-        return (DxbSparse);
-    else
+    if (useStencilMatrix)
         return (Dxb);
+    else
+        return (DxbSparse);
 }
 
 //! \brief Getter method for derivative matrix Dyb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDyb() const
 {
-    if (useSparse)
-        return (DybSparse);
-    else
+    if (useStencilMatrix)
         return (Dyb);
+    else
+        return (DybSparse);
 }
 
 //! \brief Getter method for derivative matrix Dzb
 template <typename ValueType>
 scai::lama::Matrix<ValueType> const &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::getDzb() const
 {
-    if (useSparse)
-        return (DzbSparse);
-    else
+    if (useStencilMatrix)
         return (Dzb);
+    else
+        return (DzbSparse);
 }
 
 //! \brief Getter method for derivative interpolation matrix of P

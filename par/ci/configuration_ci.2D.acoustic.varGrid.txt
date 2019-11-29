@@ -1,6 +1,3 @@
-# Input file SOFI
-# The format has to be name=value (without any white spaces)
-# Use the hashtag "#" for comments
 
 # Type of forward simulation
 dimension=2D              # Dimension: 2D or 3D

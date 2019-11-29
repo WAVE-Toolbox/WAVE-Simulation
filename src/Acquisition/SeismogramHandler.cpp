@@ -47,7 +47,6 @@ template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
 {
     for (auto &i : seismo) {
-        i.getNormalizeTraces();
         i.normalizeTrace();
     }
 }
@@ -239,20 +238,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setDT(ValueType newDT)
     }
 }
 
-//! \brief Setter methode to set Index for trace-normalization.
-/*!
- *
- * This method sets the index for trace-normalization.
- \param normalizeTrace Index for trace-normalization which will normalize the seismogram traces
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setNormalizeTraces(IndexType normalize)
-{
-    for (auto &i : seismo) {
-        i.setNormalizeTraces(normalize);
-    }
-}
-
 //! \brief Setter methode to set source coordinate
 /*!
  * This method sets the source coordinate to all handled Seismogram.
@@ -276,6 +261,22 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSeismoDT(ValueType se
     for (auto &i : seismo) {
         i.setSeismoDT(seismoDT);
     }
+}
+
+//! \brief Check seismograms for inf or NaN
+/*!
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
+{
+    bool isfinite=true;
+    for (auto &i : seismo) {
+        isfinite = i.isFinite();
+            if (isfinite==false){
+                break;
+            }
+    }
+    return(isfinite);
 }
 
 template class KITGPI::Acquisition::SeismogramHandler<double>;

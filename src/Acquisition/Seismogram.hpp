@@ -27,7 +27,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : normalizeTraces(0), DT(0.0), seismoType(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : DT(0.0), seismoType(KITGPI::Acquisition::SeismogramType::P){};
 
             //! Default destructor
             ~Seismogram(){};
@@ -52,11 +52,12 @@ namespace KITGPI
             void integrateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
+            bool isFinite();
+
             /* Getter functions */
             scai::IndexType getNumTracesGlobal() const;
             scai::IndexType getNumTracesLocal() const;
             scai::IndexType getNumSamples() const;
-            scai::IndexType getNormalizeTraces() const;
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
@@ -71,7 +72,6 @@ namespace KITGPI
             void setTraceType(SeismogramType trace);
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
-            void setNormalizeTraces(scai::IndexType normalizeTrace);
             void setSeismoDT(ValueType seismoDT);
 
             /* Overloading Operators */
@@ -83,12 +83,10 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
-            scai::IndexType normalizeTraces; //!< L2 Norm of seismogram is calculated
-
             /* header information */
             ValueType DT;                                           //!< Temporal sampling interval in seconds
             ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds
-            SeismogramType seismoType;                                    //!< Type of trace as #SeismogramType
+            SeismogramType seismoType;                              //!< Type of trace as #SeismogramType
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
 

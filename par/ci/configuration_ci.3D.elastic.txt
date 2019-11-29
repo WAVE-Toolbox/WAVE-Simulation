@@ -11,6 +11,8 @@ NZ=100 # horizontal 2
 UseVariableGrid=0
 useVariableFDoperators=0
 partitioning=1
+useStencilMatrix=1 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1)
+useHybridFreeSurface=0 #faster on GPUs, saves memory, only available when using stencil matrices
 
 NumShotDomains=1 
 ShotDomainDefinition=0
