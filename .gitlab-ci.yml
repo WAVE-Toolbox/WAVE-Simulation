@@ -23,6 +23,7 @@ gcc:
     expire_in: 30 min
     paths:
       - build/bin/
+      - geographer/build/lib/geographer
 
 
 unittest-gcc:
