@@ -54,7 +54,7 @@ ModelRead=0               # 1=Regular model will be read from file and meshed on
 ModelFilename=model/model # The ending vp.<FileFormat>, vs.<FileFormat> and density.<FileFormat> will be added automatically. 
 
 # Define format
-FileFormat=2  # file format for input and output  of models and wavefields
+FileFormat=2  # file format for input and output  of models and wavefields, 2=lmf recommended
 
 # Supported formats:
 # 1=mtx : formated ascii file - serial IO

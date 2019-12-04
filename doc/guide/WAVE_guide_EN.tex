@@ -1218,7 +1218,8 @@ where the first value represents the computer or node name, the second value the
 \end{table}
 The second section in table \ref{tab:config_inputoutput} contains parameters to manage input and output of the model. The first parameter \textit{ModelRead} can be set with ($1=$ yes) or (else $=$ no).  
 \textit{ModelFilename} is given to determine the location and filename of the model. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. 
-The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}) while the file format is configured in \textit{FileFormat} with either $1=$mtx, a formated ascii file with serial IO, $2=$lmf, a binary file with parallel IO, little endian and a 5 int header (20 byte) or $3=$frv, a binary file with serial IO,  little endian and seperate header.
+The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}) while the file format is configured in \textit{FileFormat} with either $1=$mtx, a formated ascii file with serial input/output, $2=$lmf, a binary file with parallel input/output, little endian and a 5 int header (20 byte) or $3=$frv, a binary file with serial input/output,  little endian and seperate header.
+Due to the parallel input/output, chosing lmf as the file format is recommended.
 
 \begin{table}[h!]
 \caption[List of boundary conditions configuration parameters.]{List of boundary conditions configuration parameters, that can be added and changed in the config-file.}\label{tab:config_boundary}
@@ -1290,7 +1291,7 @@ To verify the models stability  the courant can be calculated:
 \end{equation*}
 
 \begin{table}[h!]
-\caption[List of aquisition geometry configuration parameters.]{List of aquisition geometry configuration parameters, that can be added and changed in the config-file.}\label{tab:config_aquisition}
+\caption[List of acquisition geometry configuration parameters.]{List of acquisition geometry configuration parameters, that can be added and changed in the config-file.}\label{tab:config_acquisition}
 \centering
 \begin{adjustbox}{width=1\textwidth,center=\textwidth}
 	\begin{tabular}{llll}
@@ -1299,7 +1300,7 @@ To verify the models stability  the courant can be calculated:
 	\midrule
 	SourceFilename & Filename to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources}\end{tabular}  \\
 	ReceiverFilename & Filename to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
-	SourceSignalFilename & Filename to read source signal & string & \begin{tabular}{@{}l@{}}\shellcmd{aquisition/} \\\shellcmd{signal}\end{tabular}  \\
+	SourceSignalFilename & Filename to read source signal & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{signal}\end{tabular}  \\
 	useReceiversPerShot & Use an individual receiver file for each shot & int & \num{0} \\
 	writeSource & Write used sourcewavelet per shot & int & \num{0}\\	
 	writeSourceFilename & Filename to write source wavelet & string & \begin{tabular}{@{}l@{}}\shellcmd{SourceSignal/} \\\shellcmd{Source}\end{tabular}  \\
@@ -1313,9 +1314,9 @@ To verify the models stability  the courant can be calculated:
 \end{tabular}
 \end{adjustbox}
 \end{table}
-The sixth section in \ref{tab:config_aquisition} handles the acquisition geometry. \textit{SourceFilename} and \textit{ReceiverFilename} must be set to the files where source and receiver properties are specified respectively. The ending .txt has to be omitted in the config-file. 
+The sixth section in \ref{tab:config_acquisition} handles the acquisition geometry. \textit{SourceFilename} and \textit{ReceiverFilename} must be set to the files where source and receiver properties are specified respectively. The way they are structured is explained in chapter \ref{ch:sourcesandreceiver}. The ending .txt has to be omitted in the config-file. 
 \textit{SourceSignalFilename} specifies the location of the file where the source signals are stored in case you want to use your own.
-If useReceiversPerShot is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending .shot\_<shot number>.txt.
+If \textit{useReceiversPerShot} is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending .shot\_<shot number>.txt. 
 The used source wavelet per shot can be written to disk by setting \textit{writeSource} to 1 and specifying a filename.
 \textit{SeismogramFilename} gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \textit{seismoDT} and their traces can be normalized by setting \textit{NormalizeTraces} to 1.
 These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \textit{SeismogramFormat}.  
@@ -1342,7 +1343,33 @@ Furthermore, the sources or receivers can be initialized from SU files if \texti
 In the last section in \ref{tab:config_snapshots} you can set the properties of the wavefield snapshots to save. \textit{snapType} sets the wavefield type that should be saved ($0=$ no save, $1=$ save velocities, $2=$ save pressure/stress, $3=$ save energy). 
 The snapshots are stored in the directory chosen in \textit{WavefieldFilename}. Snapshots start at time \textit{tFirstSnapshot}, end at time \textit{tLastSnapshot} and have an interval of \textit{tIncSnapshot}.
 
-\subsection{Source Signal}
+\subsection{Source and Receiver File}\label{ch:sourcesandreceiver}
+In \shellcmd{par/acquisition/} two files can be found,the \shellcmd{sources.txt} and \shellcmd{receiver.txt} files.
+The source file contains columns filled with information about the source number, source coordinates (x,y,z), source type, wavelet shape, center frequency, amplitude and time shift. It can look like this
+\begin{verbatim}
+# shotNr:  x  y  z    sourceType  WAVELET_TYPE  WAVELET_SHAPE  FC  AMP  TShift
+  0        50 50 50   3           1             1              5   5    0
+  1        40 40 40   1           1             1              5   5    0
+  1        80 80 80   1           1             1              5   5    0
+\end{verbatim}
+where each row is one shot. Each shot with the same shot number is modelled in one simulation, whereas each shot number is simulated individually. Thus, the example shows two shot simulations, one with one shot, the other with two.
+The coordinates in (x,y,z) are given in grid points. There are three different source types, pressure (1=P), velocity in x- (2=vX),y- (3=vY), and z-direction (4=vZ). 
+The wavelet type can be set as 1=synthetic signal or 0=own signal and its shape can be set as a 1=Ricker wavelet, 2=Fuchs-M\"uller signal , 3=$\sin^3$ function, 4=First derivative of Gaussian, 5=Spike/Delta signal or 6=integral of $\sin^3$. 
+Further information can be found in chapter \ref{ch:sourcesignal}.
+Center frequency is to be set in Hz, the Amplitude scales the maximum amplitude of the wavefields and output seismograms and the time shift is defined in seconds.
+
+The receiver file is similarly built, with information about the receiver coordinates and the receiver type. It can look like this 
+\begin{verbatim}
+20 20 20 1
+21 21 21 1
+22 22 22 1
+23 23 23 1
+\end{verbatim}
+where each row is one receiver with its grid coordinates in (x,y,z) and receiver type that can be set as pressure (1=P), velocity in x- (2=vX),y- (3=vY), and z-direction (4=vZ). Depending on the chosen type, the output seismograms will have the same type.
+
+
+
+\subsection{Source Signal}\label{ch:sourcesignal}
 There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal and a spike signal. The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
@@ -1353,7 +1380,7 @@ There are two ways to choose a source signal used for modelling the wavefield. F
 \begin{itemize}
 \item Ricker wavelet:
 \begin{align}
-	f(t) &= A \cdot \left(1 - 2\cdot\tau^2\right)\cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.5}{f_c}\right)\\
+	f(t) &= A \cdot \left(1 - 2\cdot\tau^2\right)\cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.5}{f_c}\right)\label{eqn:SignalStart}\\
 \intertext{\item Fuchs-M\"uller signal, which is a combination of different sinus signals:}
 	f(t)&= 
 	\begin{cases}
@@ -1367,7 +1394,7 @@ There are two ways to choose a source signal used for modelling the wavefield. F
 	\quad 0 & \qquad \text{otherwise}
 	\end{cases}
 \intertext{\item Signal given by the first derivative of the Gaussian:}
-	f(t) &=-A \cdot 2 \cdot \tau \cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.2}{f_c}\right) \label{eqn:SignalStart}\\
+	f(t) &=-A \cdot 2 \cdot \tau \cdot e^{-\tau^2} \qquad \text{with} \qquad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.2}{f_c}\right)\\
 \intertext{\item Spike signal:}
 	f(t)&= 
 	\begin{cases}
