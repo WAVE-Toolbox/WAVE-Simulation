@@ -1,4 +1,6 @@
 *.mtx
 *.lmf
+*.frv
+*.vec
 *.txt
 *.SU

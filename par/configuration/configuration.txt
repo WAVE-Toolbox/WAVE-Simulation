@@ -2,50 +2,69 @@
 # The format has to be name=value (without any white spaces)
 # Use the hashtag "#" for comments
 
+#-------------------------------------------------------------------#
+#			Simulation/Grid Parameter		    #
+#-------------------------------------------------------------------#
 # Type of forward simulation
 dimension=3D              # Dimension: 2D or 3D
 equationType=acoustic    # Type of wave equation: acoustic, elastic, visco
 
-# define spatial sampling: number of grid points in direction
-useVariableGrid=0
-partitioning=0
-useStencilMatrix=0 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1) 
-useHybridFreeSurface=0 #faster on GPUs, saves memory, only available when using stencil matrices
-useVariableFDoperators=0
-
-coordinateWrite=0
-
+# Define spatial sampling: number of grid points in direction
 NX=133                    # horizontal 1
 NY=112                    # depth
 NZ=105                    # horizontal 2
 
-# define Partitioning
-ShotDomainDefinition=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
-NumShotDomains=2                  # Number of shot domains
-
-# distance between two grid points
+# Distance between two grid points
 DH=50                     # in meter
 
-# define temporal sampling
+# Define temporal sampling
 DT=2.0e-03                   # temporal sampling in seconds
 T=2                          # total simulation time in seconds
 
-# define order of spatial FD operator
+# Define order of spatial FD operator
 spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 
-# define material parameter
+# Define Partitioning
+useVariableGrid=0
+partitioning=1
+useStencilMatrix=0 #faster on CPUs and GPUs, saves memory, only available for grid distribution (partitioning=1)
+useGraphPartitioning=1
+useVariableFDoperators=0
+
+graphPartitionTool=geoKmeans
+#possible tool options: geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom, parMetisGraph
+
+gridConfigurationFilename=configuration/gridConfig.txt
+
+partitionWrite=0                                   # 1=partition will be written to disk, 0=not
+partitionFilename=partition/partition
+coordinateWrite=0
+coordinateFilename=configuration/coordinates 
+
+# Define shot domain parallelisation
+ShotDomainDefinition=0              # 0 define domains by ProcNS, #1 define by node id, #2 define by env var DOMAIN
+NumShotDomains=2                  # Number of shot domains 
+
+
+#-------------------------------------------------------------------#
+#			Input/Output				    #
+#-------------------------------------------------------------------#
+# Define model
 ModelRead=0               # 1=Regular model will be read from file and meshed onto discontinuous grid if UseVariableGrid=1, 2=Variable grid model will be read from file,  0=generated on the fly
-ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
+ModelFilename=model/model # The ending vp.<FileFormat>, vs.<FileFormat> and density.<FileFormat> will be added automatically. 
 
-
-#input-output 
-FileFormat=1  # file format for input and output  of models and wavefields
+# Define format
+FileFormat=2  # file format for input and output  of models and wavefields, 2=lmf recommended
 
 # Supported formats:
 # 1=mtx : formated ascii file - serial IO
 # 2=lmf : binary file - parallel IO - float - little endian - 5 int header (20 byte) 
 # 3=frv : binary file - serial IO - float - little endian - seperate header 
 
+
+#-------------------------------------------------------------------#
+#			Boundary Conditions			    #
+#-------------------------------------------------------------------#
 # Apply the free surface condition
 FreeSurface=0             # 0=OFF, 1=mirror method, 2=improved vacuum formulation
 
@@ -55,45 +74,64 @@ BoundaryWidth=10          # Width of damping boundary in grid points
 DampingCoeff=8.0          # Damping coefficient 
 VMaxCPML=3500.0           # Maximum velocity of the CPML
 CenterFrequencyCPML=5.0   # Center frequency inside the boundaries
-NPower=4.0
+NPower=4.0		  # Degree of damping profile
 KMaxCPML=1.0
-    
-# Viscoelastic modelling
+
+
+#-------------------------------------------------------------------#
+#			Viscoelastic Modelling			    #
+#-------------------------------------------------------------------#
 numRelaxationMechanisms=0 # Number of relaxation mechanisms 
 relaxationFrequency=0     # Relaxation frequency
 
-# generate homogeneous model
+
+#-------------------------------------------------------------------#
+#			Generate Model on-the-fly		    #
+#-------------------------------------------------------------------#
+# Homogeneous model
 velocityP=3500            # P-wave velocity in meter per seconds
 velocityS=2000               # S-wave velocity in meter per seconds
 rho=2000                  # Density in kilo gramms per cubic meter
 tauP=0.0                  # Tau value for P-waves
 tauS=0.0                  # Tau value for S-waves
 
+
+#-------------------------------------------------------------------#
+#			Aquisition Geometry			    #
+#-------------------------------------------------------------------#
 # Acquisition
 SourceFilename=acquisition/sources             # location of source file
 ReceiverFilename=acquisition/receiver          # location of receiver file
-SeismogramFilename=seismograms/seismogram      # target location of seismogram
 SourceSignalFilename=acquisition/signal        # location of the source signal file
+
+useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
+writeSource=0				       # 1=Writes used source wavelet/s per shot, filename=WriteSourceFilename+_shot_+<ShotNumber>+extension (specified by FileFormat)
+writeSourceFilename=SourceSignal/Source
+
+# Seismogram
+SeismogramFilename=seismograms/seismogram      # target location of seismogram
+seismoDT=2.0e-03                               # Seismogram sampling in seconds
+NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 SeismogramFormat=1                             # 1=MTX (ascii serial), 2=lmf(binary parallel) 3=frv (binary serial), 4=su (parallel)
 # 1=mtx : formated ascii file - serial IO - 2 line ascii header
 # 2=lmf : binary file - parallel IO - float - little endian - 6 int header (24 byte) 
 # 3=frv : binary file - serial IO - float - little endian - seperate header 
 # 4=su  : binary file - parallel IO - float - little endian - 240 byte header per trace
 
+# SU file
 initSourcesFromSU=0                            # 1=initialize sources from SU file 0=not (one file per component, filename=SourceSignalFilename+.<component> + .su)
-initReceiverFromSU=0                           # 1=initialize receiver from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .su)
-seismoDT=2.0e-03                               # Seismogram sampling in seconds
-NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
-useReceiversPerShot=0                          # 1=Uses an individual receiver geometry for each shot, the ending shot_<shotNumber>.mtx will be searched
-writeSource=0				       # 1=Writes used source wavelet/s per shot, filename=WriteSourceFilename+_shot_+<ShotNumber>+extension (specified by FileFormat)
-writeSourceFilename=SourceSignal/Source
+initReceiverFromSU=0                           # 1=initialize receivers from SU file 0=not (one file per component, filename=ReceiverFilename+.<component> + .su)
 
-# wavefield snapshots
+
+#-------------------------------------------------------------------#
+#			Wavefield Snapshots			    #
+#-------------------------------------------------------------------#
+# Wavefield snapshots
 snapType=2                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds
 tIncSnapshot=0.1                              # Time increment between snapshot in seconds
 
-# console output
+# Console output
 verbose=1                 # 0=normal output 1=verbose output (shows additional status messages which can be confusing if shots are run in parallel)
