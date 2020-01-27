@@ -216,7 +216,7 @@ void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     } else {
-        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("fileFormat"));
+        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("SeismogramFormat"));
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     }
