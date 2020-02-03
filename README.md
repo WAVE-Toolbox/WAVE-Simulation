@@ -21,4 +21,4 @@ Tested with:
 
 GitHub:
 
-https://github.com/WAVE-Toolbox/Installation
+https://github.com/WAVE-Toolbox/
