@@ -25,7 +25,4 @@ https://github.com/WAVE-Toolbox/
 
 LAMA:
 
-# Clone Lama
-https://gitlab.scai.fraunhofer.de/
-
 git clone https://gitlab.scai.fraunhofer.de/hpcpublic/lama.git
