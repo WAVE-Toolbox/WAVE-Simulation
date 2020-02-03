@@ -20,4 +20,5 @@ Tested with:
 - MPI: OpenMPI (1.7.2, 1.10.7)
 
 GitHub:
-github.com/WAVE-Toolbox/
+
+https://github.com/WAVE-Toolbox/Installation
