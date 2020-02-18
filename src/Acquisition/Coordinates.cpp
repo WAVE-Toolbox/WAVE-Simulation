@@ -20,7 +20,17 @@ using namespace scai;
 template <typename ValueType>
 KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config) : NX(config.get<IndexType>("NX")), NY(config.get<IndexType>("NY")), NZ(config.get<IndexType>("NZ")), DH(config.get<ValueType>("DH"))
 {
+    init(config);
+}
 
+template <typename ValueType>
+void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config){
+    
+    NX=config.get<IndexType>("NX");
+    NY=config.get<IndexType>("NY");
+    NZ=config.get<IndexType>("NZ");
+    DH=config.get<ValueType>("DH");
+    
     if (config.get<bool>("useVariableGrid")) {
         VariableGrid = true;
         std::vector<IndexType> dhFactor;
@@ -67,6 +77,9 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
         init();
     }
 }
+
+
+
 /*! \brief constructor for variable grid
  *
  \param nx Number of grid points in X

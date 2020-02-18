@@ -60,17 +60,19 @@ namespace KITGPI
 
           public:
             //! \brief Default constructor
-            Coordinates(){};
+            Coordinates(): NX(0), NY(0), NZ(0), DH(0.0){};
 
             //! Destructor, releases all allocated resources.
             ~Coordinates(){};
 
             Coordinates(Configuration::Configuration const &config);
+            
+            void init(Configuration::Configuration const &config);
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
             Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh, std::vector<scai::IndexType> &dhFactor, std::vector<int> &interface);
-
+            
             ValueType getDH() const;
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
