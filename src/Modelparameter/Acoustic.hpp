@@ -65,7 +65,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getInverseDensity() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
-            scai::lama::Vector<ValueType> const &getVelocityS() const override;
+            scai::lama::DenseVector<ValueType> const &getVelocityS() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() override;
@@ -86,7 +86,10 @@ namespace KITGPI
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
             void applyThresholds(Configuration::Configuration const &config) override;
-
+            
+            void getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd) override;
+            void setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange) override;
+            
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;

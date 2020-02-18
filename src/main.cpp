@@ -52,7 +52,14 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Read configuration from file            */
     /* --------------------------------------- */
-    Configuration::Configuration config(argv[1]);
+    Configuration::Configuration config;
+    config.init(argv[1]);
+    
+    Configuration::Configuration configStream;
+    if (config.get<bool>("useStreamConfig")){
+        configStream.readFromFile(config.get<std::string>("streamConfigFilename"),true);    
+    }
+    
     verbose = config.get<bool>("verbose");
 
     std::string dimension = config.get<std::string>("dimension");
@@ -141,6 +148,7 @@ int main(int argc, const char *argv[])
 
     ForwardSolver::Derivatives::Derivatives<ValueType>::DerivativesPtr derivatives(ForwardSolver::Derivatives::Factory<ValueType>::Create(dimension));
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelBig(Modelparameter::Factory<ValueType>::Create(equationType)); //whole stream model
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
 
@@ -226,52 +234,7 @@ int main(int argc, const char *argv[])
     //         allSettings = su.getSourceSettingsVec();
 
     Acquisition::Sources<ValueType> sources;
-
-    Acquisition::Receivers<ValueType> receivers;
-
-    if (!config.get<bool>("useReceiversPerShot")) {
-        receivers.init(config, modelCoordinates, ctx, dist);
-    }
-    end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "", "Finished initializing Acquisition in " << end_t - start_t << " sec.\n\n");
-    /* --------------------------------------- */
-    /* Modelparameter                          */
-    /* --------------------------------------- */
-    {
-        SCAI_REGION("WAVE-Simulation.initModel")
-        start_t = common::Walltime::get();
-        model->init(config, ctx, dist, modelCoordinates);
-        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
-        end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
-    }
-
-    /* --------------------------------------- */
-    /* Wavefields                              */
-    /* --------------------------------------- */
-    {
-        SCAI_REGION("WAVE-Simulation.initWavefields")
-        start_t = common::Walltime::get();
-        wavefields->init(ctx, dist);
-        end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
-    }
-
-    /* --------------------------------------- */
-    /* Forward solver                          */
-    /* --------------------------------------- */
-    {
-        SCAI_REGION("WAVE-Simulation.initForwardSolver")
-        start_t = common::Walltime::get();
-        solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
-        solver->prepareForModelling(*model, config.get<ValueType>("DT"));
-        end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
-    }
-
-    ValueType DT = config.get<ValueType>("DT");
-    IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
-
+    
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
@@ -281,7 +244,7 @@ int main(int argc, const char *argv[])
     /* general block distribution of shot domains accorting to their weights */
     IndexType firstShot = 0;
     IndexType lastShot = numshots - 1;
-
+    
     float processorWeight = 1.0f;
     common::Settings::getEnvironment(processorWeight, "WEIGHT");
     float domainWeight = commShot->sum(processorWeight);
@@ -294,87 +257,171 @@ int main(int argc, const char *argv[])
     }
     commShot->bcast(&firstShot, 1, 0);
     commShot->bcast(&lastShot, 1, 0);
-
-    double end_tInit = common::Walltime::get();
-    double tInit = end_tInit - globalStart_t;
-    HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
-
-    /* --------------------------------------- */
-    /* Loop over shots                        */
-    /* --------------------------------------- */
-
-    for (IndexType shotInd = firstShot; shotInd < lastShot; shotInd++) {
-        SCAI_REGION("WAVE-Simulation.shotLoop")
-        IndexType shotNumber = uniqueShotNos[shotInd];
-        /* Update Source */
-        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
-        Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
-
-        sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-
-        CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
-
-        bool writeSource_bool;
-        try {
-            writeSource_bool = config.get<bool>("writeSource");
-        } catch (...) {
-            writeSource_bool = false;
-        }
-        if (writeSource_bool) {
-            lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
-            KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
-        }
-
-        if (config.get<bool>("useReceiversPerShot")) {
-            receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
-        }
-
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",
-                   "\nTotal Number of time steps: " << tStepEnd << "\n");
-        wavefields->resetWavefields();
-
-        start_t = common::Walltime::get();
-
-        double start_t2 = 0.0, end_t2 = 0.0;
-
-        /* --------------------------------------- */
-        /* Loop over time steps                        */
-        /* --------------------------------------- */
-        for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
-            SCAI_REGION("WAVE-Simulation.timeLoop")
-            if ((tStep - 1) % 100 == 0) {
-                start_t2 = common::Walltime::get();
-                //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
-            }
-
-            solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-            
-            if (tStep % 100 == 0 && tStep != 0) {
-                end_t2 = common::Walltime::get();
-                HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps"
-                                                       << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
-            }
-
-            if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
-            }
-        }
-
-        end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
-        
-        // check wavefield and seismogram for NaNs or infinite values
-        SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
-        
-        if (config.get<bool>("NormalizeTraces")) {
-            receivers.getSeismogramHandler().normalize();
-        }
-
-        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-        
-        solver->resetCPML();
+    
+    if (config.get<bool>("useStreamConfig")){
+        lastShot = firstShot + 1;
     }
+    
+    Acquisition::Receivers<ValueType> receivers;
+
+    if (!config.get<bool>("useReceiversPerShot")) {
+        receivers.init(config, modelCoordinates, ctx, dist);
+    }
+    
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "", "Finished initializing Acquisition in " << end_t - start_t << " sec.\n\n");
+    
+    /* --------------------------------------- */
+    /* Modelparameter                          */
+    /* --------------------------------------- */
+    {
+        SCAI_REGION("WAVE-Simulation.initModel")
+        start_t = common::Walltime::get();
+        model->init(config, ctx, dist, modelCoordinates);
+        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+        end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
+    }
+    /* --------------------------------------- */
+    /* Modelparameter for bigmodel             */
+    /* --------------------------------------- */
+    
+    Acquisition::Coordinates<ValueType> modelCoordinatesBig;
+
+    if (config.get<bool>("useStreamConfig")){       
+        modelCoordinatesBig.init(configStream);
+        dmemo::DistributionPtr distBig = nullptr;
+        distBig = std::make_shared<dmemo::BlockDistribution>(modelCoordinatesBig.getNGridpoints(), commShot); 
+        modelBig->init(configStream, ctx, distBig, modelCoordinatesBig);   
+    }
+
+    std::vector<Acquisition::coordinate3D> cutCoord;
+    Acquisition::getCutCoord("acquisition/cutCoordinations.txt", cutCoord);
+        
+    /* --------------------------------------- */
+    /* Loop over subset shots                 */
+    /* --------------------------------------- */
+    
+    IndexType cutCoordSize = 1;
+    if (config.get<bool>("useStreamConfig")) {
+        cutCoordSize = cutCoord.size();
+        }
+
+    for (IndexType cutCoordInd = 0; cutCoordInd < cutCoordSize; cutCoordInd++) {
+        if (config.get<bool>("useStreamConfig")) {
+            modelBig->getModelSubset(*model,modelCoordinates,modelCoordinatesBig,cutCoord,cutCoordInd);
+        }
+        
+        model->prepareForModelling(modelCoordinates, ctx, dist, commShot);
+        
+        /* --------------------------------------- */
+        /* Wavefields                              */
+        /* --------------------------------------- */
+        {
+            SCAI_REGION("WAVE-Simulation.initWavefields")
+            start_t = common::Walltime::get();
+            wavefields->init(ctx, dist);
+            end_t = common::Walltime::get();
+            HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
+        }
+
+        /* --------------------------------------- */
+        /* Forward solver                          */
+        /* --------------------------------------- */
+        {
+            SCAI_REGION("WAVE-Simulation.initForwardSolver")
+            start_t = common::Walltime::get();
+            solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, config.get<ValueType>("DT"));
+            solver->prepareForModelling(*model, config.get<ValueType>("DT"));
+            end_t = common::Walltime::get();
+            HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
+        }
+
+        ValueType DT = config.get<ValueType>("DT");
+        IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
+
+        double end_tInit = common::Walltime::get();
+        double tInit = end_tInit - globalStart_t;
+        HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
+
+        /* --------------------------------------- */
+        /* Loop over shots                         */
+        /* --------------------------------------- */
+
+        for (IndexType shotInd = firstShot + cutCoordInd; shotInd < lastShot + cutCoordInd; shotInd++) {
+            SCAI_REGION("WAVE-Simulation.shotLoop")
+            IndexType shotNumber = uniqueShotNos[shotInd];
+            /* Update Source */
+            std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
+            Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+
+            sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+
+            CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
+
+            bool writeSource_bool;
+            try {
+                writeSource_bool = config.get<bool>("writeSource");
+            } catch (...) {
+                writeSource_bool = false; 
+            }
+            if (writeSource_bool) {
+                lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
+                KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+            }
+
+            if (config.get<bool>("useReceiversPerShot")) {
+                receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+            }
+
+            HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",
+                    "\nTotal Number of time steps: " << tStepEnd << "\n");
+            wavefields->resetWavefields();
+
+            start_t = common::Walltime::get();
+
+            double start_t2 = 0.0, end_t2 = 0.0;
+
+            /* --------------------------------------- */
+            /* Loop over time steps                        */
+            /* --------------------------------------- */
+            for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
+
+                SCAI_REGION("WAVE-Simulation.timeLoop")
+                if ((tStep - 1) % 100 == 0) {
+                    start_t2 = common::Walltime::get();
+                    //HOST_PRINT(commShot, " ", "Calculating time step " << tStep << " in shot  " << shotNumber << "\n");
+                }
+                
+                solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
+                
+                if (tStep % 100 == 0 && tStep != 0) {
+                    end_t2 = common::Walltime::get();
+                    HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps"
+                    << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                }
+
+                if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                    wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                }
+            }
+
+            end_t = common::Walltime::get();
+            HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
+            
+            // check wavefield and seismogram for NaNs or infinite values
+            SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
+            
+            if (config.get<bool>("NormalizeTraces")) {
+                receivers.getSeismogramHandler().normalize();
+            }
+
+            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+            
+            solver->resetCPML();
+        }
+    }
+
     globalEnd_t = common::Walltime::get();
 
     commAll->synchronize();

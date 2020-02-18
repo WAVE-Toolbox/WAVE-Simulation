@@ -32,7 +32,6 @@ namespace KITGPI
     //! \brief Modelparameter namespace
     namespace Modelparameter
     {
-
         //! \brief Abstract class for a single Modelparameter (Subsurface properties)
         /*!
          * This class handels a single modelparameter.
@@ -41,7 +40,7 @@ namespace KITGPI
         template <typename ValueType>
         class Modelparameter
         {
-          public:
+          public: 
             //! Default constructor.
             Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parametrisation(0), numRelaxationMechanisms(0){};
 
@@ -86,15 +85,15 @@ namespace KITGPI
 
             virtual std::string getEquationType() const = 0;
 
-            virtual scai::lama::Vector<ValueType> const &getDensity() const;
+            virtual scai::lama::DenseVector<ValueType> const &getDensity() const;
             virtual scai::lama::Vector<ValueType> const &getInverseDensity();
             virtual scai::lama::Vector<ValueType> const &getInverseDensity() const;
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus() const;
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus() const;
-            virtual scai::lama::Vector<ValueType> const &getVelocityP() const;
-            virtual scai::lama::Vector<ValueType> const &getVelocityS() const;
+            virtual scai::lama::DenseVector<ValueType> const &getVelocityP() const;
+            virtual scai::lama::DenseVector<ValueType> const &getVelocityS() const;
 
             virtual scai::lama::Vector<ValueType> const &getTauP() const;
             virtual scai::lama::Vector<ValueType> const &getTauS() const;
@@ -135,7 +134,10 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getTauSAverageXZ() const;
             virtual scai::lama::Vector<ValueType> const &getTauSAverageYZ();
             virtual scai::lama::Vector<ValueType> const &getTauSAverageYZ() const;
-
+            
+            virtual void getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd)=0;
+            virtual void setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange)=0;
+            
             virtual bool getDirtyFlagPWaveModulus() const;
             virtual bool getDirtyFlagSWaveModulus() const;
             virtual bool getDirtyFlagInverseDensity() const;
@@ -199,6 +201,12 @@ namespace KITGPI
 
             scai::IndexType getParametrisation();
 
+            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
+            SparseFormat getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D &cutCoord);
+            
+            scai::lama::SparseVector<ValueType> getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D &cutCoord);
+            scai::lama::DenseVector<ValueType> smoothParameter(scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, scai::lama::DenseVector<ValueType> parameter, scai::IndexType subsetSize, Acquisition::coordinate3D &cutCoord, scai::IndexType smoothRange);
+            
             //! \brief Initializsation of the aneraging matrices
             /*!
              *
@@ -217,8 +225,7 @@ namespace KITGPI
             void calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
-
-            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
+            
             SparseFormat averageMatrixX;                                 //!< Averaging density matrix in x-direction
             SparseFormat averageMatrixY;                                 //!< Averaging density matrix in x-direction
             SparseFormat averageMatrixZ;                                 //!< Averaging density matrix in x-direction

@@ -75,6 +75,9 @@ namespace KITGPI
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
+            void getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd) override;
+            void setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange) override;
+            
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;

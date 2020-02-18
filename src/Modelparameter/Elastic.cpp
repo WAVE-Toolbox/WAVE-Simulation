@@ -1,4 +1,5 @@
 #include "Elastic.hpp"
+#include "../Acquisition/AcquisitionSettings.hpp"
 #include "../IO/IO.hpp"
 
 using namespace scai;
@@ -68,6 +69,74 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
+}
+
+/*! \brief If stream configuration is used, get a subset model from the big model
+ \param modelSubset subset model
+ \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinatesBig coordinate class object of the big model
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd)
+{
+    auto distBig = velocityP.getDistributionPtr();
+    auto dist = modelSubset.getVelocityP().getDistributionPtr();
+//     auto comm = dist.getCommunicatorPtr();
+
+    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+
+    lama::DenseVector<ValueType> temp;
+    temp = modelSubset.getVelocityP();  
+    
+    temp = shrinkMatrix*velocityP;
+    modelSubset.setVelocityP(temp);
+        
+    temp = shrinkMatrix*velocityS;
+    modelSubset.setVelocityS(temp);
+    IO::writeVector(temp, "model/usedSubset_" + std::to_string(cutCoordInd) + ".vs", 2);
+    
+    temp = shrinkMatrix*density;
+    modelSubset.setDensity(temp);
+}
+
+/*! \brief If stream configuration is used, get a subset model from the big model
+ \param modelSubset subset model
+ \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinatesBig coordinate class object of the big model
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Elastic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange)
+{
+    IndexType subsetSize = invertedModelSubset.getVelocityP().size();
+    auto distBig = velocityP.getDistributionPtr();
+    auto dist = invertedModelSubset.getVelocityP().getDistributionPtr();
+//     auto comm = dist.getCommunicatorPtr();
+
+    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+    shrinkMatrix.assignTranspose(shrinkMatrix);
+    
+    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+    
+    lama::DenseVector<ValueType> temp;
+    temp = invertedModelSubset.getVelocityP(); //results of inverted subset model
+    temp = shrinkMatrix*temp; //transform subset into big model
+    velocityP *= eraseVector;
+    velocityP += temp; //take over the values
+  
+    temp = invertedModelSubset.getVelocityS(); //results of inverted subset model
+    temp = shrinkMatrix*temp; //transform subset into big model
+    velocityS *= eraseVector;
+    velocityS += temp; //take over the values
+    
+    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(distBig, modelCoordinatesBig, velocityS, subsetSize, cutCoord.at(cutCoordInd), smoothRange);
+    velocityS = smoothParameter;
+    IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vs" ,2);
+    
+    temp = invertedModelSubset.getDensity(); //results of inverted subset model
+    temp = shrinkMatrix*temp; //transform subset into big model
+    density *= eraseVector;
+    density += temp; //take over the values
+
 }
 
 /*! \brief Constructor that is using the Configuration class

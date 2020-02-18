@@ -28,6 +28,105 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(
     return (parametrisation);
 }
 
+/*! \brief Get matrix that multiplies with model matrices to get a subset
+ \param dist Distribution of the subset
+ \param distBig Distribution of the big model
+ \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinatesBig coordinate class object of the big model
+ \param cutCoord coordinate where to cut the subset
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D &cutCoord)
+{
+    SparseFormat shrinkMatrix; //!< Shrink Multiplication matrix 
+    shrinkMatrix.allocate(dist,distBig);
+      
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+    lama::MatrixAssembly<ValueType> assembly; 
+    IndexType indexBig = 0;
+ 
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices 
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
+        coordinate.x = coordinate.x + cutCoord.x; // offset depends on shot number
+        indexBig = modelCoordinatesBig.coordinate2index(coordinate);
+        assembly.push(ownedIndex, indexBig, 1.0);
+    }
+    shrinkMatrix.fillFromAssembly(assembly);
+    return shrinkMatrix;
+}
+
+/*! \brief Get erase-matrix that erases the old values in the big model 
+ \param dist Distribution of the subset
+ \param distBig Distribution of the big model
+ \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinatesBig coordinate class object of the big model
+ \param cutCoord coordinate where to cut the subset
+ */
+template <typename ValueType>
+scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D &cutCoord)
+{
+    scai::lama::SparseVector<ValueType> eraseVector(distBig,1); //!< Shrink Multiplication matrix 
+      
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+    lama::VectorAssembly<ValueType> assembly; 
+    IndexType indexBig = 0;
+ 
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices 
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
+        coordinate.x = coordinate.x + cutCoord.x; // offset depends on shot number
+        indexBig = modelCoordinatesBig.coordinate2index(coordinate);
+        assembly.push(indexBig, 0);
+    }
+    eraseVector.fillFromAssembly(assembly);
+    return eraseVector;
+}
+
+/*! \brief Get erase-matrix that erases the old values in the big model 
+ \param dist Distribution of the subset
+ \param distBig Distribution of the big model
+ \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinatesBig coordinate class object of the big model
+ \param cutCoord coordinate where to cut the subset
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::smoothParameter(scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, scai::lama::DenseVector<ValueType> parameter, scai::IndexType subsetSize, Acquisition::coordinate3D &cutCoord, scai::IndexType smoothRange)
+{
+    scai::lama::DenseVector<ValueType> savedPar = parameter;
+    
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    distBig->getOwnedIndexes(ownedIndexes);
+
+//     scai::lama::DenseVector<ValueType> cutIndices(smoothRange*2+1,0);
+    std::vector<int> cutIndices;
+//     cutIndices.resize(smoothRange*2+1, std::vector<int>(4, 0));
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices 
+        Acquisition::coordinate3D coordinate = modelCoordinatesBig.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
+        if (coordinate.x == cutCoord.x - smoothRange) {
+            for (IndexType i = 0; i<smoothRange*2+1; i++) {
+                coordinate.x = cutCoord.x - smoothRange+i;
+                cutIndices.push_back(modelCoordinatesBig.coordinate2index(coordinate));
+                // CREATE cutIndices WITH ASSEMBLY INSTEAD OF PUSH BACK
+            }
+           
+//             for (IndexType j = 0; j<smoothRange*2+1; j++) {
+//                 parameter[cutIndices[j+2]] = savedPar[cutIndices[j]]*0.05 + savedPar[cutIndices[j+1]]*0.242 + savedPar[cutIndices[j+2]]*0.399 + savedPar[cutIndices[j+3]]*0.242 + savedPar[cutIndices[j+4]]*0.05;
+//                 parameter[cutIndices[j]] = savedPar[cutIndices[j]];
+//             }
+        }
+        if (coordinate.x == cutCoord.x - smoothRange + subsetSize) {
+        }
+    }
+    
+    std::cout << "cutIndices: " << cutIndices[10] << std::endl;
+    std::cout << "parameter: " << parameter[59605] << std::endl;
+    std::cout << "parameter: " << parameter[cutIndices[10]] << std::endl;
+    
+    return parameter;
+}
+
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
@@ -167,7 +266,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 /*! \brief Get const reference to density model parameter
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
 {
     return (density);
 }
@@ -243,7 +342,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
 {
     return (velocityP);
 }
@@ -260,7 +359,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setVelocityP(scai::lama:
 /*! \brief Get const reference to S-wave velocity
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
 {
     return (velocityS);
 }

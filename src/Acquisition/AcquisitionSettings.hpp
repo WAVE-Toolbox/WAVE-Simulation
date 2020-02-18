@@ -265,5 +265,55 @@ namespace KITGPI
             }
             return (sourcecoords1D);
         }
+        
+        /*! \brief Get matrix that multiplies with model matrices to get a subset
+        \param fileName cut coordinations filename where the coordinates are where to cut the subset
+        \param cutCoord 3D coordinates where to cut the subset
+        */
+        inline void getCutCoord(std::string fileName, std::vector<KITGPI::Acquisition::coordinate3D> &cutCoord)
+        {
+            std::ifstream istream(fileName, std::ios::binary);
+
+                cutCoord.clear();
+                Acquisition::coordinate3D coordinate;
+                if (istream.is_open()) {
+                    std::string line;
+                    while (getline(istream, line)) {
+                        std::stringstream strings(line);
+                        std::vector<std::string> vecStrings;
+
+                        char firstChar = strings.peek();
+                        if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
+                            continue;
+                        } else {
+                            std::string tempStr;
+                            while (strings >> tempStr) {
+                                vecStrings.push_back(tempStr);
+                            }
+
+                            if (vecStrings.size() != 3) {
+                                COMMON_THROWEXCEPTION("Not three parameters (x y z) in line of cut coordination file (" << fileName << ")")
+                            }
+
+                            try {
+                                coordinate.x = std::stoi(vecStrings[0]);
+                                coordinate.y = std::stoi(vecStrings[1]);
+                                coordinate.z = std::stoi(vecStrings[2]);
+                            }
+
+                            catch (const std::invalid_argument &ia) {
+                                COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
+                            }
+
+                            catch (const std::out_of_range &oor) {
+                                COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
+                            }
+                            cutCoord.push_back(coordinate);
+                        }
+                    }
+                } else {
+                    COMMON_THROWEXCEPTION("Could not open cut coordination file " << fileName);
+                }
+        }
     }
 }
