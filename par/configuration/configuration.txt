@@ -24,6 +24,10 @@ T=2                          # total simulation time in seconds
 # Define order of spatial FD operator
 spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 
+useStreamConfig=0
+streamConfigFilename=configuration/configurationStream.txt
+smoothRange=5
+
 # Define Partitioning
 useVariableGrid=0
 partitioning=1
