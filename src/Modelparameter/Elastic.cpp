@@ -129,7 +129,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::setModelSubset(KITGPI::Modelpar
     velocityS += temp; //take over the values
     
     scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(distBig, modelCoordinatesBig, velocityS, subsetSize, cutCoord.at(cutCoordInd), smoothRange);
-    velocityS = smoothParameter;
+//     velocityS = smoothParameter;
     IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vs" ,2);
     
     temp = invertedModelSubset.getDensity(); //results of inverted subset model

@@ -56,7 +56,14 @@ int main(int argc, const char *argv[])
     config.init(argv[1]);
     
     Configuration::Configuration configStream;
-    if (config.get<bool>("useStreamConfig")){
+    bool useStreamConfig;
+    try {
+        useStreamConfig = config.get<bool>("useStreamConfig");
+    } catch(...) {
+        useStreamConfig = false;
+    }
+    
+    if (useStreamConfig){
         configStream.readFromFile(config.get<std::string>("streamConfigFilename"),true);    
     }
     
@@ -258,7 +265,7 @@ int main(int argc, const char *argv[])
     commShot->bcast(&firstShot, 1, 0);
     commShot->bcast(&lastShot, 1, 0);
     
-    if (config.get<bool>("useStreamConfig")){
+    if (useStreamConfig){
         lastShot = firstShot + 1;
     }
     
@@ -288,7 +295,7 @@ int main(int argc, const char *argv[])
     
     Acquisition::Coordinates<ValueType> modelCoordinatesBig;
 
-    if (config.get<bool>("useStreamConfig")){       
+    if (useStreamConfig){       
         modelCoordinatesBig.init(configStream);
         dmemo::DistributionPtr distBig = nullptr;
         distBig = std::make_shared<dmemo::BlockDistribution>(modelCoordinatesBig.getNGridpoints(), commShot); 
@@ -303,12 +310,12 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     
     IndexType cutCoordSize = 1;
-    if (config.get<bool>("useStreamConfig")) {
+    if (useStreamConfig) {
         cutCoordSize = cutCoord.size();
         }
 
     for (IndexType cutCoordInd = 0; cutCoordInd < cutCoordSize; cutCoordInd++) {
-        if (config.get<bool>("useStreamConfig")) {
+        if (useStreamConfig) {
             modelBig->getModelSubset(*model,modelCoordinates,modelCoordinatesBig,cutCoord,cutCoordInd);
         }
         
