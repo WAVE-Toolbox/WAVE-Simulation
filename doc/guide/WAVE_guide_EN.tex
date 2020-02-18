@@ -1095,28 +1095,19 @@ LAMA 				& The LAMA-framework for high performance			& \url{https://www.libama.o
 \section{Quick Guide}
 
 \subsection{Installation}
-To get started Download, FDSimulation\_LAMA. 
+To get started, download WAVE-Simulation. 
 
-You can either download the software directly from \url{https://git.scc.kit.edu/WAVE/FDSimulation_LAMA/repository/archive.zip?ref=master} and unzip the folder (e.g. by entering \shellcmd{tar -zxvf FDSimulation\_LAMA.tgz}).
+You can download the software together with WAVE-Inversion directly from \url{https://github.com/WAVE-Toolbox/Installation} and unzip the folder (e.g. by entering \shellcmd{tar -zxvf Installation-master.zip}).
 
-Alternatively you can also get FDSimulation\_LAMA by entering the command: \\\shellcmdline{git clone https://git.scc.kit.edu/WAVE/FDSimulation\_LAMA.git}
+Alternatively you can also get WAVE-Simulation by entering the command: \\\shellcmdline{git clone https://github.com/WAVE-Toolbox/Installation.git}
 
-As preparatory steps environment variables have to be linked to LAMA. Add the following lines to the \shellcmd{{\char`\~}/.bashrc}:
-\\\shellcmdline{ `export SCAI\_ROOT=[PATH\_TO\_LAMA\_BUILD]`}
-\\\shellcmdline{ `export DYLD\_LIBRARY\_PATH=\$\{SCAI\_ROOT\}/lib:\$\{DYLD\_LIBRARY\_PATH\}`}
-\\\shellcmdline{ `export LD\_LIBRARY\_PATH=\$\{SCAI\_ROOT\}/lib:\$\{LD\_LIBRARY\_PATH\}`}
-\\\shellcmdline{ `export OMP\_NUM\_THREADS=1`}\\
-You can also find the instructions in \shellcmd{FDSimulation\_LAMA/par/README.md}. 
+In the \shellcmd{tar -zxvf Installation-master} folder you will find a readme file and an \shellcmd{install.sh} script. Run the script where you want to have the installation by entering: \\\shellcmdline{./install.sh}
 
-Change to the directory: \\\shellcmdline{FDSimulation\_LAMA/build/}
+The script installs (clones, configures and compiles) the required LAMA-framework, the WAVE-Simulation and the WAVE-Inversion and the optional Geographer distribution.
 
-You can compile the source code by simply entering: \\\shellcmdline{make prog}\\ in your command line. \gCC is set to be the default \CC-compiler. To use an alternative compiler, the compiler setting can be change in the \shellcmd{Makefile}, or otherwise by executing:\\\shellcmdline{make CXX=<yourCompiler> }
+The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
 
-To compile the program on more than one CPU add \shellcmd{-j <numberCPUs>} to the \shellcmd{make} command.
-
-The runtime configuration (such as the FD grid) can be changed in the \shellcmd{configuration.txt} file, located in the directory \shellcmd{FDSimulation\_LAMA/par/configuration/}. A list of all input variables and their dependencies can be found in section \ref{sec:config}. 
-
-To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{FDSimulation\_LAMA/build/} and run the command \shellcmd{make doc}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{build/doc/doxygen/} and \shellcmd{build/doc/guide/}.
+To create a html and LaTeX or Pdf documentation of the software code itself, you can generate a doxygen documentation. Therefore change the directory to \shellcmd{build/} and run the command \shellcmd{make doc}. After running doxygen, the html, LaTeX and Pdf version of the reference manual can be found in \shellcmd{build/doc/doxygen/} and \shellcmd{build/doc/guide/}.
 
 \subsection{Example}
 
@@ -1153,6 +1144,9 @@ As mentioned in the quick guide, the configuration can be found in \shellcmd{par
 	T & Total simulation time & double & \SI{2}{s}\\
 	spatialFDorder & Define order of spatial FD operator & int & \num{2}\\
 	\midrule
+	useStreamConfig & Use a streaming configuration with subset models & int & \num{0} \\
+	streamConfigFilename & Filename of the stream configuration file & string & \shellcmd{configuration/configurationStream.txt} \\
+	\midrule
 	useVariableGrid & Use the variable Grid & int & \num{0} \\
 	partitioning & Number of partitions & int & \num{1} \\
 	useVariableFDoperators & Usage of variable FD operators & int & \num{0} \\
@@ -1177,6 +1171,18 @@ The total Number of time-steps can be calculated by
 	NT = round\left(\frac{T}{DT}+0.5\right)
 \end{equation*}
 Furthermore, the parameter \textit{spatialFDorder} defines the order of the spatial FD-operator and therefore influences the accuracy of the simulation significantly.
+
+If the model is very large or if a huge number of shots is used, it is useful to split the model into subsets. This can be done by setting the parameter \textit{useVariableGrid} to 1. This allows for wavefield simulations within several subsets that can be looped and cut at specific coordinates which are defined in the file \shellcmd{acquisition/cutCoordinations.txt} by X, Y and Z. E.g., cut coordiations could be at
+\begin{verbatim}
+# X   Y   Z
+  0   0   0
+  50  0   0
+  100 0   0
+\end{verbatim}
+The number of rows, in this case three, specifies the number of subsets that are used. For each subset, a shot number must be defined in the file \shellcmd{acquisition/sources.txt} that is explained in chapter \ref{ch:sourcesandreceiver}.
+
+The whole input model then is not specified by \textit{ModelFilename} in table \ref{tab:config_inputoutput} anymore, but by the parameters in a second configuration file named by the parameter \textit{streamConfigFilename}. Every other parameter in the \shellcmd{configuration.txt} file is then set for the subset model where the simulation is run.
+
 The following parameter \textit{useVariableGrid} characterises whether the model uses a variable grid spacing for the calculation of the wavefield ($1=$ yes, else $=$ no). 
 The type of partition can be chosen in \textit{partitioning} where you can opt for a block distribution ($=0$), grid distribution ($=1$) parallel graph distribution by geographer ($=2$) or parallel graph distribution by ParMETIS ($=3$).
 The block distribution divides the model vector evenly which creates a layered grid, the grid distribution divides the grid into equally large regions and the two graph distribution divides the grid based on optimal load balance and communication.
