@@ -83,47 +83,28 @@ scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<Value
     return eraseVector;
 }
 
-/*! \brief Get erase-matrix that erases the old values in the big model 
- \param dist Distribution of the subset
- \param distBig Distribution of the big model
- \param modelCoordinates coordinate class object of the subset
+/*! \brief Smoothes parameter within a certain range via gauss
  \param modelCoordinatesBig coordinate class object of the big model
+ \param parameter input parameter that is to be smoothed
+ \param subsetSize size of the subset in x-direction
  \param cutCoord coordinate where to cut the subset
+ \param smoothRange grid points to the left/right which are to be smoothed
+ \param NYBig NY in big model
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::smoothParameter(scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, scai::lama::DenseVector<ValueType> parameter, scai::IndexType subsetSize, Acquisition::coordinate3D &cutCoord, scai::IndexType smoothRange)
+scai::lama::DenseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::smoothParameter(Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, scai::lama::DenseVector<ValueType> parameter, Acquisition::coordinate3D &cutCoord, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NYBig)
 {
     scai::lama::DenseVector<ValueType> savedPar = parameter;
-    
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    distBig->getOwnedIndexes(ownedIndexes);
+ 
+    for (IndexType y = 0; y < NYBig; y++) {
+        for (IndexType i = 0; i<smoothRange*2+1; i++) {
+//             if (cutCoord.x < smoothRange+4 || cutCoord )
 
-//     scai::lama::DenseVector<ValueType> cutIndices(smoothRange*2+1,0);
-    std::vector<int> cutIndices;
-//     cutIndices.resize(smoothRange*2+1, std::vector<int>(4, 0));
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices 
-        Acquisition::coordinate3D coordinate = modelCoordinatesBig.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
-        if (coordinate.x == cutCoord.x - smoothRange) {
-            for (IndexType i = 0; i<smoothRange*2+1; i++) {
-                coordinate.x = cutCoord.x - smoothRange+i;
-                cutIndices.push_back(modelCoordinatesBig.coordinate2index(coordinate));
-                // CREATE cutIndices WITH ASSEMBLY INSTEAD OF PUSH BACK
-            }
-           
-//             for (IndexType j = 0; j<smoothRange*2+1; j++) {
-//                 parameter[cutIndices[j+2]] = savedPar[cutIndices[j]]*0.05 + savedPar[cutIndices[j+1]]*0.242 + savedPar[cutIndices[j+2]]*0.399 + savedPar[cutIndices[j+3]]*0.242 + savedPar[cutIndices[j+4]]*0.05;
-//                 parameter[cutIndices[j]] = savedPar[cutIndices[j]];
-//             }
-        }
-        if (coordinate.x == cutCoord.x - smoothRange + subsetSize) {
+            parameter[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i, y, 0)] = savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i-4, y, 0)]*0.0008 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i-3, y, 0)]*0.0077 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i-2, y, 0)]*0.05 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i-1, y, 0)]*0.242 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i, y, 0)]*0.399 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i+1, y, 0)]*0.242 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i+2, y, 0)]*0.05 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i+3, y, 0)]*0.0077 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x-smoothRange+i+4, y, 0)]*0.0008;
+            
+            parameter[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i, y, 0)] = savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i-4, y, 0)]*0.0008 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i-3, y, 0)]*0.0077 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i-2, y, 0)]*0.05 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i-1, y, 0)]*0.242 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i, y, 0)]*0.399 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i+1, y, 0)]*0.242 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i+2, y, 0)]*0.05 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i+3, y, 0)]*0.0077 + savedPar[modelCoordinatesBig.coordinate2index(cutCoord.x+NX-smoothRange+i+4, y, 0)]*0.0008;
         }
     }
-    
-    std::cout << "cutIndices: " << cutIndices[10] << std::endl;
-    std::cout << "parameter: " << parameter[59605] << std::endl;
-    std::cout << "parameter: " << parameter[cutIndices[10]] << std::endl;
-    
     return parameter;
 }
 

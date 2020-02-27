@@ -105,9 +105,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::getModelSubset(KITGPI::Modelpar
  \param modelCoordinatesBig coordinate class object of the big model
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange)
+void KITGPI::Modelparameter::Elastic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NYBig)
 {
-    IndexType subsetSize = invertedModelSubset.getVelocityP().size();
     auto distBig = velocityP.getDistributionPtr();
     auto dist = invertedModelSubset.getVelocityP().getDistributionPtr();
 //     auto comm = dist.getCommunicatorPtr();
@@ -128,7 +127,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::setModelSubset(KITGPI::Modelpar
     velocityS *= eraseVector;
     velocityS += temp; //take over the values
     
-    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(distBig, modelCoordinatesBig, velocityS, subsetSize, cutCoord.at(cutCoordInd), smoothRange);
+    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityS, cutCoord.at(cutCoordInd), smoothRange, NX, NYBig);
 //     velocityS = smoothParameter;
     IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vs" ,2);
     

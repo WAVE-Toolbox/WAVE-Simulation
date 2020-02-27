@@ -304,7 +304,7 @@ int main(int argc, const char *argv[])
 
     std::vector<Acquisition::coordinate3D> cutCoord;
     Acquisition::getCutCoord("acquisition/cutCoordinations.txt", cutCoord);
-        
+
     /* --------------------------------------- */
     /* Loop over subset shots                 */
     /* --------------------------------------- */

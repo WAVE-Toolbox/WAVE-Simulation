@@ -93,9 +93,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelpa
  \param modelCoordinatesBig coordinate class object of the big model
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange)
+void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NYBig)
 {
-    IndexType subsetSize = invertedModelSubset.getVelocityP().size();
     auto distBig = velocityP.getDistributionPtr();
     auto dist = invertedModelSubset.getVelocityP().getDistributionPtr();
 //     auto comm = dist.getCommunicatorPtr();
@@ -111,8 +110,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelpa
     velocityP *= eraseVector;
     velocityP += temp; //take over the values
     
-    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(distBig, modelCoordinatesBig, velocityS, subsetSize, cutCoord.at(cutCoordInd), smoothRange);
-    IO::writeVector(velocityP, "model/setSubset_" + std::to_string(cutCoordInd) + ".vp" ,2);
+    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityP, cutCoord.at(cutCoordInd), smoothRange, NX, NYBig);
+//     velocityP = smoothParameter;
+    IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vp" ,2);
     
     temp = invertedModelSubset.getDensity(); //results of inverted subset model
     temp = shrinkMatrix*temp; //transform subset into big model
