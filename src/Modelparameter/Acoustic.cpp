@@ -6,7 +6,7 @@ using namespace scai;
 using namespace KITGPI;
 
 /*! \brief estimate sum of the memory of all model parameters
- * 
+ *
  \param dist Distribution
  */
 template <typename ValueType>
@@ -77,11 +77,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelpa
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
     
     lama::DenseVector<ValueType> temp;
-    temp = modelSubset.getVelocityP();  
+    temp = modelSubset.getVelocityP();
     
     temp = shrinkMatrix*velocityP;
     modelSubset.setVelocityP(temp);
-    IO::writeVector(temp, "model/usedSubset_" + std::to_string(cutCoordInd) + ".vp", 2);
+//    IO::writeVector(temp, "model/usedSubset_" + std::to_string(cutCoordInd) + ".vp", 2);
     
     temp = shrinkMatrix*density;
     modelSubset.setDensity(temp);
@@ -93,7 +93,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelpa
  \param modelCoordinatesBig coordinate class object of the big model
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NYBig)
+void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NY, scai::IndexType NXBig, scai::IndexType NYBig, scai::IndexType boundaryWidth)
 {
     auto distBig = velocityP.getDistributionPtr();
     auto dist = invertedModelSubset.getVelocityP().getDistributionPtr();
@@ -102,19 +102,33 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelpa
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
     shrinkMatrix.assignTranspose(shrinkMatrix);
     
-    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd),NX,NYBig,boundaryWidth);
     
     lama::DenseVector<ValueType> temp;
     temp = invertedModelSubset.getVelocityP(); //results of inverted subset model
+    //damp the boundary borders
+    for (IndexType y = 0; y < NY; y++) {
+        for (IndexType i = 0; i < boundaryWidth; i++) {
+            temp[modelCoordinates.coordinate2index(i, y, 0)] = temp[modelCoordinates.coordinate2index(i, y, 0)]*(i+1)/boundaryWidth;
+            temp[modelCoordinates.coordinate2index(NX-1-i, y, 0)] = temp[modelCoordinates.coordinate2index(NX-1-i, y, 0)]*(i+1)/boundaryWidth;
+        }
+    }
     temp = shrinkMatrix*temp; //transform subset into big model
     velocityP *= eraseVector;
     velocityP += temp; //take over the values
     
-    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityP, cutCoord.at(cutCoordInd), smoothRange, NX, NYBig);
-//     velocityP = smoothParameter;
-    IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vp" ,2);
+    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityP, cutCoord.at(cutCoordInd), smoothRange, NX, NXBig, NYBig);
+    velocityP = smoothParameter;
+//    IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vp" ,2);
     
     temp = invertedModelSubset.getDensity(); //results of inverted subset model
+    //damp the boundary borders
+    for (IndexType y = 0; y < NY; y++) {
+        for (IndexType i = 0; i < boundaryWidth; i++) {
+            temp[modelCoordinates.coordinate2index(i, y, 0)] = temp[modelCoordinates.coordinate2index(i, y, 0)]*(i+1)/boundaryWidth;
+            temp[modelCoordinates.coordinate2index(NX-1-i, y, 0)] = temp[modelCoordinates.coordinate2index(NX-1-i, y, 0)]*(i+1)/boundaryWidth;
+        }
+    }
     temp = shrinkMatrix*temp; //transform subset into big model
     density *= eraseVector;
     density += temp; //take over the values
