@@ -66,6 +66,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
  \param modelSubset subset model
  \param modelCoordinates coordinate class object of the subset
  \param modelCoordinatesBig coordinate class object of the big model
+ \param cutCoord cut coordinate
+ \param cutCoordInd cut coordinate index
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd)
@@ -91,6 +93,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelpa
  \param modelSubset subset model
  \param modelCoordinates coordinate class object of the subset
  \param modelCoordinatesBig coordinate class object of the big model
+ \param cutCoord cut coordinate
+ \param cutCoordInd cut coordinate index
+ \param smoothRange range in x direction which is to be smoothened
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NY, scai::IndexType NXBig, scai::IndexType NYBig, scai::IndexType boundaryWidth)
