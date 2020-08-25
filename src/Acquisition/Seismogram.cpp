@@ -115,8 +115,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
     for (IndexType i = 0; i < getNumTracesLocal(); i++) {
         data.getLocalStorage().getRow(tempRow, i);
         ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
-        scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
-        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        if (tempMax!=0) {
+            scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
+            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        }
     }
 }
 
