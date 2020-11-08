@@ -122,6 +122,25 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
     }
 }
 
+//! \brief Set killed traces to zero
+/*!
+ *
+ * This methode sets the killed traces from the preprocessing to zero
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::killTrace()
+{
+    if (data.getNumRows() != 0) {
+        std::vector<scai::IndexType> deadTraces = {0, 9, 11};
+        scai::lama::DenseVector<ValueType> tempRow(data.getNumColumns(), 0);
+        for (IndexType i = 0; i < 3; i++) {
+            IndexType deadTraceInd = deadTraces[i];
+            data.setRow(tempRow, deadTraceInd, scai::common::BinaryOp::COPY);
+        }
+    }
+
+}
+
 //! \brief Integrate the seismogram-traces
 /*!
  *

@@ -51,6 +51,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
     }
 }
 
+//! \brief Method to kill  Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::kill()
+{
+    for (auto &i : seismo) {
+        i.killTrace();
+    }
+}
+
 //! \brief Method to integrate the Seismogram-traces
 /*!
  *

@@ -49,6 +49,7 @@ namespace KITGPI
             void resetSeismogram();
 
             void normalizeTrace();
+            void killTrace();
             void integrateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
