@@ -312,115 +312,139 @@ int main(int argc, const char *argv[])
     }
     
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
-    shotDist = dmemo::blockDistribution(numshots, commInterShot);
-
-    for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
-        SCAI_REGION("WAVE-Simulation.shotLoop")
-        IndexType shotNumber = uniqueShotNos[shotInd];
-        
-        if (useStreamConfig) {
-            HOST_PRINT(commShot, "Switch to model shot: " << shotInd + 1 << " of " << numshots << "\n");
-            model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates, shotInd);
-            modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
-            modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
-            solver->prepareForModelling(*modelPerShot, config.get<ValueType>("DT"));
-        }       
-        
-        /* Update Source */
-        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
-        Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
-
-        sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-
-        if (!useStreamConfig) {
-            CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
-        } else {
-            CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
-        }
-
-        bool writeSource_bool;
-        try {
-            writeSource_bool = config.get<bool>("writeSource");
-        } catch (...) {
-            writeSource_bool = false; 
-        }
-        if (writeSource_bool) {
-            lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
-            KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
-        }
-
-        if (config.get<bool>("useReceiversPerShot")) {
-            receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
-        } else if (config.get<bool>("useReceiverMark")) {
-            receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
-        }
-
-        HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",
-                "\nTotal Number of time steps: " << tStepEnd << "\n");
-        wavefields->resetWavefields();
-
-        start_t = common::Walltime::get();
-
-        double start_t2 = 0.0, end_t2 = 0.0;
-
-        /* --------------------------------------- */
-        /* Loop over time steps                        */
-        /* --------------------------------------- */
-        if (!useStreamConfig) {
-            for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
-                SCAI_REGION("SOFIEM.timeLoop")
-                if ((tStep - 1) % 100 == 0) {
-                    start_t2 = common::Walltime::get();
-                }
-
-                solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-
-                if (tStep % 100 == 0 && tStep != 0) {
-                    end_t2 = common::Walltime::get();
-                    HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
-                }
-
-                if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                    wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
-                }
-            }
-        } else {                
-            for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
-                SCAI_REGION("SOFIEM.timeLoop")
-                if ((tStep - 1) % 100 == 0) {
-                    start_t2 = common::Walltime::get();
-                }
-
-                solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
-
-                if (tStep % 100 == 0 && tStep != 0) {
-                    end_t2 = common::Walltime::get();
-                    HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
-                }
-
-                if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                    wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
-                }
-            }
-        }
-
-        end_t = common::Walltime::get();
-        HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
-        
-        // check wavefield and seismogram for NaNs or infinite values
-        SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
-        
-        if (config.get<bool>("NormalizeTraces")) {
-            receivers.getSeismogramHandler().normalize();
-        }
-
-        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-        
-        solver->resetCPML();
+    if (config.get<IndexType>("useRandSource") != 0) {  
+        shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
+    } else {
+        shotDist = dmemo::blockDistribution(numshots, commInterShot);
     }
+    IndexType maxcount = 1;    
+    std::vector<scai::IndexType> filterHistoryCount(numshots, 0);
+    std::vector<scai::IndexType> uniqueShotNosRand(numShotDomains, 0); 
+    for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
+        if (config.get<IndexType>("useRandSource") != 0) {  
+            start_t = common::Walltime::get();
+            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.get<IndexType>("useRandSource"));
+            end_t = common::Walltime::get();
+            HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
+        }
+        IndexType shotNumber;
+        IndexType shotIndTrue = 0;
+        for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
+            SCAI_REGION("WAVE-Simulation.shotLoop")
+            if (config.get<IndexType>("useRandSource") == 0) {  
+                shotNumber = uniqueShotNos[shotInd];
+                shotIndTrue = shotInd;
+            } else {
+                shotNumber = uniqueShotNosRand[shotInd];
+                Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
+            }
+            
+            if (useStreamConfig) {
+                HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
+                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates, shotIndTrue);
+                modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
+                modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
+                solver->prepareForModelling(*modelPerShot, config.get<ValueType>("DT"));
+            }       
+            
+            /* Update Source */
+            std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
+            Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
 
+            sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+
+            if (!useStreamConfig) {
+                CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
+            } else {
+                CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
+            }
+
+            bool writeSource_bool;
+            try {
+                writeSource_bool = config.get<bool>("writeSource");
+            } catch (...) {
+                writeSource_bool = false; 
+            }
+            if (writeSource_bool) {
+                lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
+                KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+            }
+
+            if (config.get<bool>("useReceiversPerShot")) {
+                receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+            } else if (config.get<bool>("useReceiverMark")) {
+                receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
+            }
+
+            HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",
+                    "\nTotal Number of time steps: " << tStepEnd << "\n");
+            wavefields->resetWavefields();
+
+            start_t = common::Walltime::get();
+
+            double start_t2 = 0.0, end_t2 = 0.0;
+
+            /* --------------------------------------- */
+            /* Loop over time steps                        */
+            /* --------------------------------------- */
+            if (!useStreamConfig) {
+                for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
+
+                    SCAI_REGION("SOFIEM.timeLoop")
+                    if ((tStep - 1) % 100 == 0) {
+                        start_t2 = common::Walltime::get();
+                    }
+
+                    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
+
+                    if (tStep % 100 == 0 && tStep != 0) {
+                        end_t2 = common::Walltime::get();
+                        HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                    }
+
+                    if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                        wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                    }
+                }
+            } else {                
+                for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
+
+                    SCAI_REGION("SOFIEM.timeLoop")
+                    if ((tStep - 1) % 100 == 0) {
+                        start_t2 = common::Walltime::get();
+                    }
+
+                    solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
+
+                    if (tStep % 100 == 0 && tStep != 0) {
+                        end_t2 = common::Walltime::get();
+                        HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
+                    }
+
+                    if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                        wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                    }
+                }
+            }
+
+            end_t = common::Walltime::get();
+            HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
+            
+            // check wavefield and seismogram for NaNs or infinite values
+            SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
+            
+            if (config.get<bool>("NormalizeTraces")) {
+                receivers.getSeismogramHandler().normalize();
+            }
+
+            receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+            
+            solver->resetCPML();
+        }
+
+        if (config.get<IndexType>("useRandSource") == 0) 
+            break;
+    }
     globalEnd_t = common::Walltime::get();
 
     commAll->synchronize();

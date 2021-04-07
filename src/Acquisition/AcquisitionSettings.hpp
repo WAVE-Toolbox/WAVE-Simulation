@@ -5,6 +5,8 @@
 #include <fstream>
 #include <scai/dmemo/GeneralDistribution.hpp>
 #include <scai/lama.hpp>
+#include <algorithm>
+#include "../Common/HostPrint.hpp"
 
 namespace KITGPI
 {
@@ -359,5 +361,94 @@ namespace KITGPI
             outputFile.close();
         }
         
+        /*! \brief Generate a random shot sequence without any repeated elements and with the max appearances of one shot
+        *
+        \param uniqueShotNosRand random Shot numbers
+        \param filterHistoryCount a vector to count how much times the shot appears
+        \param uniqueShotNos unique Shot numbers
+        \param maxcount max times for one shot
+        \param useRandSource useRandSource
+        */
+        template <typename ValueType>
+        void getRandShotNos(std::vector<scai::IndexType> &uniqueShotNosRand, std::vector<scai::IndexType> &filterHistoryCount, std::vector<scai::IndexType> uniqueShotNos, scai::IndexType maxcount, scai::IndexType useRandSource)
+        {  
+            scai::IndexType numShotDomains = uniqueShotNosRand.size();
+            scai::IndexType numshots = uniqueShotNos.size(); 
+            scai::IndexType randShotInd;
+              
+            if (useRandSource == 1) {
+                std::vector<scai::IndexType> randShotIndHistory(numShotDomains, 0);
+                std::srand((int)time(0));
+                for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
+                    bool repeat = false;
+                    randShotInd = std::rand() % numshots;
+                    randShotIndHistory[shotDomainInd] = randShotInd;
+                    for (scai::IndexType i = 0; i < shotDomainInd; i++) {
+                        if (randShotIndHistory[i] == randShotInd) {
+                            shotDomainInd--;
+                            repeat = true;
+                            break;
+                        }
+                    }
+                    if (filterHistoryCount[randShotInd] >= maxcount) {
+                        if (!repeat) 
+                            shotDomainInd--;
+                    } else if (!repeat) {
+                        uniqueShotNosRand[shotDomainInd] = uniqueShotNos[randShotInd];
+                        filterHistoryCount[randShotInd]++;
+                    }
+                }
+            } else if (useRandSource == 2) {
+                scai::IndexType startShotInd = 0;
+                if (filterHistoryCount[0] != filterHistoryCount[numshots-1]) {
+                    for (scai::IndexType shotInd = 0; shotInd < numshots-1; shotInd++) { 
+                        if (filterHistoryCount[shotInd] != filterHistoryCount[shotInd+1]) {
+                            startShotInd = shotInd + 1;
+                        }
+                    }
+                }
+                for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
+                    randShotInd = startShotInd + shotDomainInd;
+                    uniqueShotNosRand[shotDomainInd] = uniqueShotNos[randShotInd];
+                    filterHistoryCount[randShotInd]++;
+                }
+            }
+        }
+                
+        /*! \brief Write to randSource-file
+        *
+        \param comm Communicator
+        \param randSourceFilename Name of randSource-file
+        \param uniqueShotNosRand unique Shot numbers randomly
+        \param stage inversion stage
+        \param iteration inversion iteration
+        \param useRandSource useRandSource
+        */
+        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string randSourceFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandSource)
+        {      
+            int myRank = comm->getRank();  
+            if (useRandSource != 0 && myRank == MASTERGPI) {
+                std::ofstream outputFile; 
+                if (stage == 1 && iteration == 1) {
+                    outputFile.open(randSourceFilename);
+                    outputFile << "# ShotNumber records during inversion\n"; 
+                    outputFile << "# random source type = " << useRandSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
+                    outputFile << "# Stage | Iteration | shotNumbers\n"; 
+                } else {                    
+                    outputFile.open(randSourceFilename, std::ios_base::app);
+                    outputFile << std::scientific;
+                }
+                outputFile << std::setw(5) << stage << std::setw(10) << iteration;
+                for (unsigned i = 0; i < uniqueShotNosRand.size(); i++) {  
+                    if (i == 0) {
+                        outputFile << std::setw(9) << uniqueShotNosRand[i];
+                    } else {
+                        outputFile << std::setw(4) << uniqueShotNosRand[i];
+                    }
+                }
+                outputFile << "\n";
+                outputFile.close();
+            }
+        }
     }
 }
