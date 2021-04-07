@@ -11,6 +11,7 @@
 // #include <scai/lama/matrix/HybridMatrix.hpp>
 #include <cmath>
 #include <scai/tracing.hpp>
+#include <scai/lama/fft.hpp>
 
 namespace KITGPI
 {
@@ -198,6 +199,74 @@ namespace KITGPI
         scai::IndexType time2index(ValueType time, ValueType DT)
         {
             return (static_cast<scai::IndexType>(time / DT + 0.5));
+        }
+        
+        /*! \brief apply Hilbert transform to data
+        *
+        \param data Input matrix
+        */
+        template <typename ValueType>
+        void hilbert(scai::lama::DenseMatrix<ValueType> &data)
+        {
+            typedef scai::common::Complex<scai::RealType<ValueType>> ComplexValueType;
+            
+            scai::IndexType nfLength = Common::calcNextPowTwo<ValueType>(data.getNumColumns());
+            auto nsDist = data.getColDistributionPtr();
+            auto nfDist = std::make_shared<scai::dmemo::NoDistribution>(nfLength);
+            scai::lama::DenseVector<ComplexValueType> h;
+            scai::lama::DenseVector<ComplexValueType> fDataTrace;
+            scai::lama::DenseMatrix<ComplexValueType> fData;
+            
+            /* calculation of the vector h */
+            h = scai::lama::fill<scai::lama::DenseVector<ComplexValueType>>(nfLength, 0.0);
+            if ((2*(nfLength/2))==nfLength) {
+                /* nfLength is even */
+                h[0]=1.0;
+                h[nfLength/2]=1.0;
+                for (int i=1;i<(nfLength/2);i++) {
+                    h[i] = 2.0;                 
+                }
+            } else {
+                /* nfLength is odd */
+                h[0]=1.0;
+                for (int i=1;i<((nfLength+1)/2);i++) {
+                    h[i]=2.0;                
+                }
+            }
+            
+            fData = scai::lama::cast<ComplexValueType>(data);
+            fData.resize(data.getRowDistributionPtr(), std::make_shared<scai::dmemo::NoDistribution>(nfLength));
+
+            scai::lama::fft<ComplexValueType>(fData, 1);
+
+            fData.scaleColumns(h);
+
+            fData *= (1.0 / ValueType(nfLength)); // proper fft normalization
+
+            scai::lama::ifft<ComplexValueType>(fData, 1);
+            fData.resize(data.getRowDistributionPtr(), data.getColDistributionPtr());
+            fData = -fData;
+            data = scai::lama::imag(fData);
+        }
+        
+        /*! \brief apply Hilbert transform to data
+        *
+        \param data Input matrix
+        */
+        template <typename ValueType>
+        void envelope(scai::lama::DenseMatrix<ValueType> &data)
+        {
+            scai::lama::DenseMatrix<ValueType> dataImag = data;
+            scai::lama::DenseVector<ValueType> dataTrace;
+            hilbert(dataImag);
+            data.binaryOp(data, scai::common::BinaryOp::MULT, data);
+            dataImag.binaryOp(dataImag, scai::common::BinaryOp::MULT, dataImag);
+            data.binaryOp(data, scai::common::BinaryOp::ADD, dataImag);
+            for (int i=0; i<data.getNumRows(); i++) {
+                data.getRow(dataTrace, i);   
+                dataTrace = scai::lama::sqrt(dataTrace);
+                data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+            }
         }
     }
 }

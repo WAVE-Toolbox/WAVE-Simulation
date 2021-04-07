@@ -20,6 +20,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
     resampleMat = rhs.resampleMat;
+    outputEnvelope = rhs.outputEnvelope;
 }
 //! \brief swap function
 /*!
@@ -35,6 +36,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(seismoType, rhs.seismoType);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
+    std::swap(outputEnvelope, rhs.outputEnvelope);
     data.swap(rhs.data);
 }
 
@@ -66,6 +68,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
+        if (outputEnvelope == 1) Common::envelope(dataResample);
 
         std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
 
@@ -110,7 +113,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 {
-
     scai::hmemo::HArray<ValueType> tempRow;
     for (IndexType i = 0; i < getNumTracesLocal(); i++) {
         data.getLocalStorage().getRow(tempRow, i);
@@ -120,25 +122,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
             data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
     }
-}
-
-//! \brief Set killed traces to zero
-/*!
- *
- * This methode sets the killed traces from the preprocessing to zero
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::killTrace()
-{
-    if (data.getNumRows() != 0) {
-        std::vector<scai::IndexType> deadTraces = {0, 9, 11};
-        scai::lama::DenseVector<ValueType> tempRow(data.getNumColumns(), 0);
-        for (IndexType i = 0; i < 3; i++) {
-            IndexType deadTraceInd = deadTraces[i];
-            data.setRow(tempRow, deadTraceInd, scai::common::BinaryOp::COPY);
-        }
-    }
-
 }
 
 //! \brief Integrate the seismogram-traces
@@ -259,6 +242,16 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSeismoDT(ValueType seismoDT)
     if (this->getNumSamples() != 0) {
         Common::calcResampleMat<ValueType>(resampleMat, getNumSamples(), resampleCoeff);
     }
+}
+
+//! \brief Setter methode to set outputEnvelope.
+/*!
+ \param outputEnvelope outputEnvelope
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setEnvelopTrace(scai::IndexType envelopTraces)
+{
+    outputEnvelope = envelopTraces;
 }
 
 //! \brief Getter method for #SeismogramType

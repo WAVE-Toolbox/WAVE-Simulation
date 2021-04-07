@@ -51,18 +51,6 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::normalize()
     }
 }
 
-//! \brief Method to kill  Seismogram-traces
-/*!
- *
- */
-template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::kill()
-{
-    for (auto &i : seismo) {
-        i.killTrace();
-    }
-}
-
 //! \brief Method to integrate the Seismogram-traces
 /*!
  *
@@ -272,6 +260,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setSeismoDT(ValueType se
 {
     for (auto &i : seismo) {
         i.setSeismoDT(seismoDT);
+    }
+}
+
+//! \brief Setter methode to set outputEnvelope.
+/*!
+ \param envelopTraces outputEnvelope
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setEnvelopTrace(scai::IndexType envelopTraces)
+{
+    for (auto &i : seismo) {
+        i.setEnvelopTrace(envelopTraces);
     }
 }
 

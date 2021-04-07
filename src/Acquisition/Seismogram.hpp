@@ -49,7 +49,6 @@ namespace KITGPI
             void resetSeismogram();
 
             void normalizeTrace();
-            void killTrace();
             void integrateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
@@ -74,6 +73,7 @@ namespace KITGPI
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
             void setSeismoDT(ValueType seismoDT);
+            void setEnvelopTrace(scai::IndexType envelopTraces);
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -96,6 +96,7 @@ namespace KITGPI
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;
+            scai::IndexType outputEnvelope; // output envelope
         };
     }
 }

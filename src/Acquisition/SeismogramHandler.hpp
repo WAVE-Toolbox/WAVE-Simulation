@@ -28,7 +28,6 @@ namespace KITGPI
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
             void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
             void normalize();
-            void kill();
             void integrate();
             void resetData();
             void resetSeismograms();
@@ -36,9 +35,9 @@ namespace KITGPI
 
             void setSourceCoordinate(scai::IndexType sourceCoord);
             void setDT(ValueType newDT);
-            void setNormalizeTraces(scai::IndexType normalize);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
             void setSeismoDT(ValueType seismoDT);
+            void setEnvelopTrace(scai::IndexType envelopTraces);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);
