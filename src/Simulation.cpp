@@ -257,7 +257,7 @@ int main(int argc, const char *argv[])
         Acquisition::writeCutCoordToFile(config.get<std::string>("cutCoordinatesFilename"), cutCoordinates, uniqueShotNos);        
     }
     
-    if (!config.get<bool>("useReceiversPerShot")) {
+    if (!config.get<bool>("useReceiversPerShot") && !config.get<bool>("useReceiverMark")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
     
@@ -351,6 +351,8 @@ int main(int argc, const char *argv[])
 
         if (config.get<bool>("useReceiversPerShot")) {
             receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+        } else if (config.get<bool>("useReceiverMark")) {
+            receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
         }
 
         HOST_PRINT(commShot, "Start time stepping for shot " << shotInd << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n",

@@ -176,6 +176,21 @@ namespace KITGPI
             }
         }
 
+        /*! \brief compute vector of unique shot numbers
+        *
+        \param uniqueShotNo vector with all shot numbers, each included only once
+        \param sourceSettings vector of sourceSettings structs
+        */
+        inline void getuniqueShotInd(scai::IndexType &shotInd, std::vector<scai::IndexType> uniqueShotNo, scai::IndexType shotNumber)
+        {
+            for (unsigned i = 0; i < uniqueShotNo.size(); i++) {
+                if (uniqueShotNo[i] == shotNumber) {
+                    shotInd = i;
+                    break;
+                }
+            }
+        }
+        
         /*! \brief Read all receiver settings into vector of receiverSettings
          *
          \param allSettings vector of receiverSettings structs
