@@ -78,7 +78,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
  \param cutCoordInd cut coordinate index
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoordinates, scai::IndexType cutCoordInd)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoordinates, scai::IndexType cutCoordInd)
 {
     auto distBig = velocityP.getDistributionPtr();
     auto dist = modelSubset.getVelocityP().getDistributionPtr();
