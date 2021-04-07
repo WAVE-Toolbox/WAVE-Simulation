@@ -66,17 +66,17 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
  \param modelSubset subset model
  \param modelCoordinates coordinate class object of the subset
  \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoord cut coordinate
+ \param cutCoordinates cut coordinate
  \param cutCoordInd cut coordinate index
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd)
+void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoordinates, scai::IndexType cutCoordInd)
 {
     auto distBig = velocityP.getDistributionPtr();
     auto dist = modelSubset.getVelocityP().getDistributionPtr();
 //     auto comm = dist.getCommunicatorPtr();
 
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoordinates.at(cutCoordInd));
     
     lama::DenseVector<ValueType> temp;
     temp = modelSubset.getVelocityP();
@@ -93,21 +93,21 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelSubset(KITGPI::Modelpa
  \param modelSubset subset model
  \param modelCoordinates coordinate class object of the subset
  \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoord cut coordinate
+ \param cutCoordinates cut coordinate
  \param cutCoordInd cut coordinate index
  \param smoothRange range in x direction which is to be smoothened
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoord, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NY, scai::IndexType NXBig, scai::IndexType NYBig, scai::IndexType boundaryWidth)
+void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelparameter::Modelparameter<ValueType> &invertedModelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoordinates, scai::IndexType cutCoordInd, scai::IndexType smoothRange, scai::IndexType NX, scai::IndexType NY, scai::IndexType NXBig, scai::IndexType NYBig, scai::IndexType boundaryWidth)
 {
     auto distBig = velocityP.getDistributionPtr();
     auto dist = invertedModelSubset.getVelocityP().getDistributionPtr();
 //     auto comm = dist.getCommunicatorPtr();
 
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd));
+    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoordinates.at(cutCoordInd));
     shrinkMatrix.assignTranspose(shrinkMatrix);
     
-    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoord.at(cutCoordInd),NX,NYBig,boundaryWidth);
+    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoordinates.at(cutCoordInd),NX,NYBig,boundaryWidth);
     
     lama::DenseVector<ValueType> temp;
     temp = invertedModelSubset.getVelocityP(); //results of inverted subset model
@@ -122,7 +122,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::setModelSubset(KITGPI::Modelpa
     velocityP *= eraseVector;
     velocityP += temp; //take over the values
     
-    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityP, cutCoord.at(cutCoordInd), smoothRange, NX, NXBig, NYBig);
+    scai::lama::DenseVector<ValueType> smoothParameter = this->smoothParameter(modelCoordinatesBig, velocityP, cutCoordinates.at(cutCoordInd), smoothRange, NX, NXBig, NYBig);
     velocityP = smoothParameter;
 //    IO::writeVector(velocityS, "model/setSubset_" + std::to_string(cutCoordInd) + ".vp" ,2);
     

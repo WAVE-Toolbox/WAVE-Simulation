@@ -55,7 +55,7 @@ int main(int argc, const char *argv[])
     Configuration::Configuration config;
     config.init(argv[1]);
     
-    Configuration::Configuration configStream;
+    Configuration::Configuration configBig;
     bool useStreamConfig;
     try {
         useStreamConfig = config.get<bool>("useStreamConfig");
@@ -64,7 +64,7 @@ int main(int argc, const char *argv[])
     }
     
     if (useStreamConfig){
-        configStream.readFromFile(config.get<std::string>("streamConfigFilename"),true);    
+        configBig.readFromFile(config.get<std::string>("streamConfigFilename"),true);    
     }
     
     verbose = config.get<bool>("verbose");
@@ -233,20 +233,45 @@ int main(int argc, const char *argv[])
     /* Acquisition geometry                    */
     /* --------------------------------------- */
     start_t = common::Walltime::get();
-    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
-    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
     // build Settings for SU?
     //settings = su.getSourceSettings(shotNumber); // currently not working, expecting a sourceSettings struct and not a vector of sourceSettings structs
     //         su.buildAcqMatrixSource(config.get<std::string>("SourceSignalFilename"), modelCoordinates.getDH());
     //         allSettings = su.getSourceSettingsVec();
 
     Acquisition::Sources<ValueType> sources;
+    Acquisition::Receivers<ValueType> receivers;    
     
+    Acquisition::Coordinates<ValueType> modelCoordinatesBig;
+
+    if (useStreamConfig){       
+        modelCoordinatesBig.init(configBig);
+        dmemo::DistributionPtr distBig = nullptr;
+        distBig = std::make_shared<dmemo::BlockDistribution>(modelCoordinatesBig.getNGridpoints(), commShot); 
+        modelBig->init(configBig, ctx, distBig, modelCoordinatesBig);   
+    }
+
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;    
+    std::vector<Acquisition::coordinate3D> cutCoordinates;
+    if (useStreamConfig) {
+        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig);
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig);
+        Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
+    } else {
+        sources.getAcquisitionSettings(config, sourceSettings);
+    }
+    CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     IndexType numshots = uniqueShotNos.size();
+    IndexType numCuts = 1;
+    if (useStreamConfig) {
+        numCuts = cutCoordinates.size();
+        SCAI_ASSERT_ERROR(numshots == numCuts, "numshots != numCuts"); // check whether model pershot has been applied sucessfully.
+        Acquisition::writeCutCoordToFile(config.get<std::string>("cutCoordinatesFilename"), cutCoordinates, uniqueShotNos);        
+    }
 
     /* general block distribution of shot domains accorting to their weights */
     IndexType firstShot = 0;
@@ -269,8 +294,6 @@ int main(int argc, const char *argv[])
         lastShot = firstShot + 1;
     }
     
-    Acquisition::Receivers<ValueType> receivers;
-
     if (!config.get<bool>("useReceiversPerShot")) {
         receivers.init(config, modelCoordinates, ctx, dist);
     }
@@ -289,21 +312,6 @@ int main(int argc, const char *argv[])
         end_t = common::Walltime::get();
         HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
     }
-    /* --------------------------------------- */
-    /* Modelparameter for bigmodel             */
-    /* --------------------------------------- */
-    
-    Acquisition::Coordinates<ValueType> modelCoordinatesBig;
-
-    if (useStreamConfig){       
-        modelCoordinatesBig.init(configStream);
-        dmemo::DistributionPtr distBig = nullptr;
-        distBig = std::make_shared<dmemo::BlockDistribution>(modelCoordinatesBig.getNGridpoints(), commShot); 
-        modelBig->init(configStream, ctx, distBig, modelCoordinatesBig);   
-    }
-
-    std::vector<Acquisition::coordinate3D> cutCoord;
-    Acquisition::getCutCoord("acquisition/cutCoordinations.txt", cutCoord);
 
     /* --------------------------------------- */
     /* Loop over subset shots                 */
@@ -311,12 +319,12 @@ int main(int argc, const char *argv[])
     
     IndexType cutCoordSize = 1;
     if (useStreamConfig) {
-        cutCoordSize = cutCoord.size();
+        cutCoordSize = cutCoordinates.size();
         }
 
     for (IndexType cutCoordInd = 0; cutCoordInd < cutCoordSize; cutCoordInd++) {
         if (useStreamConfig) {
-            modelBig->getModelSubset(*model,modelCoordinates,modelCoordinatesBig,cutCoord,cutCoordInd);
+            modelBig->getModelSubset(*model,modelCoordinates,modelCoordinatesBig,cutCoordinates,cutCoordInd);
         }
         
         model->prepareForModelling(modelCoordinates, ctx, dist, commShot);

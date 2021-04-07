@@ -131,7 +131,7 @@ initReceiverFromSU=0                           # 1=initialize receivers from SU 
 #			Wavefield Snapshots			    #
 #-------------------------------------------------------------------#
 # Wavefield snapshots
-snapType=2                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
+snapType=0                # 0=don't save snapshots 1=save velocities 2=save pressure/stress 3=save energy
 WavefieldFileName=wavefields/wavefield        # location of wavefields
 tFirstSnapshot=0       			              # Time of first snapshot in seconds
 tLastSnapshot=2         		              # Time of last snapshot in seconds

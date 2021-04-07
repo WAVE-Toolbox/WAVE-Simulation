@@ -121,6 +121,42 @@ namespace KITGPI
             }
         }
 
+        /*! \brief adjust sourceSettings for big model to settings for one model pershot
+        *
+        \param settings vector of sourceSettings structs corresponding to model pershot 
+        \param allSettings vector of sourceSettings structs with settings for big model
+        \param cutCoordinates coordinates to extract corresponding model pershot        
+        */
+        template <typename ValueType>
+        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &settings, std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> const allSettings, std::vector<KITGPI::Acquisition::coordinate3D> const cutCoordinates)
+        {
+            settings.clear();
+            settings = allSettings;
+            for (unsigned i = 0; i < allSettings.size(); i++) {
+                settings[i].sourceCoords.x -= cutCoordinates[i].x;
+                settings[i].sourceCoords.y -= cutCoordinates[i].y;
+                settings[i].sourceCoords.z -= cutCoordinates[i].z;
+            }
+        }
+        
+        /*! \brief adjust receiverSettings for big model to settings for one model pershot
+        *
+        \param settings vector of receiverSettings structs corresponding to model pershot 
+        \param allSettings vector of receiverSettings structs with settings for big model
+        \param cutCoordinates coordinates to extract corresponding model pershot        
+        */
+        template <typename ValueType>
+        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::receiverSettings> &settings, std::vector<KITGPI::Acquisition::receiverSettings> const allSettings, std::vector<KITGPI::Acquisition::coordinate3D> const cutCoordinates, scai::IndexType shotIndTrue)
+        {
+            settings.clear();
+            settings = allSettings;
+            for (unsigned i = 0; i < allSettings.size(); i++) {
+                settings[i].receiverCoords.x -= cutCoordinates[shotIndTrue].x;
+                settings[i].receiverCoords.y -= cutCoordinates[shotIndTrue].y;
+                settings[i].receiverCoords.z -= cutCoordinates[shotIndTrue].z;
+            }
+        }
+
         /*! \brief compute vector of unique shot numbers
         *
         \param uniqueShotNo vector with all shot numbers, each included only once
@@ -266,54 +302,47 @@ namespace KITGPI
             return (sourcecoords1D);
         }
         
-        /*! \brief Get matrix that multiplies with model matrices to get a subset
-        \param fileName cut coordinations filename where the coordinates are where to cut the subset
-        \param cutCoord 3D coordinates where to cut the subset
+        /*! \brief coordinates of cutting model per shot
+        \param cutCoordinates coordinates of cutting model per shot
+        \param sourceSettingsBig sourceSettings for the big model
         */
-        inline void getCutCoord(std::string fileName, std::vector<KITGPI::Acquisition::coordinate3D> &cutCoord)
+        template <typename ValueType>
+        inline void getCutCoord(std::vector<KITGPI::Acquisition::coordinate3D> &cutCoordinates, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig)
         {
-            std::ifstream istream(fileName, std::ios::binary);
-
-                cutCoord.clear();
-                Acquisition::coordinate3D coordinate;
-                if (istream.is_open()) {
-                    std::string line;
-                    while (getline(istream, line)) {
-                        std::stringstream strings(line);
-                        std::vector<std::string> vecStrings;
-
-                        char firstChar = strings.peek();
-                        if ((firstChar == '#') || (line.empty() || (std::all_of(line.begin(), line.end(), isspace)))) {
-                            continue;
-                        } else {
-                            std::string tempStr;
-                            while (strings >> tempStr) {
-                                vecStrings.push_back(tempStr);
-                            }
-
-                            if (vecStrings.size() != 3) {
-                                COMMON_THROWEXCEPTION("Not three parameters (x y z) in line of cut coordination file (" << fileName << ")")
-                            }
-
-                            try {
-                                coordinate.x = std::stoi(vecStrings[0]);
-                                coordinate.y = std::stoi(vecStrings[1]);
-                                coordinate.z = std::stoi(vecStrings[2]);
-                            }
-
-                            catch (const std::invalid_argument &ia) {
-                                COMMON_THROWEXCEPTION("Invalid argument while reading file " << fileName << " Bad line: " << line << " Message: " << ia.what());
-                            }
-
-                            catch (const std::out_of_range &oor) {
-                                COMMON_THROWEXCEPTION("Argument out of range while reading file " << fileName << " Bad line: " << line << oor.what());
-                            }
-                            cutCoord.push_back(coordinate);
-                        }
-                    }
-                } else {
-                    COMMON_THROWEXCEPTION("Could not open cut coordination file " << fileName);
-                }
+            cutCoordinates.clear();
+            std::vector<scai::IndexType> uniqueShotNos;
+            Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
+            Acquisition::coordinate3D coordinate;
+            SCAI_ASSERT(sourceSettingsBig.size() == uniqueShotNos.size(), "sourceSettingsBig.size() != uniqueShotNos.size()");
+            std::vector<scai::IndexType> uniqueShotNosX;
+            for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {               
+                uniqueShotNosX.push_back(sourceSettingsBig[i].sourceCoords.x);
+            }
+            auto minX = min(uniqueShotNosX.begin(), uniqueShotNosX.end());
+            for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {               
+                coordinate.x = sourceSettingsBig[i].sourceCoords.x - *minX;
+                coordinate.y = 0;
+                coordinate.z = 0;
+                cutCoordinates.push_back(coordinate);
+            }
         }
+        
+        /*! \brief Write to cutCoordinates-file
+        *
+        \param cutCoordinatesFilename Name of cutCoordinates-file
+        \param cutCoordinates coordinates of cutting model per shot
+        \param uniqueShotNos unique shot numbers
+        */
+        inline void writeCutCoordToFile(std::string cutCoordinatesFilename, std::vector<KITGPI::Acquisition::coordinate3D> cutCoordinates, std::vector<scai::IndexType> uniqueShotNos)
+        {
+            std::ofstream outputFile(cutCoordinatesFilename);
+            outputFile << "# Coordinate for cutting model per shot \n";
+            outputFile << "# ShotNumber | index_x | index_y | index_z\n";                
+            for (unsigned i = 0; i < uniqueShotNos.size(); i++) {  
+                outputFile << std::setw(12) << uniqueShotNos[i] << std::setw(10) << cutCoordinates[i].x << std::setw(10) << cutCoordinates[i].y << std::setw(10) << cutCoordinates[i].z << "\n";
+            }
+            outputFile.close();
+        }
+        
     }
 }
