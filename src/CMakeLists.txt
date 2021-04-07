@@ -168,7 +168,7 @@ install( TARGETS Simulation DESTINATION lib )
 #  WAVE-Simulation executable                                 #
 ####################################################
 
-add_executable( prog main.cpp )
+add_executable( prog Simulation.cpp )
 
 target_link_libraries( prog Simulation ${Simulation_used_libs} )
 
