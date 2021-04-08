@@ -34,8 +34,6 @@ namespace KITGPI
 
             explicit Configuration(std::string const &filename);
 
-            void init(std::string const &filename);
-            
             void readFromFile(std::string const &filename, bool overwrite = false);
 
             void print() const;

@@ -96,11 +96,6 @@ void KITGPI::Configuration::Configuration::readFromFile(std::string const &filen
  */
 KITGPI::Configuration::Configuration::Configuration(std::string const &filename)
 {
-    init(filename);
-}
-
-void KITGPI::Configuration::Configuration::init(std::string const &filename)
-{
     readFromFile(filename, true);
 }
 
