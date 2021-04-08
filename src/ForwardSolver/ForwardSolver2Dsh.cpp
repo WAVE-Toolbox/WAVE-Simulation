@@ -76,10 +76,10 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const & /*model*/, ValueType /*DT*/)
 {
-    if (useFreeSurface == 1) {
-        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-        //    FreeSurface.setModelparameter(model);
-    }
+//     if (useFreeSurface == 1) {
+//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         //    FreeSurface.setModelparameter(model);
+//     }
 }
 
 /*! \brief Running the 2-D sh foward solver
@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Dshell");
 
@@ -122,29 +122,35 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /* Get references to required derivatives matrixes */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();
-    auto const &Dyb = derivatives.getDyb();
     auto const &Dyf = derivatives.getDyf();
-    //   lama::Matrix const &DybVelocity = derivatives.getDybVelocity();
-
+    auto const &Dyb = derivatives.getDyb();
+    
+    auto const &DybFreeSurface = derivatives.getDybFreeSurface();
+    
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
-    if (useFreeSurface) {
-        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-        //         FreeSurface.setModelparameter(model);
-    }
+//     if (useFreeSurface) {
+//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         //         FreeSurface.setModelparameter(model);
+//     }
 
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
 
     update = Dxb * Sxz;
-    update_temp = Dyb * Syz;
 
-    if (useConvPML) {
-        ConvPML.apply_vxx(update);
-        ConvPML.apply_vyy(update_temp);
+    if (useFreeSurface == 1) {
+        /* Apply image method */
+        update_temp = DybFreeSurface * Syz;
+    } else {
+        update_temp = Dyb * Syz;
     }
 
+    if (useConvPML) {
+        ConvPML.apply_sxz_x(update);
+        ConvPML.apply_syz_y(update_temp);
+    }
     update += update_temp;
 
     update *= inverseDensity;
@@ -156,7 +162,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     update = Dxf * vZ;
     if (useConvPML) {
-        ConvPML.apply_sxx_x(update);
+        ConvPML.apply_vzx(update);
     }
 
     update *= sWaveModulusAverageXZ;
@@ -165,17 +171,17 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     update = Dyf * vZ;
     if (useConvPML) {
-        ConvPML.apply_syy_y(update);
+        ConvPML.apply_vzy(update);
     }
     update *= sWaveModulusAverageYZ;
 
     Syz += update;
 
     /* Apply free surface to stress update */
-    if (useFreeSurface) {
-        SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
-        //       FreeSurface.apply(vZ, Sxz, Syz);
-    }
+//     if (useFreeSurface) {
+//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         //       FreeSurface.apply(vZ, Sxz, Syz);
+//     }
 
     /* Apply the damping boundary */
     if (useDampingBoundary) {

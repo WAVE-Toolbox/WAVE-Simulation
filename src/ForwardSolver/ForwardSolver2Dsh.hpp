@@ -10,7 +10,7 @@
 #include "ForwardSolver.hpp"
 
 #include "BoundaryCondition/ABS2D.hpp"
-#include "BoundaryCondition/CPML3D.hpp"
+#include "BoundaryCondition/CPML2D.hpp"
 #include "BoundaryCondition/FreeSurface2Delastic.hpp"
 #include "SourceReceiverImpl/FDTD2Dsh.hpp"
 
@@ -34,7 +34,7 @@ namespace KITGPI
 
             ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
-            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, const Acquisition::AcquisitionGeometry<ValueType> &sources, const Modelparameter::Modelparameter<ValueType> &model, Wavefields::Wavefields<ValueType> &wavefield, const Derivatives::Derivatives<ValueType> &derivatives, scai::IndexType t) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) override;
 
             void resetCPML() override;
 
@@ -52,7 +52,7 @@ namespace KITGPI
             BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
 
-            BoundaryCondition::CPML3D<ValueType> ConvPML; //!< Damping boundary condition class
+            BoundaryCondition::CPML2D<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
 
             /* Auxiliary Vectors */

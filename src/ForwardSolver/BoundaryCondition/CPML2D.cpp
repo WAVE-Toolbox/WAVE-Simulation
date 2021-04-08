@@ -7,13 +7,17 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::resetCPML()
 {
     this->resetVector(psi_vxx);
     this->resetVector(psi_vyx);
+    this->resetVector(psi_vzx);
     this->resetVector(psi_vxy);
     this->resetVector(psi_vyy);
+    this->resetVector(psi_vzy);
 
     this->resetVector(psi_sxx_x);
     this->resetVector(psi_sxy_x);
+    this->resetVector(psi_sxz_x);
     this->resetVector(psi_sxy_y);
     this->resetVector(psi_syy_y);
+    this->resetVector(psi_syz_y);
 }
 
 //! \brief application of cpml on the derivation of sxx in x direction
@@ -30,6 +34,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_x(sc
     this->applyCPML(sxy_x, psi_sxy_x, a_x, b_x);
 }
 
+//! \brief application of cpml on the derivation of sxz in x direction
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxz_x(scai::lama::DenseVector<ValueType> &sxz_x)
+{
+    this->applyCPML(sxz_x, psi_sxz_x, a_x, b_x);
+}
+
 //! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_sxy_y(scai::lama::DenseVector<ValueType> &sxy_y)
@@ -42,6 +53,13 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syy_y(scai::lama::DenseVector<ValueType> &syy_y)
 {
     this->applyCPML(syy_y, psi_syy_y, a_y_half, b_y_half);
+}
+
+//! \brief application of cpml on the derivation of syz in y direction
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_syz_y(scai::lama::DenseVector<ValueType> &syz_y)
+{
+    this->applyCPML(syz_y, psi_syz_y, a_y, b_y);
 }
 
 //! \brief application of cpml on the derivation of vx in x direction
@@ -58,6 +76,13 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyx(scai
     this->applyCPML(vyx, psi_vyx, a_x_half, b_x_half);
 }
 
+//! \brief application of cpml on the derivation of vz in x direction
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vzx(scai::lama::DenseVector<ValueType> &vzx)
+{
+    this->applyCPML(vzx, psi_vzx, a_x_half, b_x_half);
+}
+
 //! \brief application of cpml on the derivation of vx in y direction
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vxy(scai::lama::DenseVector<ValueType> &vxy)
@@ -70,6 +95,13 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vyy(scai::lama::DenseVector<ValueType> &vyy)
 {
     this->applyCPML(vyy, psi_vyy, a_y, b_y);
+}
+
+//! \brief application of cpml on the derivation of vz in y direction
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::apply_vzy(scai::lama::DenseVector<ValueType> &vzy)
+{
+    this->applyCPML(vzy, psi_vzy, a_y_half, b_y_half);
 }
 
 //! \brief estimate memory for the absorbing boundary frame
@@ -146,13 +178,17 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPML2D<ValueType>::init(scai::dme
     /* Distributed vectors */
     this->initVector(psi_vxx, ctx, dist);
     this->initVector(psi_vyx, ctx, dist);
+    this->initVector(psi_vzx, ctx, dist);
     this->initVector(psi_vxy, ctx, dist);
     this->initVector(psi_vyy, ctx, dist);
+    this->initVector(psi_vzy, ctx, dist);
 
     this->initVector(psi_sxx_x, ctx, dist);
     this->initVector(psi_sxy_x, ctx, dist);
+    this->initVector(psi_sxz_x, ctx, dist);
     this->initVector(psi_sxy_y, ctx, dist);
     this->initVector(psi_syy_y, ctx, dist);
+    this->initVector(psi_syz_y, ctx, dist);
 
     this->initVector(a_x, ctx, dist);
     this->initVector(b_x, ctx, dist);

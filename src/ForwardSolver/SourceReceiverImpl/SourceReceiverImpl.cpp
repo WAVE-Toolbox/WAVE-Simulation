@@ -56,7 +56,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     gatherSeismogramSingle(seismo, wavefieldIN.getRefVX(), gatherSeismogram_samplesVX, t);
 }
@@ -68,7 +68,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     gatherSeismogramSingle(seismo, wavefieldIN.getRefVY(), gatherSeismogram_samplesVY, t);
 }
@@ -80,7 +80,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     gatherSeismogramSingle(seismo, wavefieldIN.getRefVZ(), gatherSeismogram_samplesVZ, t);
 }
@@ -93,7 +93,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::g
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, scai::IndexType t)
 {
     const lama::DenseVector<IndexType> &coordinates = seismo.get1DCoordinates();
     lama::DenseMatrix<ValueType> &seismogramData = seismo.getData();
@@ -130,7 +130,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     applySourceSingle(seismo, wavefieldIN.getRefVX(), applySource_samplesVX, t);
 }
@@ -142,7 +142,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     applySourceSingle(seismo, wavefieldIN.getRefVY(), applySource_samplesVY, t);
 }
@@ -154,7 +154,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
 {
     applySourceSingle(seismo, wavefieldIN.getRefVZ(), applySource_samplesVZ, t);
 }
@@ -167,7 +167,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::a
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, lama::DenseVector<ValueType> &wavefieldSingle, lama::DenseVector<ValueType> &temp, scai::IndexType t)
 {
     /* Get reference to sourcesignal storing seismogram */
     const lama::DenseMatrix<ValueType> &sourcesSignals = seismo.getData();

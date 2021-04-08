@@ -18,7 +18,7 @@ ValueType KITGPI::ForwardSolver::FD3Dvisco<ValueType>::estimateMemory(Configurat
  \param DT time sampling interval
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, const Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
     SCAI_REGION("ForwardSolver.init3Dvisco");
 
@@ -123,7 +123,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::prepareForModelling(Modelparam
  \param t current timestep
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, IndexType t)
+void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep3Dvisco");
 

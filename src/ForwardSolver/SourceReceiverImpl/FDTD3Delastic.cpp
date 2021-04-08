@@ -9,7 +9,7 @@ using namespace scai;
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t)
 {
     /* Get reference to wavefields */
     lama::DenseVector<ValueType> &Sxx = wavefield.getRefSxx();
@@ -35,7 +35,7 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::gather
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::FDTD3Delastic<ValueType>::applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t)
 {
     /* Get reference to wavefields */
     lama::DenseVector<ValueType> &Sxx = wavefield.getRefSxx();
