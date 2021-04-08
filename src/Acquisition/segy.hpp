@@ -64,6 +64,8 @@
 
 //! \brief Define the structure for Seismic Unix (SEG-Y) header
 #define SU_NFLTS USHRT_MAX /* Arbitrary limit on data array size	*/
+namespace KITGPI
+{
 struct Segy {              /* segy - trace identification header */
 
     signed tracl : 32; /* trace sequence number within line */
@@ -347,5 +349,5 @@ struct Segy {              /* segy - trace identification header */
 
     float data[SU_NFLTS];
 };
-
+}
 // \endcond

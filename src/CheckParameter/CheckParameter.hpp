@@ -20,7 +20,7 @@ namespace KITGPI
         \param modelCoordinates modelCoordinates object
         */
         template <typename ValueType>
-        void checkVariableGrid(const KITGPI::Configuration::Configuration &config, scai::dmemo::CommunicatorPtr commAll, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+        void checkVariableGrid(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
 
             scai::IndexType NX = config.get<scai::IndexType>("NX");
@@ -164,7 +164,7 @@ namespace KITGPI
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtefeactsAndInstabilities(const KITGPI::Configuration::Configuration &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
+        void checkNumericalArtefeactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
                 auto dist = model.getDensity().getDistributionPtr();
@@ -194,7 +194,8 @@ namespace KITGPI
                     auto layer = modelCoordinates.getLayer(coordinate);
 
                     if ((config.get<std::string>("equationType").compare("elastic") == 0) || (config.get<std::string>("equationType").compare("visco") == 0)) {
-                        SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= 1, "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < 1 at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
+                        SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= sqrt(2.0), "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < sqrt(2.0) at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
+                        // vp/vs = sqrt((lambda+2*mu)/mu) >= sqrt(2.0)
                     }
                     if (read_vMaxTmp[localIndex] > vMax[layer]) {
                         vMax[layer] = read_vMaxTmp[localIndex];

@@ -13,7 +13,6 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::readAllSettingsFromSU(std::vector<sourceSettings<ValueType>> &allSettings, std::string const &filename, ValueType DH)
 {
-
     allSettings.clear();
     std::vector<sourceSettings<ValueType>> sourceSettingsVecTmp;
 
@@ -66,9 +65,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::readAllSettingsFromSUComp(std::string const &filename, std::vector<sourceSettings<ValueType>> &sourceSettingsVec, ValueType DH)
 {
     sourceSettingsVec.clear();
-    std::vector<Segy> header;
+    std::vector<KITGPI::Segy> header;
     SUIO::readHeaderSU<ValueType>(filename, header);
-    Segy thisHeader;
+    KITGPI::Segy thisHeader;
 
     IndexType component = getComponentFromName(filename);
     //sourceSettingsVec.reserve(header.size());
@@ -96,9 +95,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::suHandler<ValueType>::readAllSettingsFromSUComp(std::string const &filename, std::vector<receiverSettings> &receiverSettingsVec, ValueType DH)
 {
     receiverSettingsVec.clear();
-    std::vector<Segy> header;
+    std::vector<KITGPI::Segy> header;
     SUIO::readHeaderSU<ValueType>(filename, header);
-    Segy thisHeader;
+    KITGPI::Segy thisHeader;
     IndexType component = getComponentFromName(filename);
 
     receiverSettingsVec.resize(header.size());
@@ -119,7 +118,6 @@ void KITGPI::Acquisition::suHandler<ValueType>::readAllSettingsFromSUComp(std::s
 template <typename ValueType>
 scai::IndexType KITGPI::Acquisition::suHandler<ValueType>::getComponentFromName(std::string const &filename)
 {
-
     IndexType iTmp = filename.find_last_of('.');
     std::string tmpString = filename.substr(0, iTmp);
     iTmp = tmpString.find_last_of('.');
