@@ -11,12 +11,12 @@ namespace KITGPI
         using namespace scai;
 
         /*! \brief Write lama vector to an external file
- *
- *  Write a lama vector to an external file block.
- \param vector lama vector which will be written to filename
- \param filename Name of file in which vector will be written
- \param fileFormat Output file format 1=mtx 2=lmf 3=frv
- */
+        *
+        *  Write a lama vector to an external file block.
+        \param vector lama vector which will be written to filename
+        \param filename Name of file in which vector will be written
+        \param fileFormat Output file format 1=mtx 2=lmf 3=frv
+        */
         template <typename ValueType>
         void writeVector(lama::Vector<ValueType> const &vector, std::string filename, IndexType fileFormat)
         {
@@ -49,11 +49,11 @@ namespace KITGPI
         }
 
         /*! \brief Read a Vector from file
- * 
- \param vector lama vector which will be written to filename the size of the input vector must be known before reading the data. The vector will be redistributed to the dist of the input vector.
- \param filename Name of file in which vector will be written
- \param fileFormat Output file format 1=mtx 2=lmf 3=frv
- */
+        * 
+        \param vector lama vector which will be written to filename the size of the input vector must be known before reading the data. The vector will be redistributed to the dist of the input vector.
+        \param filename Name of file in which vector will be written
+        \param fileFormat Output file format 1=mtx 2=lmf 3=frv
+        */
         template <typename ValueType>
         void readVector(scai::lama::Vector<ValueType> &vector, std::string filename, IndexType fileFormat)
         {
@@ -86,12 +86,12 @@ namespace KITGPI
         }
 
         /*! \brief Write lama Matrix to an external file
- *
- *  Write a lama matrix to an external file block.
- \param matrix lama matrix which will be written to filename
- \param filename Name of file in which matrix will be written
- \param fileFormat Output file format 1=mtx 2=lmf 3=frv
- */
+        *
+        *  Write a lama matrix to an external file block.
+        \param matrix lama matrix which will be written to filename
+        \param filename Name of file in which matrix will be written
+        \param fileFormat Output file format 1=mtx 2=lmf 3=frv
+        */
         template <typename ValueType>
         void writeMatrix(lama::Matrix<ValueType> const &matrix, std::string filename, IndexType fileFormat)
         {
@@ -121,11 +121,11 @@ namespace KITGPI
         }
 
         /*! \brief Read a Matrix from file
- * 
- \param matrix lama matrix which will be written to filename the size of the input matrix must be known before reading the data. The matrix will be redistributed to the dist of the input matrix.
- \param filename Name of file in which matrix will be written
- \param fileFormat Output file format 1=mtx 2=lmf 3=frv
- */
+        * 
+        \param matrix lama matrix which will be written to filename the size of the input matrix must be known before reading the data. The matrix will be redistributed to the dist of the input matrix.
+        \param filename Name of file in which matrix will be written
+        \param fileFormat Output file format 1=mtx 2=lmf 3=frv
+        */
         template <typename ValueType>
         void readMatrix(scai::lama::Matrix<ValueType> &matrix, std::string filename, IndexType fileFormat)
         {
@@ -162,10 +162,10 @@ namespace KITGPI
         }
 
         /*! \brief Read single row of a Matrix from file
- * 
- \param filename Name of file in which matrix will be written
- \param fileFormat Output file format 1=mtx 2=lmf 3=frv
- */
+        * 
+        \param filename Name of file in which matrix will be written
+        \param fileFormat Output file format 1=mtx 2=lmf 3=frv
+        */
         template <typename ValueType>
         hmemo::HArray<ValueType> readMatrix(std::string filename, IndexType rowNumber, IndexType fileFormat)
         {
@@ -187,7 +187,6 @@ namespace KITGPI
             }
             scai::lama::DenseStorage<ValueType> matrix;
             matrix.readFromFile(filename, rowNumber, 1);
-            //HOST_PRINT(matrix.getRowDistributionPtr()->getCommunicatorPtr(), "reading " << filename << ", fileFormat = " << fileFormat << "\n");
 
             hmemo::HArray<ValueType> localsignal = matrix.getValues();
             return (localsignal);

@@ -13,12 +13,12 @@ namespace KITGPI
     {
         using namespace scai;
 
-        //! \brief Initialize a Segy struct
+        //! \brief Initialize a KITGPI::Segy struct
         /*!
-\param tr Segy struct
-*/
+        \param tr KITGPI::Segy struct
+        */
         //template <typename ValueType>
-        inline void initSegy(Segy &tr)
+        inline void initSegy(KITGPI::Segy &tr)
         {
             /* Define parameters in tr header */
             tr.tracr = 0; /* trace sequence number within reel */
@@ -143,15 +143,15 @@ namespace KITGPI
 
         //! \brief Write a seismogram to disk in Seismic Unix (SEG-Y) format
         /*!
-*
-* This method writes the seismogram in the Seismic Unix format to disk.
-* Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
-\param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
-\param data DenseMatrix with traces of one seismogramtype
-\param coordinates1D coordinates of the traces
-\param sourceCoordinate1D source coordinate (is only !=0 if a single source is used)
-\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
-*/
+        *
+        * This method writes the seismogram in the Seismic Unix format to disk.
+        * Some header information will be calculated based on the input parameters and will be included in the seismic unix file.
+        \param filename Filename to write seismogram in Seismic Unix (SEG-Y) format
+        \param data DenseMatrix with traces of one seismogramtype
+        \param coordinates1D coordinates of the traces
+        \param sourceCoordinate1D source coordinate (is only !=0 if a single source is used)
+        \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+        */
         template <typename ValueType>
         void writeSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> const &data, scai::lama::DenseVector<scai::IndexType> const &coordinates1D, ValueType DT, scai::IndexType sourceCoordinate1D, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
@@ -189,8 +189,8 @@ namespace KITGPI
             auto writeLocalBuffer = hmemo::hostWriteAccess(localBuffer);
             char *writePointer = writeLocalBuffer.get();
 
-            // create Segy header
-            Segy tr;
+            // create KITGPI::Segy header
+            KITGPI::Segy tr;
             initSegy(tr);
 
             ValueType xr, yr, zr, x, y, z;
@@ -270,16 +270,16 @@ namespace KITGPI
 
         //! \brief Read a SU file from disk without header
         /*!
-*
-\param filename Filename to read from
-\param data Matrix where the data read is stored in
-\param ns number of samples in trace
-\param ntr number of traces
-*/
+        *
+        \param filename Filename to read from
+        \param data Matrix where the data read is stored in
+        \param ns number of samples in trace
+        \param ntr number of traces
+        */
         template <typename ValueType>
         void readDataSU(std::string const &filename, scai::lama::DenseMatrix<ValueType> &data, scai::IndexType ns, scai::IndexType ntr)
         {
-            //Segy tr;
+            //KITGPI::Segy tr;
 
             // write su pararllel
             // 1 redistribute data matrix and coordinate vector to block distribution
@@ -303,7 +303,7 @@ namespace KITGPI
             }
 
             //readAll wont check the filesize. It would makes sense to read in the Header and check if ntr and ns is correct in the su file!
-            //     std::vector<Segy> header;
+            //     std::vector<KITGPI::Segy> header;
             //     readHeaderSU(filenameTmp, header);
             //     if (header.size() != ntr) {
             //         HOST_PRINT(comm, "\n Error: seismogram '" << filenameTmp << "' has wrong number of traces " << header.size() << "(in) !=" << ntr << "\n\n\n");
@@ -341,15 +341,15 @@ namespace KITGPI
 
         //! \brief Read a single trace without header form SU
         /*!
-*
-\param filename Filename to read from
-\param data Vector where the data read is stored in
-\param traceNumber number of trace to read
-*/
+        *
+        \param filename Filename to read from
+        \param data Vector where the data read is stored in
+        \param traceNumber number of trace to read
+        */
         template <typename ValueType>
         void readSingleDataSU(std::string const &filename, scai::lama::Vector<ValueType> &data, scai::IndexType traceNumber)
         {
-            Segy tr;
+            KITGPI::Segy tr;
 
             const char *filetemp = filename.c_str();
             FILE *pFile;
@@ -373,13 +373,13 @@ namespace KITGPI
 
         //! \brief Read all headers of a SU file and store them in a standard vector
         /*!
-\param filename Name of the file
-\param header std::vecor the headers are stored in
-*/
+        \param filename Name of the file
+        \param header std::vecor the headers are stored in
+        */
         template <typename ValueType>
-        void readHeaderSU(std::string const &filename, std::vector<Segy> &header)
+        void readHeaderSU(std::string const &filename, std::vector<KITGPI::Segy> &header)
         {
-            Segy tr;
+            KITGPI::Segy tr;
 
             header.clear();
 
