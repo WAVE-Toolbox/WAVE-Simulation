@@ -1,6 +1,6 @@
 #include "Filter.hpp"
 
-/*! \brief Initialize the filter transfere function. In this state nothing is filtered when applying it.
+/*! \brief Initialize the filter transfer function. In this state nothing is filtered when applying it.
  \param dt Sampling period of the signal the filter should be applied on
  \param nt Length of the signal the filter should be applied on
  */
@@ -64,7 +64,7 @@ void KITGPI::Filter::Filter<ValueType>::calcFrequencyMat(std::string filterType,
 template <typename ValueType>
 void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly)
 {
-
+    // see https://www.cnblogs.com/xpvincent/p/5557659.html for details (in Chinese)
     poly = scai::lama::fill<scai::lama::DenseVector<ValueType>>(order + 1, 0.0);
     poly[0] = 1.0; //using this as initial factor for the convolution gives the right order of coefficients
 
@@ -107,8 +107,8 @@ void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, sc
     poly = scai::lama::real(fPoly);
 }
 
-/*! \brief Calculate the transfere function of a Butterworth filter.
- \param transFcnFmly Specifies which transfere function type should be used (currently only "butterworth" is possible)
+/*! \brief Calculate the transfer function of a Butterworth filter.
+ \param transFcnFmly Specifies which transfer function type should be used (currently only "butterworth" is possible)
  \param filterType Type of filter: "lp" = low pass, "hp" = high pass
  \param fc1 Lower corner frequency in Hz
  \param fc2 Upper corner frequency in Hz
@@ -121,11 +121,11 @@ void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::stri
     if (transFcnFmly == "butterworth") {
         calcButterworthFilt(filterType, order, fc1, fc2);
     } else {
-        COMMON_THROWEXCEPTION("Invalid transfere function family.");
+        COMMON_THROWEXCEPTION("Invalid transfer function family.");
     }
 }
 
-/*! \brief Calculate the transfere function of a Butterworth filter.
+/*! \brief Calculate the transfer function of a Butterworth filter.
  \param filterType Type of filter: "lp" = low pass, "hp" = high pass
  \param fc1 Lower corner frequency in Hz
  \param fc2 Upper corner frequency in Hz
@@ -151,8 +151,8 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
     }
 }
 
-/*! \brief Calculate the transfere function of a Butterworth low-pass filter.
- \param transFcnTmp Vector where the transfere function gets stored
+/*! \brief Calculate the transfer function of a Butterworth low-pass filter.
+ \param transFcnTmp Vector where the transfer function gets stored
  \param freqVec Frequency vector
  \param fc Corner frequency in Hz
  \param order Filter order
@@ -174,8 +174,8 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthLp(scai::lama::DenseVecto
     transFcnTmp.setValue(0, ComplexValueType(1.0, 0.0));
 }
 
-/*! \brief Calculate the transfere function of a Butterworth high-pass filter.
- \param transFcnTmp Vector where the transfere function gets stored
+/*! \brief Calculate the transfer function of a Butterworth high-pass filter.
+ \param transFcnTmp Vector where the transfer function gets stored
  \param freqVec Frequency vector
  \param fc Corner frequency in Hz
  \param order Filter order
@@ -197,8 +197,8 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthHp(scai::lama::DenseVecto
     transFcnTmp.setValue(0, ComplexValueType(0.0, 0.0));
 }
 
-/*! \brief Calculate the transfere function of a Butterworth band-pass filter.
- \param transFcnTmp Vector where the transfere function gets stored
+/*! \brief Calculate the transfer function of a Butterworth band-pass filter.
+ \param transFcnTmp Vector where the transfer function gets stored
  \param freqVec Frequency vector
  \param fc1 Lower corner frequency in Hz
  \param fc2 Upper corner frequency in Hz
