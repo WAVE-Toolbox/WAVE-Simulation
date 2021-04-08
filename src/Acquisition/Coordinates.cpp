@@ -18,18 +18,34 @@ using namespace scai;
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config) : NX(config.get<IndexType>("NX")), NY(config.get<IndexType>("NY")), NZ(config.get<IndexType>("NZ")), DH(config.get<ValueType>("DH"))
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config)
 {
     init(config);
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config){
+void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config) {
+    scai::IndexType DHInversion = 1;
+    init(config, DHInversion);
+}
+/*! \brief constructor for variable grid (to reduce inversion memery)
+ *
+ \param config Configuration class
+ *
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config, scai::IndexType DHInversion)
+{
+    init(config, DHInversion);
+}
+
+template <typename ValueType>
+void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, scai::IndexType DHInversion) {
     
-    NX=config.get<IndexType>("NX");
-    NY=config.get<IndexType>("NY");
-    NZ=config.get<IndexType>("NZ");
-    DH=config.get<ValueType>("DH");
+    NX=config.get<IndexType>("NX")/DHInversion;
+    NY=config.get<IndexType>("NY")/DHInversion;
+    NZ=config.get<IndexType>("NZ")/DHInversion;
+    DH=config.get<ValueType>("DH")*DHInversion;
     
     if (config.get<bool>("useVariableGrid")) {
         VariableGrid = true;
@@ -77,8 +93,6 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configurat
         init();
     }
 }
-
-
 
 /*! \brief constructor for variable grid
  *

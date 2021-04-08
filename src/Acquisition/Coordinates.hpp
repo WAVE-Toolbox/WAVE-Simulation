@@ -66,8 +66,10 @@ namespace KITGPI
             ~Coordinates(){};
 
             Coordinates(Configuration::Configuration const &config);
+            Coordinates(Configuration::Configuration const &config, scai::IndexType DHInversion);
             
             void init(Configuration::Configuration const &config);
+            void init(Configuration::Configuration const &config, scai::IndexType DHInversion);
             // constructor for regular grid
             Coordinates(scai::IndexType NX, scai::IndexType NY, scai::IndexType NZ, ValueType DH);
 
