@@ -18,7 +18,6 @@ namespace KITGPI
     //! \brief Common namespace
     namespace Common
     {
-
         template <typename T>
         void readColumnFromFile(std::string filename, std::vector<T> &values, unsigned int column)
         {
@@ -63,7 +62,6 @@ namespace KITGPI
         template <typename ValueType>
         void searchAndReplace(scai::lama::DenseVector<ValueType> &searchVector, ValueType threshold, ValueType replaceValue, scai::IndexType compareType)
         {
-
             // needs rework with new LAMA features
             scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
             scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
@@ -124,7 +122,6 @@ namespace KITGPI
         template <typename ValueType>
         void replaceInvalid(scai::lama::DenseVector<ValueType> &searchVector, ValueType replaceValue)
         {
-
             // needs rework with new LAMA features
             scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
             scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
@@ -133,6 +130,46 @@ namespace KITGPI
                 if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity() || -write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason
                     write_searchVector[i] = replaceValue;
                 }
+            }
+
+            write_searchVector.release();
+        }
+
+        /*! \brief Replaces velocityP (velocityP < VpVsRatio * velocityS) by velocityS
+        *
+        \param velocityP Input vector
+        \param velocityS Input vector
+        */
+        template <typename ValueType>
+        void replaceVpwithVs(scai::lama::DenseVector<ValueType> &velocityP, scai::lama::DenseVector<ValueType> const &velocityS, ValueType VpVsRatio, scai::IndexType compareType)
+        {
+            scai::hmemo::HArray<ValueType> *searchVector_Ptr = &velocityP.getLocalValues();
+            scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
+            
+            auto read_velocityS = scai::hmemo::hostReadAccess(velocityS.getLocalValues());
+            ValueType replaceValue;
+            
+            switch (compareType) {
+            case 1: {
+                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    replaceValue = VpVsRatio * read_velocityS[i];
+                    if (write_searchVector[i] < replaceValue) { 
+                        write_searchVector[i] = replaceValue;
+                    }
+                }
+                break;
+            }
+            case 2: {
+                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                    replaceValue = VpVsRatio * read_velocityS[i];
+                    if (write_searchVector[i] > replaceValue) { 
+                        write_searchVector[i] = replaceValue;
+                    }
+                }
+                break;
+            }
+            default:
+                COMMON_THROWEXCEPTION("Invalid compareType. Has to be < 3 but is " << compareType)
             }
 
             write_searchVector.release();
@@ -159,7 +196,6 @@ namespace KITGPI
         template <typename ValueType>
         void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, ValueType resamplingCoeff)
         {
-
             scai::lama::MatrixAssembly<ValueType> assembly;
 
             scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
