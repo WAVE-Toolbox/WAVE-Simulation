@@ -33,7 +33,7 @@ void KITGPI::ForwardSolver::FD3Dvisco<ValueType>::initForwardSolver(Configuratio
         this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
-    /* aalocation of auxiliary vectors*/
+    /* allocation of auxiliary vectors*/
     update.allocate(dist);
     update_temp.allocate(dist);
     vxx.allocate(dist);

@@ -32,7 +32,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configurat
         this->prepareBoundaryConditions(config, modelCoordinates, derivatives, dist, ctx);
     }
 
-    /* aalocation of auxiliary vectors*/
+    /* allocation of auxiliary vectors*/
     update.allocate(dist);
     update_temp.allocate(dist);
     vxx.allocate(dist);

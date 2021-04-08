@@ -6,3 +6,5 @@
 #include "SinThree.hpp"
 #include "SinW.hpp"
 #include "Spike.hpp"
+#include "Ricker_GRTM.hpp"
+#include "Ricker_GprMax.hpp"
