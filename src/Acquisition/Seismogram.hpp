@@ -49,11 +49,14 @@ namespace KITGPI
             void resetSeismogram();
 
             void normalizeTrace();
+            void normalizeTraceL2();
+            scai::lama::DenseVector<ValueType> getTraceL2norm();
+            scai::lama::DenseVector<ValueType> getTraceSum();
             void integrateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
             bool isFinite();
-
+            
             /* Getter functions */
             scai::IndexType getNumTracesGlobal() const;
             scai::IndexType getNumTracesLocal() const;
@@ -77,6 +80,7 @@ namespace KITGPI
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
+            KITGPI::Acquisition::Seismogram<ValueType> operator*=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
             KITGPI::Acquisition::Seismogram<ValueType> operator+(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
             KITGPI::Acquisition::Seismogram<ValueType> operator+=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
             KITGPI::Acquisition::Seismogram<ValueType> operator-(KITGPI::Acquisition::Seismogram<ValueType> const &rhs) const;
@@ -84,6 +88,7 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
           private:
+
             /* header information */
             ValueType DT;                                           //!< Temporal sampling interval in seconds
             ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds

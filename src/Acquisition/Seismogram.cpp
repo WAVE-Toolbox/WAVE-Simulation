@@ -112,16 +112,87 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
-{
-    scai::hmemo::HArray<ValueType> tempRow;
-    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-        data.getLocalStorage().getRow(tempRow, i);
-        ValueType tempMax = scai::utilskernel::HArrayUtils::max(tempRow);
-        if (tempMax!=0) {
-            scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
-            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+{    
+    if (data.getNumValues() > 0) {
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRow);
+            if (tempMax!=0) {
+                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
+                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+            }
         }
     }
+}
+
+//! \brief Normalize the seismogram-traces
+/*!
+ *
+ * This methode normalized the traces of the seismogram after the time stepping.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTraceL2()
+{    
+    if (data.getNumValues() > 0) {
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
+            if (tempMax!=0) {
+                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
+                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+            }
+        }
+    }
+}
+
+//! \brief Normalize the seismogram-traces
+/*!
+ *
+ * This methode normalized the traces of the seismogram after the time stepping.
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceL2norm()
+{    
+    scai::lama::DenseVector<ValueType> tempRow;
+    scai::lama::DenseVector<ValueType> traceL2Norm;
+    traceL2Norm.allocate(data.getRowDistributionPtr());
+    traceL2Norm = 1.0; // in this state the taper does nothing when applied
+    traceL2Norm.setContextPtr(data.getContextPtr());
+    
+    if (data.getNumValues() > 0) {
+        for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
+            data.getRow(tempRow, i);
+            traceL2Norm.setValue(i, tempRow.l2Norm());
+            if (traceL2Norm.getValue(i)==0) traceL2Norm.setValue(i,1);
+        }
+    }
+    return traceL2Norm;
+}
+
+//! \brief Normalize the seismogram-traces
+/*!
+ *
+ * This methode normalized the traces of the seismogram after the time stepping.
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceSum()
+{    
+    scai::lama::DenseVector<ValueType> tempRow;
+    scai::lama::DenseVector<ValueType> traceSum;
+    traceSum.allocate(data.getRowDistributionPtr());
+    traceSum = 1.0; // in this state the taper does nothing when applied
+    traceSum.setContextPtr(data.getContextPtr());
+    
+    if (data.getNumValues() > 0) {
+        for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
+            data.getRow(tempRow, i);
+            traceSum.setValue(i, tempRow.sum());
+            if (traceSum.getValue(i)==0) traceSum.setValue(i,1);
+        }
+    }
+    return traceSum;
 }
 
 //! \brief Integrate the seismogram-traces
@@ -132,14 +203,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace()
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 {
-
-    scai::hmemo::HArray<ValueType> tempRow;
-    for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-        data.getLocalStorage().getRow(tempRow, i);
-        for (IndexType j = 0; j < tempRow.size() - 1; j++) {
-            tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
+    if (data.getNumValues() > 0) {
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            for (IndexType j = 0; j < tempRow.size() - 1; j++) {
+                tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
+            }
+            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
-        data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
     }
 }
 
@@ -156,7 +228,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::filterTraces(Filter::Filter<Val
         freqFilter.apply(data);
     }
 }
-
 
 //! \brief Check seismogram for infinite/NaN value
 /*!
@@ -175,7 +246,6 @@ bool KITGPI::Acquisition::Seismogram<ValueType>::isFinite()
     }
     return(result_isfinite);
 }
-
 
 //! \brief Setter method for the temporal sampling DT
 /*!
@@ -465,6 +535,18 @@ template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(ValueType const &rhs)
 {
     data *= rhs;
+
+    return *this;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
+{
+    data.binaryOp(data, scai::common::BinaryOp::MULT, rhs.data);
 
     return *this;
 }
