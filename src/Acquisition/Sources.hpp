@@ -41,7 +41,7 @@ namespace KITGPI
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType>);
 
-            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings);
+            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
 
           private:

@@ -143,7 +143,6 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSignals(Configuration::Con
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType SourceLocal, IndexType NT, ValueType DT)
 {
-
     lama::DenseVector<ValueType> signalVector;
     signalVector.allocate(NT);
 
@@ -179,6 +178,16 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
     case 6:
         /* integral sin3 signal */
         SourceSignal::IntgSinThree<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        break;
+        
+    case 7:
+        /* Ricker_GprMax */
+        SourceSignal::Ricker_GprMax<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        break;
+        
+    case 8:
+        /* Ricker_GRTM */
+        SourceSignal::Ricker_GRTM<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     default:
@@ -225,7 +234,6 @@ void KITGPI::Acquisition::Sources<ValueType>::readSignalFromFile(Configuration::
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::checkRequiredNumParameter(IndexType numParameterCheck)
 {
-
     if (numParameterCheck < 6 || numParameterCheck > 10) {
         COMMON_THROWEXCEPTION("Source acquisition file has an unknown format ")
     }
@@ -389,12 +397,12 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSourceSettings)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings)
 {
     if (config.get<bool>("initSourcesFromSU"))
-        su.readAllSettingsFromSU(allSourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
+        su.readAllSettingsFromSU(allSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
     else
-        readAllSettings(allSourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+        readAllSettings(allSettings, config.get<std::string>("SourceFilename") + ".txt");
 }
 
 template <typename ValueType>
