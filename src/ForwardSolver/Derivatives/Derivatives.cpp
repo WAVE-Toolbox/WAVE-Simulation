@@ -16,7 +16,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
     std::string type = config.get<std::string>("equationType");
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if ((type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
+    if ((type.compare("sh") == 0) || (type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
         isElastic = true;
     }
 
@@ -68,7 +68,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setup(Configura
 
     std::string type = config.get<std::string>("equationType");
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
-    if ((type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
+    if ((type.compare("sh") == 0) || (type.compare("elastic") == 0) || (type.compare("visco") == 0)) {
         isElastic = true;
     }
 

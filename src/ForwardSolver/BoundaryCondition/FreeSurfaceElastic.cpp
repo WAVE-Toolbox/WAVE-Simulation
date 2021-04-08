@@ -30,6 +30,10 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
     lama::Vector<ValueType> const &pWaveModulus = model.getPWaveModulus();
     lama::Vector<ValueType> const &sWaveModulus = model.getSWaveModulus();
 
+    if (sWaveModulus.min() <= 0) {
+        std::cout << "sWaveModulus.min() = " << sWaveModulus.min() << std::endl;
+    }
+    
     SCAI_ASSERT(sWaveModulus.min() > 0, "S wave modulus can't be zero when using image method")
 
     auto temp = lama::eval<lama::DenseVector<ValueType>>(pWaveModulus - 2 * sWaveModulus);
