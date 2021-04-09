@@ -1,5 +1,4 @@
 #include "Acoustic.hpp"
-#include "../Acquisition/AcquisitionSettings.hpp"
 #include "../IO/IO.hpp"
 
 using namespace scai;
