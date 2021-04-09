@@ -355,5 +355,20 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::timesAssign(ValueType rhs)
     Syy *= rhs;
     Sxy *= rhs;
 }
+
+/*! \brief apply model transform to wavefields in inversion
+ *
+ \param rhs Abstract wavefield which is added.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Delastic<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = lhs * rhs.getRefVX();
+    VY = lhs * rhs.getRefVY();
+    Sxx = lhs * rhs.getRefSxx();
+    Syy = lhs * rhs.getRefSyy();
+    Sxy = lhs * rhs.getRefSxy();
+}
+
 template class KITGPI::Wavefields::FD2Delastic<float>;
 template class KITGPI::Wavefields::FD2Delastic<double>;

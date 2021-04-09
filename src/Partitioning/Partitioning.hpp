@@ -31,16 +31,14 @@ namespace KITGPI
     //! \brief Partitioning namespace
     namespace Partitioning
     {
-
-        //         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
-        //             *Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
-        //             \param config configuration object
-        //             \param commShot communicator of a shot domain
-        //             */
+        /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
+        *Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
+        \param config configuration object
+        \param commShot communicator of a shot domain
+        */
         // template <typename ValueType>
         IndexType getShotDomain(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll)
         {
-
             /* Definition of shot domains */
             IndexType shotDomainDefinition = config.get<int>("ShotDomainDefinition");
             IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
@@ -53,8 +51,7 @@ namespace KITGPI
                 IndexType npDomain = commAll->getSize() / numShotDomains; // number of processors for each shot domain
 
                 if (commAll->getSize() != numShotDomains * npDomain) {
-                    HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize()
-                                                                              << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n\n\n")
+                    HOST_PRINT(commAll, "\n Error: Number of MPI processes (" << commAll->getSize() << ") is not multiple of shot domains in the configuration: numShotDomains = " << numShotDomains << "\n\n\n");
                     COMMON_THROWEXCEPTION("Number of MPI processes is not multiple of shot domains in the configuration: numShotDomains");
                 }
 
@@ -67,9 +64,7 @@ namespace KITGPI
                 bool set = common::Settings::getEnvironment(shotDomain, "DOMAIN");
 
                 if (!set) {
-                    std::cout << *commAll << ", node = " << commAll->getNodeName()
-                              << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize()
-                              << ": environment variable DOMAIN not set" << std::endl;
+                    std::cout << *commAll << ", node = " << commAll->getNodeName() << ", node rank = " << commAll->getNodeRank() << " of " << commAll->getNodeSize() << ": environment variable DOMAIN not set" << std::endl;
                 }
 
                 set = commAll->all(set); // make sure that all processors will terminate
@@ -82,10 +77,10 @@ namespace KITGPI
         }
 
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
-               *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride, 1 z-dimension has stride 2 y-dimension has stride 3
-            \param config configuration object
-            \param commShot communicator of a shot domain
-            */
+        *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
+        \param config configuration object
+        \param commShot communicator of a shot domain
+        */
         template <typename ValueType>
         dmemo::DistributionPtr gridPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
         {
@@ -94,15 +89,32 @@ namespace KITGPI
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
         }
 
+        /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
+        *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
+        \param config configuration object
+        \param commShot communicator of a shot domain
+        \param DHInversion scaling factor of DH used in inversion
+        */
+        template <typename ValueType>
+        dmemo::DistributionPtr gridPartitionInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
+        {
+            IndexType NXinversion = std::ceil(config.get<IndexType>("NX") / config.get<IndexType>("DHInversion"));
+            IndexType NYinversion = std::ceil(config.get<IndexType>("NY") / config.get<IndexType>("DHInversion"));
+            IndexType NZinversion = std::ceil(config.get<IndexType>("NZ") / config.get<IndexType>("DHInversion"));
+            common::Grid3D grid(NYinversion, NZinversion, NXinversion);
+            // distribute the grid onto available processors
+            return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
+        }
+        
 #ifdef USE_GEOGRAPHER
 
         /*! \brief 
-            \param config configuration object
-            \param commShot communicator of a shot domain
-            \param coords std::vector of the coordinate Densevectors (x,y,z)
-            \param graph CSR Matrix of the graph (combined derivative matrices)
-            \param weights DenseVector of node weights for each gridpoint
-            */
+        \param config configuration object
+        \param commShot communicator of a shot domain
+        \param coords std::vector of the coordinate Densevectors (x,y,z)
+        \param graph CSR Matrix of the graph (combined derivative matrices)
+        \param weights DenseVector of node weights for each gridpoint
+        */
         template <typename ValueType>
         dmemo::DistributionPtr graphPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, std::vector<scai::lama::DenseVector<ValueType>> &coords, scai::lama::CSRSparseMatrix<ValueType> &graph, scai::lama::DenseVector<ValueType> &weights, ITI::Tool tool = ITI::Tool::geoKmeans)
         {
@@ -199,7 +211,7 @@ namespace KITGPI
             scai::lama::DenseVector<IndexType> partition;
 
             if (ITI::to_string(tool).rfind("geo", 0) == 0) {
-                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector,commShot, settings, metrics);
+                partition = ITI::ParcoRepart<IndexType, ValueType>::partitionGraph(graph, coords, weightVector, commShot, settings, metrics);
             } else {
 #ifdef USE_GEOGRAPHER_WRAPPERS
                 bool nodeWeightsUse = true; //usign unit weights
@@ -226,10 +238,10 @@ namespace KITGPI
 #endif
 
         /*! \brief calculation of the node weights (variable fd order + pml)
-            \param config configuration object
-            \param dist distributionPtr of the model
-            \param modelCoordinates coordinate object
-            */
+        \param config configuration object
+        \param dist distributionPtr of the model
+        \param modelCoordinates coordinate object
+        */
         template <typename ValueType>
         scai::lama::DenseVector<ValueType> Weights(Configuration::Configuration const &config, dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {

@@ -68,6 +68,7 @@ namespace KITGPI
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
+            void applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs);
 
           private:
             void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);

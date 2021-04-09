@@ -352,5 +352,22 @@ void KITGPI::Wavefields::FD2Dvisco<ValueType>::timesAssign(ValueType rhs)
     Rxy *= rhs;
 }
 
+/*! \brief apply model transform to wavefields in inversion
+ *
+ \param rhs Abstract wavefield which is added.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dvisco<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = lhs * rhs.getRefVX();
+    VY = lhs * rhs.getRefVY();
+    Sxx = lhs * rhs.getRefSxx();
+    Syy = lhs * rhs.getRefSyy();
+    Sxy = lhs * rhs.getRefSxy();
+    Rxx = lhs * rhs.getRefRxx();
+    Ryy = lhs * rhs.getRefRyy();
+    Rxy = lhs * rhs.getRefRxy();
+}
+
 template class KITGPI::Wavefields::FD2Dvisco<double>;
 template class KITGPI::Wavefields::FD2Dvisco<float>;

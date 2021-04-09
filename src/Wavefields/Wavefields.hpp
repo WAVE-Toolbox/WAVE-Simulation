@@ -83,6 +83,7 @@ namespace KITGPI
             virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void timesAssign(ValueType rhs) = 0;
+            virtual void applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
 
             KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);

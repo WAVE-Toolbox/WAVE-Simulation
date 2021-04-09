@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     }
 
     // read configuration parameter from file
-    KITGPI::Configuration::Configuration config(argv[1]);
+    Configuration::Configuration config(argv[1]);
 
     // Create an object of the mapping (3D-1D) class Coordinates
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     receiversRef.init(config, Coordinates, ctx, dist);
 
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
-    Acquisition::readAllSettings<ValueType>(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+    Acquisition::readAllSettings(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
 
     std::string filenameTest = config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(sourceSettings[0].sourceNo);
     std::size_t pos = filenameTest.find(".ci");

@@ -73,6 +73,7 @@ namespace KITGPI
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
+            void applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs);
 
           private:
               std::string EquationType;

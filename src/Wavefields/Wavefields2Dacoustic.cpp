@@ -311,5 +311,17 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(ValueType rhs)
     P *= rhs;
 }
 
+/*! \brief apply model transform to wavefields in inversion
+ *
+ \param rhs Abstract wavefield which is added.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+{
+    VX = lhs * rhs.getRefVX();
+    VY = lhs * rhs.getRefVY();
+    P = lhs * rhs.getRefP();
+}
+
 template class KITGPI::Wavefields::FD2Dacoustic<double>;
 template class KITGPI::Wavefields::FD2Dacoustic<float>;
