@@ -72,34 +72,36 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
     velocityS *= maskS;
 }
 
-/*! \brief If stream configuration is used, get a subset model from the big model
- \param modelSubset subset model
- \param modelCoordinates coordinate class object of the subset
+/*! \brief If stream configuration is used, get a pershot model from the big model
+ \param modelPerShot pershot model
+ \param modelCoordinates coordinate class object of the pershot
  \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinates cut coordinate
- \param cutCoordInd cut coordinate index
+ \param cutCoordinate cut coordinate 
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelSubset, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, std::vector<Acquisition::coordinate3D> cutCoordinates, scai::IndexType cutCoordInd)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
-    auto distBig = velocityP.getDistributionPtr();
-    auto dist = modelSubset.getVelocityP().getDistributionPtr();
-//     auto comm = dist.getCommunicatorPtr();
+    auto distBig = density.getDistributionPtr();
+    auto dist = modelPerShot.getDensity().getDistributionPtr();
 
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist,distBig,modelCoordinates,modelCoordinatesBig,cutCoordinates.at(cutCoordInd));
+    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
     
     lama::DenseVector<ValueType> temp;
-    temp = modelSubset.getVelocityP();
     
-    temp = shrinkMatrix*velocityP;
-    modelSubset.setVelocityP(temp);
+    temp = shrinkMatrix * velocityP;
+    modelPerShot.setVelocityP(temp);
         
-    temp = shrinkMatrix*velocityS;
-    modelSubset.setVelocityS(temp);
-//    IO::writeVector(temp, "model/usedSubset_" + std::to_string(cutCoordInd) + ".vs", 2);
+    temp = shrinkMatrix * velocityS;
+    modelPerShot.setVelocityS(temp);
     
-    temp = shrinkMatrix*density;
-    modelSubset.setDensity(temp);
+    temp = shrinkMatrix * density;
+    modelPerShot.setDensity(temp);
+    
+    temp = shrinkMatrix * tauP;
+    modelPerShot.setTauP(temp);
+        
+    temp = shrinkMatrix * tauS;
+    modelPerShot.setTauS(temp);
 }
 
 /*! \brief If stream configuration is used, get a subset model from the big model

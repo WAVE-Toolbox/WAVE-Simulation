@@ -36,10 +36,10 @@ IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation(
  \param cutCoordinates coordinate where to cut the subset
  */
 template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D &cutCoordinates)
+scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
     SparseFormat shrinkMatrix; //!< Shrink Multiplication matrix
-    shrinkMatrix.allocate(dist,distBig);
+    shrinkMatrix.allocate(dist, distBig);
       
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -48,7 +48,9 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<Va
  
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices
         Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
-        coordinate.x = coordinate.x + cutCoordinates.x; // offset depends on shot number
+        coordinate.x += cutCoordinate.x; // offset depends on shot number
+        coordinate.y += cutCoordinate.y;
+        coordinate.z += cutCoordinate.z;
         indexBig = modelCoordinatesBig.coordinate2index(coordinate);
         assembly.push(ownedIndex, indexBig, 1.0);
     }

@@ -341,7 +341,7 @@ int main(int argc, const char *argv[])
             
             if (useStreamConfig) {
                 HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
-                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates, shotIndTrue);
+                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndTrue));
                 modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
                 modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
                 solver->prepareForModelling(*modelPerShot, config.get<ValueType>("DT"));
