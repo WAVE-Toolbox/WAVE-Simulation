@@ -52,6 +52,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
     maskS.unaryOp(maskP, common::UnaryOp::SIGN);
     maskS.unaryOp(maskP, common::UnaryOp::ABS);
 
+    Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("lowerVpVsRatioTh"), 1);
+    Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("upperVpVsRatioTh"), 2);
+
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
     dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
