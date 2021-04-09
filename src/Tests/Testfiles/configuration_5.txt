@@ -1,6 +1,6 @@
 ModelRead=1
 ModelWrite=0
-ModelParametrisation=2
+ModelParameterisation=2
 ModelFilename=model/Test/testModel
 PartitionedIn=0
 PartitionedOut=0

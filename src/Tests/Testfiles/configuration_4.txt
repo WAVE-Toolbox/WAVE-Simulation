@@ -1,2 +1,2 @@
 ModelRead=1
-ModelParametrisation=3
+ModelParameterisation=3

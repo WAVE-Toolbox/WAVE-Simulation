@@ -21,19 +21,26 @@ ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryModel(scai
     return (dist->getGlobalSize() * sizeof(ValueType));
 }
 
-/*! \brief Getter method for parametrisation */
+/*! \brief Getter method for parameterisation */
 template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParametrisation()
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getParameterisation() const
 {
-    return (parametrisation);
+    return (parameterisation);
 }
 
-/*! \brief Get matrix that multiplies with model matrices to get a subset
- \param dist Distribution of the subset
+/*! \brief Set method for parameterisation */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setParameterisation(scai::IndexType const setParameterisation)
+{
+    parameterisation = setParameterisation;
+}
+
+/*! \brief Get matrix that multiplies with model matrices to get a pershot
+ \param dist Distribution of the pershot
  \param distBig Distribution of the big model
- \param modelCoordinates coordinate class object of the subset
+ \param modelCoordinates coordinate class object of the pershot
  \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinates coordinate where to cut the subset
+ \param cutCoordinate coordinate where to cut the pershot
  */
 template <typename ValueType>
 scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
@@ -94,6 +101,16 @@ scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<Value
         }
     }
     return eraseVector;
+}
+
+/*! \brief Prepare modelparameter for inversion
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
+{
+    HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
+    setParameterisation(config.get<ValueType>("parameterisation"));
+    HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
 /*! \brief Getter method for relaxation frequency */
@@ -263,8 +280,8 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
     // If the modulus is dirty, than recalculate
     if (dirtyFlagPWaveModulus) {
         HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "", "P-Wave modulus will be calculated from density and P-Wave velocity\n");
-        dirtyFlagPWaveModulus = false;
         calcModulusFromVelocity(velocityP, density, pWaveModulus);
+        dirtyFlagPWaveModulus = false;
     }
 
     return (pWaveModulus);

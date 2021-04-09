@@ -42,7 +42,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parametrisation(0), numRelaxationMechanisms(0){};
+            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parameterisation(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~Modelparameter(){};
@@ -86,14 +86,14 @@ namespace KITGPI
             virtual std::string getEquationType() const = 0;
 
             virtual scai::lama::Vector<ValueType> const &getDensity() const;
+            virtual scai::lama::Vector<ValueType> const &getVelocityP() const;
+            virtual scai::lama::Vector<ValueType> const &getVelocityS() const;
             virtual scai::lama::Vector<ValueType> const &getInverseDensity();
             virtual scai::lama::Vector<ValueType> const &getInverseDensity() const;
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus() const;
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus() const;
-            virtual scai::lama::Vector<ValueType> const &getVelocityP() const;
-            virtual scai::lama::Vector<ValueType> const &getVelocityS() const;
 
             virtual scai::lama::Vector<ValueType> const &getTauP() const;
             virtual scai::lama::Vector<ValueType> const &getTauS() const;
@@ -111,8 +111,12 @@ namespace KITGPI
             virtual void setNumRelaxationMechanisms(scai::IndexType const setNumRelaxationMechanisms);
             virtual void setRelaxationFrequency(ValueType const setRelaxationFrequency);
 
+            scai::IndexType getParameterisation() const;
+            void setParameterisation(scai::IndexType const setParameterisation);
+            
             /*! \brief Prepare the model parameters for modelling */
-            virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
+            virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;   
+            void prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
 
@@ -158,7 +162,7 @@ namespace KITGPI
             bool dirtyFlagPWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             bool dirtyFlagSWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
 
-            scai::IndexType parametrisation; //!< ==0 if P/S-wave modulus parametrisation; ==1 Velocity-parametrisation
+            scai::IndexType parameterisation; //!< ==0 if P/S-wave modulus parameterisation; ==1 Velocity-parameterisation
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             std::string equationType;
@@ -198,8 +202,6 @@ namespace KITGPI
 
             /*! \brief Calculate Averaging if they are required */
             virtual void calculateAveraging() = 0;
-
-            scai::IndexType getParametrisation();
 
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
             SparseFormat getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate);

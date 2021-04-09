@@ -31,9 +31,9 @@ void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coo
 
     // refreshModulus();
     this->getSWaveModulus();
+    this->getInverseDensity();
     //sWaveModulus is not needed after avereging. The memory should be freed after calculating the averaging.
     initializeMatrices(dist, ctx, modelCoordinates, comm);
-    this->getInverseDensity();
     calculateAveraging();
     purgeMatrices();
     HOST_PRINT(comm, "", "Model ready!\n\n");
@@ -49,8 +49,8 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
     maskS.unaryOp(maskS, common::UnaryOp::SIGN);
     maskS.unaryOp(maskS, common::UnaryOp::ABS);
 
-    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
-    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVSTh"), config.get<ValueType>("lowerVSTh"), 1);
+    Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVSTh"), config.get<ValueType>("upperVSTh"), 2);
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
 
     Common::searchAndReplace<ValueType>(density, config.get<ValueType>("lowerDensityTh"), config.get<ValueType>("lowerDensityTh"), 1);
@@ -160,7 +160,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(Configuration::Configuration co
  *  Generates a homogeneous model, which will be initialized by the two given values.
  \param ctx Context
  \param dist Distribution
- \param sWaveModulus_const S-wave modulus given as
+ \param sWaveModulus_const S-wave modulus given as ValueType
  \param rho Density given as ValueType
  */
 template <typename ValueType>

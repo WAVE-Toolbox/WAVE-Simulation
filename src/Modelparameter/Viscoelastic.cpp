@@ -298,10 +298,10 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
     IO::writeVector(density, filename + ".density", fileFormat);
-    IO::writeVector(tauP, filename + ".tauP", fileFormat);
-    IO::writeVector(tauS, filename + ".tauS", fileFormat);
     IO::writeVector(velocityP, filename + ".vp", fileFormat);
     IO::writeVector(velocityS, filename + ".vs", fileFormat);
+    IO::writeVector(tauP, filename + ".tauP", fileFormat);
+    IO::writeVector(tauS, filename + ".tauS", fileFormat);
 };
 
 //! \brief Initializsation of the Averaging matrices
@@ -400,7 +400,7 @@ std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() c
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getInverseDensity()
 {
-    COMMON_THROWEXCEPTION("Inverse density is not set for elastic modelling")
+    COMMON_THROWEXCEPTION("Inverse density is not set for visco-elastic modelling")
     return (inverseDensity);
 }
 
@@ -475,7 +475,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus() const
 {
-    SCAI_ASSERT(dirtyFlagSWaveModulus == false, "P-Wave Modulus has to be recalculated! ");
+    SCAI_ASSERT(dirtyFlagSWaveModulus == false, "S-Wave Modulus has to be recalculated! ");
     return (sWaveModulus);
 }
 
