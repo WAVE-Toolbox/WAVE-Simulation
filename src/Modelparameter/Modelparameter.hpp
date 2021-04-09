@@ -85,15 +85,15 @@ namespace KITGPI
 
             virtual std::string getEquationType() const = 0;
 
-            virtual scai::lama::DenseVector<ValueType> const &getDensity() const;
+            virtual scai::lama::Vector<ValueType> const &getDensity() const;
             virtual scai::lama::Vector<ValueType> const &getInverseDensity();
             virtual scai::lama::Vector<ValueType> const &getInverseDensity() const;
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus() const;
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus() const;
-            virtual scai::lama::DenseVector<ValueType> const &getVelocityP() const;
-            virtual scai::lama::DenseVector<ValueType> const &getVelocityS() const;
+            virtual scai::lama::Vector<ValueType> const &getVelocityP() const;
+            virtual scai::lama::Vector<ValueType> const &getVelocityS() const;
 
             virtual scai::lama::Vector<ValueType> const &getTauP() const;
             virtual scai::lama::Vector<ValueType> const &getTauS() const;

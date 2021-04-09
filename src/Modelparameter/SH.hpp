@@ -63,7 +63,7 @@ namespace KITGPI
 
             /* Getter methods for not requiered parameters */
 
-            scai::lama::DenseVector<ValueType> const &getVelocityP() const override;
+            scai::lama::Vector<ValueType> const &getVelocityP() const override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;

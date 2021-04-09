@@ -235,7 +235,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
 /*! \brief Get const reference to density model parameter
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensity() const
 {
     return (density);
 }
@@ -311,7 +311,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<Valu
  *
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityP() const
 {
     return (velocityP);
 }
@@ -328,7 +328,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setVelocityP(scai::lama:
 /*! \brief Get const reference to S-wave velocity
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getVelocityS() const
 {
     return (velocityS);
 }

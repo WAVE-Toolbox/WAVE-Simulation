@@ -65,7 +65,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getInverseDensity() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
-            scai::lama::DenseVector<ValueType> const &getVelocityS() const override;
+            scai::lama::Vector<ValueType> const &getVelocityS() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulusAverageXY() override;

@@ -14,7 +14,7 @@ ValueType KITGPI::Modelparameter::Viscoelastic<ValueType>::estimateMemory(dmemo:
     return (this->getMemoryUsage(dist, numParameter));
 }
 
-/*! \brief Prepare modellparameter for visco-elastic modelling
+/*! \brief Prepare modelparameter for visco-elastic modelling
  *
  * Applies Equation 12 from Bohlen 2002 and refreshes the modulus
  *
@@ -48,8 +48,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
     maskP.unaryOp(maskP, common::UnaryOp::ABS);
 
     lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
-    maskS.unaryOp(maskP, common::UnaryOp::SIGN);
-    maskS.unaryOp(maskP, common::UnaryOp::ABS);
+    maskS.unaryOp(maskS, common::UnaryOp::SIGN);
+    maskS.unaryOp(maskS, common::UnaryOp::ABS);
 
     Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("lowerVpVsRatioTh"), 1);
     Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("upperVpVsRatioTh"), 2);
@@ -295,7 +295,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
  \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, IndexType fileFormat) const
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
     IO::writeVector(density, filename + ".density", fileFormat);
     IO::writeVector(tauP, filename + ".tauP", fileFormat);
@@ -313,10 +313,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.Visco.initializeMatrices")
+        HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");
 
         this->calcAverageMatrixX(modelCoordinates, dist);
         this->calcAverageMatrixY(modelCoordinates, dist);
@@ -573,7 +574,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> KITGPI::Modelparameter::Viscoela
 template <typename ValueType>
 KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoelastic<ValueType>::operator-=(KITGPI::Modelparameter::Viscoelastic<ValueType> const &rhs)
 {
-    density = density -= rhs.density;
+    density -= rhs.density;
     tauS -= rhs.tauS;
     tauP -= rhs.tauP;
     velocityP -= rhs.velocityP;

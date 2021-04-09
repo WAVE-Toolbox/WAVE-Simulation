@@ -16,7 +16,7 @@ ValueType KITGPI::Modelparameter::Acoustic<ValueType>::estimateMemory(dmemo::Dis
     return (this->getMemoryUsage(dist, numParameter));
 }
 
-/*! \brief Prepare modellparameter for modelling
+/*! \brief Prepare modelparameter for modelling
  *
  * Refreshes the modulus, calculates inverse density and average Values on staggered grid
  *
@@ -44,9 +44,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Acquisitio
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration::Configuration const &config)
 {
-    lama::DenseVector<ValueType> mask(velocityP); //mask to restore vacuum
-    mask.unaryOp(mask, common::UnaryOp::SIGN);
-    mask.unaryOp(mask, common::UnaryOp::ABS);
+    lama::DenseVector<ValueType> maskP(velocityP); //mask to restore vacuum
+    maskP.unaryOp(maskP, common::UnaryOp::SIGN);
+    maskP.unaryOp(maskP, common::UnaryOp::ABS);
 
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityP, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
@@ -57,8 +57,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
     dirtyFlagAveraging = true;      // If S-Wave velocity will be changed, averaging needs to be redone
 
-    velocityP *= mask;
-    density *= mask;
+    velocityP *= maskP;
+    density *= maskP;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -274,7 +274,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
  \param fileFormat output file format mtx=1 lmf=2
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, IndexType fileFormat) const
+void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
     IO::writeVector(density, filename + ".density", fileFormat);
     IO::writeVector(velocityP, filename + ".vp", fileFormat);
@@ -289,10 +289,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, In
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Acoustic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.Acoustic.initializeMatrices")
+        HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");
 
         this->calcAverageMatrixX(modelCoordinates, dist);
         this->calcAverageMatrixY(modelCoordinates, dist);
@@ -369,7 +370,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>
 /*! \brief Get reference to S-wave velocity
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Acoustic<ValueType>::getVelocityS() const
 {
     COMMON_THROWEXCEPTION("The S-wave velocity is not defined in an acoustic simulation.")
     return (velocityS);

@@ -15,7 +15,7 @@ ValueType KITGPI::Modelparameter::Elastic<ValueType>::estimateMemory(dmemo::Dist
     return (this->getMemoryUsage(dist, numParameter));
 }
 
-/*! \brief Prepare modellparameter for modelling
+/*! \brief Prepare modelparameter for modelling
  *
  * Refreshes the modulus, calculates inverseDensity and calculates average values on staggered grid
  *
@@ -49,8 +49,8 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
     maskP.unaryOp(maskP, common::UnaryOp::ABS);
 
     lama::DenseVector<ValueType> maskS(velocityS); //mask to restore acoustic media
-    maskS.unaryOp(maskP, common::UnaryOp::SIGN);
-    maskS.unaryOp(maskP, common::UnaryOp::ABS);
+    maskS.unaryOp(maskS, common::UnaryOp::SIGN);
+    maskS.unaryOp(maskS, common::UnaryOp::ABS);
 
     Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("lowerVpVsRatioTh"), 1);
     Common::replaceVpwithVs<ValueType>(velocityP, velocityS, config.get<ValueType>("upperVpVsRatioTh"), 2);
@@ -305,7 +305,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
  \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, IndexType fileFormat) const
+void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
     IO::writeVector(density, filename + ".density", fileFormat);
     IO::writeVector(velocityP, filename + ".vp", fileFormat);
@@ -320,10 +320,11 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, Ind
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::Elastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.Elastic.initializeMatrices")
+        HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");
 
         this->calcAverageMatrixX(modelCoordinates, dist);
         this->calcAverageMatrixY(modelCoordinates, dist);
@@ -568,7 +569,7 @@ KITGPI::Modelparameter::Elastic<ValueType> KITGPI::Modelparameter::Elastic<Value
 template <typename ValueType>
 KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<ValueType>::operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs)
 {
-    density = density -= rhs.density;
+    density -= rhs.density;
     velocityP -= rhs.velocityP;
     velocityS -= rhs.velocityS;
 

@@ -15,7 +15,7 @@ ValueType KITGPI::Modelparameter::SH<ValueType>::estimateMemory(dmemo::Distribut
     return (this->getMemoryUsage(dist, numParameter));
 }
 
-/*! \brief Prepare modellparameter for modelling
+/*! \brief Prepare modelparameter for modelling
  *
  * Refreshes the modulus, calculates inverse density and average Values on staggered grid
  *
@@ -45,9 +45,9 @@ void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coo
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Configuration const &config)
 {
-    lama::DenseVector<ValueType> mask(velocityS); //mask to restore vacuum
-    mask.unaryOp(mask, common::UnaryOp::SIGN);
-    mask.unaryOp(mask, common::UnaryOp::ABS);
+    lama::DenseVector<ValueType> maskS(velocityS); //mask to restore vacuum
+    maskS.unaryOp(maskS, common::UnaryOp::SIGN);
+    maskS.unaryOp(maskS, common::UnaryOp::ABS);
 
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("lowerVPTh"), config.get<ValueType>("lowerVPTh"), 1);
     Common::searchAndReplace<ValueType>(velocityS, config.get<ValueType>("upperVPTh"), config.get<ValueType>("upperVPTh"), 2);
@@ -58,8 +58,8 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
     dirtyFlagInverseDensity = true; // If density will be changed, the inverse has to be refreshed if it is accessed
     dirtyFlagAveraging = true;      // If S-Wave velocity will be changed, averaging needs to be redone
 
-    velocityS *= mask;
-    density *= mask;
+    velocityS *= maskS;
+    density *= maskS;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -233,7 +233,7 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
  \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexType fileFormat) const
+void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
     IO::writeVector(density, filename + ".density", fileFormat);
     IO::writeVector(velocityS, filename + ".vs", fileFormat);
@@ -247,16 +247,19 @@ void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, IndexTyp
  \param comm Communicator
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr /*comm*/)
+void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
 
-    SCAI_REGION("Modelparameter.SH.initializeMatrices")
-    // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
-    this->calcAverageMatrixX(modelCoordinates, dist);
-    this->calcAverageMatrixY(modelCoordinates, dist);
+    if (dirtyFlagAveraging) {
+        SCAI_REGION("Modelparameter.SH.initializeMatrices")
+        HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");
+        // reuse of density average for the swavemodulus : sxz and syz are on the same spot as vx and vy in acoustic modeling
+        this->calcAverageMatrixX(modelCoordinates, dist);
+        this->calcAverageMatrixY(modelCoordinates, dist);
 
-    averageMatrixX.setContextPtr(ctx);
-    averageMatrixY.setContextPtr(ctx);
+        averageMatrixX.setContextPtr(ctx);
+        averageMatrixY.setContextPtr(ctx);
+    }
 }
 
 //! \brief Purge Averaging matrices to free memory
@@ -294,7 +297,7 @@ std::string KITGPI::Modelparameter::SH<ValueType>::getEquationType() const
  *
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getVelocityP() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getVelocityP() const
 {
     COMMON_THROWEXCEPTION("There is no velocityP parameter in an sh modelling")
     return (velocityP);
@@ -494,7 +497,7 @@ KITGPI::Modelparameter::SH<ValueType> KITGPI::Modelparameter::SH<ValueType>::ope
 template <typename ValueType>
 KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::operator-=(KITGPI::Modelparameter::SH<ValueType> const &rhs)
 {
-    density = density -= rhs.density;
+    density -= rhs.density;
     velocityS -= rhs.velocityS;
 
     dirtyFlagInverseDensity = true;
