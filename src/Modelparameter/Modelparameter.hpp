@@ -82,6 +82,7 @@ namespace KITGPI
              \param fileFormat Output file format 1=mtx 2=lmf
              */
             virtual void write(std::string filename, scai::IndexType fileFormat) const = 0;
+            virtual void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) = 0;
 
             virtual std::string getEquationType() const = 0;
 
@@ -94,6 +95,11 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getPWaveModulus() const;
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus();
             virtual scai::lama::Vector<ValueType> const &getSWaveModulus() const;
+            virtual scai::lama::Vector<ValueType> const &getPorosity() const;
+            virtual scai::lama::Vector<ValueType> const &getSaturation() const;
+            virtual scai::lama::Vector<ValueType> const &getDensityRockMatrix() const;
+            virtual scai::lama::Vector<ValueType> const &getBulkModulusRockMatrix() const;
+            virtual scai::lama::Vector<ValueType> const &getShearModulusRockMatrix() const;
 
             virtual scai::lama::Vector<ValueType> const &getTauP() const;
             virtual scai::lama::Vector<ValueType> const &getTauS() const;
@@ -104,18 +110,38 @@ namespace KITGPI
             virtual void setDensity(scai::lama::Vector<ValueType> const &setDensity);
             virtual void setVelocityP(scai::lama::Vector<ValueType> const &setVelocityP);
             virtual void setVelocityS(scai::lama::Vector<ValueType> const &setVelocityS);
+            virtual void setPorosity(scai::lama::Vector<ValueType> const &setPorosity);
+            virtual void setSaturation(scai::lama::Vector<ValueType> const &setSaturation);
+            virtual void setDensityRockMatrix(scai::lama::Vector<ValueType> const &setDensityRockMatrix);
+            virtual void setBulkModulusRockMatrix(scai::lama::Vector<ValueType> const &setBulkModulusRockMatrix);
+            virtual void setShearModulusRockMatrix(scai::lama::Vector<ValueType> const &setShearModulusRockMatrix);
 
             virtual void setTauP(scai::lama::Vector<ValueType> const &setTauP);
             virtual void setTauS(scai::lama::Vector<ValueType> const &setTauS);
 
             virtual void setNumRelaxationMechanisms(scai::IndexType const setNumRelaxationMechanisms);
             virtual void setRelaxationFrequency(ValueType const setRelaxationFrequency);
+            virtual void calcRockMatrixParameter(Configuration::Configuration const &config) = 0; 
+            virtual void calcWaveModulusFromPetrophysics() = 0;      
+            virtual void calcPetrophysicsFromWaveModulus() = 0;        
+            scai::lama::DenseVector<ValueType> const &getBiotCoefficient(); 
+            scai::lama::DenseVector<ValueType> const &getBiotCoefficient() const; 
+            scai::lama::DenseVector<ValueType> const &getBulkModulusM();
+            scai::lama::DenseVector<ValueType> const &getBulkModulusM() const;
+            scai::lama::DenseVector<ValueType> const &getBulkModulusKf();
+            scai::lama::DenseVector<ValueType> const &getBulkModulusKf() const;
+            
+            ValueType const getDensityWater() const; 
+            ValueType const getDensityAir() const; 
+            ValueType const getBulkModulusWater() const; 
+            ValueType const getBulkModulusAir() const; 
+            ValueType const getCriticalPorosity() const; 
 
             scai::IndexType getParameterisation() const;
             void setParameterisation(scai::IndexType const setParameterisation);
             
             /*! \brief Prepare the model parameters for modelling */
-            virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;   
+            virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
             void prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm);
 
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
@@ -178,6 +204,22 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for visco-elastic modelling.
             scai::lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for visco-elastic modelling.
 
+            scai::lama::DenseVector<ValueType> porosity; 
+            scai::lama::DenseVector<ValueType> saturation; 
+            scai::lama::DenseVector<ValueType> densityRockMatrix;        //!< Vector storing Density.
+            scai::lama::DenseVector<ValueType> bulkModulusRockMatrix;   //!< Vector storing P-wave modulus.
+            scai::lama::DenseVector<ValueType> shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
+
+            scai::lama::DenseVector<ValueType> bulkModulusKf; 
+            scai::lama::DenseVector<ValueType> BiotCoefficient;
+            scai::lama::DenseVector<ValueType> bulkModulusM;
+            
+            ValueType const DensityWater = 1000;           
+            ValueType const DensityAir = 1.29; 
+            ValueType const VelocityPWater = 1473;           
+            ValueType const VelocityPAir = 340; 
+            ValueType const CriticalPorosity = 0.4; 
+            
             scai::lama::DenseVector<ValueType> inverseDensityAverageX; //!< Vector storing inverse averaged density in x-direction.
             scai::lama::DenseVector<ValueType> inverseDensityAverageY; //!< Vector storing inverse averaged density in y-direction.
             scai::lama::DenseVector<ValueType> inverseDensityAverageZ; //!< Vector storing inverse averaged density in z-direction.

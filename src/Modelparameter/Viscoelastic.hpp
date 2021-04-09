@@ -60,6 +60,7 @@ namespace KITGPI
             void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
 
             void write(std::string filename, scai::IndexType fileFormat) const override;
+            void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) override;
 
             std::string getEquationType() const;
             
@@ -70,6 +71,9 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            void calcRockMatrixParameter(Configuration::Configuration const &config) override;
+            void calcWaveModulusFromPetrophysics() override;
+            void calcPetrophysicsFromWaveModulus() override;
 
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -108,6 +112,14 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
+            using Modelparameter<ValueType>::bulkModulusRockMatrix;   //!< Vector storing S-wave modulus.
+            using Modelparameter<ValueType>::shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
+            using Modelparameter<ValueType>::densityRockMatrix;        //!< Vector storing Density.
+            using Modelparameter<ValueType>::porosity; 
+            using Modelparameter<ValueType>::saturation; 
+            using Modelparameter<ValueType>::DensityWater;
+            using Modelparameter<ValueType>::DensityAir;
+            using Modelparameter<ValueType>::CriticalPorosity;
 
             using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::tauP;

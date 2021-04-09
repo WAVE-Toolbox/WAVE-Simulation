@@ -58,6 +58,7 @@ namespace KITGPI
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
             void write(std::string filename, scai::IndexType fileFormat) const override;
+            void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) override;
 
             std::string getEquationType() const;
 
@@ -66,6 +67,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getVelocityP() const override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
+            scai::lama::Vector<ValueType> const &getBulkModulusRockMatrix() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
             scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
@@ -77,6 +79,9 @@ namespace KITGPI
 
             scai::IndexType getNumRelaxationMechanisms() const override;
             ValueType getRelaxationFrequency() const override;
+            void calcRockMatrixParameter(Configuration::Configuration const &config) override;
+            void calcWaveModulusFromPetrophysics() override;
+            void calcPetrophysicsFromWaveModulus() override;
 
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -111,6 +116,13 @@ namespace KITGPI
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityS;
+            using Modelparameter<ValueType>::shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
+            using Modelparameter<ValueType>::densityRockMatrix;        //!< Vector storing Density.
+            using Modelparameter<ValueType>::porosity; 
+            using Modelparameter<ValueType>::saturation; 
+            using Modelparameter<ValueType>::DensityWater;
+            using Modelparameter<ValueType>::DensityAir;
+            using Modelparameter<ValueType>::CriticalPorosity;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -132,6 +144,7 @@ namespace KITGPI
 
             /* Not requiered parameters */
             using Modelparameter<ValueType>::pWaveModulus;
+            using Modelparameter<ValueType>::bulkModulusRockMatrix;
             using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::tauS;

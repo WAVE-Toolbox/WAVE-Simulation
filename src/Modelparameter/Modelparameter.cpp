@@ -191,6 +191,85 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::allocateModelparameter(s
     vector.allocate(dist);
 };
 
+/*! \brief calculate BiotCoefficient beta based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBiotCoefficient()
+{
+    BiotCoefficient = porosity / CriticalPorosity;    
+    Common::searchAndReplace<ValueType>(BiotCoefficient, 0.0, 0.0, 1);
+    Common::searchAndReplace<ValueType>(BiotCoefficient, 1.0, 1.0, 2);
+
+    return (BiotCoefficient);    
+}
+
+/*! \brief get BiotCoefficient beta based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBiotCoefficient() const
+{    
+    return (BiotCoefficient);
+}
+
+/*! \brief calculate BulkModulus Kf based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusKf()
+{        
+    scai::lama::DenseVector<ValueType> temp;
+                        
+    bulkModulusKf = saturation / this->getBulkModulusWater();
+    temp = 1 - saturation;
+    temp /= this->getBulkModulusAir();    
+    bulkModulusKf += temp; 
+    bulkModulusKf = 1 / bulkModulusKf;
+    Common::replaceInvalid<ValueType>(bulkModulusKf, 0.0); 
+    Common::searchAndReplace<ValueType>(bulkModulusKf, 0.0, 0.0, 1);
+    
+    return (bulkModulusKf); 
+}
+
+/*! \brief get BulkModulus Kf based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusKf() const
+{          
+    return (bulkModulusKf);
+}
+
+/*! \brief calculate BulkModulus M based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusM()
+{        
+    scai::lama::DenseVector<ValueType> Kf;
+    scai::lama::DenseVector<ValueType> K_ma;
+    scai::lama::DenseVector<ValueType> beta;    
+    scai::lama::DenseVector<ValueType> temp;
+    
+    K_ma = this->getBulkModulusRockMatrix();                     
+    beta = this->getBiotCoefficient();
+    Kf = this->getBulkModulusKf();
+    
+    bulkModulusM = porosity / Kf;
+    temp = beta - porosity;
+    temp /= K_ma;
+    bulkModulusM += temp;
+    bulkModulusM = 1 / bulkModulusM;
+    Common::replaceInvalid<ValueType>(bulkModulusM, 0.0);
+    Common::searchAndReplace<ValueType>(bulkModulusM, 0.0, 0.0, 1);
+    
+    return (bulkModulusM);
+}
+
+/*! \brief get BulkModulus M based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusM() const
+{            
+    return (bulkModulusM);
+}
+
 /*! \brief Calculate a modulus from velocity
  *
  *  Calculates Modulus = pow(Velocity,2) *  Density
@@ -360,6 +439,87 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setVelocityS(scai::lama:
     velocityS = setVelocityS;
 }
 
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusRockMatrix() const
+{
+    return (bulkModulusRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setBulkModulusRockMatrix(scai::lama::Vector<ValueType> const &setBulkModulusRockMatrix)
+{
+    bulkModulusRockMatrix = setBulkModulusRockMatrix;
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getShearModulusRockMatrix() const
+{
+    return (shearModulusRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setShearModulusRockMatrix(scai::lama::Vector<ValueType> const &setShearModulusRockMatrix)
+{
+    shearModulusRockMatrix = setShearModulusRockMatrix;
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityRockMatrix() const
+{
+    return (densityRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setDensityRockMatrix(scai::lama::Vector<ValueType> const &setDensityRockMatrix)
+{
+    densityRockMatrix = setDensityRockMatrix;
+}
+
+/*! \brief Get const reference to P-wave velocity
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getPorosity() const
+{
+    return (porosity);
+}
+
+/*! \brief Set P-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setPorosity(scai::lama::Vector<ValueType> const &setPorosity)
+{
+    porosity = setPorosity;
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getSaturation() const
+{
+    return (saturation);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setSaturation(scai::lama::Vector<ValueType> const &setSaturation)
+{
+    saturation = setSaturation;
+}
+
 /*! \brief Get const reference to tauP
  *
  */
@@ -394,6 +554,43 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setTauS(scai::lama::Vect
     tauS = setTauS;
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
     dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
+}
+
+/*! \brief Getter method for DensityWater */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityWater() const
+{
+    return (DensityWater);
+}
+
+/*! \brief Getter method for DensityAir */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getDensityAir() const
+{
+    return (DensityAir);
+}
+
+/*! \brief Getter method for BulkModulusWater */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusWater() const
+{
+    ValueType BulkModulusWater = DensityWater * VelocityPWater * VelocityPWater; 
+    return (BulkModulusWater);
+}
+
+/*! \brief Getter method for BulkModulusAir */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getBulkModulusAir() const
+{         
+    ValueType BulkModulusAir = DensityAir * VelocityPAir * VelocityPAir; 
+    return (BulkModulusAir);
+}
+
+/*! \brief Getter method for CriticalPorosity */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getCriticalPorosity() const
+{
+    return (CriticalPorosity);
 }
 
 //! \brief Calculate averaging matrix in x-direction
