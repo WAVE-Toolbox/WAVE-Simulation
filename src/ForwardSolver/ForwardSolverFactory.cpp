@@ -10,7 +10,7 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
 
     // Assert correctness of input values
     SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
-    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("visco") == 0 || type.compare("sh") == 0, "Unkown type");
+    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0, "Unkown type");
 
     // 2D
     if (dimension.compare("2d") == 0 && type.compare("acoustic") == 0) {
@@ -19,8 +19,8 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
     if (dimension.compare("2d") == 0 && type.compare("elastic") == 0) {
         return ForwardSolverPtr(new FD2Delastic<ValueType>);
     }
-    if (dimension.compare("2d") == 0 && type.compare("visco") == 0) {
-        return ForwardSolverPtr(new FD2Dvisco<ValueType>);
+    if (dimension.compare("2d") == 0 && type.compare("viscoelastic") == 0) {
+        return ForwardSolverPtr(new FD2Dviscoelastic<ValueType>);
     }
     if (dimension.compare("2d") == 0 && type.compare("sh") == 0) {
         return ForwardSolverPtr(new FD2Dsh<ValueType>);
@@ -33,8 +33,8 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
     if (dimension.compare("3d") == 0 && type.compare("elastic") == 0) {
         return ForwardSolverPtr(new FD3Delastic<ValueType>);
     }
-    if (dimension.compare("3d") == 0 && type.compare("visco") == 0) {
-        return ForwardSolverPtr(new FD3Dvisco<ValueType>);
+    if (dimension.compare("3d") == 0 && type.compare("viscoelastic") == 0) {
+        return ForwardSolverPtr(new FD3Dviscoelastic<ValueType>);
     }
 
     COMMON_THROWEXCEPTION("Reached end of factory without match");

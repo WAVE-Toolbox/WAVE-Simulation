@@ -6,11 +6,11 @@
 #include "ForwardSolver2Dacoustic.hpp"
 #include "ForwardSolver2Delastic.hpp"
 #include "ForwardSolver2Dsh.hpp"
-#include "ForwardSolver2Dvisco.hpp"
+#include "ForwardSolver2Dviscoelastic.hpp"
 
 #include "ForwardSolver3Dacoustic.hpp"
 #include "ForwardSolver3Delastic.hpp"
-#include "ForwardSolver3Dvisco.hpp"
+#include "ForwardSolver3Dviscoelastic.hpp"
 
 namespace KITGPI
 {

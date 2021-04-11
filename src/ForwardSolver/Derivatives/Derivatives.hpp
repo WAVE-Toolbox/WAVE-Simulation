@@ -24,7 +24,7 @@ namespace KITGPI
             class FreeSurface2Dacoustic;
 
             template <typename Type>
-            class FreeSurface2Dvisco;
+            class FreeSurface2Dviscoelastic;
 
             template <typename Type>
             class FreeSurface2Dsh;
@@ -36,7 +36,7 @@ namespace KITGPI
             class FreeSurfaceAcoustic;
 
             template <typename Type>
-            class FreeSurfaceVisco;
+            class FreeSurfaceViscoelastic;
         }
     }
 }
@@ -64,7 +64,7 @@ namespace KITGPI
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dacoustic;
                 template <typename>
-                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dvisco;
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dsh;
 
@@ -73,7 +73,7 @@ namespace KITGPI
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
                 template <typename>
-                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco;
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic;
 
                 //! \brief Default constructor
                 Derivatives() : DyfFreeSurfaceHybrid(DyfFreeSurfaceStencil, DyfFreeSurfaceSparse),

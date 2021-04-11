@@ -16,25 +16,25 @@ namespace KITGPI
     namespace Wavefields
     {
 
-        /*! \brief The class FD2Dvisco holds the wavefields for 2D visco elastic simulation
+        /*! \brief The class FD2Dviscoelastic holds the wavefields for 2D viscoelastic simulation
          *
          */
         template <typename ValueType>
-        class FD2Dvisco : public Wavefields<ValueType>
+        class FD2Dviscoelastic : public Wavefields<ValueType>
         {
 
           public:
             //! Default constructor
-            FD2Dvisco():EquationType("visco"),NumDimension(2)
+            FD2Dviscoelastic():EquationType("viscoelastic"),NumDimension(2)
             {
                 equationType = EquationType;
                 numDimension = NumDimension;
             };
 
             //! Default destructor
-            ~FD2Dvisco(){};
+            ~FD2Dviscoelastic(){};
 
-            explicit FD2Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit FD2Dviscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             void resetWavefields() override;
 
@@ -58,10 +58,10 @@ namespace KITGPI
             ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
             /* Overloading Operators */
-            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*(ValueType rhs);
-            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*=(ValueType rhs);
-            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
-            KITGPI::Wavefields::FD2Dvisco<ValueType> operator*=(KITGPI::Wavefields::FD2Dvisco<ValueType> rhs);
+            KITGPI::Wavefields::FD2Dviscoelastic<ValueType> operator*(ValueType rhs);
+            KITGPI::Wavefields::FD2Dviscoelastic<ValueType> operator*=(ValueType rhs);
+            KITGPI::Wavefields::FD2Dviscoelastic<ValueType> operator*(KITGPI::Wavefields::FD2Dviscoelastic<ValueType> rhs);
+            KITGPI::Wavefields::FD2Dviscoelastic<ValueType> operator*=(KITGPI::Wavefields::FD2Dviscoelastic<ValueType> rhs);
 
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) override;
 

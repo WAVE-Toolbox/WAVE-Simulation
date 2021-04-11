@@ -4,10 +4,10 @@
 #include "Wavefields2Dacoustic.hpp"
 #include "Wavefields2Delastic.hpp"
 #include "Wavefields2Dsh.hpp"
-#include "Wavefields2Dvisco.hpp"
+#include "Wavefields2Dviscoelastic.hpp"
 #include "Wavefields3Dacoustic.hpp"
 #include "Wavefields3Delastic.hpp"
-#include "Wavefields3Dvisco.hpp"
+#include "Wavefields3Dviscoelastic.hpp"
 
 namespace KITGPI
 {

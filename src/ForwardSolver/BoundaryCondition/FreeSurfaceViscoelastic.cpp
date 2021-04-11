@@ -1,9 +1,9 @@
-#include "FreeSurfaceVisco.hpp"
+#include "FreeSurfaceViscoelastic.hpp"
 using namespace scai;
 
 //! Default destructor
 template <typename ValueType>
-KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurfaceVisco(){};
+KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<ValueType>::~FreeSurfaceViscoelastic(){};
 
 /*! \brief Scale horizontal update with model parameter
  *
@@ -13,7 +13,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::~FreeSurf
  \param onePlusLtauS Parameter with ( 1 + L * tauS )
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model, scai::lama::Vector<ValueType> &onePlusLtauP, scai::lama::Vector<ValueType> &onePlusLtauS, ValueType DT)
 {
     /*This function sets scaling factors for (vxx+vzz) and vyy for the calculation of the horizontal updates without vertical derivatives */
 
@@ -102,7 +102,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::setM
  \param DT Temporal Sampling
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<ValueType>::init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT)
 {
 
     HOST_PRINT(dist->getCommunicatorPtr(), "", "Initialization of the free surface...\n");
@@ -138,5 +138,5 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<ValueType>::init
 }
 
 
-template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<float>;
-template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceVisco<double>;
+template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<float>;
+template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<double>;

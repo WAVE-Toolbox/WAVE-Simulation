@@ -1,4 +1,4 @@
-#include "Wavefields3Dvisco.hpp"
+#include "Wavefields3Dviscoelastic.hpp"
 #include "../IO/IO.hpp"
 
 using namespace scai;
@@ -6,7 +6,7 @@ using namespace scai;
 /*! \brief Returns hmemo::ContextPtr from this wavefields
  */
 template <typename ValueType>
-scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr()
+scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getContextPtr()
 {
     return (VX.getContextPtr());
 }
@@ -19,7 +19,7 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dvisco<ValueType>::getContextPtr(
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::FD3Dviscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     equationType = "viscoelastic";
     numDimension = 3;
@@ -27,7 +27,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType>::FD3Dvisco(scai::hmemo::ContextPtr ctx,
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -47,7 +47,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::init(scai::hmemo::ContextPtr ctx,
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD3Dvisco<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
 {
     /* 15 Wavefields in 2D acoustic modeling: Sxx,Syy,Szz,Sxy,Sxz,Syz,Rxx,Ryy,Rzz,Rxy,Rxz,Ryz, Vx, Vy, Vz */
     IndexType numWavefields = 15;
@@ -65,7 +65,7 @@ ValueType KITGPI::Wavefields::FD3Dvisco<ValueType>::estimateMemory(dmemo::Distri
  \param fileFormat Output file format 
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType fileFormat)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType fileFormat)
 {
     std::string fileName = baseName + type;
     std::string timeStep = std::to_string(static_cast<long long>(t));
@@ -104,7 +104,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::write(IndexType snapType, std::st
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::resetWavefields()
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::resetWavefields()
 {
     this->resetWavefield(VX);
     this->resetWavefield(VY);
@@ -126,7 +126,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::resetWavefields()
 /*! \brief Get numDimension (3)
  */
 template <typename ValueType>
-int KITGPI::Wavefields::FD3Dvisco<ValueType>::getNumDimension() const
+int KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getNumDimension() const
 {
     return (numDimension);
 }
@@ -134,13 +134,13 @@ int KITGPI::Wavefields::FD3Dvisco<ValueType>::getNumDimension() const
 /*! \brief Get equationType (viscoelastic)
  */
 template <typename ValueType>
-std::string KITGPI::Wavefields::FD3Dvisco<ValueType>::getEquationType() const
+std::string KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getEquationType() const
 {
     return (equationType);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus)
 {
     scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
@@ -169,7 +169,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::getCurl(KITGPI::ForwardSolver::De
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, lama::Vector<ValueType> const &PWaveModulus)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getDiv(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &div, lama::Vector<ValueType> const &PWaveModulus)
 {
     scai::lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
     scai::lama::Matrix<ValueType> const &Dyb = derivatives.getDyb();
@@ -186,7 +186,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::getDiv(KITGPI::ForwardSolver::Der
 
 //! \brief Not valid in the 3D visco-elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::getRefP()
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getRefP()
 {
     COMMON_THROWEXCEPTION("There is no p wavefield in the 3D visco-elastic case.")
     return (P);
@@ -197,9 +197,9 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dvisco<ValueType>::ge
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(ValueType rhs)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType> KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::operator*(ValueType rhs)
 {
-    KITGPI::Wavefields::FD3Dvisco<ValueType> result;
+    KITGPI::Wavefields::FD3Dviscoelastic<ValueType> result;
     result.VX = this->VX * rhs;
     result.VY = this->VY * rhs;
     result.VZ = this->VZ * rhs;
@@ -219,7 +219,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
  \param rhs Vector
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType> operator*(ValueType lhs, KITGPI::Wavefields::FD3Dviscoelastic<ValueType> rhs)
 {
     return rhs * lhs;
 }
@@ -229,7 +229,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> operator*(ValueType lhs, KITGPI::Wavefi
  \param rhs Scalar factor with which the vectors are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(ValueType rhs)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType> KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::operator*=(ValueType rhs)
 {
     return rhs * *this;
 }
@@ -239,9 +239,9 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
  \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType> KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::operator*(KITGPI::Wavefields::FD3Dviscoelastic<ValueType> rhs)
 {
-    KITGPI::Wavefields::FD3Dvisco<ValueType> result;
+    KITGPI::Wavefields::FD3Dviscoelastic<ValueType> result;
     result.VX = this->VX * rhs.VX;
     result.VY = this->VY * rhs.VY;
     result.VZ = this->VZ * rhs.VZ;
@@ -260,7 +260,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
  \param rhs seperate Wavefield whith which the components of the current wavefield are multiplied.
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType>::operator*=(KITGPI::Wavefields::FD3Dvisco<ValueType> rhs)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType> KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::operator*=(KITGPI::Wavefields::FD3Dviscoelastic<ValueType> rhs)
 {
     return rhs * *this;
 }
@@ -270,7 +270,7 @@ KITGPI::Wavefields::FD3Dvisco<ValueType> KITGPI::Wavefields::FD3Dvisco<ValueType
  \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX = rhs.getRefVX();
     VY = rhs.getRefVY();
@@ -294,7 +294,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::assign(KITGPI::Wavefields::Wavefi
  \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX -= rhs.getRefVX();
     VY -= rhs.getRefVY();
@@ -318,7 +318,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::minusAssign(KITGPI::Wavefields::W
  \param rhs Abstarct wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX += rhs.getRefVX();
     VY += rhs.getRefVY();
@@ -342,7 +342,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::plusAssign(KITGPI::Wavefields::Wa
  \param rhs Scalar which is multiplied.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::timesAssign(ValueType rhs)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::timesAssign(ValueType rhs)
 {
     VX *= rhs;
     VY *= rhs;
@@ -366,7 +366,7 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dvisco<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX = lhs * rhs.getRefVX();
     VY = lhs * rhs.getRefVY();
@@ -385,5 +385,5 @@ void KITGPI::Wavefields::FD3Dvisco<ValueType>::applyWavefieldTransform(scai::lam
     Ryz = lhs * rhs.getRefRyz();
 }
 
-template class KITGPI::Wavefields::FD3Dvisco<float>;
-template class KITGPI::Wavefields::FD3Dvisco<double>;
+template class KITGPI::Wavefields::FD3Dviscoelastic<float>;
+template class KITGPI::Wavefields::FD3Dviscoelastic<double>;

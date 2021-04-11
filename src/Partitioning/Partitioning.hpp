@@ -266,7 +266,7 @@ namespace KITGPI
 
             // Assert correctness of input values
             SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
-            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("visco") == 0 || type.compare("sh") == 0, "Unkown type");
+            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0, "Unkown type");
 
             //Number of operations during the time stepping
             // 2D
@@ -282,7 +282,7 @@ namespace KITGPI
                 NumVectorPlusVector = 0;
                 NumPMLPerDim = 4;
             }
-            if (dimension.compare("2d") == 0 && type.compare("visco") == 0) {
+            if (dimension.compare("2d") == 0 && type.compare("viscoelastic") == 0) {
                 NumMatrixVector = 8;
                 NumVectorAssignement = 41;
                 NumVectorPlusVector = 8;
@@ -308,7 +308,7 @@ namespace KITGPI
                 NumVectorPlusVector = 3;
                 NumPMLPerDim = 6;
             }
-            if (dimension.compare("3d") == 0 && type.compare("visco") == 0) {
+            if (dimension.compare("3d") == 0 && type.compare("viscoelastic") == 0) {
                 NumMatrixVector = 18;
                 NumVectorAssignement = 72;
                 NumVectorPlusVector = 22;

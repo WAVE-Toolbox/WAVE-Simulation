@@ -9,10 +9,10 @@
 
 #include "ForwardSolver.hpp"
 
-#include "BoundaryCondition/ABS2D.hpp"
-#include "BoundaryCondition/CPML2D.hpp"
-#include "BoundaryCondition/FreeSurface2Dvisco.hpp"
-#include "SourceReceiverImpl/FDTD2Delastic.hpp"
+#include "BoundaryCondition/ABS3D.hpp"
+#include "BoundaryCondition/CPML3D.hpp"
+#include "BoundaryCondition/FreeSurface3Dviscoelastic.hpp"
+#include "SourceReceiverImpl/FDTD3Delastic.hpp"
 
 namespace KITGPI
 {
@@ -20,17 +20,17 @@ namespace KITGPI
     namespace ForwardSolver
     {
 
-        //! \brief 2-D visco forward solver
+        //! \brief 3-D viscoelastic forward solver
         template <typename ValueType>
-        class FD2Dvisco : public ForwardSolver<ValueType>
+        class FD3Dviscoelastic : public ForwardSolver<ValueType>
         {
 
           public:
             //! Default constructor
-            FD2Dvisco(){};
+            FD3Dviscoelastic(){};
 
             //! Default destructor
-            ~FD2Dvisco(){};
+            ~FD3Dviscoelastic(){};
 
             ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
@@ -46,13 +46,13 @@ namespace KITGPI
 
           private:
             /* Boundary Conditions */
-            BoundaryCondition::FreeSurface2Dvisco<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            BoundaryCondition::FreeSurface3Dviscoelastic<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolver<ValueType>::useFreeSurface;
 
-            BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
+            BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useDampingBoundary;
 
-            BoundaryCondition::CPML2D<ValueType> ConvPML; //!< Damping boundary condition class
+            BoundaryCondition::CPML3D<ValueType> ConvPML; //!< Damping boundary condition class
             using ForwardSolver<ValueType>::useConvPML;
 
             /* Auxiliary Vectors */
@@ -60,6 +60,7 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> update_temp;
             scai::lama::DenseVector<ValueType> vxx;
             scai::lama::DenseVector<ValueType> vyy;
+            scai::lama::DenseVector<ValueType> vzz;
             scai::lama::DenseVector<ValueType> update2;
             scai::lama::DenseVector<ValueType> onePlusLtauP;
             scai::lama::DenseVector<ValueType> onePlusLtauS;

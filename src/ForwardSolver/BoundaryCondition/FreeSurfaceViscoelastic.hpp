@@ -16,16 +16,16 @@ namespace KITGPI
         namespace BoundaryCondition
         {
 
-            //! \brief 3-D visco free surface
+            //! \brief 3-D viscoelastic free surface
             template <typename ValueType>
-            class FreeSurfaceVisco : public FreeSurface<ValueType>
+            class FreeSurfaceViscoelastic : public FreeSurface<ValueType>
             {
               public:
                 //! Default constructor
-                FreeSurfaceVisco(){};
+                FreeSurfaceViscoelastic(){};
 
                 //! Default destructor
-                virtual ~FreeSurfaceVisco() = 0;
+                virtual ~FreeSurfaceViscoelastic() = 0;
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
 

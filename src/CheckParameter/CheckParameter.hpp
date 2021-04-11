@@ -193,7 +193,7 @@ namespace KITGPI
                     Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
                     auto layer = modelCoordinates.getLayer(coordinate);
 
-                    if ((config.get<std::string>("equationType").compare("elastic") == 0) || (config.get<std::string>("equationType").compare("visco") == 0)) {
+                    if ((config.get<std::string>("equationType").compare("elastic") == 0) || (config.get<std::string>("equationType").compare("viscoelastic") == 0)) {
                         SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= sqrt(2.0), "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < sqrt(2.0) at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
                         // vp/vs = sqrt((lambda+2*mu)/mu) >= sqrt(2.0)
                     }

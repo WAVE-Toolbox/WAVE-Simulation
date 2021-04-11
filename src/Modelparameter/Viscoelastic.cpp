@@ -533,7 +533,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
     if (dirtyFlagAveraging) {
-        SCAI_REGION("Modelparameter.Visco.initializeMatrices")
+        SCAI_REGION("Modelparameter.Viscoelastic.initializeMatrices")
         HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");
 
         this->calcAverageMatrixX(modelCoordinates, dist);
@@ -571,7 +571,7 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
-        SCAI_REGION("Modelparameter.Visco.calculateAveraging")
+        SCAI_REGION("Modelparameter.Viscoelastic.calculateAveraging")
         this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
         this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
         this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
