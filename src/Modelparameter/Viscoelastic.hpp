@@ -30,9 +30,9 @@ namespace KITGPI
     namespace Modelparameter
     {
 
-        //! Class for Modelparameter for visco-elastic simulations (Subsurface properties)
+        //! Class for Modelparameter for viscoelastic simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the visco-elastic finite-difference simulation.
+         This class handels the modelparameter for the viscoelastic finite-difference simulation.
          */
         template <typename ValueType>
         class Viscoelastic : public Modelparameter<ValueType>

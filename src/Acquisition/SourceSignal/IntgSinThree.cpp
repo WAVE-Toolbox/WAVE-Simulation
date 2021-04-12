@@ -31,7 +31,7 @@ void KITGPI::Acquisition::SourceSignal::IntgSinThree<ValueType>::calc(scai::lama
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
-    SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(FC > 0, "FC is < 0: No valid argument!");
 
     /*
      *  t=0:DT:(NT*DT-DT);

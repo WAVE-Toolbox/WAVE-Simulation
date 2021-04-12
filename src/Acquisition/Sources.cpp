@@ -185,11 +185,6 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         SourceSignal::Ricker_GprMax<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
         
-    case 8:
-        /* Ricker_GRTM */
-        SourceSignal::Ricker_GRTM<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
-        break;
-
     default:
         COMMON_THROWEXCEPTION("Unknown wavelet shape ")
         break;

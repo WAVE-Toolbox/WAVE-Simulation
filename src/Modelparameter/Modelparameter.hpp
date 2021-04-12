@@ -201,8 +201,8 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> velocityP; //!< Vector storing P-wave velocity.
             scai::lama::DenseVector<ValueType> velocityS; //!< Vector storing S-wave velocity.
 
-            scai::lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for visco-elastic modelling.
-            scai::lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for visco-elastic modelling.
+            scai::lama::DenseVector<ValueType> tauP; //!< Vector storing tauP for viscoelastic modelling.
+            scai::lama::DenseVector<ValueType> tauS; //!< Vector storing tauS for viscoelastic modelling.
 
             scai::lama::DenseVector<ValueType> porosity; 
             scai::lama::DenseVector<ValueType> saturation; 

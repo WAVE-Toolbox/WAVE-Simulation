@@ -14,7 +14,7 @@ ValueType KITGPI::Modelparameter::Viscoelastic<ValueType>::estimateMemory(dmemo:
     return (this->getMemoryUsage(dist, numParameter));
 }
 
-/*! \brief Prepare modelparameter for visco-elastic modelling
+/*! \brief Prepare modelparameter for viscoelastic modelling
  *
  * Applies Equation 12 from Bohlen 2002 and refreshes the modulus
  *
@@ -594,10 +594,10 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
 {
     if (numRelaxationMechanisms_in < 1) {
-        COMMON_THROWEXCEPTION("The number of relaxation mechanisms should be >0 in an visco-elastic simulation")
+        COMMON_THROWEXCEPTION("The number of relaxation mechanisms should be >0 in an viscoelastic simulation")
     }
     if (relaxationFrequency_in <= 0) {
-        COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an visco-elastic simulation")
+        COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an viscoelastic simulation")
     }
     numRelaxationMechanisms = numRelaxationMechanisms_in;
     relaxationFrequency = relaxationFrequency_in;
@@ -617,7 +617,7 @@ std::string KITGPI::Modelparameter::Viscoelastic<ValueType>::getEquationType() c
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getInverseDensity()
 {
-    COMMON_THROWEXCEPTION("Inverse density is not set for visco-elastic modelling")
+    COMMON_THROWEXCEPTION("Inverse density is not set for viscoelastic modelling")
     return (inverseDensity);
 }
 

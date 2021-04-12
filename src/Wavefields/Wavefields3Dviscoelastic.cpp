@@ -184,11 +184,11 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getDiv(KITGPI::ForwardSolv
     div = scai::lama::sqrt(div);
 }
 
-//! \brief Not valid in the 3D visco-elastic case
+//! \brief Not valid in the 3D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getRefP()
 {
-    COMMON_THROWEXCEPTION("There is no p wavefield in the 3D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no p wavefield in the 3D viscoelastic case.")
     return (P);
 }
 

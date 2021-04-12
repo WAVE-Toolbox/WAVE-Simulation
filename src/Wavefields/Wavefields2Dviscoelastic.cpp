@@ -122,67 +122,67 @@ std::string KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getEquationType() c
     return (equationType);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefRzz()
 {
-    COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D viscoelastic case.")
     return (Rzz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefRyz()
 {
-    COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D viscoelastic case.")
     return (Ryz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefRxz()
 {
-    COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D viscoelastic case.")
     return (Rxz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefSzz()
 {
-    COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Szz wavefield in the 2D viscoelastic case.")
     return (Szz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefSyz()
 {
-    COMMON_THROWEXCEPTION("There is no Syz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Syz wavefield in the 2D viscoelastic case.")
     return (Syz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefSxz()
 {
-    COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no Sxz wavefield in the 2D viscoelastic case.")
     return (Sxz);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefVZ()
 {
-    COMMON_THROWEXCEPTION("There is no VZ wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no VZ wavefield in the 2D viscoelastic case.")
     return (VZ);
 }
 
-//! \brief Not valid in the 2D visco-elastic case
+//! \brief Not valid in the 2D viscoelastic case
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::getRefP()
 {
-    COMMON_THROWEXCEPTION("There is no p wavefield in the 2D visco-elastic case.")
+    COMMON_THROWEXCEPTION("There is no p wavefield in the 2D viscoelastic case.")
     return (P);
 }
 

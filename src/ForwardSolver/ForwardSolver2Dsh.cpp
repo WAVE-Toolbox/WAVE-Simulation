@@ -77,7 +77,7 @@ template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const & /*model*/, ValueType /*DT*/)
 {
 //     if (useFreeSurface == 1) {
-//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
 //         //    FreeSurface.setModelparameter(model);
 //     }
 }
@@ -130,7 +130,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 
 //     if (useFreeSurface) {
-//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
 //         //         FreeSurface.setModelparameter(model);
 //     }
 
@@ -179,7 +179,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     /* Apply free surface to stress update */
 //     if (useFreeSurface) {
-//         SCAI_ASSERT(useFreeSurface != true, " Image method is not implemented for Love-Waves ");
+//         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
 //         //       FreeSurface.apply(vZ, Sxz, Syz);
 //     }
 

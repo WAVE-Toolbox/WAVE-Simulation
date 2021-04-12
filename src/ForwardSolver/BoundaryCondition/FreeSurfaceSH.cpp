@@ -15,7 +15,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::~FreeSurface
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::init(scai::dmemo::DistributionPtr /*dist*/, Derivatives::Derivatives<ValueType> & /*derivatives*/, Acquisition::Coordinates<ValueType> const & /*modelCoordinates*/, ValueType /*DT*/)
 {
-//     COMMON_THROWEXCEPTION(" Image method is not implemented for Love-Waves ");
+//     COMMON_THROWEXCEPTION(" Stress-image method is not implemented for Love-Waves ");
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<float>;

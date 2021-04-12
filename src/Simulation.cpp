@@ -56,7 +56,12 @@ int main(int argc, const char *argv[])
     verbose = config.get<bool>("verbose");
     
     Configuration::Configuration configBig;
-    bool useStreamConfig = config.get<bool>("useStreamConfig");
+    bool useStreamConfig;
+    try {
+        useStreamConfig = config.get<bool>("useStreamConfig");
+    } catch(...) {
+        useStreamConfig = false;
+    }
     
     if (useStreamConfig){
         configBig.readFromFile(config.get<std::string>("streamConfigFilename"), true);    

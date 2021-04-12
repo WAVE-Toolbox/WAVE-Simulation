@@ -109,7 +109,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::prepareBoundaryConditio
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
-/*! \brief Running the 2-D visco-elastic foward solver
+/*! \brief Running the 2-D viscoelastic foward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

@@ -31,12 +31,12 @@ void KITGPI::Acquisition::SourceSignal::FGaussian<ValueType>::calc(scai::lama::D
 
     SCAI_ASSERT_ERROR(NT > 0, "NT is < 0: No valid argument!");
     SCAI_ASSERT_ERROR(DT > 0, "DT is < 0: No valid argument!");
-    SCAI_ASSERT_ERROR(FC > 0, "DT is < 0: No valid argument!");
+    SCAI_ASSERT_ERROR(FC > 0, "FC is < 0: No valid argument!");
 
     /*
      *  t=0:DT:(NT*DT-DT);
-     *  tau=pi*FC*(t-1.2/FC);
-     *  signal=AMP*2*tau.*exp(-tau*tau);
+     *  tau=pi*FC*(t-1.2/FC-Tshift);
+     *  signal=-AMP*2*tau.*exp(-tau*tau);
      */
     auto t = lama::linearDenseVector<ValueType>(NT, 0, DT);
     auto help = lama::fill<lama::DenseVector<ValueType>>(t.size(), 1.2 / FC + Tshift);
