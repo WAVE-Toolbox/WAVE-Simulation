@@ -115,7 +115,7 @@ writeSourceFilename=SourceSignal/Source
 # Seismogram
 SeismogramFilename=seismograms/seismogram      # target location of seismogram
 seismoDT=2.0e-03                               # Seismogram sampling in seconds
-NormalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
+normalizeTraces=0                              # 1=Normalize Traces of the Seismogram, 0=Not Normalized
 SeismogramFormat=1                             # 1=MTX (ascii serial), 2=lmf(binary parallel) 3=frv (binary serial), 4=su (parallel)
 # 1=mtx : formated ascii file - serial IO - 2 line ascii header
 # 2=lmf : binary file - parallel IO - float - little endian - 6 int header (24 byte) 

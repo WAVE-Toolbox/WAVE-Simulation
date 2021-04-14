@@ -10,7 +10,7 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
 
     // Assert correctness of input values
     SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
-    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0, "Unkown type");
+    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0 || type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0, "Unkown type");
 
     // 2D
     if (dimension.compare("2d") == 0 && type.compare("acoustic") == 0) {
@@ -37,7 +37,6 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
         return ForwardSolverPtr(new FD3Dviscoelastic<ValueType>);
     }
 
-    COMMON_THROWEXCEPTION("Reached end of factory without match");
     return ForwardSolverPtr();
 };
 

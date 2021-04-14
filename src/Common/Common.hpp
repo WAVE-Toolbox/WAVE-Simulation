@@ -236,7 +236,29 @@ namespace KITGPI
         {
             return (static_cast<scai::IndexType>(time / DT + 0.5));
         }
+
+        /*! \brief check is seismic or EM
+        \param type equationType
+        */
+        template <typename ValueType>
+        bool checkEquationType(std::string type)
+        {
+            bool isSeismic = false;
+            // transform to lower cases
+            std::transform(type.begin(), type.end(), type.begin(), ::tolower);
+            
+            // Assert correctness of input values
+            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0 || type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0, "Unkown type");
         
+            if (type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0) {
+                isSeismic = true;
+            } else if (type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0) {
+                isSeismic = false;
+            }
+
+            return isSeismic;
+        }
+                
         /*! \brief apply Hilbert transform to data
         *
         \param data Input matrix
