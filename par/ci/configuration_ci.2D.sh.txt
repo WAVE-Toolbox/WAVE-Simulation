@@ -31,7 +31,7 @@ spatialFDorder=2
 ModelRead=0
 ModelWrite=0
 ModelFilename=model/model
-coordinateWrite=0
+writeCoordinate=0
 
 # Viscoelastic modelling
 numRelaxationMechanisms=0;

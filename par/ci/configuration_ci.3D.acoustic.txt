@@ -29,7 +29,7 @@ spatialFDorder=4
 ModelRead=1
 ModelWrite=0
 ModelFilename=model/model
-coordinateWrite=0
+writeCoordinate=0
 
 FileFormat=1
 

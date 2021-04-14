@@ -12,8 +12,8 @@ graphPartitionTool=geoKmeans
 BoundaryWeights=2.0
 useVariableFDoperators=1
 
-partitionWrite=0  
-coordinateWrite=0 
+writePartition=0  
+writeCoordinate=0 
 weightsWrite=0 
 
 gridConfigurationFilename=ci/gridConfig.txt

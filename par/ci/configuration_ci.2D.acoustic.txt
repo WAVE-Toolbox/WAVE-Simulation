@@ -32,7 +32,7 @@ ModelRead=0
 ModelWrite=0
 ModelFilename=model/model
 ModelParametrisation=2    # 1=Lame, 2=Velocity
-coordinateWrite=0
+writeCoordinate=0
 
 FileFormat=1
 

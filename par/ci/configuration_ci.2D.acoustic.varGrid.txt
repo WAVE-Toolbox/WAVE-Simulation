@@ -14,8 +14,8 @@ useVariableFDoperators=1
 
 gridConfigurationFilename=ci/gridConfig.txt
 
-partitionWrite=0  
-coordinateWrite=0 
+writePartition=0  
+writeCoordinate=0 
 weightsWrite=0  
 
 NX=305                    # horizontal 1
@@ -40,7 +40,7 @@ spatialFDorder=2          # possible values 2, 4, 6, 8, 10 and 12
 ModelRead=0               # 1=Model will be read from file, 0=generated on the fly
 ModelWrite=0              # 1=Model will be written to disk, 0=not
 ModelFilename=model/model # The ending vp.mtx, vs.mtx and density.mtx will be added automatically. 
-coordinateWrite=0
+writeCoordinate=0
 
 FileFormat=1
 
