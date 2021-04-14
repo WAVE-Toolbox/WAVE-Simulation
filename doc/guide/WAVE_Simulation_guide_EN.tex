@@ -242,7 +242,7 @@ The authors of WAVE-Simulation are listed in file \lstinline{AUTHORS}.
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
 
-In order to extract information about the structure and composition of the crust from seismic observations, it is necessary to be able to predict how seismic wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation, that is described in this guide, is based on the FD approach described by \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
+In order to extract information about the structure and composition of the crust from seismic observations, it is necessary to be able to predict how seismic wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation (C++), that is described in this guide, is based on the FD approach described by \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
 
 WAVE-Simulation features solving seismic waves including the acoustic, elastic and viscoelastic wave equation in 2D and 3D by utilising an explicit time-domain FD method. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh (\cite{komatitsch2007unsplit}). It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface. In the following sections, we give a short description of the  theoretical background, the different modelling parameters and options and how the program is used and executed.
 
@@ -1050,6 +1050,8 @@ As a first test, run the default example by following the commands to obtain the
 \section{Configuration}\label{sec:config}
 As mentioned in the quick guide, the configuration can be found in \shellcmd{par/configuration/}. In the \shellcmd{configuration.txt} file input variables can be added or changed. A list of all variables and config parameters that can be added and changed can be found in tables \ref{tab:config_grid} to \ref{tab:config_snapshots}.
 
+\subsection{Configuration file}
+\subsubsection{Simulation/grid}
 \begin{table}[h!]
 \caption[List of simulation/grid configuration parameters.]{List of simulation/grid configuration parameters, that can be added and changed in the config-file.}\label{tab:config_grid}
 \centering
@@ -1104,7 +1106,7 @@ If the model is very large or if a huge number of shots is used, it is useful to
            1        50         0         0
            2       100         0         0
 \end{verbatim}
-The number of rows, in this case three, specifies the number of unique shot used. The whole input model then is not specified by \textit{ModelFilename} in the \shellcmd{configuration.txt} anymore, but by \textit{ModelFilename} defined in the stream configuration file \textit{streamConfigFilename}. For each unique shot, we cut a model subset from the stream/big model defined in file \textit{streamConfigFilename}. The cutting coordinates are specified by the distance between adjacent shots. The left or right distance between model boundaries and the unique shot in $X$ direction is identified with the left most or right most shot to avoid the artificial reflections caused by model cutting. Each model subset has the same model size $N$, which makes sure \textit{NumShotDomains} shots can be generated parallelly with significantly lower computation cost than that directly running on a stream/big model. To sum up, $NX$, $NY$, $NZ$, $DH$, \textit{ModelFilename}, \textit{SourceFilename} and \textit{ReceiverFilename} in the file \textit{streamConfigFilename} will be used to extract models per shot by setting \textit{useStreamConfig} = 1. The other parameters in the \shellcmd{configuration.txt} file is then used for the model subset where the simulation is run. 
+The number of rows, in this case three, specifies the number of unique shot used. The whole input model then is not specified by \textit{ModelFilename} in the \shellcmd{configuration.txt} anymore, but by \textit{ModelFilename} defined in the stream configuration file \textit{streamConfigFilename}. For each unique shot, we cut a model subset from the stream/big model defined in file \textit{streamConfigFilename}. The cutting coordinates are specified by the distance between adjacent shots. The left or right distance between model boundaries and the unique shot in $X$ direction is identified with the left most or right most shot to avoid the artificial reflections caused by model cutting. Each model subset has the same model size $N$, which makes sure \textit{NumShotDomains} shots can be generated parallelly with significantly lower computation cost than that directly running on a stream/big model. To sum up, $NX$, $NY$, $NZ$, $DH$, \textit{ModelFilename}, \textit{SourceFilename} and \textit{ReceiverFilename} in the file \textit{streamConfigFilename} will be used to extract models per shot by setting \textit{useStreamConfig} = 1. The other parameters in the \shellcmd{configuration.txt} file are then used for the model subset where the simulation is run. 
 
 The following parameter \textit{useVariableGrid} characterises whether the model uses a variable grid spacing for the calculation of the wavefield ($1=$ yes, else $=$ no). 
 The type of partition can be chosen in \textit{partitioning} where you can opt for a block distribution ($=0$), grid distribution ($=1$) parallel graph distribution by geographer ($=2$) or parallel graph distribution by ParMETIS ($=3$).
@@ -1129,7 +1131,7 @@ computer_name2 1 DOMAIN=3 WEIGHT=5 SCAI_CONTEXT=CUDA SCAI_DEVICE=1
 \end{verbatim}
 where the first value represents the computer or node name, the second value the processors or node rank which can be set as an interval. In addition, GPUs can also be used if SCAI\_CONTEXT is set to CUDA.
 
-
+\subsubsection{Input/output model}
 \begin{table}[h!]
 \caption[List of input/output model configuration parameters.]{List of input/output model configuration parameters, that can be added and changed in the config-file.}\label{tab:config_inputoutput}
 \centering
@@ -1147,6 +1149,7 @@ where the first value represents the computer or node name, the second value the
 \end{table}
 The second section in table \ref{tab:config_inputoutput} contains parameters to manage input and output of the model. The first parameter \textit{ModelRead} can be set with ($1=$ yes) or (else $=$ no). An on-the-fly model described in table \ref{tab:config_onthefly} will be created if there is no input model. \textit{ModelFilename} is given to determine the location and filename of the model. \textit{ModelFilename} is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}) while the file format is configured in \textit{FileFormat} with either $1=$ mtx, a formated ascii file with serial input/output, $2=$ lmf, a binary file with parallel input/output, little endian and a 5 int header (20 byte) or $3=$ frv, a binary file with serial input/output,  little endian and seperate header. Due to the parallel input/output, chosing lmf as the file format is recommended.
 
+\subsubsection{Boundary conditions}
 \begin{table}[h!]
 \caption[List of boundary conditions configuration parameters.]{List of boundary conditions configuration parameters, that can be added and changed in the config-file.}\label{tab:config_boundary}
 \centering
@@ -1171,6 +1174,7 @@ The model boundaries are characterised by \textit{DampingBoundary}, \textit{Boun
 The usage of damping boundaries can be turned off (\textit{DampingBoundary} $=0$) or set as ABS $=1$ or CPML $=2$. Again, if the parameter for \textit{DampingBoundary} is set to 0, it is not used. 
 If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML} and \textit{NPower} also have to be set. 
 
+\subsubsection{Viscoelastic modelling}
 \begin{table}[h!]
 \caption[List of viscoelastic modelling configuration parameters.]{List of viscoelastic modelling configuration parameters, that can be added and changed in the config-file.}\label{tab:config_visco}
 \centering
@@ -1187,6 +1191,7 @@ If \textit{CPML} is used, \textit{VMaxCPML}, \textit{CenterFrequencyCPML} and \t
 \end{table}
 The fourth section in \ref{tab:config_visco} are the parameters relevant for viscoelastic modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
+\subsubsection{On-the-fly model}
 \begin{table}[h!]
 \caption[List of on-the-fly model configuration parameters.]{List of on-the-fly model configuration parameters, that can be added and changed in the config-file.}\label{tab:config_onthefly}
 \centering
@@ -1216,6 +1221,7 @@ To verify the models stability  the courant can be calculated:
 	v_{max} \cdot \frac{DT}{DH} \leq 0.43
 \end{equation*}
 
+\subsubsection{Acquisition geometry}
 \begin{table}[h!]
 \caption[List of acquisition geometry configuration parameters.]{List of acquisition geometry configuration parameters, that can be added and changed in the config-file.}\label{tab:config_acquisition}
 \centering
@@ -1254,7 +1260,7 @@ The used source wavelet per shot can be written to disk by setting \textit{write
 These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \textit{SeismogramFormat}.  
 Furthermore, the sources or receivers can be initialized from SU files if \textit{initSourcesFromSU} and \textit{initReceiverFromSU} is set to 1.
 
-
+\subsubsection{Wavefield snapshots}
 \begin{table}[h!]
 \caption[List of wavefield snapshots configuration parameters.]{List of wavefield snapshots configuration parameters, that can be added and changed in the config-file.}\label{tab:config_snapshots}
 \centering
@@ -1268,6 +1274,9 @@ Furthermore, the sources or receivers can be initialized from SU files if \texti
 	tFirstSnapshot & Time of first snapshot in seconds & double & \num{0.1} \\
 	tLastSnapshot & Time of last snapshot in seconds & double & \num{2.2} \\
 	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
+	\midrule
+    verbose        & display detailed output                          &  int   & 0 \\
+	
 	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1275,14 +1284,16 @@ Furthermore, the sources or receivers can be initialized from SU files if \texti
 In the last section in \ref{tab:config_snapshots} you can set the properties of the wavefield snapshots to save. \textit{snapType} sets the wavefield type that should be saved ($0=$ no save, $1=$ save velocities, $2=$ save pressure/stress, $3=$ save energy). 
 The snapshots are stored in the directory chosen in \textit{WavefieldFilename}. Snapshots start at time \textit{tFirstSnapshot}, end at time \textit{tLastSnapshot} and have an interval of \textit{tIncSnapshot}.
 
+At the end of configuration file, one can set \textit{verbose} = 0 to briefly display the key points of the program running, or \textit{verbose} = 1 to show all the status messages which can be confusing if shots are run in parallel. However, \textit{verbose} = 1 would help you find the bugs much faster when you develop and debug a new feature in WAVE-Simulation.
+
 \subsection{Source and Receiver File}\label{ch:sourcesandreceiver}
 In \shellcmd{par/acquisition/} two files can be found,the \shellcmd{sources.txt} and \shellcmd{receiver.txt} files.
 The source file contains columns filled with information about the source number, source coordinates (x, y, z), source type, wavelet shape, center frequency, amplitude and time shift. It can look like this
 \begin{verbatim}
-# shotNr   x  y  z    sourceType  WAVELET_TYPE  WAVELET_SHAPE  FC  AMP  TShift
-  0        50 50 50   3           1             1              5   5    0
-  1        40 40 40   1           1             1              5   5    0
-  1        80 80 80   1           1             1              5   5    0
+# shotNr x  y  z  sourceType WAVELET_TYPE WAVELET_SHAPE FC AMP TShift
+  0      50 50 50 3          1            1             5  5   0
+  1      40 40 40 1          1            1             5  5   0
+  1      80 80 80 1          1            1             5  5   0
 \end{verbatim}
 where each row is one shot. Each shot with the same shot number is modelled in one simulation which would be used in source encode technique \citep{krebs2009fast}, whereas each shot number is simulated individually. Thus, the example shows two shot simulations, one with one shot, the other with two.
 The coordinates in (x, y, z) are given in grid points. There are three different source types, pressure (1 = P), velocity in x- (2 = vX), y- (3 = vY), and z-direction (4 = vZ). 
@@ -1390,7 +1401,7 @@ For faultless function of WAVE-Simulation all tests should execute without failu
 
 \subsection{Free surface}
 
-As mentioned in \ref{sec:FreeSurface} there are two implementations of the free surface in WAVE-Simulation. To ensure their proper functionality they are tested against an analytic solution. This solution is for a homogeneous halfspace with a free surface. Tests are done in 2D for the acoustic and the elastic case. Relevant parameters used are listed in table \ref{tab:freeSurfaceBenchmark}. In the acoustic case the shear wave velocity for the analytic solution is set to \SI{1}{\meter\per\second} for a stable result. The results are shown in figure \ref{fig:IVFvsAnalytic} for IVF and in figure \ref{fig:MirrorvsAnalytic} for mirror method. Since there are no surface waves in the acoustic case only the P-phase is visible. The combination of high amplitude surface waves and trace normalization make the P-phase almost disappear in the elastic case. Both results show, that the methods used are able to produce accurate solutions even at larger offsets.
+As mentioned in \ref{sec:FreeSurface} there are two implementations of the free surface in WAVE-Simulation. To ensure their proper functionality they are tested against an analytic solution. This solution is for a homogeneous halfspace with a free surface. Tests are done in 2D for the acoustic and the elastic case. Relevant parameters used are listed in table \ref{tab:freeSurfaceBenchmark}. In the acoustic case the shear wave velocity for the analytic solution is set to 1 $m/s$ for a stable result. The results are shown in figure \ref{fig:IVFvsAnalytic} for IVF and in figure \ref{fig:MirrorvsAnalytic} for mirror method. Since there are no surface waves in the acoustic case only the P-phase is visible. The combination of high amplitude surface waves and trace normalization make the P-phase almost disappear in the elastic case. Both results show, that the methods used are able to produce accurate solutions even at larger offsets.
 
 \begin{table}[]
 \centering
@@ -1402,9 +1413,9 @@ Parameter        & Value  \\ \midrule
 dh               & \SI{7.5}{\meter}    \\
 dt               & \SI{0.5}{\milli\second} \\
 spatial FD order & 6      \\
-$v_p$               & \SI{3845}{\meter\per\second}   \\
-$v_s$               & \SI{2200}{\meter\per\second}   \\
-$\rho$              & \SI{3000}{\kilogram\per\cubic\meter}   \\ \bottomrule
+$v_p$               & \SI{3845}{m/s}   \\
+$v_s$               & \SI{2200}{m/s}   \\
+$\rho$              & \SI{3000}{kg/m^3}  \\ \bottomrule
 \end{tabular}
 \end{table}
 
