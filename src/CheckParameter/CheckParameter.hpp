@@ -5,6 +5,7 @@
 #include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
+#include "../ModelparameterEM/Modelparameter.hpp"
 #include <scai/lama.hpp>
 
 namespace KITGPI
@@ -12,7 +13,6 @@ namespace KITGPI
     //! \brief CheckParameter namespace
     namespace CheckParameter
     {
-
         /*! \brief check variable grid
         *
         \param config configuration class
@@ -22,7 +22,6 @@ namespace KITGPI
         template <typename ValueType>
         void checkVariableGrid(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll, Acquisition::Coordinates<ValueType> const &modelCoordinates)
         {
-
             scai::IndexType NX = config.get<scai::IndexType>("NX");
             scai::IndexType NY = config.get<scai::IndexType>("NY");
             scai::IndexType NZ = config.get<scai::IndexType>("NZ");
@@ -164,7 +163,7 @@ namespace KITGPI
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtefeactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
+        void checkNumericalArtifactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
                 auto dist = model.getDensity().getDistributionPtr();
@@ -240,17 +239,89 @@ namespace KITGPI
             }
         }
 
+        //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
+        template <typename ValueType>
+        void checkNumericalArtifactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::ModelparameterEM<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
+        {
+            if (!config.get<bool>("initSourcesFromSU")) {
+                auto dist = model.getMagneticPermeabilityEM().getDistributionPtr();
+                auto commShot = dist->getCommunicatorPtr();
+                scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
+                dist->getOwnedIndexes(ownedIndexes);
+
+                scai::IndexType numlayer = modelCoordinates.getNumLayers();
+
+                ValueType vMax[numlayer] = {0};
+                ValueType vMin[numlayer] = {0};
+                std::fill_n(vMin, numlayer, 3e8);
+
+                scai::IndexType localIndex = 0;
+
+                scai::lama::DenseVector<ValueType> vMaxTmp;
+                vMaxTmp = model.getVelocityEM();
+                auto read_vMaxTmp = scai::hmemo::hostReadAccess(vMaxTmp.getLocalValues());
+
+                scai::lama::DenseVector<ValueType> vMinTmp;
+                vMinTmp = model.getVelocityEM();
+                auto read_vMinTmp = scai::hmemo::hostReadAccess(vMinTmp.getLocalValues());
+
+                for (scai::IndexType ownedIndex : scai::hmemo::hostReadAccess(ownedIndexes)) {
+
+                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
+                    auto layer = modelCoordinates.getLayer(coordinate);
+
+                    if (read_vMaxTmp[localIndex] > vMax[layer]) {
+                        vMax[layer] = read_vMaxTmp[localIndex];
+                    }
+
+                    if ((read_vMinTmp[localIndex] < vMin[layer]) && (read_vMinTmp[localIndex] > 0.0)) {
+                        vMin[layer] = read_vMinTmp[localIndex];
+                    }
+
+                    localIndex++;
+                }
+
+                // communicate vMin and vMax and find the minimu and maximum of all processes
+                commShot->minImpl(vMin, vMin, numlayer, scai::common::TypeTraits<ValueType>::stype);
+                commShot->maxImpl(vMax, vMax, numlayer, scai::common::TypeTraits<ValueType>::stype);
+
+                ValueType fcMax = 0;
+                for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                    if (sourceSettings[i].fc > fcMax)
+                        fcMax = sourceSettings[i].fc;
+                }
+
+                std::vector<scai::IndexType> spatialFDorderVec;
+
+                if (config.get<bool>("useVariableFDoperators")) {
+
+                    unsigned int column = 2;
+                    Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), spatialFDorderVec, column);
+                } else {
+                    spatialFDorderVec.assign(numlayer, config.get<scai::IndexType>("spatialFDorder"));
+                }
+
+                for (scai::IndexType layer = 0; layer < numlayer; layer++) {
+                    if (config.get<bool>("useVariableGrid")) {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber, layer);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber, layer);
+                    } else {
+                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber);
+                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber);
+                    }
+                }
+            }
+        }
+
         /*! \brief check if sources are located within the grid
         \param NX Number of gridpoints in x-direction.
         \param NY Number of gridpoints in y-direction.
         \param NZ Number of gridpoints in z-direction.
         \param sourcefile Name of the source file 
         */
-
         template <typename ValueType>
         void checkSources(std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings_temp, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
         {
-
             for (auto const &source : sourceSettings_temp) {
 
                 if ((source.sourceCoords.x >= modelCoordinates.getNX() || source.sourceCoords.x < 0 || source.sourceCoords.y >= modelCoordinates.getNY() || source.sourceCoords.y < 0 || source.sourceCoords.z >= modelCoordinates.getNZ() || source.sourceCoords.z < 0)) {
@@ -275,7 +346,6 @@ namespace KITGPI
         \param NZ Number of gridpoints in z-direction.
         \param receiverfile Name of the receiver file 
         */
-
         template <typename ValueType>
         void checkReceivers(std::vector<Acquisition::receiverSettings> receiverSettings_temp, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
         {
