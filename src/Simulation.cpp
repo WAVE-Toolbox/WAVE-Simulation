@@ -354,8 +354,8 @@ int main(int argc, const char *argv[])
                 CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
             }
 
-            bool writeSource_bool = config.getAndCatch("writeSource", false);
-            if (writeSource_bool) {
+            bool writeSource = config.getAndCatch("writeSource", false);
+            if (writeSource) {
                 lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
                 KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
             }
