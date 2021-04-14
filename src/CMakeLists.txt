@@ -126,14 +126,18 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror" )
 
 set ( Simulation_LIB_DIRS 
         Acquisition 
+        AcquisitionEM 
         Configuration  
-        ForwardSolver   
+        ForwardSolver  
+        ForwardSolverEM   
         Wavefields
+        WavefieldsEM
         CheckParameter 
         IO
         Common
         Filter
         Modelparameter  
+        ModelparameterEM  
         Partitioning )
 
 foreach ( dir ${Simulation_LIB_DIRS} ) 
@@ -156,7 +160,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 #  WAVE-Simulation library                                    #
 ####################################################
 
-include_directories( Common Configuration Acquisition Modelparameter )
+include_directories( Common Configuration Acquisition AcquisitionEM Modelparameter ModelparameterEM )
 
 add_library( Simulation ${Simulation_FILES} )
 
@@ -189,7 +193,7 @@ if ( ${GTEST_FOUND} )
 
    add_executable( utest ${Simulation_UNIT_TEST_SOURCES} )
 
-   target_include_directories( utest PRIVATE ForwardSolver Configuration Acquisition Modelparameter ${GTEST_INCLUDE_DIR} )
+   target_include_directories( utest PRIVATE ForwardSolver ForwardSolverEM Configuration Acquisition AcquisitionEM Modelparameter ModelparameterEM ${GTEST_INCLUDE_DIR} )
    target_link_libraries( utest ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} Simulation ${Simulation_used_libs} )
 
    set_target_properties( utest PROPERTIES OUTPUT_NAME Test_unit )

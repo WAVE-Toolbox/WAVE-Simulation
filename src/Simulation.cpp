@@ -11,16 +11,23 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "Acquisition/Receivers.hpp"
-#include "Acquisition/Sources.hpp"
 #include "Configuration/Configuration.hpp"
 #include "Configuration/ValueType.hpp"
-#include "ForwardSolver/ForwardSolver.hpp"
-
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
+
+#include "Acquisition/Receivers.hpp"
+#include "Acquisition/Sources.hpp"
+#include "ForwardSolver/ForwardSolver.hpp"
+#include "AcquisitionEM/Receivers.hpp"
+#include "AcquisitionEM/Sources.hpp"
+#include "ForwardSolverEM/ForwardSolver.hpp"
+
 #include "ForwardSolver/ForwardSolverFactory.hpp"
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
+#include "ForwardSolverEM/ForwardSolverFactory.hpp"
+#include "ModelparameterEM/ModelparameterFactory.hpp"
+#include "WavefieldsEM/WavefieldsFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"

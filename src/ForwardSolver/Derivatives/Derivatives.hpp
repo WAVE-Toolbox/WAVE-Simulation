@@ -43,6 +43,27 @@ namespace KITGPI
 
 namespace KITGPI
 {
+    namespace ForwardSolver
+    {
+        namespace BoundaryCondition
+        {
+            template <typename Type>
+            class FreeSurface2Demem;
+
+            template <typename Type>
+            class FreeSurface2Dtmem;
+
+            template <typename Type>
+            class FreeSurfaceEMEM;
+
+            template <typename Type>
+            class FreeSurfaceTMEM;
+        }
+    }
+}
+
+namespace KITGPI
+{
 
     namespace ForwardSolver
     {
@@ -74,6 +95,15 @@ namespace KITGPI
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic;
                 template <typename>
                 friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic;
+
+                template <typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Demem;
+                template <typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dtmem;
+                template <typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEMEM;
+                template <typename>
+                friend class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceTMEM;
 
                 //! \brief Default constructor
                 Derivatives() : DyfFreeSurfaceHybrid(DyfFreeSurfaceStencil, DyfFreeSurfaceSparse),
