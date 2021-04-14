@@ -133,7 +133,7 @@ int main(int argc, const char *argv[])
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
-    if ((config.get<bool>("coordinateWrite")) && (shotDomain == 0)) {
+    if ((config.get<bool>("writeCoordinate")) && (shotDomain == 0)) {
         // every shotdomain owns the same coordinates
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"), config.get<IndexType>("FileFormat"));
     }
@@ -188,12 +188,7 @@ int main(int argc, const char *argv[])
         HOST_PRINT(commAll, "", "Finished ParMetis graph partitioning in " << end_t - start_t << " sec.\n\n");
     }
 
-    bool writePartition;
-    try {
-        writePartition = config.get<bool>("partitionWrite");
-    } catch (...) {
-        writePartition = false;
-    }
+    bool writePartition = config.getAndCatch("writePartition", false);
 
     if (writePartition) {
         scai::lama::DenseVector<IndexType> partition(dist, commShot->getRank());
@@ -359,12 +354,7 @@ int main(int argc, const char *argv[])
                 CheckParameter::checkNumericalArtefeactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
             }
 
-            bool writeSource_bool;
-            try {
-                writeSource_bool = config.get<bool>("writeSource");
-            } catch (...) {
-                writeSource_bool = false; 
-            }
+            bool writeSource_bool = config.getAndCatch("writeSource", false);
             if (writeSource_bool) {
                 lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
                 KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
