@@ -26,13 +26,15 @@
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/partitioning/Partitioning.hpp>
 
+using namespace scai;
+
 namespace KITGPI
 {
     //! \brief Partitioning namespace
     namespace Partitioning
     {
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
-        *Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
+        *Attention: LAMA uses row-major indexing while WAVE-Simulation uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
         \param config configuration object
         \param commShot communicator of a shot domain
         */
@@ -77,7 +79,7 @@ namespace KITGPI
         }
 
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
-        *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
+        *    Attention: LAMA uses row-major indexing while WAVE-Simulation uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
         \param config configuration object
         \param commShot communicator of a shot domain
         */
@@ -90,7 +92,7 @@ namespace KITGPI
         }
 
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration   
-        *    Attention: LAMA uses row-major indexing while WAVE-Simulation-3D uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
+        *    Attention: LAMA uses row-major indexing while WAVE-Simulation uses column-major, so switch dimensions, x-dimension has stride 1, z-dimension has stride 2, y-dimension has stride 3.
         \param config configuration object
         \param commShot communicator of a shot domain
         \param DHInversion scaling factor of DH used in inversion
@@ -266,7 +268,7 @@ namespace KITGPI
 
             // Assert correctness of input values
             SCAI_ASSERT_ERROR(dimension.compare("2d") == 0 || dimension.compare("3d") == 0, "Unkown dimension");
-            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0, "Unkown type");
+            SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0 || type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0, "Unkown type");
 
             //Number of operations during the time stepping
             // 2D
@@ -309,6 +311,46 @@ namespace KITGPI
                 NumPMLPerDim = 6;
             }
             if (dimension.compare("3d") == 0 && type.compare("viscoelastic") == 0) {
+                NumMatrixVector = 18;
+                NumVectorAssignement = 72;
+                NumVectorPlusVector = 22;
+                NumPMLPerDim = 6;
+            }
+
+            // 2D
+            if (dimension.compare("2d") == 0 && type.compare("tmem") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 7;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("emem") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 7;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("viscotmem") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 41;
+                NumVectorPlusVector = 8;
+                NumPMLPerDim = 4;
+            }
+            if (dimension.compare("2d") == 0 && type.compare("viscoemem") == 0) {
+                NumMatrixVector = 8;
+                NumVectorAssignement = 41;
+                NumVectorPlusVector = 8;
+                NumPMLPerDim = 4;
+            }
+
+            // 3D
+            if (dimension.compare("3d") == 0 && type.compare("emem") == 0) {
+                NumMatrixVector = 18;
+                NumVectorAssignement = 34;
+                NumVectorPlusVector = 3;
+                NumPMLPerDim = 6;
+            }
+            if (dimension.compare("3d") == 0 && type.compare("viscoemem") == 0) {
                 NumMatrixVector = 18;
                 NumVectorAssignement = 72;
                 NumVectorPlusVector = 22;
