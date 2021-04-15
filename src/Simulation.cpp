@@ -140,7 +140,7 @@ int main(int argc, const char *argv[])
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
     }
 
-    if ((config.get<bool>("writeCoordinate")) && (shotDomain == 0)) {
+    if (config.get<bool>("writeCoordinate") && shotDomain == 0) {
         // every shotdomain owns the same coordinates
         modelCoordinates.writeCoordinates(dist, ctx, config.get<std::string>("coordinateFilename"), config.get<IndexType>("FileFormat"));
     }

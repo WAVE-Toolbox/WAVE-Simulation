@@ -185,11 +185,11 @@ void KITGPI::Modelparameter::EMEM<ValueType>::init(Configuration::Configuration 
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model
-             \param model regular input model
-             \param variableDist Distribution for a variable grid
-             \param variableCoordinates Coordinate Class of a Variable Grid
-             \param regularCoordinates Coordinate Class of a regular Grid
-             */
+\param model regular input model
+\param variableDist Distribution for a variable grid
+\param variableCoordinates Coordinate Class of a Variable Grid
+\param regularCoordinates Coordinate Class of a regular Grid
+*/
 template <typename ValueType>
 void KITGPI::Modelparameter::EMEM<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {

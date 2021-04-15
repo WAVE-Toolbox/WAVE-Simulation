@@ -12,6 +12,7 @@
 #include <cmath>
 #include <scai/tracing.hpp>
 #include <scai/lama/fft.hpp>
+#include "../Configuration/Configuration.hpp"
 
 namespace KITGPI
 {
@@ -326,5 +327,24 @@ namespace KITGPI
                 data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
             }
         }
+        
+        /*! \brief Get the parameter from a stream configuration file
+        \param config config handle
+        \param parameterName parameter name
+        */   
+        template <typename ReturnType>
+        ReturnType getFromStreamFile(KITGPI::Configuration::Configuration config, std::string const &parameterName)
+        {   
+            std::string tempName = parameterName;
+            ReturnType temp;
+            bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+            if (!useStreamConfig) {
+                temp = config.get<ReturnType>(tempName);
+            } else {
+                Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));                
+                temp = configBig.get<ReturnType>(tempName);
+            }      
+            return (temp);
+        };
     }
 }

@@ -49,7 +49,8 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configurat
 {
     std::vector<receiverSettings> allSettings;
     
-    if (config.get<bool>("useStreamConfig")) {
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig);
@@ -82,7 +83,8 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configurat
 {
     std::vector<receiverSettings> allSettings;
     
-    if (config.get<bool>("useStreamConfig")) {
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber);
@@ -123,7 +125,8 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configurat
 {
     std::vector<receiverSettings> allSettings;
     
-    if (config.get<bool>("useStreamConfig")) {
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber, numshots);

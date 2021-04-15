@@ -55,8 +55,9 @@ template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     std::vector<receiverSettings> allSettings;
-    
-    if (config.get<bool>("useStreamConfig")) {
+
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig);
@@ -89,7 +90,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 {
     std::vector<receiverSettings> allSettings;
     
-    if (config.get<bool>("useStreamConfig")) {
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber);
@@ -130,7 +132,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 {
     std::vector<receiverSettings> allSettings;
     
-    if (config.get<bool>("useStreamConfig")) {
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber, numshots);
