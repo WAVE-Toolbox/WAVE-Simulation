@@ -242,15 +242,13 @@ The authors of WAVE-Simulation are listed in file \lstinline{AUTHORS}.
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
 
-In order to extract information about the structure and composition of the crust from seismic observations, it is necessary to be able to predict how seismic wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation (C++), that is described in this guide, is based on the FD approach described by \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
+In order to extract information about the structure and composition of the crust from seismic observations and ground penetrating radar (GPR) observations, it is necessary to be able to predict how seismic wavefields and electromagnetic (EM) wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation (C++), that is described in this guide, is based on the FD approach described by \cite{yee1966numerical}, \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
 
-WAVE-Simulation features solving seismic waves including the acoustic, elastic and viscoelastic wave equation in 2D and 3D by utilising an explicit time-domain FD method. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh (\cite{komatitsch2007unsplit}). It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface. In the following sections, we give a short description of the  theoretical background, the different modelling parameters and options and how the program is used and executed.
+WAVE-Simulation features solving seismic waves and EM waves by utilising an explicit time-domain FD method. Seismic waves include the acoustic, elastic and viscoelastic wave equation in 2D and 3D and Shear Horizontal (SH) wave in 2D, while EM waves include (visco) transverse magnetic (TM) mode and (visco) transverse electric (TE) mode in 2D and visco-EM wave in 3D. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh \citep{berenger1994perfectly,roden2000convolution,komatitsch2007unsplit}. It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface in seismic wave propagation. In the following sections, by taking 3D elastic wave equation as an example, we give a short description of the theoretical background, the different modelling parameters and options and how the program is used and executed. The others such as the acoustic, viscoelastic and visco-EM wave equations are shown in the appendix 
+\ref{sec:Discretization_of_other_wave_equations}.
 
 \cleardoublepage
 \part{Theory of Finite Difference Simulation in Matrix-Vector Formalism}
-
-In this part, we introduce the theory of 3D elastic wave equation and how to implement it's FD simulation in matrix-vector formalism. The other waves such as viscoelastic wave equation are shown in the appendix 
-\ref{sec:Discretization_of_other_wave_equations}.
 
 \chapter{Physical Derivation of Seismic Wave Propagations}
 
@@ -408,49 +406,73 @@ To solve the wave equations with finite differences, the physical continuous spa
 \section{Definition of the \textit{Standard Staggered Grid} (SSG)} \label{sec:SSG}
 
 The SSG \citep{virieux1986p,levander1988fourth} is a method to distribute physical quantities over grid points, such that the partial differential wave equations each refer to a common grid point. The shape of the SSG in three dimensions is shown in figure \ref{fig:StagGrid}. Here the temporal dimension is not shown explicitly. Stress components $\sigma_{ij}$ are temporally located on half-spaced grid points, the particle velocity $v_{i}$ is temporally located on full grid points.
-
 \begin{figure}
-\begin{tikzpicture}
-	\begin{pgfonlayer}{nodelayer}
-		\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw,label=90:{$k,l,m$}] (0) at (0, 0) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$m+\frac{1}{2}$}] (1) at (2, 1) {};
-		\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw,label=90:{$k+\frac{1}{2}$}] (2) at (4, 0) {};
-		\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw] (3) at (6, 1) {};
-		\node [style=none,label=0:$z(m)$] (4) at (4, 2) {};
-		\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw,label=180:{$l+\frac{1}{2}$}] (5) at (0, -4) {};
-		\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw] (6) at (4, -4) {};
-		\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw] (7) at (2, -3) {};
-		\node [style=none] (8) at (6, -3) {};
-		\node [style=none,label=-90:$x(k)$] (9) at (8, 0) {};
-		\node [style=none,label=0:$y(l)$] (10) at (0, -6) {};
-		\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw,label=right:\textcolor{green}{$\sigma_{xx},\sigma_{yy},\sigma_{zz},\lambda,\mu,\rho$}] (11) at (10,2) {};
-		\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw,label=right:\textcolor{brown}{$v_x$}] (12) at (10,1) {};
-		\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw,label=right:\textcolor{red}{$v_y$}] (13) at (10,0) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=right:\textcolor{orange}{$v_z$}] (14) at (10,-1) {};
-		\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw,label=right:\textcolor{violet}{$\sigma_{xy}$}] (15) at (10,-2) {};
-		\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw,label=right:\textcolor{blue}{$\sigma_{yz}$}] (16) at (10,-3) {};
-		\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw,label=right:\textcolor{black}{$\sigma_{xz}$}] (17) at (10,-4) {};
-	\end{pgfonlayer}
-	\begin{pgfonlayer}{edgelayer}
-		\draw (0.center) to (1.center);
-		\draw (2.center) to (3.center);
-		\draw (0.center) to (2.center);
-		\draw (1.center) to (3.center);
-		\draw (0.center) to (5.center);
-		\draw (5.center) to (6.center);
-		\draw [dashed](5.center) to (7.center);
-		\draw (6.center) to (8.center);
-		\draw [dashed](7.center) to (8.center);
-		\draw (6.center) to (2.center);
-		\draw [dashed](7.center) to (1.center);
-		\draw (8.center) to (3.center);
-		\draw [->] (1.center) to (4.center);
-		\draw [->] (2.center) to (9.center);
-		\draw [->] (5.center) to (10.center);
-	\end{pgfonlayer}
+\begin{tikzpicture} 
+    \begin{pgfonlayer}{nodelayer}
+	\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw, label=90:{$i,j,k$}, label={[align=left]-70:$p, \sigma_{xx},\sigma_{yy},\sigma_{zz}, \lambda, \mu, \rho$ \\ $r_{xxl},r_{yyl},r_{zzl}, \tau_p, \tau_s$}] (0) at (0, 0) {};
+	\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw, label=90:{$k+\frac{1}{2}$}, label={[align=left]-45:$v_z, \rho_z$}] (1) at (2, 1) {};
+	\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw, label=90:{$i+\frac{1}{2}$}, label={[align=left]-45:$v_x, \rho_x$}] (2) at (4, 0) {};
+	\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw, label=90:{$i+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]0:$\sigma_{xz}, \mu_{xz}$ \\ $r_{xzl}, \tau_{sxz}$}] (3) at (6, 1) {};
+	\node [style=none,label=0:$z$] (4) at (3, 1.5) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw, label=80:{$j+\frac{1}{2}$}, label={[align=left]-45:$v_y, \rho_y$}] (5) at (0, -4) {};
+	\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw, label=0:{$i+\frac{1}{2}, j+\frac{1}{2}$}, label={[align=left]-90:$\sigma_{xy}, \mu_{xy}$ \\ $r_{xyl}, \tau_{sxy}$}] (6) at (4, -4) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]-15:$\sigma_{yz}, \mu_{yz}$ \\ $r_{yzl}, \tau_{syz}$}] (7) at (2, -3) {};
+	\node [style=none] (8) at (6, -3) {};
+	\node [style=none,label=-90:$x$] (9) at (7, 0) {};
+	\node [style=none,label=0:$y$] (10) at (0, -6) {};	
+	\node [style=none,label=0:$\mathbf{Viscoelastic}$] (101) at (4.5, -5.5) {};		
+    \end{pgfonlayer}
+    \begin{pgfonlayer}{edgelayer}
+	\draw (0.center) to (1.center);
+	\draw (2.center) to (3.center);
+	\draw (0.center) to (2.center);
+	\draw (1.center) to (3.center);
+	\draw (0.center) to (5.center);
+	\draw (5.center) to (6.center);
+	\draw [dashed](5.center) to (7.center);
+	\draw (6.center) to (8.center);
+	\draw [dashed](7.center) to (8.center);
+	\draw (6.center) to (2.center);
+	\draw [dashed](7.center) to (1.center);
+	\draw (8.center) to (3.center);
+	\draw [->] (1.center) to (4.center);
+	\draw [->] (2.center) to (9.center);
+	\draw [->] (5.center) to (10.center);
+    \end{pgfonlayer}
+    \begin{pgfonlayer}{nodelayer}
+	\node [style=none, label=-45:{$i,j,k$}] (11) at (0+8.3, 0) {};
+	\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw, label=-9:{$k+\frac{1}{2}$}, label={[align=left]93:$E_z,\varepsilon_{z},\sigma_{ez}$\\$r_{zl},\tau_{\varepsilon z l},\tau_{\sigma e z}$}] (12) at (2+8.3, 1) {};
+	\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw, label=-135:{$i+\frac{1}{2}$}, label={[align=left]-87:$E_x, \varepsilon_{x}, \sigma_{ex}$\\$r_{xl},\tau_{\varepsilon x l},\tau_{\sigma e x}$}] (13) at (4+8.3, 0) {};
+	\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw, label=90:{$i+\frac{1}{2}, k+\frac{1}{2}$}, label=-70:{$H_y, \mu_{mxz}$}] (14) at (6+8.3, 1) {};
+	\node [style=none,label=0:$z$] (15) at (3+8.3, 1.5) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw, label=80:{$j+\frac{1}{2}$}, label={[align=left]-45:$E_y, \varepsilon_{y}, \sigma_{ey}$\\$r_{yl},\tau_{\varepsilon y l},\tau_{\sigma e y}$}] (16) at (0+8.3, -4) {};
+	\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw, label=0:{$i+\frac{1}{2}, j+\frac{1}{2}$}, label=-90:{$H_z, \mu_{mxy}$}] (17) at (4+8.3, -4) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]-45:$H_x, \mu_{myz}$}] (18) at (2+8.3, -3) {};
+	\node [style=none] (19) at (6+8.3, -3) {};
+	\node [style=none,label=-90:$x$] (20) at (7+8.3, 0) {};
+	\node [style=none,label=0:$y$] (21) at (0+8.3, -6) {};	
+	\node [style=none,label=0:$\mathbf{Visco-EM}$] (102) at (4.5+8.3, -5.5) {};		
+    \end{pgfonlayer}
+    \begin{pgfonlayer}{edgelayer}
+	\draw (11.center) to (12.center);
+	\draw (13.center) to (14.center);
+	\draw (11.center) to (13.center);
+	\draw (12.center) to (14.center);
+	\draw (11.center) to (16.center);
+	\draw (16.center) to (17.center);
+	\draw [dashed](16.center) to (18.center);
+	\draw (17.center) to (19.center);
+	\draw [dashed](18.center) to (19.center);
+	\draw (17.center) to (13.center);
+	\draw [dashed](18.center) to (12.center);
+	\draw (19.center) to (14.center);
+	\draw [->] (12.center) to (15.center);
+	\draw [->] (13.center) to (20.center);
+	\draw [->] (16.center) to (21.center);
+    \end{pgfonlayer}
 \end{tikzpicture}
-\caption[Representation of the \textit{Standard Staggered Grid} (SSG).]{Representation of the \textit{Standard Staggered Grid} (SSG) with the distribution of material and wavefield parameter in 3-D.}
-\label{fig:StagGrid}
+\caption[]{Representation of the SSG with the distribution of material and wavefield parameter of viscoelastic wave \citep{graves1996simulating} and visco-EM wave \citep{yee1966numerical} in 3D. The model parameters $\mathbf{m}$ are located at the integer points or averaged by $i$ direction ($\mathbf{m}_i$) or averaged by $ij$ plane ($\mathbf{m}_{ij}$).}
+\label{fig:StagGrid3D}
 \end{figure}
 
 Using the solution approach of finite differences, the analytical calculations of spatial and time derivation are approximated by calculating the weighted average (FD-operators) of surrounding grid points. Depending on the FD-operator order, more surrounding grid points are included in the averaging. Models can be approximated more exactly by using higher orders, at the expense of higher computing effort and thus higher computing time.
@@ -465,37 +487,37 @@ To accomplish a feasible implementation of the finite difference calculations to
 In equation \ref{eqn:ElBewGlDis} it can be seen that velocity is defined on full grid points whereas stress is defined on half grid points. This leads to the fact that the equations are referring to a joint grid point. 
 
 A compact definition of the FD-scheme can be made by defining fractions for each order of the spatial derivative as shown below. 
-In the following, equations upper indices represent the time increments and lower indices describe the spatial centres. 
+In the following, equations upper indices represent the time increments and lower indices describe the spatial centers. 
 
 For second and fourth order the following applies: 
 \begin{align}
-	\mathcal{O}_2: \qquad   \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}}{\Delta x}\label{eqn:FDO2O}\\
-	\mathcal{O}_4: \qquad  \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\frac{9}{8}\left(\sigma_{xx,k+1,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k,l,m}^{n+\frac{1}{2}}\right) - \frac{1}{24}\left(\sigma_{xx,k+2,l,m}^{n+\frac{1}{2}} - \sigma_{xx,k-1,l,m}^{n+\frac{1}{2}}\right)}{\Delta x}
+	\mathcal{O}_2: \qquad   \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\sigma_{xx,i+1,j,k}^{n+\frac{1}{2}} - \sigma_{xx,i,j,k}^{n+\frac{1}{2}}}{\Delta x}\label{eqn:FDO2O}\\
+	\mathcal{O}_4: \qquad  \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} &\overset{}{\coloneqq} \frac{\frac{9}{8}\left(\sigma_{xx,i+1,j,k}^{n+\frac{1}{2}} - \sigma_{xx,i,j,k}^{n+\frac{1}{2}}\right) - \frac{1}{24}\left(\sigma_{xx,i+2,j,k}^{n+\frac{1}{2}} - \sigma_{xx,i-1,j,k}^{n+\frac{1}{2}}\right)}{\Delta x}
 \end{align}
 Consequently by usage of the SSG, the elastic wave equation can be discretised as follows:
 \begin{align*}
-	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} &= \sigma_{xx,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t  \cdot\mu_{k,l,m} \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n\\
-	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} &= \sigma_{yy,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t \cdot \mu_{k,l,m} \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n\\
-	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} &= \sigma_{zz,k,l,m}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{k,l,m} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n \right) + 2 \cdot \Delta t \cdot \mu_{k,l,m} \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^n
+	\sigma_{xx,i,j,k}^{n+\frac{1}{2}} &= \sigma_{xx,i,j,k}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^n \right) + 2 \cdot \Delta t  \cdot\mu_{i,j,k} \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^n\\
+	\sigma_{yy,i,j,k}^{n+\frac{1}{2}} &= \sigma_{yy,i,j,k}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^n \right) + 2 \cdot \Delta t \cdot \mu_{i,j,k} \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^n\\
+	\sigma_{zz,i,j,k}^{n+\frac{1}{2}} &= \sigma_{zz,i,j,k}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^n \right) + 2 \cdot \Delta t \cdot \mu_{i,j,k} \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^n
 \end{align*}
 \begin{align*}
-	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} &= \sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m} \left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n \right)\\
-	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}} \left( \left.\frac{\partial v_x}{\partial z}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\\
-	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}} \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)
+	\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} &= \sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{i+\frac{1}{2},j+\frac{1}{2},k} \left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^n \right)\\
+	\sigma_{xz,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{xz,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{i+\frac{1}{2},j,k+\frac{1}{2}} \left( \left.\frac{\partial v_x}{\partial z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^n \right)\\
+	\sigma_{yz,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} &= \sigma_{yz,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{i,j+\frac{1}{2},k+\frac{1}{2}} \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n + \left.\frac{\partial v_z}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n \right)
 \end{align*}
 \begin{align*}
-	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\Delta t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
-	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
-	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
+	v_{x,i+\frac{1}{2},j,k}^{n+1} &= v_{x,i+\frac{1}{2},j,k}^n + \frac{\Delta t}{\rho_{i+\frac{1}{2},j,k}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} \right)\\
+	v_{y,i,j+\frac{1}{2},k}^{n+1} &= v_{y,i,j+\frac{1}{2},k}^n + \frac{\Delta t}{\rho_{i,j+\frac{1}{2},k}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} \right)\\
+	v_{z,i,j,k+\frac{1}{2}}^{n+1} &= v_{z,i,j,k+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{i,j,k+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
-Using the SSG  requires numerical stability. Density $\rho_{klm}$ on half grid points is arithmetically averaged from surrounding full grid points. The first Lam\'{e} parameter $\mu_{k,l,m}$ however is harmonically averaged. 
+Using the SSG  requires numerical stability. Density $\rho_{klm}$ on half grid points is arithmetically averaged from surrounding full grid points. The first Lam\'{e} parameter $\mu_{i,j,k}$ however is harmonically averaged. 
 \begin{align*}
-	\rho_{k+\frac{1}{2},l,m} &= \frac{\rho_{k,l,m} + \rho_{k+1,l,m}}{2} \quad \rho_{k,l+\frac{1}{2},m} = \frac{\rho_{k,l,m} + \rho_{k,l+1,m}}{2} \quad \rho_{k,l,m+\frac{1}{2}} = \frac{\rho_{k,l,m} + \rho_{k,l,m+1}}{2}
+	\rho_{i+\frac{1}{2},j,k} &= \frac{\rho_{i,j,k} + \rho_{i+1,j,k}}{2} \quad \rho_{i,j+\frac{1}{2},k} = \frac{\rho_{i,j,k} + \rho_{i,j+1,k}}{2} \quad \rho_{i,j,k+\frac{1}{2}} = \frac{\rho_{i,j,k} + \rho_{i,j,k+1}}{2}
 \end{align*}
 \begin{align*}
-	\mu_{k+\frac{1}{2},l+\frac{1}{2},m} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k+1,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k+1,l+1,m}}\\
-	\mu_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k+1,l,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k+1,l,m+1}}\\
-	\mu_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{k,l,m} + \mu^{-1}_{k,l+1,m} + \mu^{-1}_{k,l,m+1} + \mu^{-1}_{k,l+1,m+1}}
+	\mu_{i+\frac{1}{2},j+\frac{1}{2},k} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{k+1,l+1,m}}\\
+	\mu_{i+\frac{1}{2},j,k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i+1,j,k+1}}\\
+	\mu_{i,j+\frac{1}{2},k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i,j+1,k+1}}
 \end{align*}
 \\
 
@@ -505,17 +527,17 @@ To simulate the wavefields in space and time all discretised equations for stres
 \caption{Structure of the finite differences simulation.}
 \label{alg:FD}
 \For{n=1 \KwTo NT}{
-	\For{k=1 \KwTo NX}{
-		\For{l=1 \KwTo NY}{
-			\For{m=1 \KwTo NZ}{
-				Update velocities $v_i$
+	\For{i=1 \KwTo NX}{
+		\For{j=1 \KwTo NY}{
+			\For{k=1 \KwTo NZ}{
+				Update velocities $v_x$, $v_y$, $v_z$
 			}
 		}
 	}
-	\For{k=1 \KwTo NX}{
-		\For{l=1 \KwTo NY}{
-			\For{m=1 \KwTo NZ}{
-				Update stresses $\sigma_{ij}$ 
+	\For{i=1 \KwTo NX}{
+		\For{j=1 \KwTo NY}{
+			\For{k=1 \KwTo NZ}{
+				Update stresses $\sigma_{xx}$, $\sigma_{yy}$, $\sigma_{zz}$, $\sigma_{xy}$, $\sigma_{xz}$, $\sigma_{yz}$ 
 			}
 		}
 	}		
@@ -575,7 +597,7 @@ As already mentioned, the order of spatial derivation is irrelevant. This is a p
 
 Therefore, to update $v_x$ and $\sigma_{xy}$  the following applies:
 \begin{multline}
-	v_{x,k,l,m}^{n+1} = v_{x,k,l,m}^n + \frac{\Delta t}{\rho_{k,l,m} \cdot \Delta h} \cdot\\  \left( \sigma_{xx,k+1,l,m}^{n} - \sigma_{xx,k,l,m}^{n} + \sigma_{xy,k,l,m}^{n} - \sigma_{xy,k,l-1,m}^{n} + \sigma_{xz,k,l,m}^{n} - \sigma_{xz,k,l,m-1}^{n} \right)\label{eqn:exMV1}
+	v_{x,i,j,k}^{n+1} = v_{x,i,j,k}^n + \frac{\Delta t}{\rho_{i,j,k} \cdot \Delta h} \cdot\\  \left( \sigma_{xx,i+1,j,k}^{n} - \sigma_{xx,i,j,k}^{n} + \sigma_{xy,i,j,k}^{n} - \sigma_{xy,i,j-1,k}^{n} + \sigma_{xz,i,j,k}^{n} - \sigma_{xz,i,j,k-1}^{n} \right)\label{eqn:exMV1}
 \end{multline}
 
 All physical quantities, represented by three-dimensional arrays (here $v_x$, $\sigma_{ii}$ and $\rho$), have to be converted to vectors. The approach has to be applied consequently. figure \ref{fig:ArrayToVec} illustrates the conversation from a $4 \times 3 \times 2$-array to a single vector. Projecting first the x-direction then y-direction and finally the z-direction.
@@ -609,9 +631,9 @@ All physical quantities, represented by three-dimensional arrays (here $v_x$, $\
 		\node [style=none] (22) at (2.5, -2.5) {\scriptsize{22}};
 		\node [style=none] (23) at (3.5, -2.5) {\scriptsize{23}};
 		\node [style=none] (24) at (4.5, -2.5) {\scriptsize{24}};
-		\node [style=none,label=-90:$x(k)$] (25) at (6, 0) {};
-		\node [style=none,label=0:$y(l)$] (26) at (0, -4) {};
-		\node [style=none,label=0:$z(m)$] (27) at (1, 1) {};
+		\node [style=none,label=-90:$x(i)$] (25) at (6, 0) {};
+		\node [style=none,label=0:$y(j)$] (26) at (0, -4) {};
+		\node [style=none,label=0:$z(k)$] (27) at (1, 1) {};
 	\end{pgfonlayer}
 	\begin{pgfonlayer}{edgelayer}
 		\draw [->](0.center) to (25.center);
@@ -631,9 +653,9 @@ The biggest step in applying the new formalism is, finding the according FD-coef
 
 Due to an index-shift of all half value indices by $(-\frac{1}{2})$, when applied, it must be distinguished between two cases. 
 
-Is the original centre of the FD-operator in direction of the derivation, on full grid points, the second order FD-operator theoretically refers to $\left(v_{x,k+\frac{1}{2},l,m} - v_{x,k-\frac{1}{2},l,m}\right)$. Such as in case of a $\sigma_{xx,k,l,m}$-update where the centre of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{k,l,m}$ is in direction of the derivation. By shifting half value indices by $(-\frac{1}{2})$, the operator's centre is shifted likewise and the result of $\sigma_{xx,k,l,m}$ at $k$ is calculated from $v_x$ at $(k-1)$ and $k$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,b}$, where $b$ stands for \textit{backward}. The index $i$ represents the derivation direction.
+Is the original center of the FD-operator in direction of the derivation, on full grid points, the second order FD-operator theoretically refers to $\left(v_{x,i+\frac{1}{2},j,k} - v_{x,i-\frac{1}{2},j,k}\right)$. Such as in case of a $\sigma_{xx,i,j,k}$-update where the center of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{i,j,k}$ is in direction of the derivation. By shifting half value indices by $(-\frac{1}{2})$, the operator's center is shifted likewise and the result of $\sigma_{xx,i,j,k}$ at $k$ is calculated from $v_x$ at $(k-1)$ and $k$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,b}$, where $b$ stands for \textit{backward}. The index $i$ represents the derivation direction.
 
-The second case occurs when the centre of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$, where the centre of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}$, in derivation direction $y$, is placed at $(l+\frac{1}{2})$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,k+\frac{1}{2},l+1,m} - v_{x,k+\frac{1}{2},l,m}\right)$-term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}$ is shifted to $\sigma_{xy,k,l,m}$, which is equal to a shift in $x$ and in $y$-direction by $(-\frac{1}{2})$. Thus the centre of the FD-operator is shifted to the right, compared to the $\sigma_{xy,k,l,m}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,f}$, where $f$ indicates \textit{forward}.
+The second case occurs when the center of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$, where the center of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}$, in derivation direction $y$, is placed at $(l+\frac{1}{2})$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,i+\frac{1}{2},j+1,k} - v_{x,i+\frac{1}{2},j,k}\right)$-term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$ is shifted to $\sigma_{xy,i,j,k}$, which is equal to a shift in $x$ and in $y$-direction by $(-\frac{1}{2})$. Thus the center of the FD-operator is shifted to the right, compared to the $\sigma_{xy,i,j,k}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,f}$, where $f$ indicates \textit{forward}.
 These specifications manifest themselves by shifting the FD-coefficients in the matrix, which in general can be expressed by $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$.
 
 \begin{figure}
@@ -642,12 +664,12 @@ These specifications manifest themselves by shifting the FD-coefficients in the 
 		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (0) at (0, 0) {};
 		\node [style=none] (1) at (2, 0) {};
 		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (2) at (4, 0) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k-\frac{1}{2}$}] (3) at (2, 2) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k$}] (4) at (4, 2) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k+\frac{1}{2}$}] (5) at (6, 2) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k$}] (6) at (10, 2) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$k+\frac{1}{2}$}] (7) at (12, 2) {};
-		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$k+1$}] (8) at (14, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$i-\frac{1}{2}$}] (3) at (2, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$i$}] (4) at (4, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$i+\frac{1}{2}$}] (5) at (6, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$i$}] (6) at (10, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=white, draw,label=90:{$i+\frac{1}{2}$}] (7) at (12, 2) {};
+		\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw,label=90:{$i+1$}] (8) at (14, 2) {};
 		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (9) at (10, 0) {};
 		\node [style=none, circle, color=green, minimum size=3 mm, fill=green, draw] (10) at (14, 0) {};
 		\node [style=none] (11) at (1.5, 1.5) {};
@@ -663,7 +685,7 @@ These specifications manifest themselves by shifting the FD-coefficients in the 
 		\draw [->](15.center) to (16.center);
 	\end{pgfonlayer}
 \end{tikzpicture}
-\caption[Effect of an index-shift to the FD-operator's position.]{Effect of an index-shift to the FD-operator's position. Left: The original center is placed at $k$ and is relatively shifted to the right, by which it falls back ($\underline{D}_{\,i,b}$). Right: The original center is placed at $k+\frac{1}{2}$ and is relatively shifted to the left, by which it set forward ($\underline{D}_{\,i,f}$).}
+\caption[Effect of an index-shift to the FD-operator's position.]{Effect of an index-shift to the FD-operator's position. Left: The original center is placed at $i$ and is relatively shifted to the right, by which it falls back ($\underline{D}_{\,i,b}$). Right: The original center is placed at $i+\frac{1}{2}$ and is relatively shifted to the left, by which it set forward ($\underline{D}_{\,i,f}$).}
 \label{fig:IndShift}
 \end{figure}
 
@@ -854,17 +876,7 @@ Beyond the dashed lines all entries are equal to 0, independent form the FD-oper
 
 All $\underline{D}_{\,i,b}$ can be derived from $\underline{D}_{\,i,f}$ by switching all entries $\neq 0$  in a row with the next value $\neq 0$ to the right. As this is equivalent to a multiplication with $(-1)$ followed by a transposition is obvious especially for $\underline{D}_{\,y}^4$.
 
-An important property of the FD-coefficient matrix is, how the model border is treated. Because entries beyond the model don't exist. Inevitably this entails that updates of $v_i$ and $\sigma_{ij}$ near the edge have to be calculated from partial FD-operators. At $v_x^{n+1}$ in the last $yz$-plane with $k=NX$ for example it is not possible to refer to grid point beyond the last plane. The second order FD-operator then can only be calculated from $\sigma_{xx}^n$, $\sigma_{xy}^n$ as well as $\sigma_{xz}^n$. Not including values beyond the edge is equal to fixing the wavefield and consequently the medium itself at the borders. Thus this provokes a total reflection. 
-
-The discrete components for an acoustic wavefield in matrix-vector notation can be written as following. Note that the pressure, $p$, is defined in an unconventional way as $p=\frac{1}{3}\mathrm{tr}(\sigma_{ij})$. Usually it is defined with a negative sign as $p=-\frac{1}{3}\mathrm{tr}(\sigma_{ij})$.
-\begin{align*}
-	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) 
-\end{align*}
-\begin{align*}
-	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p}^{\,n}  \right)\\
-	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p}^{\,n} \right)\\
-	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
-\end{align*}
+An important property of the FD-coefficient matrix is, how the model border is treated. Because entries beyond the model don't exist. Inevitably this entails that updates of $v_i$ and $\sigma_{ij}$ near the edge have to be calculated from partial FD-operators. At $v_x^{n+1}$ in the last $yz$-plane with $i=NX$ for example it is not possible to refer to grid point beyond the last plane. The second order FD-operator then can only be calculated from $\sigma_{xx}^n$, $\sigma_{xy}^n$ as well as $\sigma_{xz}^n$. Not including values beyond the edge is equal to fixing the wavefield and consequently the medium itself at the borders. Thus this provokes a total reflection. 
 
 All discrete components of the elastic wavefield in matrix-vector notation are: 
 \begin{align*}
@@ -882,15 +894,16 @@ All discrete components of the elastic wavefield in matrix-vector notation are:
 	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
 	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
+where $q$ is spatial FD order.
 
 \subsection{Introducing Averaging Matrices} \label{sec:Introducing_Averaging_Matrices}
-As mentioned in section \ref{fig:StagGrid}, to calculate the elastic and viscoelastic wave equations in time propagation, density $\rho_{k,l,m}$ and the first Lam\'{e} parameter $\mu_{k,l,m}$ have to be averaged. $\rho_{k,l,m}$ can be written in matrix-vector formalism as:
+As mentioned in section \ref{fig:StagGrid}, to calculate the elastic and viscoelastic wave equations in time propagation, density $\rho_{i,j,k}$ and the first Lam\'{e} parameter $\mu_{i,j,k}$ have to be averaged. $\rho_{i,j,k}$ can be written in matrix-vector formalism as:
 \begin{equation*}
 \vec{\rho}_{i}=\frac{1}{2}\cdot\underline{A}^{\text{a}}_{i} \cdot\vec{\rho}	
 \end{equation*}
 Postulating the arithmetical averaging matrix $\underline{A}^{\text{a}}_{i}$ in $i$-direction is trivial and similar to $\underline{D}_{\,i,f}^2$ whereby it should be noted that $\underline{A}^{a}_{i}$ has only entries $=1$. The upper index $a$ represents arithmetical averaging.
 
-Establishing the matrices for harmonic averaging more complicated. In matrix-vector formalism averaging the first Lam\'{e} parameter $\mu_{k,l,m}$ in the $ij$-plane can be calculated as follows.
+Establishing the matrices for harmonic averaging more complicated. In matrix-vector formalism averaging the first Lam\'{e} parameter $\mu_{i,j,k}$ in the $ij$-plane can be calculated as follows.
 \begin{equation*}
 \vec{\mu}_{ij}=\left(\underline{A}^{h}_{ij} \cdot\vec{\mu}	\right)^{-1}
 \end{equation*}
@@ -1467,64 +1480,76 @@ $\rho$              & \SI{3000}{kg/m^3}  \\ \bottomrule
 \appendix
 \chapter{Discretization of other wave equations}
 \label{sec:Discretization_of_other_wave_equations}
+
+\section{Matrix-vector formalism of acoustic wave equation}
+The discrete components for an acoustic wavefield in matrix-vector notation can be written as following. Note that the pressure, $p$, is defined in an unconventional way as $p=\frac{1}{3}\mathrm{tr}(\sigma_{ij})$. Usually it is defined with a negative sign as $p=-\frac{1}{3}\mathrm{tr}(\sigma_{ij})$.
+\begin{align*}
+	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) 
+\end{align*}
+\begin{align*}
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p}^{\,n}  \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
+\end{align*}
+
 \section{Discretization of viscoelastic wave equation}
-Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity \citep{bohlen2002parallel}. Here $\mu_{k,l,m}$ is the first Lam\'{e} parameter or S-wave modulus and $M_{k,l,m}$ is the P-wave modulus.
+Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity \citep{bohlen2002parallel}. Here $\mu_{i,j,k}$ is the first Lam\'{e} parameter or S-wave modulus and $M_{i,j,k}$ is the P-wave modulus.
 The S- and P-wave moduli are defined as:
 \begin{align}
-	\mu_{k,l,m}&= \rho_{,k,l,m}\cdot v_{S,k,l,m}^{2}\\
-	M_{k,l,m} &= \rho_{,k,l,m}\cdot v_{P,k,l,m}^{2}
+	\mu_{i,j,k}&= \rho_{,i,j,k}\cdot v_{S,i,j,k}^{2}\\
+	M_{i,j,k} &= \rho_{,i,j,k}\cdot v_{P,i,j,k}^{2}
 \end{align}
- Where $v_{S,k,l,m}$ is the velocity of the S-wave and $v_{P,k,l,m}$ is the velocity of the P-wave.
-As the system is represented by relaxation bodies the summation over $q$ is equal to the summati6on over all $L$ Maxwell-bodies. $\tau_{\sigma,q}$ describes the stress relaxation time and $\tau_{k,l,m}^s$ and $\tau_{k,l,m}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{k,l,m}^s$ on half grid points is calculated by averaging $\tau_{k,l,m}^s$  from the four surrounding grid points. 
+ Where $v_{S,i,j,k}$ is the velocity of the S-wave and $v_{P,i,j,k}$ is the velocity of the P-wave.
+As the system is represented by relaxation bodies the summation over $q$ is equal to the summati6on over all $L$ Maxwell-bodies. $\tau_{\sigma,l}$ describes the stress relaxation time and $\tau_{i,j,k}^s$ and $\tau_{i,j,k}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{i,j,k}^s$ on half grid points is calculated by averaging $\tau_{i,j,k}^s$  from the four surrounding grid points. 
 \begin{align*}
-	\tau_{k+\frac{1}{2},l+\frac{1}{2},m} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l+1,m} + \tau_{k+1,l+1,m}}{4}\\
-	\tau_{k+\frac{1}{2},l,m+\frac{1}{2}} &= \frac{\tau_{k,l,m} + \tau_{k+1,l,m} + \tau_{k,l,m+1} + \tau_{k+1,l,m+1}}{4}\\
-	\tau_{k,l+\frac{1}{2},m+\frac{1}{2}} &= \frac{\mu_{k,l,m} + \mu_{k,l+1,m} + \tau^{-1}_{k,l,m+1} + \tau_{k,l+1,m+1}}{4}
+	\tau_{i+\frac{1}{2},j+\frac{1}{2},k} &= \frac{\tau_{i,j,k} + \tau_{i+1,j,k} + \tau_{i,j+1,k} + \tau_{k+1,l+1,m}}{4}\\
+	\tau_{i+\frac{1}{2},j,k+\frac{1}{2}} &= \frac{\tau_{i,j,k} + \tau_{i+1,j,k} + \tau_{i,j,k+1} + \tau_{i+1,j,k+1}}{4}\\
+	\tau_{i,j+\frac{1}{2},k+\frac{1}{2}} &= \frac{\mu_{i,j,k} + \mu_{i,j+1,k} + \tau^{-1}_{i,j,k+1} + \tau_{i,j+1,k+1}}{4}
 \end{align*}
 
-Further on $r_{ij,q,k,l,m}^{n}$ can be interpreted as a memory variable for the $q$-th relaxation body, to help calculating the corresponding stress-tensor component $\sigma_{ij,k,l,m}$.
+Further on $r_{ij,l,i,j,k}^{n}$ can be interpreted as a memory variable for the $q$-th relaxation body, to help calculating the corresponding stress-tensor component $\sigma_{ij,i,j,k}$.
 \\\\The components of the stress tensor are given by:
 \begin{align*}
-	\sigma_{xx,k,l,m}^{n+\frac{1}{2}} =& \;\sigma_{xx,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
-	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
-	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xx,q,k,l,m}^{n-\frac{1}{2}}+ r_{xx,q,k,l,m}^{n+\frac{1}{2}}\right) \\
-	\sigma_{yy,k,l,m}^{n+\frac{1}{2}} =&\;\sigma_{yy,k,l,m}^{n}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
-	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n-} \right)\Bigg] \\
-	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,q,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
-	\sigma_{zz,k,l,m}^{n+\frac{1}{2}} =&\;\sigma_{zz,k,l,m}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{k,l,m} \left(1+L\cdot \tau^p_{k,l,m}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\Bigg]  \\
-	&- \Bigg[ 2 \Delta t \cdot \mu_{k,l,m} \left(1+L\cdot \tau^s_{k,l,m}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} \right)\Bigg] \\
-	&+ \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{yy,i,k,l,m}^{n-\frac{1}{2}}+ r_{yy,q,k,l,m}^{n+\frac{1}{2}}\right)\\ 
-	\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =&\;\sigma_{xy,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l+\frac{1}{2},m}\left(1+L\cdot\tau_{k+\frac{1}{2},l+\frac{1}{2},m}^s \right)\cdot \\ 
-	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^n \right)\Bigg] + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}}\right) \\
-	\sigma_{xz,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =&\;\sigma_{xy,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\left(1+L\cdot\tau_{k+\frac{1}{2},l,m+\frac{1}{2}}^s \right)\cdot \\ 
-	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
-	\sigma_{yz,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \;\sigma_{xy,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\left(1+L\cdot\tau_{k,l+\frac{1}{2},m+\frac{1}{2}}^s \right)\cdot \\ 
-	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{q=1}^{L} \left( r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
+	\sigma_{xx,i,j,k}^{n+\frac{1}{2}} =& \;\sigma_{xx,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xx,l,i,j,k}^{n-\frac{1}{2}}+ r_{xx,l,i,j,k}^{n+\frac{1}{2}}\right) \\
+	\sigma_{yy,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{yy,i,j,k}^{n}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n-} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{yy,l,i,j,k}^{n-\frac{1}{2}}+ r_{yy,l,i,j,k}^{n+\frac{1}{2}}\right)\\ 
+	\sigma_{zz,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{zz,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} \right)\Bigg] \\
+	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{yy,l,i,j,k}^{n-\frac{1}{2}}+ r_{yy,l,i,j,k}^{n+\frac{1}{2}}\right)\\ 
+	\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} =&\;\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{i+\frac{1}{2},j+\frac{1}{2},k}\left(1+L\cdot\tau_{i+\frac{1}{2},j+\frac{1}{2},k}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^n \right)\Bigg] + \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}}+ r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}}\right) \\
+	\sigma_{xz,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} =&\;\sigma_{xy,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{i+\frac{1}{2},j,k+\frac{1}{2}}\left(1+L\cdot\tau_{i+\frac{1}{2},j,k+\frac{1}{2}}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xy,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
+	\sigma_{yz,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} =& \;\sigma_{xy,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{i,j+\frac{1}{2},k+\frac{1}{2}}\left(1+L\cdot\tau_{i,j+\frac{1}{2},k+\frac{1}{2}}^s \right)\cdot \\ 
+	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xy,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
 \end{align*}
 
 \begin{align*}
-	r_{xx,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xx,q,k,l,m}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
-	& + \frac{2\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
-	r_{yy,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{yy,q,k,l,m}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
-	& + \frac{2\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
-	r_{zz,q,k,l,m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{zz,q,k,l,m}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{k,l,m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^p_{k,l,m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l,m}^{n} \right)\\
-	& + \frac{2\mu_{k,l,m} \Delta t}{\tau_{\sigma,q}}\cdot \tau_{k,l,m}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k,l,m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l,m}^{n}  \right)\Bigg] \\
-	r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xy,q,k+\frac{1}{2},l+\frac{1}{2},m}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{k+\frac{1}{2},l+\frac{1}{2},m}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k+\frac{1}{2},l+\frac{1}{2},m} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{k+\frac{1}{2},l+\frac{1}{2},m}^{n} \right)\Bigg]\\
-	r_{xz,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{xz,q,k+\frac{1}{2},l,m+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{k+\frac{1}{2},l,m+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k+\frac{1}{2},l,m+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k+\frac{1}{2},l,m+\frac{1}{2}}^{n} \right)\Bigg]\\
-	r_{yz,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,q}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,q}}  \right) \cdot r_{yz,q,k,l+\frac{1}{2},m+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{k,l+\frac{1}{2},m+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,q}}\cdot \tau^s_{k,l+\frac{1}{2},m+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{k,l+\frac{1}{2},m+\frac{1}{2}}^{n} \right)\Bigg] \\
+	r_{xx,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xx,l,i,j,k}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	r_{yy,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{yy,l,i,j,k}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	r_{zz,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{zz,l,i,j,k}^{n-\frac{1}{2}} \\ 
+	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{i+\frac{1}{2},j+\frac{1}{2},k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j+\frac{1}{2},k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\Bigg]\\
+	r_{xz,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xz,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{i+\frac{1}{2},j,k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j,k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\Bigg]\\
+	r_{yz,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{yz,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
+	& -\frac{\mu_{i,j+\frac{1}{2},k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j+\frac{1}{2},k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\Bigg] \\
 \end{align*}
 
 Just as in the elastic case, the velocity equations for the viscoelastic case are given by:
 \begin{align*}
-	v_{x,k+\frac{1}{2},l,m}^{n+1} &= v_{x,k+\frac{1}{2},l,m}^n + \frac{\Delta t}{\rho_{k+\frac{1}{2},l,m}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{k+\frac{1}{2},l,m}^{n+\frac{1}{2}} \right)\\
-	v_{y,k,l+\frac{1}{2},m}^{n+1} &= v_{y,k,l+\frac{1}{2},m}^n + \frac{\Delta t}{\rho_{k,l+\frac{1}{2},m}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{k,l+\frac{1}{2},m}^{n+\frac{1}{2}} \right)\\
-	v_{z,k,l,m+\frac{1}{2}}^{n+1} &= v_{z,k,l,m+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{k,l,m+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{k,l,m+\frac{1}{2}}^{n+\frac{1}{2}} \right)
+	v_{x,i+\frac{1}{2},j,k}^{n+1} &= v_{x,i+\frac{1}{2},j,k}^n + \frac{\Delta t}{\rho_{i+\frac{1}{2},j,k}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} \right)\\
+	v_{y,i,j+\frac{1}{2},k}^{n+1} &= v_{y,i,j+\frac{1}{2},k}^n + \frac{\Delta t}{\rho_{i,j+\frac{1}{2},k}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} \right)\\
+	v_{z,i,j,k+\frac{1}{2}}^{n+1} &= v_{z,i,j,k+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{i,j,k+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
 
 

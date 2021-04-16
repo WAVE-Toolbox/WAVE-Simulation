@@ -96,6 +96,7 @@ int main(int argc, const char *argv[])
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
     Acquisition::Coordinates<ValueType> modelCoordinates(config);
+    Acquisition::Coordinates<ValueType> modelCoordinatesBig;
 
     if (config.get<bool>("useVariableGrid")) {
         CheckParameter::checkVariableGrid(config, commAll, modelCoordinates);
@@ -124,6 +125,7 @@ int main(int argc, const char *argv[])
     /* Distribution                            */
     /* --------------------------------------- */
     dmemo::DistributionPtr dist = nullptr;
+    dmemo::DistributionPtr distBig = nullptr;
     IndexType configPartitioning = config.get<IndexType>("partitioning");
     switch (configPartitioning) {
     case 0:
@@ -135,6 +137,10 @@ int main(int argc, const char *argv[])
     case 1:
         SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
         dist = Partitioning::gridPartition<ValueType>(config, commShot);
+        if (useStreamConfig) {
+            modelCoordinatesBig.init(configBig);
+            distBig = Partitioning::gridPartition<ValueType>(configBig, commShot);
+        }
         break;
     default:
         COMMON_THROWEXCEPTION("unknown partitioning method = " << configPartitioning);
@@ -298,7 +304,6 @@ int main(int argc, const char *argv[])
     start_t = common::Walltime::get();
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelPerShot(Modelparameter::Factory<ValueType>::Create(equationType)); 
     Modelparameter::ModelparameterEM<ValueType>::ModelparameterPtr modelPerShotEM(Modelparameter::FactoryEM<ValueType>::Create(equationType));
-    Acquisition::Coordinates<ValueType> modelCoordinatesBig;
     if (!useStreamConfig) {
         if (isSeismic) {
             model->init(config, ctx, dist, modelCoordinates);
@@ -306,9 +311,6 @@ int main(int argc, const char *argv[])
             modelEM->init(config, ctx, dist, modelCoordinates);
         }
     } else { 
-        modelCoordinatesBig.init(configBig);
-        dmemo::DistributionPtr distBig = nullptr;
-        distBig = KITGPI::Partitioning::gridPartition<ValueType>(configBig, commShot);
         if (isSeismic) {   
             model->init(configBig, ctx, distBig, modelCoordinatesBig);   
             modelPerShot->init(config, ctx, dist, modelCoordinates);  
