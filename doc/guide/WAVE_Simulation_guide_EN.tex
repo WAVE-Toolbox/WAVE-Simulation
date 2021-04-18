@@ -245,7 +245,7 @@ The authors of WAVE-Simulation are listed in file \lstinline{AUTHORS}.
 In order to extract information about the structure and composition of the crust from seismic observations and ground penetrating radar (GPR) observations, it is necessary to be able to predict how seismic wavefields and electromagnetic (EM) wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation (C++), that is described in this guide, is based on the FD approach described by \cite{yee1966numerical}, \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
 
 WAVE-Simulation features solving seismic waves and EM waves by utilising an explicit time-domain FD method. Seismic waves include the acoustic, elastic and viscoelastic wave equation in 2D and 3D and Shear Horizontal (SH) wave in 2D, while EM waves include (visco) transverse magnetic (TM) mode and (visco) transverse electric (TE) mode in 2D and visco-EM wave in 3D. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh \citep{berenger1994perfectly,roden2000convolution,komatitsch2007unsplit}. It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface in seismic wave propagation. In the following sections, by taking 3D elastic wave equation as an example, we give a short description of the theoretical background, the different modelling parameters and options and how the program is used and executed. The others such as the acoustic, viscoelastic and visco-EM wave equations are shown in the appendix 
-\ref{sec:Discretization_of_other_wave_equations}.
+\ref{Viscoelastic_wave_equation}.
 
 \cleardoublepage
 \part{Theory of Finite Difference Simulation in Matrix-Vector Formalism}
@@ -260,6 +260,7 @@ This chapter contains the theoretical principles for the physical description of
 Other than not viscous fluids, viscous fluids and solid objects can be under shear stress. The normal stress in all spatial directions is generally varying. This can be explained by internal friction.
 
 The state of stress is represented by an infinitesimal volume element  $\partial V = \partial x~ \partial y~ \partial z$, as shown in figure \ref{fig:AllgSpZu}.
+In index notation $\sigma_{ij}$, index $i$ represents the direction of the surface normal, which is affected by the stress and index $j$ describes the direction of the stress itself. $\sigma_{ii}$ correspond to normal stress with the convention $\sigma_{ii} > 0$: tension and $\sigma_{ii} < 0$: compression. $\sigma_{ij}$ with  $i \neq j$ are also denoted by $\tau_{ij}$ and correspond to shear stress. 
 \begin{figure}
 \centering
 \begin{tikzpicture}
@@ -315,7 +316,6 @@ The state of stress is represented by an infinitesimal volume element  $\partial
 \caption[Representation of the general stress state by a volume element.]{Representation of the general stress state by a volume element $\partial V = \partial x~ \partial y~ \partial z$. Where $\sigma_{ij}$ corresponds to normal stress and $\tau_{ij}$ to shear stress. }
 \label{fig:AllgSpZu}
 \end{figure}
-In index notation $\sigma_{ij}$, index $i$ represents the direction of the surface normal, which is affected by the stress and index $j$ describes the direction of the stress itself. $\sigma_{ii}$ correspond to normal stress with the convention $\sigma_{ii} > 0$: tension and $\sigma_{ii} < 0$: compression. $\sigma_{ij}$ with  $i \neq j$ are also denoted by $\tau_{ij}$ and correspond to shear stress. 
 
 As the state of stress represents an object in a static equilibrium, for every tension on one of the three covered sides there exists a counter-stress in the opposite direction. 
 
@@ -351,10 +351,10 @@ The stiffness tensor $C_{ijkl}$ is \num{4}-dimensional and in general has $3^4 =
 
 Thus the generalised Hook's law for linear elastic and isotropic media can be derived:
 \begin{align}
-	\sigma_{ij} &= \lambda \epsilon_{rr} \delta_{ij} + 2 \mu \epsilon_{ij}\label{eqn:GenHook}\\
+	\sigma_{ij} &= \lambda \theta \delta_{ij} + 2 \mu \epsilon_{ij}\label{eqn:GenHook}\\
 	\epsilon_{ij} &= \frac{1}{2} \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right)\label{eqn:Dehnij}
 \end{align}
-Here $\lambda$ is the first Lam\'{e} parameter and $\mu$ the second Lam\'{e} parameter. $\delta_{ij}$ is equivalent to the Kronecker delta. $\epsilon_{ij}$ represents the linear strain tensor and $u_i$ resembles the displacement of a particle in $i$-direction.
+Here $\lambda$ is the second Lam\'{e} parameter and $\mu$ the second Lam\'{e} parameter. $\delta_{ij}$ is equivalent to the Kronecker delta. $\theta=\epsilon_{11} + \epsilon_{22} + \epsilon_{33}$ is the cubic dilatation. $\epsilon_{ij}$ represents the linear strain tensor and $u_i$ resembles the displacement of a particle in $i$-direction.
 
 \section{Conservation of Momentum}
 
@@ -394,33 +394,34 @@ Finally the equilibrium of forces $f_{T,i} = f_{s,i}$, resulting from equation \
 \end{equation}
 The three equations \ref{eqn:ElBewGl}, \ref{eqn:GenHook} and \ref{eqn:Dehnij} describe a complete seismic wave propagation in linear elastic and isotropic media. Time-derivation of equations \ref{eqn:GenHook} and \ref{eqn:Dehnij} together with equation \ref{eqn:ElBewGl} leads to the stress-velocity formulation:
 \begin{align}
-	\frac{\partial\sigma_{ij}}{\partial t} &= \lambda \frac{\partial \epsilon_{rr}}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t}\label{eqn:GenHookdt}\\
+	\frac{\partial\sigma_{ij}}{\partial t} &= \lambda \frac{\partial \theta}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t}\label{eqn:GenHookdt}\\
+	\frac{\partial \theta}{\partial t} &= \frac{\partial v_1}{\partial x_1} + \frac{\partial v_2}{\partial x_2} + \frac{\partial v_3}{\partial x_3} = \frac{\partial v_k}{\partial x_k} \\
 	\frac{\partial\epsilon_{ij}}{\partial t} &= \frac{1}{2} \left( \frac{\partial v_i}{\partial x_j} + \frac{\partial v_j}{\partial x_i} \right)\label{eqn:Dehnijdt}
 \end{align}
 \cleardoublepage
 
 \chapter{Discretization}
 
-To solve the wave equations with finite differences, the physical continuous space and time have to be discretised in mathematical grids. Space and time coordinates are given by $x=k \cdot \Delta x$, $y=l \cdot \Delta y$, $z=m \cdot \Delta z$ and $t=n \cdot \Delta t$. The spacial intervals between grid points in each direction are represented by $\Delta x, \Delta y$ and $\Delta z$. $\Delta t$ is equivalent to a time interval. The total grid size $N$ is equal to $NX \times NY \times NZ$ and the simulation duration $T$ is $NT \cdot \Delta t$.
+To solve the wave equations with finite differences, the physical continuous space and time have to be discretised in mathematical grids. Space and time coordinates are given by $x=i \cdot \Delta x$, $y=j \cdot \Delta y$, $z=k \cdot \Delta z$ and $t=n \cdot \Delta t$. The spacial intervals between grid points in each direction are represented by $\Delta x, \Delta y$ and $\Delta z$. $\Delta t$ is equivalent to a time interval. The total grid size $N$ is equal to $NX \times NY \times NZ$ and the simulation duration $T$ is $NT \cdot \Delta t$.
 
 \section{Definition of the \textit{Standard Staggered Grid} (SSG)} \label{sec:SSG}
 
-The SSG \citep{virieux1986p,levander1988fourth} is a method to distribute physical quantities over grid points, such that the partial differential wave equations each refer to a common grid point. The shape of the SSG in three dimensions is shown in figure \ref{fig:StagGrid}. Here the temporal dimension is not shown explicitly. Stress components $\sigma_{ij}$ are temporally located on half-spaced grid points, the particle velocity $v_{i}$ is temporally located on full grid points.
+The \textit{Standard Staggered Grid} (SSG) \citep{virieux1986p,levander1988fourth} is a method to distribute physical quantities over grid points, such that the partial differential wave equations each refer to a common grid point. The shape of the SSG in 3D \citep{graves1996simulating} is shown in figure \ref{fig:StagGrid3D}. Here the temporal dimension is not shown explicitly. Stress components $\sigma_{ij}$ are temporally located on half-spaced grid points, the particle velocity $v_{i}$ is temporally located on full grid points.
 \begin{figure}
 \begin{tikzpicture} 
     \begin{pgfonlayer}{nodelayer}
-	\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw, label=90:{$i,j,k$}, label={[align=left]-70:$p, \sigma_{xx},\sigma_{yy},\sigma_{zz}, \lambda, \mu, \rho$ \\ $r_{xxl},r_{yyl},r_{zzl}, \tau_p, \tau_s$}] (0) at (0, 0) {};
+	\node [style=none, rectangle, color=green, minimum size=3 mm, fill=green, draw, label=90:{$i,j,k$}, label={[align=left]-70:$\nwarrow p, \sigma_{xx},\sigma_{yy},\sigma_{zz}$\\$\lambda, \mu, \rho,r_{xxl},r_{yyl},r_{zzl}$\\$\tau^p, \tau^s$}] (0) at (0, 0) {};
 	\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw, label=90:{$k+\frac{1}{2}$}, label={[align=left]-45:$v_z, \rho_z$}] (1) at (2, 1) {};
 	\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw, label=90:{$i+\frac{1}{2}$}, label={[align=left]-45:$v_x, \rho_x$}] (2) at (4, 0) {};
-	\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw, label=90:{$i+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]0:$\sigma_{xz}, \mu_{xz}$ \\ $r_{xzl}, \tau_{sxz}$}] (3) at (6, 1) {};
-	\node [style=none,label=0:$z$] (4) at (3, 1.5) {};
+	\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw, label=90:{$i+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]0:$\sigma_{xz}, \mu_{xz}$ \\ $r_{xzl}, \tau^s_{xz}$}] (3) at (6, 1) {};
+	\node [style=none,label=0:$z(k)$] (4) at (3, 1.5) {};
 	\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw, label=80:{$j+\frac{1}{2}$}, label={[align=left]-45:$v_y, \rho_y$}] (5) at (0, -4) {};
-	\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw, label=0:{$i+\frac{1}{2}, j+\frac{1}{2}$}, label={[align=left]-90:$\sigma_{xy}, \mu_{xy}$ \\ $r_{xyl}, \tau_{sxy}$}] (6) at (4, -4) {};
-	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]-15:$\sigma_{yz}, \mu_{yz}$ \\ $r_{yzl}, \tau_{syz}$}] (7) at (2, -3) {};
+	\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw, label=0:{$i+\frac{1}{2}, j+\frac{1}{2}$}, label={[align=left]-90:$\sigma_{xy}, \mu_{xy}$ \\ $r_{xyl}, \tau^s_{xy}$}] (6) at (4, -4) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=-45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]45:$\sigma_{yz}, \mu_{yz}$ \\ $\swarrow r_{yzl}, \tau^s_{yz}$}] (7) at (2, -3) {};
 	\node [style=none] (8) at (6, -3) {};
-	\node [style=none,label=-90:$x$] (9) at (7, 0) {};
-	\node [style=none,label=0:$y$] (10) at (0, -6) {};	
-	\node [style=none,label=0:$\mathbf{Viscoelastic}$] (101) at (4.5, -5.5) {};		
+	\node [style=none,label=-90:$x(i)$] (9) at (7, 0) {};
+	\node [style=none,label=0:$y(j)$] (10) at (0, -6) {};	
+	\node [style=none,label={[align=right]0:$\mathbf{Acoustic}$ \\ $\mathbf{Viscoelastic}$}] (101) at (4.5, -5.5) {};		
     \end{pgfonlayer}
     \begin{pgfonlayer}{edgelayer}
 	\draw (0.center) to (1.center);
@@ -444,13 +445,13 @@ The SSG \citep{virieux1986p,levander1988fourth} is a method to distribute physic
 	\node [style=none, circle, color=orange, minimum size=3 mm, fill=orange, draw, label=-9:{$k+\frac{1}{2}$}, label={[align=left]93:$E_z,\varepsilon_{z},\sigma_{ez}$\\$r_{zl},\tau_{\varepsilon z l},\tau_{\sigma e z}$}] (12) at (2+8.3, 1) {};
 	\node [style=none, diamond, color=brown, minimum size=4 mm, fill=brown, draw, label=-135:{$i+\frac{1}{2}$}, label={[align=left]-87:$E_x, \varepsilon_{x}, \sigma_{ex}$\\$r_{xl},\tau_{\varepsilon x l},\tau_{\sigma e x}$}] (13) at (4+8.3, 0) {};
 	\node [style=none, regular polygon,regular polygon sides=5, color=black, minimum size=4 mm, fill=white,line width=0.5 mm, draw, label=90:{$i+\frac{1}{2}, k+\frac{1}{2}$}, label=-70:{$H_y, \mu_{mxz}$}] (14) at (6+8.3, 1) {};
-	\node [style=none,label=0:$z$] (15) at (3+8.3, 1.5) {};
+	\node [style=none,label=0:$z(k)$] (15) at (3+8.3, 1.5) {};
 	\node [style=none, regular polygon,regular polygon sides=3, color=red, minimum size=4 mm, fill=red, line width=0.5 mm, draw, label=80:{$j+\frac{1}{2}$}, label={[align=left]-45:$E_y, \varepsilon_{y}, \sigma_{ey}$\\$r_{yl},\tau_{\varepsilon y l},\tau_{\sigma e y}$}] (16) at (0+8.3, -4) {};
 	\node [style=none, rectangle, color=violet, minimum size=3 mm, line width=0.5 mm, fill=white, draw, label=0:{$i+\frac{1}{2}, j+\frac{1}{2}$}, label=-90:{$H_z, \mu_{mxy}$}] (17) at (4+8.3, -4) {};
-	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]-45:$H_x, \mu_{myz}$}] (18) at (2+8.3, -3) {};
+	\node [style=none, regular polygon,regular polygon sides=3, color=blue, minimum size=4 mm, line width=0.5 mm, fill=white, draw, label=45:{$j+\frac{1}{2}, k+\frac{1}{2}$}, label={[align=left]135:$H_x, \mu_{myz}$}] (18) at (2+8.3, -3) {};
 	\node [style=none] (19) at (6+8.3, -3) {};
-	\node [style=none,label=-90:$x$] (20) at (7+8.3, 0) {};
-	\node [style=none,label=0:$y$] (21) at (0+8.3, -6) {};	
+	\node [style=none,label=-90:$x(i)$] (20) at (7+8.3, 0) {};
+	\node [style=none,label=0:$y(j)$] (21) at (0+8.3, -6) {};	
 	\node [style=none,label=0:$\mathbf{Visco-EM}$] (102) at (4.5+8.3, -5.5) {};		
     \end{pgfonlayer}
     \begin{pgfonlayer}{edgelayer}
@@ -471,7 +472,7 @@ The SSG \citep{virieux1986p,levander1988fourth} is a method to distribute physic
 	\draw [->] (16.center) to (21.center);
     \end{pgfonlayer}
 \end{tikzpicture}
-\caption[]{Representation of the SSG with the distribution of material and wavefield parameter of viscoelastic wave \citep{graves1996simulating} and visco-EM wave \citep{yee1966numerical} in 3D. The model parameters $\mathbf{m}$ are located at the integer points or averaged by $i$ direction ($\mathbf{m}_i$) or averaged by $ij$ plane ($\mathbf{m}_{ij}$).}
+\caption[]{Representation of the SSG with the distribution of material and wavefield parameter of acoustic and viscoelastic wave \citep{graves1996simulating} and visco-EM wave \citep{yee1966numerical} in 3D. The seismic wavefields include one pressure value $p$ (only for acoustic wave), six stress values $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ and corresponding $6L$ memory variables $r_{xxl}, r_{yyl}, r_{zzl}, r_{xyl}, r_{xzl}, r_{yzl}$ ($l=1,...,L$), three components of particle velocity $v_x, v_y, v_z$. The seismic material parameters include $\lambda, \mu, \tau^p, \tau^s, \rho$. The visco-EM wavefields include three components of electric fields $E_x, E_y, E_z$ and corresponding $3L$ memory variables $r_{xl}, r_{yl}, r_{zl}$ ($l=1,...,L$), three components of magnetic fields $H_x, H_y, H_z$. The visco-EM material parameters include $\mu_m, \varepsilon, \sigma_e, \tau_{\varepsilon l}, \tau_{\sigma e}$. The seismic and visco-EM material parameters $\mathbf{m}$ are located at the integer points or averaged by $i$-direction ($\mathbf{m}_i$) or averaged by $ij$-plane ($\mathbf{m}_{ij}$).}
 \label{fig:StagGrid3D}
 \end{figure}
 
@@ -481,8 +482,8 @@ To accomplish a feasible implementation of the finite difference calculations to
 \begin{align}
 	\rho \frac{\partial v_i}{\partial t} &= \frac{\partial \sigma_{ji}}{\partial x_j} \qquad \qquad \qquad \quad \,\,\,\, \text{with} \quad \left.\frac{\partial v_i}{\partial t}\right\rvert^{n+\frac{1}{2}} \approx \frac{v_i^{n+1} - v_i^{n}}{\Delta t}\notag\\
 	&\rightarrow v_i^{n+1} \approx v_i^n + \frac{\Delta t}{\rho}  \left.\frac{\partial \sigma_{ji}}{\partial x_j}\right\rvert^{n+\frac{1}{2}}\label{eqn:ElBewGlDis}\\
-	\frac{\partial \sigma_{ij}}{\partial t} &= \lambda \frac{\partial \epsilon_{rr}}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t} \qquad \text{with} \quad \left.\frac{\partial \sigma_{ij}}{\partial t}\right\rvert^n \approx \frac{\sigma_{ij}^{n+\frac{1}{2}} - \sigma_{ij}^{n-\frac{1}{2}}}{\Delta t}\notag\\
-	&\rightarrow \sigma_{ij}^{n+\frac{1}{2}} \approx \sigma_{ij}^{n-\frac{1}{2}} + \Delta t \cdot \lambda \left.\frac{\partial \epsilon_{rr}}{\partial t}\right\rvert^n \delta_{ij} + 2 \cdot \Delta t \cdot \mu \left. \frac{\partial \epsilon_{ij}}{\partial t}\right\rvert^n
+	\frac{\partial \sigma_{ij}}{\partial t} &= \lambda \frac{\partial \epsilon_{ij}}{\partial t} \delta_{ij} + 2 \mu \frac{\partial \epsilon_{ij}}{\partial t} \qquad \text{with} \quad \left.\frac{\partial \sigma_{ij}}{\partial t}\right\rvert^n \approx \frac{\sigma_{ij}^{n+\frac{1}{2}} - \sigma_{ij}^{n-\frac{1}{2}}}{\Delta t}\notag\\
+	&\rightarrow \sigma_{ij}^{n+\frac{1}{2}} \approx \sigma_{ij}^{n-\frac{1}{2}} + \Delta t \cdot \lambda \left.\frac{\partial \epsilon_{ij}}{\partial t}\right\rvert^n \delta_{ij} + 2 \cdot \Delta t \cdot \mu \left. \frac{\partial \epsilon_{ij}}{\partial t}\right\rvert^n
 \end{align}
 In equation \ref{eqn:ElBewGlDis} it can be seen that velocity is defined on full grid points whereas stress is defined on half grid points. This leads to the fact that the equations are referring to a joint grid point. 
 
@@ -510,14 +511,14 @@ Consequently by usage of the SSG, the elastic wave equation can be discretised a
 	v_{y,i,j+\frac{1}{2},k}^{n+1} &= v_{y,i,j+\frac{1}{2},k}^n + \frac{\Delta t}{\rho_{i,j+\frac{1}{2},k}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} \right)\\
 	v_{z,i,j,k+\frac{1}{2}}^{n+1} &= v_{z,i,j,k+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{i,j,k+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
-Using the SSG  requires numerical stability. Density $\rho_{klm}$ on half grid points is arithmetically averaged from surrounding full grid points. The first Lam\'{e} parameter $\mu_{i,j,k}$ however is harmonically averaged. 
+Using the SSG requires numerical stability. Density $\rho_{ijk}$ on half grid points is arithmetically averaged from surrounding full grid points. The second Lam\'{e} parameter $\mu_{i,j,k}$ however is harmonically averaged. 
 \begin{align*}
-	\rho_{i+\frac{1}{2},j,k} &= \frac{\rho_{i,j,k} + \rho_{i+1,j,k}}{2} \quad \rho_{i,j+\frac{1}{2},k} = \frac{\rho_{i,j,k} + \rho_{i,j+1,k}}{2} \quad \rho_{i,j,k+\frac{1}{2}} = \frac{\rho_{i,j,k} + \rho_{i,j,k+1}}{2}
+	\rho_x=\rho_{i+\frac{1}{2},j,k} = \frac{\rho_{i,j,k} + \rho_{i+1,j,k}}{2}, \rho_y=\rho_{i,j+\frac{1}{2},k} = \frac{\rho_{i,j,k} + \rho_{i,j+1,k}}{2}, \rho_z=\rho_{i,j,k+\frac{1}{2}} = \frac{\rho_{i,j,k} + \rho_{i,j,k+1}}{2}
 \end{align*}
 \begin{align*}
-	\mu_{i+\frac{1}{2},j+\frac{1}{2},k} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{k+1,l+1,m}}\\
-	\mu_{i+\frac{1}{2},j,k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i+1,j,k+1}}\\
-	\mu_{i,j+\frac{1}{2},k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i,j+1,k+1}}
+	\mu_{xy}=\mu_{i+\frac{1}{2},j+\frac{1}{2},k} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{i+1,j+1,k}}\\
+	\mu_{xz}=\mu_{i+\frac{1}{2},j,k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i+1,j,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i+1,j,k+1}}\\
+	\mu_{yz}=\mu_{i,j+\frac{1}{2},k+\frac{1}{2}} &= \frac{4}{\mu^{-1}_{i,j,k} + \mu^{-1}_{i,j+1,k} + \mu^{-1}_{i,j,k+1} + \mu^{-1}_{i,j+1,k+1}}
 \end{align*}
 \\
 
@@ -558,7 +559,7 @@ This method works by allowing the discretization of media without density and sh
         \frac{2}{\rho_i+\rho_{i+1}} & \text{otherwise}
        \end{cases}
 \end{align}
-The condition for the averaging of the first Lam\'e parameter $\mu$ in the $ij$-plane is:
+The condition for the averaging of the second Lam\'e parameter $\mu$ in the $ij$-plane is:
 \begin{align}
  \mu_{ij} = \begin{cases}
         \left[\frac{1}{4}\left(\frac{1}{\mu_{i,j}}+\frac{1}{\mu_{i+1,j}}+\frac{1}{\mu_{i,j+1}}+\frac{1}{\mu_{i+1,j+1}}\right)\right]^{-1} & \text{if }\mu_{i,j},\;\mu_{i+1,j},\;\mu_{i,j+1},\;\mu_{i+1,j+1},\;\neq 0\\
@@ -577,7 +578,7 @@ To avoid wavefield reflections at the boundaries of the model grid, an absorbing
 \end{equation}
 where $amp$ is calculated from the damping coeffitient $amp= 1-{DampingCoefficient}/{100}$. With a damping coefficient of \SI{8.0}{}, $amp=$ \SI{0.92}{}. The seismic waves are damped inside the boundary frame and cannot be reflected back into the model. This type of absorbing boundary is not able to damp the reflected waves from the boundary completely.
 
-A more effective way to damp the waves near the boundaries are the Perfectly Matched Layers (PMLs). This can be achieved by a coordinate stretch of the wave equations in the frequency domain \cite{komatitsch2007unsplit}. The coordinate stretch creates exponentially decaying plane wave solutions in the absorbing boundary frame. The PMLs are only reflectionless if the exact wave equation is solved. As soon as the problem is discretized (for example using finite differences) you are solving an approximate wave equation and the analytical perfection of the PML is no longer valid. To overcome this shortcoming the wavefield is damped by the damping function 
+A more effective way to damp the waves near the boundaries are the Perfectly Matched Layers (PMLs). This can be achieved by a coordinate stretch of the wave equations in the frequency domain \citep{berenger1994perfectly,roden2000convolution,komatitsch2007unsplit}. The coordinate stretch creates exponentially decaying plane wave solutions in the absorbing boundary frame. The PMLs are only reflectionless if the exact wave equation is solved. As soon as the problem is discretized (for example using finite differences) you are solving an approximate wave equation and the analytical perfection of the PML is no longer valid. To overcome this shortcoming the wavefield is damped by the damping function 
 \begin{equation}
 	c=-V_{pml} \cdot \frac{log(\alpha)}{L}
 \end{equation}
@@ -653,9 +654,9 @@ The biggest step in applying the new formalism is, finding the according FD-coef
 
 Due to an index-shift of all half value indices by $(-\frac{1}{2})$, when applied, it must be distinguished between two cases. 
 
-Is the original center of the FD-operator in direction of the derivation, on full grid points, the second order FD-operator theoretically refers to $\left(v_{x,i+\frac{1}{2},j,k} - v_{x,i-\frac{1}{2},j,k}\right)$. Such as in case of a $\sigma_{xx,i,j,k}$-update where the center of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{i,j,k}$ is in direction of the derivation. By shifting half value indices by $(-\frac{1}{2})$, the operator's center is shifted likewise and the result of $\sigma_{xx,i,j,k}$ at $k$ is calculated from $v_x$ at $(k-1)$ and $k$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,b}$, where $b$ stands for \textit{backward}. The index $i$ represents the derivation direction.
+Is the original center of the FD-operator in direction of the derivation, on full grid points, the second order FD-operator theoretically refers to $\left(v_{x,i+\frac{1}{2},j,k} - v_{x,i-\frac{1}{2},j,k}\right)$. Such as in case of a $\sigma_{xx,i,j,k}$-update where the center of $\left. \frac{\partial v_x}{\partial x} \right\rvert_{i,j,k}$ is in direction of the derivation. By shifting half value indices by $(-\frac{1}{2})$, the operator's center is shifted likewise and the result of $\sigma_{xx,i,j,k}$ at $i$ is calculated from $v_x$ at $(i-1)$ and $i$ (compare figure \ref{fig:IndShift}, left). This geometry is given in all $\frac{\partial v_i}{\partial x_i}$ as well as in $\frac{\partial \sigma_{ij}}{\partial x_j}$ with $i\neq j$. In this case the matching FD-coefficient matrix  is named $\underline{D}_{\,i,b}$, where $b$ stands for \textit{backward}. The index $i$ represents the derivation direction.
 
-The second case occurs when the center of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$, where the center of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}$, in derivation direction $y$, is placed at $(l+\frac{1}{2})$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,i+\frac{1}{2},j+1,k} - v_{x,i+\frac{1}{2},j,k}\right)$-term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$ is shifted to $\sigma_{xy,i,j,k}$, which is equal to a shift in $x$ and in $y$-direction by $(-\frac{1}{2})$. Thus the center of the FD-operator is shifted to the right, compared to the $\sigma_{xy,i,j,k}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,f}$, where $f$ indicates \textit{forward}.
+The second case occurs when the center of the FD-operator is placed on half value grid points in its direction of derivation. As for example in case of  updating $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$, where the center of $\left. \frac{\partial v_x}{\partial y} \right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}$, in derivation direction $y$, is placed at $(j+\frac{1}{2})$. In this case the second order FD-operator theoretically refers back to the $\left(v_{x,i+\frac{1}{2},j+1,k} - v_{x,i+\frac{1}{2},j,k}\right)$-term. These $v_x$-values don't have to be shifted in $y$-direction. However hereby the calculated value of $\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}$ is shifted to $\sigma_{xy,i,j,k}$, which is equal to a shift in $x$ and in $y$-direction by $(-\frac{1}{2})$. Thus the center of the FD-operator is shifted to the right, compared to the $\sigma_{xy,i,j,k}$ reference frame (compare figure \ref{fig:IndShift}, right). This shift is given for all $\frac{\partial v_i}{\partial x_j}$ with $i\neq j$ and $\frac{\partial \sigma_{ii}}{\partial x_i}$. This case is designated as $\underline{D}_{\,i,f}$, where $f$ indicates \textit{forward}.
 These specifications manifest themselves by shifting the FD-coefficients in the matrix, which in general can be expressed by $\underline{D}_{\,i,f} = -\underline{D}_{\,i,b}^T$.
 
 \begin{figure}
@@ -692,7 +693,7 @@ These specifications manifest themselves by shifting the FD-coefficients in the 
 \subsection{Completing the Formalism}\label{sec:Mat}
 An example for an update equation in the matrix-vector formalism is based on equation \ref{eqn:exMV1}, where the index-shift has already been executed:
 \begin{equation}
-	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} \cdot \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^2 \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^2 \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
+	\vec{v}_x^{\,n+1} = \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} \cdot \mathrm{diag} \left( \vec{\rho}_{x,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^2 \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^2 \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^2 \vec{\sigma}_{xz}^{\,n} \right)\label{eqn:exMV2}
 \end{equation}
 The diagonal matrix $\mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) = \mathrm{diag} \left( \rho_1^{-1}, \rho_2^{-1}, \rho_3^{-1}, \dots , \rho_{NX \cdot NY \cdot NZ}^{-1} \right)$ contains the density model values. $\underline{D}_{\,i,b}^2$ or $\underline{D}_{\,i,f}^2$ contain the second order FD-coefficients (the order is indicated by the upper index) in spatial derivation direction $i$. Now the matrix $\underline{D}_{\,i}^2$ has to be found, such that the model $\vec{\sigma}_{ij}$ is equivalent to the according FD-operators.
 
@@ -885,25 +886,25 @@ All discrete components of the elastic wavefield in matrix-vector notation are:
 	\vec{\sigma}_{zz}^{\,n} &= \vec{\sigma}_{zz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) + 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \underline{D}_{\,z,b}^q \vec{v}_z^{\,n}
 \end{align*}
 \begin{align*}
-	\vec{\sigma}_{xy}^{\,n} &= \vec{\sigma}_{xy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_y^{\,n} \right)\\
-	\vec{\sigma}_{xz}^{\,n} &= \vec{\sigma}_{xz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_z^{\,n} \right)\\
-	\vec{\sigma}_{yz}^{\,n} &= \vec{\sigma}_{yz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y^{\,n} + \underline{D}_{\,y,f}^q \vec{v}_z^{\,n} \right)
+	\vec{\sigma}_{xy}^{\,n} &= \vec{\sigma}_{xy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}_{xy}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_y^{\,n} \right)\\
+	\vec{\sigma}_{xz}^{\,n} &= \vec{\sigma}_{xz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}_{xz}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_z^{\,n} \right)\\
+	\vec{\sigma}_{yz}^{\,n} &= \vec{\sigma}_{yz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\mu}_{yz}^{\,T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y^{\,n} + \underline{D}_{\,y,f}^q \vec{v}_z^{\,n} \right)
 \end{align*}
 \begin{align*}
-	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
-	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
-	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{x,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{y,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{z,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
 \end{align*}
 where $q$ is spatial FD order.
 
 \subsection{Introducing Averaging Matrices} \label{sec:Introducing_Averaging_Matrices}
-As mentioned in section \ref{fig:StagGrid}, to calculate the elastic and viscoelastic wave equations in time propagation, density $\rho_{i,j,k}$ and the first Lam\'{e} parameter $\mu_{i,j,k}$ have to be averaged. $\rho_{i,j,k}$ can be written in matrix-vector formalism as:
+As mentioned in section \ref{fig:StagGrid3D}, to calculate the elastic wave equation in time propagation, density $\rho_{i,j,k}$ and the second Lam\'{e} parameter $\mu_{i,j,k}$ have to be averaged. $\rho_{i,j,k}$ can be written in matrix-vector formalism as:
 \begin{equation*}
 \vec{\rho}_{i}=\frac{1}{2}\cdot\underline{A}^{\text{a}}_{i} \cdot\vec{\rho}	
 \end{equation*}
 Postulating the arithmetical averaging matrix $\underline{A}^{\text{a}}_{i}$ in $i$-direction is trivial and similar to $\underline{D}_{\,i,f}^2$ whereby it should be noted that $\underline{A}^{a}_{i}$ has only entries $=1$. The upper index $a$ represents arithmetical averaging.
 
-Establishing the matrices for harmonic averaging more complicated. In matrix-vector formalism averaging the first Lam\'{e} parameter $\mu_{i,j,k}$ in the $ij$-plane can be calculated as follows.
+Establishing the matrices for harmonic averaging more complicated. In matrix-vector formalism averaging the second Lam\'{e} parameter $\mu_{i,j,k}$ in the $ij$-plane can be calculated as follows.
 \begin{equation*}
 \vec{\mu}_{ij}=\left(\underline{A}^{h}_{ij} \cdot\vec{\mu}	\right)^{-1}
 \end{equation*}
@@ -937,7 +938,7 @@ Mark, that in case a border plane is reached, the averaging can only be calculat
 \cleardoublepage
 
 \chapter{Frequency Filters}
-WAVE-Simulation also includes a frequency filter for seismograms, which will be called by WAVE-Inversion with a multi-scale strategy (the corresponding inversion software we developed). For this Butterworth filters are very popular since they are maximally flat in the passband. As described in many literature (e.g. \cite{bianchi2007electronic}) the transfere function $H(s)$ of a low-pass Butterworth filter can be described by its poles $s_k$ with:
+WAVE-Simulation also includes a frequency filter for seismograms and radargrams, which will be used by WAVE-Inversion (the corresponding inversion software we developed) in a multi-scale strategy. For this Butterworth filters are very popular since they are maximally flat in the passband. As described in many literature (e.g. \cite{bianchi2007electronic}) the transfer function $H(s)$ of a low-pass Butterworth filter can be described by its poles $s_k$ with:
 \begin{align}
  H(s)=\frac{1}{\prod_{k=1}^n (s-s_k)/\omega_c} \label{eq:transButter}
 \end{align}
@@ -951,11 +952,11 @@ The polynomial in the denominator of equation \ref{eq:transButter} can be writte
   B_n(s)=\prod_{k=1}^{\frac{n}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{even} \\
   B_n(s)=(s+1)\prod_{k=1}^{\frac{n-1}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{odd}
 \end{align}
-So the transfere function is:
+So the transfer function is:
 \begin{align}
 H(s) = \frac{1}{B_n(a)} \label{eq:transPoly}
 \end{align}
-Where $a= s/\omega_c = i \omega / \omega_c$. A high-pass is designed with $a= \omega_c/s = -i \omega_c / \omega$. Multiplication of low- and high-pass transfere functions yields the transfere function of a band-pass filter.\\ The final step is to find a matrix vector representation of expression \ref{eq:transPoly}. Since time is treated as discrete values in a finite interval $s$ can be represented by a vector $\vec{s}$:
+Where $a= s/\omega_c = i \omega / \omega_c$. A high-pass is designed with $a= \omega_c/s = -i \omega_c / \omega$. Multiplication of low- and high-pass transfer functions yields the transfer function of a band-pass filter.\\ The final step is to find a matrix vector representation of expression \ref{eq:transPoly}. Since time is treated as discrete values in a finite interval $s$ can be represented by a vector $\vec{s}$:
 \begin{align}
  \vec{H}(\vec{s}) = \left[ F \vec{c} \right]^{-1}
 \end{align}
@@ -977,7 +978,7 @@ The coefficients $c_0$ to $c_4$ are calculated by convolution:
 \begin{align*}
 \begin{pmatrix} c_4 \\ c_3 \\ c_2 \\ c_1 \\ c_0 \end{pmatrix}  = \begin{pmatrix}1 \\ 0.7654 \\ 1 \end{pmatrix} * \begin{pmatrix}1 \\ 1.8478 \\ 1\end{pmatrix} = \begin{pmatrix} 1 \\ 2.6131 \\ 3.4142 \\ 2.6131 \\ 1 \end{pmatrix}
 \end{align*}
-This convolution can be done efficiently by multiplication in the frequency domain. The transfere function in this case is then:
+This convolution can be done efficiently by multiplication in the frequency domain. The transfer function in this case is then:
 \begin{align*}
  H(\vec{s}) = \left[ \begin{pmatrix} \vec{a}^0 & \vec{a}^1 &  \vec{a}^2 &  \vec{a}^3 & \vec{a}^4 \end{pmatrix} \begin{pmatrix} 1 \\ 2.6131 \\ 3.4142 \\ 2.6131 \\ 1 \end{pmatrix} \right]^{-1}
 \end{align*}
@@ -1222,7 +1223,7 @@ The fourth section in \ref{tab:config_visco} are the parameters relevant for vis
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-In the fifth section in \ref{tab:config_onthefly} all variables can be set to create a homogeneous model on-the-fly. The variable \verb+velocityP+ ($v_p$) is only needed in elastic and viscoelastic calculations and  \verb+tauP+ ($\tau_p$) and \verb+tauS+ ($\tau_s$) are solely needed in the viscoelastic case. 
+In the fifth section in \ref{tab:config_onthefly} all variables can be set to create a homogeneous model on-the-fly. The variable \verb+velocityP+ ($v_p$) is only needed in elastic and viscoelastic calculations and  \verb+tauP+ ($\tau^p$) and \verb+tauS+ ($\tau^s$) are solely needed in the viscoelastic case. 
 The P-wave ($M$) and S-wave ($\mu$) moduli can be calculated by:
 \begin{align*}
 	M&=\rho\cdot v_p^2\\
@@ -1473,50 +1474,68 @@ $\rho$              & \SI{3000}{kg/m^3}  \\ \bottomrule
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
 \addcontentsline{toc}{chapter}{List of Tables}
 \cleardoublepage
-%\bibliography{@CMAKE_SOURCE_DIR@/../doc/guide/WAVE_guide}
-\bibliography{WAVE_guide}
+%\bibliography{@CMAKE_SOURCE_DIR@/../doc/guide/WAVE_Simulation_guide}
+\bibliography{WAVE_Simulation_guide}
 \bibliographystyle{apalike}
 
 \appendix
-\chapter{Discretization of other wave equations}
-\label{sec:Discretization_of_other_wave_equations}
+
+\chapter{Acoustic wave equation}
+\label{sec:Acoustic_wave_equation}
+\section{Theory of acoustic wave equation}
+The acoustic wave equations for pressure and velocity.
+\begin{align}
+\pdv{p}{t} &= \lambda \pdv{v_k}{x_k} \\
+\rho\pdv{v_i}{t}&=\pdv{p}{x_i}+ f_i
+\end{align}
+Note that the pressure, $p$, is defined in an unconventional way as $p=\frac{1}{3}\mathrm{tr}(\sigma_{ij})$. Usually it is defined with a negative sign as $p=-\frac{1}{3}\mathrm{tr}(\sigma_{ij})$.
+
+\section{Discretization of acoustic wave equation}
+Derivation of the acoustic wave equations for the SSG in Fig.\ref{fig:StagGrid3D} yields the following system of equations for pressure and velocity. \\
+\begin{align*}
+	p_{i,j,k}^{n+\frac{1}{2}} &= p_{i,j,k}^{n-\frac{1}{2}} + \Delta t \cdot \lambda_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^n + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^n \right)\\
+	v_{x,i+\frac{1}{2},j,k}^{n+1} &= v_{x,i+\frac{1}{2},j,k}^n + \frac{\Delta t}{\rho_{i+\frac{1}{2},j,k}} \frac{\partial p}{\partial x} \\
+	v_{y,i,j+\frac{1}{2},k}^{n+1} &= v_{y,i,j+\frac{1}{2},k}^n + \frac{\Delta t}{\rho_{i,j+\frac{1}{2},k}} \frac{\partial p}{\partial y} \\
+	v_{z,i,j,k+\frac{1}{2}}^{n+1} &= v_{z,i,j,k+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{i,j,k+\frac{1}{2}}} \frac{\partial p}{\partial z}
+\end{align*}
 
 \section{Matrix-vector formalism of acoustic wave equation}
-The discrete components for an acoustic wavefield in matrix-vector notation can be written as following. Note that the pressure, $p$, is defined in an unconventional way as $p=\frac{1}{3}\mathrm{tr}(\sigma_{ij})$. Usually it is defined with a negative sign as $p=-\frac{1}{3}\mathrm{tr}(\sigma_{ij})$.
+The discrete components for an acoustic wavefield in matrix-vector notation can be written as following. 
 \begin{align*}
-	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) 
+	\vec{p}^{\,n} &= \vec{p}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left( \vec{\lambda}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{x,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p}^{\,n}  \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{y,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_{z,\mathrm{inv}}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
 \end{align*}
-\begin{align*}
-	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{p}^{\,n}  \right)\\
-	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{p}^{\,n} \right)\\
-	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag}  \left( \vec{\rho}_\mathrm{inv}^{\,T} \right) \cdot\left( \underline{D}_{\,z,f}^q \vec{p}^{\,n} \right)\\
-\end{align*}
+
+\chapter{Viscoelastic wave equation}
+\label{Viscoelastic_wave_equation}
+
+\section{Theory of viscoelastic wave equation}
+The viscoelastic wave equations for stress and velocity \citep{bohlen2002parallel}.
+\begin{align}
+\label{eqn:elastic_wave_stress_xx}
+\pdv{\sigma_{ii}}{t} &= \left\{ \pi (1+\tau^p)-2\mu (1+\tau^s) \right\} \pdv{v_k}{x_k} + 2\mu (1+\tau^s) \pdv{v_i}{x_i} + \sum_{l=1}^L r_{iil}\\
+\pdv{\sigma_{ij}}{t} &= \mu (1+\tau^s) \left(\pdv{v_i}{x_j} +\pdv{v_j}{x_i}\right) + \sum_{l=1}^L r_{ijl}, \quad i \neq j\\
+\rho\pdv{v_i}{t}&=\pdv{\sigma_{ij}}{x_j}+ f_i
+\end{align}
+with the so-called memory equations:
+\begin{align}
+\pdv{r_{iil}}{t} &= -\frac{1}{\tau_{\sigma l}} \left\{ (\pi \tau^p-2\mu \tau^s) \pdv{v_k}{x_k} + 2\mu \tau^s \pdv{v_i}{x_i} + r_{iil} \right\}\\
+\pdv{r_{ijl}}{t} &= -\frac{1}{\tau_{\sigma l}} \left\{ \mu (1+\tau^s) \left(\pdv{v_i}{x_j} +\pdv{v_j}{x_i}\right) + r_{ijl} \right\}, \quad i \neq j
+\end{align}
 
 \section{Discretization of viscoelastic wave equation}
-Derivation of the viscoelastic wave equations for the SSG yields the following system of equations for stress and velocity \citep{bohlen2002parallel}. Here $\mu_{i,j,k}$ is the first Lam\'{e} parameter or S-wave modulus and $M_{i,j,k}$ is the P-wave modulus.
-The S- and P-wave moduli are defined as:
-\begin{align}
-	\mu_{i,j,k}&= \rho_{,i,j,k}\cdot v_{S,i,j,k}^{2}\\
-	M_{i,j,k} &= \rho_{,i,j,k}\cdot v_{P,i,j,k}^{2}
-\end{align}
- Where $v_{S,i,j,k}$ is the velocity of the S-wave and $v_{P,i,j,k}$ is the velocity of the P-wave.
-As the system is represented by relaxation bodies the summation over $q$ is equal to the summati6on over all $L$ Maxwell-bodies. $\tau_{\sigma,l}$ describes the stress relaxation time and $\tau_{i,j,k}^s$ and $\tau_{i,j,k}^s$ respectively describe the level of attenuation for S- and P-waves. $\tau_{i,j,k}^s$ on half grid points is calculated by averaging $\tau_{i,j,k}^s$  from the four surrounding grid points. 
+Derivation of the viscoelastic wave equations for the SSG in Fig.\ref{fig:StagGrid3D} yields the following system of equations for stress and velocity. \\
+The components of the stress tensor are given by:
 \begin{align*}
-	\tau_{i+\frac{1}{2},j+\frac{1}{2},k} &= \frac{\tau_{i,j,k} + \tau_{i+1,j,k} + \tau_{i,j+1,k} + \tau_{k+1,l+1,m}}{4}\\
-	\tau_{i+\frac{1}{2},j,k+\frac{1}{2}} &= \frac{\tau_{i,j,k} + \tau_{i+1,j,k} + \tau_{i,j,k+1} + \tau_{i+1,j,k+1}}{4}\\
-	\tau_{i,j+\frac{1}{2},k+\frac{1}{2}} &= \frac{\mu_{i,j,k} + \mu_{i,j+1,k} + \tau^{-1}_{i,j,k+1} + \tau_{i,j+1,k+1}}{4}
-\end{align*}
-
-Further on $r_{ij,l,i,j,k}^{n}$ can be interpreted as a memory variable for the $q$-th relaxation body, to help calculating the corresponding stress-tensor component $\sigma_{ij,i,j,k}$.
-\\\\The components of the stress tensor are given by:
-\begin{align*}
-	\sigma_{xx,i,j,k}^{n+\frac{1}{2}} =& \;\sigma_{xx,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	\sigma_{xx,i,j,k}^{n+\frac{1}{2}} =& \;\sigma_{xx,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot \pi_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xx,l,i,j,k}^{n-\frac{1}{2}}+ r_{xx,l,i,j,k}^{n+\frac{1}{2}}\right) \\
-	\sigma_{yy,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{yy,i,j,k}^{n}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	\sigma_{yy,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{yy,i,j,k}^{n}+ \Bigg[ \Delta t \cdot \pi_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n-} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{yy,l,i,j,k}^{n-\frac{1}{2}}+ r_{yy,l,i,j,k}^{n+\frac{1}{2}}\right)\\ 
-	\sigma_{zz,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{zz,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot M_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
+	\sigma_{zz,i,j,k}^{n+\frac{1}{2}} =&\;\sigma_{zz,i,j,k}^{n-\frac{1}{2}}+ \Bigg[ \Delta t \cdot \pi_{i,j,k} \left(1+L\cdot \tau^p_{i,j,k}\right)\left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n}+ \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\Bigg]  \\
 	&- \Bigg[ 2 \Delta t \cdot \mu_{i,j,k} \left(1+L\cdot \tau^s_{i,j,k}\right)\cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} \right)\Bigg] \\
 	&+ \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{yy,l,i,j,k}^{n-\frac{1}{2}}+ r_{yy,l,i,j,k}^{n+\frac{1}{2}}\right)\\ 
 	\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} =&\;\sigma_{xy,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{i+\frac{1}{2},j+\frac{1}{2},k}\left(1+L\cdot\tau_{i+\frac{1}{2},j+\frac{1}{2},k}^s \right)\cdot \\ 
@@ -1526,31 +1545,229 @@ Further on $r_{ij,l,i,j,k}^{n}$ can be interpreted as a memory variable for the 
 	\sigma_{yz,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} =& \;\sigma_{xy,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}}+\Bigg[\Delta t \cdot \mu_{i,j+\frac{1}{2},k+\frac{1}{2}}\left(1+L\cdot\tau_{i,j+\frac{1}{2},k+\frac{1}{2}}^s \right)\cdot \\ 
 	&\left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^n \right)\Bigg]  + \frac{\Delta t}{2} \sum _{l=1}^{L} \left( r_{xy,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}}+ r_{xy,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}}\right) \\
 \end{align*}
-
 \begin{align*}
 	r_{xx,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xx,l,i,j,k}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
-	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	& -\frac{\pi_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j,k} \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
 	r_{yy,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{yy,l,i,j,k}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
-	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	& -\frac{\pi_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
 	r_{zz,l,i,j,k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{zz,l,i,j,k}^{n-\frac{1}{2}} \\ 
-	& -\frac{M_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
-	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau_{i,j,k}^s \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
+	& -\frac{\pi_{i,j,k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^p_{i,j,k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j,k}^{n} \right)\\
+	& + \frac{2\mu_{i,j,k} \Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j,k} \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i,j,k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j,k}^{n}  \right)\Bigg] \\
 	r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xy,l,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{i+\frac{1}{2},j+\frac{1}{2},k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j+\frac{1}{2},k} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\frac{\partial v_y}{\partial y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\Bigg]\\
+	& -\frac{\mu_{i+\frac{1}{2},j+\frac{1}{2},k}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j+\frac{1}{2},k} \cdot \left( \left.\frac{\partial v_x}{\partial y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\frac{\partial v_y}{\partial x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\Bigg]\\
 	r_{xz,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{xz,l,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{i+\frac{1}{2},j,k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j,k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_x}{\partial x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\Bigg]\\
+	& -\frac{\mu_{i+\frac{1}{2},j,k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i+\frac{1}{2},j,k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_x}{\partial z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\Bigg]\\
 	r_{yz,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} =& \left( 1+ \frac{\Delta t}{2\tau_{\sigma,l}} \right)^{-1}\cdot \Bigg[\left( 1- \frac{\Delta t}{2\tau_{\sigma,l}}  \right) \cdot r_{yz,l,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} \\ 
-	& -\frac{\mu_{i,j+\frac{1}{2},k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j+\frac{1}{2},k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\Bigg] \\
+	& -\frac{\mu_{i,j+\frac{1}{2},k+\frac{1}{2}}\cdot\Delta t}{\tau_{\sigma,l}}\cdot \tau^s_{i,j+\frac{1}{2},k+\frac{1}{2}} \cdot \left( \left.\frac{\partial v_y}{\partial z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\frac{\partial v_z}{\partial y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\Bigg] \\
 \end{align*}
-
 Just as in the elastic case, the velocity equations for the viscoelastic case are given by:
 \begin{align*}
 	v_{x,i+\frac{1}{2},j,k}^{n+1} &= v_{x,i+\frac{1}{2},j,k}^n + \frac{\Delta t}{\rho_{i+\frac{1}{2},j,k}}  \left( \left.\frac{\partial\sigma_{xx}}{\partial x}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xy}}{\partial y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{xz}}{\partial z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} \right)\\
 	v_{y,i,j+\frac{1}{2},k}^{n+1} &= v_{y,i,j+\frac{1}{2},k}^n + \frac{\Delta t}{\rho_{i,j+\frac{1}{2},k}}  \left( \left.\frac{\partial\sigma_{yx}}{\partial x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yy}}{\partial y}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{yz}}{\partial z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} \right)\\
 	v_{z,i,j,k+\frac{1}{2}}^{n+1} &= v_{z,i,j,k+\frac{1}{2}}^n + \frac{\Delta t}{\rho_{i,j,k+\frac{1}{2}}}  \left( \left.\frac{\partial\sigma_{zx}}{\partial x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zy}}{\partial y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \left.\frac{\partial\sigma_{zz}}{\partial z}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} \right)
 \end{align*}
+Here $\mu_{i,j,k}$ is the second Lam\'{e} parameter or S-wave modulus and $\pi_{i,j,k}$ is the P-wave modulus.
+The S- and P-wave moduli are defined as:
+\begin{align}
+	\mu_{i,j,k}&= \rho_{i,j,k}\cdot v_{s,i,j,k}^{2}\\
+	\pi_{i,j,k} &= \rho_{i,j,k}\cdot v_{p,i,j,k}^{2}
+\end{align}
+where $v_{s,i,j,k}$ is the velocity of the S-wave and $v_{p,i,j,k}$ is the velocity of the P-wave.
+As the system is represented by relaxation bodies the summation over $l$ is equal to the summation over all $L$ Maxwell-bodies. $\tau_{\sigma,l}$ describes the stress relaxation time and $\tau^s_{i,j,k}$ and $\tau^p_{i,j,k}$ respectively describe the level of attenuation for S- and P-waves. $\tau^s$ on the center of planes is calculated by averaging $\tau^s_{i,j,k}$  from the four surrounding grid points. 
+\begin{align*}
+	\tau^s_{xy} &= \tau^s_{i+\frac{1}{2},j+\frac{1}{2},k} = \frac{\tau^s_{i,j,k} + \tau^s_{i+1,j,k} + \tau^s_{i,j+1,k} + \tau^s_{i+1,j+1,k}}{4}\\
+	\tau^s_{xz} &= \tau^s_{i+\frac{1}{2},j,k+\frac{1}{2}} = \frac{\tau^s_{i,j,k} + \tau^s_{i+1,j,k} + \tau^s_{i,j,k+1} + \tau^s_{i+1,j,k+1}}{4}\\
+	\tau^s_{yz} &= \tau^s_{i,j+\frac{1}{2},k+\frac{1}{2}} = \frac{\tau^s_{i,j,k} + \tau^s_{i,j+1,k} + \tau^s_{i,j,k+1} + \tau^s_{i,j+1,k+1}}{4}
+\end{align*}
+Further on $r_{ij,l}^{n}$ can be interpreted as a memory variable for the $l$-th relaxation body, to help calculating the corresponding stress-tensor component $\sigma_{ij,l}$.
 
+\section{Matrix-vector formalism of viscoelastic wave equation}
+All discrete components of the viscoelastic wavefield in matrix-vector notation are: 
+\begin{align*}
+	\vec{\sigma}_{xx}^{\,n} =& \vec{\sigma}_{xx}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\pi}^{\,T} (1+\vec{\tau^p}^{T}) \right] \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&- 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left[ \vec{\mu}^{\,T} (1+\vec{\tau^s}^{T}) \right] \cdot \left( \underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{xxl}^{\,n} + \vec{r}_{xxl}^{\,n-1} \right)\\
+	\vec{\sigma}_{yy}^{\,n} =& \vec{\sigma}_{yy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\pi}^{\,T} (1+\vec{\tau^p}^{T}) \right] \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&- 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left[ \vec{\mu}^{\,T} (1+\vec{\tau^s}^{T}) \right] \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{yyl}^{\,n} + \vec{r}_{yyl}^{\,n-1} \right)\\
+	\vec{\sigma}_{zz}^{\,n} =& \vec{\sigma}_{zz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\pi}^{\,T} (1+\vec{\tau^p}^{T}) \right] \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&- 2~ \frac{\Delta t}{\Delta h} ~\mathrm{diag} \left[ \vec{\mu}^{\,T} (1+\vec{\tau^s}^{T}) \right] \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} + \underline{D}_{\,y,b}^q \vec{v}_y^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{zzl}^{\,n} + \vec{r}_{zzl}^{\,n-1} \right)\\
+\end{align*}
+\begin{align*}
+	\vec{\sigma}_{xy}^{\,n} &= \vec{\sigma}_{xy}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\mu}_{xy}^{\,T} (1+\vec{\tau^s_{xy}}^{T}) \right] \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_y^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{xyl}^{\,n} + \vec{r}_{xyl}^{\,n-1} \right)\\
+	\vec{\sigma}_{xz}^{\,n} &= \vec{\sigma}_{xz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\mu}_{xz}^{\,T} (1+\vec{\tau^s_{xz}}^{T}) \right] \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_z^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{xzl}^{\,n} + \vec{r}_{xzl}^{\,n-1} \right)\\
+	\vec{\sigma}_{yz}^{\,n} &= \vec{\sigma}_{yz}^{\,n-1} + \frac{\Delta t}{\Delta h}~ \mathrm{diag} \left[ \vec{\mu}_{yz}^{\,T} (1+\vec{\tau^s_{yz}}^{T}) \right] \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y^{\,n} + \underline{D}_{\,y,f}^q \vec{v}_z^{\,n} \right) + \frac{\Delta t}{2} \sum_{l=1}^L \left( \vec{r}_{yzl}^{\,n} + \vec{r}_{yzl}^{\,n-1} \right)
+\end{align*}
+\begin{align*}
+	\vec{r}_{xxl}^{\,n} =& \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{xxl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h }~ \mathrm{diag} \left( \vec{\pi}^{\,T} \vec{\tau^p}^{T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&+ 2~ \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \vec{\tau^s}^{T} \right) \cdot \left( \underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \Bigg]\\
+	\vec{r}_{yyl}^{\,n} =& \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{yyl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h }~ \mathrm{diag} \left( \vec{\pi}^{\,T} \vec{\tau^p}^{T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&+ 2~ \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \vec{\tau^s}^{T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \Bigg]\\
+	\vec{r}_{zzl}^{\,n} =& \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{zzl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h }~ \mathrm{diag} \left( \vec{\pi}^{\,T} \vec{\tau^p}^{T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} +\underline{D}_{\,y,b}^q \vec{v}_y^{\,n} + \underline{D}_{\,z,b}^q \vec{v}_z^{\,n} \right) \\
+	&+ 2~ \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}^{\,T} \vec{\tau^s}^{T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{v}_x^{\,n} + \underline{D}_{\,y,b}^q \vec{v}_y^{\,n} \right) \Bigg]\\
+\end{align*}
+\begin{align*}
+	\vec{r}_{xyl}^{\,n} &= \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{xyl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}_{xy}^{\,T} \vec{\tau^s_{xy}}^{T} \right) \cdot \left( \underline{D}_{\,y,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_y^{\,n} \right) \Bigg]\\
+	\vec{r}_{xz}^{\,n} &= \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{xzl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}_{xz}^{\,T} \vec{\tau_{xz}^s}^{T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_x^{\,n} + \underline{D}_{\,x,f}^q \vec{v}_z^{\,n} \right) \Bigg]\\
+	\vec{r}_{yz}^{\,n} &= \left( 1+\frac{\Delta t}{2 \tau_{\sigma l}} \right)^{-1} \Bigg[ \left( 1-\frac{\Delta t}{2 \tau_{\sigma l}} \right) \vec{r}_{yzl}^{\,n-1} - \frac{\Delta t}{\tau_{\sigma l} \Delta h} ~\mathrm{diag} \left( \vec{\mu}_{yz}^{\,T} \vec{\tau_{yz}^s}^{T} \right) \cdot \left( \underline{D}_{\,z,f}^q \vec{v}_y^{\,n} + \underline{D}_{\,y,f}^q \vec{v}_z^{\,n} \right) \Bigg]
+\end{align*}
+\begin{align*}
+	\vec{v}_x^{\,n+1} &= \vec{v}_x^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{x,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,f}^q \vec{\sigma}_{xx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{xy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{xz}^{\,n} \right)\\
+	\vec{v}_y^{\,n+1} &= \vec{v}_y^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{y,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{yx}^{\,n} + \underline{D}_{\,y,f}^q \vec{\sigma}_{yy}^{\,n} + \underline{D}_{\,z,b}^q \vec{\sigma}_{yz}^{\,n} \right)\\
+	\vec{v}_z^{\,n+1} &= \vec{v}_z^{\,n} + \frac{\Delta t}{\Delta h} ~ \mathrm{diag} \left( \vec{\rho}_{z,\mathrm{inv}}^{\,T} \right) \cdot \left( \underline{D}_{\,x,b}^q \vec{\sigma}_{zx}^{\,n} + \underline{D}_{\,y,b}^q \vec{\sigma}_{zy}^{\,n} + \underline{D}_{\,z,f}^q \vec{\sigma}_{zz}^{\,n} \right)\\
+\end{align*}
+
+\chapter{EM wave equation}
+\label{sec:Visco_EM_wave_equation}
+
+\section{Theory of EM wave equation}
+Maxwell equations in non-electric charge field are shown as two rotation equations \citep{irving2006numerical}
+\begin{equation}
+\label{eqn:EM}
+\begin{align*}
+&\mu_{m} \pdv{ \mathbf{H}}{t} = -\nabla \times \mathbf{E} \\
+&\varepsilon\pdv{ \mathbf{E}}{t} + \sigma_{e}\mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} 
+\end{align*}
+\end{equation}
+where $\mathbf{H}$ and $\mathbf{E}$ are the magnetic field and  electric field. The source current $\mathbf{J}_s$ is injected by the GPR antenna. Without taking the visco-dispersion processes into consideration \citep{qin2020numerical2}, the dielectric permittivity $\varepsilon$, conductivity $\sigma_{e}$ and magnetic permeability $\mu_{m}$ are frequency-independent.
+
+\section{Discretization of EM wave equation}
+3D EM wave equation and FD discretization by usage of the SSG in isotropic media Fig.\ref{fig:StagGrid3D} are given as:
+\begin{equation}
+\begin{align*}
+  &\mu_{m} \pdv{H_{x}}{t} = -\pdv{E_z}{y} + \pdv{E_y}{z}\\
+  &\mu_{m} \pdv{H_{y}}{t} = -\pdv{E_x}{z} + \pdv{E_z}{x}\\
+  &\mu_{m} \pdv{H_{z}}{t} = -\pdv{E_y}{x} + \pdv{E_x}{y}\\
+  &\varepsilon \pdv{E_{x}}{t} + \sigma_{e} E_{x} + J_{sx} = \pdv{H_z}{y} - \pdv{H_y}{z}\\
+  &\varepsilon \pdv{E_{y}}{t} + \sigma_{e} E_{y} + J_{sy} = \pdv{H_x}{z} - \pdv{H_z}{x}\\
+  &\varepsilon \pdv{E_{z}}{t} + \sigma_{e} E_{z} + J_{sz} = \pdv{H_y}{x} - \pdv{H_x}{y}
+\end{align*}
+\end{equation}
+\begin{equation}
+\begin{align*}
+  &H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{myz}^{-1}  \left(- \left.\pdv{ E_{z}}{y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\pdv{ E_{y}}{z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\\
+  &H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxz}^{-1}  \left(- \left.\pdv{ E_{x}}{z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\pdv{ E_z}{x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\\
+  &H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} = H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxy}^{-1}  \left(- \left.\pdv{ E_y}{x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\pdv{ E_x}{y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\\
+  &E_{x,i+\frac{1}{2},j,k}^{n+1} = C_{ax} E_{x,i+\frac{1}{2},j,k}^{n} + \Delta t \cdot C_{bx} \left( \left.\pdv{ H_z}{y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \left.\pdv{ H_y}{z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - J_{sx} \right)\\
+  &E_{y,i,j+\frac{1}{2},k}^{n+1} = C_{ay} E_{y,i,j+\frac{1}{2},k}^{n} + \Delta t \cdot C_{by} \left( \left.\pdv{ H_x}{z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \left.\pdv{ H_z}{x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - J_{sy} \right)\\
+  &E_{z,i,j,k+\frac{1}{2}}^{n+1} = C_{az} E_{z,i,j,k+\frac{1}{2}}^{n} + \Delta t \cdot C_{bz} \left( \left.\pdv{ H_y}{x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \left.\pdv{ H_x}{y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - J_{sz} \right)
+\end{align*}
+\end{equation}
+where
+\begin{align*}
+  &\mu_{mxy} = \frac{4}{\mu^{-1}_{m,i,j,k} + \mu^{-1}_{m,i+1,j,k} + \mu^{-1}_{m,i,j+1,k} + \mu^{-1}_{m,i+1,j+1,k}}\\
+  &\mu_{mxz} = \frac{4}{\mu^{-1}_{m,i,j,k} + \mu^{-1}_{m,i+1,j,k} + \mu^{-1}_{m,i,j,k+1} + \mu^{-1}_{m,i+1,j,k+1}}\\
+  &\mu_{myz} = \frac{4}{\mu^{-1}_{m,i,j,k} + \mu^{-1}_{m,i,j+1,k} + \mu^{-1}_{m,i,j,k+1} + \mu^{-1}_{m,i,j+1,k+1}}\\
+  &C_{ai} = \left( 1 - \frac{\sigma_{ei} \Delta t}{2 \varepsilon_{i}} \right) \left( 1 + \frac{\sigma_{ei} \Delta t}{2 \varepsilon_{i}} \right)^{-1}, \quad
+  C_{bi} = \frac{1}{\varepsilon_{i}} \left( 1 + \frac{\sigma_{ei} \Delta t}{2 \varepsilon_{i}} \right)^{-1}, \quad
+  i = x,y,z\\
+  &\varepsilon_{x} = \frac{\varepsilon_{i,j,k} + \varepsilon_{i+1,j,k}}{2}, \quad
+  \varepsilon_{y} = \frac{\varepsilon_{i,j,k} + \varepsilon_{i,j+1,k}}{2}, \quad
+  \varepsilon_{z} = \frac{\varepsilon_{i,j,k} + \varepsilon_{i,j,k+1}}{2} \\
+  &\sigma_{ey} = \frac{\sigma_{e,i,j,k} + \sigma_{e,i,j+1,k}}{2}, \quad 
+  \sigma_{ex} = \frac{\sigma_{e,i,j,k} + \sigma_{e,i+1,j,k}}{2}, \quad 
+  \sigma_{ez} = \frac{\sigma_{e,i,j,k} + \sigma_{e,i,j,k+1}}{2} 
+\end{align*}
+
+\section{Matrix-vector formalism of EM wave}
+All discrete components of the 3D EM wavefield in matrix-vector notation are: 
+\begin{equation}
+\begin{align*}
+  &\vec{H}_{x}^{n+\frac{1}{2}} = \vec{H}_{x}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{myz}^{-1}\right)  \left(- \underline{D}_{\,y,f}^q \vec{E}_{z}^{n} + \underline{D}_{\,z,f}^q \vec{E}_{y}^{n} \right)\\
+  &\vec{H}_{y}^{n+\frac{1}{2}} = \vec{H}_{y}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxz}^{-1}\right)  \left(- \underline{D}_{\,z,f}^q \vec{E}_{x}^{n} + \underline{D}_{\,x,f}^q \vec{E}_z^{n} \right)\\
+  &\vec{H}_{z}^{n+\frac{1}{2}} = \vec{H}_{z}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxy}^{-1}\right)  \left(- \underline{D}_{\,x,f}^q \vec{E}_y^{n} + \underline{D}_{\,y,f}^q \vec{E}_x^{n} \right)\\
+  &\vec{E}_{x}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ax}\right) \vec{E}_{x}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{bx}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,y,b}^q \vec{H}_z^{n+\frac{1}{2}} - \underline{D}_{\,z,b}^q \vec{H}_y^{n+\frac{1}{2}} \right) - J_{sx} \right]\\
+  &\vec{E}_{y}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ay}\right) \vec{E}_{y}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{by}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,z,b}^q  \vec{H}_x^{n+\frac{1}{2}} - \underline{D}_{\,x,b}^q \vec{H}_z^{n+\frac{1}{2}} \right) - J_{sy} \right]\\
+  &\vec{E}_{z}^{n+1} =  \mathrm{diag} \left(\vec{C}_{az}\right) \vec{E}_{z}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{bz}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,x,b}^q \vec{H}_y^{n+\frac{1}{2}} - \underline{D}_{\,y,b}^q \vec{H}_x^{n+\frac{1}{2}} \right) - J_{sz} \right]
+\end{align*}
+\end{equation}
+
+\chapter{Visco-EM wave equation}
+\label{sec:Visco_EM_wave_equation}
+
+\section{Theory of visco-EM wave equation}
+Maxwell equation in dispersive media.
+\begin{equation}
+\label{eqn:ViscoEM2}
+\begin{align*}
+  &\mu_{m} \pdv{ \mathbf{H}}{t} = -\nabla \times \mathbf{E} \\
+  &\varepsilon^\infty_{} \pdv{ \mathbf{E}}{t} + \sigma^\infty_{e} \mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} + \sum_{l=1}^L \mathbf{r}_{l} \\
+  &\pdv{\mathbf{r}_{l}}{t} + \frac{1}{\tau_{Dl}} \mathbf{r}_{l} = \varepsilon^s_{} \frac{\tau_{\varepsilon l }}{L \tau_{Dl}^2} \mathbf{E} 
+\end{align*}
+\end{equation}
+where $\varepsilon^\infty_{}$ and $\sigma^\infty_{e}$ are the optical permittivity and optical conductivity, respectively. $\varepsilon^\infty_{}$ and $\sigma^\infty_{e}$ in non-dispersive case where $\tau_{\varepsilon l } = 0$ and $\tau_{\sigma e} = 0$ are simplified to $\varepsilon^s_{}$ and $\sigma^s_{e}$, respectively.
+\begin{equation}
+\label{eqn:ViscoParameter}
+\begin{align*}
+  \varepsilon^\infty_{} = \varepsilon^s_{} \left( 1-\frac{1 }{L} \sum_{l=1}^L \tau_{\varepsilon l } \right) + \sigma^s_{e} \tau_{\sigma e}, \quad
+  \sigma^\infty_{e} = \sigma^s_{e} + \varepsilon^s_{} \frac{1 }{L} \sum_{l=1}^L \frac{\tau_{\varepsilon l }}{\tau_{Dl}}
+\end{align*}
+\end{equation} 
+\par We call Eq. \ref{eqn:ViscoEM2} as visco-EM wave equation because the defination of memory variable is similar with that in visco-elastic equation. By using the new form of EM wave equation introduced above, we can achieve the FWI of EM waves in dispersive media \citep{qin2020full}.
+
+\section{Discretization of visco-EM wave equation}
+3D visco-EM wave equation and FD discretization by usage of the SSG in isotropic media Fig.\ref{fig:StagGrid3D} are given as:
+\begin{equation}
+\begin{align*}
+  &\mu_{m} \pdv{H_{x}}{t} = -\pdv{E_z}{y} + \pdv{E_y}{z}\\
+  &\mu_{m} \pdv{H_{y}}{t} = -\pdv{E_x}{z} + \pdv{E_z}{x}\\
+  &\mu_{m} \pdv{H_{z}}{t} = -\pdv{E_y}{x} + \pdv{E_x}{y}\\
+  &\varepsilon^\infty_{x} \pdv{E_{x}}{t} + \sigma^\infty_{ex} E_{x} + J_{sx} = \pdv{H_z}{y} - \pdv{H_y}{z} + \sum_{l=1}^L r_{xl} \\
+  &\varepsilon^\infty_{y} \pdv{E_{y}}{t} + \sigma^\infty_{ey} E_{y} + J_{sy} = \pdv{H_x}{z} - \pdv{H_z}{x} + \sum_{l=1}^L r_{yl} \\
+  &\varepsilon^\infty_{z} \pdv{E_{z}}{t} + \sigma^\infty_{ez} E_{z} + J_{sz} = \pdv{H_y}{x} - \pdv{H_x}{y} + \sum_{l=1}^L r_{zl} \\
+  &\pdv{r_{xl}}{t} + \frac{1}{\tau_{Dl} } r_{xl} = \varepsilon^s_{x} \frac{\tau_{\varepsilon x l}}{L \tau_{Dl}^2} E_{x}\\
+  &\pdv{r_{yl}}{t} + \frac{1}{\tau_{Dl} } r_{yl} = \varepsilon^s_{y} \frac{\tau_{\varepsilon y l}}{L \tau_{Dl}^2} E_{y}\\
+  &\pdv{r_{zl}}{t} + \frac{1}{\tau_{Dl} } r_{zl} = \varepsilon^s_{z} \frac{\tau_{\varepsilon z l}}{L \tau_{Dl}^2} E_{z}
+\end{align*}
+\end{equation}
+\begin{equation}
+\begin{align*}
+  &H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{myz}^{-1}  \left(- \left.\pdv{ E_{z}}{y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\pdv{ E_{y}}{z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\\
+  &H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxz}^{-1}  \left(- \left.\pdv{ E_{x}}{z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\pdv{ E_z}{x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\\
+  &H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} = H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxy}^{-1}  \left(- \left.\pdv{ E_y}{x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\pdv{ E_x}{y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\\
+  &E_{x,i+\frac{1}{2},j,k}^{n+1} = C_{ax} E_{x,i+\frac{1}{2},j,k}^{n} + \Delta t \cdot C_{bx} \left( \left.\pdv{ H_z}{y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \left.\pdv{ H_y}{z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} + \sum_{l=1}^L \left. r_{xl}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - J_{sx} \right)\\ 
+  &E_{y,i,j+\frac{1}{2},k}^{n+1} = C_{ay} E_{y,i,j+\frac{1}{2},k}^{n} + \Delta t \cdot C_{by} \left( \left.\pdv{ H_x}{z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \left.\pdv{ H_z}{x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} + \sum_{l=1}^L \left. r_{yl}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - J_{sy} \right)\\
+  &E_{z,i,j,k+\frac{1}{2}}^{n+1} = C_{az} E_{z,i,j,k+\frac{1}{2}}^{n} + \Delta t \cdot C_{bz} \left( \left.\pdv{ H_y}{x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \left.\pdv{ H_x}{y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} + \sum_{l=1}^L \left. r_{zl}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - J_{sz} \right)\\
+  &r_{xl,i+\frac{1}{2},j,k}^{n+\frac{1}{2}} = C_{c l} r_{xl,i+\frac{1}{2},j,k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d l x} \left.E_x \right\rvert_{i+\frac{1}{2},j,k}^{n}\\
+  &r_{yl,i,j+\frac{1}{2},k}^{n+\frac{1}{2}} = C_{c l} r_{yl,i,j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d l y} \left.E_y \right\rvert_{i,j+\frac{1}{2},k}^{n}\\
+  &r_{zl,i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} = C_{c l} r_{zl,i,j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot C_{d l z} \left.E_z \right\rvert_{i,j,k+\frac{1}{2}}^{n}
+\end{align*}
+\end{equation}
+where
+\begin{align*}
+  &C_{ai} = \left( 1 - \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right) \left( 1 + \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right)^{-1}, \quad
+  C_{bi} = \frac{1}{\varepsilon^\infty_{i}} \left( 1 + \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right)^{-1}\\
+  &C_{c l} = \left( 1 - \frac{ \Delta t}{2 \tau_{Dl}} \right) \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}, \quad
+  C_{d l i} = \varepsilon^s_{i} \frac{\tau_{\varepsilon i l}}{L \tau_{Dl}^2} \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}, \quad  i = x,y,z\\
+  &\varepsilon^s_{x} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i+1,j,k}}{2}, \quad
+  \varepsilon^s_{y} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i,j+1,k}}{2}, \quad
+  \varepsilon^s_{z} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i,j,k+1}}{2} \\
+  &\varepsilon^\infty_{x} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i+1,j,k}}{2}, \quad
+  \varepsilon^\infty_{y} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i,j+1,k}}{2}, \quad
+  \varepsilon^\infty_{z} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i,j,k+1}}{2} \\
+  &\sigma^\infty_{ex} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i+1,j,k}}{2}, \quad
+  \sigma^\infty_{ey} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i,j+1,k}}{2}, \quad
+  \sigma^\infty_{ez} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i,j,k+1}}{2} \\
+  &\tau_{\varepsilon x l} = \frac{\tau_{\varepsilon l ,i,j,k} + \tau_{\varepsilon l ,i+1,j,k}}{2}, \quad
+  \tau_{\varepsilon y l} = \frac{\tau_{\varepsilon l ,i,j,k} + \tau_{\varepsilon l ,i,j+1,k}}{2}, \quad
+  \tau_{\varepsilon z l} = \frac{\tau_{\varepsilon l ,i,j,k} + \tau_{\varepsilon l ,i,j,k+1}}{2} 
+\end{align*}
+
+
+\section{Matrix-vector formalism of visco-EM wave}
+All discrete components of the 3D visco-EM wavefield in matrix-vector notation are: 
+\begin{equation}	
+\begin{align*}
+  &\vec{H}_{x}^{n+\frac{1}{2}} = \vec{H}_{x}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{myz}^{-1}\right)  \left(- \underline{D}_{\,y,f}^q \vec{E}_{z}^{n} + \underline{D}_{\,z,f}^q \vec{E}_{y}^{n} \right)\\
+  &\vec{H}_{y}^{n+\frac{1}{2}} = \vec{H}_{y}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxz}^{-1}\right)  \left(- \underline{D}_{\,z,f}^q \vec{E}_{x}^{n} + \underline{D}_{\,x,f}^q \vec{E}_z^{n} \right)\\
+  &\vec{H}_{z}^{n+\frac{1}{2}} = \vec{H}_{z}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxy}^{-1}\right)  \left(- \underline{D}_{\,x,f}^q \vec{E}_y^{n} + \underline{D}_{\,y,f}^q \vec{E}_x^{n} \right)\\  
+  &\vec{E}_{x}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ax}\right) \vec{E}_{x}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bx}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,y,b}^q \vec{H}_z^{n+\frac{1}{2}} - \underline{D}_{\,z,b}^q \vec{H}_y^{n+\frac{1}{2}} \right) + \sum_{l=1}^L \vec{r}_{xl}^{n+\frac{1}{2}} - J_{sx} \right]\\ 
+  &\vec{E}_{y}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ay}\right) \vec{E}_{y}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{by}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,z,b}^q  \vec{H}_x^{n+\frac{1}{2}} - \underline{D}_{\,x,b}^q \vec{H}_z^{n+\frac{1}{2}} \right) + \sum_{l=1}^L \vec{r}_{ly}^{n+\frac{1}{2}} - J_{sy} \right]\\ 
+  &\vec{E}_{z}^{n+1} =  \mathrm{diag} \left(\vec{C}_{az}\right) \vec{E}_{z}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bz}\right) \left[ \frac{1}{\Delta h} \left(\underline{D}_{\,x,b}^q \vec{H}_y^{n+\frac{1}{2}} - \underline{D}_{\,y,b}^q \vec{H}_x^{n+\frac{1}{2}} \right) + \sum_{l=1}^L \vec{r}_{zl}^{n+\frac{1}{2}} - J_{sz} \right]\\ 
+  &\vec{r}_{xl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{xl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d l x}\right) \vec{E}_{x}^{n} \\
+  &\vec{r}_{ly}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{ly}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d l y}\right) \vec{E}_{y}^{n}\\
+  &\vec{r}_{zl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{zl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d l z}\right) \vec{E}_{z}^{n}
+\end{align*}
+\end{equation}
 
 \end{document}
