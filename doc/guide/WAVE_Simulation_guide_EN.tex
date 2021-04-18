@@ -567,9 +567,6 @@ The condition for the averaging of the second Lam\'e parameter $\mu$ in the $ij$
        \end{cases}
 \end{align}
 
-
-
-
 \section{Boundary Conditions}
 To find to a unique solution of the problem, boundary conditions have to be defined. 
 To avoid wavefield reflections at the boundaries of the model grid, an absorbing boundary condition can be applied. A commonly used implementation is described in \cite{cerjan1985nonreflecting}: The numerical grid is enlarged by grid points (if damping boundary is used, boundary width $FW$  is 10 gridpoints by default) in each direction. The values of the stress and particle velocity in this boundary frame are multiplied by a damping factor $damp$.
@@ -1120,7 +1117,7 @@ If the model is very large or if a huge number of shots is used, it is useful to
            1        50         0         0
            2       100         0         0
 \end{verbatim}
-The number of rows, in this case three, specifies the number of unique shot used. The whole input model then is not specified by \verb+ModelFilename+ in the \shellcmd{configuration.txt} anymore, but by \verb+ModelFilename+ defined in the stream configuration file \verb+streamConfigFilename+. For each unique shot, we cut a model subset from the stream/big model defined in file \verb+streamConfigFilename+. The cutting coordinates are specified by the distance between adjacent shots. The left or right distance between model boundaries and the unique shot in $X$ direction is identified with the left most or right most shot to avoid the artificial reflections caused by model cutting. Each model subset has the same model size $N$, which makes sure \verb+NumShotDomains+ shots can be generated parallelly with significantly lower computation cost than that directly running on a stream/big model. To sum up, \verb+NX+, \verb+NY+, \verb+NZ+, \verb+DH+, \verb+ModelFilename+, \verb+SourceFilename+ and \verb+ReceiverFilename+ in the file \verb+streamConfigFilename+ will be used to extract models per shot by setting \verb+useStreamConfig+ = 1. The other parameters in the \shellcmd{configuration.txt} file are then used for the model subset where the simulation is run. 
+The number of rows, in this case three, specifies the number of unique shot used. The whole input model then is not specified by \verb+ModelFilename+ in the \shellcmd{configuration.txt} anymore, but by \verb+ModelFilename+ defined in the stream configuration file \verb+streamConfigFilename+. For each unique shot, we cut a model subset from the stream/big model defined in file \verb+streamConfigFilename+. The cutting coordinates are specified by the distance between adjacent shots. The left or right distance between model boundaries and the unique shot in $x$-direction is identified with the left most or right most shot to avoid the artificial reflections caused by model cutting. Each model subset has the same model size $N$, which makes sure \verb+NumShotDomains+ shots can be generated parallelly with significantly lower computation cost than that directly running on a stream/big model. To sum up, \verb+NX+, \verb+NY+, \verb+NZ+, \verb+DH+, \verb+ModelFilename+, \verb+SourceFilename+ and \verb+ReceiverFilename+ in the file \verb+streamConfigFilename+ will be used to extract models per shot by setting \verb+useStreamConfig+ = 1. The other parameters in the \shellcmd{configuration.txt} file are then used for the model subset where the simulation is run. 
 
 The following parameter \verb+useVariableGrid+ characterises whether the model uses a variable grid spacing for the calculation of the wavefield ($1=$ yes, else $=$ no). 
 The type of partition can be chosen in \verb+partitioning+ where you can opt for a block distribution ($=0$), grid distribution ($=1$) parallel graph distribution by geographer ($=2$) or parallel graph distribution by ParMETIS ($=3$).
@@ -1183,14 +1180,14 @@ The second section in table \ref{tab:config_inputoutput} contains parameters to 
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-The third part in table \ref{tab:config_boundary} handles the boundary conditions. Free surface can turned off by setting (\verb+FreeSurface+ $=0$). In this case the model boundary is also used at the top. If you want to use a free surface two methods are implemented. By selecting (\verb+FreeSurface+ $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\verb+FreeSurface+ $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardless of your choise of \verb+FreeSurface+ but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\verb+FreeSurface+ $=0$) and (\verb+FreeSurface+ $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\verb+FreeSurface+ $=0$) and introduce additional grid points equal to the thickness of your boundary. 
+The third part in table \ref{tab:config_boundary} handles the boundary conditions. In EM wave simulation, the free surface can be turned off by setting (\verb+FreeSurface+ $=0$). In this case the model boundary is also used at the top. If you want to use a free surface in seismic wave simulation two methods are implemented. By selecting (\verb+FreeSurface+ $=1$) the mirror method is chosen. This method only works for a flat surface which is represented by the upper edge of the model. Selecting (\verb+FreeSurface+ $=2$) chooses the Improved Vacuum Formulation (IVF). This method should be chosen in case of a free surface with topography but requires additional grid points above the highest surface elevation. The number of additional grid points must be at least equal to one plus half the length of the FD operator if the medium above the free surface is vacuum. IVF is used regardless of your choise of \verb+FreeSurface+ but it only affects you if there is a medium with density or in elastic case shear modulus of zero in the model. Without this behaviour the simulation would crash in this case. The only difference between (\verb+FreeSurface+ $=0$) and (\verb+FreeSurface+ $=2$) is that the absorbing boundary at the top is turned off in the later case. So if you choose to discretize air at the top of your model you need to select (\verb+FreeSurface+ $=0$) and introduce additional grid points equal to the thickness of your boundary. 
 The model boundaries are characterised by \verb+DampingBoundary+, \verb+BoundaryWidth+ and \verb+DampingCoeff+. 
 The usage of damping boundaries can be turned off (\verb+DampingBoundary+ $=0$) or set as ABS $=1$ or CPML $=2$. Again, if the parameter for \verb+DampingBoundary+ is set to 0, it is not used. 
 If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NPower+ also have to be set. 
 
-\subsubsection{Viscoelastic modelling}
+\subsubsection{Viscoelastic and visco-EM wave modelling}
 \begin{table}[h!]
-\caption[List of viscoelastic modelling configuration parameters.]{List of viscoelastic modelling configuration parameters, that can be added and changed in the config-file.}\label{tab:config_visco}
+\caption[List of viscoelastic and visco-EM wave modelling configuration parameters.]{List of viscoelastic and visco-EM wave modelling configuration parameters, that can be added and changed in the config-file.}\label{tab:config_visco}
 \centering
 \begin{adjustbox}{width=1\textwidth,center=\textwidth}
 	\begin{tabular}{llll}
@@ -1203,11 +1200,11 @@ If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NP
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-The fourth section in \ref{tab:config_visco} are the parameters relevant for viscoelastic modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
+The fourth section in \ref{tab:config_visco} are the parameters relevant for viscoelastic and visco-EM wave modelling. The two parameters of this table-section describe the number of relaxation mechanisms and the relaxation frequency for first relaxation mechanism (given in \SI{}{Hz}).
 
-\subsubsection{On-the-fly model}
+\subsubsection{On-the-fly seismic model}
 \begin{table}[h!]
-\caption[List of on-the-fly model configuration parameters.]{List of on-the-fly model configuration parameters, that can be added and changed in the config-file.}\label{tab:config_onthefly}
+\caption[List of on-the-fly seismic model configuration parameters.]{List of on-the-fly seismic model configuration parameters, that can be added and changed in the config-file.}\label{tab:config_onthefly}
 \centering
 \begin{adjustbox}{width=0.8\textwidth,center=\textwidth}
 	\begin{tabular}{llll}
@@ -1223,10 +1220,10 @@ The fourth section in \ref{tab:config_visco} are the parameters relevant for vis
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-In the fifth section in \ref{tab:config_onthefly} all variables can be set to create a homogeneous model on-the-fly. The variable \verb+velocityP+ ($v_p$) is only needed in elastic and viscoelastic calculations and  \verb+tauP+ ($\tau^p$) and \verb+tauS+ ($\tau^s$) are solely needed in the viscoelastic case. 
-The P-wave ($M$) and S-wave ($\mu$) moduli can be calculated by:
+In the fifth section in \ref{tab:config_onthefly} all variables can be set to create a homogeneous seismic model on-the-fly. The variable \verb+velocityP+ ($v_p$) is only needed in elastic and viscoelastic calculations and  \verb+tauP+ ($\tau^p$) and \verb+tauS+ ($\tau^s$) are solely needed in the viscoelastic case. 
+The P-wave ($\pi$) and S-wave ($\mu$) moduli can be calculated by:
 \begin{align*}
-	M&=\rho\cdot v_p^2\\
+	\pi&=\rho\cdot v_p^2\\
 	\mu &=\rho\cdot v_s^2\\
 \end{align*}
 The Matlab script \shellcmd{createHomogeneousModel.m} and the Python script \shellcmd{createHomoge- neousModel.py} in \shellcmd{model/} are examples how to generate external models in both mentioned parametrisation. 
@@ -1310,8 +1307,8 @@ The source file contains columns filled with information about the source number
   1      80 80 80 1          1            1             5  5   0
 \end{verbatim}
 where each row is one shot. Each shot with the same shot number is modelled in one simulation which would be used in source encode technique \citep{krebs2009fast}, whereas each shot number is simulated individually. Thus, the example shows two shot simulations, one with one shot, the other with two.
-The coordinates in (x, y, z) are given in grid points. There are three different source types, pressure (1 = P), velocity in x- (2 = vX), y- (3 = vY), and z-direction (4 = vZ). 
-The wavelet type can be set as 1 = synthetic signal or 0 = own signal and its shape can be set as a 1 = Ricker wavelet, 2 = Fuchs-M\"uller signal, 3 = $\sin^3$ function, 4 = First derivative of Gaussian, 5 = Spike/Delta signal, 6 = integral of $\sin^3$, and 7 = Ricker wavelet used in GprMax which is a ground penetrating radar (GPR) simulation software  \citep{giannopoulos2005modelling}. 
+The coordinates in (x, y, z) are given in grid points. There are three different source types, pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). 
+The wavelet type can be set as 1 = synthetic signal or 0 = own signal and its shape can be set as a 1 = Ricker wavelet, 2 = Fuchs-M\"uller signal, 3 = $\sin^3$ function, 4 = First derivative of Gaussian, 5 = Spike/Delta signal, 6 = integral of $\sin^3$, and 7 = Ricker wavelet used in GprMax which is a GPR simulation software  \citep{giannopoulos2005modelling}. 
 Further information can be found in chapter \ref{ch:sourcesignal}.
 Center frequency is to be set in Hz, the Amplitude scales the maximum amplitude of the wavefields and output seismograms and the time shift is defined in seconds.
 
@@ -1323,7 +1320,7 @@ The receiver file is similarly built, with information about the receiver coordi
   20 20 20 2
   21 21 21 2
 \end{verbatim}
-where each row is one receiver with its grid coordinates in (x, y, z) and receiver type that can be set as pressure (1 = P), velocity in x- (2 = vX), y- (3 = vY), and z-direction (4 = vZ). Depending on the chosen type, the output seismograms will have the same type. In case of \verb+useReceiverMark+ = 1, you have to define a file named \verb+ReceiverFilename+.mark.mtx to store marks. The mark matrix maybe look like this
+where each row is one receiver with its grid coordinates in (x, y, z) and receiver type that can be set as pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). Depending on the chosen type, the output seismograms will have the same type. In case of \verb+useReceiverMark+ = 1, you have to define a file named \verb+ReceiverFilename+.mark.mtx to store marks. The mark matrix maybe look like this
 \begin{verbatim}
 # shotNr receiver_mark (1=use, 0=not use)
   0      0 0 0 0 1 1 1 1 1 1 1 1 1 1 ...
@@ -1333,7 +1330,7 @@ where each row is one receiver with its grid coordinates in (x, y, z) and receiv
 Please note you have to reshape this mark matrix to a vector and save it as mtx format.
 
 \subsection{Source Signal}\label{ch:sourcesignal}
-There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
+There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual but you can find it from GprMax user manual). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
 	\includegraphics[width=.7\textwidth]{images/Signal_Plot.png}
