@@ -244,8 +244,9 @@ The authors of WAVE-Simulation are listed in file \lstinline{AUTHORS}.
 
 In order to extract information about the structure and composition of the crust from seismic observations and ground penetrating radar (GPR) observations, it is necessary to be able to predict how seismic wavefields and electromagnetic (EM) wavefields are affected by complex structures. Since exact analytical solutions to the wave equations do not exist for most subsurface configurations, the solutions can be obtained only by numerical methods. For iterative calculations of synthetic seismograms with limited computer resources fast and accurate modeling methods are needed. The explicit time-domain finite-difference (FD) modeling program WAVE-Simulation (C++), that is described in this guide, is based on the FD approach described by \cite{yee1966numerical}, \cite{virieux1986p} and \cite{levander1988fourth}. To solve a large number of forward problem based on wave equations, modern seismic imaging methods often require high performance computing (HPC) systems to provide enough computational power. In order to parallelise the computation, the problem is rewritten in matrix-vector formulation. By using matrix-vector formulation the parallelisation problem can be outsourced using a HPC-framework. In our case WAVE-Simulation uses the open source framework LAMA which is a HPC library enabling the development of hardware independent Software executable on both CPUs and GPUs.
 
-WAVE-Simulation features solving seismic waves and EM waves by utilising an explicit time-domain FD method. Seismic waves include the acoustic, elastic and viscoelastic wave equation in 2D and 3D and Shear Horizontal (SH) wave in 2D, while EM waves include (visco) transverse magnetic (TM) mode and (visco) transverse electric (TE) mode in 2D and visco-EM wave in 3D. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh \citep{berenger1994perfectly,roden2000convolution,komatitsch2007unsplit}. It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface in seismic wave propagation. In the following sections, by taking 3D elastic wave equation as an example, we give a short description of the theoretical background, the different modelling parameters and options and how the program is used and executed. The others such as the acoustic, viscoelastic and visco-EM wave equations are shown in the appendix 
-\ref{Viscoelastic_wave_equation}.
+WAVE-Simulation features solving seismic waves and EM waves by utilising an explicit time-domain FD method. Seismic waves include the acoustic, elastic and viscoelastic wave equation in 2D and 3D and Shear Horizontal (SH) wave in 2D, while EM waves include (visco) transverse magnetic (TM) mode and (visco) transverse electric (TE) mode in 2D and visco-EM wave in 3D. The current version of WAVE-Simulation also includes the extension of higher order FD operators and applying Perfectly Matched Layer boundary conditions at the edges of the numerical mesh \citep{berenger1994perfectly,roden2000convolution,komatitsch2007unsplit}. It also includes the stress-image method by \cite{levander1988fourth} and the improved vacuum formulation by \cite{zeng2012improved} for modelling the free surface in seismic wave propagation. 
+
+In the following sections, by taking 3D elastic wave equation as an example, we give a short description of the theoretical background, the different modelling parameters and options and how the program is used and executed. The others such as the acoustic, viscoelastic, EM and visco-EM wave equations are shown in the appendix \ref{sec:Acoustic_wave_equation}-\ref{sec:Visco_EM_wave_equation}.
 
 \cleardoublepage
 \part{Theory of Finite Difference Simulation in Matrix-Vector Formalism}
@@ -255,7 +256,7 @@ WAVE-Simulation features solving seismic waves and EM waves by utilising an expl
 This chapter contains the theoretical principles for the physical description of seismic wave propagation in elastic media. This also includes the general stress-stain relation of solid objects or viscous fluids. Furthermore conservation of momentum is applied to infinitesimal volume elements.
 
 \section{General State of Stress}
-\label{kap:AllSp}
+\label{sec:AllSp}
 
 Other than not viscous fluids, viscous fluids and solid objects can be under shear stress. The normal stress in all spatial directions is generally varying. This can be explained by internal friction.
 
@@ -375,7 +376,7 @@ Surface forces affect an object due to its stress conditions. The derivation of 
 \begin{equation}
 	\vec{F}_s = \int_A \vec{s} ~\mathrm{d}A
 \end{equation}
-In general the stress vector, perpendicular to an arbitrary surface, can be calculated by multiplying the transposed stress tensor with the normal vector of the surface $\vec{n}$. Note that the stress tensor is symmetric due to conservation of angular momentum (see chapter \ref{kap:AllSp}) and therefore $\sigma^T = \sigma$ applies.
+In general the stress vector, perpendicular to an arbitrary surface, can be calculated by multiplying the transposed stress tensor with the normal vector of the surface $\vec{n}$. Note that the stress tensor is symmetric due to conservation of angular momentum (see chapter \ref{sec:AllSp}) and therefore $\sigma^T = \sigma$ applies.
 \begin{equation}
 	\vec{s} = \sigma^\mathrm{T} \cdot\vec{n}
 \end{equation}
@@ -937,23 +938,23 @@ Mark, that in case a border plane is reached, the averaging can only be calculat
 \chapter{Frequency Filters}
 WAVE-Simulation also includes a frequency filter for seismograms and radargrams, which will be used by WAVE-Inversion (the corresponding inversion software we developed) in a multi-scale strategy. For this Butterworth filters are very popular since they are maximally flat in the passband. As described in many literature (e.g. \cite{bianchi2007electronic}) the transfer function $H(s)$ of a low-pass Butterworth filter can be described by its poles $s_k$ with:
 \begin{align}
- H(s)=\frac{1}{\prod_{k=1}^n (s-s_k)/\omega_c} \label{eq:transButter}
+ H(s)=\frac{1}{\prod_{k=1}^n (s-s_k)/\omega_c} \label{eqn:transButter}
 \end{align}
 The parameter $n$ describes the order of the filter and $\omega_c$ is its corner frequency. 
 The poles are located in the complex plane at:
 \begin{align}
  s_k = \omega_c e^{\frac{i(2k+n-1)\pi}{2n}}\qquad k = 1,2,3,\ldots, n
 \end{align}
-The polynomial in the denominator of equation \ref{eq:transButter} can be written in a real form by multiplying complex conjugate pairs of poles. By setting $\omega_c = \SI{1}{\per\second}$ this yields:
+The polynomial in the denominator of equation \ref{eqn:transButter} can be written in a real form by multiplying complex conjugate pairs of poles. By setting $\omega_c = \SI{1}{\per\second}$ this yields:
 \begin{align}
   B_n(s)=\prod_{k=1}^{\frac{n}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{even} \\
   B_n(s)=(s+1)\prod_{k=1}^{\frac{n-1}{2}} \left[s^2-2s\cos\left(\frac{2k+n-1}{2n}\,\pi\right)+1\right]\qquad n = \text{odd}
 \end{align}
 So the transfer function is:
 \begin{align}
-H(s) = \frac{1}{B_n(a)} \label{eq:transPoly}
+H(s) = \frac{1}{B_n(a)} \label{eqn:transPoly}
 \end{align}
-Where $a= s/\omega_c = i \omega / \omega_c$. A high-pass is designed with $a= \omega_c/s = -i \omega_c / \omega$. Multiplication of low- and high-pass transfer functions yields the transfer function of a band-pass filter.\\ The final step is to find a matrix vector representation of expression \ref{eq:transPoly}. Since time is treated as discrete values in a finite interval $s$ can be represented by a vector $\vec{s}$:
+Where $a= s/\omega_c = i \omega / \omega_c$. A high-pass is designed with $a= \omega_c/s = -i \omega_c / \omega$. Multiplication of low- and high-pass transfer functions yields the transfer function of a band-pass filter.\\ The final step is to find a matrix vector representation of expression \ref{eqn:transPoly}. Since time is treated as discrete values in a finite interval $s$ can be represented by a vector $\vec{s}$:
 \begin{align}
  \vec{H}(\vec{s}) = \left[ F \vec{c} \right]^{-1}
 \end{align}
@@ -1099,7 +1100,7 @@ As mentioned in the quick guide, the configuration can be found in \shellcmd{par
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-The parameters can be divided in seven main groups. The first group which can be found in table \ref{tab:config_grid} contains the dimension and the type of wave equation of the model, as well as parameters to describe the model (\verb+NX+, \verb+NY+, \verb+NZ+ and \verb+DH+) and temporal parameters (\verb+DT+ and \verb+T+). The total number of gridpoints is given by 
+The parameters can be divided in seven main groups. The first group which can be found in table \ref{tab:config_grid} contains the dimension (2D or 3D) and the type of wave equation (acoustic, sh, elastic, viscoelastic, tmem, emem, viscotmem, viscoemem), as well as parameters to describe the model (\verb+NX+, \verb+NY+, \verb+NZ+ and \verb+DH+) and temporal parameters (\verb+DT+ and \verb+T+). The total number of gridpoints is given by 
 \begin{equation*}
 	N=NX\times NY\times NZ
 \end{equation*}
@@ -1261,7 +1262,7 @@ To verify the models stability  the courant can be calculated:
 \end{tabular}
 \end{adjustbox}
 \end{table}
-The sixth section in \ref{tab:config_acquisition} handles the acquisition geometry. \verb+SourceFilename+ and \verb+ReceiverFilename+ must be set to the files where source and receiver properties are specified respectively. The way they are structured is explained in chapter \ref{ch:sourcesandreceiver}. The ending .txt has to be omitted in the config-file. 
+The sixth section in \ref{tab:config_acquisition} handles the acquisition geometry. \verb+SourceFilename+ and \verb+ReceiverFilename+ must be set to the files where source and receiver properties are specified respectively. The way they are structured is explained in chapter \ref{sec:sourcesandreceiver}. The ending .txt has to be omitted in the config-file. 
 \verb+SourceSignalFilename+ specifies the location of the file where the source signals are stored in case you want to use your own.
 If \verb+useReceiversPerShot+ is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending \shellcmd{.shot\_<shot number>.txt}. 
 Alternatively, \verb+useReceiverMark+ can be used to save much storage memory compared with \verb+useReceiversPerShot+.
@@ -1297,7 +1298,7 @@ The snapshots are stored in the directory chosen in \verb+WavefieldFilename+. Sn
 
 At the end of configuration file, one can set \verb+verbose+ = 0 to briefly display the key points of the program running, or \verb+verbose+ = 1 to show all the status messages which can be confusing if shots are run in parallel. However, \verb+verbose+ = 1 would help you find the bugs much faster when you develop and debug a new feature in WAVE-Simulation.
 
-\subsection{Source and Receiver File}\label{ch:sourcesandreceiver}
+\subsection{Source and Receiver File}\label{sec:sourcesandreceiver}
 In \shellcmd{par/acquisition/} two files can be found,the \shellcmd{sources.txt} and \shellcmd{receiver.txt} files.
 The source file contains columns filled with information about the source number, source coordinates (x, y, z), source type, wavelet shape, center frequency, amplitude and time shift. It can look like this
 \begin{verbatim}
@@ -1309,7 +1310,7 @@ The source file contains columns filled with information about the source number
 where each row is one shot. Each shot with the same shot number is modelled in one simulation which would be used in source encode technique \citep{krebs2009fast}, whereas each shot number is simulated individually. Thus, the example shows two shot simulations, one with one shot, the other with two.
 The coordinates in (x, y, z) are given in grid points. There are three different source types, pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). 
 The wavelet type can be set as 1 = synthetic signal or 0 = own signal and its shape can be set as a 1 = Ricker wavelet, 2 = Fuchs-M\"uller signal, 3 = $\sin^3$ function, 4 = First derivative of Gaussian, 5 = Spike/Delta signal, 6 = integral of $\sin^3$, and 7 = Ricker wavelet used in GprMax which is a GPR simulation software  \citep{giannopoulos2005modelling}. 
-Further information can be found in chapter \ref{ch:sourcesignal}.
+Further information can be found in chapter \ref{sec:sourcesignal}.
 Center frequency is to be set in Hz, the Amplitude scales the maximum amplitude of the wavefields and output seismograms and the time shift is defined in seconds.
 
 The receiver file is similarly built, with information about the receiver coordinates and the receiver type. It can look like this 
@@ -1329,7 +1330,7 @@ where each row is one receiver with its grid coordinates in (x, y, z) and receiv
 \end{verbatim}
 Please note you have to reshape this mark matrix to a vector and save it as mtx format.
 
-\subsection{Source Signal}\label{ch:sourcesignal}
+\subsection{Source Signal}\label{sec:sourcesignal}
 There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual but you can find it from GprMax user manual). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
@@ -1506,7 +1507,7 @@ The discrete components for an acoustic wavefield in matrix-vector notation can 
 \end{align*}
 
 \chapter{Viscoelastic wave equation}
-\label{Viscoelastic_wave_equation}
+\label{sec:Viscoelastic_wave_equation}
 
 \section{Theory of viscoelastic wave equation}
 The viscoelastic wave equations for stress and velocity \citep{bohlen2002parallel}.
