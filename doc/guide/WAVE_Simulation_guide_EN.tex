@@ -1050,8 +1050,8 @@ To create a html and LaTeX or Pdf documentation of the software code itself, you
 To run the simulation change the directory to: \\\shellcmdline{WAVE-Simulation/par/}\\
 and start the program by running the shell script \shellcmd{start\_Simulation.sh} with  \\\shellcmdline{source start\_Simulation.sh}\\
 
-The synthetic Seismogram data is saved in \shellcmd{par/seismograms/} and can be plotted by either using either the \shellcmd{plotSeismogram.m} Matlab-script or by executing the Python-script \shellcmd{plotSeismogram.py}.
-As a first test, run the default example by following the commands to obtain the seismogram. You can compare the seismogram to the seismogram shown in figure \ref{fig:Seismogram}.
+The synthetic Seismogram or Radargram data is saved in \shellcmd{par/seismograms/} and can be plotted by either using either the \shellcmd{plotSeismogram.m} Matlab-script or by executing the Python-script \shellcmd{plotSeismogram.py}.
+As a first test, run the default example by the above commands to obtain the seismogram. You can compare the seismogram to the seismogram shown in figure \ref{fig:Seismogram}.
 
 \begin{figure}[h!]
 \centering
@@ -1100,7 +1100,7 @@ As mentioned in the quick guide, the configuration can be found in \shellcmd{par
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-The parameters can be divided in seven main groups. The first group which can be found in table \ref{tab:config_grid} contains the dimension (2D or 3D) and the type of wave equation (acoustic, sh, elastic, viscoelastic, tmem, emem, viscotmem, viscoemem), as well as parameters to describe the model (\verb+NX+, \verb+NY+, \verb+NZ+ and \verb+DH+) and temporal parameters (\verb+DT+ and \verb+T+). The total number of gridpoints is given by 
+The parameters can be divided in seven main groups. The first group which can be found in table \ref{tab:config_grid} contains the dimension (2D or 3D) and the type of wave equation (acoustic, sh, elastic, viscoelastic, tmem, emem, viscotmem, viscoemem), as well as parameters to describe the model (\verb+NX+, \verb+NY+, \verb+NZ+ and \verb+DH+) and temporal parameters (\verb+DT+ and \verb+T+). Please be careful in setting \verb+DH+ and \verb+DT+ to avoid the grid dispersion and the Courant instability. The total number of gridpoints is given by 
 \begin{equation*}
 	N=NX\times NY\times NZ
 \end{equation*}
@@ -1159,7 +1159,25 @@ where the first value represents the computer or node name, the second value the
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
-The second section in table \ref{tab:config_inputoutput} contains parameters to manage input and output of the model. The first parameter \verb+ModelRead+ can be set with ($1=$ yes) or (else $=$ no). An on-the-fly model described in table \ref{tab:config_onthefly} will be created if there is no input model. \verb+ModelFilename+ is given to determine the location and filename of the model. \verb+ModelFilename+ is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which data is needed (e.g. \shellcmd{model.vp.mtx}) while the file format is configured in \verb+FileFormat+ with either $1=$ mtx, a formated ascii file with serial input/output, $2=$ lmf, a binary file with parallel input/output, little endian and a 5 int header (20 byte) or $3=$ frv, a binary file with serial input/output,  little endian and seperate header. Due to the parallel input/output, chosing lmf as the file format is recommended.
+\begin{table}[h!]
+\caption[]{List of equationType and the corresponding model parameters.}\label{tab:equationType_model}
+\centering
+\begin{adjustbox}{width=0.8\textwidth,center=\textwidth}
+	\begin{tabular}{ll}
+	\toprule
+	equationType & model parameter (suffix) \\
+	\midrule	 
+	acoustic & $v_p$ ("vp"), $\rho$ ("density")\\
+	sh & $v_s$ ("vs"), $\rho$ ("density")\\
+	elastic & $v_p$ ("vp"), $v_s$ ("vs"), $\rho$ ("density")\\
+	viscoelastic & \begin{tabular}{@{}l@{}}{$v_p$ ("vp"), $v_s$ ("vs"), $\rho$ ("density"),} \\{$\tau^p$ ("tauP"), $\tau^^s$ ("tauS")}\end{tabular} \\
+	tmem and emem & $\sigma_e$ ("sigmaEM"), $\varepsilon_r$ ("epsilonEMr") \\
+	viscotmem and viscoemem & \begin{tabular}{@{}l@{}}{$\sigma_e$ ("sigmaEM"), $\varepsilon_r$("epsilonEMr"),} \\{$\tau_{\sigma e r}$ ("tauSigmaEMr"), $\tau_{\varepsilon}$ ("tauEpsilonEM")}\end{tabular} \\
+	\bottomrule
+	\end{tabular}
+	\end{adjustbox}
+\end{table}
+The second section in table \ref{tab:config_inputoutput} contains parameters to manage input and output of the model. The first parameter \verb+ModelRead+ can be set with ($1=$ yes) or (else $=$ no). An on-the-fly model described in table \ref{tab:config_onthefly} will be created if there is no input model. \verb+ModelFilename+ is given to determine the location and filename of the model. \verb+ModelFilename+ is only a prefix to read the model data in directory \shellcmd{model/}. The filename ending is added automatically depending on which model is needed (e.g. \shellcmd{model.suffix.mtx}) while the file format is configured in \verb+FileFormat+ with either $1=$ mtx, a formated ascii file with serial input/output, $2=$ lmf, a binary file with parallel input/output, little endian and a 5 int header (20 byte) or $3=$ frv, a binary file with serial input/output,  little endian and seperate header. Due to the parallel input/output, choosing lmf as the file format is recommended. For different type of wave equation, the model parameters input (\verb+ModelRead+=1) or output (\verb+ModelRead+=0) are different. Please see details of the corresponding suffix added to ModelFilename in table \ref{tab:equationType_model}. The model files of porosity $\phi$ (\verb+suffix+ = ``porosity'') and saturation $S_w$ (\verb+suffix+ = ``saturation'') are not necessary for WAVE-Simulation, but they are needed in petrophysical inversion in WAVE-Inversion.
 
 \subsubsection{Boundary conditions}
 \begin{table}[h!]
