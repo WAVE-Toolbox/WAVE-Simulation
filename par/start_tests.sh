@@ -8,7 +8,7 @@ export SCAI_TRACE=OFF
 
 BINDIR="./../build/bin"
 
-SOFI_EXE="${BINDIR}/Simulation"
+WAVE-Simulation_EXE="${BINDIR}/Simulation"
 UNITTEST_EXE="${BINDIR}/Test_unit"
 INTEGRATIONTEST_EXE="${BINDIR}/Test_integration"
 MODEL_EXE="${BINDIR}//tools/TwoLayer"
@@ -25,14 +25,14 @@ fi
 # Run simulation tests
 rm -rf ci/*.ci.*
 
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.sh.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.2D.sh.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.sh.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
 	exit
 fi
 
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.acoustic.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.2D.acoustic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.acoustic.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -40,7 +40,7 @@ if [ "$?" != "0" ]; then
 fi
 
 
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.acoustic.varGrid.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -48,7 +48,7 @@ if [ "$?" != "0" ]; then
 fi
 
 
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.varGrid.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.3D.acoustic.varGrid.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.acoustic.varGrid.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -57,7 +57,7 @@ fi
 
 
 ${MODEL_EXE} ci/configuration_ci.3D.acoustic.txt || { echo "Model creation failed !" ; exit 1; } 
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.acoustic.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.3D.acoustic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.acoustic.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -65,7 +65,7 @@ if [ "$?" != "0" ]; then
 fi
 
 ${MODEL_EXE} ci/configuration_ci.2D.elastic.txt || { echo "Model creation failed !"; exit 1; }
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.elastic.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.2D.elastic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.elastic.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -73,7 +73,7 @@ if [ "$?" != "0" ]; then
 fi
 
 ${MODEL_EXE} ci/configuration_ci.3D.elastic.txt || { echo "Model creation failed !"; exit 1; }
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.elastic.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.3D.elastic.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.elastic.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -81,7 +81,7 @@ if [ "$?" != "0" ]; then
 fi
 
 ${MODEL_EXE} ci/configuration_ci.2D.visco.txt || { echo "Model creation failed !"; exit 1; }
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.2D.visco.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.2D.visco.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.2D.visco.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "
@@ -90,7 +90,7 @@ fi
 
 
 ${MODEL_EXE} ci/configuration_ci.3D.visco.txt || { echo "Model creation failed !"; exit 1; }
-mpirun -np ${NUM_MPI_PROCESSES} ${SOFI_EXE} ci/configuration_ci.3D.visco.txt
+mpirun -np ${NUM_MPI_PROCESSES} ${WAVE-Simulation_EXE} ci/configuration_ci.3D.visco.txt
 ${INTEGRATIONTEST_EXE} ci/configuration_ci.3D.visco.txt
 if [ "$?" != "0" ]; then
 	echo "Test failed ! "

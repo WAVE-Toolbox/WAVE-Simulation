@@ -8,8 +8,6 @@ function [model]=readModelfromMtx(filename,NX,NY,NZ)
 %   major order of input should by X,Z,Y
 %   output is model(Y,X,Z)
 
-
-
 modelVec=readVectorfromMtx(filename);
 model=permute((reshape(modelVec(:),[NX, NZ, NY])),[3 1 2]);
 
