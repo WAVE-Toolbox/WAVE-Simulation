@@ -23,6 +23,11 @@
 *.ref
 *fort*
 *.f
+*.mtx*
+*.lmf*
+*.frv*
+*.log*
+*.txt*
 data/
 image/
 test/

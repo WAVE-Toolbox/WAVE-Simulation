@@ -20,6 +20,12 @@
 *.out
 *fort*
 *.f
+*.grad
+*.model
+*.seis
+*.wavefield
+*.step
+*.source
 data/
 image/
 test/
