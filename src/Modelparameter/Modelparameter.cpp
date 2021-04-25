@@ -281,7 +281,6 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vectorModulus)
 {
-
     vectorModulus = vecDensity;
     vectorModulus *= vecVelocity;
     vectorModulus *= vecVelocity;
@@ -302,6 +301,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModulus(
     /* Velocity = sqrt( Modulus / Density )  */
     vecVelocity = vectorModulus / vecDensity; /* = Modulus / Density */
     vecVelocity = lama::sqrt(vecVelocity);    /* = sqrt( Modulus / Density ) */
+    Common::replaceInvalid<ValueType>(vecVelocity, 0.0); // in case of density = 0 in vacuum.
 };
 
 /*! \brief Get const reference to inverseDensity model parameter
@@ -898,7 +898,6 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixYZ(Acqu
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
-
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
 
