@@ -418,24 +418,24 @@ namespace KITGPI
         /*! \brief Write to randSource-file
         *
         \param comm Communicator
-        \param randSourceFilename Name of randSource-file
+        \param RandSourceFilename Name of randSource-file
         \param uniqueShotNosRand unique Shot numbers randomly
         \param stage inversion stage
         \param iteration inversion iteration
         \param useRandSource useRandSource
         */
-        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string randSourceFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandSource)
+        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string RandSourceFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandSource)
         {      
             int myRank = comm->getRank();  
             if (useRandSource != 0 && myRank == MASTERGPI) {
                 std::ofstream outputFile; 
                 if (stage == 1 && iteration == 1) {
-                    outputFile.open(randSourceFilename);
+                    outputFile.open(RandSourceFilename);
                     outputFile << "# ShotNumber records during inversion\n"; 
                     outputFile << "# random source type = " << useRandSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
                     outputFile << "# Stage | Iteration | shotNumbers\n"; 
                 } else {                    
-                    outputFile.open(randSourceFilename, std::ios_base::app);
+                    outputFile.open(RandSourceFilename, std::ios_base::app);
                     outputFile << std::scientific;
                 }
                 outputFile << std::setw(5) << stage << std::setw(10) << iteration;

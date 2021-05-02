@@ -43,7 +43,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            ModelparameterEM() : dirtyFlagAveraging(true), dirtyFlagVelocivityEM(true), dirtyFlagConductivityEMoptical(true), dirtyFlagDielectricPermittivityEMoptical(true), parameterisation(0), numRelaxationMechanisms(0){};
+            ModelparameterEM() : dirtyFlagAveraging(true), dirtyFlagVelocivityEM(true), dirtyFlagConductivityEMoptical(true), dirtyFlagDielectricPermittivityEMoptical(true), parameterisation(0), inversionType(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~ModelparameterEM(){};
@@ -146,6 +146,8 @@ namespace KITGPI
             
             scai::IndexType getParameterisation() const;
             void setParameterisation(scai::IndexType const setParameterisation);
+            scai::IndexType getInversionType() const;
+            void setInversionType(scai::IndexType const setInversionType);
 
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -213,7 +215,8 @@ namespace KITGPI
             bool dirtyFlagConductivityEMoptical; //!< ==true if conductivityEMoptical has to be recalulated;
             bool dirtyFlagDielectricPermittivityEMoptical; //!< ==true if dielectricPermittivityEMoptical has to be recalulated;
 
-            scai::IndexType parameterisation; //!< ==0 if EM-wave modulus parameterisation; ==1 Velocity-parameterisation; ==2 Logarithm-parameterisation
+            scai::IndexType parameterisation;
+            scai::IndexType inversionType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             ValueType a_Archie;

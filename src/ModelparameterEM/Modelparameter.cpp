@@ -35,6 +35,20 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setParameterisation(sc
     parameterisation = setParameterisation;
 }
 
+/*! \brief Getter method for inversionType */
+template <typename ValueType>
+IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInversionType() const
+{
+    return (inversionType);
+}
+
+/*! \brief Set method for inversionType */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setInversionType(scai::IndexType const setInversionType)
+{
+    inversionType = setInversionType;
+}
+
 /*! \brief Get matrix that multiplies with model matrices to get a pershot
  \param dist Distribution of the pershot
  \param distBig Distribution of the big model
@@ -109,7 +123,8 @@ template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
-    setParameterisation(config.get<ValueType>("parameterisation"));
+    setParameterisation(config.get<IndexType>("parameterisation"));
+    setInversionType(config.get<IndexType>("inversionType"));
     calcConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("a_Archie"), config.get<ValueType>("m_Archie"), config.get<ValueType>("n_Archie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");

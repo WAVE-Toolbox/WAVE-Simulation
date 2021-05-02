@@ -68,12 +68,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
     dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
 
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
+    if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
 
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
-    
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
+    }
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
@@ -247,15 +248,15 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::dmemo::DistributionP
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param pWaveModulus_const P-wave modulus given as Scalar
- \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho Density given as Scalar
+ \param velocityP_const P-wave velocity given as Scalar
+ \param velocityS_const S-wave velocity given as Scalar
+ \param rho_const Density given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus_const, ValueType sWaveModulus_const, ValueType rho)
+KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const)
 {
     equationType = "elastic";
-    init(ctx, dist, pWaveModulus_const, sWaveModulus_const, rho);
+    init(ctx, dist, velocityP_const, velocityS_const, rho_const);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
@@ -263,16 +264,18 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(scai::hmemo::ContextPtr ctx,
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param pWaveModulus_const P-wave modulus given as Scalar
- \param sWaveModulus_const S-wave modulus given as Scalar
- \param rho Density given as Scalar
+ \param velocityP_const P-wave velocity given as Scalar
+ \param velocityS_const S-wave velocity given as Scalar
+ \param rho_const Density given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho)
+void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const)
 {
     this->initModelparameter(velocityP, ctx, dist, velocityP_const);
     this->initModelparameter(velocityS, ctx, dist, velocityS_const);
-    this->initModelparameter(density, ctx, dist, rho);
+    this->initModelparameter(density, ctx, dist, rho_const);
+    this->initModelparameter(porosity, ctx, dist, 0.0);
+    this->initModelparameter(saturation, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -305,8 +308,13 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
     this->initModelparameter(velocityP, ctx, dist, filename + ".vp", fileFormat);
     this->initModelparameter(velocityS, ctx, dist, filename + ".vs", fileFormat);
     this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
-    this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
-    this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
+        this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
+    } else {
+        this->initModelparameter(porosity, ctx, dist, 0.0);
+        this->initModelparameter(saturation, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -339,8 +347,10 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, sca
     IO::writeVector(density, filename + ".density", fileFormat);
     IO::writeVector(velocityP, filename + ".vp", fileFormat);
     IO::writeVector(velocityS, filename + ".vs", fileFormat);
-    IO::writeVector(porosity, filename + ".porosity", fileFormat);
-    IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        IO::writeVector(porosity, filename + ".porosity", fileFormat);
+        IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
 };
 
 /*! \brief Write model to an external file

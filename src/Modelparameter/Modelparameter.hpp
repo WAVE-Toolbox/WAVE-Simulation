@@ -42,7 +42,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parameterisation(0), numRelaxationMechanisms(0){};
+            Modelparameter() : dirtyFlagInverseDensity(true), dirtyFlagAveraging(true), dirtyFlagPWaveModulus(true), dirtyFlagSWaveModulus(true), parameterisation(0), inversionType(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~Modelparameter(){};
@@ -139,6 +139,8 @@ namespace KITGPI
 
             scai::IndexType getParameterisation() const;
             void setParameterisation(scai::IndexType const setParameterisation);
+            scai::IndexType getInversionType() const;
+            void setInversionType(scai::IndexType const setInversionType);
             
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -188,7 +190,8 @@ namespace KITGPI
             bool dirtyFlagPWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
             bool dirtyFlagSWaveModulus;   //!< ==true if P/S-wave modulus has to be recalculated; ==false if modulus is up to date
 
-            scai::IndexType parameterisation; //!< ==0 if P/S-wave modulus parameterisation; ==1 Velocity-parameterisation
+            scai::IndexType parameterisation;
+            scai::IndexType inversionType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             std::string equationType;
@@ -240,7 +243,7 @@ namespace KITGPI
 
             void calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vectorModulus);
 
-            void calcVelocityFromModulus(scai::lama::Vector<ValueType> &vectorModulus, scai::lama::Vector<ValueType> &vecV, scai::lama::Vector<ValueType> &vecDensity);
+            void calcVelocityFromModulus(scai::lama::DenseVector<ValueType> &vectorModulus, scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecVelocity);
 
             /*! \brief Calculate Averaging if they are required */
             virtual void calculateAveraging() = 0;

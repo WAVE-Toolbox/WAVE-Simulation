@@ -35,6 +35,20 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setParameterisation(scai
     parameterisation = setParameterisation;
 }
 
+/*! \brief Getter method for inversionType */
+template <typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getInversionType() const
+{
+    return (inversionType);
+}
+
+/*! \brief Set method for inversionType */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setInversionType(scai::IndexType const setInversionType)
+{
+    inversionType = setInversionType;
+}
+
 /*! \brief Get matrix that multiplies with model matrices to get a pershot
  \param dist Distribution of the pershot
  \param distBig Distribution of the big model
@@ -109,7 +123,8 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
-    setParameterisation(config.get<ValueType>("parameterisation"));
+    setParameterisation(config.get<IndexType>("parameterisation"));
+    setInversionType(config.get<IndexType>("inversionType"));
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -295,7 +310,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcModulusFromVelocity(
  \param vecVelocity Velocity-Vector which is calculated
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModulus(scai::lama::Vector<ValueType> &vectorModulus, scai::lama::Vector<ValueType> &vecDensity, scai::lama::Vector<ValueType> &vecVelocity)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcVelocityFromModulus(scai::lama::DenseVector<ValueType> &vectorModulus, scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecVelocity)
 {
     /* Modulus = pow(velocity,2) * Density */
     /* Velocity = sqrt( Modulus / Density )  */

@@ -70,11 +70,13 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::applyThresholds(Configuration
     dirtyFlagConductivityEMoptical = true; // the conductivityEM vector is now dirty
     dirtyFlagDielectricPermittivityEMoptical = true; // the dielectricPermittivityEMoptical vector is now dirty
           
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
-    
+    if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
+
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
+    }
     conductivityEM *= mask;
     tauConductivityEM *= mask;
     tauDielectricPermittivityEM *= mask;
@@ -296,6 +298,8 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::init(scai::hmemo::ContextPtr 
     
     this->initModelparameter(tauConductivityEM, ctx, dist, tauConductivityEM_const);
     this->initModelparameter(tauDielectricPermittivityEM, ctx, dist, tauDielectricPermittivityEM_const);
+    this->initModelparameter(porosity, ctx, dist, 0.0);
+    this->initModelparameter(saturation, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -328,10 +332,15 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::init(scai::hmemo::ContextPtr 
     this->initModelparameter(magneticPermeabilityEM, ctx, dist, filename + ".muEMr", fileFormat);
     this->initModelparameter(conductivityEM, ctx, dist, filename + ".sigmaEM", fileFormat);
     this->initModelparameter(dielectricPermittivityEM, ctx, dist, filename + ".epsilonEMr", fileFormat);
-    this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
-    this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
     this->initModelparameter(tauConductivityEM, ctx, dist, filename + ".tauSigmaEMr", fileFormat);
     this->initModelparameter(tauDielectricPermittivityEM, ctx, dist, filename + ".tauEpsilonEM", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
+        this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
+    } else {
+        this->initModelparameter(porosity, ctx, dist, 0.0);
+        this->initModelparameter(saturation, ctx, dist, 0.0);
+    }
             
     magneticPermeabilityEM *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeabilityEM
     dielectricPermittivityEM *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivityEM
@@ -382,10 +391,12 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::write(std::string filename, s
     IO::writeVector(magneticPermeabilityEMtemp, filename + ".muEMr", fileFormat);
     IO::writeVector(conductivityEM, filename + ".sigmaEM", fileFormat);
     IO::writeVector(dielectricPermittivityEMtemp, filename + ".epsilonEMr", fileFormat);
-    IO::writeVector(porosity, filename + ".porosity", fileFormat);
-    IO::writeVector(saturation, filename + ".saturation", fileFormat); 
     IO::writeVector(tauConductivityEMtemp, filename + ".tauSigmaEMr", fileFormat);
     IO::writeVector(tauDielectricPermittivityEM, filename + ".tauEpsilonEM", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        IO::writeVector(porosity, filename + ".porosity", fileFormat);
+        IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
 };
 
 //! \brief Initializsation of the Averaging matrices

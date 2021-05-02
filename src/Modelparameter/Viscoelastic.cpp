@@ -67,11 +67,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
     dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
 
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
-    Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
-    Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
-    
+    if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
+        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
+
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
+        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
+    }
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
@@ -239,8 +241,8 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
  *  Generates a homogeneous model, which will be initialized by the five given scalar values.
  \param ctx Context
  \param dist Distribution
- \param pWaveModulus_const P-wave modulus given as Scalar
- \param sWaveModulus_const S-wave modulus given as Scalar
+ \param velocityP_const P-wave velocity given as Scalar
+ \param velocityS_const S-wave velocity given as Scalar
  \param rho_const Density given as Scalar
  \param tauP_const TauP given as Scalar
  \param tauS_const TauS given as Scalar
@@ -256,6 +258,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
     this->initModelparameter(density, ctx, dist, rho_const);
     this->initModelparameter(tauS, ctx, dist, tauS_const);
     this->initModelparameter(tauP, ctx, dist, tauP_const);
+    this->initModelparameter(porosity, ctx, dist, 0.0);
+    this->initModelparameter(saturation, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -291,8 +295,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
     this->initModelparameter(density, ctx, dist, filename + ".density", fileFormat);
     this->initModelparameter(tauS, ctx, dist, filename + ".tauS", fileFormat);
     this->initModelparameter(tauP, ctx, dist, filename + ".tauP", fileFormat);
-    this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
-    this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
+        this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
+    } else {
+        this->initModelparameter(porosity, ctx, dist, 0.0);
+        this->initModelparameter(saturation, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -330,8 +339,10 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     IO::writeVector(velocityS, filename + ".vs", fileFormat);
     IO::writeVector(tauP, filename + ".tauP", fileFormat);
     IO::writeVector(tauS, filename + ".tauS", fileFormat);
-    IO::writeVector(porosity, filename + ".porosity", fileFormat);
-    IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        IO::writeVector(porosity, filename + ".porosity", fileFormat);
+        IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
 };
 
 /*! \brief Write model to an external file
