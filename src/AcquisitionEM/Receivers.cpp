@@ -176,7 +176,7 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::getAcquisitionSettings(Configu
 {
     if (config.get<bool>("initReceiverFromSU")) {
         su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename"), config.get<ValueType>("DH"));
-    } else if (!config.get<bool>("useReceiversPerShot")) {
+    } else if (config.get<scai::IndexType>("useReceiversPerShot") == 0) {
         readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".txt");
     }
 }
@@ -191,7 +191,7 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::getAcquisitionSettings(Configu
 template <typename ValueType>
 void KITGPI::Acquisition::ReceiversEM<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber)
 {
-    if (config.get<bool>("useReceiversPerShot")) {
+    if (config.get<scai::IndexType>("useReceiversPerShot") == 1) {
         if (config.get<bool>("initReceiverFromSU")) {
             su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), config.get<ValueType>("DH"));
         } else {
@@ -210,7 +210,7 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::getAcquisitionSettings(Configu
 template <typename ValueType>
 void KITGPI::Acquisition::ReceiversEM<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots)
 {
-    if (config.get<bool>("useReceiverMark")) {
+    if (config.get<scai::IndexType>("useReceiversPerShot") == 2) {
         std::vector<receiverSettings> allSettingsTemp;
         allSettings.clear();
         if (config.get<bool>("initReceiverFromSU")) {

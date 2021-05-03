@@ -981,9 +981,6 @@ This convolution can be done efficiently by multiplication in the frequency doma
  H(\vec{s}) = \left[ \begin{pmatrix} \vec{a}^0 & \vec{a}^1 &  \vec{a}^2 &  \vec{a}^3 & \vec{a}^4 \end{pmatrix} \begin{pmatrix} 1 \\ 2.6131 \\ 3.4142 \\ 2.6131 \\ 1 \end{pmatrix} \right]^{-1}
 \end{align*}
 
-
-
-
 \part{Software Guide to WAVE-Simulation}
 \chapter{Software Requirements and Quick Guide}
 
@@ -1178,7 +1175,6 @@ where the first value represents the computer or node name, the second value the
 	viscotmem and viscoemem & \begin{tabular}{@{}l@{}}{$\sigma_e$ ("sigmaEM"), $\varepsilon_r$("epsilonEMr"),} \\{$\tau_{\sigma e r}$ ("tauSigmaEMr"), $\tau_{\varepsilon}$ ("tauEpsilonEM")}\end{tabular} \\
 	\midrule
 	* petrophysical parameter & $\phi$ ("saturation"), $S_w$ ("saturation")\\
-	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
@@ -1268,8 +1264,7 @@ If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NP
 	SourceFilename & Filename-prefix to read source configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{sources}\end{tabular}  \\
 	ReceiverFilename & Filename-prefix to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
 	SourceSignalFilename & Filename-prefix to read source signal & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{signal}\end{tabular}  \\
-	useReceiversPerShot & Use an individual receiver file for each shot & int & \num{0} \\
-	useReceiverMark & Use an additional mark file for all shot & int & \num{0} \\
+	useReceiversPerShot & Use different receivers for each shot (0, 1, 2) & int & \num{0} \\
 	useRandSource & Use random sources (0, 1, 2) & int & \num{0} \\
 	RandSourceFilename & Filename to record random source numbers & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{randSources.txt}\end{tabular}  \\
 	writeSource & Write used source wavelet per shot & int & \num{0}\\	
@@ -1287,9 +1282,9 @@ If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NP
 \end{table}
 The sixth section in \ref{tab:config_acquisition} handles the acquisition geometry. \verb+SourceFilename+ and \verb+ReceiverFilename+ must be set to the files where source and receiver properties are specified respectively. The ending .txt has to be omitted in the config-file. 
 \verb+SourceSignalFilename+ specifies the location of the file where the source signals are stored in case you want to use your own.
-If \verb+useReceiversPerShot+ is set to 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending \shellcmd{.shot\_<shot number>.txt}. 
-Alternatively, \verb+useReceiverMark+ can be used to save much storage memory compared with \verb+useReceiversPerShot+.
-By setting \verb+useReceiverMark+ = 1, you have to define all receivers position and receiver type in \verb+ReceiverFilename+ and define an additional file \verb+ReceiverFilename.mark.mtx+ to identify which receivers are used for each shot. Please see \ref{sec:sourcesandreceiver} for more details of how  \verb+SourceFilename+, \verb+ReceiverFilename+ and \verb+ReceiverFilename.mark.mtx+ are structured.  \verb+useRandSource+ has to be set 0 in forward modelling so that all shots are simulated. In inversion, however, one can set \verb+useRandSource+ = 1 to randomly choose or set \verb+useRandSource+ = 2 to sequentially choose \verb+NumShotDomains+ shots at each iteration, which will significantly speed up the inversion progress. The file \verb+RandSourceFilename+ is used to output the source numbers selected in random shot inversion \verb+useRandSource+ = 1 or sequential shot inversion \verb+useRandSource+ = 2.
+\verb+useReceiversPerShot+ = 0 means all shot have the same receiver configuration. If \verb+useReceiversPerShot+ = 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending \shellcmd{.shot\_<shot number>.txt}. 
+Alternatively, \verb+useReceiversPerShot+ = 2 can be used to save much storage memory compared with \verb+useReceiversPerShot+ = 1.
+By setting \verb+useReceiversPerShot+ = 2, you have to define all receivers position and receiver type in \verb+ReceiverFilename+ and define an additional file \verb+ReceiverFilename.mark.mtx+ to identify which receivers are used for each shot. Please see \ref{sec:sourcesandreceiver} for more details of how  \verb+SourceFilename+, \verb+ReceiverFilename+ and \verb+ReceiverFilename.mark.mtx+ are structured.  \verb+useRandSource+ has to be set 0 in forward modelling so that all shots are simulated. In inversion, however, one can set \verb+useRandSource+ = 1 to randomly choose or set \verb+useRandSource+ = 2 to sequentially choose \verb+NumShotDomains+ shots at each iteration, which will significantly speed up the inversion progress. The file \verb+RandSourceFilename+ is used to output the source numbers selected in random shot inversion \verb+useRandSource+ = 1 or sequential shot inversion \verb+useRandSource+ = 2.
 The used source wavelet per shot can be written to disk by setting \verb+writeSource+ to 1 and specifying a filename \verb+WriteSourceFilename+.
 \verb+SeismogramFilename+ gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \verb+seismoDT+ and their traces can be normalized by setting \verb+normalizeTraces+ to 1 or be enveloped by setting \verb+envelopTraces+ to 1. Note that \verb+seismoDT+ must be the same as or smaller than \verb+DT+ in inversion because the seismograms obtained in forward modelling are used to generate an adjoint source for back propagation of wavefields. That means if we set \verb+seismoDT+ > \verb+DT+, the Courant instability will occur in the back propagation.
 These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \verb+SeismogramFormat+.  
@@ -1344,7 +1339,7 @@ The receiver file is similarly built, with information about the receiver coordi
   20 20 20 2
   21 21 21 2
 \end{verbatim}
-where each row is one receiver with its grid coordinates in (x, y, z) and receiver type that can be set as pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). Depending on the chosen type, the output seismograms will have the same type. In case of \verb+useReceiverMark+ = 1, you have to define a file named \verb+ReceiverFilename.mark.mtx+ to store marks. The mark matrix maybe look like this
+where each row is one receiver with its grid coordinates in (x, y, z) and receiver type that can be set as pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). Depending on the chosen type, the output seismograms will have the same type. In case of \verb+useReceiversPerShot+ = 2, you have to define a file named \verb+ReceiverFilename.mark.mtx+ to store marks. The mark matrix maybe look like this
 \begin{verbatim}
 # shotNr receiver_mark (1=use, 0=not use)
   0      0 0 0 0 1 1 1 1 1 1 1 1 1 1 ...
@@ -1354,7 +1349,7 @@ where each row is one receiver with its grid coordinates in (x, y, z) and receiv
 Please note you have to reshape this mark matrix to a vector and save it as mtx format.
 
 \subsection{Source Signal}\label{sec:sourcesignal}
-There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual but you can find it from GprMax user manual). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
+There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual but you can find it from GprMax user manual \url{http://docs.gprmax.com/en/latest/}). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
 	\includegraphics[width=.7\textwidth]{images/Signal_Plot.png}

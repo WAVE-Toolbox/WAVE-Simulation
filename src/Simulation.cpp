@@ -262,11 +262,11 @@ int main(int argc, const char *argv[])
     Acquisition::ReceiversEM<ValueType> receiversEM;
 
     if (isSeismic) {
-        if (!config.get<bool>("useReceiversPerShot") && !config.get<bool>("useReceiverMark")) {
+        if (config.get<IndexType>("useReceiversPerShot") == 0) {
             receivers.init(config, modelCoordinates, ctx, dist);
         }
     } else {
-        if (!config.get<bool>("useReceiversPerShot") && !config.get<bool>("useReceiverMark")) {
+        if (config.get<IndexType>("useReceiversPerShot") == 0) {
             receiversEM.init(config, modelCoordinates, ctx, dist);
         }
     }   
@@ -417,9 +417,9 @@ int main(int argc, const char *argv[])
                     KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
                 }
 
-                if (config.get<bool>("useReceiversPerShot")) {
+                if (config.get<IndexType>("useReceiversPerShot") == 1) {
                     receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
-                } else if (config.get<bool>("useReceiverMark")) {
+                } else if (config.get<IndexType>("useReceiversPerShot") == 2) {
                     receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
                 }
 
@@ -526,9 +526,9 @@ int main(int argc, const char *argv[])
                     KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + "_shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
                 }
 
-                if (config.get<bool>("useReceiversPerShot")) {
+                if (config.get<IndexType>("useReceiversPerShot") == 1) {
                     receiversEM.init(config, modelCoordinates, ctx, dist, shotNumber);
-                } else if (config.get<bool>("useReceiverMark")) {
+                } else if (config.get<IndexType>("useReceiversPerShot") == 2) {
                     receiversEM.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
                 }
 
