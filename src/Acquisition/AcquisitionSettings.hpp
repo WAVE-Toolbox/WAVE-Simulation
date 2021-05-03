@@ -367,16 +367,16 @@ namespace KITGPI
         \param filterHistoryCount a vector to count how much times the shot appears
         \param uniqueShotNos unique Shot numbers
         \param maxcount max times for one shot
-        \param useRandSource useRandSource
+        \param useRandomSource useRandomSource
         */
         template <typename ValueType>
-        void getRandShotNos(std::vector<scai::IndexType> &uniqueShotNosRand, std::vector<scai::IndexType> &filterHistoryCount, std::vector<scai::IndexType> uniqueShotNos, scai::IndexType maxcount, scai::IndexType useRandSource)
+        void getRandShotNos(std::vector<scai::IndexType> &uniqueShotNosRand, std::vector<scai::IndexType> &filterHistoryCount, std::vector<scai::IndexType> uniqueShotNos, scai::IndexType maxcount, scai::IndexType useRandomSource)
         {  
             scai::IndexType numShotDomains = uniqueShotNosRand.size();
             scai::IndexType numshots = uniqueShotNos.size(); 
             scai::IndexType randShotInd;
               
-            if (useRandSource == 1) {
+            if (useRandomSource == 1) {
                 std::vector<scai::IndexType> randShotIndHistory(numShotDomains, 0);
                 std::srand((int)time(0));
                 for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
@@ -398,7 +398,7 @@ namespace KITGPI
                         filterHistoryCount[randShotInd]++;
                     }
                 }
-            } else if (useRandSource == 2) {
+            } else if (useRandomSource == 2) {
                 scai::IndexType startShotInd = 0;
                 if (filterHistoryCount[0] != filterHistoryCount[numshots-1]) {
                     for (scai::IndexType shotInd = 0; shotInd < numshots-1; shotInd++) { 
@@ -415,27 +415,27 @@ namespace KITGPI
             }
         }
                 
-        /*! \brief Write to randSource-file
+        /*! \brief Write to randomSource-file
         *
         \param comm Communicator
-        \param RandSourceFilename Name of randSource-file
+        \param RandomSourceFilename Name of randomSource-file
         \param uniqueShotNosRand unique Shot numbers randomly
         \param stage inversion stage
         \param iteration inversion iteration
-        \param useRandSource useRandSource
+        \param useRandomSource useRandomSource
         */
-        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string RandSourceFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandSource)
+        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string RandomSourceFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandomSource)
         {      
             int myRank = comm->getRank();  
-            if (useRandSource != 0 && myRank == MASTERGPI) {
+            if (useRandomSource != 0 && myRank == MASTERGPI) {
                 std::ofstream outputFile; 
                 if (stage == 1 && iteration == 1) {
-                    outputFile.open(RandSourceFilename);
+                    outputFile.open(RandomSourceFilename);
                     outputFile << "# ShotNumber records during inversion\n"; 
-                    outputFile << "# random source type = " << useRandSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
+                    outputFile << "# random source type = " << useRandomSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
                     outputFile << "# Stage | Iteration | shotNumbers\n"; 
                 } else {                    
-                    outputFile.open(RandSourceFilename, std::ios_base::app);
+                    outputFile.open(RandomSourceFilename, std::ios_base::app);
                     outputFile << std::scientific;
                 }
                 outputFile << std::setw(5) << stage << std::setw(10) << iteration;

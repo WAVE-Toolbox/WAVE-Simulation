@@ -132,7 +132,7 @@ namespace KITGPI
             ValueType const getRelativeDielectricPermittivityWater() const; 
             ValueType const getRelativeDielectricPermittivityVacuum() const; 
             
-            void setArchieFactors(ValueType const &a_Archie_const, ValueType const &m_Archie_const, ValueType const &n_Archie_const);  
+            void setArchieFactors(ValueType const &aArchie_const, ValueType const &mArchie_const, ValueType const &nArchie_const);  
             ValueType const getArchie_a() const; 
             ValueType const getArchie_m() const;  
             ValueType const getArchie_n() const;            
@@ -219,9 +219,9 @@ namespace KITGPI
             scai::IndexType inversionType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
-            ValueType a_Archie;
-            ValueType m_Archie;
-            ValueType n_Archie;   
+            ValueType aArchie;
+            ValueType mArchie;
+            ValueType nArchie;   
             ValueType const MagneticPermeabilityVacuum = 1.2566370614e-6;       
             ValueType const DielectricPermittivityVacuum = 8.8541878176e-12;   
             ValueType ConductivityReference;   

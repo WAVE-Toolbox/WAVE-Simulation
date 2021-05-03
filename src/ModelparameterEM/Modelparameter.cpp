@@ -126,7 +126,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Co
     setParameterisation(config.get<IndexType>("parameterisation"));
     setInversionType(config.get<IndexType>("inversionType"));
     calcConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
-    setArchieFactors(config.get<ValueType>("a_Archie"), config.get<ValueType>("m_Archie"), config.get<ValueType>("n_Archie"));
+    setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -170,32 +170,32 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setNumRelaxationMechan
 
 /*! \brief Set method for Archie factors a, m, n */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setArchieFactors(ValueType const &a_Archie_const, ValueType const &m_Archie_const, ValueType const &n_Archie_const)
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setArchieFactors(ValueType const &aArchie_const, ValueType const &mArchie_const, ValueType const &nArchie_const)
 {        
-    a_Archie = a_Archie_const;
-    m_Archie = m_Archie_const;
-    n_Archie = n_Archie_const;
+    aArchie = aArchie_const;
+    mArchie = mArchie_const;
+    nArchie = nArchie_const;
 }
 
 /*! \brief Getter method for Archie factors a */
 template <typename ValueType>
 ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getArchie_a() const
 {        
-    return (a_Archie);
+    return (aArchie);
 }
 
 /*! \brief Getter method for Archie factors m */
 template <typename ValueType>
 ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getArchie_m() const
 {        
-    return (m_Archie);
+    return (mArchie);
 }
 
 /*! \brief Getter method for Archie factors n */
 template <typename ValueType>
 ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getArchie_n() const
 {        
-    return (n_Archie);
+    return (nArchie);
 }
 
 /*! \brief Getter method for DielectricPermittivityVacuum */
@@ -267,9 +267,9 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcRockMatrixParamete
     relativeDielectricPermittivityRockMatrixtemp = scai::lama::sqrt(relativeDielectricPermittivityRockMatrixtemp); 
     
     // Based on Archie equation
-    temp1 = scai::lama::pow(porosity, -m_Archie);
-    temp2 = scai::lama::pow(saturation, -n_Archie);
-    conductivityEMWatertemp *= a_Archie;
+    temp1 = scai::lama::pow(porosity, -mArchie);
+    temp2 = scai::lama::pow(saturation, -nArchie);
+    conductivityEMWatertemp *= aArchie;
     conductivityEMWatertemp *= temp1;
     conductivityEMWatertemp *= temp2;
     
@@ -318,9 +318,9 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcWaveModulusFromPet
     dielectricPermittivityEMtemp = this->getRelativeDieletricPeimittivityRockMatrix();   
     
     // Based on Archie equation
-    temp1 = scai::lama::pow(porosity, m_Archie);
-    temp2 = scai::lama::pow(saturation, n_Archie);
-    conductivitytemp /= a_Archie;
+    temp1 = scai::lama::pow(porosity, mArchie);
+    temp2 = scai::lama::pow(saturation, nArchie);
+    conductivitytemp /= aArchie;
     conductivitytemp *= temp1;
     conductivitytemp *= temp2;
     

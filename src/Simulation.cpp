@@ -363,7 +363,7 @@ int main(int argc, const char *argv[])
     }
     
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
-    if (config.get<IndexType>("useRandSource") != 0) {  
+    if (config.get<IndexType>("useRandomSource") != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
@@ -372,9 +372,9 @@ int main(int argc, const char *argv[])
     std::vector<scai::IndexType> filterHistoryCount(numshots, 0);
     std::vector<scai::IndexType> uniqueShotNosRand(numShotDomains, 0); 
     for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
-        if (config.get<IndexType>("useRandSource") != 0) {  
+        if (config.get<IndexType>("useRandomSource") != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.get<IndexType>("useRandSource"));
+            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.get<IndexType>("useRandomSource"));
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
@@ -383,7 +383,7 @@ int main(int argc, const char *argv[])
         if (isSeismic) { // for seismic wave simulation
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
-                if (config.get<IndexType>("useRandSource") == 0) {  
+                if (config.get<IndexType>("useRandomSource") == 0) {  
                     shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
@@ -492,7 +492,7 @@ int main(int argc, const char *argv[])
         } else { // for EM wave simulation
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
-                if (config.get<IndexType>("useRandSource") == 0) {  
+                if (config.get<IndexType>("useRandomSource") == 0) {  
                     shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
@@ -599,7 +599,7 @@ int main(int argc, const char *argv[])
             }
         }
         
-        if (config.get<IndexType>("useRandSource") == 0) 
+        if (config.get<IndexType>("useRandomSource") == 0) 
             break;
     }
     globalEnd_t = common::Walltime::get();

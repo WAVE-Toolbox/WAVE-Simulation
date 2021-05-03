@@ -1172,9 +1172,9 @@ where the first value represents the computer or node name, the second value the
 	elastic & $v_p$ ("vp"), $v_s$ ("vs"), $\rho$ ("density")\\
 	viscoelastic & \begin{tabular}{@{}l@{}}{$v_p$ ("vp"), $v_s$ ("vs"), $\rho$ ("density"),} \\{$\tau^p$ ("tauP"), $\tau^s$ ("tauS")}\end{tabular} \\
 	tmem and emem & $\sigma_e$ ("sigmaEM"), $\varepsilon_r$ ("epsilonEMr") \\
-	viscotmem and viscoemem & \begin{tabular}{@{}l@{}}{$\sigma_e$ ("sigmaEM"), $\varepsilon_r$("epsilonEMr"),} \\{$\tau_{\sigma e r}$ ("tauSigmaEMr"), $\tau_{\varepsilon}$ ("tauEpsilonEM")}\end{tabular} \\
+	viscotmem and viscoemem & \begin{tabular}{@{}l@{}}{$\sigma_e$ ("sigmaEM"), $\varepsilon_r$("epsilonEMr"),} \\{$\tau_{\sigma e r}$  ("tauSigmaEMr"), $\tau_{\varepsilon}$ ("tauEpsilonEM")}\end{tabular} \\
 	\midrule
-	* petrophysical parameter & $\phi$ ("saturation"), $S_w$ ("saturation")\\
+	* petrophysical parameter & $\phi$ ("porosity"), $S_w$ ("saturation")\\
 	\end{tabular}
 	\end{adjustbox}
 \end{table}
@@ -1265,8 +1265,8 @@ If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NP
 	ReceiverFilename & Filename-prefix to read receiver configuration & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{reciever}\end{tabular}  \\
 	SourceSignalFilename & Filename-prefix to read source signal & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{signal}\end{tabular}  \\
 	useReceiversPerShot & Use different receivers for each shot (0, 1, 2) & int & \num{0} \\
-	useRandSource & Use random sources (0, 1, 2) & int & \num{0} \\
-	RandSourceFilename & Filename to record random source numbers & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{randSources.txt}\end{tabular}  \\
+	useRandomSource & Use random sources (0, 1, 2) & int & \num{0} \\
+	RandomSourceFilename & Filename to record random source numbers & string & \begin{tabular}{@{}l@{}}\shellcmd{acquisition/} \\\shellcmd{randomSources.txt}\end{tabular}  \\
 	writeSource & Write used source wavelet per shot & int & \num{0}\\	
 	WriteSourceFilename & Filename-prefix to write source wavelet & string & \begin{tabular}{@{}l@{}}\shellcmd{SourceSignal/} \\\shellcmd{Source}\end{tabular}  \\
 	SeismogramFilename & Filename-prefix to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram}\end{tabular}  \\
@@ -1284,7 +1284,7 @@ The sixth section in \ref{tab:config_acquisition} handles the acquisition geomet
 \verb+SourceSignalFilename+ specifies the location of the file where the source signals are stored in case you want to use your own.
 \verb+useReceiversPerShot+ = 0 means all shot have the same receiver configuration. If \verb+useReceiversPerShot+ = 1, you can use an individual receiver configuration for each shot. In this case you need as many receiver files as there are shots. Therefore all receiver files must have the ending \shellcmd{.shot\_<shot number>.txt}. 
 Alternatively, \verb+useReceiversPerShot+ = 2 can be used to save much storage memory compared with \verb+useReceiversPerShot+ = 1.
-By setting \verb+useReceiversPerShot+ = 2, you have to define all receivers position and receiver type in \verb+ReceiverFilename+ and define an additional file \verb+ReceiverFilename.mark.mtx+ to identify which receivers are used for each shot. Please see \ref{sec:sourcesandreceiver} for more details of how  \verb+SourceFilename+, \verb+ReceiverFilename+ and \verb+ReceiverFilename.mark.mtx+ are structured.  \verb+useRandSource+ has to be set 0 in forward modelling so that all shots are simulated. In inversion, however, one can set \verb+useRandSource+ = 1 to randomly choose or set \verb+useRandSource+ = 2 to sequentially choose \verb+NumShotDomains+ shots at each iteration, which will significantly speed up the inversion progress. The file \verb+RandSourceFilename+ is used to output the source numbers selected in random shot inversion \verb+useRandSource+ = 1 or sequential shot inversion \verb+useRandSource+ = 2.
+By setting \verb+useReceiversPerShot+ = 2, you have to define all receivers position and receiver type in \verb+ReceiverFilename+ and define an additional file \verb+ReceiverFilename.mark.mtx+ to identify which receivers are used for each shot. Please see \ref{sec:sourcesandreceiver} for more details of how  \verb+SourceFilename+, \verb+ReceiverFilename+ and \verb+ReceiverFilename.mark.mtx+ are structured.  \verb+useRandomSource+ has to be set 0 in forward modelling so that all shots are simulated. In inversion, however, one can set \verb+useRandomSource+ = 1 to randomly choose or set \verb+useRandomSource+ = 2 to sequentially choose \verb+NumShotDomains+ shots at each iteration, which will significantly speed up the inversion progress. The file \verb+RandomSourceFilename+ is used to output the source numbers selected in random shot inversion \verb+useRandomSource+ = 1 or sequential shot inversion \verb+useRandomSource+ = 2.
 The used source wavelet per shot can be written to disk by setting \verb+writeSource+ to 1 and specifying a filename \verb+WriteSourceFilename+.
 \verb+SeismogramFilename+ gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \verb+seismoDT+ and their traces can be normalized by setting \verb+normalizeTraces+ to 1 or be enveloped by setting \verb+envelopTraces+ to 1. Note that \verb+seismoDT+ must be the same as or smaller than \verb+DT+ in inversion because the seismograms obtained in forward modelling are used to generate an adjoint source for back propagation of wavefields. That means if we set \verb+seismoDT+ > \verb+DT+, the Courant instability will occur in the back propagation.
 These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \verb+SeismogramFormat+.  
