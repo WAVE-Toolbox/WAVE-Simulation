@@ -163,7 +163,7 @@ namespace KITGPI
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtifactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
+        void checkNumericalArtefactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
                 auto dist = model.getDensity().getDistributionPtr();
@@ -241,7 +241,7 @@ namespace KITGPI
 
         //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
         template <typename ValueType>
-        void checkNumericalArtifactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::ModelparameterEM<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
+        void checkNumericalArtefactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::ModelparameterEM<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
                 auto dist = model.getMagneticPermeabilityEM().getDistributionPtr();

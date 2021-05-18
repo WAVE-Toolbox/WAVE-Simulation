@@ -23,7 +23,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(std::vector<receiverSetting
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setSeismoDT(config.get<ValueType>("seismoDT"));
-    this->getSeismogramHandler().setEnvelopTrace(config.get<ValueType>("envelopTraces"));
+    this->getSeismogramHandler().setEnvelopTrace(config.getAndCatch("envelopTraces", 0));
 }
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields

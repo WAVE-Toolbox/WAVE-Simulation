@@ -363,7 +363,7 @@ int main(int argc, const char *argv[])
     }
     
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
-    if (config.get<IndexType>("useRandomSource") != 0) {  
+    if (config.getAndCatch("useRandomSource", 0) != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
@@ -372,9 +372,9 @@ int main(int argc, const char *argv[])
     std::vector<scai::IndexType> filterHistoryCount(numshots, 0);
     std::vector<scai::IndexType> uniqueShotNosRand(numShotDomains, 0); 
     for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
-        if (config.get<IndexType>("useRandomSource") != 0) {  
+        if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.get<IndexType>("useRandomSource"));
+            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.getAndCatch("useRandomSource", 0));
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
@@ -383,7 +383,7 @@ int main(int argc, const char *argv[])
         if (isSeismic) { // for seismic wave simulation
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
-                if (config.get<IndexType>("useRandomSource") == 0) {  
+                if (config.getAndCatch("useRandomSource", 0) == 0) {  
                     shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
@@ -406,9 +406,9 @@ int main(int argc, const char *argv[])
                 sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
 
                 if (!useStreamConfig) {
-                    CheckParameter::checkNumericalArtifactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
+                    CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
                 } else {
-                    CheckParameter::checkNumericalArtifactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
+                    CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
                 }
 
                 bool writeSource = config.getAndCatch("writeSource", false);
@@ -492,7 +492,7 @@ int main(int argc, const char *argv[])
         } else { // for EM wave simulation
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
-                if (config.get<IndexType>("useRandomSource") == 0) {  
+                if (config.getAndCatch("useRandomSource", 0) == 0) {  
                     shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
@@ -515,9 +515,9 @@ int main(int argc, const char *argv[])
                 sourcesEM.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
 
                 if (!useStreamConfig) {
-                    CheckParameter::checkNumericalArtifactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelEM, modelCoordinates, shotNumber);
+                    CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelEM, modelCoordinates, shotNumber);
                 } else {
-                    CheckParameter::checkNumericalArtifactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShotEM, modelCoordinates, shotNumber);
+                    CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShotEM, modelCoordinates, shotNumber);
                 }
 
                 bool writeSource = config.getAndCatch("writeSource", false);
@@ -599,7 +599,7 @@ int main(int argc, const char *argv[])
             }
         }
         
-        if (config.get<IndexType>("useRandomSource") == 0) 
+        if (config.getAndCatch("useRandomSource", 0) == 0) 
             break;
     }
     globalEnd_t = common::Walltime::get();
