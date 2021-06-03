@@ -238,7 +238,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hyz(update_temp);
     }
     update -= update_temp;
-    update_temp = DT_temp * rX;
+    update_temp = -DT_temp * rX;
     update += update_temp;
     update *= CbAverageX;    
     update_temp = CaAverageX * eX;
@@ -254,7 +254,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hzx(update_temp);
     }
     update -= update_temp;
-    update_temp = DT_temp * rY;
+    update_temp = -DT_temp * rY;
     update += update_temp;
     update *= CbAverageY;   
     update_temp = CaAverageY * eY;
@@ -270,7 +270,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hxy(update_temp);
     }
     update -= update_temp;
-    update_temp = DT_temp * rZ;
+    update_temp = -DT_temp * rZ;
     update += update_temp;
     update *= CbAverageZ;   
     update_temp = CaAverageZ * eZ;

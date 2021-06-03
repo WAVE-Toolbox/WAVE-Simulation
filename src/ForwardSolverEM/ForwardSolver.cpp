@@ -146,7 +146,7 @@ ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tau
  \param DT time step
  
  \begin{align*}
-  C_{d l i} = \varepsilon^s_{ei} \frac{\tau_{\varepsilon e l i}}{L \tau_{Dl}^2} \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}
+  C_{d i l} = -\varepsilon^s_{i} \frac{\tau_{\varepsilon i l}}{L \tau_{Dl}^2} \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}
  \end{align*}
  */
 template <typename ValueType>
@@ -158,7 +158,7 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
     tempValue /= (numRelaxationMechanisms * tauDisplacementEM * tauDisplacementEM);
     averagedCd = vecAvTauDielectricPermittivityEM * tempValue;
     averagedCd *= vecAvDielectricPermittivityEMstatic;
-    averagedCd *= DT; // please note here we include DT into the coefficient
+    averagedCd *= -DT; // please note here we include DT into the coefficient
     
     return averagedCd;
 }

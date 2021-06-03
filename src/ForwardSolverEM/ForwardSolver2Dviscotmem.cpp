@@ -179,7 +179,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hxy(update_temp);
     }
     update -= update_temp;
-    update_temp = DT_temp * rZ;
+    update_temp = -DT_temp * rZ;
     update += update_temp;
     update *= CbAverageZ;   
     update_temp = CaAverageZ * eZ;
