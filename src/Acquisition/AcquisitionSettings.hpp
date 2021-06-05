@@ -427,9 +427,7 @@ namespace KITGPI
             int myRank = comm->getRank();  
             if (useRandomSource != 0 && myRank == MASTERGPI) {
                 std::ofstream outputFile; 
-                std::string randomSourceFilename = logFilename.substr(0, logFilename.length()-4);
-                randomSourceFilename += ".randomSource";
-                randomSourceFilename += logFilename.substr(logFilename.length()-4, 4);
+                std::string randomSourceFilename = logFilename.substr(0, logFilename.length()-4) + ".randomSource" + logFilename.substr(logFilename.length()-4, 4);
                 if (stage == 1 && iteration == 1) {
                     outputFile.open(randomSourceFilename);
                     outputFile << "# ShotNumber records during inversion\n"; 
