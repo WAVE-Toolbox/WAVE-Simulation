@@ -369,12 +369,12 @@ int main(int argc, const char *argv[])
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
     }
     IndexType maxcount = 1;    
-    std::vector<scai::IndexType> filterHistoryCount(numshots, 0);
+    std::vector<scai::IndexType> shotHistory(numshots, 0);
     std::vector<scai::IndexType> uniqueShotNosRand(numShotDomains, 0); 
     for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, filterHistoryCount, uniqueShotNos, maxcount, config.getAndCatch("useRandomSource", 0));
+            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, shotHistory, uniqueShotNos, maxcount, config.getAndCatch("useRandomSource", 0));
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }

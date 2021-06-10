@@ -339,7 +339,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcWaveModulusFromPet
     
     Common::searchAndReplace<ValueType>(conductivitytemp, 0, 0, 1);
     Common::searchAndReplace<ValueType>(dielectricPermittivityEMtemp, RelativeDielectricPermittivityVacuum, RelativeDielectricPermittivityVacuum, 1);
-    Common::searchAndReplace<ValueType>(dielectricPermittivityEM, RelativeDielectricPermittivityWater, RelativeDielectricPermittivityWater, 2);
+    Common::searchAndReplace<ValueType>(dielectricPermittivityEMtemp, RelativeDielectricPermittivityWater, RelativeDielectricPermittivityWater, 2);
     
     dielectricPermittivityEMtemp *= DielectricPermittivityVacuum;    
     
