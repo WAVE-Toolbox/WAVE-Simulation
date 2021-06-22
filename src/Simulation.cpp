@@ -362,19 +362,24 @@ int main(int argc, const char *argv[])
         }
     }
     
+    IndexType maxcount = 1;    
+    std::vector<scai::IndexType> shotHistory(numshots, 0);
+    std::vector<scai::IndexType> uniqueShotInds; 
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
     if (config.getAndCatch("useRandomSource", 0) != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
+        std::vector<scai::IndexType> tempShotInds(numShotDomains, 0); 
+        uniqueShotInds = tempShotInds;
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
+        for (IndexType i = 0; i < numshots; i++) {
+            uniqueShotInds.push_back(i);
+        }
     }
-    IndexType maxcount = 1;    
-    std::vector<scai::IndexType> shotHistory(numshots, 0);
-    std::vector<scai::IndexType> uniqueShotNosRand(numShotDomains, 0); 
     for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandShotNos<ValueType>(uniqueShotNosRand, shotHistory, uniqueShotNos, maxcount, config.getAndCatch("useRandomSource", 0));
+            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0));
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
@@ -384,12 +389,11 @@ int main(int argc, const char *argv[])
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
                 if (config.getAndCatch("useRandomSource", 0) == 0) {  
-                    shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
-                    shotNumber = uniqueShotNosRand[shotInd];
-                    Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
+                    shotIndTrue = uniqueShotInds[shotInd];
                 }
+                shotNumber = uniqueShotNos[shotIndTrue];
                 
                 if (useStreamConfig) {
                     HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
@@ -493,12 +497,11 @@ int main(int argc, const char *argv[])
             for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
                 SCAI_REGION("WAVE-Simulation.shotLoop")
                 if (config.getAndCatch("useRandomSource", 0) == 0) {  
-                    shotNumber = uniqueShotNos[shotInd];
                     shotIndTrue = shotInd;
                 } else {
-                    shotNumber = uniqueShotNosRand[shotInd];
-                    Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
+                    shotIndTrue = uniqueShotInds[shotInd];
                 }
+                shotNumber = uniqueShotNos[shotIndTrue];
                 
                 if (useStreamConfig) {
                     HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");

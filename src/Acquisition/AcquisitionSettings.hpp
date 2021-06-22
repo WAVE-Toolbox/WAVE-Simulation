@@ -363,37 +363,36 @@ namespace KITGPI
         
         /*! \brief Generate a random shot sequence without any repeated elements and with the max appearances of one shot
         *
-        \param uniqueShotNosRand random Shot numbers
+        \param uniqueShotInds unique shot indexes
         \param shotHistory a vector to count how much times the shot appears
-        \param uniqueShotNos unique Shot numbers
+        \param numshots numbers of shots
         \param maxcount max times for one shot
         \param useRandomSource useRandomSource
         */
         template <typename ValueType>
-        void getRandShotNos(std::vector<scai::IndexType> &uniqueShotNosRand, std::vector<scai::IndexType> &shotHistory, std::vector<scai::IndexType> uniqueShotNos, scai::IndexType maxcount, scai::IndexType useRandomSource)
+        void getRandomShotInds(std::vector<scai::IndexType> &uniqueShotInds, std::vector<scai::IndexType> &shotHistory, scai::IndexType numshots, scai::IndexType maxcount, scai::IndexType useRandomSource)
         {  
-            scai::IndexType numShotDomains = uniqueShotNosRand.size();
-            scai::IndexType numshots = uniqueShotNos.size(); 
-            scai::IndexType randShotInd;
+            scai::IndexType numShotDomains = uniqueShotInds.size();
+            scai::IndexType randomShotInd;
               
             if (useRandomSource == 1) {
-                std::vector<scai::IndexType> randShotIndHistory(numShotDomains, 0);
+                std::vector<scai::IndexType> randomShotIndHistory(numShotDomains, 0);
                 std::srand((int)time(0));
                 for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
                     bool repeat = false;
-                    randShotInd = std::rand() % numshots;
-                    randShotIndHistory[shotDomainInd] = randShotInd;
+                    randomShotInd = std::rand() % numshots;
+                    randomShotIndHistory[shotDomainInd] = randomShotInd;
                     for (scai::IndexType i = 0; i < shotDomainInd; i++) {
-                        if (randShotIndHistory[i] == randShotInd) {
+                        if (randomShotIndHistory[i] == randomShotInd) {
                             repeat = true;
                             break;
                         }
                     }
-                    if (shotHistory[randShotInd] >= maxcount || repeat) {
+                    if (shotHistory[randomShotInd] >= maxcount || repeat) {
                         shotDomainInd--;
                     } else {
-                        uniqueShotNosRand[shotDomainInd] = uniqueShotNos[randShotInd];
-                        shotHistory[randShotInd]++;
+                        uniqueShotInds[shotDomainInd] = randomShotInd;
+                        shotHistory[randomShotInd]++;
                     }
                 }
             } else if (useRandomSource == 2) {
@@ -406,9 +405,9 @@ namespace KITGPI
                     }
                 }
                 for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
-                    randShotInd = startShotInd + shotDomainInd;
-                    uniqueShotNosRand[shotDomainInd] = uniqueShotNos[randShotInd];
-                    shotHistory[randShotInd]++;
+                    randomShotInd = startShotInd + shotDomainInd;
+                    uniqueShotInds[shotDomainInd] = randomShotInd;
+                    shotHistory[randomShotInd]++;
                 }
             }
         }
@@ -417,12 +416,13 @@ namespace KITGPI
         *
         \param comm Communicator
         \param logFilename Name of log-file
-        \param uniqueShotNosRand unique Shot numbers randomly
+        \param uniqueShotNos unique shot numbers
+        \param uniqueShotInds unique shot indexes
         \param stage inversion stage
         \param iteration inversion iteration
         \param useRandomSource useRandomSource
         */
-        inline void writeRandShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string logFilename, std::vector<scai::IndexType> uniqueShotNosRand, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandomSource)
+        inline void writeRandomShotNosToFile(scai::dmemo::CommunicatorPtr comm, std::string logFilename, std::vector<scai::IndexType> uniqueShotNos, std::vector<scai::IndexType> uniqueShotInds, scai::IndexType stage, scai::IndexType iteration, scai::IndexType useRandomSource)
         {      
             int myRank = comm->getRank();  
             if (useRandomSource != 0 && myRank == MASTERGPI) {
@@ -438,11 +438,11 @@ namespace KITGPI
                     outputFile << std::scientific;
                 }
                 outputFile << std::setw(5) << stage << std::setw(10) << iteration;
-                for (unsigned i = 0; i < uniqueShotNosRand.size(); i++) {  
+                for (unsigned i = 0; i < uniqueShotInds.size(); i++) {  
                     if (i == 0) {
-                        outputFile << std::setw(9) << uniqueShotNosRand[i];
+                        outputFile << std::setw(9) << uniqueShotNos[uniqueShotInds[i]];
                     } else {
-                        outputFile << std::setw(4) << uniqueShotNosRand[i];
+                        outputFile << std::setw(4) << uniqueShotNos[uniqueShotInds[i]];
                     }
                 }
                 outputFile << "\n";

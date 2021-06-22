@@ -223,7 +223,7 @@ ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauDiele
 template <typename ValueType>
 ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauConductivityReference() const
 {        
-    ValueType TauConductivityReference = TauDielectricPermittivityReference * this->getTauDisplacementEM(); 
+    ValueType TauConductivityReference = 10 * TauDielectricPermittivityReference * this->getTauDisplacementEM(); 
     return (TauConductivityReference);
 }
 
