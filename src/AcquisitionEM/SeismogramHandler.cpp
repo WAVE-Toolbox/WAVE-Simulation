@@ -44,10 +44,10 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::read(IndexType const s
  *
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::normalize()
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::normalize(scai::IndexType normalizeTraces)
 {
     for (auto &i : seismo) {
-        i.normalizeTrace();
+        i.normalizeTrace(normalizeTraces);
     }
 }
 

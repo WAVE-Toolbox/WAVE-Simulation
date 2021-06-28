@@ -484,9 +484,7 @@ int main(int argc, const char *argv[])
                 // check wavefield and seismogram for NaNs or infinite values
                 SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
                 
-                if (config.get<bool>("normalizeTraces")) {
-                    receivers.getSeismogramHandler().normalize();
-                }
+                receivers.getSeismogramHandler().normalize(config.get<IndexType>("normalizeTraces"));
 
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
                 
@@ -592,9 +590,7 @@ int main(int argc, const char *argv[])
                 // check wavefield and seismogram for NaNs or infinite values
                 SCAI_ASSERT_ERROR(commShot->all(wavefieldsEM->isFinite(dist)) && commShot->all(receiversEM.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
                 
-                if (config.get<bool>("normalizeTraces")) {
-                    receiversEM.getSeismogramHandler().normalize();
-                }
+                receiversEM.getSeismogramHandler().normalize(config.get<IndexType>("normalizeTraces"));
 
                 receiversEM.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
                 

@@ -48,10 +48,9 @@ namespace KITGPI
             void resetData();
             void resetSeismogram();
 
-            void normalizeTrace();
-            void normalizeTraceL2();
+            void normalizeTrace(scai::IndexType normalizeTraces);
             scai::lama::DenseVector<ValueType> getTraceL2norm();
-            scai::lama::DenseVector<ValueType> getTraceSum();
+            scai::lama::DenseVector<ValueType> getTraceMean();
             void integrateTraces();
             void differentiateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);

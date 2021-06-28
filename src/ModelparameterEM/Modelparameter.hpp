@@ -58,30 +58,10 @@ namespace KITGPI
 
             ValueType getMemoryModel(scai::dmemo::DistributionPtr dist);
 
-            /*! \brief Abstract initialization function
-             * Standard initialisation function
-             \param ctx Context
-             \param dist Distribution
-             \param filename filename to read modelparameters (endings will be added by derived classes)
-             \param fileFormat Input file format 1=mtx 2=lmf
-             */
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) = 0;
 
-            /*! \brief Abstract initialisation function
-             * Standard initialisation function
-             \param config Configuration from configuration file
-             \param ctx Context
-             \param dist Distribution
-             */
             virtual void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
 
-            /*! \brief Abstract write function
-             *
-             * Standard write function
-             *
-             \param filename filename to write modelparameters (endings will be added by derived classes)
-             \param fileFormat Output file format 1=mtx 2=lmf
-             */
             virtual void write(std::string filename, scai::IndexType fileFormat) const = 0;
             void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) const;
 
@@ -197,8 +177,12 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageZ();
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageZ() const;
             
-            virtual void getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)=0;
-            virtual void setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)=0;
+            virtual void getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) = 0;
+            virtual void setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) = 0;
+
+            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
+            SparseFormat getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate);            
+            scai::lama::SparseVector<ValueType> getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth);
             
             virtual void minusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs) = 0;
             virtual void plusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs) = 0;
@@ -279,20 +263,7 @@ namespace KITGPI
 
             /*! \brief Calculate Averaging if they are required */
             virtual void calculateAveraging() = 0;
-
-
-            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
-            SparseFormat getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate);
             
-            scai::lama::SparseVector<ValueType> getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth);
-            
-            //! \brief Initializsation of the aneraging matrices
-            /*!
-             *
-             \param dist Distribution of the wavefield
-             \param ctx Context
-             \param comm Communicator
-             */
             virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) = 0;
             virtual void purgeMatrices() = 0;
 

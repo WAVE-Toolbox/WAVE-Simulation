@@ -27,7 +27,7 @@ namespace KITGPI
 
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
             void write(scai::IndexType const seismogramFormat, std::string const &filename, Acquisition::Coordinates<ValueType> const &modelCoordinates) const;
-            void normalize();
+            void normalize(scai::IndexType normalizeTraces);
             void integrate();
             void differentiate();
             void resetData();
