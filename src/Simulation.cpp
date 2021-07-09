@@ -485,6 +485,7 @@ int main(int argc, const char *argv[])
                 SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
                 
                 if (config.get<IndexType>("normalizeTraces") == 3) {
+                    receivers.getSeismogramHandler().setFrequencyAGC(config.get<ValueType>("CenterFrequencyCPML"));
                     receivers.getSeismogramHandler().calcInverseAGC();
                     receivers.getSeismogramHandler().write(5, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
                 }
@@ -595,6 +596,7 @@ int main(int argc, const char *argv[])
                 SCAI_ASSERT_ERROR(commShot->all(wavefieldsEM->isFinite(dist)) && commShot->all(receiversEM.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
                 
                 if (config.get<IndexType>("normalizeTraces") == 3) {
+                    receiversEM.getSeismogramHandler().setFrequencyAGC(config.get<ValueType>("CenterFrequencyCPML"));
                     receiversEM.getSeismogramHandler().calcInverseAGC();
                     receiversEM.getSeismogramHandler().write(5, config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);                
                 }

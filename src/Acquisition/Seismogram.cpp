@@ -193,7 +193,7 @@ scai::lama::DenseMatrix<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
             }
             for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
                 // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
-                if (tStep >= getNumSamples()-NAGC ) { // ramping on
+                if (tStep >= getNumSamples()-NAGC) { // ramping on
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var;
                     NWIN += 1;
@@ -246,7 +246,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::calcInverseAGC()
             }
             for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
                 // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
-                if (tStep >= getNumSamples()-NAGC ) { // ramping on
+                if (tStep >= getNumSamples()-NAGC) { // ramping on
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var * var;
                     sumTemp += waterLevel;
