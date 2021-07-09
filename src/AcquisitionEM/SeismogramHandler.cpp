@@ -275,15 +275,15 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setSeismoDT(ValueType 
     }
 }
 
-//! \brief Setter method to set outputEnvelope.
+//! \brief Setter method to set outputInstantaneous.
 /*!
- \param envelopTraces outputEnvelope
+ \param instantaneousTraces outputInstantaneous
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setEnvelopTrace(scai::IndexType envelopTraces)
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setInstantaneousTrace(scai::IndexType instantaneousTraces)
 {
     for (auto &i : seismo) {
-        i.setEnvelopTrace(envelopTraces);
+        i.setInstantaneousTrace(instantaneousTraces);
     }
 }
 

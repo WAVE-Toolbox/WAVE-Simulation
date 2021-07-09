@@ -1270,7 +1270,7 @@ If \verb+CPML+ is used, \verb+VMaxCPML+, \verb+CenterFrequencyCPML+ and \verb+NP
 	SeismogramFilename & Filename-prefix to write seismograms & string & \begin{tabular}{@{}l@{}}\shellcmd{seismograms/} \\\shellcmd{seismogram}\end{tabular}  \\
 	seismoDT & Seismogram sampling in seconds & double & \num{0.002} \\
 	normalizeTraces & Normalize the seismogram-traces & int & \num{0}\\
-	envelopTraces & Envelop the seismogram-traces & int & \num{0}\\
+	instantaneousTraces & Envelop the seismogram-traces & int & \num{0}\\
 	SeismogramFormat & Seismogram format & int & \num{1}\\
 	initSourcesFromSU & Initialize sources from SU file & int & \num{0}\\
 	initReceiverFromSU & Initialize receivers from SU file & int & \num{0}\\
@@ -1284,7 +1284,7 @@ The sixth section in \ref{tab:config_acquisition} handles the acquisition geomet
 Alternatively, \verb+useReceiversPerShot+ = 2 can be used to save much storage memory compared with \verb+useReceiversPerShot+ = 1.
 By setting \verb+useReceiversPerShot+ = 2, you have to define all receivers position and receiver type in \verb+ReceiverFilename+ and define an additional file \verb+ReceiverFilename.mark.mtx+ to identify which receivers are used for each shot. Please see \ref{sec:sourcesandreceiver} for more details of how  \verb+SourceFilename+, \verb+ReceiverFilename+ and \verb+ReceiverFilename.mark.mtx+ are structured.
 The used source wavelet per shot can be written to disk by setting \verb+writeSource+ to 1 and specifying a filename \verb+WriteSourceFilename+.
-\verb+SeismogramFilename+ gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \verb+seismoDT+ and their traces can be normalized by setting \verb+normalizeTraces+ to 1 or be enveloped by setting \verb+envelopTraces+ to 1. Note that \verb+seismoDT+ must be the same as or smaller than \verb+DT+ in inversion because the seismograms obtained in forward modelling are used to generate an adjoint source for back propagation of wavefields. That means if we set \verb+seismoDT+ > \verb+DT+, the Courant instability will occur in the back propagation.
+\verb+SeismogramFilename+ gives the location where the modelled seismograms are stored. Their sampling can be set in seconds in \verb+seismoDT+ and their traces can be normalized by setting \verb+normalizeTraces+ to 1 or be enveloped by setting \verb+instantaneousTraces+ to 1. Note that \verb+seismoDT+ must be the same as or smaller than \verb+DT+ in inversion because the seismograms obtained in forward modelling are used to generate an adjoint source for back propagation of wavefields. That means if we set \verb+seismoDT+ > \verb+DT+, the Courant instability will occur in the back propagation.
 These seismograms can be saved in mtx $=1$, lmf $=2$, frv $=3$ or SU $=4$ format depending on the value of \verb+SeismogramFormat+.  
 Furthermore, the sources or receivers can be initialized from SU files if \verb+initSourcesFromSU+ and \verb+initReceiverFromSU+ is set to 1.
 

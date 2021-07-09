@@ -80,7 +80,7 @@ namespace KITGPI
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
             void setSeismoDT(ValueType seismoDT);
-            void setEnvelopTrace(scai::IndexType envelopTraces);
+            void setInstantaneousTrace(scai::IndexType instantaneousTraces);
             void setFrequencyAGC(ValueType setFrequencyAGC);
 
             /* Overloading Operators */
@@ -107,7 +107,7 @@ namespace KITGPI
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;
-            scai::IndexType outputEnvelope; // output envelope
+            scai::IndexType outputInstantaneous; // output envelope
             ValueType frequencyAGC; // frequency used to calculate AGC window length
             bool useAGC = true; // make sure AGC can be applied only once for each shot
         };

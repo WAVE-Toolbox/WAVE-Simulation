@@ -20,7 +20,7 @@ KITGPI::Acquisition::SeismogramEM<ValueType>::SeismogramEM(const SeismogramEM &r
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
     resampleMat = rhs.resampleMat;
-    outputEnvelope = rhs.outputEnvelope;
+    outputInstantaneous = rhs.outputInstantaneous;
     frequencyAGC = rhs.frequencyAGC;
     inverseAGC = rhs.inverseAGC;
 }
@@ -38,7 +38,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::swap(KITGPI::Acquisition::Sei
     std::swap(seismoType, rhs.seismoType);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
-    std::swap(outputEnvelope, rhs.outputEnvelope);
+    std::swap(outputInstantaneous, rhs.outputInstantaneous);
     std::swap(frequencyAGC, rhs.frequencyAGC);
     data.swap(rhs.data);
     inverseAGC.swap(rhs.inverseAGC);
@@ -73,7 +73,12 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const s
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
-        if (outputEnvelope == 1) Common::envelope(dataResample);
+        
+        if (outputInstantaneous == 1) {
+            Common::calcEnvelope(dataResample);
+        } else if (outputInstantaneous == 2) {
+            Common::calcInstantaneousPhase(dataResample);
+        } 
 
         scai::IndexType seismoFormat = seismogramFormat;
         std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceType()];
@@ -244,7 +249,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::calcInverseAGC()
             waterLevel *= waterLevel;
             waterLevel /= getNumSamples();
             if (waterLevel != 0) {
-                waterLevel *= 1e-4;
+                waterLevel *= 1e-3;
             } else {
                 waterLevel = 1;
             }
@@ -489,14 +494,14 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::setSeismoDT(ValueType seismoD
     }
 }
 
-//! \brief Setter method to set outputEnvelope.
+//! \brief Setter method to set outputInstantaneous.
 /*!
- \param outputEnvelope outputEnvelope
+ \param outputInstantaneous outputInstantaneous
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramEM<ValueType>::setEnvelopTrace(scai::IndexType envelopTraces)
+void KITGPI::Acquisition::SeismogramEM<ValueType>::setInstantaneousTrace(scai::IndexType instantaneousTraces)
 {
-    outputEnvelope = envelopTraces;
+    outputInstantaneous = instantaneousTraces;
 }
 
 //! \brief Setter method to set frequencyAGC.

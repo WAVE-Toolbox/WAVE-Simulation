@@ -265,7 +265,7 @@ namespace KITGPI
         \param data Input matrix
         */
         template <typename ValueType>
-        void hilbert(scai::lama::DenseMatrix<ValueType> &data)
+        void calcHilbert(scai::lama::DenseMatrix<ValueType> &data)
         {
             typedef scai::common::Complex<scai::RealType<ValueType>> ComplexValueType;
             
@@ -308,22 +308,41 @@ namespace KITGPI
             data = scai::lama::imag(fData);
         }
         
-        /*! \brief apply Hilbert transform to data
+        /*! \brief calculate envelope of the data
         *
         \param data Input matrix
         */
         template <typename ValueType>
-        void envelope(scai::lama::DenseMatrix<ValueType> &data)
+        void calcEnvelope(scai::lama::DenseMatrix<ValueType> &data)
         {
             scai::lama::DenseMatrix<ValueType> dataImag = data;
             scai::lama::DenseVector<ValueType> dataTrace;
-            hilbert(dataImag);
+            calcHilbert(dataImag);
             data.binaryOp(data, scai::common::BinaryOp::MULT, data);
             dataImag.binaryOp(dataImag, scai::common::BinaryOp::MULT, dataImag);
             data.binaryOp(data, scai::common::BinaryOp::ADD, dataImag);
             for (int i=0; i<data.getNumRows(); i++) {
                 data.getRow(dataTrace, i);   
                 dataTrace = scai::lama::sqrt(dataTrace);
+                data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+            }
+        }
+        
+        /*! \brief calculate instantaneous phase of the data
+        *
+        \param data Input matrix
+        */
+        template <typename ValueType>
+        void calcInstantaneousPhase(scai::lama::DenseMatrix<ValueType> &data)
+        {
+            scai::lama::DenseMatrix<ValueType> dataImag = data;
+            scai::lama::DenseVector<ValueType> dataTrace;
+            calcHilbert(dataImag);
+            dataImag = -dataImag;
+            data.binaryOp(dataImag, scai::common::BinaryOp::DIVIDE, data);
+            for (int i=0; i<data.getNumRows(); i++) {
+                data.getRow(dataTrace, i);   
+                dataTrace = scai::lama::atan(dataTrace);
                 data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
             }
         }

@@ -23,7 +23,7 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(std::vector<receiverSetti
     this->initSeismogramHandler(getNT, ctx, dist_wavefield);
     this->getSeismogramHandler().setDT(config.get<ValueType>("DT"));
     this->getSeismogramHandler().setSeismoDT(config.get<ValueType>("seismoDT"));
-    this->getSeismogramHandler().setEnvelopTrace(config.getAndCatch("envelopTraces", 0));
+    this->getSeismogramHandler().setInstantaneousTrace(config.getAndCatch("instantaneousTraces", 0));
 }
 
 template <typename ValueType>
