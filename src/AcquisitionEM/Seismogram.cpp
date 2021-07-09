@@ -143,14 +143,16 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::normalizeTrace(scai::IndexTyp
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRow);
-                scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
+                if (tempMax == 0) tempMax = 1;
+                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
         } else if (normalizeTraces == 2) { // normalized to the l2 norm
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
-                scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
+                if (tempMax == 0) tempMax = 1;
+                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
         } else if (normalizeTraces == 3 && useAGC) { // normalized by AGC
@@ -159,7 +161,8 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::normalizeTrace(scai::IndexTyp
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
-                scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
+                if (tempMax == 0) tempMax = 1;
+                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
             useAGC = false;
@@ -240,7 +243,11 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::calcInverseAGC()
             ValueType waterLevel = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
             waterLevel *= waterLevel;
             waterLevel /= getNumSamples();
-            waterLevel *= 1e-4;
+            if (waterLevel != 0) {
+                waterLevel *= 1e-4;
+            } else {
+                waterLevel = 1;
+            }
             for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
                 var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
                 sumTemp += var * var;
