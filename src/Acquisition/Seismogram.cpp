@@ -21,6 +21,8 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     data = rhs.data;
     resampleMat = rhs.resampleMat;
     outputEnvelope = rhs.outputEnvelope;
+    frequencyAGC = rhs.frequencyAGC;
+    inverseAGC = rhs.inverseAGC;
 }
 //! \brief swap function
 /*!
@@ -37,7 +39,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
     std::swap(outputEnvelope, rhs.outputEnvelope);
+    std::swap(frequencyAGC, rhs.frequencyAGC);
     data.swap(rhs.data);
+    inverseAGC.swap(rhs.inverseAGC);
 }
 
 //! \brief Setter method for the context ptr
@@ -51,6 +55,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
 {
     data.setContextPtr(ctx);
     coordinates1D.setContextPtr(ctx);
+    inverseAGC.setContextPtr(ctx);
 }
 
 //! \brief  writes the seismogram to disk
@@ -70,14 +75,20 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         dataResample = data * resampleMat;
         if (outputEnvelope == 1) Common::envelope(dataResample);
 
+        scai::IndexType seismoFormat = seismogramFormat;
         std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
-
-        switch (seismogramFormat) {
+        if (seismogramFormat == 5) {
+            seismoFormat = 1;
+            dataResample = inverseAGC;
+            filenameTmp += ".inverseAGC";
+        }
+        
+        switch (seismoFormat) {
         case 4:
             SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
             break;
         default:
-            IO::writeMatrix(dataResample, filenameTmp, seismogramFormat);
+            IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
             break;
         }
     }
@@ -95,20 +106,33 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
     std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
-    switch (seismogramFormat) {
+    scai::IndexType seismoFormat = seismogramFormat;
+    scai::lama::DenseMatrix<ValueType> dataTemp(data);
+    if (seismogramFormat == 5) {
+        seismoFormat = 1;
+        filenameTmp += ".inverseAGC";
+        useAGC = true;
+    }
+    
+    switch (seismoFormat) {
     case 4:
-        SUIO::readDataSU(filenameTmp, data, this->getNumSamples(), this->getNumTracesGlobal());
+        SUIO::readDataSU(filenameTmp, dataTemp, this->getNumSamples(), this->getNumTracesGlobal());
         break;
     default:
-        IO::readMatrix(data, filenameTmp, seismogramFormat);
+        IO::readMatrix(dataTemp, filenameTmp, seismoFormat);
         break;
+    }
+    if (seismogramFormat == 5) {
+        inverseAGC = dataTemp;
+    } else {
+        data = dataTemp;
     }
 }
 
 //! \brief Normalize the seismogram-traces
 /*!
  *
- * This methode normalized the traces of the seismogram after the time stepping.
+ * This method normalized the traces of the seismogram after the time stepping.
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType normalizeTraces)
@@ -125,18 +149,156 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
         } else if (normalizeTraces == 2) {
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
-                ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow) / sqrt(getNumSamples());
+                ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
                 scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
+        } else if (normalizeTraces == 3 && useAGC) { // normalized by AGC
+            data.binaryOp(data, common::BinaryOp::MULT, inverseAGC);
+            // normalized to the l2 norm
+            for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+                data.getLocalStorage().getRow(tempRow, i);
+                ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
+                scai::utilskernel::HArrayUtils::setScalar(tempRow,tempMax,scai::common::BinaryOp::DIVIDE);
+                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+            }
+            useAGC = false;
         }
     }
+}
+
+//! \brief Calculate and get the AGC sum function
+/*!
+ *
+ * This method calculate and get the AGC sum function.
+ */
+template <typename ValueType>
+scai::lama::DenseMatrix<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getAGCSum()
+{    
+    scai::lama::DenseMatrix<ValueType> AGCSum;
+    if (data.getNumValues() > 0) {
+        AGCSum = data;
+        AGCSum.scale(0);
+        scai::IndexType NAGC = round(2.0 / (frequencyAGC * DT));
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            scai::hmemo::HArray<ValueType> AGCSumRow(tempRow);
+            ValueType var = 0;
+            ValueType sumTemp = 0;
+            ValueType NWIN = NAGC;
+            for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
+                var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
+                sumTemp += var;
+            }
+            for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
+                // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
+                if (tStep >= getNumSamples()-NAGC ) { // ramping on
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
+                    sumTemp += var;
+                    NWIN += 1;
+                } else if (tStep >= NAGC && tStep < getNumSamples()-NAGC) { // middle range -- full rms window 
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
+                    sumTemp += var;
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
+                    sumTemp -= var;
+                } else if  (tStep < NAGC) { // ramping off 
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
+                    sumTemp -= var;
+                    NWIN -= 1;
+                }
+                ValueType rmsTemp = sumTemp / NWIN;
+                scai::utilskernel::HArrayUtils::setVal(AGCSumRow, tStep, rmsTemp, scai::common::BinaryOp::COPY);
+            }
+            AGCSum.getLocalStorage().setRow(AGCSumRow, i, scai::common::BinaryOp::COPY);
+        }        
+    }
+    return AGCSum;
+}
+//! \brief Calculate the inverse of AGC function
+/*!
+ *
+ * This method calculate the inverse of AGC function.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::calcInverseAGC()
+{    
+    if (data.getNumValues() > 0) {
+        useAGC = true;
+        inverseAGC = data;
+        inverseAGC.scale(0);
+        scai::IndexType NAGC = round(2.0 / (frequencyAGC * DT));
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            scai::hmemo::HArray<ValueType> inverseAGCRow(tempRow);
+            ValueType var = 0;
+            ValueType sumTemp = 0;
+            ValueType NWIN = NAGC;
+            ValueType waterLevel = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
+            waterLevel *= waterLevel;
+            waterLevel /= getNumSamples();
+            waterLevel *= 1e-4;
+            for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
+                var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
+                sumTemp += var * var;
+                sumTemp += waterLevel;
+            }
+            for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
+                // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
+                if (tStep >= getNumSamples()-NAGC ) { // ramping on
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
+                    sumTemp += var * var;
+                    sumTemp += waterLevel;
+                    NWIN += 1;
+                } else if (tStep >= NAGC && tStep < getNumSamples()-NAGC) { // middle range -- full rms window 
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
+                    sumTemp += var * var;
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
+                    sumTemp -= var * var;
+                } else if  (tStep < NAGC) { // ramping off 
+                    var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
+                    sumTemp -= var * var;
+                    sumTemp -= waterLevel;
+                    NWIN -= 1;
+                }
+                ValueType rmsTemp = sumTemp / NWIN;
+                rmsTemp = sqrt(rmsTemp);
+                rmsTemp = 1 / rmsTemp;
+                scai::utilskernel::HArrayUtils::setVal(inverseAGCRow, tStep, rmsTemp, scai::common::BinaryOp::COPY);
+            }
+            inverseAGC.getLocalStorage().setRow(inverseAGCRow, i, scai::common::BinaryOp::COPY);
+        }        
+    }
+}
+
+//! \brief Get the inverse of AGC function
+/*!
+ *
+ * This method get the inverse of AGC function.
+ */
+template <typename ValueType>
+scai::lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getInverseAGC() const
+{    
+    return inverseAGC;
+}
+
+//! \brief Set the inverse of AGC function
+/*!
+ *
+ * This method set the inverse of AGC function.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setInverseAGC(scai::lama::DenseMatrix<ValueType> setInverseAGC)
+{    
+    inverseAGC = setInverseAGC;
+    useAGC = true;
 }
 
 //! \brief Normalize the seismogram-traces
 /*!
  *
- * This methode normalized the traces of the seismogram after the time stepping.
+ * This method normalized the traces of the seismogram after the time stepping.
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceL2norm()
@@ -150,7 +312,7 @@ scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
     if (data.getNumValues() > 0) {
         for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             data.getRow(tempRow, i);
-            traceL2Norm.setValue(i, tempRow.l2Norm() / sqrt(getNumSamples()));
+            traceL2Norm.setValue(i, tempRow.l2Norm());
             if (traceL2Norm.getValue(i)==0) traceL2Norm.setValue(i,1);
         }
     }
@@ -160,31 +322,31 @@ scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
 //! \brief Normalize the seismogram-traces
 /*!
  *
- * This methode normalized the traces of the seismogram after the time stepping.
+ * This method normalized the traces of the seismogram after the time stepping.
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceMean()
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceSum()
 {    
     scai::lama::DenseVector<ValueType> tempRow;
-    scai::lama::DenseVector<ValueType> traceMean;
-    traceMean.allocate(data.getRowDistributionPtr());
-    traceMean = 1.0; // in this state the taper does nothing when applied
-    traceMean.setContextPtr(data.getContextPtr());
+    scai::lama::DenseVector<ValueType> traceSum;
+    traceSum.allocate(data.getRowDistributionPtr());
+    traceSum = 1.0; // in this state the taper does nothing when applied
+    traceSum.setContextPtr(data.getContextPtr());
     
     if (data.getNumValues() > 0) {
         for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             data.getRow(tempRow, i);
-            traceMean.setValue(i, tempRow.sum() / sqrt(getNumSamples()));
-            if (traceMean.getValue(i)==0) traceMean.setValue(i,1);
+            traceSum.setValue(i, tempRow.sum());
+            if (traceSum.getValue(i)==0) traceSum.setValue(i,1);
         }
     }
-    return traceMean;
+    return traceSum;
 }
 
 //! \brief Integrate the seismogram-traces
 /*!
  *
- * This methode integrate the traces of the seismogram.
+ * This method integrate the traces of the seismogram.
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
@@ -204,7 +366,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
 //! \brief Filter the seismogram-traces
 /*!
  *
- * This methode filters the traces of the seismogram.
+ * This method filters the traces of the seismogram.
  \param freqFilter filter object
  */
 template <typename ValueType>
@@ -285,7 +447,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setCoordinates(scai::lama::Dens
     coordinates1D = indeces;
 };
 
-//! \brief Setter methode to set matrix for resampling this seismogram.
+//! \brief Setter method to set matrix for resampling this seismogram.
 /*!
  \param rMat Resampling matrix
  */
@@ -300,7 +462,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setSeismoDT(ValueType seismoDT)
     }
 }
 
-//! \brief Setter methode to set outputEnvelope.
+//! \brief Setter method to set outputEnvelope.
 /*!
  \param outputEnvelope outputEnvelope
  */
@@ -308,6 +470,16 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setEnvelopTrace(scai::IndexType envelopTraces)
 {
     outputEnvelope = envelopTraces;
+}
+
+//! \brief Setter method to set frequencyAGC.
+/*!
+ \param setFrequencyAGC setFrequencyAGC
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setFrequencyAGC(ValueType setFrequencyAGC)
+{
+    frequencyAGC = setFrequencyAGC;
 }
 
 //! \brief Getter method for #SeismogramType
@@ -405,9 +577,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 
     data.setContextPtr(ctx);
     coordinates1D.setContextPtr(ctx);
+    inverseAGC.setContextPtr(ctx);
 
     data.allocate(distTraces, no_dist_NT);
     coordinates1D.allocate(distTraces);
+    inverseAGC.allocate(distTraces, no_dist_NT);
 
     resampleMat = scai::lama::identity<scai::lama::CSRSparseMatrix<ValueType>>(NT); // initialize to identity for no resampling
 }

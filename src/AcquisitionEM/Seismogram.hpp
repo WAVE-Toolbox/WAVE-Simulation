@@ -49,8 +49,12 @@ namespace KITGPI
             void resetSeismogram();
 
             void normalizeTrace(scai::IndexType normalizeTraces);
+            scai::lama::DenseMatrix<ValueType> getAGCSum();
+            void calcInverseAGC();
+            scai::lama::DenseMatrix<ValueType> const &getInverseAGC() const;
+            void setInverseAGC(scai::lama::DenseMatrix<ValueType> setInverseAGC);
             scai::lama::DenseVector<ValueType> getTraceL2norm();
-            scai::lama::DenseVector<ValueType> getTraceMean();
+            scai::lama::DenseVector<ValueType> getTraceSum();
             void integrateTraces();
             void differentiateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
@@ -77,6 +81,7 @@ namespace KITGPI
 
             void setSeismoDT(ValueType seismoDT);
             void setEnvelopTrace(scai::IndexType envelopTraces);
+            void setFrequencyAGC(ValueType setFrequencyAGC);
 
             /* Overloading Operators */
             KITGPI::Acquisition::SeismogramEM<ValueType> operator*=(ValueType const &rhs);
@@ -98,10 +103,13 @@ namespace KITGPI
 
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
+            scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;
             scai::IndexType outputEnvelope; // output envelope
+            ValueType frequencyAGC; // frequency used to calculate AGC window length
+            bool useAGC = true; // make sure AGC can be applied only once for each shot
         };
     }
 }

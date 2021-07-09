@@ -236,7 +236,7 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setContextPtr(scai::hm
     }
 }
 
-//! \brief Setter methode to set DT.
+//! \brief Setter method to set DT.
 /*!
  *
  * This method sets the temporal sampling DT to all handled Seismogram.
@@ -250,7 +250,7 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setDT(ValueType newDT)
     }
 }
 
-//! \brief Setter methode to set source coordinate
+//! \brief Setter method to set source coordinate
 /*!
  * This method sets the source coordinate to all handled Seismogram.
  \param sourceCoord Source coordinate in 1-D format
@@ -263,7 +263,7 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setSourceCoordinate(In
     }
 }
 
-//! \brief Setter methode to set matrix for resampling this seismogram.
+//! \brief Setter method to set matrix for resampling this seismogram.
 /*!
  \param rMat Resampling matrix
  */
@@ -275,7 +275,7 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setSeismoDT(ValueType 
     }
 }
 
-//! \brief Setter methode to set outputEnvelope.
+//! \brief Setter method to set outputEnvelope.
 /*!
  \param envelopTraces outputEnvelope
  */
@@ -284,6 +284,41 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setEnvelopTrace(scai::
 {
     for (auto &i : seismo) {
         i.setEnvelopTrace(envelopTraces);
+    }
+}
+
+//! \brief Setter method to set frequencyAGC.
+/*!
+ \param setFrequencyAGC setFrequencyAGC
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setFrequencyAGC(ValueType setFrequencyAGC)
+{
+    for (auto &i : seismo) {
+        i.setFrequencyAGC(setFrequencyAGC);
+    }
+}
+
+//! \brief calculate InverseAGC .
+/*!
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::calcInverseAGC()
+{
+    for (auto &i : seismo) {
+        i.calcInverseAGC();
+    }
+}
+
+//! \brief Setter method to set inverseAGC.
+/*!
+ \param setFrequencyAGC setFrequencyAGC
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setInverseAGC(SeismogramHandlerEM<ValueType> seismograms)
+{
+    for (int i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
+        seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramTypeEM>(i)).getInverseAGC());
     }
 }
 

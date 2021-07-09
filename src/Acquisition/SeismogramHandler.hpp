@@ -38,6 +38,9 @@ namespace KITGPI
             void setContextPtr(scai::hmemo::ContextPtr ctx);
             void setSeismoDT(ValueType seismoDT);
             void setEnvelopTrace(scai::IndexType envelopTraces);
+            void setFrequencyAGC(ValueType setFrequencyAGC);
+            void calcInverseAGC();
+            void setInverseAGC(SeismogramHandler<ValueType> seismograms);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);

@@ -150,8 +150,10 @@ namespace KITGPI
             IndexType numrows_exp=matrix.getNumRows();
             IndexType numcols_exp=matrix.getNumColumns();
             
+//             std::cout << "Begin reading " << filename << ": " << numrows_exp << " rows " << numcols_exp << " cols" << std::endl;
             matrix.readFromFile(filename, matrix.getRowDistributionPtr());
             matrix.redistribute(matrix.getRowDistributionPtr(), matrix.getColDistributionPtr());
+//             std::cout << "Finish reading " << filename << std::endl;
             
             IndexType numrows_read=matrix.getNumRows();
             IndexType numcols_read=matrix.getNumColumns();           

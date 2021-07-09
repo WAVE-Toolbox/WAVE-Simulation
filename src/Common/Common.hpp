@@ -345,6 +345,6 @@ namespace KITGPI
                 temp = configBig.get<ReturnType>(tempName);
             }      
             return (temp);
-        };
+        }               
     }
 }
