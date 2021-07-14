@@ -333,17 +333,99 @@ namespace KITGPI
         \param data Input matrix
         */
         template <typename ValueType>
-        void calcInstantaneousPhase(scai::lama::DenseMatrix<ValueType> &data)
+        void calcInstantaneousPhase(scai::lama::DenseMatrix<ValueType> &data, scai::IndexType const phaseType)
         {
             scai::lama::DenseMatrix<ValueType> dataImag = data;
             scai::lama::DenseVector<ValueType> dataTrace;
             calcHilbert(dataImag);
             dataImag = -dataImag;
-            data.binaryOp(dataImag, scai::common::BinaryOp::DIVIDE, data);
-            for (int i=0; i<data.getNumRows(); i++) {
-                data.getRow(dataTrace, i);   
-                dataTrace = scai::lama::atan(dataTrace);
-                data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+            if (phaseType == 1) { // phase wrapped in [-pi/2 pi/2]
+                data.binaryOp(dataImag, scai::common::BinaryOp::DIVIDE, data);
+                for (int i=0; i<data.getNumRows(); i++) {
+                    data.getRow(dataTrace, i);   
+                    dataTrace = scai::lama::atan(dataTrace);
+                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                }
+            } else if (phaseType == 2) { // phase wrapped in [-pi pi]
+                scai::lama::DenseVector<ValueType> dataImagTrace;
+                for (int i=0; i<data.getNumRows(); i++) {
+                    data.getRow(dataTrace, i);   
+                    dataImag.getRow(dataImagTrace, i);   
+                    for (scai::IndexType tStep = 0; tStep < data.getNumColumns(); tStep++) {
+                        ValueType phase = scai::common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); 
+                        dataTrace.setValue(tStep, phase);
+                    }
+                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                }
+            } else if (phaseType == 3) { // phase unwrapped
+                scai::lama::DenseVector<ValueType> dataImagTrace;
+                for (int i=0; i<data.getNumRows(); i++) {
+                    data.getRow(dataTrace, i);   
+                    dataImag.getRow(dataImagTrace, i);   
+                    ValueType phase = scai::common::Math::atan2(dataImagTrace.getValue(0), dataTrace.getValue(0)); // phase wrapped in [-pi pi]
+                    dataTrace.setValue(0, phase);
+                    dataImagTrace.setValue(0, phase);
+                    for (scai::IndexType tStep = 1; tStep < data.getNumColumns(); tStep++) {
+                        phase = scai::common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); // phase wrapped in [-pi pi]
+                        dataImagTrace.setValue(tStep, phase);
+                        ValueType d = phase - dataImagTrace.getValue(tStep-1);
+                        d = d > M_PI ? d - 2 * M_PI : (d < -M_PI ? d + 2 * M_PI : d);
+                        phase = dataTrace.getValue(tStep-1) + d; // phase unwrapped
+                        dataTrace.setValue(tStep, phase);
+                    }
+                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                }
+            }
+        }
+        
+        /*! \brief calculate instantaneous phase residual of two data
+        *
+        \param dataResidual Output data residual
+        \param dataObs Input data observed
+        \param dataSyn Input data simulated
+        */
+        template <typename ValueType>
+        void calcInstantaneousPhaseResidual(scai::lama::DenseMatrix<ValueType> &dataRedsidual, scai::lama::DenseMatrix<ValueType> dataObs, scai::lama::DenseMatrix<ValueType> dataSyn)
+        {
+            scai::IndexType phaseType = 3;
+            Common::calcInstantaneousPhase(dataObs, phaseType);
+            Common::calcInstantaneousPhase(dataSyn, phaseType);
+            scai::lama::DenseVector<ValueType> dataObsTrace;
+            scai::lama::DenseVector<ValueType> dataSynTrace;
+            scai::lama::DenseVector<ValueType> dataResTrace1;
+            scai::lama::DenseVector<ValueType> dataResTrace2;
+            scai::lama::DenseVector<ValueType> dataResTraceMin;
+            for (int i=0; i<dataObs.getNumRows(); i++) {
+                dataObs.getRow(dataObsTrace, i);   
+                dataSyn.getRow(dataSynTrace, i);   
+                dataResTrace1 = dataObsTrace - dataSynTrace;
+                scai::IndexType phaseShift = 1;
+                dataResTrace2 = dataResTrace1 + phaseShift * 2 * M_PI;
+                dataResTraceMin = dataResTrace1;                
+                if (dataResTrace2.l2Norm() <= dataResTrace1.l2Norm()) {    
+                    while (dataResTrace2.l2Norm() <= dataResTraceMin.l2Norm()) {
+                        dataResTraceMin = dataResTrace2;
+                        phaseShift += 1;
+                        dataResTrace2 = dataResTrace1 + phaseShift * 2 * M_PI;
+                    }
+                    phaseShift -= 1;
+                } else {
+                    phaseShift = -1;
+                    dataResTrace2 = dataResTrace1 + phaseShift * 2 * M_PI;
+                    dataResTraceMin = dataResTrace1;  
+                    if (dataResTrace2.l2Norm() <= dataResTrace1.l2Norm()) {               
+                        while (dataResTrace2.l2Norm() <= dataResTraceMin.l2Norm()) {
+                            dataResTraceMin = dataResTrace2;                
+                            phaseShift -= 1;
+                            dataResTrace2 = dataResTrace1 + phaseShift * 2 * M_PI;
+                        }
+                        phaseShift += 1;
+                    } else {
+                        phaseShift = 0;
+                    }
+                }
+//                 std::cout<< "phaseShift " << i << " = " << phaseShift <<std::endl;
+                dataRedsidual.setRow(dataResTraceMin, i, scai::common::BinaryOp::COPY); 
             }
         }
         

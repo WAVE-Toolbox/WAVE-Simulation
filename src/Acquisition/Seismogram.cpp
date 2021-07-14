@@ -77,7 +77,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         if (outputInstantaneous == 1) {
             Common::calcEnvelope(dataResample);
         } else if (outputInstantaneous == 2) {
-            Common::calcInstantaneousPhase(dataResample);
+            scai::IndexType phaseType = 2;
+            Common::calcInstantaneousPhase(dataResample, phaseType);
         } 
 
         scai::IndexType seismoFormat = seismogramFormat;

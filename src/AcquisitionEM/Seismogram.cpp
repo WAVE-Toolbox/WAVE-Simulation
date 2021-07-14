@@ -77,7 +77,8 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const s
         if (outputInstantaneous == 1) {
             Common::calcEnvelope(dataResample);
         } else if (outputInstantaneous == 2) {
-            Common::calcInstantaneousPhase(dataResample);
+            scai::IndexType phaseType = 2;
+            Common::calcInstantaneousPhase(dataResample, phaseType);
         } 
 
         scai::IndexType seismoFormat = seismogramFormat;
@@ -144,7 +145,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::normalizeTrace(scai::IndexTyp
 {
     if (data.getNumValues() > 0 && normalizeTraces > 0) {
         scai::hmemo::HArray<ValueType> tempRow;
-        if (normalizeTraces == 1) { // normalized to the absolute max value
+        if (normalizeTraces == 1) { // normalized by the absolute max value
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRow);
@@ -152,7 +153,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::normalizeTrace(scai::IndexTyp
                 scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
-        } else if (normalizeTraces == 2) { // normalized to the l2 norm
+        } else if (normalizeTraces == 2) { // normalized by the l2 norm
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
@@ -171,6 +172,25 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::normalizeTrace(scai::IndexTyp
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
             useAGC = false;
+        } else if (normalizeTraces == 4) { // normalized by the envelope
+            scai::lama::DenseMatrix<ValueType> dataEnvelope(data);
+            Common::calcEnvelope(dataEnvelope);
+            ValueType waterLevel = 1e-3;
+            for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+                scai::hmemo::HArray<ValueType> tempRowEnvelope;
+                scai::hmemo::HArray<ValueType> tempRowWaterLevel;
+                data.getLocalStorage().getRow(tempRow, i);
+                dataEnvelope.getLocalStorage().getRow(tempRowEnvelope, i); 
+                ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope);
+                if (tempMax != 0) {
+                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope));
+                } else {
+                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * waterLevel);
+                }
+                scai::utilskernel::HArrayUtils::binaryOp(tempRowEnvelope, tempRowEnvelope, tempRowWaterLevel, scai::common::BinaryOp::ADD);
+                scai::utilskernel::HArrayUtils::binaryOp(tempRow, tempRow, tempRowEnvelope, scai::common::BinaryOp::DIVIDE);
+                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+            }
         }
     }
 }
