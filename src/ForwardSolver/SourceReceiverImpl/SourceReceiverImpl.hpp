@@ -25,6 +25,9 @@ namespace KITGPI
             class SourceReceiverImpl
             {
               public:
+                //! \brief Declare SourceReceiverImpl pointer
+                typedef std::shared_ptr<SourceReceiverImpl<ValueType>> SourceReceiverImplPtr;
+                
                 //! Default constructor
                 SourceReceiverImpl() = delete;
                 explicit SourceReceiverImpl(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
