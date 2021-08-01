@@ -65,7 +65,9 @@ namespace KITGPI
             void plusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
             void assign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
             void timesAssign(ValueType rhs);
-            void applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
+            
+            void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
+            void decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives);
 
           private:
             std::string EquationType;
@@ -79,6 +81,18 @@ namespace KITGPI
             using WavefieldsEM<ValueType>::EY;  //!< electric intensity Wavefield
             using WavefieldsEM<ValueType>::RX;
             using WavefieldsEM<ValueType>::RY;
+            using WavefieldsEM<ValueType>::EZup;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EZdown;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EZleft;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EZright;  //!< electric intensity Wavefield
+            using WavefieldsEM<ValueType>::EXup;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EXdown;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EXleft;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EXright;  //!< electric intensity Wavefield
+            using WavefieldsEM<ValueType>::EYup;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EYdown;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EYleft;  //!< electric intensity Wavefield 
+            using WavefieldsEM<ValueType>::EYright;  //!< electric intensity Wavefield
 
             /* non-required wavefields */
             using WavefieldsEM<ValueType>::HX;

@@ -94,11 +94,11 @@ namespace KITGPI
             bool useDampingBoundary;        //!< Bool if damping boundary is in use
             bool useConvPML;                //!< Bool if CPMLEM is in use            
 
-            scai::lama::DenseVector<ValueType> getAveragedCinv(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT);
-            scai::lama::DenseVector<ValueType> getAveragedCa(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT);
-            scai::lama::DenseVector<ValueType> getAveragedCb(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT);
-            ValueType getCc(ValueType tauDisplacementEM, ValueType DT);
-            scai::lama::DenseVector<ValueType> getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEMstatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivityEM, scai::IndexType numRelaxationMechanisms, ValueType tauDisplacementEM, ValueType DT);
+            scai::lama::DenseVector<ValueType> getAveragedCinv(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT);
+            scai::lama::DenseVector<ValueType> getAveragedCa(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT);
+            scai::lama::DenseVector<ValueType> getAveragedCb(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT);
+            ValueType getCc(ValueType tauElectricDisplacement, ValueType DT);
+            scai::lama::DenseVector<ValueType> getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, ValueType tauElectricDisplacement, ValueType DT);
                   
             scai::lama::DenseVector<ValueType> update;
             scai::lama::DenseVector<ValueType> update_temp; 

@@ -10,7 +10,7 @@ using namespace scai;
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::TMEM<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
 {
-    /* 4 Parameter in tmem modeling: inverseMagneticPermeabilityEMYZ, inverseMagneticPermeabilityEMXY, CaAverageZ, CbAverageZ */
+    /* 4 Parameter in tmem modeling: inverseMagneticPermeabilityYZ, inverseMagneticPermeabilityXY, CaAverageZ, CbAverageZ */
     IndexType numParameter = 4;
     return (this->getMemoryUsage(dist, numParameter));
 }
@@ -43,36 +43,40 @@ void KITGPI::Modelparameter::TMEM<ValueType>::prepareForModelling(Acquisition::C
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Configuration const &config)
 {
-    dielectricPermittivityEM /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivityEM
+    dielectricPermittivity /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
     
     lama::DenseVector<ValueType> mask; //mask to restore vacuum
-    mask = dielectricPermittivityEM-1;
+    mask = dielectricPermittivity-1;
     mask.unaryOp(mask, common::UnaryOp::SIGN);
     mask.unaryOp(mask, common::UnaryOp::ABS);
     
-    Common::searchAndReplace<ValueType>(conductivityEM, config.get<ValueType>("lowerSigmaEMTh"), config.get<ValueType>("lowerSigmaEMTh"), 1);
-    Common::searchAndReplace<ValueType>(conductivityEM, config.get<ValueType>("upperSigmaEMTh"), config.get<ValueType>("upperSigmaEMTh"), 2);    
-    Common::searchAndReplace<ValueType>(dielectricPermittivityEM, config.get<ValueType>("lowerEpsilonEMrTh"), config.get<ValueType>("lowerEpsilonEMrTh"), 1);
-    Common::searchAndReplace<ValueType>(dielectricPermittivityEM, config.get<ValueType>("upperEpsilonEMrTh"), config.get<ValueType>("upperEpsilonEMrTh"), 2);
+    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("lowerSigmaEMTh"), config.get<ValueType>("lowerSigmaEMTh"), 1);
+    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("upperSigmaEMTh"), config.get<ValueType>("upperSigmaEMTh"), 2);    
+    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("lowerEpsilonEMrTh"), config.get<ValueType>("lowerEpsilonEMrTh"), 1);
+    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("upperEpsilonEMrTh"), config.get<ValueType>("upperEpsilonEMrTh"), 2);
        
-    dirtyFlagVelocivityEM = true ;   // If EM-parameters will be changed, velocityEM needs to be redone
+    dirtyFlagVelocivityEM = true;   // If EM-parameters will be changed, velocityEM needs to be redone
     dirtyFlagAveraging = true;      // If EM-parameters will be changed, averaging needs to be redone
       
     if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
-        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
-        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
+        Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("lowerPorosityTh", 0.0), config.getAndCatch("lowerPorosityTh", 0.0), 1);
+        Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("upperPorosityTh", 1.0), config.getAndCatch("upperPorosityTh", 1.0), 2);
 
-        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
-        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
+        Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
+        Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
-    conductivityEM *= mask;
+    if (config.get<IndexType>("gradientType") > 1) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
+    electricConductivity *= mask;
     porosity *= mask;
     saturation *= mask;
     
-    dielectricPermittivityEM -= 1;
-    dielectricPermittivityEM *= mask;
-    dielectricPermittivityEM += 1;
-    dielectricPermittivityEM *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivityEM  
+    dielectricPermittivity -= 1;
+    dielectricPermittivity *= mask;
+    dielectricPermittivity += 1;
+    dielectricPermittivity *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity  
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -84,24 +88,27 @@ void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Con
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
-    auto distBig = dielectricPermittivityEM.getDistributionPtr();
-    auto dist = modelPerShot.getDielectricPermittivityEM().getDistributionPtr();
+    auto distBig = dielectricPermittivity.getDistributionPtr();
+    auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
 
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
 
     lama::DenseVector<ValueType> temp;
     
-    temp = shrinkMatrix * dielectricPermittivityEM;
-    modelPerShot.setDielectricPermittivityEM(temp);
+    temp = shrinkMatrix * dielectricPermittivity;
+    modelPerShot.setDielectricPermittivity(temp);
         
-    temp = shrinkMatrix * conductivityEM;
-    modelPerShot.setConductivityEM(temp);
+    temp = shrinkMatrix * electricConductivity;
+    modelPerShot.setElectricConductivity(temp);
     
     temp = shrinkMatrix * porosity;
     modelPerShot.setPorosity(temp);
     
     temp = shrinkMatrix * saturation;
     modelPerShot.setSaturation(temp);
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp);
 }
 
 /*! \brief If stream configuration is used, set a pershot model into the big model
@@ -113,8 +120,8 @@ void KITGPI::Modelparameter::TMEM<ValueType>::getModelPerShot(KITGPI::Modelparam
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
 {
-    auto distBig = dielectricPermittivityEM.getDistributionPtr();
-    auto dist = modelPerShot.getDielectricPermittivityEM().getDistributionPtr();
+    auto distBig = dielectricPermittivity.getDistributionPtr();
+    auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
 //     auto comm = dist.getCommunicatorPtr();
 
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
@@ -126,15 +133,30 @@ void KITGPI::Modelparameter::TMEM<ValueType>::setModelPerShot(KITGPI::Modelparam
     
     lama::DenseVector<ValueType> temp;
     
-    temp = shrinkMatrix * modelPerShot.getDielectricPermittivityEM(); //transform pershot into big model
+    temp = shrinkMatrix * modelPerShot.getDielectricPermittivity(); //transform pershot into big model
     temp *= restoreVector;
-    dielectricPermittivityEM *= eraseVector;
-    dielectricPermittivityEM += temp; //take over the values
+    dielectricPermittivity *= eraseVector;
+    dielectricPermittivity += temp; //take over the values
   
-    temp = shrinkMatrix * modelPerShot.getConductivityEM(); //transform pershot into big model
+    temp = shrinkMatrix * modelPerShot.getElectricConductivity(); //transform pershot into big model
     temp *= restoreVector;
-    conductivityEM *= eraseVector;
-    conductivityEM += temp; //take over the values
+    electricConductivity *= eraseVector;
+    electricConductivity += temp; //take over the values
+  
+    temp = shrinkMatrix * modelPerShot.getPorosity(); //transform pershot into big model
+    temp *= restoreVector;
+    porosity *= eraseVector;
+    porosity += temp; //take over the values
+  
+    temp = shrinkMatrix * modelPerShot.getSaturation(); //transform pershot into big model
+    temp *= restoreVector;
+    saturation *= eraseVector;
+    saturation += temp; //take over the values
+  
+    temp = shrinkMatrix * modelPerShot.getReflectivity(); //transform pershot into big model
+    temp *= restoreVector;
+    reflectivity *= eraseVector;
+    reflectivity += temp; //take over the values
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -210,12 +232,12 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::dmemo::DistributionPtr 
     }
 
     lama::CSRSparseMatrix<ValueType> meshingMatrix;
-    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, conductivityEM.getDistributionPtr());
+    meshingMatrix = lama::zero<lama::CSRSparseMatrix<ValueType>>(variableDist, electricConductivity.getDistributionPtr());
     meshingMatrix.fillFromAssembly(assembly);
 
-    magneticPermeabilityEM = meshingMatrix * magneticPermeabilityEM;
-    conductivityEM = meshingMatrix * conductivityEM;
-    dielectricPermittivityEM = meshingMatrix * dielectricPermittivityEM;
+    magneticPermeability = meshingMatrix * magneticPermeability;
+    electricConductivity = meshingMatrix * electricConductivity;
+    dielectricPermittivity = meshingMatrix * dielectricPermittivity;
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -223,15 +245,15 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::dmemo::DistributionPtr 
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param magneticPermeabilityEM_const magneticPermeabilityEM given as Scalar
- \param conductivityEM_const conductivityEM given as Scalar
- \param dielectricPermittivityEM_const dielectricPermittivityEM given as Scalar
+ \param magneticPermeability_const magneticPermeability given as Scalar
+ \param electricConductivity_const electricConductivity given as Scalar
+ \param dielectricPermittivity_const dielectricPermittivity given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::TMEM<ValueType>::TMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeabilityEM_const, ValueType conductivityEM_const, ValueType dielectricPermittivityEM_const)
+KITGPI::Modelparameter::TMEM<ValueType>::TMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const)
 {
     equationType = "tmem";
-    init(ctx, dist, magneticPermeabilityEM_const, conductivityEM_const, dielectricPermittivityEM_const);
+    init(ctx, dist, magneticPermeability_const, electricConductivity_const, dielectricPermittivity_const);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
@@ -239,21 +261,22 @@ KITGPI::Modelparameter::TMEM<ValueType>::TMEM(scai::hmemo::ContextPtr ctx, scai:
  *  Generates a homogeneous model, which will be initialized by the two given scalar values.
  \param ctx Context
  \param dist Distribution
- \param magneticPermeabilityEM_const magneticPermeabilityEM given as Scalar
- \param conductivityEM_const conductivityEM given as Scalar
- \param dielectricPermittivityEM_const dielectricPermittivityEM given as Scalar
+ \param magneticPermeability_const magneticPermeability given as Scalar
+ \param electricConductivity_const electricConductivity given as Scalar
+ \param dielectricPermittivity_const dielectricPermittivity given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeabilityEM_const, ValueType conductivityEM_const, ValueType dielectricPermittivityEM_const)
+void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const)
 {
-    magneticPermeabilityEM_const *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeabilityEM
-    dielectricPermittivityEM_const *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivityEM
+    magneticPermeability_const *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
+    dielectricPermittivity_const *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
     
-    this->initModelparameter(magneticPermeabilityEM, ctx, dist, magneticPermeabilityEM_const);
-    this->initModelparameter(conductivityEM, ctx, dist, conductivityEM_const);
-    this->initModelparameter(dielectricPermittivityEM, ctx, dist, dielectricPermittivityEM_const);
+    this->initModelparameter(magneticPermeability, ctx, dist, magneticPermeability_const);
+    this->initModelparameter(electricConductivity, ctx, dist, electricConductivity_const);
+    this->initModelparameter(dielectricPermittivity, ctx, dist, dielectricPermittivity_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -283,9 +306,9 @@ KITGPI::Modelparameter::TMEM<ValueType>::TMEM(scai::hmemo::ContextPtr ctx, scai:
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    this->initModelparameter(magneticPermeabilityEM, ctx, dist, filename + ".muEMr", fileFormat);
-    this->initModelparameter(conductivityEM, ctx, dist, filename + ".sigmaEM", fileFormat);
-    this->initModelparameter(dielectricPermittivityEM, ctx, dist, filename + ".epsilonEMr", fileFormat);
+    this->initModelparameter(magneticPermeability, ctx, dist, filename + ".muEMr", fileFormat);
+    this->initModelparameter(electricConductivity, ctx, dist, filename + ".sigmaEM", fileFormat);
+    this->initModelparameter(dielectricPermittivity, ctx, dist, filename + ".epsilonEMr", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
         this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
@@ -293,9 +316,14 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientType() != 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
     
-    magneticPermeabilityEM *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeabilityEM
-    dielectricPermittivityEM *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivityEM
+    magneticPermeability *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
+    dielectricPermittivity *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
 }
 
 //! \brief Copy constructor
@@ -304,13 +332,14 @@ KITGPI::Modelparameter::TMEM<ValueType>::TMEM(const TMEM &rhs)
 {
     equationType = rhs.equationType;
     velocivityEM = rhs.velocivityEM;
-    magneticPermeabilityEM = rhs.magneticPermeabilityEM;
-    conductivityEM = rhs.conductivityEM;
-    dielectricPermittivityEM = rhs.dielectricPermittivityEM;
+    magneticPermeability = rhs.magneticPermeability;
+    electricConductivity = rhs.electricConductivity;
+    dielectricPermittivity = rhs.dielectricPermittivity;
     dirtyFlagVelocivityEM = rhs.dirtyFlagVelocivityEM;
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -321,18 +350,21 @@ KITGPI::Modelparameter::TMEM<ValueType>::TMEM(const TMEM &rhs)
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::write(std::string filename, scai::IndexType fileFormat) const
 {
-    scai::lama::DenseVector<ValueType> magneticPermeabilityEMtemp = magneticPermeabilityEM;
-    scai::lama::DenseVector<ValueType> dielectricPermittivityEMtemp = dielectricPermittivityEM;
+    scai::lama::DenseVector<ValueType> magneticPermeabilitytemp = magneticPermeability;
+    scai::lama::DenseVector<ValueType> dielectricPermittivitytemp = dielectricPermittivity;
     
-    magneticPermeabilityEMtemp /= MagneticPermeabilityVacuum;  // calculate the relative magneticPermeabilityEM
-    dielectricPermittivityEMtemp /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivityEM
+    magneticPermeabilitytemp /= MagneticPermeabilityVacuum;  // calculate the relative magneticPermeability
+    dielectricPermittivitytemp /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
     
-    IO::writeVector(magneticPermeabilityEMtemp, filename + ".muEMr", fileFormat);
-    IO::writeVector(conductivityEM, filename + ".sigmaEM", fileFormat);
-    IO::writeVector(dielectricPermittivityEMtemp, filename + ".epsilonEMr", fileFormat);
+    IO::writeVector(magneticPermeabilitytemp, filename + ".muEMr", fileFormat);
+    IO::writeVector(electricConductivity, filename + ".sigmaEM", fileFormat);
+    IO::writeVector(dielectricPermittivitytemp, filename + ".epsilonEMr", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientType() != 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -374,8 +406,8 @@ void KITGPI::Modelparameter::TMEM<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.TMEM.calculateAveraging")
-        this->calculateInverseAveragedEMparameter(magneticPermeabilityEM, inverseMagneticPermeabilityEMAverageXZ, averageMatrixX);
-        this->calculateInverseAveragedEMparameter(magneticPermeabilityEM, inverseMagneticPermeabilityEMAverageYZ, averageMatrixY);
+        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixX);
+        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }
@@ -388,63 +420,63 @@ std::string KITGPI::Modelparameter::TMEM<ValueType>::getEquationType() const
     return (equationType);
 }
 
-/*! \brief Get reference to inverse magneticPermeabilityEM
+/*! \brief Get reference to inverse magneticPermeability
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getConductivityEMoptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getElectricConductivityOptical()
 {
-    COMMON_THROWEXCEPTION("There is no conductivityEMoptical in an tmem modelling")
-    return (conductivityEMoptical);
+    COMMON_THROWEXCEPTION("There is no electricConductivityOptical in an tmem modelling")
+    return (electricConductivityOptical);
 }
 
-/*! \brief Get reference to dielectricPermittivityEMoptical
+/*! \brief Get reference to dielectricPermittivityOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getDielectricPermittivityEMoptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getDielectricPermittivityOptical()
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEMoptical in an tmem modelling")
-    return (dielectricPermittivityEMoptical);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOptical in an tmem modelling")
+    return (dielectricPermittivityOptical);
 }
 
-/*! \brief Get reference to tauDisplacementEM
+/*! \brief Get reference to tauElectricDisplacement
  *
  */
 template <typename ValueType> 
-ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauDisplacementEM()
+ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauElectricDisplacement()
 {
-    COMMON_THROWEXCEPTION("There is no tauDisplacementEM parameter in an tmem modelling")
-    return (tauDisplacementEM);
+    COMMON_THROWEXCEPTION("There is no tauElectricDisplacement parameter in an tmem modelling")
+    return (tauElectricDisplacement);
 }
 
-/*! \brief Get reference to tauDisplacementEM
+/*! \brief Get reference to tauElectricDisplacement
  *
  */
 template <typename ValueType> 
-ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauDisplacementEM() const
+ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauElectricDisplacement() const
 {
-    COMMON_THROWEXCEPTION("There is no tauDisplacementEM parameter in an tmem modelling")
-    return (tauDisplacementEM);
+    COMMON_THROWEXCEPTION("There is no tauElectricDisplacement parameter in an tmem modelling")
+    return (tauElectricDisplacement);
 }
 
-/*! \brief Get reference to tauConductivityEM
+/*! \brief Get reference to tauElectricConductivity
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getTauConductivityEM() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getTauElectricConductivity() const
 {
-    COMMON_THROWEXCEPTION("There is no tauConductivityEM in an tmem modelling")
-    return (tauConductivityEM);
+    COMMON_THROWEXCEPTION("There is no tauElectricConductivity in an tmem modelling")
+    return (tauElectricConductivity);
 }
 
-/*! \brief Get reference to tauDielectricPermittivityEM
+/*! \brief Get reference to tauDielectricPermittivity
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getTauDielectricPermittivityEM() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getTauDielectricPermittivity() const
 {
-    COMMON_THROWEXCEPTION("There is no tauDielectricPermittivityEM in an tmem modelling")
-    return (tauDielectricPermittivityEM);
+    COMMON_THROWEXCEPTION("There is no tauDielectricPermittivity in an tmem modelling")
+    return (tauDielectricPermittivity);
 }
 
 /*! \brief Getter method for relaxation frequency */
@@ -493,11 +525,12 @@ KITGPI::Modelparameter::TMEM<ValueType> operator*(ValueType lhs, KITGPI::Modelpa
 template <typename ValueType>
 KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>::operator*=(ValueType const &rhs)
 {
-    magneticPermeabilityEM *= rhs;
-    conductivityEM *= rhs;
-    dielectricPermittivityEM *= rhs;
+    magneticPermeability *= rhs;
+    electricConductivity *= rhs;
+    dielectricPermittivity *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -523,11 +556,12 @@ KITGPI::Modelparameter::TMEM<ValueType> KITGPI::Modelparameter::TMEM<ValueType>:
 template <typename ValueType>
 KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>::operator+=(KITGPI::Modelparameter::TMEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM += rhs.magneticPermeabilityEM;
-    conductivityEM += rhs.conductivityEM;
-    dielectricPermittivityEM += rhs.dielectricPermittivityEM;
+    magneticPermeability += rhs.magneticPermeability;
+    electricConductivity += rhs.electricConductivity;
+    dielectricPermittivity += rhs.dielectricPermittivity;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -553,11 +587,12 @@ KITGPI::Modelparameter::TMEM<ValueType> KITGPI::Modelparameter::TMEM<ValueType>:
 template <typename ValueType>
 KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>::operator-=(KITGPI::Modelparameter::TMEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM -= rhs.magneticPermeabilityEM;
-    conductivityEM -= rhs.conductivityEM;
-    dielectricPermittivityEM -= rhs.dielectricPermittivityEM;
+    magneticPermeability -= rhs.magneticPermeability;
+    electricConductivity -= rhs.electricConductivity;
+    dielectricPermittivity -= rhs.dielectricPermittivity;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -571,13 +606,14 @@ KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>
 template <typename ValueType>
 KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>::operator=(KITGPI::Modelparameter::TMEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM = rhs.magneticPermeabilityEM;
-    conductivityEM = rhs.conductivityEM;
-    dielectricPermittivityEM = rhs.dielectricPermittivityEM;
+    magneticPermeability = rhs.magneticPermeability;
+    electricConductivity = rhs.electricConductivity;
+    dielectricPermittivity = rhs.dielectricPermittivity;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
-    conductivityEMWater = rhs.conductivityEMWater;
+    electricConductivityWater = rhs.electricConductivityWater;
     relativeDieletricPeimittivityRockMatrix = rhs.relativeDieletricPeimittivityRockMatrix;
     std::cout << "operator=\n" << std::endl;
     
@@ -593,13 +629,14 @@ KITGPI::Modelparameter::TMEM<ValueType> &KITGPI::Modelparameter::TMEM<ValueType>
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::assign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM = rhs.getMagneticPermeabilityEM();
-    conductivityEM = rhs.getConductivityEM();
-    dielectricPermittivityEM = rhs.getDielectricPermittivityEM();
+    magneticPermeability = rhs.getMagneticPermeability();
+    electricConductivity = rhs.getElectricConductivity();
+    dielectricPermittivity = rhs.getDielectricPermittivity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
-    conductivityEMWater = rhs.getConductivityEMWater();
+    electricConductivityWater = rhs.getElectricConductivityWater();
     relativeDieletricPeimittivityRockMatrix = rhs.getRelativeDieletricPeimittivityRockMatrix();
 //     std::cout << "assign\n" << std::endl;
     
@@ -614,11 +651,12 @@ void KITGPI::Modelparameter::TMEM<ValueType>::assign(KITGPI::Modelparameter::Mod
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::minusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM -= rhs.getMagneticPermeabilityEM();
-    conductivityEM -= rhs.getConductivityEM();
-    dielectricPermittivityEM -= rhs.getDielectricPermittivityEM();
+    magneticPermeability -= rhs.getMagneticPermeability();
+    electricConductivity -= rhs.getElectricConductivity();
+    dielectricPermittivity -= rhs.getDielectricPermittivity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -631,11 +669,12 @@ void KITGPI::Modelparameter::TMEM<ValueType>::minusAssign(KITGPI::Modelparameter
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::plusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
 {
-    magneticPermeabilityEM += rhs.getMagneticPermeabilityEM();
-    conductivityEM += rhs.getConductivityEM();
-    dielectricPermittivityEM += rhs.getDielectricPermittivityEM();
+    magneticPermeability += rhs.getMagneticPermeability();
+    electricConductivity += rhs.getElectricConductivity();
+    dielectricPermittivity += rhs.getDielectricPermittivity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;

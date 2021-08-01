@@ -43,7 +43,7 @@ namespace KITGPI
         {
           public:
             //! Default constructor.
-            ModelparameterEM() : dirtyFlagAveraging(true), dirtyFlagVelocivityEM(true), dirtyFlagConductivityEMoptical(true), dirtyFlagDielectricPermittivityEMoptical(true), parameterisation(0), inversionType(0), numRelaxationMechanisms(0){};
+            ModelparameterEM() : dirtyFlagAveraging(true), dirtyFlagVelocivityEM(true), dirtyFlagElectricConductivityOptical(true), dirtyFlagDielectricPermittivityOptical(true), parameterisation(0), inversionType(0), numRelaxationMechanisms(0){};
 
             //! Default destructor.
             ~ModelparameterEM(){};
@@ -67,48 +67,51 @@ namespace KITGPI
 
             virtual std::string getEquationType() const = 0;
 
-            virtual scai::lama::Vector<ValueType> const &getMagneticPermeabilityEM() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEM() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEM() const;
+            virtual scai::lama::Vector<ValueType> const &getMagneticPermeability() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivity() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivity() const;
             
             virtual scai::lama::Vector<ValueType> const &getVelocityEM();
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() const;
             
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMoptical();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMoptical() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMoptical();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMoptical() const;
-            virtual ValueType const &getTauDisplacementEM();
-            virtual ValueType const &getTauDisplacementEM() const;
-            virtual scai::lama::Vector<ValueType> const &getTauConductivityEM() const;
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEM() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOptical();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOptical() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOptical();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOptical() const;
+            virtual ValueType const &getTauElectricDisplacement();
+            virtual ValueType const &getTauElectricDisplacement() const;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivity() const;
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const;
 
             virtual scai::lama::Vector<ValueType> const &getPorosity() const;
             virtual scai::lama::Vector<ValueType> const &getSaturation() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMWater() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityWater() const;
             virtual scai::lama::Vector<ValueType> const &getRelativeDieletricPeimittivityRockMatrix() const;
+            virtual scai::lama::Vector<ValueType> const &getReflectivity() const;
 
             virtual scai::IndexType getNumRelaxationMechanisms() const;
             virtual ValueType getRelaxationFrequency() const;
 
-            virtual void setMagneticPermeabilityEM(scai::lama::Vector<ValueType> const &setMagneticPermeabilityEM);
-            virtual void setConductivityEM(scai::lama::Vector<ValueType> const &setConductivityEM);
-            virtual void setDielectricPermittivityEM(scai::lama::Vector<ValueType> const &setDielectricPermittivityEM);
+            virtual void setMagneticPermeability(scai::lama::Vector<ValueType> const &setMagneticPermeability);
+            virtual void setElectricConductivity(scai::lama::Vector<ValueType> const &setElectricConductivity);
+            virtual void setDielectricPermittivity(scai::lama::Vector<ValueType> const &setDielectricPermittivity);
             
-            virtual void setConductivityEMoptical(scai::lama::Vector<ValueType> const &setConductivityEMoptical);
-            virtual void setDielectricPermittivityEMoptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityEMoptical);
-            virtual void setTauConductivityEM(scai::lama::Vector<ValueType> const &setTauConductivityEM);
-            virtual void setTauDielectricPermittivityEM(scai::lama::Vector<ValueType> const &setTauDielectricPermittivityEM);
+            virtual void setElectricConductivityOptical(scai::lama::Vector<ValueType> const &setElectricConductivityOptical);
+            virtual void setDielectricPermittivityOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityOptical);
+            virtual void setTauElectricConductivity(scai::lama::Vector<ValueType> const &setTauElectricConductivity);
+            virtual void setTauDielectricPermittivity(scai::lama::Vector<ValueType> const &setTauDielectricPermittivity);
             
             virtual void setPorosity(scai::lama::Vector<ValueType> const &setPorosity);
             virtual void setSaturation(scai::lama::Vector<ValueType> const &setSaturation);
-            virtual void setConductivityEMWater(scai::lama::Vector<ValueType> const &setConductivityEMWater);
+            virtual void setElectricConductivityWater(scai::lama::Vector<ValueType> const &setElectricConductivityWater);
             virtual void setRelativeDieletricPeimittivityRockMatrix(scai::lama::Vector<ValueType> const &setRelativeDieletricPeimittivityRockMatrix); 
+            virtual void setReflectivity(scai::lama::Vector<ValueType> const &setReflectivity);
+            virtual void resetReflectivity();
             
             ValueType const getDielectricPermittivityVacuum() const; 
-            ValueType const getConductivityReference() const; 
+            ValueType const getElectricConductivityReference() const; 
             ValueType const getTauDielectricPermittivityReference() const; 
-            ValueType const getTauConductivityReference() const; 
+            ValueType const getTauElectricConductivityReference() const; 
             ValueType const getRelativeDielectricPermittivityWater() const; 
             ValueType const getRelativeDielectricPermittivityVacuum() const; 
             
@@ -117,7 +120,7 @@ namespace KITGPI
             ValueType const getArchie_m() const;  
             ValueType const getArchie_n() const;            
             void calcRockMatrixParameter(Configuration::Configuration const &config);
-            void calcConductivityReference(ValueType const CenterFrequencyCPML);
+            void calcElectricConductivityReference(ValueType const CenterFrequencyCPML);
             void calcWaveModulusFromPetrophysics();
             void calcPetrophysicsFromWaveModulus();
             
@@ -128,6 +131,8 @@ namespace KITGPI
             void setParameterisation(scai::IndexType const setParameterisation);
             scai::IndexType getInversionType() const;
             void setInversionType(scai::IndexType const setInversionType);
+            scai::IndexType getGradientType() const;
+            void setGradientType(scai::IndexType const setGradientType);
 
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -135,47 +140,47 @@ namespace KITGPI
 
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
 
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageYZ();
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageYZ() const;
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageXZ();
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageXZ() const;
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageXY();
-            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityEMAverageXY() const;
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageYZ();
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageYZ() const;
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageXZ();
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageXZ() const;
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageXY();
+            virtual scai::lama::Vector<ValueType> const &getInverseMagneticPermeabilityAverageXY() const;
             
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageX();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageX() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageY();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageY() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageZ();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMAverageZ() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageX();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageX() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageY();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageY() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageZ();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityAverageZ() const;
             
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageX();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageX() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageY();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageY() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageZ();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMAverageZ() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageX();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageX() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageY();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageY() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ() const;
             
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageX();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageX() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageY();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageY() const;
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageZ();
-            virtual scai::lama::Vector<ValueType> const &getConductivityEMopticalAverageZ() const;            
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageX();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageX() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageY();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageY() const;
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageZ();
+            virtual scai::lama::Vector<ValueType> const &getElectricConductivityOpticalAverageZ() const;            
             
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageX();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageX() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageY();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageY() const;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageZ();
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEMopticalAverageZ() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageX();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageX() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageY();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageY() const;
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageZ();
+            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityOpticalAverageZ() const;
             
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageX();
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageX() const;
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageY();
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageY() const;
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageZ();
-            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityEMAverageZ() const;
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX();
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX() const;
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageY();
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageY() const;
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageZ();
+            virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageZ() const;
             
             virtual void getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) = 0;
             virtual void setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) = 0;
@@ -196,11 +201,12 @@ namespace KITGPI
           protected:
             bool dirtyFlagAveraging;      //!< ==true if averaged EM-wave modulus has to be recalculated; ==false if averaged modulus is up to date
             bool dirtyFlagVelocivityEM;   //!< ==true if EM-wave velocity has to be recalculated; ==false if velocity is up to date
-            bool dirtyFlagConductivityEMoptical; //!< ==true if conductivityEMoptical has to be recalulated;
-            bool dirtyFlagDielectricPermittivityEMoptical; //!< ==true if dielectricPermittivityEMoptical has to be recalulated;
+            bool dirtyFlagElectricConductivityOptical; //!< ==true if electricConductivityOptical has to be recalulated;
+            bool dirtyFlagDielectricPermittivityOptical; //!< ==true if dielectricPermittivityOptical has to be recalulated;
 
             scai::IndexType parameterisation;
             scai::IndexType inversionType;
+            scai::IndexType gradientType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             ValueType aArchie;
@@ -208,7 +214,7 @@ namespace KITGPI
             ValueType nArchie;   
             ValueType const MagneticPermeabilityVacuum = 1.2566370614e-6;       
             ValueType const DielectricPermittivityVacuum = 8.8541878176e-12;   
-            ValueType ConductivityReference;   
+            ValueType ElectricConductivityReference;   
             ValueType const TauDielectricPermittivityReference = 0.01; 
             ValueType const RelativeDielectricPermittivityWater = 81; 
             ValueType const RelativeDielectricPermittivityVacuum = 1;
@@ -216,50 +222,51 @@ namespace KITGPI
             std::string equationType;
 
             scai::lama::DenseVector<ValueType> velocivityEM;   //!< Vector storing EM-wave velocity.
-            scai::lama::DenseVector<ValueType> magneticPermeabilityEM;        //!< Vector storing MagneticPermeabilityEM.
-            scai::lama::DenseVector<ValueType> conductivityEM; //!< Vector storing EM-wave velocity.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEM; //!< Vector storing dielectricPermittivityEM.
+            scai::lama::DenseVector<ValueType> magneticPermeability;        //!< Vector storing MagneticPermeability.
+            scai::lama::DenseVector<ValueType> electricConductivity; //!< Vector storing EM-wave velocity.
+            scai::lama::DenseVector<ValueType> dielectricPermittivity; //!< Vector storing dielectricPermittivity.
             
-            scai::lama::DenseVector<ValueType> conductivityEMoptical; //!< Vector storing dielectricPermittivityEMoptical for visco-emem modelling.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMoptical; //!< Vector storing dielectricPermittivityEMoptical for visco-emem modelling.
-            scai::lama::DenseVector<ValueType> tauConductivityEM; //!< Vector storing tauDielectricPermittivityEM for visco-emem modelling.
-            scai::lama::DenseVector<ValueType> tauDielectricPermittivityEM; //!< Vector storing tauDielectricPermittivityEM for visco-emem modelling.
+            scai::lama::DenseVector<ValueType> electricConductivityOptical; //!< Vector storing dielectricPermittivityOptical for visco-emem modelling.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityOptical; //!< Vector storing dielectricPermittivityOptical for visco-emem modelling.
+            scai::lama::DenseVector<ValueType> tauElectricConductivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
+            scai::lama::DenseVector<ValueType> tauDielectricPermittivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
             
             scai::lama::DenseVector<ValueType> porosity; //!< Vector storing porosity.
             scai::lama::DenseVector<ValueType> saturation; //!< Vector storing saturation.
-            scai::lama::DenseVector<ValueType> conductivityEMWater; //!< Vector conductivityEMWater.
+            scai::lama::DenseVector<ValueType> reflectivity; //!< Vector storing reflectivity.
+            scai::lama::DenseVector<ValueType> electricConductivityWater; //!< Vector electricConductivityWater.
             scai::lama::DenseVector<ValueType> relativeDieletricPeimittivityRockMatrix; //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
-            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityEMAverageYZ; //!< Vector storing inverse averaged magneticPermeabilityEM in yz-plan.
-            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityEMAverageXZ; //!< Vector storing inverse averaged magneticPermeabilityEM in xz-plan.
-            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityEMAverageXY; //!< Vector storing inverse averaged magneticPermeabilityEM in xy-plan.
-            scai::lama::DenseVector<ValueType> conductivityEMAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> conductivityEMAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> conductivityEMAverageZ; //!< Vector storing averaged modulus in z-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMAverageZ; //!< Vector storing averaged modulus in z-direction.
+            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityAverageYZ; //!< Vector storing inverse averaged magneticPermeability in yz-plan.
+            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityAverageXZ; //!< Vector storing inverse averaged magneticPermeability in xz-plan.
+            scai::lama::DenseVector<ValueType> inverseMagneticPermeabilityAverageXY; //!< Vector storing inverse averaged magneticPermeability in xy-plan.
+            scai::lama::DenseVector<ValueType> electricConductivityAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> electricConductivityAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> electricConductivityAverageZ; //!< Vector storing averaged modulus in z-direction.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
             
-            scai::lama::DenseVector<ValueType> conductivityEMopticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> conductivityEMopticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> conductivityEMopticalAverageZ; //!< Vector storing averaged modulus in z-direction.          
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMopticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMopticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEMopticalAverageZ; //!< Vector storing averaged modulus in z-direction.              
-            scai::lama::DenseVector<ValueType> tauDielectricPermittivityEMAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> tauDielectricPermittivityEMAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> tauDielectricPermittivityEMAverageZ; //!< Vector storing averaged modulus in z-direction.
+            scai::lama::DenseVector<ValueType> electricConductivityOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> electricConductivityOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> electricConductivityOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.          
+            scai::lama::DenseVector<ValueType> dielectricPermittivityOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> dielectricPermittivityOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.              
+            scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
          
             scai::IndexType numRelaxationMechanisms; //!< Number of relaxation mechanisms
             ValueType relaxationFrequency;           //!< Relaxation Frequency
-            ValueType tauDisplacementEM;     // relaxation time of electric displacement
+            ValueType tauElectricDisplacement;     // relaxation time of electric displacement
 
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType value);
             void initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
-            void calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecMagneticPermeabilityEM, scai::lama::Vector<ValueType> &vecDielectricPermittivityEM);
+            void calcModulusFromVelocity(scai::lama::Vector<ValueType> &vecVelocity, scai::lama::Vector<ValueType> &vecMagneticPermeability, scai::lama::Vector<ValueType> &vecDielectricPermittivity);
 
-            void calcVelocityFromModulus(scai::lama::Vector<ValueType> &vecDielectricPermittivityEM, scai::lama::Vector<ValueType> &vecMagneticPermeabilityEM, scai::lama::Vector<ValueType> &vecVelocity);
+            void calcVelocityFromModulus(scai::lama::Vector<ValueType> &vecDielectricPermittivity, scai::lama::Vector<ValueType> &vecMagneticPermeability, scai::lama::Vector<ValueType> &vecVelocity);
 
             /*! \brief Calculate Averaging if they are required */
             virtual void calculateAveraging() = 0;
@@ -276,15 +283,15 @@ namespace KITGPI
             void calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
             void calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist);
 
-            SparseFormat averageMatrixX;                                 //!< Averaging magneticPermeabilityEM matrix in x-direction
-            SparseFormat averageMatrixY;                                 //!< Averaging magneticPermeabilityEM matrix in y-direction
-            SparseFormat averageMatrixZ;                                 //!< Averaging magneticPermeabilityEM matrix in z-direction
+            SparseFormat averageMatrixX;                                 //!< Averaging magneticPermeability matrix in x-direction
+            SparseFormat averageMatrixY;                                 //!< Averaging magneticPermeability matrix in y-direction
+            SparseFormat averageMatrixZ;                                 //!< Averaging magneticPermeability matrix in z-direction
             SparseFormat averageMatrixXY;                                //!< Average EM-wave Modulus in xy-plane
             SparseFormat averageMatrixXZ;                                //!< Average EM-wave Modulus in xz-plane
             SparseFormat averageMatrixYZ;                                //!< Average EM-wave Modulus in yz-plane
 
-            void calculateInverseAveragedEMparameter(scai::lama::Vector<ValueType> const &vecEMparameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedEMparameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
-            void calculateAveragedEMparameter(scai::lama::Vector<ValueType> const &vecEMparameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
+            void calculateInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
+            void calculateAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
                          
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);

@@ -68,11 +68,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
     dirtyFlagAveraging = true;    // If S-Wave velocity will be changed, averaging needs to be redone
 
     if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
-        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("lowerPorosityTh"), config.get<ValueType>("lowerPorosityTh"), 1);
-        Common::searchAndReplace<ValueType>(porosity, config.get<ValueType>("upperPorosityTh"), config.get<ValueType>("upperPorosityTh"), 2);
+        Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("lowerPorosityTh", 0.0), config.getAndCatch("lowerPorosityTh", 0.0), 1);
+        Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("upperPorosityTh", 1.0), config.getAndCatch("upperPorosityTh", 1.0), 2);
 
-        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("lowerSaturationTh"), config.get<ValueType>("lowerSaturationTh"), 1);
-        Common::searchAndReplace<ValueType>(saturation, config.get<ValueType>("upperSaturationTh"), config.get<ValueType>("upperSaturationTh"), 2);
+        Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
+        Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
     velocityP *= maskP;
     density *= maskP;

@@ -74,13 +74,6 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const s
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
         
-        if (outputInstantaneous == 1) {
-            Common::calcEnvelope(dataResample);
-        } else if (outputInstantaneous == 2) {
-            scai::IndexType phaseType = 2;
-            Common::calcInstantaneousPhase(dataResample, phaseType);
-        } 
-
         scai::IndexType seismoFormat = seismogramFormat;
         std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceType()];
         if (seismogramFormat == 5) {
@@ -96,6 +89,26 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const s
         default:
             IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
             break;
+        }
+        
+        if (outputInstantaneous != 0 && seismogramFormat != 5) {
+            if (outputInstantaneous == 1) {
+                Common::calcEnvelope(dataResample);
+                filenameTmp += ".envelope";
+            } else if (outputInstantaneous == 2) {
+                scai::IndexType phaseType = 2;
+                Common::calcInstantaneousPhase(dataResample, phaseType);
+                filenameTmp += ".instantaneousPhase";
+            } 
+            
+            switch (seismoFormat) {
+            case 4:
+                SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
+                break;
+            default:
+                IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
+                break;
+            }
         }
     }
 }
@@ -762,6 +775,28 @@ KITGPI::Acquisition::SeismogramEM<ValueType> KITGPI::Acquisition::SeismogramEM<V
 
     return *this;
 }
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::SeismogramEM<ValueType> KITGPI::Acquisition::SeismogramEM<ValueType>::operator*=(scai::lama::DenseVector<ValueType> const &rhs)
+{
+    if (data.getNumValues() > 0) {
+        scai::lama::DenseVector<ValueType> scaleVector = rhs;
+        if (data.getNumRows() == scaleVector.size()) {
+            scaleVector.redistribute(data.getRowDistributionPtr());
+            data.scaleRows(scaleVector);
+        } else {
+            scaleVector.redistribute(data.getColDistributionPtr());
+            data.scaleColumns(scaleVector);
+        }
+    }
+
+    return *this;
+}
+
 /*! \brief Overloading + Operation
  *
  \param rhs Model which is added.

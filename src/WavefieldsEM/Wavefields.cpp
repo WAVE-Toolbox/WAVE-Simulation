@@ -132,6 +132,90 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
     return (EZ);
 }
 
+//! \brief Getter routine for EX wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEXup()
+{
+    return (EXup);
+}
+
+//! \brief Getter routine for EY wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEYup()
+{
+    return (EYup);
+}
+
+//! \brief Getter routine for EZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEZup()
+{
+    return (EZup);
+}
+
+//! \brief Getter routine for EX wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEXdown()
+{
+    return (EXdown);
+}
+
+//! \brief Getter routine for EY wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEYdown()
+{
+    return (EYdown);
+}
+
+//! \brief Getter routine for EZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEZdown()
+{
+    return (EZdown);
+}
+
+//! \brief Getter routine for EX wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEXleft()
+{
+    return (EXleft);
+}
+
+//! \brief Getter routine for EY wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEYleft()
+{
+    return (EYleft);
+}
+
+//! \brief Getter routine for EZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEZleft()
+{
+    return (EZleft);
+}
+
+//! \brief Getter routine for EX wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEXright()
+{
+    return (EXright);
+}
+
+//! \brief Getter routine for EY wavefield
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEYright()
+{
+    return (EYright);
+}
+
+//! \brief Getter routine for EZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefEZright()
+{
+    return (EZright);
+}
+
 //! \brief Getter routine for RX Relaxation parameter
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRX()
@@ -196,6 +280,119 @@ KITGPI::Wavefields::WavefieldsEM<ValueType> &KITGPI::Wavefields::WavefieldsEM<Va
     timesAssign(rhs);
     return *this;
 }
+
+/*! \brief calculate a matrix to transform wavefield from XZY to YXZ
+ * \param modelCoordinates coordinates of the original model
+ * \param modelCoordinatesInversion coordinates of the averaged model
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::WavefieldsEM<ValueType>::calcTransformMatrixXYZ(KITGPI::Acquisition::Coordinates<ValueType> modelCoordinates)
+{
+    // this function is only valid for grid partitioning with useVariableGrid=0
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
+    KITGPI::Acquisition::coordinate3D coordinateXZY;
+    
+    dmemo::DistributionPtr dist(transformMatrixXZY.getRowDistributionPtr());
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assemblyXZY;
+    lama::MatrixAssembly<ValueType> assemblyX;
+    lama::MatrixAssembly<ValueType> assemblyY;
+    IndexType columnIndex;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+        coordinateXZY = modelCoordinates.index2coordinate(ownedIndex);
+        columnIndex = coordinateXZY.y + coordinateXZY.x * NY + coordinateXZY.z * NX * NY;
+        assemblyXZY.push(ownedIndex, columnIndex, 1);
+        if (coordinateXZY.x % 2 == 0) {
+            if (coordinateXZY.x % NX == 0) {
+                assemblyX.push(ownedIndex, ownedIndex+1, 1); 
+            } else if (coordinateXZY.x % NX == NX-1) {
+                assemblyX.push(ownedIndex, ownedIndex-1, 1); 
+            } else {
+                assemblyX.push(ownedIndex, ownedIndex+1, 0.5); 
+                assemblyX.push(ownedIndex, ownedIndex-1, 0.5);
+            }
+        } else {
+            assemblyX.push(ownedIndex, ownedIndex, 1);
+        }
+        if (coordinateXZY.y % 2 == 0) {
+            if (coordinateXZY.y % NY == 0) {
+                assemblyY.push(ownedIndex, ownedIndex+NX*NZ, 1); 
+            } else if (coordinateXZY.y % NY == NX-1) {
+                assemblyY.push(ownedIndex, ownedIndex-NX*NZ, 1); 
+            } else {
+                assemblyY.push(ownedIndex, ownedIndex+NX*NZ, 0.5); 
+                assemblyY.push(ownedIndex, ownedIndex-NX*NZ, 0.5);
+            }
+        } else {
+            assemblyY.push(ownedIndex, ownedIndex, 1);
+        }
+    }
+
+    transformMatrixXZY.fillFromAssembly(assemblyXZY);
+    transformMatrixYXZ.assignTranspose(transformMatrixXZY);
+    transformMatrixX.fillFromAssembly(assemblyX);
+    transformMatrixY.fillFromAssembly(assemblyY);
+//     transformMatrixYXZ.writeToFile("wavefields/transformMatrixYXZ.mtx");
+//     transformMatrixXZY.writeToFile("wavefields/transformMatrixXZY.mtx");
+//     transformMatrixX.writeToFile("wavefields/transformMatrixX.mtx");
+}
+
+/*! \brief Initialize wavefield transform matrix to XYZ
+ \param decomposeType decomposeType used to identify coordinate
+ \param dist distribution
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::WavefieldsEM<ValueType>::initTransformMatrixXYZ(IndexType decomposeType, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
+{    
+    if (decomposeType != 0) {
+        transformMatrixYXZ = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixYXZ.setContextPtr(ctx);
+        transformMatrixXZY = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixXZY.setContextPtr(ctx);
+        transformMatrixX = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixX.setContextPtr(ctx);
+        transformMatrixY = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixY.setContextPtr(ctx);
+    }
+}
+
+/*! \brief get transformMatrixYXZ
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::WavefieldsEM<ValueType>::getTransformMatrixYXZ()
+{
+    return transformMatrixYXZ;
+}
+
+/*! \brief get transformMatrixXZY
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::WavefieldsEM<ValueType>::getTransformMatrixXZY()
+{
+    return transformMatrixXZY;
+}
+
+/*! \brief get transformMatrixX
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::WavefieldsEM<ValueType>::getTransformMatrixX()
+{
+    return transformMatrixX;
+}
+/*! \brief get transformMatrixY
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::WavefieldsEM<ValueType>::getTransformMatrixY()
+{
+    return transformMatrixY;
+}
+
 
 template class KITGPI::Wavefields::WavefieldsEM<float>;
 template class KITGPI::Wavefields::WavefieldsEM<double>;

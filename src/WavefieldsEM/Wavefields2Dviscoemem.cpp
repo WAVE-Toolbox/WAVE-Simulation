@@ -80,6 +80,12 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::write(IndexType snapType, std
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
+void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+{    
+}
+/*! \brief Set all wavefields to zero.
+ */
+template <typename ValueType>
 void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::resetWavefields()
 {
     this->resetWavefield(HZ);
@@ -260,7 +266,7 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
 {
     HZ = lhs * rhs.getRefHZ();
     EX = lhs * rhs.getRefEX();

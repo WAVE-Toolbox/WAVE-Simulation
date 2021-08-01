@@ -15,7 +15,6 @@ using namespace scai;
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
-
     for (auto const &i : seismo) {
         i.write(seismogramFormat, filename, modelCoordinates);
     }
@@ -308,6 +307,20 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setInverseAGC(Seismogram
     for (int i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
         seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramType>(i)).getInverseAGC());
     }
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::SeismogramHandler<ValueType> KITGPI::Acquisition::SeismogramHandler<ValueType>::operator*=(scai::lama::DenseVector<ValueType> const &rhs)
+{
+    for (auto &i : seismo) {
+        i *= rhs;
+    }
+
+    return *this;
 }
 
 //! \brief Check seismograms for inf or NaN

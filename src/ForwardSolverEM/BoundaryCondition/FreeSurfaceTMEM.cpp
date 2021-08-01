@@ -16,7 +16,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceTMEM<ValueType>::setMo
 {
     /*This function sets scaling factors for (vxx+hzz) and vyy for the calculation of the horizontal updates without vertical derivatives 
     * On the free surface the verical velocity derivarive can be expressed by 
-    * vyy = ((2mu / pi ) -1) (vxx+hzz) where mu = dielectricPermittivityEM and pi = velocivityEM
+    * vyy = ((2mu / pi ) -1) (vxx+hzz) where mu = dielectricPermittivity and pi = velocivityEM
     * The original update,
     * sxx = pi * ( vxx+vyy+hzz ) - 2mu *( hzz+vyy )
     * will be exchanged with 
@@ -28,11 +28,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceTMEM<ValueType>::setMo
     */
 /*
     lama::Vector<ValueType> const &velocivityEM = model.getVelocityEM();
-    lama::Vector<ValueType> const &dielectricPermittivityEM = model.getDielectricPermittivityEM();
+    lama::Vector<ValueType> const &dielectricPermittivity = model.getDielectricPermittivity();
 
-    SCAI_ASSERT(dielectricPermittivityEM.min() > 0, "S wave modulus can't be zero when using image method")
+    SCAI_ASSERT(dielectricPermittivity.min() > 0, "S wave modulus can't be zero when using image method")
 
-    auto temp = lama::eval<lama::DenseVector<ValueType>>(velocivityEM - 2 * dielectricPermittivityEM);
+    auto temp = lama::eval<lama::DenseVector<ValueType>>(velocivityEM - 2 * dielectricPermittivity);
 
     scaleVerticalUpdate = selectFreeSurface;
     scaleVerticalUpdate *= temp;

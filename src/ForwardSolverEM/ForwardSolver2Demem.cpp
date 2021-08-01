@@ -22,7 +22,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::initForwardSolver(Configuration
 {
     SCAI_REGION("ForwardSolver.init2Demem");
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefHZ().getDistributionPtr() == model.getMagneticPermeabilityEM().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+    SCAI_ASSERT_ERROR(wavefield.getRefHZ().getDistributionPtr() == model.getMagneticPermeability().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
     auto dist = wavefield.getRefHZ().getDistributionPtr();
@@ -78,16 +78,16 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Demem<ValueType>::prepareForModelling(Modelparameter::ModelparameterEM<ValueType> const &model, ValueType DT)
 {
-    auto const &conductivityEMAverageX = model.getConductivityEMAverageX();
-    auto const &conductivityEMAverageY = model.getConductivityEMAverageY();
-    auto const &dielectricPermittivityEMAverageX = model.getDielectricPermittivityEMAverageX();
-    auto const &dielectricPermittivityEMAverageY = model.getDielectricPermittivityEMAverageY();
+    auto const &electricConductivityAverageX = model.getElectricConductivityAverageX();
+    auto const &electricConductivityAverageY = model.getElectricConductivityAverageY();
+    auto const &dielectricPermittivityAverageX = model.getDielectricPermittivityAverageX();
+    auto const &dielectricPermittivityAverageY = model.getDielectricPermittivityAverageY();
 
-    CaAverageX = this->getAveragedCa(dielectricPermittivityEMAverageX, conductivityEMAverageX, DT);
-    CaAverageY = this->getAveragedCa(dielectricPermittivityEMAverageY, conductivityEMAverageY, DT);
+    CaAverageX = this->getAveragedCa(dielectricPermittivityAverageX, electricConductivityAverageX, DT);
+    CaAverageY = this->getAveragedCa(dielectricPermittivityAverageY, electricConductivityAverageY, DT);
     
-    CbAverageX = this->getAveragedCb(dielectricPermittivityEMAverageX, conductivityEMAverageX, DT);
-    CbAverageY = this->getAveragedCb(dielectricPermittivityEMAverageY, conductivityEMAverageY, DT);
+    CbAverageX = this->getAveragedCb(dielectricPermittivityAverageX, electricConductivityAverageX, DT);
+    CbAverageY = this->getAveragedCb(dielectricPermittivityAverageY, electricConductivityAverageY, DT);
 }
 
 /*! \brief Running the 2-Dememfoward solver
@@ -116,7 +116,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeo
     SCAI_REGION("ForwardSolver.timestep2Demem");
     
     /* Get references to required modelparameter */
-    auto const &inverseMagneticPermeabilityEMAverageXY = model.getInverseMagneticPermeabilityEMAverageXY();
+    auto const &inverseMagneticPermeabilityAverageXY = model.getInverseMagneticPermeabilityAverageXY();
 
     /* Get references to required wavefields */
     auto &hZ = wavefield.getRefHZ();
@@ -142,7 +142,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeo
         ConvPML.apply_exy(update_temp);
     }
     update -= update_temp;
-    update *= inverseMagneticPermeabilityEMAverageXY;
+    update *= inverseMagneticPermeabilityAverageXY;
     hZ -= update;
 
     /* ----------------*/

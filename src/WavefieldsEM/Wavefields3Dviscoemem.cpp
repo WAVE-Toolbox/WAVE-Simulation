@@ -81,8 +81,8 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std
         std::unique_ptr<lama::Vector<ValueType>> div_Ptr(HX.newVector());
         scai::lama::Vector<ValueType> &div = *div_Ptr;
 
-        this->getCurl(derivatives, curl, model.getDielectricPermittivityEM());
-        this->getDiv(derivatives, div, model.getConductivityEM());
+        this->getCurl(derivatives, curl, model.getDielectricPermittivity());
+        this->getDiv(derivatives, div, model.getElectricConductivity());
 
         IO::writeVector(curl, fileName + ".CURL." + timeStep, fileFormat);
         IO::writeVector(div, fileName + ".DIV." + timeStep, fileFormat);
@@ -90,6 +90,13 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std
     default:
         COMMON_THROWEXCEPTION("Invalid snapType.")
     }
+}
+
+/*! \brief Set all wavefields to zero.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+{    
 }
 
 /*! \brief Set all wavefields to zero.
@@ -317,7 +324,7 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
 {
     HX = lhs * rhs.getRefHX();
     HY = lhs * rhs.getRefHY();

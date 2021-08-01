@@ -46,20 +46,20 @@ bool KITGPI::Wavefields::Wavefields<ValueType>::isFinite(scai::dmemo::Distributi
     auto read_VX = VX.getLocalValues();
     auto read_VZ = VZ.getLocalValues();
 
-        IndexType localIndex=floor(ownedIndeces.size()/2);
-        if (read_VX.size()!=0){
-            //SCAI_ASSERT_ERROR(isfinite(read_VX[localIndex]),"Infinite or NaN value in VX wavefield!" << localIndex);
-            if (isfinite(read_VX[localIndex])==false){
-                result_isfinite=false;
-            }
+    IndexType localIndex=floor(ownedIndeces.size()/2);
+    if (read_VX.size()!=0){
+        //SCAI_ASSERT_ERROR(isfinite(read_VX[localIndex]),"Infinite or NaN value in VX wavefield!" << localIndex);
+        if (isfinite(read_VX[localIndex])==false){
+            result_isfinite=false;
         }
-        
-        if (read_VZ.size()!=0){
-            //SCAI_ASSERT_ERROR(isfinite(read_VZ[localIndex]),"Infinite or NaN value in VZ wavefield!" << localIndex);
-            if (isfinite(read_VZ[localIndex])==false){
-                result_isfinite=false;
-            }
+    }
+    
+    if (read_VZ.size()!=0){
+        //SCAI_ASSERT_ERROR(isfinite(read_VZ[localIndex]),"Infinite or NaN value in VZ wavefield!" << localIndex);
+        if (isfinite(read_VZ[localIndex])==false){
+            result_isfinite=false;
         }
+    }
 
     return(result_isfinite);
 }
@@ -235,6 +235,69 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
 {
     timesAssign(rhs);
     return *this;
+}
+
+/*! \brief calculate a matrix to transform wavefield from XZY to YXZ
+ * \param modelCoordinates coordinates of the original model
+ * \param modelCoordinatesInversion coordinates of the averaged model
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::Wavefields<ValueType>::calcTransformMatrixXYZ(KITGPI::Acquisition::Coordinates<ValueType> modelCoordinates)
+{
+    // this function is only valid for grid partitioning with useVariableGrid=0
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    KITGPI::Acquisition::coordinate3D coordinateXZY;
+    
+    dmemo::DistributionPtr dist(transformMatrixXZY.getRowDistributionPtr());
+    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
+    dist->getOwnedIndexes(ownedIndexes);
+
+    lama::MatrixAssembly<ValueType> assemblyXZY;
+    IndexType columnIndex;
+
+    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
+        coordinateXZY = modelCoordinates.index2coordinate(ownedIndex);
+        columnIndex = coordinateXZY.y + coordinateXZY.x * NY + coordinateXZY.z * NX * NY;
+        assemblyXZY.push(ownedIndex, columnIndex, 1);
+    }
+
+    transformMatrixXZY.fillFromAssembly(assemblyXZY);
+    transformMatrixYXZ.assignTranspose(transformMatrixXZY);
+//     transformMatrixYXZ.writeToFile("wavefields/transformMatrixYXZ.mtx");
+//     transformMatrixXZY.writeToFile("wavefields/transformMatrixXZY.mtx");
+}
+
+/*! \brief Initialize wavefield transform matrix to XYZ
+ \param decomposeType decomposeType used to identify coordinate
+ \param dist distribution
+ \param ctx Context
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::Wavefields<ValueType>::initTransformMatrixXYZ(IndexType decomposeType, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
+{    
+    if (decomposeType != 0) {
+        transformMatrixYXZ = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixYXZ.setContextPtr(ctx);
+        transformMatrixXZY = lama::zero<SparseFormat>(dist, dist);
+        transformMatrixXZY.setContextPtr(ctx);
+    }
+}
+
+/*! \brief get transformMatrixYXZ
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::Wavefields<ValueType>::getTransformMatrixYXZ()
+{
+    return transformMatrixYXZ;
+}
+
+/*! \brief get transformMatrixXZY
+ */
+template <typename ValueType>
+scai::lama::CSRSparseMatrix<ValueType> const &KITGPI::Wavefields::Wavefields<ValueType>::getTransformMatrixXZY()
+{
+    return transformMatrixXZY;
 }
 
 template class KITGPI::Wavefields::Wavefields<float>;

@@ -10,6 +10,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
+#include "../Common/Hilbert.hpp"
 
 namespace KITGPI
 {
@@ -83,7 +84,13 @@ namespace KITGPI
             virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void timesAssign(ValueType rhs) = 0;
-            virtual void applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
+            
+            virtual void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;            
+            
+            void initTransformMatrixXYZ(IndexType decomposeType, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx);
+            void calcTransformMatrixXYZ(KITGPI::Acquisition::Coordinates<ValueType> modelCoordinates);
+            scai::lama::CSRSparseMatrix<ValueType> const &getTransformMatrixYXZ();
+            scai::lama::CSRSparseMatrix<ValueType> const &getTransformMatrixXZY();
 
             KITGPI::Wavefields::Wavefields<ValueType> &operator=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
@@ -94,6 +101,10 @@ namespace KITGPI
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
+            typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
+            SparseFormat transformMatrixYXZ;
+            SparseFormat transformMatrixXZY;
+            
             int numDimension;
             std::string equationType;
 

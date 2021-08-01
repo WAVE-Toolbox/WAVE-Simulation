@@ -45,7 +45,7 @@ namespace KITGPI
             ~ViscoEMEM(){};
 
             explicit ViscoEMEM(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
-            explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeabilityEM_const, ValueType conductivityEM_const, ValueType dielectricPermittivityEM_const, ValueType tauConductivityEM_const, ValueType tauDielectricPermittivityEM_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             //! Copy Constructor.
@@ -53,7 +53,7 @@ namespace KITGPI
 
             ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeabilityEM_const, ValueType conductivityEM_const, ValueType dielectricPermittivityEM_const, ValueType tauConductivityEM_const, ValueType tauDielectricPermittivityEM_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) override;
 
@@ -100,22 +100,22 @@ namespace KITGPI
 
             using ModelparameterEM<ValueType>::dirtyFlagAveraging;
             using ModelparameterEM<ValueType>::dirtyFlagVelocivityEM;            
-            using ModelparameterEM<ValueType>::dirtyFlagConductivityEMoptical;
-            using ModelparameterEM<ValueType>::dirtyFlagDielectricPermittivityEMoptical;
+            using ModelparameterEM<ValueType>::dirtyFlagElectricConductivityOptical;
+            using ModelparameterEM<ValueType>::dirtyFlagDielectricPermittivityOptical;
             
             using ModelparameterEM<ValueType>::velocivityEM;
-            using ModelparameterEM<ValueType>::magneticPermeabilityEM;
-            using ModelparameterEM<ValueType>::conductivityEM;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEM;
+            using ModelparameterEM<ValueType>::magneticPermeability;
+            using ModelparameterEM<ValueType>::electricConductivity;
+            using ModelparameterEM<ValueType>::dielectricPermittivity;
             using ModelparameterEM<ValueType>::porosity; //!< Vector storing porosity.
             using ModelparameterEM<ValueType>::saturation; //!< Vector storing saturation.
-            using ModelparameterEM<ValueType>::conductivityEMWater;        //!< Vector storing conductivityEMWater.
+            using ModelparameterEM<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
             using ModelparameterEM<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
-            using ModelparameterEM<ValueType>::conductivityEMoptical;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMoptical;
-            using ModelparameterEM<ValueType>::tauConductivityEM;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityEM;
+            using ModelparameterEM<ValueType>::electricConductivityOptical;
+            using ModelparameterEM<ValueType>::dielectricPermittivityOptical;
+            using ModelparameterEM<ValueType>::tauElectricConductivity;
+            using ModelparameterEM<ValueType>::tauDielectricPermittivity;
             using ModelparameterEM<ValueType>::relaxationFrequency;
             using ModelparameterEM<ValueType>::numRelaxationMechanisms;
 
@@ -130,23 +130,23 @@ namespace KITGPI
             using ModelparameterEM<ValueType>::averageMatrixXZ;
             using ModelparameterEM<ValueType>::averageMatrixYZ;
 
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityEMAverageYZ;
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityEMAverageXZ;
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityEMAverageXY;
-            using ModelparameterEM<ValueType>::conductivityEMopticalAverageY;
-            using ModelparameterEM<ValueType>::conductivityEMopticalAverageX;
-            using ModelparameterEM<ValueType>::conductivityEMopticalAverageZ;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMopticalAverageX;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMopticalAverageY;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMopticalAverageZ;
+            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageYZ;
+            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageXZ;
+            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageXY;
+            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageY;
+            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageX;
+            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageZ;
+            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageX;
+            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageY;
+            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageZ;
             
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMAverageX;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMAverageY;
-            using ModelparameterEM<ValueType>::dielectricPermittivityEMAverageZ;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityEMAverageX;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityEMAverageY;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityEMAverageZ;
-            using ModelparameterEM<ValueType>::tauDisplacementEM;
+            using ModelparameterEM<ValueType>::dielectricPermittivityAverageX;
+            using ModelparameterEM<ValueType>::dielectricPermittivityAverageY;
+            using ModelparameterEM<ValueType>::dielectricPermittivityAverageZ;
+            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageX;
+            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageY;
+            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageZ;
+            using ModelparameterEM<ValueType>::tauElectricDisplacement;
             
             /* Not requiered parameters */
         };

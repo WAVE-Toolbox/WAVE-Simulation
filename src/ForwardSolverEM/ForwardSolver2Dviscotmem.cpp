@@ -22,7 +22,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::initForwardSolver(Configur
 {
     SCAI_REGION("ForwardSolver.init2Dviscotmem");
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefHX().getDistributionPtr() == model.getMagneticPermeabilityEM().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+    SCAI_ASSERT_ERROR(wavefield.getRefHX().getDistributionPtr() == model.getMagneticPermeability().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
     auto dist = wavefield.getRefHX().getDistributionPtr();
@@ -78,20 +78,20 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::prepareForModelling(Modelparameter::ModelparameterEM<ValueType> const &model, ValueType DT)
 {
-    auto const &conductivityEMoptical = model.getConductivityEMoptical();
-    auto const &dielectricPermittivityEMoptical = model.getDielectricPermittivityEMoptical();
-    auto const &dielectricPermittivityEM = model.getDielectricPermittivityEM();
-    auto const &tauDielectricPermittivityEM = model.getTauDielectricPermittivityEM();
-    ValueType tauDisplacementEM = model.getTauDisplacementEM();
+    auto const &electricConductivityOptical = model.getElectricConductivityOptical();
+    auto const &dielectricPermittivityOptical = model.getDielectricPermittivityOptical();
+    auto const &dielectricPermittivity = model.getDielectricPermittivity();
+    auto const &tauDielectricPermittivity = model.getTauDielectricPermittivity();
+    ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
     scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
 
-    CaAverageZ = this->getAveragedCa(dielectricPermittivityEMoptical, conductivityEMoptical, DT);
+    CaAverageZ = this->getAveragedCa(dielectricPermittivityOptical, electricConductivityOptical, DT);
     
-    CbAverageZ = this->getAveragedCb(dielectricPermittivityEMoptical, conductivityEMoptical, DT);
+    CbAverageZ = this->getAveragedCb(dielectricPermittivityOptical, electricConductivityOptical, DT);
     
-    Cc = this->getCc(tauDisplacementEM, DT);
+    Cc = this->getCc(tauElectricDisplacement, DT);
     
-    CdAverageZ = this->getAveragedCd(dielectricPermittivityEM, tauDielectricPermittivityEM, numRelaxationMechanisms, tauDisplacementEM, DT);
+    CdAverageZ = this->getAveragedCd(dielectricPermittivity, tauDielectricPermittivity, numRelaxationMechanisms, tauElectricDisplacement, DT);
 }
 
 /*! \brief Running the 2-D tmem foward solver
@@ -123,8 +123,8 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     SCAI_REGION("ForwardSolver.timestep2Dtmem");
 
     /* Get references to required modelparameter */
-    auto const &inverseMagneticPermeabilityEMAverageYZ = model.getInverseMagneticPermeabilityEMAverageYZ();
-    auto const &inverseMagneticPermeabilityEMAverageXZ = model.getInverseMagneticPermeabilityEMAverageXZ();
+    auto const &inverseMagneticPermeabilityAverageYZ = model.getInverseMagneticPermeabilityAverageYZ();
+    auto const &inverseMagneticPermeabilityAverageXZ = model.getInverseMagneticPermeabilityAverageXZ();
         
     /* Get references to required wavefields */
     auto &hX = wavefield.getRefHX();
@@ -147,7 +147,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     if (useConvPML) {
         ConvPML.apply_ezy(update);
     }
-    update *= inverseMagneticPermeabilityEMAverageYZ;
+    update *= inverseMagneticPermeabilityAverageYZ;
     hX -= update;
 
     /* ----------------*/
@@ -158,7 +158,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_ezx(update_temp);
     }
     update = -update_temp;
-    update *= inverseMagneticPermeabilityEMAverageXZ;
+    update *= inverseMagneticPermeabilityAverageXZ;
     hY -= update;
     
     /* ----------------*/

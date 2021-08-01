@@ -79,6 +79,48 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configurat
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
+void KITGPI::Acquisition::ReceiversEM<ValueType>::initWholeSpace(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+{
+    std::vector<receiverSettings> allSettings;
+    receiverSettings thisSettings;
+    std::string dimension = config.get<std::string>("dimension");
+    std::string equationType = config.get<std::string>("equationType");
+    std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);   
+    std::transform(equationType.begin(), equationType.end(), equationType.begin(), ::tolower); 
+    
+    std::vector<scai::IndexType> receiverTypes;
+    if (dimension.compare("2d") == 0 && (equationType.compare("tmem") == 0 || equationType.compare("viscotmem") == 0)) {
+        receiverTypes.push_back(1);
+    } else if (dimension.compare("2d") == 0 && (equationType.compare("emem") == 0 || equationType.compare("viscoemem") == 0)) {
+        receiverTypes.push_back(2);
+        receiverTypes.push_back(3);
+    } else if (dimension.compare("3d") == 0 && (equationType.compare("emem") == 0 || equationType.compare("viscoemem") == 0)) {
+        receiverTypes.push_back(1);
+        receiverTypes.push_back(2);
+        receiverTypes.push_back(3);
+    }
+    for (unsigned i=0; i<receiverTypes.size(); i++) {
+        for (int index=0; index < dist_wavefield->getGlobalSize(); index++) {        
+            Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(index);
+            thisSettings.receiverCoords = coordinate;
+            thisSettings.receiverType = receiverTypes[i];            
+            allSettings.push_back(thisSettings);
+        }
+    }        
+    
+    CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
+        
+    init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
+template <typename ValueType>
 void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
 {
     std::vector<receiverSettings> allSettings;

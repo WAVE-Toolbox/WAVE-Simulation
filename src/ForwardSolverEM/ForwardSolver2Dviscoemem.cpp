@@ -23,7 +23,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::initForwardSolver(Configur
 {
     SCAI_REGION("ForwardSolver.init2Dviscoemem");
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefEX().getDistributionPtr() == model.getMagneticPermeabilityEM().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+    SCAI_ASSERT_ERROR(wavefield.getRefEX().getDistributionPtr() == model.getMagneticPermeability().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution */
     auto dist = wavefield.getRefEX().getDistributionPtr();
@@ -64,27 +64,27 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::prepareForModelling(Modelparameter::ModelparameterEM<ValueType> const &model, ValueType DT)
 {
-    auto const &conductivityEMopticalAverageX = model.getConductivityEMopticalAverageX();
-    auto const &conductivityEMopticalAverageY = model.getConductivityEMopticalAverageY();
-    auto const &dielectricPermittivityEMopticalAverageX = model.getDielectricPermittivityEMopticalAverageX();
-    auto const &dielectricPermittivityEMopticalAverageY = model.getDielectricPermittivityEMopticalAverageY();
-    auto const &dielectricPermittivityEMAverageX = model.getDielectricPermittivityEMAverageX();
-    auto const &dielectricPermittivityEMAverageY = model.getDielectricPermittivityEMAverageY();
-    auto const &tauDielectricPermittivityEMAverageX = model.getTauDielectricPermittivityEMAverageX();
-    auto const &tauDielectricPermittivityEMAverageY = model.getTauDielectricPermittivityEMAverageY();
-    ValueType tauDisplacementEM = model.getTauDisplacementEM();
+    auto const &electricConductivityOpticalAverageX = model.getElectricConductivityOpticalAverageX();
+    auto const &electricConductivityOpticalAverageY = model.getElectricConductivityOpticalAverageY();
+    auto const &dielectricPermittivityOpticalAverageX = model.getDielectricPermittivityOpticalAverageX();
+    auto const &dielectricPermittivityOpticalAverageY = model.getDielectricPermittivityOpticalAverageY();
+    auto const &dielectricPermittivityAverageX = model.getDielectricPermittivityAverageX();
+    auto const &dielectricPermittivityAverageY = model.getDielectricPermittivityAverageY();
+    auto const &tauDielectricPermittivityAverageX = model.getTauDielectricPermittivityAverageX();
+    auto const &tauDielectricPermittivityAverageY = model.getTauDielectricPermittivityAverageY();
+    ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
     scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
 
-    CaAverageX = this->getAveragedCa(dielectricPermittivityEMopticalAverageX, conductivityEMopticalAverageX, DT);
-    CaAverageY = this->getAveragedCa(dielectricPermittivityEMopticalAverageY, conductivityEMopticalAverageY, DT);
+    CaAverageX = this->getAveragedCa(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
+    CaAverageY = this->getAveragedCa(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
     
-    CbAverageX = this->getAveragedCb(dielectricPermittivityEMopticalAverageX, conductivityEMopticalAverageX, DT);
-    CbAverageY = this->getAveragedCb(dielectricPermittivityEMopticalAverageY, conductivityEMopticalAverageY, DT);
+    CbAverageX = this->getAveragedCb(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
+    CbAverageY = this->getAveragedCb(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
     
-    Cc = this->getCc(tauDisplacementEM, DT);
+    Cc = this->getCc(tauElectricDisplacement, DT);
     
-    CdAverageX = this->getAveragedCd(dielectricPermittivityEMAverageX, tauDielectricPermittivityEMAverageX, numRelaxationMechanisms, tauDisplacementEM, DT);
-    CdAverageY = this->getAveragedCd(dielectricPermittivityEMAverageY, tauDielectricPermittivityEMAverageY, numRelaxationMechanisms, tauDisplacementEM, DT);
+    CdAverageX = this->getAveragedCd(dielectricPermittivityAverageX, tauDielectricPermittivityAverageX, numRelaxationMechanisms, tauElectricDisplacement, DT);
+    CdAverageY = this->getAveragedCd(dielectricPermittivityAverageY, tauDielectricPermittivityAverageY, numRelaxationMechanisms, tauElectricDisplacement, DT);
 }
 
 /*! \brief Initialitation of the boundary conditions
@@ -129,7 +129,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     SCAI_REGION("ForwardSolver.timestep2Dviscoemem");
 
     /* Get references to required modelparameter */
-    auto const &inverseMagneticPermeabilityEMAverageXY = model.getInverseMagneticPermeabilityEMAverageXY();
+    auto const &inverseMagneticPermeabilityAverageXY = model.getInverseMagneticPermeabilityAverageXY();
             
     /* Get references to required wavefields */
     auto &hZ = wavefield.getRefHZ();
@@ -157,7 +157,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_exy(update_temp);
     }
     update -= update_temp;
-    update *= inverseMagneticPermeabilityEMAverageXY;
+    update *= inverseMagneticPermeabilityAverageXY;
     hZ -= update;
 
     /* ----------------*/

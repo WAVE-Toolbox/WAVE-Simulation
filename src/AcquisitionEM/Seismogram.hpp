@@ -86,6 +86,7 @@ namespace KITGPI
             /* Overloading Operators */
             KITGPI::Acquisition::SeismogramEM<ValueType> operator*=(ValueType const &rhs);
             KITGPI::Acquisition::SeismogramEM<ValueType> operator*=(KITGPI::Acquisition::SeismogramEM<ValueType> const &rhs);
+            KITGPI::Acquisition::SeismogramEM<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             KITGPI::Acquisition::SeismogramEM<ValueType> operator+(KITGPI::Acquisition::SeismogramEM<ValueType> const &rhs) const;
             KITGPI::Acquisition::SeismogramEM<ValueType> operator+=(KITGPI::Acquisition::SeismogramEM<ValueType> const &rhs);
             KITGPI::Acquisition::SeismogramEM<ValueType> operator-(KITGPI::Acquisition::SeismogramEM<ValueType> const &rhs) const;

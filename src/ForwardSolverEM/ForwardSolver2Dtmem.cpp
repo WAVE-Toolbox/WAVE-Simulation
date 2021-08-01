@@ -22,7 +22,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::initForwardSolver(Configuration
 {
     SCAI_REGION("ForwardSolver.init2Dtmem");
     /* Check if distributions of wavefields and models are the same */
-    SCAI_ASSERT_ERROR(wavefield.getRefHX().getDistributionPtr() == model.getMagneticPermeabilityEM().getDistributionPtr(), "Distributions of wavefields and models are not the same");
+    SCAI_ASSERT_ERROR(wavefield.getRefHX().getDistributionPtr() == model.getMagneticPermeability().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
     /* Get distribibution of the wavefields */
     auto dist = wavefield.getRefHX().getDistributionPtr();
@@ -78,11 +78,11 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareForModelling(Modelparameter::ModelparameterEM<ValueType> const &model, ValueType DT)
 {
-    auto const &conductivityEM = model.getConductivityEM();
-    auto const &dielectricPermittivityEM = model.getDielectricPermittivityEM();
+    auto const &electricConductivity = model.getElectricConductivity();
+    auto const &dielectricPermittivity = model.getDielectricPermittivity();
     
-    CaAverageZ = this->getAveragedCa(dielectricPermittivityEM, conductivityEM, DT);
-    CbAverageZ = this->getAveragedCb(dielectricPermittivityEM, conductivityEM, DT);
+    CaAverageZ = this->getAveragedCa(dielectricPermittivity, electricConductivity, DT);
+    CbAverageZ = this->getAveragedCb(dielectricPermittivity, electricConductivity, DT);
 }
 
 /*! \brief Running the 2-D tmem foward solver
@@ -112,15 +112,9 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeo
     SCAI_REGION("ForwardSolver.timestep2Dtmem");
 
     /* Get references to required modelparameter */
-    auto const &inverseMagneticPermeabilityEMAverageYZ = model.getInverseMagneticPermeabilityEMAverageYZ();
-    auto const &inverseMagneticPermeabilityEMAverageXZ = model.getInverseMagneticPermeabilityEMAverageXZ();
-        
-    /* Get references to required wavefields */      
-//     typename Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldtemp(Wavefields::FactoryEM<ValueType>::Create("2d", "tmem"));
-//     *wavefieldtemp = wavefield;
-//     std::shared_ptr<typename Wavefields::FD2Dtmem<ValueType>> wavefieldFD2Dtmem = std::dynamic_pointer_cast<typename Wavefields::FD2Dtmem<ValueType>>(wavefieldtemp);
-//     SCAI_ASSERT_ERROR(wavefieldFD2Dtmem != NULL, "wavefieldFD2Dtmem == NULL");
-//     
+    auto const &inverseMagneticPermeabilityAverageYZ = model.getInverseMagneticPermeabilityAverageYZ();
+    auto const &inverseMagneticPermeabilityAverageXZ = model.getInverseMagneticPermeabilityAverageXZ();
+   
     auto &hX = wavefield.getRefHX();
     auto &hY = wavefield.getRefHY();    
     auto &eZ = wavefield.getRefEZ();
@@ -140,7 +134,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeo
     if (useConvPML) {
         ConvPML.apply_ezy(update);
     }
-    update *= inverseMagneticPermeabilityEMAverageYZ;
+    update *= inverseMagneticPermeabilityAverageYZ;
     hX -= update;
 
     /* ----------------*/
@@ -151,7 +145,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeo
         ConvPML.apply_ezx(update_temp);
     }
     update = -update_temp;
-    update *= inverseMagneticPermeabilityEMAverageXZ;
+    update *= inverseMagneticPermeabilityAverageXZ;
     hY -= update;
     
     /* ----------------*/

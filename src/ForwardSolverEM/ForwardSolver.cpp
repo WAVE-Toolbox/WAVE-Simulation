@@ -55,8 +55,8 @@ void KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::prepareBoundaries(Config
 
 /*! \brief calculate averaged AveragedCinv which will be used in Ca, Cb
  *
- \param vecAvDielectricPermittivityEM Averaged dielectricPermittivityEM vector
- \param vecAvConductivityEM Averaged ConductivityEM vector
+ \param vecAvDielectricPermittivity Averaged dielectricPermittivity vector
+ \param vecAvElectricConductivity Averaged ElectricConductivity vector
  \param DT time step
  
  \begin{align*}
@@ -64,11 +64,11 @@ void KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::prepareBoundaries(Config
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCinv(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT)
+scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCinv(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT)
 {
     scai::lama::DenseVector<ValueType> averagedCinv;
-    averagedCinv = 0.5 / vecAvDielectricPermittivityEM;
-    averagedCinv *= vecAvConductivityEM;
+    averagedCinv = 0.5 / vecAvDielectricPermittivity;
+    averagedCinv *= vecAvElectricConductivity;
     averagedCinv *= DT;
     averagedCinv += 1;
     averagedCinv = 1 / averagedCinv;
@@ -78,8 +78,8 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
 
 /*! \brief calculate averaged AveragedCa
  *
- \param vecAvDielectricPermittivityEM Averaged dielectricPermittivityEM vector
- \param vecAvConductivityEM Averaged ConductivityEM vector
+ \param vecAvDielectricPermittivity Averaged dielectricPermittivity vector
+ \param vecAvElectricConductivity Averaged ElectricConductivity vector
  \param DT time step
  
  \begin{align*}
@@ -87,22 +87,22 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCa(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT)
+scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCa(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT)
 {
     scai::lama::DenseVector<ValueType> averagedCa;
-    averagedCa = 0.5 / vecAvDielectricPermittivityEM;
-    averagedCa *= vecAvConductivityEM;
+    averagedCa = 0.5 / vecAvDielectricPermittivity;
+    averagedCa *= vecAvElectricConductivity;
     averagedCa *= DT;
     averagedCa = 1 - averagedCa;
-    averagedCa *= getAveragedCinv(vecAvDielectricPermittivityEM, vecAvConductivityEM, DT);
+    averagedCa *= getAveragedCinv(vecAvDielectricPermittivity, vecAvElectricConductivity, DT);
     
     return averagedCa;
 }
 
 /*! \brief calculate averaged AveragedCb
  *
- \param vecAvDielectricPermittivityEM Averaged dielectricPermittivityEM vector
- \param vecAvConductivityEM Averaged ConductivityEM vector
+ \param vecAvDielectricPermittivity Averaged dielectricPermittivity vector
+ \param vecAvElectricConductivity Averaged ElectricConductivity vector
  \param DT time step
  
  \begin{align*}
@@ -111,18 +111,18 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCb(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEM, scai::lama::Vector<ValueType> const &vecAvConductivityEM, ValueType DT)
+scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCb(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT)
 {
     scai::lama::DenseVector<ValueType> averagedCb;
-    averagedCb = 1 / vecAvDielectricPermittivityEM;
-    averagedCb *= getAveragedCinv(vecAvDielectricPermittivityEM, vecAvConductivityEM, DT);
+    averagedCb = 1 / vecAvDielectricPermittivity;
+    averagedCb *= getAveragedCinv(vecAvDielectricPermittivity, vecAvElectricConductivity, DT);
     
     return averagedCb;
 }
 
 /*! \brief calculate Cc
  *
- \param tauDisplacementEM relaxtiontime of electric displacement
+ \param tauElectricDisplacement relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -130,19 +130,19 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
  \end{align*}
  */
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tauDisplacementEM, ValueType DT)
+ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tauElectricDisplacement, ValueType DT)
 {
     ValueType Cc;
-    Cc = (1 - 0.5 * DT / tauDisplacementEM) / (1 + 0.5 * DT / tauDisplacementEM);
+    Cc = (1 - 0.5 * DT / tauElectricDisplacement) / (1 + 0.5 * DT / tauElectricDisplacement);
     
     return Cc;
 }
 
 /*! \brief calculate averaged AveragedCd
  *
- \param vecAvDielectricPermittivityEMstatic static Dielectric Permittivity
- \param vecAvTauDielectricPermittivityEM relaxtiontime of Dielectric Permittivity
- \param tauDisplacementEM relaxtiontime of electric displacement
+ \param vecAvDielectricPermittivitystatic static Dielectric Permittivity
+ \param vecAvTauDielectricPermittivity relaxtiontime of Dielectric Permittivity
+ \param tauElectricDisplacement relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -150,14 +150,14 @@ ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tau
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivityEMstatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivityEM, scai::IndexType numRelaxationMechanisms, ValueType tauDisplacementEM, ValueType DT)
+scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, ValueType tauElectricDisplacement, ValueType DT)
 {
     scai::lama::DenseVector<ValueType> averagedCd;
     ValueType tempValue;
-    tempValue = 1 / (1 + 0.5 * DT / tauDisplacementEM);
-    tempValue /= (numRelaxationMechanisms * tauDisplacementEM * tauDisplacementEM);
-    averagedCd = vecAvTauDielectricPermittivityEM * tempValue;
-    averagedCd *= vecAvDielectricPermittivityEMstatic;
+    tempValue = 1 / (1 + 0.5 * DT / tauElectricDisplacement);
+    tempValue /= (numRelaxationMechanisms * tauElectricDisplacement * tauElectricDisplacement);
+    averagedCd = vecAvTauDielectricPermittivity * tempValue;
+    averagedCd *= vecAvDielectricPermittivitystatic;
     averagedCd *= -DT; // please note here we include DT into the coefficient
     
     return averagedCd;

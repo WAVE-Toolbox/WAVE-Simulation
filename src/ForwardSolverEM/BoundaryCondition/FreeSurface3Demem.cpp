@@ -19,7 +19,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface3Demem<ValueType>::exc
 
     /* Apply horizontal update, which replaces the vertical one 
     * On the free surface the verical velocity derivarive can be expressed by 
-    * vyy = ((2mu / pi ) -1) (vxx+hzz) where mu = dielectricPermittivityEM and pi = velocivityEM
+    * vyy = ((2mu / pi ) -1) (vxx+hzz) where mu = dielectricPermittivity and pi = velocivityEM
     * The original update,
     * sxx = pi * ( vxx+vyy+hzz ) - 2mu *(hzz+vyy )
     * will be exchanged with 

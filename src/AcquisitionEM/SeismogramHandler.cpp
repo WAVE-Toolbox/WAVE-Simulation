@@ -322,6 +322,20 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setInverseAGC(Seismogr
     }
 }
 
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::SeismogramHandlerEM<ValueType> KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::operator*=(scai::lama::DenseVector<ValueType> const &rhs)
+{
+    for (auto &i : seismo) {
+        i *= rhs;
+    }
+
+    return *this;
+}
+
 //! \brief Check seismograms for inf or NaN
 /*!
  */

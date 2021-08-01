@@ -244,7 +244,7 @@ namespace KITGPI
         void checkNumericalArtefactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::ModelparameterEM<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
-                auto dist = model.getMagneticPermeabilityEM().getDistributionPtr();
+                auto dist = model.getMagneticPermeability().getDistributionPtr();
                 auto commShot = dist->getCommunicatorPtr();
                 scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
                 dist->getOwnedIndexes(ownedIndexes);

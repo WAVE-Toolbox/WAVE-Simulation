@@ -78,7 +78,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::write(IndexType snapType, std::str
         std::unique_ptr<lama::Vector<ValueType>> div_Ptr(HX.newVector());
         scai::lama::Vector<ValueType> &div = *div_Ptr;
 
-        this->getCurl(derivatives, curl, model.getDielectricPermittivityEM());
+        this->getCurl(derivatives, curl, model.getDielectricPermittivity());
         this->getDiv(derivatives, div, model.getVelocityEM());
 
         IO::writeVector(curl, fileName + ".CURL." + timeStep, fileFormat);
@@ -89,6 +89,12 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::write(IndexType snapType, std::str
     }
 }
 
+/*! \brief Set all wavefields to zero.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Demem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+{    
+}
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
@@ -143,7 +149,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::get
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &InverseDielectricPermittivityEM)
+void KITGPI::Wavefields::FD3Demem<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &InverseDielectricPermittivity)
 {
     scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
@@ -167,7 +173,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::getCurl(KITGPI::ForwardSolver::Der
     curl += update;
 
     // conversion to energy according to Dougherty and Stephen (PAGEOPH, 1988)
-    curl *= InverseDielectricPermittivityEM;
+    curl *= InverseDielectricPermittivity;
     curl = scai::lama::sqrt(curl);
 }
 
@@ -317,7 +323,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Demem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
 {
     HX = lhs * rhs.getRefHX();
     HY = lhs * rhs.getRefHY();

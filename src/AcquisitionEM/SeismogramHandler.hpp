@@ -48,6 +48,7 @@ namespace KITGPI
             scai::IndexType getNumTracesGlobal(SeismogramTypeEM type) const;
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramTypeEM type) const;
+            KITGPI::Acquisition::SeismogramHandlerEM<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             bool isFinite();
 
           private:

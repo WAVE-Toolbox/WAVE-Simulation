@@ -354,7 +354,6 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::copySignalsToSeismogramHandler()
     SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramTypeEM::HZ), " Size mismatch ");
 }
 
-
 /*! \brief get source signal
  *
  */
@@ -365,6 +364,15 @@ lama::DenseMatrix<ValueType> KITGPI::Acquisition::SourcesEM<ValueType>::getsourc
     return(signal_out);
 }
 
+/*! \brief set source signal
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SourcesEM<ValueType>::setsourcesignal(lama::DenseMatrix<ValueType> setsourcesignal)
+{
+    signals.getData() = setsourcesignal;
+    copySignalsToSeismogramHandler();
+}
 
 /*! \brief Allocation of the source signals matrix
  *

@@ -43,6 +43,7 @@ namespace KITGPI
 
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
+            void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
 
           private:
             SeismogramEM<ValueType> signals; //!< Source signals

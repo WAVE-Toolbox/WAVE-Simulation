@@ -13,7 +13,10 @@
 #include <scai/tracing.hpp>
 #include <scai/lama/fft.hpp>
 #include "../Configuration/Configuration.hpp"
+#include "Hilbert.hpp"
+#include "medianfilter.hpp"
 
+using namespace scai;
 namespace KITGPI
 {
     //! \brief Common namespace
@@ -61,15 +64,15 @@ namespace KITGPI
         \param compareType The relation the values in searchVector and threshold should have. Possible values are 1 := <, 2 := >, 3 := <=, 4 := >=, 5 := ==
         */
         template <typename ValueType>
-        void searchAndReplace(scai::lama::DenseVector<ValueType> &searchVector, ValueType threshold, ValueType replaceValue, scai::IndexType compareType)
+        void searchAndReplace(lama::DenseVector<ValueType> &searchVector, ValueType threshold, ValueType replaceValue, IndexType compareType)
         {
             // needs rework with new LAMA features
-            scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
-            scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
+            hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
+            hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
 
             switch (compareType) {
             case 1: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     if (write_searchVector[i] < threshold) {
                         write_searchVector[i] = replaceValue;
                     }
@@ -77,7 +80,7 @@ namespace KITGPI
                 break;
             }
             case 2: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     if (write_searchVector[i] > threshold) {
                         write_searchVector[i] = replaceValue;
                     }
@@ -85,7 +88,7 @@ namespace KITGPI
                 break;
             }
             case 3: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     if (write_searchVector[i] <= threshold) {
                         write_searchVector[i] = replaceValue;
                     }
@@ -93,7 +96,7 @@ namespace KITGPI
                 break;
             }
             case 4: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     if (write_searchVector[i] >= threshold) {
                         write_searchVector[i] = replaceValue;
                     }
@@ -101,7 +104,7 @@ namespace KITGPI
                 break;
             }
             case 5: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     if (write_searchVector[i] == threshold) {
                         write_searchVector[i] = replaceValue;
                     }
@@ -121,13 +124,13 @@ namespace KITGPI
         \param replaceValue Value NaN and Inf are set to
         */
         template <typename ValueType>
-        void replaceInvalid(scai::lama::DenseVector<ValueType> &searchVector, ValueType replaceValue)
+        void replaceInvalid(lama::DenseVector<ValueType> &searchVector, ValueType replaceValue)
         {
             // needs rework with new LAMA features
-            scai::hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
-            scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
+            hmemo::HArray<ValueType> *searchVector_Ptr = &searchVector.getLocalValues();
+            hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
 
-            for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+            for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                 if (std::isnan(write_searchVector[i]) || write_searchVector[i] == std::numeric_limits<ValueType>::infinity() || -write_searchVector[i] == std::numeric_limits<ValueType>::infinity()) { //std::isinf doesn't work for whatever reason
                     write_searchVector[i] = replaceValue;
                 }
@@ -142,17 +145,17 @@ namespace KITGPI
         \param velocityS Input vector
         */
         template <typename ValueType>
-        void replaceVpwithVs(scai::lama::DenseVector<ValueType> &velocityP, scai::lama::DenseVector<ValueType> const &velocityS, ValueType VpVsRatio, scai::IndexType compareType)
+        void replaceVpwithVs(lama::DenseVector<ValueType> &velocityP, lama::DenseVector<ValueType> const &velocityS, ValueType VpVsRatio, IndexType compareType)
         {
-            scai::hmemo::HArray<ValueType> *searchVector_Ptr = &velocityP.getLocalValues();
-            scai::hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
+            hmemo::HArray<ValueType> *searchVector_Ptr = &velocityP.getLocalValues();
+            hmemo::WriteAccess<ValueType> write_searchVector(*searchVector_Ptr);
             
-            auto read_velocityS = scai::hmemo::hostReadAccess(velocityS.getLocalValues());
+            auto read_velocityS = hmemo::hostReadAccess(velocityS.getLocalValues());
             ValueType replaceValue;
             
             switch (compareType) {
             case 1: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     replaceValue = VpVsRatio * read_velocityS[i];
                     if (write_searchVector[i] < replaceValue) { 
                         write_searchVector[i] = replaceValue;
@@ -161,7 +164,7 @@ namespace KITGPI
                 break;
             }
             case 2: {
-                for (scai::IndexType i = 0; i < write_searchVector.size(); ++i) {
+                for (IndexType i = 0; i < write_searchVector.size(); ++i) {
                     replaceValue = VpVsRatio * read_velocityS[i];
                     if (write_searchVector[i] > replaceValue) { 
                         write_searchVector[i] = replaceValue;
@@ -180,12 +183,12 @@ namespace KITGPI
         \param nt number the next power of two should be calculated for
         */
         template <typename ValueType>
-        scai::IndexType calcNextPowTwo(scai::IndexType nt)
+        IndexType calcNextPowTwo(IndexType nt)
         {
-            ValueType temp = scai::common::Math::log(ValueType(nt));
-            temp /= scai::common::Math::log(2.0);
-            temp = scai::common::Math::ceil(temp);
-            temp = scai::common::Math::pow(ValueType(2.0), temp);
+            ValueType temp = common::Math::log(ValueType(nt));
+            temp /= common::Math::log(2.0);
+            temp = common::Math::ceil(temp);
+            temp = common::Math::pow(ValueType(2.0), temp);
             return temp;
         }
 
@@ -195,33 +198,33 @@ namespace KITGPI
         \param resamplingCoeff resampling coefficient
         */
         template <typename ValueType>
-        void calcResampleMat(scai::lama::CSRSparseMatrix<ValueType> &rMat, scai::IndexType numCols, ValueType resamplingCoeff)
+        void calcResampleMat(lama::CSRSparseMatrix<ValueType> &rMat, IndexType numCols, ValueType resamplingCoeff)
         {
-            scai::lama::MatrixAssembly<ValueType> assembly;
+            lama::MatrixAssembly<ValueType> assembly;
 
-            scai::IndexType numColsNew = scai::IndexType(scai::common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
+            IndexType numColsNew = IndexType(common::Math::floor<ValueType>(ValueType(numCols - 1) / ValueType(resamplingCoeff))) + 1; // number of samples after resampling
 
-            scai::IndexType columnIndex = 0;
+            IndexType columnIndex = 0;
             ValueType value = 0.0;
             ValueType sampleCoeff = 1.0;
-            for (scai::IndexType rowIndex = 0; rowIndex < numColsNew; rowIndex++) {
+            for (IndexType rowIndex = 0; rowIndex < numColsNew; rowIndex++) {
 
                 ValueType relativeIndex = rowIndex * resamplingCoeff;
                 //leftValue
-                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex);
+                columnIndex = common::Math::floor<ValueType>(relativeIndex);
                 if (columnIndex < numCols) {
                     value = 1 - fmod(relativeIndex, sampleCoeff);
                     assembly.push(columnIndex, rowIndex, value);
                 }
                 //rightValue
-                columnIndex = scai::common::Math::floor<ValueType>(relativeIndex) + 1;
+                columnIndex = common::Math::floor<ValueType>(relativeIndex) + 1;
                 if (columnIndex < numCols) {
                     value = fmod(relativeIndex, sampleCoeff);
                     assembly.push(columnIndex, rowIndex, value);
                 }
             }
 
-            scai::lama::CSRSparseMatrix<ValueType> csrMatrix;
+            lama::CSRSparseMatrix<ValueType> csrMatrix;
             csrMatrix.allocate(numCols, numColsNew);
             csrMatrix.fillFromAssembly(assembly);
 
@@ -233,9 +236,9 @@ namespace KITGPI
         \param DT time sampling interval in seconds
         */
         template <typename ValueType>
-        scai::IndexType time2index(ValueType time, ValueType DT)
+        IndexType time2index(ValueType time, ValueType DT)
         {
-            return (static_cast<scai::IndexType>(time / DT + 0.5));
+            return (static_cast<IndexType>(time / DT + 0.5));
         }
 
         /*! \brief check is seismic or EM
@@ -259,72 +262,29 @@ namespace KITGPI
 
             return isSeismic;
         }
-                
-        /*! \brief apply Hilbert transform to data
-        *
-        \param data Input matrix
-        */
-        template <typename ValueType>
-        void calcHilbert(scai::lama::DenseMatrix<ValueType> &data)
-        {
-            typedef scai::common::Complex<scai::RealType<ValueType>> ComplexValueType;
-            
-            scai::IndexType nfLength = Common::calcNextPowTwo<ValueType>(data.getNumColumns());
-            auto nsDist = data.getColDistributionPtr();
-            auto nfDist = std::make_shared<scai::dmemo::NoDistribution>(nfLength);
-            scai::lama::DenseVector<ComplexValueType> h;
-            scai::lama::DenseVector<ComplexValueType> fDataTrace;
-            scai::lama::DenseMatrix<ComplexValueType> fData;
-            
-            /* calculation of the vector h */
-            h = scai::lama::fill<scai::lama::DenseVector<ComplexValueType>>(nfLength, 0.0);
-            if ((2*(nfLength/2))==nfLength) {
-                /* nfLength is even */
-                h[0]=1.0;
-                h[nfLength/2]=1.0;
-                for (int i=1;i<(nfLength/2);i++) {
-                    h[i] = 2.0;                 
-                }
-            } else {
-                /* nfLength is odd */
-                h[0]=1.0;
-                for (int i=1;i<((nfLength+1)/2);i++) {
-                    h[i]=2.0;                
-                }
-            }
-            
-            fData = scai::lama::cast<ComplexValueType>(data);
-            fData.resize(data.getRowDistributionPtr(), std::make_shared<scai::dmemo::NoDistribution>(nfLength));
-
-            scai::lama::fft<ComplexValueType>(fData, 1);
-
-            fData.scaleColumns(h);
-
-            fData *= (1.0 / ValueType(nfLength)); // proper fft normalization
-
-            scai::lama::ifft<ComplexValueType>(fData, 1);
-            fData.resize(data.getRowDistributionPtr(), data.getColDistributionPtr());
-            fData = -fData;
-            data = scai::lama::imag(fData);
-        }
-        
+                        
         /*! \brief calculate envelope of the data
         *
         \param data Input matrix
         */
         template <typename ValueType>
-        void calcEnvelope(scai::lama::DenseMatrix<ValueType> &data)
+        void calcEnvelope(lama::DenseMatrix<ValueType> &data)
         {
-            scai::lama::DenseMatrix<ValueType> dataImag = data;
-            scai::lama::DenseVector<ValueType> dataTrace;
-            calcHilbert(dataImag);
-            data.binaryOp(data, scai::common::BinaryOp::MULT, data);
-            dataImag.binaryOp(dataImag, scai::common::BinaryOp::MULT, dataImag);
-            data.binaryOp(data, scai::common::BinaryOp::ADD, dataImag);
+            lama::DenseMatrix<ValueType> dataImag = data;
+            lama::DenseVector<ValueType> dataTrace;
+            Hilbert::HilbertFFT<ValueType> hilbertHandler;
+//             Hilbert::HilbertFIR<ValueType> hilbertHandler;
+            IndexType kernelSize = Common::calcNextPowTwo<ValueType>(data.getNumColumns());  
+            hilbertHandler.setCoefficientLength(kernelSize);
+            hilbertHandler.calcHilbertCoefficient();
+            hilbertHandler.hilbert(dataImag);
+            data.binaryOp(data, common::BinaryOp::MULT, data);
+            dataImag.binaryOp(dataImag, common::BinaryOp::MULT, dataImag);
+            data.binaryOp(data, common::BinaryOp::ADD, dataImag);
             for (int i=0; i<data.getNumRows(); i++) {
                 data.getRow(dataTrace, i);   
-                dataTrace = scai::lama::sqrt(dataTrace);
-                data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                dataTrace = lama::sqrt(dataTrace);
+                data.setRow(dataTrace, i, common::BinaryOp::COPY);               
             }
         }
         
@@ -333,47 +293,47 @@ namespace KITGPI
         \param data Input matrix
         */
         template <typename ValueType>
-        void calcInstantaneousPhase(scai::lama::DenseMatrix<ValueType> &data, scai::IndexType const phaseType)
+        void calcInstantaneousPhase(lama::DenseMatrix<ValueType> &data, IndexType const phaseType)
         {
-            scai::lama::DenseMatrix<ValueType> dataImag = data;
-            scai::lama::DenseVector<ValueType> dataTrace;
-            calcHilbert(dataImag);
+            lama::DenseMatrix<ValueType> dataImag = data;
+            lama::DenseVector<ValueType> dataTrace;
+//             calcHilbertFFT(dataImag);
             dataImag = -dataImag;
             if (phaseType == 1) { // phase wrapped in [-pi/2 pi/2]
-                data.binaryOp(dataImag, scai::common::BinaryOp::DIVIDE, data);
+                data.binaryOp(dataImag, common::BinaryOp::DIVIDE, data);
                 for (int i=0; i<data.getNumRows(); i++) {
                     data.getRow(dataTrace, i);   
-                    dataTrace = scai::lama::atan(dataTrace);
-                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                    dataTrace = lama::atan(dataTrace);
+                    data.setRow(dataTrace, i, common::BinaryOp::COPY);               
                 }
             } else if (phaseType == 2) { // phase wrapped in [-pi pi]
-                scai::lama::DenseVector<ValueType> dataImagTrace;
+                lama::DenseVector<ValueType> dataImagTrace;
                 for (int i=0; i<data.getNumRows(); i++) {
                     data.getRow(dataTrace, i);   
                     dataImag.getRow(dataImagTrace, i);   
-                    for (scai::IndexType tStep = 0; tStep < data.getNumColumns(); tStep++) {
-                        ValueType phase = scai::common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); 
+                    for (IndexType tStep = 0; tStep < data.getNumColumns(); tStep++) {
+                        ValueType phase = common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); 
                         dataTrace.setValue(tStep, phase);
                     }
-                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                    data.setRow(dataTrace, i, common::BinaryOp::COPY);               
                 }
             } else if (phaseType == 3) { // phase unwrapped
-                scai::lama::DenseVector<ValueType> dataImagTrace;
+                lama::DenseVector<ValueType> dataImagTrace;
                 for (int i=0; i<data.getNumRows(); i++) {
                     data.getRow(dataTrace, i);   
                     dataImag.getRow(dataImagTrace, i);   
-                    ValueType phase = scai::common::Math::atan2(dataImagTrace.getValue(0), dataTrace.getValue(0)); // phase wrapped in [-pi pi]
+                    ValueType phase = common::Math::atan2(dataImagTrace.getValue(0), dataTrace.getValue(0)); // phase wrapped in [-pi pi]
                     dataTrace.setValue(0, phase);
                     dataImagTrace.setValue(0, phase);
-                    for (scai::IndexType tStep = 1; tStep < data.getNumColumns(); tStep++) {
-                        phase = scai::common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); // phase wrapped in [-pi pi]
+                    for (IndexType tStep = 1; tStep < data.getNumColumns(); tStep++) {
+                        phase = common::Math::atan2(dataImagTrace.getValue(tStep), dataTrace.getValue(tStep)); // phase wrapped in [-pi pi]
                         dataImagTrace.setValue(tStep, phase);
                         ValueType d = phase - dataImagTrace.getValue(tStep-1);
                         d = d > M_PI ? d - 2 * M_PI : (d < -M_PI ? d + 2 * M_PI : d);
                         phase = dataTrace.getValue(tStep-1) + d; // phase unwrapped
                         dataTrace.setValue(tStep, phase);
                     }
-                    data.setRow(dataTrace, i, scai::common::BinaryOp::COPY);               
+                    data.setRow(dataTrace, i, common::BinaryOp::COPY);               
                 }
             }
         }
@@ -385,21 +345,21 @@ namespace KITGPI
         \param dataSyn Input data simulated
         */
         template <typename ValueType>
-        void calcInstantaneousPhaseResidual(scai::lama::DenseMatrix<ValueType> &dataRedsidual, scai::lama::DenseMatrix<ValueType> dataObs, scai::lama::DenseMatrix<ValueType> dataSyn)
+        void calcInstantaneousPhaseResidual(lama::DenseMatrix<ValueType> &dataRedsidual, lama::DenseMatrix<ValueType> dataObs, lama::DenseMatrix<ValueType> dataSyn)
         {
-            scai::IndexType phaseType = 3;
+            IndexType phaseType = 3;
             Common::calcInstantaneousPhase(dataObs, phaseType);
             Common::calcInstantaneousPhase(dataSyn, phaseType);
-            scai::lama::DenseVector<ValueType> dataObsTrace;
-            scai::lama::DenseVector<ValueType> dataSynTrace;
-            scai::lama::DenseVector<ValueType> dataResTrace1;
-            scai::lama::DenseVector<ValueType> dataResTrace2;
-            scai::lama::DenseVector<ValueType> dataResTraceMin;
+            lama::DenseVector<ValueType> dataObsTrace;
+            lama::DenseVector<ValueType> dataSynTrace;
+            lama::DenseVector<ValueType> dataResTrace1;
+            lama::DenseVector<ValueType> dataResTrace2;
+            lama::DenseVector<ValueType> dataResTraceMin;
             for (int i=0; i<dataObs.getNumRows(); i++) {
                 dataObs.getRow(dataObsTrace, i);   
                 dataSyn.getRow(dataSynTrace, i);   
                 dataResTrace1 = dataObsTrace - dataSynTrace;
-                scai::IndexType phaseShift = 1;
+                IndexType phaseShift = 1;
                 dataResTrace2 = dataResTrace1 + phaseShift * 2 * M_PI;
                 dataResTraceMin = dataResTrace1;                
                 if (dataResTrace2.l2Norm() <= dataResTrace1.l2Norm()) {    
@@ -425,10 +385,10 @@ namespace KITGPI
                     }
                 }
 //                 std::cout<< "phaseShift " << i << " = " << phaseShift <<std::endl;
-                dataRedsidual.setRow(dataResTraceMin, i, scai::common::BinaryOp::COPY); 
+                dataRedsidual.setRow(dataResTraceMin, i, common::BinaryOp::COPY); 
             }
         }
-        
+                
         /*! \brief Get the parameter from a stream configuration file
         \param config config handle
         \param parameterName parameter name
@@ -446,6 +406,58 @@ namespace KITGPI
                 temp = configBig.get<ReturnType>(tempName);
             }      
             return (temp);
-        }               
+        }        
+        
+        /*! \brief Apply a 2D median filter to model/gradient parameter to filter out the extreme values
+        \param vecter2D model/gradient parameter vector
+        \param NX Number of grid points in x-direction
+        \param NY Number of grid points in y-direction
+        \param spatialFDorder spatial FD order used in Derivatives calculation
+        */     
+        template<typename ValueType>
+        void applyMedianFilterTo2DVector(lama::DenseVector<ValueType> &vecter2D, IndexType NX, IndexType NY, IndexType spatialFDorder)
+        {    
+            typedef float element;
+            element signal_2D[ NY * NX ] = {0};
+//             signal_2D = lama::cast<element>(vecter2D);
+            for (int i = 0; i < NY * NX; i++) {
+                signal_2D[i] = vecter2D[i];
+            }
+            element *result;
+            result = (element *)malloc(NY * NX * sizeof(element));
+
+            medianfilter(signal_2D, result, NX, NY, spatialFDorder*2+1, 0);
+            
+            for (int i = 0; i < NY * NX; i++) {
+                vecter2D[i] = *(result + i);
+            }
+//             vecter2D = lama::cast<ValueType>(result);
+        }
+        
+        /*! \brief Apply a 1D median filter to model/gradient parameter to filter out the extreme values
+        \param vecter1D model/gradient parameter vector
+        \param N Number of grid points
+        \param spatialFDorder spatial FD order used in Derivatives calculation
+        */     
+        template<typename ValueType>
+        void applyMedianFilterTo1DVector(lama::DenseVector<ValueType> &vecter1D, IndexType spatialFDorder)
+        {    
+            typedef float element;
+            int N = vecter1D.size();
+            element signal_1D[N] = {0};
+//             signal_1D = lama::cast<element>(vecter1D);
+            for (int i = 0; i < N; i++) {
+                signal_1D[i] = vecter1D[i];
+            }
+            element *result;
+            result = (element *)malloc(N * sizeof(element));
+
+            medianfilter(signal_1D, result, N, spatialFDorder*2+1);
+            
+//             vecter1D = lama::cast<ValueType>(result);
+            for (int i = 0; i < N; i++) {
+                vecter1D[i] = *(result + i);
+            }
+        }
     }
 }

@@ -74,13 +74,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
         
-        if (outputInstantaneous == 1) {
-            Common::calcEnvelope(dataResample);
-        } else if (outputInstantaneous == 2) {
-            scai::IndexType phaseType = 2;
-            Common::calcInstantaneousPhase(dataResample, phaseType);
-        } 
-
         scai::IndexType seismoFormat = seismogramFormat;
         std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
         if (seismogramFormat == 5) {
@@ -96,6 +89,26 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         default:
             IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
             break;
+        }
+        
+        if (outputInstantaneous != 0 && seismogramFormat != 5) {
+            if (outputInstantaneous == 1) {
+                Common::calcEnvelope(dataResample);
+                filenameTmp += ".envelope";
+            } else if (outputInstantaneous == 2) {
+                scai::IndexType phaseType = 2;
+                Common::calcInstantaneousPhase(dataResample, phaseType);
+                filenameTmp += ".instantaneousPhase";
+            } 
+            
+            switch (seismoFormat) {
+            case 4:
+                SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
+                break;
+            default:
+                IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
+                break;
+            }
         }
     }
 }
@@ -720,6 +733,21 @@ template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs)
 {
     data.binaryOp(data, scai::common::BinaryOp::MULT, rhs.data);
+
+    return *this;
+}
+
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar factor with which the vectors are multiplied.
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::DenseVector<ValueType> const &rhs)
+{
+    if (data.getNumRows() == rhs.size())
+        data.scaleRows(rhs);
+    else
+        data.scaleColumns(rhs);
 
     return *this;
 }

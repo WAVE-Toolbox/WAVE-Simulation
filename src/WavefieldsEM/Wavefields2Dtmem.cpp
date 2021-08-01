@@ -32,6 +32,10 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::init(scai::hmemo::ContextPtr ctx, 
     this->initWavefield(HX, ctx, dist);
     this->initWavefield(HY, ctx, dist);
     this->initWavefield(EZ, ctx, dist);
+    this->initWavefield(EZup, ctx, dist);
+    this->initWavefield(EZdown, ctx, dist);
+    this->initWavefield(EZleft, ctx, dist);
+    this->initWavefield(EZright, ctx, dist);
 }
 
 template <typename ValueType>
@@ -72,15 +76,80 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::write(IndexType snapType, std::str
         std::unique_ptr<lama::Vector<ValueType>> div_Ptr(HX.newVector());
         scai::lama::Vector<ValueType> &div = *div_Ptr;
 
-        this->getCurl(derivatives, curl, model.getDielectricPermittivityEM());
+        this->getCurl(derivatives, curl, model.getDielectricPermittivity());
         this->getDiv(derivatives, div, model.getVelocityEM());
 
         IO::writeVector(curl, fileName + ".curl." + timeStep, fileFormat);
         IO::writeVector(div, fileName + ".div." + timeStep, fileFormat);
         break;
     }
+    case 4:
+        IO::writeVector(EZup, fileName + ".EZ.up." + timeStep, fileFormat);
+        IO::writeVector(EZdown, fileName + ".EZ.down." + timeStep, fileFormat);
+        break;
+    case 5:
+        IO::writeVector(EZleft, fileName + ".EZ.left." + timeStep, fileFormat);
+        IO::writeVector(EZright, fileName + ".EZ.right." + timeStep, fileFormat);
+        break;
     default:
         COMMON_THROWEXCEPTION("Invalid snapType.")
+    }
+}
+
+/*! \brief decompose wavefields to parts.
+ \param decomposeType decomposeType
+ \param wavefieldsDerivative the time derivative of wavefields
+ \param derivatives the spatial derivatives
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+{    
+    if (decomposeType > 0) {
+        lama::DenseVector<ValueType> temp;
+        if (decomposeType == 1) {  
+            auto const &Dyf = derivatives.getDyf();
+            temp = Dyf * EZ;
+            temp *= wavefieldsDerivative.getRefEZ();
+            
+            EZup = EZ;
+            EZup *= HX;
+            
+            temp *= EZup.maxNorm() / temp.maxNorm();
+            temp += EZup;
+            
+            EZup.unaryOp(temp, common::UnaryOp::SIGN);
+            EZup -= 1;
+            EZup.unaryOp(EZup, common::UnaryOp::ABS);
+            EZup.unaryOp(EZup, common::UnaryOp::SIGN);
+            EZup *= EZ;
+            
+            EZdown.unaryOp(temp, common::UnaryOp::SIGN);
+            EZdown += 1;
+            EZdown.unaryOp(EZdown, common::UnaryOp::SIGN);
+            EZdown *= EZ;
+        } else if (decomposeType == 2) {
+            auto const &Dxf = derivatives.getDxf();
+            temp = Dxf * EZ;
+            temp *= wavefieldsDerivative.getRefEZ();
+            
+            EZleft = EZ;
+            EZleft *= HY;
+            EZleft *= -1;
+            
+            temp *= EZleft.maxNorm() / temp.maxNorm();
+            temp += EZleft;
+            
+            EZleft.unaryOp(temp, common::UnaryOp::SIGN);
+            EZleft -= 1;
+            EZleft.unaryOp(EZleft, common::UnaryOp::ABS);
+            EZleft.unaryOp(EZleft, common::UnaryOp::SIGN);
+            EZleft *= EZ;
+                        
+            EZright.unaryOp(temp, common::UnaryOp::SIGN);
+            EZright += 1;
+            EZright.unaryOp(EZright, common::UnaryOp::SIGN);
+            EZright *= EZ;  
+        }
     }
 }
 
@@ -108,14 +177,6 @@ template <typename ValueType>
 std::string KITGPI::Wavefields::FD2Dtmem<ValueType>::getEquationType() const
 {
     return (equationType);
-}
-
-/*! \brief Get equationType (tmem)
- */
-template <typename ValueType>
-std::string KITGPI::Wavefields::FD2Dtmem<ValueType>::getEquationType2() const
-{
-    return ("tmem2");
 }
 
 //! \brief Not valid in the 2D tmem case
@@ -167,7 +228,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::get
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dtmem<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &InverseDielectricPermittivityEM)
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &InverseDielectricPermittivity)
 {
     scai::lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     scai::lama::Matrix<ValueType> const &Dyf = derivatives.getDyf();
@@ -179,7 +240,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::getCurl(KITGPI::ForwardSolver::Der
     update_tmp = Dxf * HY;
     curl -= update_tmp;
 
-    update_tmp = scai::lama::sqrt(InverseDielectricPermittivityEM);
+    update_tmp = scai::lama::sqrt(InverseDielectricPermittivity);
     curl *= update_tmp;
 }
 
@@ -210,6 +271,10 @@ KITGPI::Wavefields::FD2Dtmem<ValueType> KITGPI::Wavefields::FD2Dtmem<ValueType>:
     result.HX = this->HX * rhs;
     result.HY = this->HY * rhs;
     result.EZ = this->EZ * rhs;
+    result.EZup = this->EZup * rhs;
+    result.EZdown = this->EZdown * rhs;
+    result.EZleft = this->EZleft * rhs;
+    result.EZright = this->EZright * rhs;
     return result;
 }
 
@@ -245,6 +310,10 @@ KITGPI::Wavefields::FD2Dtmem<ValueType> KITGPI::Wavefields::FD2Dtmem<ValueType>:
     result.HX = this->HX * rhs.HX;
     result.HY = this->HY * rhs.HY;
     result.EZ = this->EZ * rhs.EZ;
+    result.EZup = this->EZup * rhs.EZup;
+    result.EZdown = this->EZdown * rhs.EZdown;
+    result.EZleft = this->EZleft * rhs.EZleft;
+    result.EZright = this->EZright * rhs.EZright;
     return result;
 }
 
@@ -268,6 +337,10 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::assign(KITGPI::Wavefields::Wavefie
     HX = rhs.getRefHX();
     HY = rhs.getRefHY();
     EZ = rhs.getRefEZ();
+    EZup = rhs.getRefEZup();
+    EZdown = rhs.getRefEZdown();
+    EZleft = rhs.getRefEZleft();
+    EZright = rhs.getRefEZright();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -280,6 +353,10 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::minusAssign(KITGPI::Wavefields::Wa
     HX -= rhs.getRefHX();
     HY -= rhs.getRefHY();
     EZ -= rhs.getRefEZ();
+    EZup -= rhs.getRefEZup();
+    EZdown -= rhs.getRefEZdown();
+    EZleft -= rhs.getRefEZleft();
+    EZright -= rhs.getRefEZright();
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -292,6 +369,10 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::plusAssign(KITGPI::Wavefields::Wav
     HX += rhs.getRefHX();
     HY += rhs.getRefHY();
     EZ += rhs.getRefEZ();
+    EZup += rhs.getRefEZup();
+    EZdown += rhs.getRefEZdown();
+    EZleft += rhs.getRefEZleft();
+    EZright += rhs.getRefEZright();
 }
 
 /*! \brief function for overloading *= Operation (called in base class)
@@ -304,6 +385,10 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::timesAssign(ValueType rhs)
     HX *= rhs;
     HY *= rhs;
     EZ *= rhs;
+    EZup *= rhs;
+    EZdown *= rhs;
+    EZleft *= rhs;
+    EZright *= rhs;
 }
 
 /*! \brief apply model transform to wavefields in inversion
@@ -311,11 +396,15 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dtmem<ValueType>::applyWavefieldTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
 {
     HX = lhs * rhs.getRefHX();
     HY = lhs * rhs.getRefHY();
     EZ = lhs * rhs.getRefEZ();
+    EZup = lhs * rhs.getRefEZup();
+    EZdown = lhs * rhs.getRefEZdown();
+    EZleft = lhs * rhs.getRefEZleft();
+    EZright = lhs * rhs.getRefEZright();
 }
 
 template class KITGPI::Wavefields::FD2Dtmem<float>;
