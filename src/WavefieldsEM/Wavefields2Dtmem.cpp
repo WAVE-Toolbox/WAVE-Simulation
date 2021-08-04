@@ -63,6 +63,8 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::write(IndexType snapType, std::str
     std::string timeStep = std::to_string(static_cast<long long>(t));
 
     switch (snapType) {
+    case 0:
+        break;
     case 1:
         IO::writeVector(HX, fileName + ".HX." + timeStep, fileFormat);
         IO::writeVector(HY, fileName + ".HY." + timeStep, fileFormat);
@@ -110,6 +112,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType,
             auto const &Dyf = derivatives.getDyf();
             temp = Dyf * EZ;
             temp *= wavefieldsDerivative.getRefEZ();
+            temp *= -1;
             
             EZup = EZ;
             EZup *= HX;
@@ -131,6 +134,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType,
             auto const &Dxf = derivatives.getDxf();
             temp = Dxf * EZ;
             temp *= wavefieldsDerivative.getRefEZ();
+            temp *= -1;
             
             EZleft = EZ;
             EZleft *= HY;

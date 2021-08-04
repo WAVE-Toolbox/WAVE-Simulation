@@ -70,7 +70,7 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::applyThresholds(Configuration
     dirtyFlagElectricConductivityOptical = true; // the electricConductivity vector is now dirty
     dirtyFlagDielectricPermittivityOptical = true; // the dielectricPermittivityOptical vector is now dirty
           
-    if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
+    if (config.getAndCatch("inversionType", 1) == 3 || config.getAndCatch("parameterisation", 0) == 1 || config.getAndCatch("parameterisation", 0) == 2) {
         Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("lowerPorosityTh", 0.0), config.getAndCatch("lowerPorosityTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("upperPorosityTh", 1.0), config.getAndCatch("upperPorosityTh", 1.0), 2);
 

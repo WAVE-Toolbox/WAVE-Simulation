@@ -591,7 +591,7 @@ int main(int argc, const char *argv[])
                         
                         if (decomposeType != 0) {
                             *wavefieldsTempEM -= *wavefieldsEM;
-                            *wavefieldsTempEM *= DTinv;
+                            *wavefieldsTempEM *= -DTinv;
                             wavefieldsEM->decompose(decomposeType, *wavefieldsTempEM, *derivatives);
                         }
 

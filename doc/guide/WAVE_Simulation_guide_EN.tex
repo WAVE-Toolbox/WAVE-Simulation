@@ -1488,8 +1488,8 @@ $\rho$              & \SI{3000}{kg/m^3}  \\ \bottomrule
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
 \addcontentsline{toc}{chapter}{List of Tables}
 \cleardoublepage
-%\bibliography{@CMAKE_SOURCE_DIR@/../doc/guide/WAVE_Simulation_guide}
-\bibliography{WAVE_Simulation_guide}
+\bibliography{@CMAKE_SOURCE_DIR@/../doc/guide/WAVE_Simulation_guide}
+% \bibliography{WAVE_Simulation_guide}
 \bibliographystyle{apalike}
 
 \appendix
@@ -1635,37 +1635,37 @@ All discrete components of the viscoelastic wavefield in matrix-vector notation 
 \label{sec:Visco_EM_wave_equation}
 
 \section{Theory of EM wave equation}
-Maxwell equations in non-electric charge field are shown as two rotation equations \citep{irving2006numerical}
+Maxwell equations in non-electric charge field are shown as two rotation equations \citep{irving2006numerical}.
 \begin{equation}
 \label{eqn:EM}
-\begin{align*}
+\begin{aligned}
 &\mu_{m} \pdv{ \mathbf{H}}{t} = -\nabla \times \mathbf{E} \\
-&\varepsilon\pdv{ \mathbf{E}}{t} + \sigma_{e}\mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} 
-\end{align*}
+&\varepsilon \pdv{ \mathbf{E}}{t} + \sigma_{e}\mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} 
+\end{aligned}
 \end{equation}
 where $\mathbf{H}$ and $\mathbf{E}$ are the magnetic field and  electric field. The source current $\mathbf{J}_s$ is injected by the GPR antenna. Without taking the visco-dispersion processes into consideration \citep{qin2020numerical2}, the dielectric permittivity $\varepsilon$, conductivity $\sigma_{e}$ and magnetic permeability $\mu_{m}$ are frequency-independent.
 
 \section{Discretization of EM wave equation}
 3D EM wave equation and FD discretization by usage of the SSG in isotropic media Fig.\ref{fig:StagGrid3D} are given as:
 \begin{equation}
-\begin{align*}
+\begin{aligned}
   &\mu_{m} \pdv{H_{x}}{t} = -\pdv{E_z}{y} + \pdv{E_y}{z}\\
   &\mu_{m} \pdv{H_{y}}{t} = -\pdv{E_x}{z} + \pdv{E_z}{x}\\
   &\mu_{m} \pdv{H_{z}}{t} = -\pdv{E_y}{x} + \pdv{E_x}{y}\\
   &\varepsilon \pdv{E_{x}}{t} + \sigma_{e} E_{x} + J_{sx} = \pdv{H_z}{y} - \pdv{H_y}{z}\\
   &\varepsilon \pdv{E_{y}}{t} + \sigma_{e} E_{y} + J_{sy} = \pdv{H_x}{z} - \pdv{H_z}{x}\\
   &\varepsilon \pdv{E_{z}}{t} + \sigma_{e} E_{z} + J_{sz} = \pdv{H_y}{x} - \pdv{H_x}{y}
-\end{align*}
+\end{aligned}
 \end{equation}
 \begin{equation}
-\begin{align*}
+\begin{aligned}
   &H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{myz}^{-1}  \left(- \left.\pdv{ E_{z}}{y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\pdv{ E_{y}}{z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\\
   &H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxz}^{-1}  \left(- \left.\pdv{ E_{x}}{z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\pdv{ E_z}{x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\\
   &H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} = H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxy}^{-1}  \left(- \left.\pdv{ E_y}{x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\pdv{ E_x}{y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\\
   &E_{x,i+\frac{1}{2},j,k}^{n+1} = C_{ax} E_{x,i+\frac{1}{2},j,k}^{n} + \Delta t \cdot C_{bx} \left( \left.\pdv{ H_z}{y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \left.\pdv{ H_y}{z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - J_{sx} \right)\\
   &E_{y,i,j+\frac{1}{2},k}^{n+1} = C_{ay} E_{y,i,j+\frac{1}{2},k}^{n} + \Delta t \cdot C_{by} \left( \left.\pdv{ H_x}{z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \left.\pdv{ H_z}{x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - J_{sy} \right)\\
   &E_{z,i,j,k+\frac{1}{2}}^{n+1} = C_{az} E_{z,i,j,k+\frac{1}{2}}^{n} + \Delta t \cdot C_{bz} \left( \left.\pdv{ H_y}{x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \left.\pdv{ H_x}{y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - J_{sz} \right)
-\end{align*}
+\end{aligned}
 \end{equation}
 where
 \begin{align*}
@@ -1686,14 +1686,14 @@ where
 \section{Matrix-vector formalism of EM wave}
 All discrete components of the 3D EM wavefield in matrix-vector notation are: 
 \begin{equation}
-\begin{align*}
+\begin{aligned}
   &\vec{H}_{x}^{n+\frac{1}{2}} = \vec{H}_{x}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{myz}^{-1}\right)  \left(- \underline{D}_{\,y,f}^q \vec{E}_{z}^{n} + \underline{D}_{\,z,f}^q \vec{E}_{y}^{n} \right)\\
   &\vec{H}_{y}^{n+\frac{1}{2}} = \vec{H}_{y}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxz}^{-1}\right)  \left(- \underline{D}_{\,z,f}^q \vec{E}_{x}^{n} + \underline{D}_{\,x,f}^q \vec{E}_z^{n} \right)\\
   &\vec{H}_{z}^{n+\frac{1}{2}} = \vec{H}_{z}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxy}^{-1}\right)  \left(- \underline{D}_{\,x,f}^q \vec{E}_y^{n} + \underline{D}_{\,y,f}^q \vec{E}_x^{n} \right)\\
   &\vec{E}_{x}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ax}\right) \vec{E}_{x}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{bx}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,y,b}^q \vec{H}_z^{n+\frac{1}{2}} - \underline{D}_{\,z,b}^q \vec{H}_y^{n+\frac{1}{2}} \right) - J_{sx} \right]\\
   &\vec{E}_{y}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ay}\right) \vec{E}_{y}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{by}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,z,b}^q  \vec{H}_x^{n+\frac{1}{2}} - \underline{D}_{\,x,b}^q \vec{H}_z^{n+\frac{1}{2}} \right) - J_{sy} \right]\\
   &\vec{E}_{z}^{n+1} =  \mathrm{diag} \left(\vec{C}_{az}\right) \vec{E}_{z}^{n} + \Delta t \cdot  \mathrm{diag} \left(\vec{C}_{bz}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,x,b}^q \vec{H}_y^{n+\frac{1}{2}} - \underline{D}_{\,y,b}^q \vec{H}_x^{n+\frac{1}{2}} \right) - J_{sz} \right]
-\end{align*}
+\end{aligned}
 \end{equation}
 
 \chapter{Visco-EM wave equation}
@@ -1703,26 +1703,26 @@ All discrete components of the 3D EM wavefield in matrix-vector notation are:
 Maxwell equation in dispersive media.
 \begin{equation}
 \label{eqn:ViscoEM2}
-\begin{align*}
+\begin{aligned}
   &\mu_{m} \pdv{ \mathbf{H}}{t} = -\nabla \times \mathbf{E} \\
   &\varepsilon^\infty \pdv{ \mathbf{E}}{t} + \sigma^\infty_{e} \mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} - \sum_{l=1}^L \mathbf{r}_{l} \\
   &\pdv{\mathbf{r}_{l}}{t} + \frac{1}{\tau_{Dl}} \mathbf{r}_{l} = -\varepsilon^s \frac{\tau_{\varepsilon }}{L \tau_{Dl}^2} \mathbf{E} 
-\end{align*}
+\end{aligned}
 \end{equation}
 where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity and optical conductivity, respectively. $\varepsilon^\infty$ and $\sigma^\infty_{e}$ in non-dispersive case where $\tau_{\varepsilon } = 0$ and $\tau_{\sigma e} = 0$ are simplified to $\varepsilon^s$ and $\sigma^s_{e}$, respectively.
 \begin{equation}
 \label{eqn:ViscoParameter}
-\begin{align*}
+\begin{aligned}
   \varepsilon^\infty = \varepsilon^s \left( 1-\tau_{\varepsilon} \right) + \sigma^s_{e} \tau_{\sigma e}, \quad
   \sigma^\infty_{e} = \sigma^s_{e} + \varepsilon^s \frac{1 }{L} \sum_{l=1}^L \frac{\tau_{\varepsilon }}{\tau_{Dl}}
-\end{align*}
+\end{aligned}
 \end{equation} 
 \par We call Eq. \ref{eqn:ViscoEM2} as visco-EM wave equation because the defination of memory variable is similar with that in visco-elastic equation. By using the new form of EM wave equation introduced above, we can achieve the FWI of EM waves in dispersive media \citep{qin2020full}.
 
 \section{Discretization of visco-EM wave equation}
 3D visco-EM wave equation and FD discretization by usage of the SSG in isotropic media Fig.\ref{fig:StagGrid3D} are given as:
 \begin{equation}
-\begin{align*}
+\begin{aligned}
   &\mu_{m} \pdv{H_{x}}{t} = -\pdv{E_z}{y} + \pdv{E_y}{z}\\
   &\mu_{m} \pdv{H_{y}}{t} = -\pdv{E_x}{z} + \pdv{E_z}{x}\\
   &\mu_{m} \pdv{H_{z}}{t} = -\pdv{E_y}{x} + \pdv{E_x}{y}\\
@@ -1732,10 +1732,10 @@ where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity 
   &\pdv{r_{xl}}{t} + \frac{1}{\tau_{Dl} } r_{xl} = -\varepsilon^s_{x} \frac{\tau_{\varepsilon x}}{L \tau_{Dl}^2} E_{x}\\
   &\pdv{r_{yl}}{t} + \frac{1}{\tau_{Dl} } r_{yl} = -\varepsilon^s_{y} \frac{\tau_{\varepsilon y}}{L \tau_{Dl}^2} E_{y}\\
   &\pdv{r_{zl}}{t} + \frac{1}{\tau_{Dl} } r_{zl} = -\varepsilon^s_{z} \frac{\tau_{\varepsilon z}}{L \tau_{Dl}^2} E_{z}
-\end{align*}
+\end{aligned}
 \end{equation}
 \begin{equation}
-\begin{align*}
+\begin{aligned}
   &H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{myz}^{-1}  \left(- \left.\pdv{ E_{z}}{y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\pdv{ E_{y}}{z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\\
   &H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxz}^{-1}  \left(- \left.\pdv{ E_{x}}{z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\pdv{ E_z}{x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\\
   &H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} = H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxy}^{-1}  \left(- \left.\pdv{ E_y}{x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\pdv{ E_x}{y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\\
@@ -1745,7 +1745,7 @@ where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity 
   &r_{xl,i+\frac{1}{2},j,k}^{n+\frac{1}{2}} = C_{c l} r_{xl,i+\frac{1}{2},j,k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d x l} \left.E_x \right\rvert_{i+\frac{1}{2},j,k}^{n}\\
   &r_{yl,i,j+\frac{1}{2},k}^{n+\frac{1}{2}} = C_{c l} r_{yl,i,j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d y l} \left.E_y \right\rvert_{i,j+\frac{1}{2},k}^{n}\\
   &r_{zl,i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} = C_{c l} r_{zl,i,j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot C_{d z l} \left.E_z \right\rvert_{i,j,k+\frac{1}{2}}^{n}
-\end{align*}
+\end{aligned}
 \end{equation}
 where
 \begin{align*}
@@ -1771,7 +1771,7 @@ where
 \section{Matrix-vector formalism of visco-EM wave}
 All discrete components of the 3D visco-EM wavefield in matrix-vector notation are: 
 \begin{equation}	
-\begin{align*}
+\begin{aligned}
   &\vec{H}_{x}^{n+\frac{1}{2}} = \vec{H}_{x}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{myz}^{-1}\right)  \left(- \underline{D}_{\,y,f}^q \vec{E}_{z}^{n} + \underline{D}_{\,z,f}^q \vec{E}_{y}^{n} \right)\\
   &\vec{H}_{y}^{n+\frac{1}{2}} = \vec{H}_{y}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxz}^{-1}\right)  \left(- \underline{D}_{\,z,f}^q \vec{E}_{x}^{n} + \underline{D}_{\,x,f}^q \vec{E}_z^{n} \right)\\
   &\vec{H}_{z}^{n+\frac{1}{2}} = \vec{H}_{z}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxy}^{-1}\right)  \left(- \underline{D}_{\,x,f}^q \vec{E}_y^{n} + \underline{D}_{\,y,f}^q \vec{E}_x^{n} \right)\\  
@@ -1781,7 +1781,7 @@ All discrete components of the 3D visco-EM wavefield in matrix-vector notation a
   &\vec{r}_{xl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{xl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d x l}\right) \vec{E}_{x}^{n} \\
   &\vec{r}_{ly}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{ly}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d y l}\right) \vec{E}_{y}^{n}\\
   &\vec{r}_{zl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{zl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d z l}\right) \vec{E}_{z}^{n}
-\end{align*}
+\end{aligned}
 \end{equation}
 
 \end{document}

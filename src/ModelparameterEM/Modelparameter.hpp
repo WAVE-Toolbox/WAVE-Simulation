@@ -133,6 +133,8 @@ namespace KITGPI
             void setInversionType(scai::IndexType const setInversionType);
             scai::IndexType getGradientType() const;
             void setGradientType(scai::IndexType const setGradientType);
+            scai::IndexType getDecomposeType() const;
+            void setDecomposeType(scai::IndexType const setDecomposeType);
 
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -207,6 +209,7 @@ namespace KITGPI
             scai::IndexType parameterisation;
             scai::IndexType inversionType;
             scai::IndexType gradientType;
+            scai::IndexType decomposeType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             ValueType aArchie;

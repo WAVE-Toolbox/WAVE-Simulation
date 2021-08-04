@@ -38,7 +38,7 @@ void KITGPI::Hilbert::HilbertFFT<ValueType>::hilbert(lama::DenseMatrix<ValueType
     fData = lama::cast<ComplexValueType>(data);
     fData.resize(data.getRowDistributionPtr(), std::make_shared<dmemo::NoDistribution>(kernelSize));
     lama::fft<ComplexValueType>(fData, 1);
-    std::cout<< "hilbert matrix kernelSize "<< kernelSize<< std::endl;
+//     std::cout<< "hilbert matrix kernelSize "<< kernelSize<< std::endl;
 
     fData.scaleColumns(kernel);
     fData *= (1.0 / ValueType(kernelSize)); // proper fft normalization
@@ -58,16 +58,13 @@ void KITGPI::Hilbert::HilbertFFT<ValueType>::hilbert(lama::DenseVector<ValueType
     lama::DenseVector<ComplexValueType> fData;
     fData = lama::cast<ComplexValueType>(data);
     fData.resize(std::make_shared<dmemo::NoDistribution>(kernelSize));
-    std::cout<< "hilbert vector kernelSize "<< kernelSize<< std::endl;
-//     fData.writeToFile("wavefields/fData_fft0.mtx");
+//     std::cout<< "hilbert vector kernelSize "<< kernelSize<< std::endl;
     lama::fft<ComplexValueType>(fData);
-//     fData.writeToFile("wavefields/fData_fft.mtx");
 
     fData *= kernel;
     fData /= kernelSize; // proper fft normalization
 
     lama::ifft<ComplexValueType>(fData);
-//     fData.writeToFile("wavefields/fData_ifft.mtx");
     fData.resize(data.getDistributionPtr());
     
     data = lama::imag(fData);

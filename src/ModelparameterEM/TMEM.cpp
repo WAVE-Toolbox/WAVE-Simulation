@@ -58,20 +58,21 @@ void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Con
     dirtyFlagVelocivityEM = true;   // If EM-parameters will be changed, velocityEM needs to be redone
     dirtyFlagAveraging = true;      // If EM-parameters will be changed, averaging needs to be redone
       
-    if (config.get<IndexType>("inversionType") == 3 || config.get<IndexType>("parameterisation") == 1 || config.get<IndexType>("parameterisation") == 2) {
+    if (config.getAndCatch("inversionType", 1) == 3 || config.getAndCatch("parameterisation", 0) == 1 || config.getAndCatch("parameterisation", 0) == 2) {
         Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("lowerPorosityTh", 0.0), config.getAndCatch("lowerPorosityTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("upperPorosityTh", 1.0), config.getAndCatch("upperPorosityTh", 1.0), 2);
 
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
-    if (config.get<IndexType>("gradientType") > 1) {
+    if (config.getAndCatch("gradientType", 0) > 1 && config.getAndCatch("decomposeType", 0) == 0) {
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
     }
     electricConductivity *= mask;
     porosity *= mask;
     saturation *= mask;
+    saturation *= reflectivity;
     
     dielectricPermittivity -= 1;
     dielectricPermittivity *= mask;
@@ -316,7 +317,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
-    if (this->getGradientType() != 0) {
+    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
         this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
     } else {
         this->initModelparameter(reflectivity, ctx, dist, 0.0);
@@ -363,7 +364,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::write(std::string filename, scai::
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
     }
-    if (this->getGradientType() != 0) {
+    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
         IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };

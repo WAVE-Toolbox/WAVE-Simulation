@@ -63,6 +63,20 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setGradientType(scai::
     gradientType = setGradientType;
 }
 
+/*! \brief Getter method for decomposeType */
+template <typename ValueType>
+IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDecomposeType() const
+{
+    return (decomposeType);
+}
+
+/*! \brief Set method for decomposeType */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
+{
+    decomposeType = setDecomposeType;
+}
+
 /*! \brief Get matrix that multiplies with model matrices to get a pershot
  \param dist Distribution of the pershot
  \param distBig Distribution of the big model
@@ -137,9 +151,10 @@ template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
-    setParameterisation(config.get<IndexType>("parameterisation"));
+    setParameterisation(config.getAndCatch("parameterisation", 0));
     setInversionType(config.getAndCatch("inversionType", 1));
     setGradientType(config.getAndCatch("gradientType", 0));
+    setDecomposeType(config.getAndCatch("decomposeType", 0));
     calcElectricConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");

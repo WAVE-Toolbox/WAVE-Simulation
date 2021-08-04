@@ -123,8 +123,8 @@ template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
-    setParameterisation(config.get<IndexType>("parameterisation"));
-    setInversionType(config.get<IndexType>("inversionType"));
+    setParameterisation(config.getAndCatch("parameterisation", 0));
+    setInversionType(config.getAndCatch("inversionType", 1));
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 

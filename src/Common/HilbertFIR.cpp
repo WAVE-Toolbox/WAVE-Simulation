@@ -52,7 +52,7 @@ void KITGPI::Hilbert::HilbertFIR<ValueType>::hilbert(lama::DenseMatrix<ValueType
     if (halfklen == kernelSize) {
         koffset = 1;
     }
-    std::cout<< "hilbert matrix kernelSize "<< kernelSize<< std::endl;
+//     std::cout<< "hilbert matrix kernelSize "<< kernelSize<< std::endl;
     
     for (int itrace=0; itrace<data.getNumRows(); itrace++) {
         data.getRow(dataTrace, itrace);
@@ -89,7 +89,7 @@ void KITGPI::Hilbert::HilbertFIR<ValueType>::hilbert(lama::DenseVector<ValueType
     if (halfklen == kernelSize) {
         koffset = 1;
     }
-    std::cout<< "hilbert vector kernelSize "<< kernelSize<< std::endl;
+//     std::cout<< "hilbert vector kernelSize "<< kernelSize<< std::endl;
     
     for (IndexType n {halfklen}; n < signalSize+halfklen-1; n++) {
         kmin = std::max(static_cast<int>(n-(FIRlength-1)), 0) + koffset;
