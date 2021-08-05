@@ -288,6 +288,7 @@ int main(int argc, const char *argv[])
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     IndexType numshots = uniqueShotNos.size();
+    SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();

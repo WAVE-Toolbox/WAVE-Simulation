@@ -738,12 +738,33 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setReflectivity(scai::
     reflectivity = setReflectivity;
 }
 
-/*! \brief Set reflectivity
+/*! \brief reset reflectivity
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::resetReflectivity()
 {
     reflectivity = 0.0;
+}
+
+/*! \brief calculate reflectivity from permittivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
+{
+    scai::lama::DenseVector<ValueType> dielectricPermittivitytemp;
+    scai::lama::DenseVector<ValueType> dielectricPermittivityAverageYtemp;
+    auto dist = dielectricPermittivity.getDistributionPtr();
+    auto ctx = dielectricPermittivity.getContextPtr();
+    auto const &Dyf = derivatives.getDyf();
+    this->calcAverageMatrixY(modelCoordinates, dist);
+    averageMatrixY.setContextPtr(ctx);
+    dielectricPermittivitytemp = scai::lama::sqrt(dielectricPermittivity);
+    this->calculateAveragedParameter(dielectricPermittivitytemp, dielectricPermittivityAverageYtemp, averageMatrixY);
+    averageMatrixY.purge();
+    dielectricPermittivityAverageYtemp *= 2;
+    reflectivity = Dyf * dielectricPermittivitytemp;
+    reflectivity *= -modelCoordinates.getDH() / DT;
+    reflectivity /= dielectricPermittivityAverageYtemp;
 }
 
 /*! \brief Get const reference to electricConductivityWater

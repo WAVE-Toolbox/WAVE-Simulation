@@ -25,6 +25,7 @@
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
 #include <iostream>
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 namespace KITGPI
 {
@@ -107,6 +108,7 @@ namespace KITGPI
             virtual void setRelativeDieletricPeimittivityRockMatrix(scai::lama::Vector<ValueType> const &setRelativeDieletricPeimittivityRockMatrix); 
             virtual void setReflectivity(scai::lama::Vector<ValueType> const &setReflectivity);
             virtual void resetReflectivity();
+            virtual void calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT);
             
             ValueType const getDielectricPermittivityVacuum() const; 
             ValueType const getElectricConductivityReference() const; 
