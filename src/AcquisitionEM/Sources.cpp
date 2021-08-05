@@ -173,7 +173,7 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::generateSyntheticSignal(IndexTyp
 
     case 5:
         /* Spike signal */
-        Acquisition::SourceSignal::Spike<ValueType>(signalVector, NT, DT, 0, wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        Acquisition::SourceSignal::Spike<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 6:
@@ -186,6 +186,11 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::generateSyntheticSignal(IndexTyp
         Acquisition::SourceSignal::Ricker_GprMax<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
+    case 8:
+        /* Berlage */
+        Acquisition::SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        break;
+        
     default:
         COMMON_THROWEXCEPTION("Unknown wavelet shape ")
         break;
