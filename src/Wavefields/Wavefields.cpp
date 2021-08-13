@@ -151,6 +151,118 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::g
     return (P);
 }
 
+//! \brief Getter routine for P
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefPup()
+{
+    return (Pup);
+}
+
+//! \brief Getter routine for P
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefPdown()
+{
+    return (Pdown);
+}
+
+//! \brief Getter routine for P
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefPleft()
+{
+    return (Pleft);
+}
+
+//! \brief Getter routine for P
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefPright()
+{
+    return (Pright);
+}
+
+//! \brief Getter routine for VX
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVXup()
+{
+    return (VXup);
+}
+
+//! \brief Getter routine for VX
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVXdown()
+{
+    return (VXdown);
+}
+
+//! \brief Getter routine for VX
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVXleft()
+{
+    return (VXleft);
+}
+
+//! \brief Getter routine for VX
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVXright()
+{
+    return (VXright);
+}
+
+//! \brief Getter routine for VY
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVYup()
+{
+    return (VYup);
+}
+
+//! \brief Getter routine for VY
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVYdown()
+{
+    return (VYdown);
+}
+
+//! \brief Getter routine for VY
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVYleft()
+{
+    return (VYleft);
+}
+
+//! \brief Getter routine for VY
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVYright()
+{
+    return (VYright);
+}
+
+//! \brief Getter routine for VZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVZup()
+{
+    return (VZup);
+}
+
+//! \brief Getter routine for VZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVZdown()
+{
+    return (VZdown);
+}
+
+//! \brief Getter routine for VZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVZleft()
+{
+    return (VZleft);
+}
+
+//! \brief Getter routine for VZ
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefVZright()
+{
+    return (VZright);
+}
+
 //! \brief Getter routine for Rxx Relaxation parameter
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::getRefRxx()

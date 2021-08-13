@@ -437,8 +437,8 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.ViscoTMEM.calculateAveraging")
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixX);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixY);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixX);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }

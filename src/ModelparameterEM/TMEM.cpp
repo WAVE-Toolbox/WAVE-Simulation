@@ -72,7 +72,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Con
     electricConductivity *= mask;
     porosity *= mask;
     saturation *= mask;
-    saturation *= reflectivity;
+    reflectivity *= mask;
     
     dielectricPermittivity -= 1;
     dielectricPermittivity *= mask;
@@ -211,11 +211,11 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(Configuration::Configuration 
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model
-             \param model regular input model
-             \param variableDist Distribution for a variable grid
-             \param variableCoordinates Coordinate Class of a Variable Grid
-             \param regularCoordinates Coordinate Class of a regular Grid
-             */
+\param model regular input model
+\param variableDist Distribution for a variable grid
+\param variableCoordinates Coordinate Class of a Variable Grid
+\param regularCoordinates Coordinate Class of a regular Grid
+*/
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
@@ -407,8 +407,8 @@ void KITGPI::Modelparameter::TMEM<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.TMEM.calculateAveraging")
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixX);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixY);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixX);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }

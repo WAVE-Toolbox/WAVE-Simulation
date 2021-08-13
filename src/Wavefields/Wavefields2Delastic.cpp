@@ -88,6 +88,16 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::
     }
 }
 
+/*! \brief decompose wavefields to parts.
+ \param decomposeType decomposeType
+ \param wavefieldsDerivative the time derivative of wavefields
+ \param derivatives the spatial derivatives
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Delastic<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+{ 
+}
+
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>

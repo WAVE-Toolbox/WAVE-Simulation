@@ -74,7 +74,8 @@ namespace KITGPI
             void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
-            void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) override;
+            void decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) override;
 
           private:
             std::string EquationType;
@@ -86,6 +87,18 @@ namespace KITGPI
             using Wavefields<ValueType>::VX;
             using Wavefields<ValueType>::VY;
             using Wavefields<ValueType>::P;
+            using Wavefields<ValueType>::Pup; 
+            using Wavefields<ValueType>::Pdown; 
+            using Wavefields<ValueType>::Pleft; 
+            using Wavefields<ValueType>::Pright; 
+            using Wavefields<ValueType>::VXup; 
+            using Wavefields<ValueType>::VXdown; 
+            using Wavefields<ValueType>::VXleft; 
+            using Wavefields<ValueType>::VXright; 
+            using Wavefields<ValueType>::VYup; 
+            using Wavefields<ValueType>::VYdown; 
+            using Wavefields<ValueType>::VYleft; 
+            using Wavefields<ValueType>::VYright;
 
             /* non-required wavefields */
             using Wavefields<ValueType>::VZ;
@@ -102,7 +115,7 @@ namespace KITGPI
             using Wavefields<ValueType>::Rxz;
             using Wavefields<ValueType>::Rxy;
 
-            std::string type = equationType+std::to_string(NumDimension)+"D";
+            std::string type = EquationType+std::to_string(NumDimension)+"D";
         };
     }
 }

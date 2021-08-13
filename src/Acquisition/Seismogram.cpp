@@ -744,10 +744,16 @@ KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<Value
 template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::operator*=(scai::lama::DenseVector<ValueType> const &rhs)
 {
-    if (data.getNumRows() == rhs.size())
-        data.scaleRows(rhs);
-    else
-        data.scaleColumns(rhs);
+    if (data.getNumValues() > 0) {
+        scai::lama::DenseVector<ValueType> scaleVector = rhs;
+        if (data.getNumRows() == scaleVector.size()) {
+            scaleVector.redistribute(data.getRowDistributionPtr());
+            data.scaleRows(scaleVector);
+        } else {
+            scaleVector.redistribute(data.getColDistributionPtr());
+            data.scaleColumns(scaleVector);
+        }
+    }
 
     return *this;
 }

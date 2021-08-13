@@ -403,25 +403,25 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.ViscoEMEM.calculateAveraging")
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixYZ);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixXZ);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXY, averageMatrixXY);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixYZ);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixXZ);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXY, averageMatrixXY);
                 
-        this->calculateAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageX, averageMatrixX);
-        this->calculateAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageY, averageMatrixY);
-        this->calculateAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageX, averageMatrixX);
+        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageY, averageMatrixY);
+        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageZ, averageMatrixZ);
         
-        this->calculateAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageX, averageMatrixX);
-        this->calculateAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageY, averageMatrixY);
-        this->calculateAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageX, averageMatrixX);
+        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageY, averageMatrixY);
+        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageZ, averageMatrixZ);
         
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageX, averageMatrixX);
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageY, averageMatrixY);
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageX, averageMatrixX);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageY, averageMatrixY);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageZ, averageMatrixZ);
         
-        this->calculateAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageX, averageMatrixX);
-        this->calculateAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageY, averageMatrixY);
-        this->calculateAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageX, averageMatrixX);
+        this->calcAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageY, averageMatrixY);
+        this->calcAveragedParameter(tauDielectricPermittivity, tauDielectricPermittivityAverageZ, averageMatrixZ);
         
         dirtyFlagAveraging = false;
     }

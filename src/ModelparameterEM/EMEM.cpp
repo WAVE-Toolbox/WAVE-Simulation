@@ -385,17 +385,17 @@ void KITGPI::Modelparameter::EMEM<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.EMEM.calculateAveraging")
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixYZ);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixXZ);
-        this->calculateInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXY, averageMatrixXY);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageYZ, averageMatrixYZ);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixXZ);
+        this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXY, averageMatrixXY);
         
-        this->calculateAveragedParameter(electricConductivity, electricConductivityAverageX, averageMatrixX);
-        this->calculateAveragedParameter(electricConductivity, electricConductivityAverageY, averageMatrixY);
-        this->calculateAveragedParameter(electricConductivity, electricConductivityAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(electricConductivity, electricConductivityAverageX, averageMatrixX);
+        this->calcAveragedParameter(electricConductivity, electricConductivityAverageY, averageMatrixY);
+        this->calcAveragedParameter(electricConductivity, electricConductivityAverageZ, averageMatrixZ);
         
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageX, averageMatrixX);
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageY, averageMatrixY);
-        this->calculateAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageX, averageMatrixX);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageY, averageMatrixY);
+        this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageZ, averageMatrixZ);
         dirtyFlagAveraging = false;
     }
 }

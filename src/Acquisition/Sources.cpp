@@ -367,6 +367,16 @@ lama::DenseMatrix<ValueType> KITGPI::Acquisition::Sources<ValueType>::getsources
     return (signal_out);
 }
 
+/*! \brief set source signal
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::setsourcesignal(lama::DenseMatrix<ValueType> setsourcesignal)
+{
+    signals.getData() = setsourcesignal;
+    copySignalsToSeismogramHandler();
+}
+
 /*! \brief Allocation of the source signals matrix
  *
  * Allocation of the source signals matrix based on an already defined source distribution and the number of time steps.

@@ -14,7 +14,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::init(std::vector<receiverSettings> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {    
     /*reset seismograms. This is necessary when init will be called multiple times*/
-//     this->getSeismogramHandler().resetSeismograms();
+    this->getSeismogramHandler().resetSeismograms();
    
     scai::IndexType getNT = static_cast<scai::IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
 
@@ -75,6 +75,45 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     
     CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr()); 
 
+    init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::initWholeSpace(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseVector<scai::IndexType> const &seismogramTypes)
+{
+    std::vector<receiverSettings> allSettings;
+    receiverSettings thisSettings;
+    std::vector<scai::IndexType> uniqueReceiverTypes;
+            
+    uniqueReceiverTypes.push_back(seismogramTypes[0]);
+    for (int i=0; i<seismogramTypes.size(); i++) { 
+        int count = 0;
+        for (unsigned index=0; index < uniqueReceiverTypes.size(); index++) { 
+            if (uniqueReceiverTypes[index] != seismogramTypes[i]) {
+                count++;
+            }
+        }
+        if (count != 0)
+            uniqueReceiverTypes.push_back(seismogramTypes[i]);
+    }  
+    for (unsigned i=0; i<uniqueReceiverTypes.size(); i++) {
+        for (int index=0; index < dist_wavefield->getGlobalSize(); index++) {        
+            Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(index);
+            thisSettings.receiverCoords = coordinate;
+            thisSettings.receiverType = uniqueReceiverTypes[i];            
+            allSettings.push_back(thisSettings);
+        }
+    }        
+    
+    CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
+        
     init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
 }
 

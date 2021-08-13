@@ -64,11 +64,16 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientType", 0) > 1 && config.getAndCatch("decomposeType", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
     
     velocityP *= maskP;
     density *= maskP;
     porosity *= maskP;
     saturation *= maskP;
+    reflectivity *= maskP;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -98,6 +103,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelPerShot(KITGPI::Modelp
     
     temp = shrinkMatrix * saturation;
     modelPerShot.setSaturation(temp);
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp);
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -140,6 +148,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::setModelPerShot(KITGPI::Modelp
     temp *= restoreVector;
     saturation *= eraseVector;
     saturation += temp; //take over the values
+  
+    temp = shrinkMatrix * modelPerShot.getReflectivity(); //transform pershot into big model
+    temp *= restoreVector;
+    reflectivity *= eraseVector;
+    reflectivity += temp; //take over the values
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -250,6 +263,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
     this->initModelparameter(density, ctx, dist, rho_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -288,6 +302,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -304,6 +323,7 @@ KITGPI::Modelparameter::Acoustic<ValueType>::Acoustic(const Acoustic &rhs)
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -319,6 +339,9 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, sc
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -394,10 +417,39 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.Acoustic.calculateAveraging")
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageX, averageMatrixX);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageY, averageMatrixY);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageZ, averageMatrixZ);
         dirtyFlagAveraging = false;
+    }
+}
+
+/*! \brief calculate reflectivity from permittivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Acoustic<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
+{
+    scai::lama::DenseVector<ValueType> impedance;
+    scai::lama::DenseVector<ValueType> impedanceAverageY;
+    IndexType spatialFDorder = derivatives.getSpatialFDorder();
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
+    auto dist = density.getDistributionPtr();
+    auto ctx = density.getContextPtr();
+    auto const &Dyf = derivatives.getDyf();
+    this->calcAverageMatrixY(modelCoordinates, dist);
+    averageMatrixY.setContextPtr(ctx);
+    impedance = density * velocityP;
+    this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
+    averageMatrixY.purge();
+    impedanceAverageY *= 2;
+    reflectivity = Dyf * impedance;
+    reflectivity *= -modelCoordinates.getDH() / DT;
+    reflectivity /= impedanceAverageY;
+    for (IndexType i=0; i < spatialFDorder * NX * NZ / 2; i++) {
+        reflectivity[i] = 0.0;
+        reflectivity[NX*NY*NZ-i-1] = 0.0;
     }
 }
 
@@ -625,6 +677,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     velocityP *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -655,6 +708,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     velocityP += rhs.velocityP;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -685,6 +739,7 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     velocityP -= rhs.velocityP;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -703,6 +758,8 @@ KITGPI::Modelparameter::Acoustic<ValueType> &KITGPI::Modelparameter::Acoustic<Va
     density = rhs.density;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
+    
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
@@ -720,6 +777,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::assign(KITGPI::Modelparameter:
     density = rhs.getDensity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
+    
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
@@ -736,6 +795,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::minusAssign(KITGPI::Modelparam
     density -= rhs.getDensity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
+    
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;
@@ -752,6 +813,8 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::plusAssign(KITGPI::Modelparame
     density += rhs.getDensity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
+    
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
     dirtyFlagAveraging = true;

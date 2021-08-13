@@ -447,10 +447,31 @@ void KITGPI::Modelparameter::SH<ValueType>::calculateAveraging()
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.SH.calculateAveraging")
         // sxz and syz are on the same spot as vx and vy in acoustic modeling
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);
+        this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
+        this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
+}
+
+/*! \brief calculate reflectivity from permittivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::SH<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
+{
+    scai::lama::DenseVector<ValueType> impedance;
+    scai::lama::DenseVector<ValueType> impedanceAverageY;
+    auto dist = density.getDistributionPtr();
+    auto ctx = density.getContextPtr();
+    auto const &Dyf = derivatives.getDyf();
+    this->calcAverageMatrixY(modelCoordinates, dist);
+    averageMatrixY.setContextPtr(ctx);
+    impedance = density * velocityS;
+    this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
+    averageMatrixY.purge();
+    impedanceAverageY *= 2;
+    reflectivity = Dyf * impedance;
+    reflectivity *= -modelCoordinates.getDH() / DT;
+    reflectivity /= impedanceAverageY;
 }
 
 /*! \brief Get equationType (sh)

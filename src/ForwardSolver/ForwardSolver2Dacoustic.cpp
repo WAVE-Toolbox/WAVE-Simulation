@@ -117,8 +117,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
 
     /* ----------------*/
     /* update velocity */
-    /* ----------------*/
-
+    /* ----------------*/    
     update = Dxf * p;
     if (useConvPML) {
         ConvPML.apply_p_x(update);

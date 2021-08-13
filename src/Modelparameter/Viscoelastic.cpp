@@ -583,15 +583,15 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calculateAveraging()
 {
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.Viscoelastic.calculateAveraging")
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageX, averageMatrixX);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageY, averageMatrixY);
-        this->calculateInverseAveragedDensity(density, inverseDensityAverageZ, averageMatrixZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, averageMatrixXY);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixXZ);
-        this->calculateAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixYZ);
-        this->calculateAveragedTauS(tauS, tauSAverageXY, averageMatrixXY);
-        this->calculateAveragedTauS(tauS, tauSAverageXZ, averageMatrixXZ);
-        this->calculateAveragedTauS(tauS, tauSAverageYZ, averageMatrixYZ);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageX, averageMatrixX);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageY, averageMatrixY);
+        this->calcInverseAveragedParameter(density, inverseDensityAverageZ, averageMatrixZ);
+        this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXY, averageMatrixXY);
+        this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixXZ);
+        this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixYZ);
+        this->calcAveragedParameter(tauS, tauSAverageXY, averageMatrixXY);
+        this->calcAveragedParameter(tauS, tauSAverageXZ, averageMatrixXZ);
+        this->calcAveragedParameter(tauS, tauSAverageYZ, averageMatrixYZ);
         dirtyFlagAveraging = false;
     }
 }
@@ -612,6 +612,27 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::initRelaxationMechanisms(I
     }
     numRelaxationMechanisms = numRelaxationMechanisms_in;
     relaxationFrequency = relaxationFrequency_in;
+}
+
+/*! \brief calculate reflectivity from permittivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
+{
+    scai::lama::DenseVector<ValueType> impedance;
+    scai::lama::DenseVector<ValueType> impedanceAverageY;
+    auto dist = density.getDistributionPtr();
+    auto ctx = density.getContextPtr();
+    auto const &Dyf = derivatives.getDyf();
+    this->calcAverageMatrixY(modelCoordinates, dist);
+    averageMatrixY.setContextPtr(ctx);
+    impedance = density * velocityP;
+    this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
+    averageMatrixY.purge();
+    impedanceAverageY *= 2;
+    reflectivity = Dyf * impedance;
+    reflectivity *= -modelCoordinates.getDH() / DT;
+    reflectivity /= impedanceAverageY;
 }
 
 /*! \brief Get equationType (viscoelastic)

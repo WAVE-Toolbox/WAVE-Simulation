@@ -751,20 +751,29 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::resetReflectivity()
 template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
 {
-    scai::lama::DenseVector<ValueType> dielectricPermittivitytemp;
-    scai::lama::DenseVector<ValueType> dielectricPermittivityAverageYtemp;
+    scai::lama::DenseVector<ValueType> impedance;
+    scai::lama::DenseVector<ValueType> impedanceAverageY;
+    IndexType spatialFDorder = derivatives.getSpatialFDorder();
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
     auto dist = dielectricPermittivity.getDistributionPtr();
     auto ctx = dielectricPermittivity.getContextPtr();
     auto const &Dyf = derivatives.getDyf();
     this->calcAverageMatrixY(modelCoordinates, dist);
     averageMatrixY.setContextPtr(ctx);
-    dielectricPermittivitytemp = scai::lama::sqrt(dielectricPermittivity);
-    this->calculateAveragedParameter(dielectricPermittivitytemp, dielectricPermittivityAverageYtemp, averageMatrixY);
+    impedance = scai::lama::sqrt(dielectricPermittivity);
+    impedance = 1 / impedance;
+    this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
     averageMatrixY.purge();
-    dielectricPermittivityAverageYtemp *= 2;
-    reflectivity = Dyf * dielectricPermittivitytemp;
-    reflectivity *= -modelCoordinates.getDH() / DT;
-    reflectivity /= dielectricPermittivityAverageYtemp;
+    impedanceAverageY *= 2;
+    reflectivity = Dyf * impedance;
+    reflectivity *= modelCoordinates.getDH() / DT;
+    reflectivity /= impedanceAverageY;
+    for (IndexType i=0; i < spatialFDorder * NX * NZ / 2; i++) {
+        reflectivity[i] = 0.0;
+        reflectivity[NX*NY*NZ-i-1] = 0.0;
+    }
 }
 
 /*! \brief Get const reference to electricConductivityWater
@@ -1102,11 +1111,9 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixYZ(Ac
  \param averagedMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calculateAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
 {
     vecAveragedParameter = averagedMatrix * vecParameter;
-    
-    Common::replaceInvalid<ValueType>(vecAveragedParameter, 0.0);
 }
 
 /*! \brief calculate averaged inverse EM parameter
@@ -1116,7 +1123,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calculateAveragedParam
  \param averagedMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calculateInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
 {
     vecInverseAveragedParameter = averagedMatrix * vecParameter;
     vecInverseAveragedParameter = 1 / vecInverseAveragedParameter;

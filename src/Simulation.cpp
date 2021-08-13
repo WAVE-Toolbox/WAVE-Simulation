@@ -354,30 +354,21 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Hilbet handler                          */
     /* --------------------------------------- */
-    Acquisition::SourcesEM<ValueType> sourcesHilbertEM;
-    Acquisition::ReceiversEM<ValueType> receiversHilbertEM;
+    IndexType snapType = config.get<IndexType>("snapType");
     Hilbert::HilbertFFT<ValueType> hilbertHandlerTime;
     IndexType decomposeType = config.getAndCatch("decomposeType", 0);
-    Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldsHilbertEM(Wavefields::FactoryEM<ValueType>::Create(dimension, equationType));
-    IndexType snapTypeTemp = 0;
     if (decomposeType != 0) {
         IndexType kernelSize = Common::calcNextPowTwo<ValueType>(tStepEnd);  
         hilbertHandlerTime.setCoefficientLength(kernelSize);
         hilbertHandlerTime.calcHilbertCoefficient(); 
-        if (!isSeismic) {
-            wavefieldsHilbertEM->init(ctx, dist);
-            if (config.get<IndexType>("useReceiversPerShot") == 0) {
-                receiversHilbertEM.init(config, modelCoordinates, ctx, dist);
-            }
-        }
-        snapTypeTemp = decomposeType + 3;
+        snapType = decomposeType + 3;
     }
     
     /* --------------------------------------- */
     /* Wavefield additional                        */
     /* --------------------------------------- */
-    typedef typename Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldPtrEM;   
-    wavefieldPtrEM wavefieldsTempEM = Wavefields::FactoryEM<ValueType>::Create(dimension, equationType);
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsTemp = Wavefields::Factory<ValueType>::Create(dimension, equationType);
+    Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldsTempEM = Wavefields::FactoryEM<ValueType>::Create(dimension, equationType);
     
     /* --------------------------------------- */
     /* Loop over shots                         */
@@ -406,12 +397,16 @@ int main(int argc, const char *argv[])
             uniqueShotInds.push_back(i);
         }
     }
-    for (IndexType randInd = 0; randInd < numshots / numShotDomains; randInd++) { 
+    IndexType numRand = numshots / numShotDomains;  
+    if (decomposeType != 0) {
+        numRand = 2;
+    }
+    for (IndexType randInd = 0; randInd < numRand; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
             Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0));
             end_t = common::Walltime::get();
-            HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numshots / numShotDomains << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
+            HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numRand << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
@@ -445,10 +440,19 @@ int main(int argc, const char *argv[])
                     CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
                 }
 
+                if (randInd == 1 && decomposeType != 0) {
+                    lama::DenseMatrix<ValueType> sourcesignalHilbert = sources.getsourcesignal();
+                    hilbertHandlerTime.hilbert(sourcesignalHilbert);
+                    sources.setsourcesignal(sourcesignalHilbert);
+                }
                 bool writeSource = config.getAndCatch("writeSource", false);
                 if (writeSource) {
                     lama::DenseMatrix<ValueType> sourcesignal_out = sources.getsourcesignal();
-                    KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+                    if (randInd == 1 && decomposeType != 0) {
+                        KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", config.get<IndexType>("fileFormat"));
+                    } else {
+                        KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+                    }
                 }
 
                 if (config.get<IndexType>("useReceiversPerShot") == 1) {
@@ -457,7 +461,11 @@ int main(int argc, const char *argv[])
                     receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
                 }
 
-                HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                if (randInd == 1 && decomposeType != 0) {
+                    HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << " Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                } else {
+                    HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                }
                 wavefields->resetWavefields();
 
                 start_t = common::Walltime::get();
@@ -465,8 +473,9 @@ int main(int argc, const char *argv[])
                 double start_t2 = 0.0, end_t2 = 0.0;
 
                 /* --------------------------------------- */
-                /* Loop over time steps                        */
+                /* Loop over time steps                    */
                 /* --------------------------------------- */
+                ValueType DTinv = 1 / config.get<ValueType>("DT");
                 if (!useStreamConfig) {
                     for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
@@ -474,16 +483,28 @@ int main(int argc, const char *argv[])
                         if ((tStep - 1) % 100 == 0) {
                             start_t2 = common::Walltime::get();
                         }
+                        *wavefieldsTemp = *wavefields;
 
                         solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
+
+                        if (randInd == 0 && decomposeType != 0) {
+                            *wavefieldsTemp -= *wavefields;
+                            *wavefieldsTemp *= -DTinv;
+                            wavefields->decompose(decomposeType, *wavefieldsTemp, *derivatives);
+                        }
 
                         if (tStep % 100 == 0 && tStep != 0) {
                             end_t2 = common::Walltime::get();
                             HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
                         }
 
-                        if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                            wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                        if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                            if (randInd == 1 && decomposeType != 0) {
+                                wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                                wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                            } else {
+                                wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                            }
                         }
                     }
                 } else {                
@@ -493,20 +514,32 @@ int main(int argc, const char *argv[])
                         if ((tStep - 1) % 100 == 0) {
                             start_t2 = common::Walltime::get();
                         }
+                        *wavefieldsTemp = *wavefields;
 
                         solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
+
+                        if (randInd == 0 && decomposeType != 0) {
+                            *wavefieldsTemp -= *wavefields;
+                            *wavefieldsTemp *= -DTinv;
+                            wavefields->decompose(decomposeType, *wavefieldsTemp, *derivatives);
+                        }
 
                         if (tStep % 100 == 0 && tStep != 0) {
                             end_t2 = common::Walltime::get();
                             HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
                         }
 
-                        if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                            wavefields->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                        if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                            if (randInd == 1 && decomposeType != 0) {
+                                wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                                wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                            } else {
+                                wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                            }
                         }
                     }
                 }
-
+                solver->resetCPML();
                 end_t = common::Walltime::get();
                 HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
                 
@@ -520,9 +553,11 @@ int main(int argc, const char *argv[])
                 }
                 receivers.getSeismogramHandler().normalize(config.get<IndexType>("normalizeTraces"));
 
-                receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-                
-                solver->resetCPML();
+                if (randInd == 1 && decomposeType != 0) { 
+                    receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
+                } else {
+                    receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+                }                
             }
             
         } else { // for EM wave simulation
@@ -555,10 +590,19 @@ int main(int argc, const char *argv[])
                     CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShotEM, modelCoordinates, shotNumber);
                 }
 
+                if (randInd == 1 && decomposeType != 0) {
+                    lama::DenseMatrix<ValueType> sourcesignalHilbert = sourcesEM.getsourcesignal();
+                    hilbertHandlerTime.hilbert(sourcesignalHilbert);
+                    sourcesEM.setsourcesignal(sourcesignalHilbert);
+                }
                 bool writeSource = config.getAndCatch("writeSource", false);
                 if (writeSource) {
                     lama::DenseMatrix<ValueType> sourcesignal_out = sourcesEM.getsourcesignal();
-                    KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+                    if (randInd == 1 && decomposeType != 0) {
+                        KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", config.get<IndexType>("fileFormat"));
+                    } else {
+                        KITGPI::IO::writeMatrix(sourcesignal_out, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber), config.get<IndexType>("fileFormat"));
+                    }
                 }
                 
                 if (config.get<IndexType>("useReceiversPerShot") == 1) {
@@ -567,7 +611,11 @@ int main(int argc, const char *argv[])
                     receiversEM.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
                 }
 
-                HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                if (randInd == 1 && decomposeType != 0) {
+                    HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << " Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                } else {
+                    HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                }
                 wavefieldsEM->resetWavefields();
 
                 start_t = common::Walltime::get();
@@ -585,12 +633,11 @@ int main(int argc, const char *argv[])
                         if ((tStep - 1) % 100 == 0) {
                             start_t2 = common::Walltime::get();
                         }
-
                         *wavefieldsTempEM = *wavefieldsEM;
                         
                         solverEM->run(receiversEM, sourcesEM, *modelEM, *wavefieldsEM, *derivatives, tStep);
                         
-                        if (decomposeType != 0) {
+                        if (randInd == 0 && decomposeType != 0) {
                             *wavefieldsTempEM -= *wavefieldsEM;
                             *wavefieldsTempEM *= -DTinv;
                             wavefieldsEM->decompose(decomposeType, *wavefieldsTempEM, *derivatives);
@@ -601,9 +648,12 @@ int main(int argc, const char *argv[])
                             HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
                         }
 
-                        if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                            wavefieldsEM->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelEM, config.get<IndexType>("FileFormat"));
-                            wavefieldsEM->write(snapTypeTemp, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelEM, config.get<IndexType>("FileFormat"));
+                        if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                            if (randInd == 1 && decomposeType != 0) {
+                                wavefieldsEM->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelEM, config.get<IndexType>("FileFormat"));
+                            } else {
+                                wavefieldsEM->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelEM, config.get<IndexType>("FileFormat"));
+                            }
                         }
                     }
                 } else {                
@@ -613,10 +663,14 @@ int main(int argc, const char *argv[])
                         if ((tStep - 1) % 100 == 0) {
                             start_t2 = common::Walltime::get();
                         }
+                        *wavefieldsTempEM = *wavefieldsEM;
 
                         solverEM->run(receiversEM, sourcesEM, *modelPerShotEM, *wavefieldsEM, *derivatives, tStep);
                         
-                        if (decomposeType != 0) {
+                        if (randInd == 0 && decomposeType != 0) {
+                            *wavefieldsTempEM -= *wavefieldsEM;
+                            *wavefieldsTempEM *= -DTinv;
+                            wavefieldsEM->decompose(decomposeType, *wavefieldsTempEM, *derivatives);
                         }
                         
                         if (tStep % 100 == 0 && tStep != 0) {
@@ -624,68 +678,16 @@ int main(int argc, const char *argv[])
                             HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
                         }
 
-                        if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                            wavefieldsEM->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShotEM, config.get<IndexType>("FileFormat"));
-                        }
-                    }
-                }
-
-                if (decomposeType != 0) {
-                    sourcesHilbertEM.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-                    lama::DenseMatrix<ValueType> sourcesignalHilbert = sourcesHilbertEM.getsourcesignal();
-                    hilbertHandlerTime.hilbert(sourcesignalHilbert);
-                    sourcesHilbertEM.setsourcesignal(sourcesignalHilbert);
-                    if (writeSource) {
-                        KITGPI::IO::writeMatrix(sourcesignalHilbert, config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", config.get<IndexType>("fileFormat"));
-                    }
-                    if (config.get<IndexType>("useReceiversPerShot") == 1) {
-                        receiversHilbertEM.init(config, modelCoordinates, ctx, dist, shotNumber);
-                    } else if (config.get<IndexType>("useReceiversPerShot") == 2) {
-                        receiversHilbertEM.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
-                    }
-                    
-                    HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << " Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
-                    wavefieldsHilbertEM->resetWavefields();
-                    if (!useStreamConfig) {
-                        for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
-                            SCAI_REGION("WAVE-Simulation.timeLoop")
-                            if ((tStep - 1) % 100 == 0) {
-                                start_t2 = common::Walltime::get();
-                            }
-
-                            solverEM->run(receiversHilbertEM, sourcesHilbertEM, *modelEM, *wavefieldsHilbertEM, *derivatives, tStep);
-
-                            if (tStep % 100 == 0 && tStep != 0) {
-                                end_t2 = common::Walltime::get();
-                                HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
-                            }
-
-                            if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                                wavefieldsHilbertEM->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelEM, config.get<IndexType>("FileFormat"));
-                            }
-                        }
-                    } else {                
-                        for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
-
-                            SCAI_REGION("WAVE-Simulation.timeLoop")
-                            if ((tStep - 1) % 100 == 0) {
-                                start_t2 = common::Walltime::get();
-                            }
-
-                            solverEM->run(receiversHilbertEM, sourcesHilbertEM, *modelPerShotEM, *wavefieldsHilbertEM, *derivatives, tStep);
-                            
-                            if (tStep % 100 == 0 && tStep != 0) {
-                                end_t2 = common::Walltime::get();
-                                HOST_PRINT(commShot, "", "Calculated " << tStep << " time steps" << " in shot  " << shotNumber << " at t = " << end_t2 - globalStart_t << "\nLast 100 timesteps calculated in " << end_t2 - start_t2 << " sec. - Estimated runtime (Simulation/total): " << (int)((tStepEnd / 100) * (end_t2 - start_t2)) << " / " << (int)((tStepEnd / 100) * (end_t2 - start_t2) + tInit) << " sec.\n\n");
-                            }
-
-                            if (config.get<IndexType>("snapType") > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
-                                wavefieldsHilbertEM->write(config.get<IndexType>("snapType"), config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShotEM, config.get<IndexType>("FileFormat"));
+                        if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
+                            if (randInd == 1 && decomposeType != 0) {
+                                wavefieldsEM->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShotEM, config.get<IndexType>("FileFormat"));
+                            } else {
+                                wavefieldsEM->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShotEM, config.get<IndexType>("FileFormat"));
                             }
                         }
                     }
                 }
+                solverEM->resetCPML();
                 end_t = common::Walltime::get();
                 HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
                 
@@ -699,16 +701,15 @@ int main(int argc, const char *argv[])
                 }
                 receiversEM.getSeismogramHandler().normalize(config.get<IndexType>("normalizeTraces"));
 
-                receiversEM.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-
-                if (decomposeType != 0) { 
-                    receiversHilbertEM.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
-                }               
-                solverEM->resetCPML();
+                if (randInd == 1 && decomposeType != 0) { 
+                    receiversEM.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
+                } else {
+                    receiversEM.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+                }
             }
         }
         
-        if (config.getAndCatch("useRandomSource", 0) == 0) 
+        if (config.getAndCatch("useRandomSource", 0) == 0 && decomposeType == 0) 
             break;
     }
     globalEnd_t = common::Walltime::get();

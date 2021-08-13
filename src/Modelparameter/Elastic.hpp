@@ -77,6 +77,7 @@ namespace KITGPI
             void calcRockMatrixParameter(Configuration::Configuration const &config) override;
             void calcWaveModulusFromPetrophysics() override;
             void calcPetrophysicsFromWaveModulus() override;
+            void calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT) override;
 
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -119,6 +120,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::densityRockMatrix;        //!< Vector storing Density.
             using Modelparameter<ValueType>::porosity; 
             using Modelparameter<ValueType>::saturation; 
+            using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity.
             using Modelparameter<ValueType>::DensityWater;
             using Modelparameter<ValueType>::DensityAir;
             using Modelparameter<ValueType>::CriticalPorosity;

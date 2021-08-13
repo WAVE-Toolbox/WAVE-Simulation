@@ -86,10 +86,12 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::write(IndexType snapType, std::str
         break;
     }
     case 4:
+        IO::writeVector(EZ, fileName + ".EZ." + timeStep, fileFormat);
         IO::writeVector(EZup, fileName + ".EZ.up." + timeStep, fileFormat);
         IO::writeVector(EZdown, fileName + ".EZ.down." + timeStep, fileFormat);
         break;
     case 5:
+        IO::writeVector(EZ, fileName + ".EZ." + timeStep, fileFormat);
         IO::writeVector(EZleft, fileName + ".EZ.left." + timeStep, fileFormat);
         IO::writeVector(EZright, fileName + ".EZ.right." + timeStep, fileFormat);
         break;
@@ -107,49 +109,50 @@ template <typename ValueType>
 void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
     if (decomposeType > 0) {
-        lama::DenseVector<ValueType> temp;
-        if (decomposeType == 1) {  
+        lama::DenseVector<ValueType> Poynting1;
+        lama::DenseVector<ValueType> Poynting2;
+        if (decomposeType == 1) {              
+            Poynting1 = EZ;
+            Poynting1 *= HX;
+            
             auto const &Dyf = derivatives.getDyf();
-            temp = Dyf * EZ;
-            temp *= wavefieldsDerivative.getRefEZ();
-            temp *= -1;
+            Poynting2 = Dyf * EZ;
+            Poynting2 *= wavefieldsDerivative.getRefEZ();
+            Poynting2 *= -1;
             
-            EZup = EZ;
-            EZup *= HX;
+            Poynting2 *= Poynting1.maxNorm() / Poynting2.maxNorm();
+            Poynting2 += Poynting1;
             
-            temp *= EZup.maxNorm() / temp.maxNorm();
-            temp += EZup;
-            
-            EZup.unaryOp(temp, common::UnaryOp::SIGN);
+            EZup.unaryOp(Poynting2, common::UnaryOp::SIGN);
             EZup -= 1;
             EZup.unaryOp(EZup, common::UnaryOp::ABS);
             EZup.unaryOp(EZup, common::UnaryOp::SIGN);
             EZup *= EZ;
             
-            EZdown.unaryOp(temp, common::UnaryOp::SIGN);
+            EZdown.unaryOp(Poynting2, common::UnaryOp::SIGN);
             EZdown += 1;
             EZdown.unaryOp(EZdown, common::UnaryOp::SIGN);
             EZdown *= EZ;
-        } else if (decomposeType == 2) {
+        } else if (decomposeType == 2) {            
+            Poynting1 = EZ;
+            Poynting1 *= HY;
+            Poynting1 *= -1;
+            
             auto const &Dxf = derivatives.getDxf();
-            temp = Dxf * EZ;
-            temp *= wavefieldsDerivative.getRefEZ();
-            temp *= -1;
+            Poynting2 = Dxf * EZ;
+            Poynting2 *= wavefieldsDerivative.getRefEZ();
+            Poynting2 *= -1;
             
-            EZleft = EZ;
-            EZleft *= HY;
-            EZleft *= -1;
+            Poynting2 *= Poynting1.maxNorm() / Poynting2.maxNorm();
+            Poynting2 += Poynting1;
             
-            temp *= EZleft.maxNorm() / temp.maxNorm();
-            temp += EZleft;
-            
-            EZleft.unaryOp(temp, common::UnaryOp::SIGN);
+            EZleft.unaryOp(Poynting2, common::UnaryOp::SIGN);
             EZleft -= 1;
             EZleft.unaryOp(EZleft, common::UnaryOp::ABS);
             EZleft.unaryOp(EZleft, common::UnaryOp::SIGN);
             EZleft *= EZ;
                         
-            EZright.unaryOp(temp, common::UnaryOp::SIGN);
+            EZright.unaryOp(Poynting2, common::UnaryOp::SIGN);
             EZright += 1;
             EZright.unaryOp(EZright, common::UnaryOp::SIGN);
             EZright *= EZ;  

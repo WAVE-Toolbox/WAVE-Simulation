@@ -25,6 +25,7 @@
 #include "../Common/HostPrint.hpp"
 #include "../Configuration/Configuration.hpp"
 #include <iostream>
+#include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 namespace KITGPI
 {
@@ -80,6 +81,7 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getDensityRockMatrix() const;
             virtual scai::lama::Vector<ValueType> const &getBulkModulusRockMatrix() const;
             virtual scai::lama::Vector<ValueType> const &getShearModulusRockMatrix() const;
+            virtual scai::lama::Vector<ValueType> const &getReflectivity() const;
 
             virtual scai::lama::Vector<ValueType> const &getTauP() const;
             virtual scai::lama::Vector<ValueType> const &getTauS() const;
@@ -95,6 +97,9 @@ namespace KITGPI
             virtual void setDensityRockMatrix(scai::lama::Vector<ValueType> const &setDensityRockMatrix);
             virtual void setBulkModulusRockMatrix(scai::lama::Vector<ValueType> const &setBulkModulusRockMatrix);
             virtual void setShearModulusRockMatrix(scai::lama::Vector<ValueType> const &setShearModulusRockMatrix);
+            virtual void setReflectivity(scai::lama::Vector<ValueType> const &setReflectivity);
+            virtual void resetReflectivity();
+            virtual void calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT) = 0;
 
             virtual void setTauP(scai::lama::Vector<ValueType> const &setTauP);
             virtual void setTauS(scai::lama::Vector<ValueType> const &setTauS);
@@ -121,6 +126,10 @@ namespace KITGPI
             void setParameterisation(scai::IndexType const setParameterisation);
             scai::IndexType getInversionType() const;
             void setInversionType(scai::IndexType const setInversionType);
+            scai::IndexType getGradientType() const;
+            void setGradientType(scai::IndexType const setGradientType);
+            scai::IndexType getDecomposeType() const;
+            void setDecomposeType(scai::IndexType const setDecomposeType);
             
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -176,6 +185,8 @@ namespace KITGPI
 
             scai::IndexType parameterisation;
             scai::IndexType inversionType;
+            scai::IndexType gradientType;
+            scai::IndexType decomposeType;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
 
             std::string equationType;
@@ -193,6 +204,7 @@ namespace KITGPI
 
             scai::lama::DenseVector<ValueType> porosity; 
             scai::lama::DenseVector<ValueType> saturation; 
+            scai::lama::DenseVector<ValueType> reflectivity; //!< Vector storing reflectivity.
             scai::lama::DenseVector<ValueType> densityRockMatrix;        //!< Vector storing Density.
             scai::lama::DenseVector<ValueType> bulkModulusRockMatrix;   //!< Vector storing P-wave modulus.
             scai::lama::DenseVector<ValueType> shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
@@ -251,9 +263,9 @@ namespace KITGPI
             SparseFormat averageMatrixXZ;                                //!< Average S-wave Modulus in xz-plane
             SparseFormat averageMatrixYZ;                                //!< Average S-wave Modulus in yz-plane
 
-            void calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
-            void calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);
-            void calculateAveragedTauS(scai::lama::Vector<ValueType> &vecTauS, scai::lama::Vector<ValueType> &vecAvTauS, scai::lama::Matrix<ValueType> &avTauSMatrix);
+            void calcInverseAveragedParameter(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix);
+            void calcAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix);
+            void calcAveragedParameter(scai::lama::Vector<ValueType> &vecTauS, scai::lama::Vector<ValueType> &vecAvTauS, scai::lama::Matrix<ValueType> &avTauSMatrix);
 
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);

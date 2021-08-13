@@ -47,6 +47,22 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> &getRefVY();
             virtual scai::lama::DenseVector<ValueType> &getRefVZ();
             virtual scai::lama::DenseVector<ValueType> &getRefP();
+            virtual scai::lama::DenseVector<ValueType> &getRefPup();
+            virtual scai::lama::DenseVector<ValueType> &getRefPdown();
+            virtual scai::lama::DenseVector<ValueType> &getRefPleft();
+            virtual scai::lama::DenseVector<ValueType> &getRefPright();
+            virtual scai::lama::DenseVector<ValueType> &getRefVXup();
+            virtual scai::lama::DenseVector<ValueType> &getRefVXdown();
+            virtual scai::lama::DenseVector<ValueType> &getRefVXleft();
+            virtual scai::lama::DenseVector<ValueType> &getRefVXright();
+            virtual scai::lama::DenseVector<ValueType> &getRefVYup();
+            virtual scai::lama::DenseVector<ValueType> &getRefVYdown();
+            virtual scai::lama::DenseVector<ValueType> &getRefVYleft();
+            virtual scai::lama::DenseVector<ValueType> &getRefVYright();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZup();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZdown();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZleft();
+            virtual scai::lama::DenseVector<ValueType> &getRefVZright();
 
             virtual scai::lama::DenseVector<ValueType> &getRefSxx();
             virtual scai::lama::DenseVector<ValueType> &getRefSyy();
@@ -85,7 +101,8 @@ namespace KITGPI
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void timesAssign(ValueType rhs) = 0;
             
-            virtual void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;            
+            virtual void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;        
+            virtual void decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) = 0;    
             
             void initTransformMatrixXYZ(IndexType decomposeType, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx);
             void calcTransformMatrixXYZ(KITGPI::Acquisition::Coordinates<ValueType> modelCoordinates);
@@ -118,6 +135,22 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> Sxz; //!< Wavefield
             scai::lama::DenseVector<ValueType> Sxy; //!< Wavefield
             scai::lama::DenseVector<ValueType> P;   //!< Wavefield
+            scai::lama::DenseVector<ValueType> Pup;   //!< Wavefield
+            scai::lama::DenseVector<ValueType> Pdown;   //!< Wavefield
+            scai::lama::DenseVector<ValueType> Pleft;   //!< Wavefield
+            scai::lama::DenseVector<ValueType> Pright;   //!< Wavefield
+            scai::lama::DenseVector<ValueType> VXup;
+            scai::lama::DenseVector<ValueType> VXdown;
+            scai::lama::DenseVector<ValueType> VXleft;
+            scai::lama::DenseVector<ValueType> VXright;
+            scai::lama::DenseVector<ValueType> VYup;
+            scai::lama::DenseVector<ValueType> VYdown;
+            scai::lama::DenseVector<ValueType> VYleft;
+            scai::lama::DenseVector<ValueType> VYright;
+            scai::lama::DenseVector<ValueType> VZup;
+            scai::lama::DenseVector<ValueType> VZdown;
+            scai::lama::DenseVector<ValueType> VZleft;
+            scai::lama::DenseVector<ValueType> VZright;
 
             scai::lama::DenseVector<ValueType> Rxx; //!< Relaxation parameter
             scai::lama::DenseVector<ValueType> Ryy; //!< Relaxation parameter

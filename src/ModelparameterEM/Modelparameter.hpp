@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <scai/lama.hpp>
@@ -295,8 +293,8 @@ namespace KITGPI
             SparseFormat averageMatrixXZ;                                //!< Average EM-wave Modulus in xz-plane
             SparseFormat averageMatrixYZ;                                //!< Average EM-wave Modulus in yz-plane
 
-            void calculateInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
-            void calculateAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
+            void calcInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
+            void calcAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix);
                          
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);

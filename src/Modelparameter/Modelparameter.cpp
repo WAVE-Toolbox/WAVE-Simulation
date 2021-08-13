@@ -49,6 +49,34 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setInversionType(scai::I
     inversionType = setInversionType;
 }
 
+/*! \brief Getter method for gradientType */
+template <typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getGradientType() const
+{
+    return (gradientType);
+}
+
+/*! \brief Set method for gradientType */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientType(scai::IndexType const setGradientType)
+{
+    gradientType = setGradientType;
+}
+
+/*! \brief Getter method for decomposeType */
+template <typename ValueType>
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getDecomposeType() const
+{
+    return (decomposeType);
+}
+
+/*! \brief Set method for decomposeType */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
+{
+    decomposeType = setDecomposeType;
+}
+
 /*! \brief Get matrix that multiplies with model matrices to get a pershot
  \param dist Distribution of the pershot
  \param distBig Distribution of the big model
@@ -125,6 +153,8 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::prepareForInversion(Conf
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
     setParameterisation(config.getAndCatch("parameterisation", 0));
     setInversionType(config.getAndCatch("inversionType", 1));
+    setGradientType(config.getAndCatch("gradientType", 0));
+    setDecomposeType(config.getAndCatch("decomposeType", 0));
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -535,6 +565,30 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setSaturation(scai::lama
     saturation = setSaturation;
 }
 
+/*! \brief Get const reference to reflectivity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Modelparameter<ValueType>::getReflectivity() const
+{
+    return (reflectivity);
+}
+
+/*! \brief Set reflectivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setReflectivity(scai::lama::Vector<ValueType> const &setReflectivity)
+{
+    reflectivity = setReflectivity;
+}
+
+/*! \brief reset reflectivity
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::resetReflectivity()
+{
+    reflectivity = 0.0;
+}
+
 /*! \brief Get const reference to tauP
  *
  */
@@ -911,7 +965,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAverageMatrixYZ(Acqu
  \param avDensityMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveragedDensity(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcInverseAveragedParameter(scai::lama::DenseVector<ValueType> &vecDensity, scai::lama::DenseVector<ValueType> &vecInverseAvDensity, scai::lama::Matrix<ValueType> &avDensityMatrix)
 {
     vecInverseAvDensity = avDensityMatrix * vecDensity;
     vecInverseAvDensity = 1 / vecInverseAvDensity;
@@ -926,7 +980,7 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateInverseAveraged
  \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
 {
     //replace values smaller than 1.0 with 1.0 (to avoid infs)
     Common::searchAndReplace<ValueType>(vecSWaveModulus, 1.0, 1.0, 1);
@@ -946,10 +1000,9 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedSWaveMo
  \param avTauSMatrix Averaging matrix which is used to calculate averaged vector
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::calculateAveragedTauS(scai::lama::Vector<ValueType> &vecTauS, scai::lama::Vector<ValueType> &vecAvTauS, scai::lama::Matrix<ValueType> &avTauSMatrix)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::calcAveragedParameter(scai::lama::Vector<ValueType> &vecTauS, scai::lama::Vector<ValueType> &vecAvTauS, scai::lama::Matrix<ValueType> &avTauSMatrix)
 {
-    vecAvTauS = vecTauS;
-    vecAvTauS = avTauSMatrix * vecAvTauS;
+    vecAvTauS = avTauSMatrix * vecTauS;
 }
 
 /*! \brief Get const reference to averaged density in x-direction
