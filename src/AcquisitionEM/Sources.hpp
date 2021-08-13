@@ -4,7 +4,7 @@
 #include <scai/lama.hpp>
 #include <vector>
 
-#include "AcquisitionGeometry.hpp"
+#include "../Acquisition/AcquisitionGeometry.hpp"
 #include "../Acquisition/AcquisitionSettings.hpp"
 #include "../Acquisition/SourceSignal/all.hpp"
 #include "../Acquisition/suHandler.hpp"
@@ -16,7 +16,7 @@ namespace KITGPI
     {
 
         template <typename ValueType>
-        class AcquisitionGeometryEM;
+        class AcquisitionGeometry;
 
         template <typename ValueType>
         class Seismogram;
@@ -30,7 +30,7 @@ namespace KITGPI
          * It provides the reading from the source acquisition from file, the distribution of the sources and the generation of synthetic signals.
          */
         template <typename ValueType>
-        class SourcesEM : public AcquisitionGeometryEM<ValueType>
+        class SourcesEM : public AcquisitionGeometry<ValueType>
         {
 
           public:

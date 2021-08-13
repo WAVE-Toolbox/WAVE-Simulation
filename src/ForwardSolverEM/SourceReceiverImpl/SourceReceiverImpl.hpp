@@ -3,7 +3,7 @@
 #include <scai/lama.hpp>
 
 #include "../../Acquisition/Acquisition.hpp"
-#include "../../AcquisitionEM/AcquisitionGeometry.hpp"
+#include "../../Acquisition/AcquisitionGeometry.hpp"
 #include "../../Acquisition/Seismogram.hpp"
 #include "../../Acquisition/SeismogramHandler.hpp"
 
@@ -30,7 +30,7 @@ namespace KITGPI
                 
                 //! Default constructor
                 SourceReceiverImplEM() = delete;
-                explicit SourceReceiverImplEM(Acquisition::AcquisitionGeometryEM<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometryEM<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN);
+                explicit SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN);
                 //! Default destructor
                 ~SourceReceiverImplEM(){};
 

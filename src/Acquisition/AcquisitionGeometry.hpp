@@ -40,6 +40,8 @@ namespace KITGPI
             SeismogramHandler<ValueType> &getSeismogramHandler();
             SeismogramHandler<ValueType> const &getSeismogramHandler() const;
 
+            bool isSeismic = false;
+            
           protected:
             scai::IndexType getNumParameter() const;
             void initSeismogramHandler(scai::IndexType const NT, scai::hmemo::ContextPtr const ctx, scai::dmemo::DistributionPtr const dist_wavefield);

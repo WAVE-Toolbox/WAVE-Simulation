@@ -8,7 +8,7 @@ using namespace scai;
  \param wavefieldIN Wavefield
  */
 template <typename ValueType>
-KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::SourceReceiverImplEM(Acquisition::AcquisitionGeometryEM<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometryEM<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN)
+KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN)
     : wavefield(wavefieldIN), seismogramHandlerSrc(sourceConfig.getSeismogramHandler()), seismogramHandlerRec(receiverConfig.getSeismogramHandler())
 {
 

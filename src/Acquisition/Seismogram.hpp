@@ -95,6 +95,8 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
+            bool isSeismic = false;
+            
           private:
 
             /* header information */
@@ -114,7 +116,6 @@ namespace KITGPI
             scai::IndexType outputInstantaneous; // output envelope
             ValueType frequencyAGC; // frequency used to calculate AGC window length
             bool useAGC = true; // make sure AGC can be applied only once for each shot
-            bool isSeismic = false;
         };
     }
 }

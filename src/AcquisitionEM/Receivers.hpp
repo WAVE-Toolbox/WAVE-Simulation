@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AcquisitionGeometry.hpp"
+#include "../Acquisition/AcquisitionGeometry.hpp"
 #include "../Acquisition/AcquisitionSettings.hpp"
 #include "../Acquisition/suHandler.hpp"
 #include <scai/lama.hpp>
@@ -27,7 +27,7 @@ namespace KITGPI
          *
          */
         template <typename ValueType>
-        class ReceiversEM : public AcquisitionGeometryEM<ValueType>
+        class ReceiversEM : public AcquisitionGeometry<ValueType>
         {
           public:
             //! \brief Default constructor

@@ -48,19 +48,31 @@ void KITGPI::Acquisition::AcquisitionGeometry<ValueType>::initSeismogramHandler(
         coord[tempIndexType].setValue(count[tempIndexType], this->get1DCoordinates().getValue(i));
         ++count[tempIndexType];
     }
-
-    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(0), SeismogramType::P, "Cast went wrong");
-    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(1), SeismogramType::VX, "Cast went wrong");
-    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(2), SeismogramType::VY, "Cast went wrong");
-    SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(3), SeismogramType::VZ, "Cast went wrong");
+    
+    if (isSeismic) {
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(0), SeismogramType::P, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(1), SeismogramType::VX, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(2), SeismogramType::VY, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramType>(3), SeismogramType::VZ, "Cast went wrong");
+    } else {
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramTypeEM>(0), SeismogramTypeEM::EZ, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramTypeEM>(1), SeismogramTypeEM::EX, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramTypeEM>(2), SeismogramTypeEM::EY, "Cast went wrong");
+        SCAI_ASSERT_EQ_DEBUG(static_cast<SeismogramTypeEM>(3), SeismogramTypeEM::HZ, "Cast went wrong");
+    }
 
     /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
     for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; ++i) {
-        if (coord[i].size() > 0) {
+        if (coord[i].size() > 0 && isSeismic) {
             dist[i] = calcDistribution(coord[i], dist_wavefield);
             seismograms.getSeismogram(static_cast<SeismogramType>(i)).allocate(ctx, dist[i], NT);
             coord[i].redistribute(dist[i]);
             seismograms.getSeismogram(static_cast<SeismogramType>(i)).setCoordinates(coord[i]);
+        } else if (coord[i].size() > 0 && !isSeismic) {
+            dist[i] = calcDistribution(coord[i], dist_wavefield);
+            seismograms.getSeismogram(static_cast<SeismogramTypeEM>(i)).allocate(ctx, dist[i], NT);
+            coord[i].redistribute(dist[i]);
+            seismograms.getSeismogram(static_cast<SeismogramTypeEM>(i)).setCoordinates(coord[i]);
         }
         count[i] = 0;
     }

@@ -55,12 +55,13 @@ namespace KITGPI
             KITGPI::Acquisition::SeismogramHandler<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             bool isFinite();
 
+            bool isSeismic = false;
+            
           private:
             void setTraceType();
             void setTraceTypeEM();
 
             std::vector<Seismogram<ValueType>> seismo; //!< Vector which holds the individual Seismogram classes
-            bool isSeismic = false;
         };
     }
 }
