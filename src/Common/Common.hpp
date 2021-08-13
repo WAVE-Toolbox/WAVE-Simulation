@@ -247,7 +247,7 @@ namespace KITGPI
         template <typename ValueType>
         bool checkEquationType(std::string type)
         {
-            bool isSeismic = false;
+            bool isSeismic = true;
             // transform to lower cases
             std::transform(type.begin(), type.end(), type.begin(), ::tolower);
             

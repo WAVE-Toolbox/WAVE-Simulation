@@ -7,9 +7,7 @@
 #include <vector>
 
 #include "Acquisition.hpp"
-
 #include "Coordinates.hpp"
-
 #include "AcquisitionSettings.hpp"
 #include "SeismogramHandler.hpp"
 
@@ -40,7 +38,7 @@ namespace KITGPI
             SeismogramHandler<ValueType> &getSeismogramHandler();
             SeismogramHandler<ValueType> const &getSeismogramHandler() const;
 
-            bool isSeismic = false;
+            bool isSeismic = true;
             
           protected:
             scai::IndexType getNumParameter() const;
@@ -56,7 +54,7 @@ namespace KITGPI
             /* Acquisition Settings */
             scai::IndexType numParameter;                             //!< Number of parameters given in acquisition matrix
             scai::lama::DenseVector<scai::IndexType> coordinates1D;   //!< Global coordinates of the traces (1-D coordinates)
-            scai::lama::DenseVector<scai::IndexType> seismogramTypes; //!< #SeismogramType of the traces: 1==Pressure, 2==vX, 3==vY, 4==vZ
+            scai::lama::DenseVector<scai::IndexType> seismogramTypes; //!< #SeismogramType of the traces: 1==Pressure/EZ, 2==vX/EX, 3==vY/EY, 4==vZ/HZ
 
             /* Methods in derived classes for the readAcquisitionFromFile method */
             virtual void checkRequiredNumParameter(scai::IndexType numParameterCheck) = 0;

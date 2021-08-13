@@ -84,6 +84,7 @@ namespace KITGPI
             void setSeismoDT(ValueType seismoDT);
             void setInstantaneousTrace(scai::IndexType instantaneousTraces);
             void setFrequencyAGC(ValueType setFrequencyAGC);
+            void setIsSeismic(bool setIsSeismic);
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -95,7 +96,7 @@ namespace KITGPI
             KITGPI::Acquisition::Seismogram<ValueType> operator-=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
             KITGPI::Acquisition::Seismogram<ValueType> &operator=(KITGPI::Acquisition::Seismogram<ValueType> const &rhs);
 
-            bool isSeismic = false;
+            bool isSeismic = true;
             
           private:
 

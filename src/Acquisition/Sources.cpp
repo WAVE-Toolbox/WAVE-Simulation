@@ -14,7 +14,12 @@ using namespace scai;
  */
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
-{
+{    
+    /* identify seismic and EM wave */
+    std::string equationType = config.get<std::string>("equationType");
+    isSeismic = Common::checkEquationType<ValueType>(equationType);
+    this->getSeismogramHandler().setIsSeismic(isSeismic);
+    
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
 
@@ -52,6 +57,11 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix)
 {
+    /* identify seismic and EM wave */
+    std::string equationType = config.get<std::string>("equationType");
+    isSeismic = Common::checkEquationType<ValueType>(equationType);
+    this->getSeismogramHandler().setIsSeismic(isSeismic);
+    
     ValueType DT = config.get<ValueType>("DT");
     IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / DT) + 0.5);
 

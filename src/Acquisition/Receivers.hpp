@@ -48,6 +48,8 @@ namespace KITGPI
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber);
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots);
 
+            using AcquisitionGeometry<ValueType>::isSeismic;
+            
           private:
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
             void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);

@@ -42,6 +42,7 @@ namespace KITGPI
             void setFrequencyAGC(ValueType setFrequencyAGC);
             void calcInverseAGC();
             void setInverseAGC(SeismogramHandler<ValueType> seismograms);
+            void setIsSeismic(bool setIsSeismic);
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);
@@ -55,7 +56,7 @@ namespace KITGPI
             KITGPI::Acquisition::SeismogramHandler<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             bool isFinite();
 
-            bool isSeismic = false;
+            bool isSeismic = true;
             
           private:
             void setTraceType();

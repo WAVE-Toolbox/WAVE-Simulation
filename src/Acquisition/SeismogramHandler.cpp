@@ -406,6 +406,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setInverseAGC(Seismogram
     }
 }
 
+//! \brief Setter method to set isSeismic .
+/*!
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setIsSeismic(bool setIsSeismic)
+{
+    isSeismic = setIsSeismic;
+    for (auto &i : seismo) {
+        i.setIsSeismic(setIsSeismic);
+    }
+}
+
 /*! \brief Overloading *= Operation
  *
  \param rhs Scalar factor with which the vectors are multiplied.

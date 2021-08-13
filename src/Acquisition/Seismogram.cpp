@@ -24,6 +24,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     outputInstantaneous = rhs.outputInstantaneous;
     frequencyAGC = rhs.frequencyAGC;
     inverseAGC = rhs.inverseAGC;
+    isSeismic = rhs.isSeismic;
 }
 //! \brief swap function
 /*!
@@ -42,6 +43,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(sourceIndex, rhs.sourceIndex);
     std::swap(outputInstantaneous, rhs.outputInstantaneous);
     std::swap(frequencyAGC, rhs.frequencyAGC);
+    std::swap(isSeismic, rhs.isSeismic);
     data.swap(rhs.data);
     inverseAGC.swap(rhs.inverseAGC);
 }
@@ -567,6 +569,16 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::setFrequencyAGC(ValueType setFrequencyAGC)
 {
     frequencyAGC = setFrequencyAGC;
+}
+
+//! \brief Setter method to set isSeismic.
+/*!
+ \param setIsSeismic setIsSeismic
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setIsSeismic(bool setIsSeismic)
+{
+    isSeismic = setIsSeismic;
 }
 
 //! \brief Getter method for #SeismogramType

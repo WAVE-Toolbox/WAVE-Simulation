@@ -45,7 +45,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
 
-            bool isSeismic = false;
+            using AcquisitionGeometry<ValueType>::isSeismic;
             
           private:
             Seismogram<ValueType> signals; //!< Source signals
