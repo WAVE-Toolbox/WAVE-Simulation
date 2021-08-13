@@ -6,7 +6,7 @@
 
 #include "../Configuration/Configuration.hpp"
 #include "../Filter/Filter.hpp"
-#include "Acquisition.hpp"
+#include "../Acquisition/Acquisition.hpp"
 #include "../Acquisition/Coordinates.hpp"
 #include "math.h"
 

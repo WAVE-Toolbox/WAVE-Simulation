@@ -2,7 +2,7 @@
 
 #include <scai/lama.hpp>
 
-#include "../../AcquisitionEM/Acquisition.hpp"
+#include "../../Acquisition/Acquisition.hpp"
 #include "../../AcquisitionEM/AcquisitionGeometry.hpp"
 #include "../../AcquisitionEM/Seismogram.hpp"
 #include "../../AcquisitionEM/SeismogramHandler.hpp"

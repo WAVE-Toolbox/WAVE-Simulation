@@ -2,7 +2,7 @@
 
 #include "../Configuration/Configuration.hpp"
 #include "../Filter/Filter.hpp"
-#include "Acquisition.hpp"
+#include "../Acquisition/Acquisition.hpp"
 #include "Seismogram.hpp"
 #include <scai/hmemo.hpp>
 

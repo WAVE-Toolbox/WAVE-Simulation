@@ -6,7 +6,7 @@
 #include <scai/lama/DenseVector.hpp>
 #include <vector>
 
-#include "Acquisition.hpp"
+#include "../Acquisition/Acquisition.hpp"
 
 #include "../Acquisition/Coordinates.hpp"
 
