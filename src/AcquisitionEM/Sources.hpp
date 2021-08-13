@@ -46,7 +46,7 @@ namespace KITGPI
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
 
           private:
-            SeismogramEM<ValueType> signals; //!< Source signals
+            Seismogram<ValueType> signals; //!< Source signals
             suHandler<ValueType> su;
 
             /* Requiered acquisition Settings */

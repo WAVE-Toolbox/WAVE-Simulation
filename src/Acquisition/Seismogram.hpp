@@ -27,7 +27,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            Seismogram() : DT(0.0), seismoType(KITGPI::Acquisition::SeismogramType::P){};
+            Seismogram() : DT(0.0), seismoType(KITGPI::Acquisition::SeismogramType::P), seismoTypeEM(KITGPI::Acquisition::SeismogramTypeEM::EZ){};
 
             //! Default destructor
             ~Seismogram(){};
@@ -70,6 +70,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> const &getData() const;
             scai::lama::DenseVector<scai::IndexType> const &get1DCoordinates() const;
             SeismogramType getTraceType() const;
+            SeismogramTypeEM getTraceTypeEM() const;
             scai::IndexType getSourceCoordinate() const;
 
             /* Setter functions */
@@ -77,6 +78,7 @@ namespace KITGPI
             void setContextPtr(scai::hmemo::ContextPtr ctx);
             void setSourceCoordinate(scai::IndexType sourceIdx);
             void setTraceType(SeismogramType trace);
+            void setTraceTypeEM(SeismogramTypeEM trace);
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
             void setSeismoDT(ValueType seismoDT);
@@ -99,6 +101,7 @@ namespace KITGPI
             ValueType DT;                                           //!< Temporal sampling interval in seconds
             ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds
             SeismogramType seismoType;                              //!< Type of trace as #SeismogramType
+            SeismogramTypeEM seismoTypeEM;                                    //!< Type of trace as #SeismogramTypeEM
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
 
@@ -111,6 +114,7 @@ namespace KITGPI
             scai::IndexType outputInstantaneous; // output envelope
             ValueType frequencyAGC; // frequency used to calculate AGC window length
             bool useAGC = true; // make sure AGC can be applied only once for each shot
+            bool isSeismic = false;
         };
     }
 }

@@ -193,13 +193,13 @@ IndexType KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::getNumTracesGloba
  *
  * **Example Usage:**\n
  * To get const access to the pressure seismogram (SeismogramTypeEM::EZ):\n
- * `const Acquisition::SeismogramEM pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
+ * `const Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
  * or to the HX seismogram (SeismogramTypeEM::HX):\n
- * `const Acquisition::SeismogramEM hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
+ * `const Acquisition::Seismogram hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
  \param type #SeismogramTypeEM of the desired Seismogram
  */
 template <typename ValueType>
-KITGPI::Acquisition::SeismogramEM<ValueType> const &KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::getSeismogram(SeismogramTypeEM type) const
+KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::getSeismogram(SeismogramTypeEM type) const
 {
     SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
     return (seismo[type]);
@@ -211,13 +211,13 @@ KITGPI::Acquisition::SeismogramEM<ValueType> const &KITGPI::Acquisition::Seismog
  *
  * **Example Usage:**\n
  * To get const access to the pressure seismogram (SeismogramTypeEM::EZ):\n
- * `Acquisition::SeismogramEM pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
+ * `Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
  * or to the HX seismogram (SeismogramTypeEM::HX):\n
- * `Acquisition::SeismogramEM hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
+ * `Acquisition::Seismogram hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
  \param type #SeismogramTypeEM of the desired Seismogram
  */
 template <typename ValueType>
-KITGPI::Acquisition::SeismogramEM<ValueType> &KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::getSeismogram(SeismogramTypeEM type)
+KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::getSeismogram(SeismogramTypeEM type)
 {
     SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
     return (seismo[type]);

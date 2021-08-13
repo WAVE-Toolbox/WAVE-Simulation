@@ -16,6 +16,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     outputDT = rhs.outputDT;
     DT = rhs.DT;
     seismoType = rhs.seismoType;
+    seismoTypeEM = rhs.seismoTypeEM;
     coordinates1D = rhs.coordinates1D;
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
@@ -36,6 +37,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(DT, rhs.DT);
     std::swap(outputDT, rhs.outputDT);
     std::swap(seismoType, rhs.seismoType);
+    std::swap(seismoTypeEM, rhs.seismoTypeEM);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
     std::swap(outputInstantaneous, rhs.outputInstantaneous);
@@ -75,7 +77,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         dataResample = data * resampleMat;
         
         scai::IndexType seismoFormat = seismogramFormat;
-        std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+        std::string filenameTmp;
+        if (isSeismic)
+            filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+        else
+            filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
         if (seismogramFormat == 5) {
             seismoFormat = 1;
             dataResample = inverseAGC;
@@ -124,7 +130,11 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
-    std::string filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+    std::string filenameTmp;
+    if (isSeismic)
+        filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+    else
+        filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
     scai::IndexType seismoFormat = seismogramFormat;
     scai::lama::DenseMatrix<ValueType> dataTemp(data);
     if (seismogramFormat == 5) {
@@ -498,6 +508,18 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setTraceType(SeismogramType tra
     seismoType = trace;
 };
 
+//! \brief Setter method for the #SeismogramTypeEM
+/*!
+ *
+ * This method will set the #SeismogramTypeEM to this class.
+ \param trace Trace
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setTraceTypeEM(SeismogramTypeEM trace)
+{
+    seismoTypeEM = trace;
+};
+
 //! \brief Setter function for the 1D coordinates of the traces
 /*!
  *
@@ -560,6 +582,21 @@ template <typename ValueType>
 KITGPI::Acquisition::SeismogramType KITGPI::Acquisition::Seismogram<ValueType>::getTraceType() const
 {
     return (seismoType);
+}
+
+//! \brief Getter method for #SeismogramTypeEM
+/*!
+ *
+ * This method returns the #SeismogramTypeEM of this seismogram.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
+KITGPI::Acquisition::SeismogramTypeEM KITGPI::Acquisition::Seismogram<ValueType>::getTraceTypeEM() const
+{
+    return (seismoTypeEM);
 }
 
 //! \brief Getter method for reference to coordinates1D vector

@@ -64,7 +64,7 @@ namespace KITGPI
 
         /*! \brief reads parameters from the acquisition matrix and redistributes 
         *
-        * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
+        * seismogram coordinates and Seismogram Types are stored in vectors and redistributed according to the distribution of the wavefield.
         * seismograms are only stored at the spatial domains which include the receiver/source coordinate.
         \param acquisition_matrix Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
         \param modelCoordinates Coordinates object (handles wavefield coordinates)

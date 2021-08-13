@@ -3,7 +3,7 @@
 #include "../Configuration/Configuration.hpp"
 #include "../Filter/Filter.hpp"
 #include "../Acquisition/Acquisition.hpp"
-#include "Seismogram.hpp"
+#include "../Acquisition/Seismogram.hpp"
 #include <scai/hmemo.hpp>
 
 namespace KITGPI
@@ -43,8 +43,8 @@ namespace KITGPI
             void calcInverseAGC();
             void setInverseAGC(SeismogramHandlerEM<ValueType> seismograms);
 
-            SeismogramEM<ValueType> const &getSeismogram(SeismogramTypeEM type) const;
-            SeismogramEM<ValueType> &getSeismogram(SeismogramTypeEM type);
+            Seismogram<ValueType> const &getSeismogram(SeismogramTypeEM type) const;
+            Seismogram<ValueType> &getSeismogram(SeismogramTypeEM type);
             scai::IndexType getNumTracesGlobal(SeismogramTypeEM type) const;
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramTypeEM type) const;
@@ -54,7 +54,7 @@ namespace KITGPI
           private:
             void setTraceTypeEM();
 
-            std::vector<SeismogramEM<ValueType>> seismo; //!< Vector which holds the individual SeismogramEM classes
+            std::vector<Seismogram<ValueType>> seismo; //!< Vector which holds the individual Seismogram classes
         };
     }
 }

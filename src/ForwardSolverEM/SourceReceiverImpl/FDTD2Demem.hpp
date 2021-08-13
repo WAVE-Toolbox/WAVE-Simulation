@@ -26,8 +26,8 @@ namespace KITGPI
 
                 using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
 
-                void applySourceEZ(Acquisition::SeismogramEM<ValueType> const & /*seismo*/, Wavefields::WavefieldsEM<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ sources can not be implemented in EMEM modeling")};
-                void gatherSeismogramEZ(Acquisition::SeismogramEM<ValueType> & /*seismo*/, Wavefields::WavefieldsEM<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ receivers can not be implemented in EMEM modeling")};
+                void applySourceEZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::WavefieldsEM<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ sources can not be implemented in EMEM modeling")};
+                void gatherSeismogramEZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::WavefieldsEM<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ receivers can not be implemented in EMEM modeling")};
 
               private:
                 /* Temporary memory */
