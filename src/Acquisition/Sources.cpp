@@ -346,15 +346,24 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
 
         signals.getData().getRow(temp, i);
 
-        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
+        if (isSeismic)
+            seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
+        else
+            seismograms.getSeismogram(static_cast<SeismogramTypeEM>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
 
         ++count[tempIndexType];
     }
-
-    SCAI_ASSERT_DEBUG(count[0] == seismograms.getNumTracesGlobal(SeismogramType::P), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[1] == seismograms.getNumTracesGlobal(SeismogramType::VX), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[2] == seismograms.getNumTracesGlobal(SeismogramType::VY), " Size mismatch ");
-    SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
+    if (isSeismic) {
+        SCAI_ASSERT_DEBUG(count[0] == seismograms.getNumTracesGlobal(SeismogramType::P), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[1] == seismograms.getNumTracesGlobal(SeismogramType::VX), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[2] == seismograms.getNumTracesGlobal(SeismogramType::VY), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramType::VZ), " Size mismatch ");
+    } else {
+        SCAI_ASSERT_DEBUG(count[0] == seismograms.getNumTracesGlobal(SeismogramTypeEM::EZ), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[1] == seismograms.getNumTracesGlobal(SeismogramTypeEM::EX), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[2] == seismograms.getNumTracesGlobal(SeismogramTypeEM::EY), " Size mismatch ");
+        SCAI_ASSERT_DEBUG(count[3] == seismograms.getNumTracesGlobal(SeismogramTypeEM::HZ), " Size mismatch ");
+    }
 }
 
 /*! \brief get source signal

@@ -18,8 +18,6 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
-#include "AcquisitionEM/Sources.hpp"
-#include "ForwardSolverEM/ForwardSolver.hpp"
 
 #include "ForwardSolver/ForwardSolverFactory.hpp"
 #include "Modelparameter/ModelparameterFactory.hpp"
@@ -258,7 +256,7 @@ int main(int argc, const char *argv[])
     
     Acquisition::Sources<ValueType> sources;
     Acquisition::Receivers<ValueType> receivers; 
-    Acquisition::SourcesEM<ValueType> sourcesEM;
+    Acquisition::Sources<ValueType> sourcesEM;
     Acquisition::Receivers<ValueType> receiversEM;
     
     if (isSeismic) {
