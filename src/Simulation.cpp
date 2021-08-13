@@ -18,7 +18,6 @@
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
 #include "ForwardSolver/ForwardSolver.hpp"
-#include "AcquisitionEM/Receivers.hpp"
 #include "AcquisitionEM/Sources.hpp"
 #include "ForwardSolverEM/ForwardSolver.hpp"
 
@@ -260,7 +259,7 @@ int main(int argc, const char *argv[])
     Acquisition::Sources<ValueType> sources;
     Acquisition::Receivers<ValueType> receivers; 
     Acquisition::SourcesEM<ValueType> sourcesEM;
-    Acquisition::ReceiversEM<ValueType> receiversEM;
+    Acquisition::Receivers<ValueType> receiversEM;
     
     if (isSeismic) {
         if (config.get<IndexType>("useReceiversPerShot") == 0) {
