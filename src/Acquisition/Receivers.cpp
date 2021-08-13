@@ -28,16 +28,17 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(std::vector<receiverSetting
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
+ \param acquisition_matrix Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
  \param config Configuration class, which is used to derive all requiered parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     std::vector<receiverSettings> allSettings;
-    acqMat2settings(acquisition_temp, allSettings, dist_wavefield);
+    acqMat2settings(acquisition_matrix, allSettings, dist_wavefield);
     
     CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr()); 
     
@@ -266,8 +267,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
         }
         std::string filenameTmp = config.get<std::string>("ReceiverFilename") + ".mark";
         scai::lama::CSRSparseMatrix<ValueType> receiverMarkMatrix;
-        receiverMarkMatrix.allocate(numshots, allSettingsTemp.size()+1);
-//         std::cout << "\nreceiverMarkMatrix =" << receiverMarkMatrix << "\n";
+        receiverMarkMatrix.allocate(numshots, allSettingsTemp.size()+1);        
         IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
         scai::lama::SparseVector<ValueType> receiverMarkVector;
         for (scai::IndexType shotInd = 0; shotInd < numshots; shotInd++) {

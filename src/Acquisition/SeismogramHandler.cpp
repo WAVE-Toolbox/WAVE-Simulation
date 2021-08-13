@@ -62,6 +62,18 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::integrate()
     }
 }
 
+//! \brief Method to differentiate the Seismogram-traces
+/*!
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::differentiate()
+{
+    for (auto &i : seismo) {
+        i.differentiateTraces();
+    }
+}
+
 /*! \brief Method to filter the Seismogram-traces
  \param freqFilter filter object
 */

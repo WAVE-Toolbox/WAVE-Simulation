@@ -27,7 +27,7 @@ namespace KITGPI
 
           public:
             //! Default constructor
-            SeismogramEM() : DT(0.0), seismoType(KITGPI::Acquisition::SeismogramTypeEM::EZ){};
+            SeismogramEM() : DT(0.0), seismoTypeEM(KITGPI::Acquisition::SeismogramTypeEM::EZ){};
 
             //! Default destructor
             ~SeismogramEM(){};
@@ -36,7 +36,7 @@ namespace KITGPI
             SeismogramEM(const SeismogramEM &rhs);
 
             void swap(KITGPI::Acquisition::SeismogramEM<ValueType> &rhs);
-            void write(scai::IndexType const seismogramFormat, std::string const &filename, Acquisition::Coordinates<ValueType> const &modelCoordinates) const;
+            void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
             //void read(scai::IndexType const SeismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
@@ -69,14 +69,14 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
             scai::lama::DenseVector<scai::IndexType> const &get1DCoordinates() const;
-            SeismogramTypeEM getTraceType() const;
+            SeismogramTypeEM getTraceTypeEM() const;
             scai::IndexType getSourceCoordinate() const;
 
             /* Setter functions */
             void setDT(ValueType newDT);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
             void setSourceCoordinate(scai::IndexType sourceIdx);
-            void setTraceType(SeismogramTypeEM trace);
+            void setTraceTypeEM(SeismogramTypeEM trace);
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
 
             void setSeismoDT(ValueType seismoDT);
@@ -98,7 +98,7 @@ namespace KITGPI
             /* header information */
             ValueType DT;                                           //!< Temporal sampling interval in seconds
             ValueType outputDT;                                     //!< Temporal sampling interval for the reampled output in seconds
-            SeismogramTypeEM seismoType;                                    //!< Type of trace as #SeismogramTypeEM
+            SeismogramTypeEM seismoTypeEM;                                    //!< Type of trace as #SeismogramTypeEM
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
 

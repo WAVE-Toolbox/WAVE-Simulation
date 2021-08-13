@@ -56,6 +56,7 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> getTraceL2norm();
             scai::lama::DenseVector<ValueType> getTraceSum();
             void integrateTraces();
+            void differentiateTraces();
             void filterTraces(Filter::Filter<ValueType> const &freqFilter);
 
             bool isFinite();

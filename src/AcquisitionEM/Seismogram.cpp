@@ -15,7 +15,7 @@ KITGPI::Acquisition::SeismogramEM<ValueType>::SeismogramEM(const SeismogramEM &r
 {
     outputDT = rhs.outputDT;
     DT = rhs.DT;
-    seismoType = rhs.seismoType;
+    seismoTypeEM = rhs.seismoTypeEM;
     coordinates1D = rhs.coordinates1D;
     sourceIndex = rhs.sourceIndex;
     data = rhs.data;
@@ -35,7 +35,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::swap(KITGPI::Acquisition::Sei
 {
     std::swap(DT, rhs.DT);
     std::swap(outputDT, rhs.outputDT);
-    std::swap(seismoType, rhs.seismoType);
+    std::swap(seismoTypeEM, rhs.seismoTypeEM);
     std::swap(coordinates1D, rhs.coordinates1D);
     std::swap(sourceIndex, rhs.sourceIndex);
     std::swap(outputInstantaneous, rhs.outputInstantaneous);
@@ -68,14 +68,14 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::setContextPtr(scai::hmemo::Co
  \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Acquisition::Coordinates<ValueType> const &modelCoordinates) const
+void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
 {
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
         
         scai::IndexType seismoFormat = seismogramFormat;
-        std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceType()];
+        std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
         if (seismogramFormat == 5) {
             seismoFormat = 1;
             dataResample = inverseAGC;
@@ -124,7 +124,7 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::write(scai::IndexType const s
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramEM<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
-    std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceType()];
+    std::string filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
     scai::IndexType seismoFormat = seismogramFormat;
     scai::lama::DenseMatrix<ValueType> dataTemp(data);
     if (seismogramFormat == 5) {
@@ -446,12 +446,13 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::filterTraces(Filter::Filter<V
 
 //! \brief Check seismograms for inf or NaN
 /*!
+ * Check last sample of each trace of seismogram for infinite/NaN value
  */
 template <typename ValueType>
 bool KITGPI::Acquisition::SeismogramEM<ValueType>::isFinite()
 {
     bool result_isfinite=true;
-    for (IndexType loc_vals=0;loc_vals<data.getLocalStorage().getData().size();loc_vals++) {
+    for (IndexType loc_vals=this->getNumSamples()-1;loc_vals<data.getLocalStorage().getData().size()-1;loc_vals=loc_vals+this->getNumSamples()) {
         if (isfinite(data.getLocalStorage().getData()[loc_vals])==false){
             result_isfinite=false;
             break;
@@ -493,9 +494,9 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::setSourceCoordinate(IndexType
  \param trace Trace
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramEM<ValueType>::setTraceType(SeismogramTypeEM trace)
+void KITGPI::Acquisition::SeismogramEM<ValueType>::setTraceTypeEM(SeismogramTypeEM trace)
 {
-    seismoType = trace;
+    seismoTypeEM = trace;
 };
 
 //! \brief Setter function for the 1D coordinates of the traces
@@ -557,9 +558,9 @@ void KITGPI::Acquisition::SeismogramEM<ValueType>::setFrequencyAGC(ValueType set
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::SeismogramTypeEM KITGPI::Acquisition::SeismogramEM<ValueType>::getTraceType() const
+KITGPI::Acquisition::SeismogramTypeEM KITGPI::Acquisition::SeismogramEM<ValueType>::getTraceTypeEM() const
 {
-    return (seismoType);
+    return (seismoTypeEM);
 }
 
 //! \brief Getter method for reference to coordinates1D vector

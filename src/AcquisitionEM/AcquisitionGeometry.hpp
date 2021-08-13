@@ -29,7 +29,7 @@ namespace KITGPI
 
             /* I/O for acquisition */
             template <class settingsVec>
-            void setAcquisition(settingsVec allSettings, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
+            void setAcquisition(settingsVec allSettings, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx);
             void writeAcquisitionToFile(std::string const &filename) const;
 
             /* Getter methods */
@@ -66,14 +66,14 @@ namespace KITGPI
         *
         * seismogram coordinates and Seismogram Types are stored in vectors and redistributet according to the distribution of the wavefield.
         * seismograms are only stored at the spatial domains which include the receiver/source coordinate.
-        \param acquisition_temp Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
+        \param acquisition_matrix Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
         \param modelCoordinates Coordinates object (handles wavefield coordinates)
         \param dist_wavefield Distribution of the wavefield
         \param ctx Context
         */
         template <typename ValueType>
         template <class settingsVec>
-        void AcquisitionGeometryEM<ValueType>::setAcquisition(settingsVec allSettings, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
+        void AcquisitionGeometryEM<ValueType>::setAcquisition(settingsVec allSettings, Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist_wavefield, scai::hmemo::ContextPtr ctx)
         {
             scai::IndexType nrow_temp = allSettings.size();
 
@@ -107,7 +107,7 @@ namespace KITGPI
             coordinates1D.redistribute(no_dist_numTracesGlobal);
 
             /* Get local traces from global traces */
-            scai::dmemo::DistributionPtr dist_wavefield_traces = Acquisition::calcDistribution(coordinates1D, dist_wavefield);
+            scai::dmemo::DistributionPtr dist_wavefield_traces = calcDistribution(coordinates1D, dist_wavefield);
 
             numTracesLocal = dist_wavefield_traces->getLocalSize();
             numTracesGlobal = dist_wavefield_traces->getGlobalSize();

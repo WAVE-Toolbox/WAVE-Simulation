@@ -36,8 +36,8 @@ namespace KITGPI
           public:
             //! \brief Default destructor
             ~SourcesEM(){};
-            void init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
-            void init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
+            void init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield);
+            void init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::lama::DenseMatrix<ValueType> &signalMatrix);
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType>);
 
@@ -47,7 +47,7 @@ namespace KITGPI
 
           private:
             SeismogramEM<ValueType> signals; //!< Source signals
-            Acquisition::suHandler<ValueType> su;
+            suHandler<ValueType> su;
 
             /* Requiered acquisition Settings */
             scai::lama::DenseVector<scai::IndexType> wavelet_type; //!< Type of wavelet: 1==Synthetic

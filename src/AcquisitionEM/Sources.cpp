@@ -13,7 +13,7 @@ using namespace scai;
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SourcesEM<ValueType>::init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::SourcesEM<ValueType>::init(std::vector<sourceSettings<ValueType>> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
@@ -153,42 +153,42 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::generateSyntheticSignal(IndexTyp
     switch (wavelet_shape_i) {
     case 1:
         /* Ricker */
-        Acquisition::SourceSignal::Ricker<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::Ricker<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 2:
         /* combination of sin signals */
-        Acquisition::SourceSignal::SinW<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::SinW<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 3:
         /* sin3 signal */
-        Acquisition::SourceSignal::SinThree<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::SinThree<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 4:
         /* First derivative of a Gaussian (FGaussian) */
-        Acquisition::SourceSignal::FGaussian<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::FGaussian<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 5:
         /* Spike signal */
-        Acquisition::SourceSignal::Spike<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::Spike<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 6:
         /* integral sin3 signal */
-        Acquisition::SourceSignal::IntgSinThree<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::IntgSinThree<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
         
     case 7:
         /* Ricker_GprMax */
-        Acquisition::SourceSignal::Ricker_GprMax<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::Ricker_GprMax<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
 
     case 8:
         /* Berlage */
-        Acquisition::SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
         
     default:
@@ -226,7 +226,7 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::readSignalFromFile(Configuration
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     } else {
-        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("fileFormat"));
+        hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(signalFilename, rowNumber, config.get<IndexType>("SeismogramFormat"));
         lama::DenseMatrix<ValueType> &signalsMatrix = signals.getData();
         signalsMatrix.setLocalRow(localsignal, SourceLocal, scai::common::BinaryOp::COPY);
     }

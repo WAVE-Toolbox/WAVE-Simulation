@@ -57,7 +57,7 @@ void KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::initSeismogramHandle
     /* Calculate distribution, redistribute coordinates and set coordinates to seismogramHandler */
     for (IndexType i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; ++i) {
         if (coord[i].size() > 0) {
-            dist[i] = Acquisition::calcDistribution(coord[i], dist_wavefield);
+            dist[i] = calcDistribution(coord[i], dist_wavefield);
             seismograms.getSeismogram(static_cast<SeismogramTypeEM>(i)).allocate(ctx, dist[i], NT);
             coord[i].redistribute(dist[i]);
             seismograms.getSeismogram(static_cast<SeismogramTypeEM>(i)).setCoordinates(coord[i]);

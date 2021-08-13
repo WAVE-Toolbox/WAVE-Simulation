@@ -187,7 +187,7 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         
     case 8:
         /* Berlage */
-        Acquisition::SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
         
     default:

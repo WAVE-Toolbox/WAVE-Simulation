@@ -158,7 +158,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
 {    
     if (data.getNumValues() > 0 && normalizeTraces > 0) {
         scai::hmemo::HArray<ValueType> tempRow;
-        if (normalizeTraces == 1) {
+        if (normalizeTraces == 1) { // normalized by the absolute max value
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRow);
@@ -166,7 +166,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
                 scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
-        } else if (normalizeTraces == 2) {
+        } else if (normalizeTraces == 2) { // normalized by the l2 norm
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
@@ -185,6 +185,25 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
             useAGC = false;
+        } else if (normalizeTraces == 4) { // normalized by the envelope
+            scai::lama::DenseMatrix<ValueType> dataEnvelope(data);
+            Common::calcEnvelope(dataEnvelope);
+            ValueType waterLevel = 1e-3;
+            for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+                scai::hmemo::HArray<ValueType> tempRowEnvelope;
+                scai::hmemo::HArray<ValueType> tempRowWaterLevel;
+                data.getLocalStorage().getRow(tempRow, i);
+                dataEnvelope.getLocalStorage().getRow(tempRowEnvelope, i); 
+                ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope);
+                if (tempMax != 0) {
+                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope));
+                } else {
+                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * waterLevel);
+                }
+                scai::utilskernel::HArrayUtils::binaryOp(tempRowEnvelope, tempRowEnvelope, tempRowWaterLevel, scai::common::BinaryOp::ADD);
+                scai::utilskernel::HArrayUtils::binaryOp(tempRow, tempRow, tempRowEnvelope, scai::common::BinaryOp::DIVIDE);
+                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+            }
         }
     }
 }
@@ -383,6 +402,26 @@ void KITGPI::Acquisition::Seismogram<ValueType>::integrateTraces()
             data.getLocalStorage().getRow(tempRow, i);
             for (IndexType j = 0; j < tempRow.size() - 1; j++) {
                 tempRow[j + 1] = tempRow[j + 1] * DT + tempRow[j];
+            }
+            data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
+        }
+    }
+}
+
+//! \brief differentiate the seismogram-traces
+/*!
+ *
+ * This method differentiate the traces of the seismogram.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::differentiateTraces()
+{
+    if (data.getNumValues() > 0) {
+        scai::hmemo::HArray<ValueType> tempRow;
+        for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+            data.getLocalStorage().getRow(tempRow, i);
+            for (IndexType j = 0; j < tempRow.size() - 1; j++) {
+                tempRow[j + 1] = (tempRow[j + 1] - tempRow[j]) / DT;
             }
             data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
         }
@@ -648,7 +687,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::redistribute(scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples)
 {
     if (distSamples == NULL) {
-        SCAI_ASSERT_DEBUG(getNumSamples() >= 0, "data has 0 collumns");
+        SCAI_ASSERT_DEBUG(getNumSamples() >= 0, "data has 0 columns");
         dmemo::DistributionPtr distSamplestmp(new scai::dmemo::NoDistribution(getNumSamples()));
         distSamples = distSamplestmp;
     }

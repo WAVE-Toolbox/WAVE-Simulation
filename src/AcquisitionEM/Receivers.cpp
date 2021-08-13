@@ -11,7 +11,7 @@
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::ReceiversEM<ValueType>::init(std::vector<receiverSettings> allSettings, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::ReceiversEM<ValueType>::init(std::vector<receiverSettings> allSettings, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {    
     /*reset seismograms. This is necessary when init will be called multiple times*/
     this->getSeismogramHandler().resetSeismograms();
@@ -26,11 +26,19 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(std::vector<receiverSetti
     this->getSeismogramHandler().setInstantaneousTrace(config.getAndCatch("instantaneousTraces", 0));
 }
 
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param acquisition_matrix Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
+ \param config Configuration class, which is used to derive all requiered parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
 template <typename ValueType>
-void KITGPI::Acquisition::ReceiversEM<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_temp, Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::ReceiversEM<ValueType>::init(scai::lama::DenseMatrix<ValueType> acquisition_matrix, Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     std::vector<receiverSettings> allSettings;
-    acqMat2settings(acquisition_temp, allSettings, dist_wavefield);
+    acqMat2settings(acquisition_matrix, allSettings, dist_wavefield);
     
     CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
     
@@ -45,7 +53,7 @@ void KITGPI::Acquisition::ReceiversEM<ValueType>::init(scai::lama::DenseMatrix<V
  \param dist_wavefield Distribution of the wavefields
  */
 template <typename ValueType>
-void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
+void KITGPI::Acquisition::ReceiversEM<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield)
 {
     std::vector<receiverSettings> allSettings;
     

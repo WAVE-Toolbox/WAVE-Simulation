@@ -99,7 +99,7 @@ KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::SeismogramHandlerEM()
 // seismo(4) initializes 4 Seismogram objects by calling the default constructor of the Class Seismogram. Other constructors can be called by e.g. seismo(4,Seismogram<ValueType>(a,b...))
 {
     // seismo.shrink_to_fit();
-    setTraceType();
+    setTraceTypeEM();
 }
 
 /*! \brief Setter method for #SeismogramTypeEM
@@ -107,7 +107,7 @@ KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::SeismogramHandlerEM()
  * This method sets the #SeismogramTypeEM to each handled Seismogram. The #SeismogramTypeEM is assigned in the same order the #SeismogramTypeEM are defined in the corresponding enum.
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setTraceType()
+void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setTraceTypeEM()
 {
 
     SCAI_ASSERT_DEBUG(static_cast<SeismogramTypeEM>(0) == SeismogramTypeEM::EZ, "Cast went wrong");
@@ -117,7 +117,7 @@ void KITGPI::Acquisition::SeismogramHandlerEM<ValueType>::setTraceType()
 
     IndexType count = 0;
     for (auto &i : seismo) {
-        i.setTraceType(static_cast<SeismogramTypeEM>(count));
+        i.setTraceTypeEM(static_cast<SeismogramTypeEM>(count));
         ++count;
     }
 }

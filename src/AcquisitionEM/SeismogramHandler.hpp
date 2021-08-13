@@ -26,7 +26,7 @@ namespace KITGPI
             ~SeismogramHandlerEM(){};
 
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
-            void write(scai::IndexType const seismogramFormat, std::string const &filename, Acquisition::Coordinates<ValueType> const &modelCoordinates) const;
+            void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
             void normalize(scai::IndexType normalizeTraces);
             void integrate();
             void differentiate();
@@ -52,7 +52,7 @@ namespace KITGPI
             bool isFinite();
 
           private:
-            void setTraceType();
+            void setTraceTypeEM();
 
             std::vector<SeismogramEM<ValueType>> seismo; //!< Vector which holds the individual SeismogramEM classes
         };
