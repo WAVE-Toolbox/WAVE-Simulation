@@ -19,10 +19,10 @@ namespace KITGPI
         class AcquisitionGeometryEM;
 
         template <typename ValueType>
-        class SeismogramEM;
+        class Seismogram;
 
         template <typename ValueType>
-        class SeismogramHandlerEM;
+        class SeismogramHandler;
 
         //! \brief Handling of sources
         /*!

@@ -84,13 +84,13 @@ IndexType KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::getNumParameter
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::SeismogramHandlerEM<ValueType> const &KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::getSeismogramHandler() const
+KITGPI::Acquisition::SeismogramHandler<ValueType> const &KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::getSeismogramHandler() const
 {
     return (seismograms);
 }
 
 template <typename ValueType>
-KITGPI::Acquisition::SeismogramHandlerEM<ValueType> &KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::getSeismogramHandler()
+KITGPI::Acquisition::SeismogramHandler<ValueType> &KITGPI::Acquisition::AcquisitionGeometryEM<ValueType>::getSeismogramHandler()
 {
     return (seismograms);
 }

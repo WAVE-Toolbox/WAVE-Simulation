@@ -339,7 +339,7 @@ void KITGPI::Acquisition::SourcesEM<ValueType>::copySignalsToSeismogramHandler()
 {
     IndexType tempIndexType;
     lama::DenseVector<ValueType> temp;
-    SeismogramHandlerEM<ValueType> &seismograms = this->getSeismogramHandler();
+    SeismogramHandler<ValueType> &seismograms = this->getSeismogramHandler();
     IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
 
     /* Copy data to the seismogram handler */

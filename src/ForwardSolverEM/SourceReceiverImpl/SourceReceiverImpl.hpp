@@ -5,7 +5,7 @@
 #include "../../Acquisition/Acquisition.hpp"
 #include "../../AcquisitionEM/AcquisitionGeometry.hpp"
 #include "../../Acquisition/Seismogram.hpp"
-#include "../../AcquisitionEM/SeismogramHandler.hpp"
+#include "../../Acquisition/SeismogramHandler.hpp"
 
 #include "../../ModelparameterEM/Modelparameter.hpp"
 #include "../../WavefieldsEM/Wavefields.hpp"
@@ -56,10 +56,10 @@ namespace KITGPI
                 Wavefields::WavefieldsEM<ValueType> &wavefield; //!< Wavefields
 
                 /* source */
-                Acquisition::SeismogramHandlerEM<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources
+                Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources
 
                 /* receiver */
-                Acquisition::SeismogramHandlerEM<ValueType> &seismogramHandlerRec; //!< Seismogram Handler of Receivers
+                Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec; //!< Seismogram Handler of Receivers
 
                 /* Temporary memory */
                 scai::lama::DenseVector<ValueType> applySource_samplesEZ; //!< Variable to apply velocity Source-samples in x-direction

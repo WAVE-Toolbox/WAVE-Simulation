@@ -46,15 +46,21 @@ namespace KITGPI
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);
             scai::IndexType getNumTracesGlobal(SeismogramType type) const;
+            Seismogram<ValueType> const &getSeismogram(SeismogramTypeEM type) const;
+            Seismogram<ValueType> &getSeismogram(SeismogramTypeEM type);
+            scai::IndexType getNumTracesGlobal(SeismogramTypeEM type) const;
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramType type) const;
+            scai::IndexType getNumSamples(SeismogramTypeEM type) const;
             KITGPI::Acquisition::SeismogramHandler<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             bool isFinite();
 
           private:
             void setTraceType();
+            void setTraceTypeEM();
 
             std::vector<Seismogram<ValueType>> seismo; //!< Vector which holds the individual Seismogram classes
+            bool isSeismic = false;
         };
     }
 }

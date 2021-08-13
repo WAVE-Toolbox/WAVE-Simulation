@@ -11,7 +11,7 @@
 #include "../Acquisition/Coordinates.hpp"
 
 #include "../Acquisition/AcquisitionSettings.hpp"
-#include "SeismogramHandler.hpp"
+#include "../Acquisition/SeismogramHandler.hpp"
 
 namespace KITGPI
 {
@@ -37,8 +37,8 @@ namespace KITGPI
             scai::lama::DenseVector<scai::IndexType> const &getSeismogramTypes() const;
             scai::IndexType getNumTracesGlobal() const;
             scai::IndexType getNumTracesLocal() const;
-            SeismogramHandlerEM<ValueType> &getSeismogramHandler();
-            SeismogramHandlerEM<ValueType> const &getSeismogramHandler() const;
+            SeismogramHandler<ValueType> &getSeismogramHandler();
+            SeismogramHandler<ValueType> const &getSeismogramHandler() const;
 
           protected:
             scai::IndexType getNumParameter() const;
@@ -49,7 +49,7 @@ namespace KITGPI
             scai::IndexType numTracesLocal;  //!< Number of local traces
 
             /* SeismogramHandler to store seismic data */
-            SeismogramHandlerEM<ValueType> seismograms; //!< SeismogramHandler to handle the #Seismogram's
+            SeismogramHandler<ValueType> seismograms; //!< SeismogramHandler to handle the #Seismogram's
 
             /* Acquisition Settings */
             scai::IndexType numParameter;                             //!< Number of parameters given in acquisition matrix

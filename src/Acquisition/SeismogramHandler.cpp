@@ -99,6 +99,7 @@ KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
 {
     // seismo.shrink_to_fit();
     setTraceType();
+    setTraceTypeEM();
 }
 
 /*! \brief Setter method for #SeismogramType
@@ -108,7 +109,6 @@ KITGPI::Acquisition::SeismogramHandler<ValueType>::SeismogramHandler()
 template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
 {
-
     SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(0) == SeismogramType::P, "Cast went wrong");
     SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(1) == SeismogramType::VX, "Cast went wrong");
     SCAI_ASSERT_DEBUG(static_cast<SeismogramType>(2) == SeismogramType::VY, "Cast went wrong");
@@ -117,6 +117,26 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceType()
     IndexType count = 0;
     for (auto &i : seismo) {
         i.setTraceType(static_cast<SeismogramType>(count));
+        ++count;
+    }
+}
+
+/*! \brief Setter method for #SeismogramTypeEM
+ *
+ * This method sets the #SeismogramTypeEM to each handled Seismogram. The #SeismogramTypeEM is assigned in the same order the #SeismogramTypeEM are defined in the corresponding enum.
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setTraceTypeEM()
+{
+
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramTypeEM>(0) == SeismogramTypeEM::EZ, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramTypeEM>(1) == SeismogramTypeEM::EX, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramTypeEM>(2) == SeismogramTypeEM::EY, "Cast went wrong");
+    SCAI_ASSERT_DEBUG(static_cast<SeismogramTypeEM>(3) == SeismogramTypeEM::HZ, "Cast went wrong");
+
+    IndexType count = 0;
+    for (auto &i : seismo) {
+        i.setTraceTypeEM(static_cast<SeismogramTypeEM>(count));
         ++count;
     }
 }
@@ -158,6 +178,19 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(Seism
     return (seismo[type].getNumSamples());
 }
 
+//! \brief Getter method for the number of samples
+/*!
+ * This method returns the number of temporal samples of the specified #SeismogramTypeEM.\n
+ * See getSeismogram() for information how to use #SeismogramTypeEM as input parameter.
+ \param type #SeismogramTypeEM of the desired Seismogram
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumSamples(SeismogramTypeEM type) const
+{
+    SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
+    return (seismo[type].getNumSamples());
+}
+
 //! \brief Getter method for the total number of traces
 /*!
  * This method returns the total number of global traces, which is the sum of the number of global traces of all handled #Seismogram.\n
@@ -186,6 +219,19 @@ IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(
     return (seismo[type].getNumTracesGlobal());
 }
 
+//! \brief Getter method for the number of global traces
+/*!
+ * This method returns the number of global traces for the specified #SeismogramTypeEM.\n
+* See getSeismogram() for information how to use #SeismogramTypeEM as input parameter.
+ \param type #SeismogramTypeEM of the desired Seismogram
+ */
+template <typename ValueType>
+IndexType KITGPI::Acquisition::SeismogramHandler<ValueType>::getNumTracesGlobal(SeismogramTypeEM type) const
+{
+    SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
+    return (seismo[type].getNumTracesGlobal());
+}
+
 //! \brief Getter method for the Seismogram class
 /*!
  * This method returns the Seismogram class for the specified #SeismogramType.
@@ -206,6 +252,24 @@ KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::Seismogra
 
 //! \brief Getter method for the Seismogram class
 /*!
+ * This method returns the Seismogram class for the specified #SeismogramTypeEM.
+ *
+ * **Example Usage:**\n
+ * To get const access to the pressure seismogram (SeismogramTypeEM::EZ):\n
+ * `const Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
+ * or to the HX seismogram (SeismogramTypeEM::HX):\n
+ * `const Acquisition::Seismogram hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
+ \param type #SeismogramTypeEM of the desired Seismogram
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> const &KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramTypeEM type) const
+{
+    SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
+    return (seismo[type]);
+}
+
+//! \brief Getter method for the Seismogram class
+/*!
  * This method returns the Seismogram class for the specified #SeismogramType.
  *
  * **Example Usage:**\n
@@ -219,6 +283,24 @@ template <typename ValueType>
 KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramType type)
 {
     SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramType unkown");
+    return (seismo[type]);
+}
+
+//! \brief Getter method for the Seismogram class
+/*!
+ * This method returns the Seismogram class for the specified #SeismogramTypeEM.
+ *
+ * **Example Usage:**\n
+ * To get const access to the pressure seismogram (SeismogramTypeEM::EZ):\n
+ * `Acquisition::Seismogram pressure = handler.getSeismogram(Acquisition::SeismogramTypeEM::EZ);`\n
+ * or to the HX seismogram (SeismogramTypeEM::HX):\n
+ * `Acquisition::Seismogram hx = handler.getSeismogram(Acquisition::SeismogramTypeEM::HX);`\n
+ \param type #SeismogramTypeEM of the desired Seismogram
+ */
+template <typename ValueType>
+KITGPI::Acquisition::Seismogram<ValueType> &KITGPI::Acquisition::SeismogramHandler<ValueType>::getSeismogram(SeismogramTypeEM type)
+{
+    SCAI_ASSERT_ERROR(type >= 0 && type <= NUM_ELEMENTS_SEISMOGRAMTYPE - 1, "SeismogramTypeEM unkown");
     return (seismo[type]);
 }
 
@@ -317,7 +399,10 @@ template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setInverseAGC(SeismogramHandler<ValueType> seismograms)
 {
     for (int i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
-        seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramType>(i)).getInverseAGC());
+        if (isSeismic)
+            seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramType>(i)).getInverseAGC());
+        else
+            seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramTypeEM>(i)).getInverseAGC());
     }
 }
 
