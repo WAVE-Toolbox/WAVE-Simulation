@@ -5,7 +5,7 @@
 
 #include "../Common/HostPrint.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
-#include "../ModelparameterEM/Modelparameter.hpp"
+#include "../Modelparameter/Modelparameter.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/dmemo/SingleDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
@@ -82,7 +82,7 @@ namespace KITGPI
 
             ValueType getMemoryWavefield(scai::dmemo::DistributionPtr dist);
 
-            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::ModelparameterEM<ValueType> const &model, scai::IndexType fileFormat) = 0;
+            virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) = 0;
 
             //! Operator overloading
             virtual void minusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs) = 0;

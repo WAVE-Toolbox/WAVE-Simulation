@@ -82,7 +82,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::applyThresholds(Configuration::Con
  \param cutCoordinate cut coordinate 
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
+void KITGPI::Modelparameter::EMEM<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
     auto distBig = dielectricPermittivity.getDistributionPtr();
     auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
@@ -111,7 +111,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::getModelPerShot(KITGPI::Modelparam
  \param cutCoordinate cut coordinate 
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
+void KITGPI::Modelparameter::EMEM<ValueType>::setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
 {
     auto distBig = dielectricPermittivity.getDistributionPtr();
     auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
@@ -610,7 +610,7 @@ KITGPI::Modelparameter::EMEM<ValueType> &KITGPI::Modelparameter::EMEM<ValueType>
  \param rhs Abstract model which is assigned.
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::assign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
+void KITGPI::Modelparameter::EMEM<ValueType>::assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
     magneticPermeability = rhs.getMagneticPermeability();
     electricConductivity = rhs.getElectricConductivity();
@@ -630,7 +630,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::assign(KITGPI::Modelparameter::Mod
  \param rhs Abstract model which is substracted.
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::minusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
+void KITGPI::Modelparameter::EMEM<ValueType>::minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
     magneticPermeability -= rhs.getMagneticPermeability();
     electricConductivity -= rhs.getElectricConductivity();
@@ -647,7 +647,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::minusAssign(KITGPI::Modelparameter
  \param rhs Abstract model which is added.
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::plusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
+void KITGPI::Modelparameter::EMEM<ValueType>::plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs)
 {
     magneticPermeability += rhs.getMagneticPermeability();
     electricConductivity += rhs.getElectricConductivity();

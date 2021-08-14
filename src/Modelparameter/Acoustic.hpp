@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include "Modelparameter.hpp"
+#include "ModelparameterSeismic.hpp"
 
 namespace KITGPI
 {
@@ -35,7 +35,7 @@ namespace KITGPI
          This class handels the modelparameter for the acoustic finite-difference simulation.
          */
         template <typename ValueType>
-        class Acoustic : public Modelparameter<ValueType>
+        class Acoustic : public ModelparameterSeismic<ValueType>
         {
           public:
             //! Default constructor.

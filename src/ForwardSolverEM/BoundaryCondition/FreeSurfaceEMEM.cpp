@@ -12,7 +12,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEMEM<ValueType>::~FreeSurfa
  \param model which is used during forward modelling
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEMEM<ValueType>::setModelparameter(Modelparameter::ModelparameterEM<ValueType> const &model)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEMEM<ValueType>::setModelparameter(Modelparameter::Modelparameter<ValueType> const &model)
 {
     /*This function sets scaling factors for (vxx+hzz) and vyy for the calculation of the horizontal updates without vertical derivatives 
     * On the free surface the verical velocity derivarive can be expressed by 

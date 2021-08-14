@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include "Modelparameter.hpp"
+#include "ModelparameterEM.hpp"
 
 namespace KITGPI
 {
@@ -76,12 +76,12 @@ namespace KITGPI
 
             void applyThresholds(Configuration::Configuration const &config) override;
 
-            void getModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) override;
-            void setModelPerShot(KITGPI::Modelparameter::ModelparameterEM<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) override;
+            void getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) override;
+            void setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) override;
 
-            void minusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs) override;
-            void plusAssign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs) override;
-            void assign(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs) override;
+            void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
+            void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
             KITGPI::Modelparameter::TMEM<ValueType> operator*(ValueType rhs);
@@ -96,58 +96,58 @@ namespace KITGPI
             void init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates);
             void calculateAveraging() override;
 
-            using ModelparameterEM<ValueType>::MagneticPermeabilityVacuum;        // magnetic permeability of free space
-            using ModelparameterEM<ValueType>::DielectricPermittivityVacuum;     // dielectric permittivity of free space 
+            using Modelparameter<ValueType>::MagneticPermeabilityVacuum;        // magnetic permeability of free space
+            using Modelparameter<ValueType>::DielectricPermittivityVacuum;     // dielectric permittivity of free space 
             
-            using ModelparameterEM<ValueType>::equationType;
+            using Modelparameter<ValueType>::equationType;
 
-            using ModelparameterEM<ValueType>::dirtyFlagAveraging;
-            using ModelparameterEM<ValueType>::dirtyFlagVelocivityEM;
-            using ModelparameterEM<ValueType>::velocivityEM;
-            using ModelparameterEM<ValueType>::magneticPermeability;
-            using ModelparameterEM<ValueType>::electricConductivity;
-            using ModelparameterEM<ValueType>::dielectricPermittivity;
-            using ModelparameterEM<ValueType>::porosity; //!< Vector storing porosity.
-            using ModelparameterEM<ValueType>::saturation; //!< Vector storing saturation.
-            using ModelparameterEM<ValueType>::reflectivity; //!< Vector storing reflectivity.
-            using ModelparameterEM<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
-            using ModelparameterEM<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
+            using Modelparameter<ValueType>::dirtyFlagAveraging;
+            using Modelparameter<ValueType>::dirtyFlagVelocivityEM;
+            using Modelparameter<ValueType>::velocivityEM;
+            using Modelparameter<ValueType>::magneticPermeability;
+            using Modelparameter<ValueType>::electricConductivity;
+            using Modelparameter<ValueType>::dielectricPermittivity;
+            using Modelparameter<ValueType>::porosity; //!< Vector storing porosity.
+            using Modelparameter<ValueType>::saturation; //!< Vector storing saturation.
+            using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity.
+            using Modelparameter<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
+            using Modelparameter<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
             void purgeMatrices() override;
 
-            using ModelparameterEM<ValueType>::averageMatrixX;
-            using ModelparameterEM<ValueType>::averageMatrixY;
+            using Modelparameter<ValueType>::averageMatrixX;
+            using Modelparameter<ValueType>::averageMatrixY;
 
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageYZ;
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageXZ;            
+            using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageYZ;
+            using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXZ;            
 
             /* Not requiered parameters */
-            using ModelparameterEM<ValueType>::inverseMagneticPermeabilityAverageXY;
-            using ModelparameterEM<ValueType>::electricConductivityAverageX;
-            using ModelparameterEM<ValueType>::electricConductivityAverageY;
-            using ModelparameterEM<ValueType>::electricConductivityAverageZ;
-            using ModelparameterEM<ValueType>::dielectricPermittivityAverageX;
-            using ModelparameterEM<ValueType>::dielectricPermittivityAverageY;
-            using ModelparameterEM<ValueType>::dielectricPermittivityAverageZ;
-            using ModelparameterEM<ValueType>::dirtyFlagElectricConductivityOptical;
-            using ModelparameterEM<ValueType>::dirtyFlagDielectricPermittivityOptical;
-            using ModelparameterEM<ValueType>::electricConductivityOptical;
-            using ModelparameterEM<ValueType>::dielectricPermittivityOptical;
-            using ModelparameterEM<ValueType>::tauElectricConductivity;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivity;
-            using ModelparameterEM<ValueType>::relaxationFrequency;
-            using ModelparameterEM<ValueType>::numRelaxationMechanisms;
-            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageX;
-            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageY;
-            using ModelparameterEM<ValueType>::electricConductivityOpticalAverageZ;
-            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageX;
-            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageY;
-            using ModelparameterEM<ValueType>::dielectricPermittivityOpticalAverageZ;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageX;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageY;
-            using ModelparameterEM<ValueType>::tauDielectricPermittivityAverageZ;
-            using ModelparameterEM<ValueType>::tauElectricDisplacement;
+            using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXY;
+            using Modelparameter<ValueType>::electricConductivityAverageX;
+            using Modelparameter<ValueType>::electricConductivityAverageY;
+            using Modelparameter<ValueType>::electricConductivityAverageZ;
+            using Modelparameter<ValueType>::dielectricPermittivityAverageX;
+            using Modelparameter<ValueType>::dielectricPermittivityAverageY;
+            using Modelparameter<ValueType>::dielectricPermittivityAverageZ;
+            using Modelparameter<ValueType>::dirtyFlagElectricConductivityOptical;
+            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityOptical;
+            using Modelparameter<ValueType>::electricConductivityOptical;
+            using Modelparameter<ValueType>::dielectricPermittivityOptical;
+            using Modelparameter<ValueType>::tauElectricConductivity;
+            using Modelparameter<ValueType>::tauDielectricPermittivity;
+            using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::numRelaxationMechanisms;
+            using Modelparameter<ValueType>::electricConductivityOpticalAverageX;
+            using Modelparameter<ValueType>::electricConductivityOpticalAverageY;
+            using Modelparameter<ValueType>::electricConductivityOpticalAverageZ;
+            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageX;
+            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageY;
+            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageZ;
+            using Modelparameter<ValueType>::tauDielectricPermittivityAverageX;
+            using Modelparameter<ValueType>::tauDielectricPermittivityAverageY;
+            using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ;
+            using Modelparameter<ValueType>::tauElectricDisplacement;
         };
     }
 }

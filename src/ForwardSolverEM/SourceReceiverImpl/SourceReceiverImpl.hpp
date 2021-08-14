@@ -7,7 +7,7 @@
 #include "../../Acquisition/Seismogram.hpp"
 #include "../../Acquisition/SeismogramHandler.hpp"
 
-#include "../../ModelparameterEM/Modelparameter.hpp"
+#include "../../Modelparameter/Modelparameter.hpp"
 #include "../../WavefieldsEM/Wavefields.hpp"
 
 namespace KITGPI

@@ -59,7 +59,7 @@ namespace KITGPI
             KITGPI::Wavefields::FD2Dviscoemem<ValueType> operator*(KITGPI::Wavefields::FD2Dviscoemem<ValueType> rhs);
             KITGPI::Wavefields::FD2Dviscoemem<ValueType> operator*=(KITGPI::Wavefields::FD2Dviscoemem<ValueType> rhs);
 
-            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::ModelparameterEM<ValueType> const &model, scai::IndexType fileFormat) override;
+            void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) override;
 
             void minusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
             void plusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);

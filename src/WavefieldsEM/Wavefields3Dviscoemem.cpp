@@ -59,7 +59,7 @@ ValueType KITGPI::Wavefields::FD3Dviscoemem<ValueType>::estimateMemory(dmemo::Di
  \param fileFormat Output file format 
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::ModelparameterEM<ValueType> const &model, IndexType fileFormat)
+void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std::string baseName, IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, IndexType fileFormat)
 {
     std::string fileName = baseName + type;
     std::string timeStep = std::to_string(static_cast<long long>(t));

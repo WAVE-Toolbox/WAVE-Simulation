@@ -6,7 +6,7 @@
 #include "../Acquisition/AcquisitionGeometry.hpp"
 
 #include "../Common/HostPrint.hpp"
-#include "../ModelparameterEM/Modelparameter.hpp"
+#include "../Modelparameter/Modelparameter.hpp"
 #include "../WavefieldsEM/Wavefields.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
@@ -47,8 +47,8 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::ModelparameterEM<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
-            virtual void runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::ModelparameterEM<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+            virtual void runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
 
             /*! \brief Reset PML memory variables if PML is used 
             *
@@ -60,7 +60,7 @@ namespace KITGPI
             *
             \param model model parameter object
             */
-            virtual void prepareForModelling(Modelparameter::ModelparameterEM<ValueType> const &model, ValueType DT) = 0;
+            virtual void prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT) = 0;
 
             ValueType estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABSEM<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML);
 
@@ -87,7 +87,7 @@ namespace KITGPI
              \param wavefield Wavefields for the modelling
              \param ctx Context
              */
-            virtual void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::WavefieldsEM<ValueType> &wavefield, Modelparameter::ModelparameterEM<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
+            virtual void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::WavefieldsEM<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
             scai::IndexType useFreeSurface; //!< Indicator which free surface is in use

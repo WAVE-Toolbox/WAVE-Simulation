@@ -21,7 +21,7 @@
 
 #include <iostream>
 
-#include "Modelparameter.hpp"
+#include "ModelparameterSeismic.hpp"
 
 namespace KITGPI
 {
@@ -35,7 +35,7 @@ namespace KITGPI
          This class handels the modelparameter for the elastic finite-difference simulation.
          */
         template <typename ValueType>
-        class Elastic : public Modelparameter<ValueType>
+        class Elastic : public ModelparameterSeismic<ValueType>
         {
           public:
             //! Default constructor.

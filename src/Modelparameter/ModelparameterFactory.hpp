@@ -1,12 +1,16 @@
-
-
 #pragma once
 
 #include "Acoustic.hpp"
 #include "Elastic.hpp"
-#include "Modelparameter.hpp"
 #include "SH.hpp"
 #include "Viscoelastic.hpp"
+#include "Modelparameter.hpp"
+#include "ModelparameterSeismic.hpp"
+#include "../ModelparameterEM/TMEM.hpp"
+#include "../ModelparameterEM/EMEM.hpp"
+#include "../ModelparameterEM/ViscoTMEM.hpp"
+#include "../ModelparameterEM/ViscoEMEM.hpp"
+#include "../ModelparameterEM/ModelparameterEM.hpp"
 #include <string>
 
 namespace KITGPI

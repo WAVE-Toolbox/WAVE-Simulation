@@ -5,7 +5,6 @@
 #include "../Common/Common.hpp"
 #include "../Configuration/Configuration.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-#include "../ModelparameterEM/Modelparameter.hpp"
 #include <scai/lama.hpp>
 
 namespace KITGPI
@@ -166,11 +165,11 @@ namespace KITGPI
         void checkNumericalArtefactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::Modelparameter<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
         {
             if (!config.get<bool>("initSourcesFromSU")) {
-                auto dist = model.getDensity().getDistributionPtr();
-                auto commShot = dist->getCommunicatorPtr();
-                scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
-                dist->getOwnedIndexes(ownedIndexes);
-
+                /* identify seismic and EM wave */
+                std::string equationType = config.get<std::string>("equationType");
+                bool isSeismic = Common::checkEquationType<ValueType>(equationType);
+                
+                scai::dmemo::DistributionPtr dist;
                 scai::IndexType numlayer = modelCoordinates.getNumLayers();
 
                 ValueType vMax[numlayer] = {0};
@@ -180,11 +179,25 @@ namespace KITGPI
                 scai::IndexType localIndex = 0;
 
                 scai::lama::DenseVector<ValueType> vMaxTmp;
-                vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
-                auto read_vMaxTmp = scai::hmemo::hostReadAccess(vMaxTmp.getLocalValues());
-
                 scai::lama::DenseVector<ValueType> vMinTmp;
-                vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
+                if (isSeismic) {
+                    dist = model.getDensity().getDistributionPtr();
+                    vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
+                    vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
+                } else {
+                    std::cout << "model.getMagneticPermeability() here " << std::endl;
+                    std::cout << "model.getMagneticPermeability() = " << model.getMagneticPermeability()[0] << std::endl;
+                    dist = model.getMagneticPermeability().getDistributionPtr();
+                    std::cout << "model.getVelocityEM() = " << model.getVelocityEM()[0] << std::endl;
+                    vMaxTmp = model.getVelocityEM();
+                    vMinTmp = vMaxTmp;
+                }
+                
+                auto commShot = dist->getCommunicatorPtr();
+                scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
+                dist->getOwnedIndexes(ownedIndexes);
+                
+                auto read_vMaxTmp = scai::hmemo::hostReadAccess(vMaxTmp.getLocalValues());
                 auto read_vMinTmp = scai::hmemo::hostReadAccess(vMinTmp.getLocalValues());
 
                 for (scai::IndexType ownedIndex : scai::hmemo::hostReadAccess(ownedIndexes)) {
@@ -196,80 +209,6 @@ namespace KITGPI
                         SCAI_ASSERT_ERROR(read_vMaxTmp[localIndex] / read_vMinTmp[localIndex] >= sqrt(2.0), "\n vp/vs (" << read_vMaxTmp[localIndex] << "/" << read_vMinTmp[localIndex] << ") < sqrt(2.0) at X,Y,Z =" << coordinate.x << "," << coordinate.y << "," << coordinate.z << "\n\n");
                         // vp/vs = sqrt((lambda+2*mu)/mu) >= sqrt(2.0)
                     }
-                    if (read_vMaxTmp[localIndex] > vMax[layer]) {
-                        vMax[layer] = read_vMaxTmp[localIndex];
-                    }
-
-                    if ((read_vMinTmp[localIndex] < vMin[layer]) && (read_vMinTmp[localIndex] > 0.0)) {
-                        vMin[layer] = read_vMinTmp[localIndex];
-                    }
-
-                    localIndex++;
-                }
-
-                // communicate vMin and vMax and find the minimu and maximum of all processes
-                commShot->minImpl(vMin, vMin, numlayer, scai::common::TypeTraits<ValueType>::stype);
-                commShot->maxImpl(vMax, vMax, numlayer, scai::common::TypeTraits<ValueType>::stype);
-
-                ValueType fcMax = 0;
-                for (unsigned i = 0; i < sourceSettings.size(); i++) {
-                    if (sourceSettings[i].fc > fcMax)
-                        fcMax = sourceSettings[i].fc;
-                }
-
-                std::vector<scai::IndexType> spatialFDorderVec;
-
-                if (config.get<bool>("useVariableFDoperators")) {
-
-                    unsigned int column = 2;
-                    Common::readColumnFromFile(config.get<std::string>("gridConfigurationFilename"), spatialFDorderVec, column);
-                } else {
-                    spatialFDorderVec.assign(numlayer, config.get<scai::IndexType>("spatialFDorder"));
-                }
-
-                for (scai::IndexType layer = 0; layer < numlayer; layer++) {
-                    if (config.get<bool>("useVariableGrid")) {
-                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber, layer);
-                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber, layer);
-                    } else {
-                        checkStabilityCriterion<ValueType>(config.get<ValueType>("DT"), modelCoordinates.getDH(layer), vMax[layer], config.get<std::string>("dimension"), spatialFDorderVec[layer], commShot, shotNumber);
-                        checkNumericalDispersion<ValueType>(modelCoordinates.getDH(layer), vMin[layer], fcMax, spatialFDorderVec[layer], commShot, shotNumber);
-                    }
-                }
-            }
-        }
-
-        //! \brief Wrapper Function who calls checkStabilityCriterion and checkNumericalDispersion
-        template <typename ValueType>
-        void checkNumericalArtefactsAndInstabilities(Configuration::Configuration const &config, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings, Modelparameter::ModelparameterEM<ValueType> &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::IndexType shotNumber = -1)
-        {
-            if (!config.get<bool>("initSourcesFromSU")) {
-                auto dist = model.getMagneticPermeability().getDistributionPtr();
-                auto commShot = dist->getCommunicatorPtr();
-                scai::hmemo::HArray<scai::IndexType> ownedIndexes; // all (global) points owned by this process
-                dist->getOwnedIndexes(ownedIndexes);
-
-                scai::IndexType numlayer = modelCoordinates.getNumLayers();
-
-                ValueType vMax[numlayer] = {0};
-                ValueType vMin[numlayer] = {0};
-                std::fill_n(vMin, numlayer, 3e8);
-
-                scai::IndexType localIndex = 0;
-
-                scai::lama::DenseVector<ValueType> vMaxTmp;
-                vMaxTmp = model.getVelocityEM();
-                auto read_vMaxTmp = scai::hmemo::hostReadAccess(vMaxTmp.getLocalValues());
-
-                scai::lama::DenseVector<ValueType> vMinTmp;
-                vMinTmp = model.getVelocityEM();
-                auto read_vMinTmp = scai::hmemo::hostReadAccess(vMinTmp.getLocalValues());
-
-                for (scai::IndexType ownedIndex : scai::hmemo::hostReadAccess(ownedIndexes)) {
-
-                    Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-                    auto layer = modelCoordinates.getLayer(coordinate);
-
                     if (read_vMaxTmp[localIndex] > vMax[layer]) {
                         vMax[layer] = read_vMaxTmp[localIndex];
                     }

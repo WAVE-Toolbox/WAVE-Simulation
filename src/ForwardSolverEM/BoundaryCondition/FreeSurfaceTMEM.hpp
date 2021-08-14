@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../Common/HostPrint.hpp"
-#include "../../ModelparameterEM/Modelparameter.hpp"
+#include "../../Modelparameter/Modelparameter.hpp"
 #include "../../ForwardSolver/Derivatives/Derivatives.hpp"
 #include "../../ForwardSolver/Derivatives/FDTD2D.hpp"
 #include "FreeSurface.hpp"
@@ -28,7 +28,7 @@ namespace KITGPI
 
                 void init(scai::dmemo::DistributionPtr dist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType /*DT*/) override;
 
-                void setModelparameter(Modelparameter::ModelparameterEM<ValueType> const &model);
+                void setModelparameter(Modelparameter::Modelparameter<ValueType> const &model);
 
               protected:
                 using FreeSurfaceEM<ValueType>::active;

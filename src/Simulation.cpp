@@ -23,7 +23,6 @@
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
 #include "ForwardSolverEM/ForwardSolverFactory.hpp"
-#include "ModelparameterEM/ModelparameterFactory.hpp"
 #include "WavefieldsEM/WavefieldsFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
@@ -158,7 +157,7 @@ int main(int argc, const char *argv[])
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
 
-    Modelparameter::ModelparameterEM<ValueType>::ModelparameterPtr modelEM(Modelparameter::FactoryEM<ValueType>::Create(equationType));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelEM(Modelparameter::Factory<ValueType>::Create(equationType));
     Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldsEM(Wavefields::FactoryEM<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolverEM<ValueType>::ForwardSolverPtr solverEM(ForwardSolver::FactoryEM<ValueType>::Create(dimension, equationType));
 
@@ -302,7 +301,7 @@ int main(int argc, const char *argv[])
     SCAI_REGION("WAVE-Simulation.initModel")
     start_t = common::Walltime::get();
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelPerShot(Modelparameter::Factory<ValueType>::Create(equationType)); 
-    Modelparameter::ModelparameterEM<ValueType>::ModelparameterPtr modelPerShotEM(Modelparameter::FactoryEM<ValueType>::Create(equationType));
+    Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelPerShotEM(Modelparameter::Factory<ValueType>::Create(equationType));
     if (!useStreamConfig) {
         if (isSeismic) {
             model->init(config, ctx, dist, modelCoordinates);

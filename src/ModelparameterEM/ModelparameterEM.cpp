@@ -1,149 +1,8 @@
-#include "Modelparameter.hpp"
+#include "ModelparameterEM.hpp"
 #include "../IO/IO.hpp"
 
 using namespace scai;
 using namespace KITGPI;
-
-template <typename ValueType>
-ValueType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter)
-{
-    ValueType size = getMemoryModel(dist) / 1024 / 1024 * numParameter;
-    return size;
-}
-
-//! \brief calculate and return memory usage the of a single ModelParameter
-/*!
- */
-template <typename ValueType>
-ValueType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getMemoryModel(scai::dmemo::DistributionPtr dist)
-{
-    /* size of a wavefield is the size of a densevector = numGridpoints*size of Valuetype*/
-    return (dist->getGlobalSize() * sizeof(ValueType));
-}
-
-/*! \brief Getter method for parameterisation */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getParameterisation() const
-{
-    return (parameterisation);
-}
-
-/*! \brief Set method for parameterisation */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setParameterisation(scai::IndexType const setParameterisation)
-{
-    parameterisation = setParameterisation;
-}
-
-/*! \brief Getter method for inversionType */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInversionType() const
-{
-    return (inversionType);
-}
-
-/*! \brief Set method for inversionType */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setInversionType(scai::IndexType const setInversionType)
-{
-    inversionType = setInversionType;
-}
-
-/*! \brief Getter method for gradientType */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getGradientType() const
-{
-    return (gradientType);
-}
-
-/*! \brief Set method for gradientType */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setGradientType(scai::IndexType const setGradientType)
-{
-    gradientType = setGradientType;
-}
-
-/*! \brief Getter method for decomposeType */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDecomposeType() const
-{
-    return (decomposeType);
-}
-
-/*! \brief Set method for decomposeType */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
-{
-    decomposeType = setDecomposeType;
-}
-
-/*! \brief Get matrix that multiplies with model matrices to get a pershot
- \param dist Distribution of the pershot
- \param distBig Distribution of the big model
- \param modelCoordinates coordinate class object of the pershot
- \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinate coordinate where to cut the pershot
- */
-template <typename ValueType>
-scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::ModelparameterEM<ValueType>::getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
-{
-    SparseFormat shrinkMatrix; //!< Shrink Multiplication matrix
-    shrinkMatrix.allocate(dist, distBig);
-      
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-    lama::MatrixAssembly<ValueType> assembly;
-    IndexType indexBig = 0;
- 
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
-        coordinate.x += cutCoordinate.x; // offset depends on shot number
-        coordinate.y += cutCoordinate.y;
-        coordinate.z += cutCoordinate.z;
-        indexBig = modelCoordinatesBig.coordinate2index(coordinate);
-        assembly.push(ownedIndex, indexBig, 1.0);
-    }
-    shrinkMatrix.fillFromAssembly(assembly);
-    return shrinkMatrix;
-}
-
-/*! \brief Get erase-vector that erases the old values in the big model
- \param dist Distribution of the pershot
- \param distBig Distribution of the big model
- \param modelCoordinates coordinate class object of the pershot
- \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinate coordinate where to cut the pershot
- */
-template <typename ValueType>
-scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::ModelparameterEM<ValueType>::getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
-{
-    scai::lama::SparseVector<ValueType> eraseVector(distBig, 1.0); //!< Shrink Multiplication matrix
-      
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-    lama::VectorAssembly<ValueType> assembly;
-    IndexType indexBig = 0;
- 
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) { // loop over all indices
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex); // get submodel coordinate from singleIndex
-        coordinate.x += cutCoordinate.x; // offset depends on shot number
-        coordinate.y += cutCoordinate.y;
-        coordinate.z += cutCoordinate.z;
-        indexBig = modelCoordinatesBig.coordinate2index(coordinate);
-        assembly.push(indexBig, 0.0);
-    }
-    eraseVector.fillFromAssembly(assembly);
-    
-    // damp the boundary boarders
-    for (IndexType y = 0; y < modelCoordinatesBig.getNY(); y++) {
-        for (IndexType i = 0; i < boundaryWidth; i++) {
-            ValueType tmp = (ValueType)1.0 - (i + 1) / (ValueType)boundaryWidth;
-            eraseVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+i, y, 0)] = tmp;
-            eraseVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+modelCoordinates.getNX()-1-i, y, 0)] = tmp;
-        }
-    }
-    return eraseVector;
-}
 
 /*! \brief Prepare modelparameter for inversion
  */
@@ -151,20 +10,13 @@ template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr comm)
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
-    setParameterisation(config.getAndCatch("parameterisation", 0));
-    setInversionType(config.getAndCatch("inversionType", 1));
-    setGradientType(config.getAndCatch("gradientType", 0));
-    setDecomposeType(config.getAndCatch("decomposeType", 0));
+    this->setParameterisation(config.getAndCatch("parameterisation", 0));
+    this->setInversionType(config.getAndCatch("inversionType", 1));
+    this->setGradientType(config.getAndCatch("gradientType", 0));
+    this->setDecomposeType(config.getAndCatch("decomposeType", 0));
     calcElectricConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");
-}
-
-/*! \brief Getter method for relaxation frequency */
-template <typename ValueType>
-ValueType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getRelaxationFrequency() const
-{
-    return (relaxationFrequency);
 }
 
 /*! \brief Set relaxation frequency
@@ -177,13 +29,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setRelaxationFrequency
     dirtyFlagDielectricPermittivityOptical = true; // the visco Modulus vector is now dirty
     dirtyFlagElectricConductivityOptical = true; // the visco Modulus vector is now dirty
     relaxationFrequency = setRelaxationFrequency;
-}
-
-/*! \brief Getter method for number of relaxation mechanisms */
-template <typename ValueType>
-IndexType KITGPI::Modelparameter::ModelparameterEM<ValueType>::getNumRelaxationMechanisms() const
-{
-    return (numRelaxationMechanisms);
 }
 
 /*! \brief Set number of Relaxation Mechanisms
@@ -276,7 +121,7 @@ ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getRelative
  \param fileFormat Output file format 1=mtx 2=lmf
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) const
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat)
 {
     IO::writeVector(electricConductivityWater, filename + ".sigmaEMw", fileFormat);
     IO::writeVector(relativeDieletricPeimittivityRockMatrix, filename + ".epsilonEMrma", fileFormat);
@@ -405,47 +250,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcPetrophysicsFromWa
     
     this->setSaturation(temp1);      
 }
-/*! \brief Init a single modelparameter by a constant value
- *
- \param vector Singel modelparameter which will be initialized
- \param ctx Context
- \param dist Distribution
- \param value Value which will be used to initialize the single modelparameter to a homogenoeus model
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType value)
-{
-    allocateModelparameter(vector, ctx, dist);
-    
-    vector = value;
-}
-
-/*! \brief Init a single modelparameter by reading a model from an external file
- *
- *  Reads a single model from an external vector file.
- \param vector Singel modelparameter which will be initialized
- \param ctx Context
- \param dist Distribution
- \param filename Location of external file which will be read in
- \param fileFormat Input file format
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::initModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
-{
-    HOST_PRINT(dist->getCommunicatorPtr(), "", "initModelParameter from file " << filename << "\n")
-    allocateModelparameter(vector, ctx, dist);
-
-    IO::readVector(vector, filename, fileFormat);
-}
-
-/*! \brief Allocate a single modelparameter
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
-{
-    vector.setContextPtr(ctx);
-    vector.allocate(dist);
-};
 
 /*! \brief Calculate a modulus from velocity
  *
@@ -461,6 +265,10 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcModulusFromVelocit
     vecDielectricPermittivity = 1 / vecMagneticPermeability;
     vecDielectricPermittivity /= vecVelocity;
     vecDielectricPermittivity /= vecVelocity;
+    scai::lama::DenseVector<ValueType> temp;
+    temp = vecDielectricPermittivity;
+    Common::replaceInvalid<ValueType>(temp, 0.0); // in case of Inf divided by zero.
+    vecDielectricPermittivity = temp;
 };
 
 /*! \brief Calculate velocities from a modulus
@@ -477,6 +285,10 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcVelocityFromModulu
     vecVelocity = vecDielectricPermittivity * vecMagneticPermeability; 
     vecVelocity = lama::sqrt(vecVelocity);    
     vecVelocity = 1 / vecVelocity;
+    scai::lama::DenseVector<ValueType> temp;
+    temp = vecVelocity;
+    Common::replaceInvalid<ValueType>(temp, 0.0); // in case of Inf divided by zero.
+    vecVelocity = temp;
 };
 
 /*! \brief Get const reference to EM-wave velocity
@@ -693,59 +505,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setTauDielectricPermit
     tauDielectricPermittivity = setTauDielectricPermittivity;
 }
 
-/*! \brief Get const reference to porosity */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getPorosity() const
-{
-    return (porosity);
-}
-
-/*! \brief Set porosity */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setPorosity(scai::lama::Vector<ValueType> const &setPorosity)
-{
-    porosity = setPorosity;
-}
-
-/*! \brief Get const reference to saturation */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSaturation() const
-{
-    return (saturation);
-}
-
-/*! \brief Set saturation
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setSaturation(scai::lama::Vector<ValueType> const &setSaturation)
-{
-    saturation = setSaturation;
-}
-
-/*! \brief Get const reference to reflectivity
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getReflectivity() const
-{
-    return (reflectivity);
-}
-
-/*! \brief Set reflectivity
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setReflectivity(scai::lama::Vector<ValueType> const &setReflectivity)
-{
-    reflectivity = setReflectivity;
-}
-
-/*! \brief reset reflectivity
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::resetReflectivity()
-{
-    reflectivity = 0.0;
-}
-
 /*! \brief calculate reflectivity from permittivity
  */
 template <typename ValueType>
@@ -806,329 +565,6 @@ template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setRelativeDieletricPeimittivityRockMatrix(scai::lama::Vector<ValueType> const &setRelativeDieletricPeimittivityRockMatrix)
 {
     relativeDieletricPeimittivityRockMatrix = setRelativeDieletricPeimittivityRockMatrix;
-}
-
-//! \brief Calculate averaging matrix in x-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixX(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixX")
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        scai::IndexType dhFactor = modelCoordinates.getDHFactor(coordinate);
-        scai::IndexType X = coordinate.x + dhFactor;
-
-        if (X < modelCoordinates.getNX()) {
-            //point 1
-            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-            //point 2
-            IndexType columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
-            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-        } else {
-            //point 1
-            assembly.push(ownedIndex, ownedIndex, 1.0);
-        }
-    }
-
-    averageMatrixX = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixX.fillFromAssembly(assembly);
-}
-
-//! \brief Calculate averaging matrix in y-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixY")
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
-    IndexType layer = 0;
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-
-        layer = modelCoordinates.getLayer(coordinate);
-
-        scai::IndexType Y = coordinate.y;
-
-        if ((modelCoordinates.locatedOnInterface(coordinate)) && (modelCoordinates.getTransition(coordinate) == 0)) {
-            Y += modelCoordinates.getDHFactor(layer + 1);
-        } else {
-            Y += modelCoordinates.getDHFactor(layer);
-        }
-
-        if (Y < modelCoordinates.getNY()) {
-            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-            IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
-            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-        } else {
-            assembly.push(ownedIndex, ownedIndex, 1.0);
-        }
-    }
-
-    averageMatrixY = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixY.fillFromAssembly(assembly);
-}
-
-//! \brief Calculate averaging matrix in z-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixZ")
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 2);
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-        scai::IndexType dhFactor = modelCoordinates.getDHFactor(coordinate);
-        scai::IndexType Z = coordinate.z + dhFactor;
-        ;
-
-        if (Z < modelCoordinates.getNZ()) {
-            //point 1
-            assembly.push(ownedIndex, ownedIndex, 1.0 / 2.0);
-            //point 2
-            IndexType columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
-            assembly.push(ownedIndex, columnIndex, 1.0 / 2.0);
-        } else {
-            //point 1
-            assembly.push(ownedIndex, ownedIndex, 1.0);
-        }
-    }
-
-    averageMatrixZ = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixZ.fillFromAssembly(assembly);
-}
-
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calc4PointAverageMatrixRow(scai::IndexType rowIndex, scai::IndexType pX[], scai::IndexType pY[], scai::IndexType pZ[], scai::lama::MatrixAssembly<ValueType> &assembly, Acquisition::Coordinates<ValueType> const &modelCoordinates)
-{
-    IndexType columnIndex;
-    /*Points
-            1      2
-               av
-            3      4
-        */
-
-    IndexType maxX = *std::max_element(pX, pX + 5);
-    IndexType maxY = *std::max_element(pY, pY + 5);
-    IndexType maxZ = *std::max_element(pZ, pZ + 5);
-
-    if ((maxX < modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
-        // Point 1 (diagonal element)
-        assembly.push(rowIndex, rowIndex, 1.0 / 4.0);
-
-        //Point 2
-        columnIndex = modelCoordinates.coordinate2index(pX[2], pY[2], pZ[2]);
-        assembly.push(rowIndex, columnIndex, 1.0 / 4.0);
-
-        //Point 3
-        columnIndex = modelCoordinates.coordinate2index(pX[3], pY[3], pZ[3]);
-        assembly.push(rowIndex, columnIndex, 1.0 / 4.0);
-
-        //Point 4
-        columnIndex = modelCoordinates.coordinate2index(pX[4], pY[4], pZ[4]);
-        assembly.push(rowIndex, columnIndex, 1.0 / 4.0);
-    }
-
-    //bottom side
-    if ((maxX < modelCoordinates.getNX()) && (maxY >= modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
-        columnIndex = modelCoordinates.coordinate2index(maxX, pY[1], maxZ);
-        // Point 2
-        assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
-    }
-
-    // right side
-    if ((maxX >= modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
-        columnIndex = modelCoordinates.coordinate2index(pX[1], maxY, maxZ);
-        //Point 3
-        assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
-    }
-
-    // back side
-    if ((maxX < modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ >= modelCoordinates.getNZ())) {
-        columnIndex = modelCoordinates.coordinate2index(maxX, maxY, pZ[1]);
-        // Point 3
-        assembly.push(rowIndex, columnIndex, 1.0 / 2.0);
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0 / 2.0);
-    }
-
-    //bottom-right edge
-
-    if ((maxX >= modelCoordinates.getNX()) && (maxY >= modelCoordinates.getNY()) && (maxZ < modelCoordinates.getNZ())) {
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0);
-    }
-
-    //bottom-back edge
-
-    if ((maxX < modelCoordinates.getNX()) && (maxY >= modelCoordinates.getNY()) && (maxZ >= modelCoordinates.getNZ())) {
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0);
-    }
-
-    //right-back edge
-
-    if ((maxX >= modelCoordinates.getNX()) && (maxY < modelCoordinates.getNY()) && (maxZ >= modelCoordinates.getNZ())) {
-        // Point 1
-        assembly.push(rowIndex, rowIndex, 1.0);
-    }
-}
-
-//! \brief Calculate averaging matrix in x and y-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixXY(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixXY")
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 4);
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-
-        IndexType dhFactor = modelCoordinates.getDHFactor(coordinate);
-
-        IndexType pX[] = {0, coordinate.x, coordinate.x + dhFactor, coordinate.x, coordinate.x + dhFactor};
-        IndexType pY[] = {0, coordinate.y, coordinate.y, coordinate.y + dhFactor, coordinate.y + dhFactor};
-        IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z, coordinate.z};
-
-        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
-    }
-
-    averageMatrixXY = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixXY.fillFromAssembly(assembly);
-}
-
-//! \brief Calculate averaging matrix in x and y-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixXZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixXZ")
-    //     calcAverageMatrix(dielectricPermittivityAverageMatrixXZ, &ModelparameterEM<ValueType>::calcNumberRowElements_InverseDielectricPermittivityAverageMatrixXZ, &ModelparameterEM<ValueType>::setRowElements_InverseDielectricPermittivityAverageMatrixXZ, modelCoordinates, dist);
-
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 4);
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-
-        IndexType dhFactor = modelCoordinates.getDHFactor(coordinate);
-
-        IndexType pX[] = {0, coordinate.x, coordinate.x + dhFactor, coordinate.x, coordinate.x + dhFactor};
-        IndexType pY[] = {0, coordinate.y, coordinate.y, coordinate.y, coordinate.y};
-        IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z + dhFactor, coordinate.z + dhFactor};
-
-        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
-    }
-
-    averageMatrixXZ = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixXZ.fillFromAssembly(assembly);
-}
-
-//! \brief Calculate averaging matrix in y and z-direction
-/*!
- *
- \param dist Distribution
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAverageMatrixYZ(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::DistributionPtr dist)
-{
-    SCAI_REGION("Modelparameter.calcAverageMatrixYZ")
-    hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
-    dist->getOwnedIndexes(ownedIndexes);
-
-    lama::MatrixAssembly<ValueType> assembly;
-    assembly.reserve(ownedIndexes.size() * 4);
-
-    for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
-
-        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
-
-        IndexType dhFactor = modelCoordinates.getDHFactor(coordinate);
-
-        IndexType pX[] = {0, coordinate.x, coordinate.x, coordinate.x, coordinate.x};
-        IndexType pY[] = {0, coordinate.y, coordinate.y + dhFactor, coordinate.y, coordinate.y + dhFactor};
-        IndexType pZ[] = {0, coordinate.z, coordinate.z, coordinate.z + dhFactor, coordinate.z + dhFactor};
-
-        calc4PointAverageMatrixRow(ownedIndex, pX, pY, pZ, assembly, modelCoordinates);
-    }
-
-    averageMatrixYZ = lama::zero<SparseFormat>(dist, dist);
-    averageMatrixYZ.fillFromAssembly(assembly);
-}
-
-/*! \brief calculate averaged Parameter
- *
- \param vecParameter EM parameter vector
- \param vecAveragedParameter Averaged EM parameter vector which is calculated
- \param averagedMatrix Averaging matrix which is used to calculate averaged vector
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
-{
-    vecAveragedParameter = averagedMatrix * vecParameter;
-}
-
-/*! \brief calculate averaged inverse EM parameter
- *
- \param vecParameter EM parameter vector.
- \param vecInverseAveragedParameter Averaged inverse EM parameter vector which is calculated
- \param averagedMatrix Averaging matrix which is used to calculate averaged vector
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcInverseAveragedParameter(scai::lama::Vector<ValueType> const &vecParameter, scai::lama::DenseVector<ValueType> &vecInverseAveragedParameter, scai::lama::Matrix<ValueType> const &averagedMatrix)
-{
-    vecInverseAveragedParameter = averagedMatrix * vecParameter;
-    vecInverseAveragedParameter = 1 / vecInverseAveragedParameter;
-
-    Common::replaceInvalid<ValueType>(vecInverseAveragedParameter, 0.0);
 }
 
 /*! \brief Get const reference to averaged magneticPermeability in yz-plane
@@ -1509,37 +945,478 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<Va
     return (tauDielectricPermittivityAverageZ);
 }
 
-/*! \brief Overloading = Operation
- *
- \param rhs Model which is copied.
+
+
+/* override the functions that only used by seismic wave */
+
+/*! \brief calculate BiotCoefficient beta based on Gaussmann equation
  */
 template <typename ValueType>
-KITGPI::Modelparameter::ModelparameterEM<ValueType> &KITGPI::Modelparameter::ModelparameterEM<ValueType>::operator=(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBiotCoefficient()
 {
-    assign(rhs);
-    return *this;
+    COMMON_THROWEXCEPTION("There is no BiotCoefficient in an EM modelling")
+    return (BiotCoefficient);    
 }
 
-/*! \brief Overloading += Operation
- *
- \param rhs Model which is added.
+/*! \brief get BiotCoefficient beta based on Gaussmann equation
  */
 template <typename ValueType>
-KITGPI::Modelparameter::ModelparameterEM<ValueType> &KITGPI::Modelparameter::ModelparameterEM<ValueType>::operator+=(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
-{
-    plusAssign(rhs);
-    return *this;
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBiotCoefficient() const
+{    
+    COMMON_THROWEXCEPTION("There is no BiotCoefficient in an EM modelling")
+    return (BiotCoefficient);
 }
 
-/*! \brief Overloading -= Operation
- *
- \param rhs Model which is substracted.
+/*! \brief calculate BulkModulus Kf based on Gaussmann equation
  */
 template <typename ValueType>
-KITGPI::Modelparameter::ModelparameterEM<ValueType> &KITGPI::Modelparameter::ModelparameterEM<ValueType>::operator-=(KITGPI::Modelparameter::ModelparameterEM<ValueType> const &rhs)
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusKf()
+{        
+    COMMON_THROWEXCEPTION("There is no bulkModulusKf in an EM modelling")
+    return (bulkModulusKf); 
+}
+
+/*! \brief get BulkModulus Kf based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusKf() const
+{          
+    COMMON_THROWEXCEPTION("There is no bulkModulusKf in an EM modelling")
+    return (bulkModulusKf);
+}
+
+/*! \brief calculate BulkModulus M based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusM()
+{        
+    COMMON_THROWEXCEPTION("There is no bulkModulusM in an EM modelling")
+    return (bulkModulusM);
+}
+
+/*! \brief get BulkModulus M based on Gaussmann equation
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusM() const
+{            
+    COMMON_THROWEXCEPTION("There is no bulkModulusM in an EM modelling")
+    return (bulkModulusM);
+}
+
+/*! \brief Get const reference to inverseDensity model parameter
+ *
+ * If inverseDensity is dirty eg. because the density was modified, inverseDensity will be calculated from density.
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensity()
 {
-    minusAssign(rhs);
-    return *this;
+    COMMON_THROWEXCEPTION("There is no inverseDensity in an EM modelling")
+    return (inverseDensity);
+}
+
+/*! \brief Get const reference to inverseDensity model parameter
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensity() const
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensity in an EM modelling")
+    return (inverseDensity);
+}
+
+/*! \brief Get const reference to density model parameter
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDensity() const
+{
+    COMMON_THROWEXCEPTION("There is no density in an EM modelling")
+    return (density);
+}
+
+/*! \brief Set density model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDensity(scai::lama::Vector<ValueType> const &setDensity)
+{
+    COMMON_THROWEXCEPTION("There is no setDensity in an EM modelling")
+}
+
+/*! \brief Get const reference to first Lame model parameter
+ *
+ * If P-Wave modulus is dirty eg. because the P-Wave velocity was modified, P-Wave modulus will be calculated from density and P-Wave velocity.
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getPWaveModulus()
+{
+    COMMON_THROWEXCEPTION("There is no pWaveModulus in an EM modelling")
+    return (pWaveModulus);
+}
+
+/*! \brief Get const reference to first Lame model parameter
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getPWaveModulus() const
+{
+    COMMON_THROWEXCEPTION("There is no pWaveModulus in an EM modelling")
+    return (pWaveModulus);
+}
+
+/*! \brief Get const reference to second Lame Parameter sWaveModulus
+ *
+ * If S-Wave modulus is dirty eg. because the S-Wave Velocity was modified, S-Wave modulus will be calculated from density and S-Wave velocity.
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulus()
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulus in an EM modelling")
+
+    return (sWaveModulus);
+}
+
+/*! \brief Get const reference to second Lame Parameter sWaveModulus
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulus() const
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulus in an EM modelling")
+    return (sWaveModulus);
+}
+
+/*! \brief Get const reference to P-wave velocity
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getVelocityP() const
+{
+    COMMON_THROWEXCEPTION("There is no velocityP in an EM modelling")
+    return (velocityP);
+}
+
+/*! \brief Set P-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setVelocityP(scai::lama::Vector<ValueType> const &setVelocityP)
+{
+    COMMON_THROWEXCEPTION("There is no setVelocityP in an EM modelling")
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getVelocityS() const
+{
+    COMMON_THROWEXCEPTION("There is no velocityS in an EM modelling")
+    return (velocityS);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setVelocityS(scai::lama::Vector<ValueType> const &setVelocityS)
+{
+    COMMON_THROWEXCEPTION("There is no setVelocityS in an EM modelling")
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusRockMatrix() const
+{
+    COMMON_THROWEXCEPTION("There is no bulkModulusRockMatrix in an EM modelling")
+    return (bulkModulusRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setBulkModulusRockMatrix(scai::lama::Vector<ValueType> const &setBulkModulusRockMatrix)
+{
+    COMMON_THROWEXCEPTION("There is no setBulkModulusRockMatrix in an EM modelling")
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getShearModulusRockMatrix() const
+{
+    COMMON_THROWEXCEPTION("There is no shearModulusRockMatrix in an EM modelling")
+    return (shearModulusRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setShearModulusRockMatrix(scai::lama::Vector<ValueType> const &setShearModulusRockMatrix)
+{
+    COMMON_THROWEXCEPTION("There is no setShearModulusRockMatrix in an EM modelling")
+}
+
+/*! \brief Get const reference to S-wave velocity
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDensityRockMatrix() const
+{
+    COMMON_THROWEXCEPTION("There is no densityRockMatrix in an EM modelling")
+    return (densityRockMatrix);
+}
+
+/*! \brief Set S-wave velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDensityRockMatrix(scai::lama::Vector<ValueType> const &setDensityRockMatrix)
+{
+    COMMON_THROWEXCEPTION("There is no setDensityRockMatrix in an EM modelling")
+}
+
+/*! \brief Get const reference to tauP
+ *
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauP() const
+{
+    COMMON_THROWEXCEPTION("There is no tauP in an EM modelling")
+    return (tauP);
+}
+
+/*! \brief Set tauP velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setTauP(scai::lama::Vector<ValueType> const &setTauP)
+{
+    COMMON_THROWEXCEPTION("There is no setTauP in an EM modelling")
+}
+
+/*! \brief Get const reference to tauS
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauS() const
+{
+    COMMON_THROWEXCEPTION("There is no tauS in an EM modelling")
+    return (tauS);
+}
+
+/*! \brief Set tauS velocity model parameter
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setTauS(scai::lama::Vector<ValueType> const &setTauS)
+{
+    COMMON_THROWEXCEPTION("There is no setTauS in an EM modelling")
+}
+
+/*! \brief Getter method for DensityWater */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDensityWater() const
+{
+    COMMON_THROWEXCEPTION("There is no DensityWater in an EM modelling")
+    return (DensityWater);
+}
+
+/*! \brief Getter method for DensityAir */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDensityAir() const
+{
+    COMMON_THROWEXCEPTION("There is no DensityAir in an EM modelling")
+    return (DensityAir);
+}
+
+/*! \brief Getter method for BulkModulusWater */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusWater() const
+{
+    COMMON_THROWEXCEPTION("There is no BulkModulusWater in an EM modelling")
+    ValueType BulkModulusWater = DensityWater * VelocityPWater * VelocityPWater; 
+    return (BulkModulusWater);
+}
+
+/*! \brief Getter method for BulkModulusAir */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusAir() const
+{         
+    COMMON_THROWEXCEPTION("There is no BulkModulusAir in an EM modelling")
+    ValueType BulkModulusAir = DensityAir * VelocityPAir * VelocityPAir; 
+    return (BulkModulusAir);
+}
+
+/*! \brief Getter method for CriticalPorosity */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getCriticalPorosity() const
+{
+    COMMON_THROWEXCEPTION("There is no CriticalPorosity in an EM modelling")
+    return (CriticalPorosity);
+}
+
+/*! \brief calculate averaged s-wave modulus
+ *
+ \param vecSWaveModulus s-wave modulus vector
+ \param vecAvSWaveModulus Averaged s-wave modulus vector which is calculated
+ \param avSWaveModulusMatrix Averaging matrix which is used to calculate averaged vector
+ */
+template <typename ValueType>
+void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcAveragedSWaveModulus(scai::lama::DenseVector<ValueType> &vecSWaveModulus, scai::lama::DenseVector<ValueType> &vecAvSWaveModulus, scai::lama::Matrix<ValueType> &avSWaveModulusMatrix)
+{
+    COMMON_THROWEXCEPTION("There is no calcAveragedSWaveModulus in an EM modelling")
+}
+
+/*! \brief Get const reference to averaged density in x-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageX()
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageX in an EM modelling")
+    return (inverseDensityAverageX);
+}
+
+/*! \brief Get const reference to averaged density in y-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageY()
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageY in an EM modelling")
+    return (inverseDensityAverageY);
+}
+
+/*! \brief Get const reference to averaged density in z-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageZ()
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageZ in an EM modelling")
+    return (inverseDensityAverageZ);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageXY()
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageXY in an EM modelling")
+    return (sWaveModulusAverageXY);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageXZ()
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageXZ in an EM modelling")
+    return (sWaveModulusAverageXZ);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageYZ in an EM modelling")
+    return (sWaveModulusAverageYZ);
+}
+
+/*! \brief Get const reference to averaged tauS in xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageXY()
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageXY in an EM modelling")
+    return (tauSAverageXY);
+}
+
+/*! \brief Get const reference to averaged tauS in xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageXZ()
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageXZ in an EM modelling")
+    return (tauSAverageXZ);
+}
+
+/*! \brief Get const reference to averaged tauS in yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageYZ()
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageYZ in an EM modelling")
+    return (tauSAverageYZ);
+}
+
+/*! \brief Get const reference to averaged density in x-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageX() const
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageX in an EM modelling")
+    return (inverseDensityAverageX);
+}
+
+/*! \brief Get const reference to averaged density in y-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageY() const
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageY in an EM modelling")
+    return (inverseDensityAverageY);
+}
+
+/*! \brief Get const reference to averaged density in z-direction
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getInverseDensityAverageZ() const
+{
+    COMMON_THROWEXCEPTION("There is no inverseDensityAverageZ in an EM modelling")
+    return (inverseDensityAverageZ);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageXY() const
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageXY in an EM modelling")
+    return (sWaveModulusAverageXY);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageXZ() const
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageXZ in an EM modelling")
+    return (sWaveModulusAverageXZ);
+}
+
+/*! \brief Get const reference to averaged s-wave modulus in yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getSWaveModulusAverageYZ() const
+{
+    COMMON_THROWEXCEPTION("There is no sWaveModulusAverageYZ in an EM modelling")
+    return (sWaveModulusAverageYZ);
+}
+
+/*! \brief Get const reference to averaged tauS in xy-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageXY() const
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageXY in an EM modelling")
+    return (tauSAverageXY);
+}
+
+/*! \brief Get const reference to averaged tauS in xz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageXZ() const
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageXZ in an EM modelling")
+    return (tauSAverageXZ);
+}
+
+/*! \brief Get const reference to averaged tauS in yz-plane
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauSAverageYZ() const
+{
+    COMMON_THROWEXCEPTION("There is no tauSAverageYZ in an EM modelling")
+    return (tauSAverageYZ);
 }
 
 template class KITGPI::Modelparameter::ModelparameterEM<float>;
