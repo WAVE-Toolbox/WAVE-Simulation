@@ -8,7 +8,7 @@
 #include "../../Acquisition/SeismogramHandler.hpp"
 
 #include "../../Modelparameter/Modelparameter.hpp"
-#include "../../WavefieldsEM/Wavefields.hpp"
+#include "../../Wavefields/Wavefields.hpp"
 
 namespace KITGPI
 {
@@ -30,7 +30,7 @@ namespace KITGPI
                 
                 //! Default constructor
                 SourceReceiverImplEM() = delete;
-                explicit SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN);
+                explicit SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
                 //! Default destructor
                 ~SourceReceiverImplEM(){};
 
@@ -39,21 +39,21 @@ namespace KITGPI
 
               protected:
                 //! \brief Allying method for pressure source
-                virtual void applySourceEZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void applySourceEX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void applySourceEY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void applySourceHZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void applySourceEZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void applySourceEX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void applySourceEY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void applySourceHZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
                 void applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
 
                 //! \brief Gather method for pressure seismogram
-                virtual void gatherSeismogramEX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void gatherSeismogramEY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void gatherSeismogramEZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void gatherSeismogramHZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::WavefieldsEM<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void gatherSeismogramEX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void gatherSeismogramEY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void gatherSeismogramEZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
+                virtual void gatherSeismogramHZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
                 void gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
 
                 /* wavefields */
-                Wavefields::WavefieldsEM<ValueType> &wavefield; //!< Wavefields
+                Wavefields::Wavefields<ValueType> &wavefield; //!< Wavefields
 
                 /* source */
                 Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources

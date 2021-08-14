@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
@@ -7,7 +5,7 @@
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 
-#include "Wavefields.hpp"
+#include "WavefieldsSeismic.hpp"
 
 namespace KITGPI
 {
@@ -19,7 +17,7 @@ namespace KITGPI
          *
          */
         template <typename ValueType>
-        class FD2Dsh : public Wavefields<ValueType>
+        class FD2Dsh : public WavefieldsSeismic<ValueType>
         {
 
           public:

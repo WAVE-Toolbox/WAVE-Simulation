@@ -1,7 +1,7 @@
 #include "SourceReceiverImplFactory.hpp"
 
 template <typename ValueType>
-typename KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::SourceReceiverImplPtr KITGPI::ForwardSolver::SourceReceiverImpl::FactoryEM<ValueType>::Create(std::string dimension, std::string type, Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN)
+typename KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::SourceReceiverImplPtr KITGPI::ForwardSolver::SourceReceiverImpl::FactoryEM<ValueType>::Create(std::string dimension, std::string type, Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN)
 {
     // transform to lower cases
     std::transform(dimension.begin(), dimension.end(), dimension.begin(), ::tolower);

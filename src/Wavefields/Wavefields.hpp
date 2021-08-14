@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
@@ -10,7 +8,6 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
-#include "../Common/Hilbert.hpp"
 
 namespace KITGPI
 {
@@ -34,49 +31,15 @@ namespace KITGPI
             //! Default destructor
             ~Wavefields(){};
 
+            /* Common */
             //! \brief Declare Wavefield pointer
             typedef std::shared_ptr<Wavefields<ValueType>> WavefieldPtr;
-
+            
             //! Reset wavefields
             virtual void resetWavefields() = 0;
 
             virtual int getNumDimension() const = 0;
             virtual std::string getEquationType() const = 0;
-
-            virtual scai::lama::DenseVector<ValueType> &getRefVX();
-            virtual scai::lama::DenseVector<ValueType> &getRefVY();
-            virtual scai::lama::DenseVector<ValueType> &getRefVZ();
-            virtual scai::lama::DenseVector<ValueType> &getRefP();
-            virtual scai::lama::DenseVector<ValueType> &getRefPup();
-            virtual scai::lama::DenseVector<ValueType> &getRefPdown();
-            virtual scai::lama::DenseVector<ValueType> &getRefPleft();
-            virtual scai::lama::DenseVector<ValueType> &getRefPright();
-            virtual scai::lama::DenseVector<ValueType> &getRefVXup();
-            virtual scai::lama::DenseVector<ValueType> &getRefVXdown();
-            virtual scai::lama::DenseVector<ValueType> &getRefVXleft();
-            virtual scai::lama::DenseVector<ValueType> &getRefVXright();
-            virtual scai::lama::DenseVector<ValueType> &getRefVYup();
-            virtual scai::lama::DenseVector<ValueType> &getRefVYdown();
-            virtual scai::lama::DenseVector<ValueType> &getRefVYleft();
-            virtual scai::lama::DenseVector<ValueType> &getRefVYright();
-            virtual scai::lama::DenseVector<ValueType> &getRefVZup();
-            virtual scai::lama::DenseVector<ValueType> &getRefVZdown();
-            virtual scai::lama::DenseVector<ValueType> &getRefVZleft();
-            virtual scai::lama::DenseVector<ValueType> &getRefVZright();
-
-            virtual scai::lama::DenseVector<ValueType> &getRefSxx();
-            virtual scai::lama::DenseVector<ValueType> &getRefSyy();
-            virtual scai::lama::DenseVector<ValueType> &getRefSzz();
-            virtual scai::lama::DenseVector<ValueType> &getRefSyz();
-            virtual scai::lama::DenseVector<ValueType> &getRefSxz();
-            virtual scai::lama::DenseVector<ValueType> &getRefSxy();
-
-            virtual scai::lama::DenseVector<ValueType> &getRefRxx();
-            virtual scai::lama::DenseVector<ValueType> &getRefRyy();
-            virtual scai::lama::DenseVector<ValueType> &getRefRzz();
-            virtual scai::lama::DenseVector<ValueType> &getRefRyz();
-            virtual scai::lama::DenseVector<ValueType> &getRefRxz();
-            virtual scai::lama::DenseVector<ValueType> &getRefRxy();
 
             //! Declare getter variable for context pointer
             virtual scai::hmemo::ContextPtr getContextPtr() = 0;
@@ -84,7 +47,7 @@ namespace KITGPI
             //! \brief Initialization
             virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
             
-            bool isFinite(scai::dmemo::DistributionPtr dist);
+            virtual bool isFinite(scai::dmemo::DistributionPtr dist) = 0;
 
             ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields);
 
@@ -114,17 +77,81 @@ namespace KITGPI
             KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator*=(ValueType rhs);
 
+            /* Seismic */
+            virtual scai::lama::DenseVector<ValueType> &getRefVX() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVY() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVZ() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefP() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefPup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefPdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefPleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefPright() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVXup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVXdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVXleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVXright() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVYup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVYdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVYleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVYright() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVZup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVZdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVZleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefVZright() = 0;
+
+            virtual scai::lama::DenseVector<ValueType> &getRefSxx() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefSyy() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefSzz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefSyz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefSxz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefSxy() = 0;
+
+            virtual scai::lama::DenseVector<ValueType> &getRefRxx() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRyy() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRzz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRyz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRxz() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRxy() = 0;
+
+            /* EM */
+            virtual scai::lama::DenseVector<ValueType> &getRefHX() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefHY() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefHZ() = 0;
+
+            virtual scai::lama::DenseVector<ValueType> &getRefEX() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEY() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEZ() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEXup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEYup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEZup() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEXdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEYdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEZdown() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEXleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEYleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEZleft() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEXright() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEYright() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefEZright() = 0;
+
+            virtual scai::lama::DenseVector<ValueType> &getRefRX() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRY() = 0;
+            virtual scai::lama::DenseVector<ValueType> &getRefRZ() = 0;
           protected:
+            /* Common */
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
             void initWavefield(scai::lama::DenseVector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
 
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Define sparse format as CSRSparseMatrix
             SparseFormat transformMatrixYXZ;
             SparseFormat transformMatrixXZY;
+            SparseFormat transformMatrixX;
+            SparseFormat transformMatrixY;
             
             int numDimension;
             std::string equationType;
 
+            /* Seismic */
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
             scai::lama::DenseVector<ValueType> VY;  //!< Wavefield for velocity in y
             scai::lama::DenseVector<ValueType> VZ;  //!< Wavefield for velocity in z
@@ -158,6 +185,30 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> Ryz; //!< Relaxation parameter
             scai::lama::DenseVector<ValueType> Rxz; //!< Relaxation parameter
             scai::lama::DenseVector<ValueType> Rxy; //!< Relaxation parameter
+        
+            /* EM */
+            scai::lama::DenseVector<ValueType> HX;  //!< magnatic intensity Wavefield 
+            scai::lama::DenseVector<ValueType> HY;  //!< magnatic intensity Wavefield 
+            scai::lama::DenseVector<ValueType> HZ;  //!< magnatic intensity Wavefield 
+            scai::lama::DenseVector<ValueType> EX;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EY;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EZ;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EXup;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EYup;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EZup;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EXdown;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EYdown;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EZdown;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EXleft;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EYleft;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EZleft;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EXright;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EYright;  //!< electric intensity Wavefield
+            scai::lama::DenseVector<ValueType> EZright;  //!< electric intensity Wavefield
+
+            scai::lama::DenseVector<ValueType> RX; //!< Relaxation parameter memory varible
+            scai::lama::DenseVector<ValueType> RY; //!< Relaxation parameter memory varible
+            scai::lama::DenseVector<ValueType> RZ; //!< Relaxation parameter memory varible
         };
     }
 }

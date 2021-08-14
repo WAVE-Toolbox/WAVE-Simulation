@@ -7,7 +7,7 @@
 
 #include "../Common/HostPrint.hpp"
 #include "../Modelparameter/Modelparameter.hpp"
-#include "../WavefieldsEM/Wavefields.hpp"
+#include "../Wavefields/Wavefields.hpp"
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 
 #include "BoundaryCondition/ABS.hpp"
@@ -47,8 +47,8 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
-            virtual void runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::WavefieldsEM<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+            virtual void runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
 
             /*! \brief Reset PML memory variables if PML is used 
             *
@@ -87,7 +87,7 @@ namespace KITGPI
              \param wavefield Wavefields for the modelling
              \param ctx Context
              */
-            virtual void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::WavefieldsEM<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
+            virtual void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
           protected:
             scai::IndexType useFreeSurface; //!< Indicator which free surface is in use

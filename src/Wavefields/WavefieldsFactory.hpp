@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Wavefields.hpp"
+#include "WavefieldsSeismic.hpp"
 #include "Wavefields2Dacoustic.hpp"
 #include "Wavefields2Delastic.hpp"
 #include "Wavefields2Dsh.hpp"
@@ -8,6 +9,13 @@
 #include "Wavefields3Dacoustic.hpp"
 #include "Wavefields3Delastic.hpp"
 #include "Wavefields3Dviscoelastic.hpp"
+#include "../WavefieldsEM/WavefieldsEM.hpp"
+#include "../WavefieldsEM/Wavefields2Dtmem.hpp"
+#include "../WavefieldsEM/Wavefields2Demem.hpp"
+#include "../WavefieldsEM/Wavefields2Dviscotmem.hpp"
+#include "../WavefieldsEM/Wavefields2Dviscoemem.hpp"
+#include "../WavefieldsEM/Wavefields3Demem.hpp"
+#include "../WavefieldsEM/Wavefields3Dviscoemem.hpp"
 
 namespace KITGPI
 {

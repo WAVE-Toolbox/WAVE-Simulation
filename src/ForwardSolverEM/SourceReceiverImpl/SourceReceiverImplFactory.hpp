@@ -35,7 +35,7 @@ namespace KITGPI
                 \param dimension Dimension of the model (2D, 3D)
                 \param type Simmulation type (acoustic, elsstic, viscoelastic)
                 */
-                static SourceReceiverImplPtr Create(std::string dimension, std::string type, Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::WavefieldsEM<ValueType> &wavefieldIN);
+                static SourceReceiverImplPtr Create(std::string dimension, std::string type, Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
             };
         }/* end namespace SourceReceiverImpl */
     } /* end namespace ForwardSolver */

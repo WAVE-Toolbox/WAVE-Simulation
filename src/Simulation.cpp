@@ -23,7 +23,6 @@
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
 #include "ForwardSolverEM/ForwardSolverFactory.hpp"
-#include "WavefieldsEM/WavefieldsFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
@@ -158,7 +157,7 @@ int main(int argc, const char *argv[])
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
 
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelEM(Modelparameter::Factory<ValueType>::Create(equationType));
-    Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldsEM(Wavefields::FactoryEM<ValueType>::Create(dimension, equationType));
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsEM(Wavefields::Factory<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolverEM<ValueType>::ForwardSolverPtr solverEM(ForwardSolver::FactoryEM<ValueType>::Create(dimension, equationType));
 
     /* --------------------------------------- */
@@ -364,7 +363,7 @@ int main(int argc, const char *argv[])
     /* Wavefield additional                        */
     /* --------------------------------------- */
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsTemp = Wavefields::Factory<ValueType>::Create(dimension, equationType);
-    Wavefields::WavefieldsEM<ValueType>::WavefieldPtr wavefieldsTempEM = Wavefields::FactoryEM<ValueType>::Create(dimension, equationType);
+    Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsTempEM = Wavefields::Factory<ValueType>::Create(dimension, equationType);
     
     /* --------------------------------------- */
     /* Loop over shots                         */

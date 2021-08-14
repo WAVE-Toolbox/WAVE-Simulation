@@ -92,7 +92,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::write(IndexType snapType, std::str
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD3Demem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
 }
 /*! \brief Set all wavefields to zero.
@@ -263,7 +263,7 @@ KITGPI::Wavefields::FD3Demem<ValueType> KITGPI::Wavefields::FD3Demem<ValueType>:
  \param rhs Abstract wavefield which is assigned.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::assign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Demem<ValueType>::assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     HX = rhs.getRefHX();
     HY = rhs.getRefHY();
@@ -278,7 +278,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::assign(KITGPI::Wavefields::Wavefie
  \param rhs Abstract wavefield which is substracted.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::minusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Demem<ValueType>::minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     HX -= rhs.getRefHX();
     HY -= rhs.getRefHY();
@@ -293,7 +293,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::minusAssign(KITGPI::Wavefields::Wa
  \param rhs Abstarct wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::plusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Demem<ValueType>::plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     HX += rhs.getRefHX();
     HY += rhs.getRefHY();
@@ -323,7 +323,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::timesAssign(ValueType rhs)
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Demem<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     HX = lhs * rhs.getRefHX();
     HY = lhs * rhs.getRefHY();

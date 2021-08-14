@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include <scai/lama.hpp>
 #include <scai/lama/DenseVector.hpp>
@@ -7,8 +5,7 @@
 #include <scai/dmemo/BlockDistribution.hpp>
 #include <scai/hmemo/HArray.hpp>
 
-#include "../ForwardSolver/Derivatives/Derivatives.hpp"
-#include "Wavefields.hpp"
+#include "WavefieldsEM.hpp"
 
 namespace KITGPI
 {
@@ -56,13 +53,13 @@ namespace KITGPI
 
             void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) override;
 
-            void minusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
-            void plusAssign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
-            void assign(KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs);
+            void minusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
+            void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             void timesAssign(ValueType rhs);
             
-            void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::WavefieldsEM<ValueType> &rhs) override;
-            void decompose(IndexType decomposeType, KITGPI::Wavefields::WavefieldsEM<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) override;
+            void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) override;
+            void decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) override;
 
           private:
             void getCurl(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::lama::Vector<ValueType> &curl, scai::lama::Vector<ValueType> const &SWaveModulus);
@@ -70,31 +67,31 @@ namespace KITGPI
 
             std::string EquationType;
             int NumDimension;
-            using WavefieldsEM<ValueType>::numDimension;
-            using WavefieldsEM<ValueType>::equationType;
+            using Wavefields<ValueType>::numDimension;
+            using Wavefields<ValueType>::equationType;
 
             /* required wavefields */
-            using WavefieldsEM<ValueType>::HX;
-            using WavefieldsEM<ValueType>::HY;
-            using WavefieldsEM<ValueType>::HZ;
-            using WavefieldsEM<ValueType>::EX;
-            using WavefieldsEM<ValueType>::EY;
-            using WavefieldsEM<ValueType>::EZ;
-            using WavefieldsEM<ValueType>::RX;
-            using WavefieldsEM<ValueType>::RY;
-            using WavefieldsEM<ValueType>::RZ;
-            using WavefieldsEM<ValueType>::EZup;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EZdown;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EZleft;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EZright;  //!< electric intensity Wavefield
-            using WavefieldsEM<ValueType>::EXup;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EXdown;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EXleft;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EXright;  //!< electric intensity Wavefield
-            using WavefieldsEM<ValueType>::EYup;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EYdown;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EYleft;  //!< electric intensity Wavefield 
-            using WavefieldsEM<ValueType>::EYright;  //!< electric intensity Wavefield
+            using Wavefields<ValueType>::HX;
+            using Wavefields<ValueType>::HY;
+            using Wavefields<ValueType>::HZ;
+            using Wavefields<ValueType>::EX;
+            using Wavefields<ValueType>::EY;
+            using Wavefields<ValueType>::EZ;
+            using Wavefields<ValueType>::RX;
+            using Wavefields<ValueType>::RY;
+            using Wavefields<ValueType>::RZ;
+            using Wavefields<ValueType>::EZup;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EZdown;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EZleft;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EZright;  //!< electric intensity Wavefield
+            using Wavefields<ValueType>::EXup;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EXdown;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EXleft;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EXright;  //!< electric intensity Wavefield
+            using Wavefields<ValueType>::EYup;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EYdown;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EYleft;  //!< electric intensity Wavefield 
+            using Wavefields<ValueType>::EYright;  //!< electric intensity Wavefield
 
             /* non-required wavefields */
 
