@@ -107,7 +107,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareForModelling(Modelparame
 \end{equation}
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {
     SCAI_REGION("ForwardSolver.timestep2Dtmem");
 
@@ -167,7 +167,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeo
 }
 
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::runAdjoint(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {
 
 }

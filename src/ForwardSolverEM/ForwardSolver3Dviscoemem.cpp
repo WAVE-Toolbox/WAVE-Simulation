@@ -137,7 +137,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::prepareForModelling(Modelp
  */
 
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {
 
     SCAI_REGION("timestep");
@@ -281,7 +281,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
 }
 
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::runAdjoint(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::runAdjoint(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {
 
 }

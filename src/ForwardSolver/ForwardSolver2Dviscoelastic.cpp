@@ -121,7 +121,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::prepareBoundaryConditio
  \param t current timesample 
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
 {
     SCAI_REGION("ForwardSolver.timestep2Dviscoelastic");
 

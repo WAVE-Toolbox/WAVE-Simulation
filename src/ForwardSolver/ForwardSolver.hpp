@@ -48,7 +48,7 @@ namespace KITGPI
              \param NT Total number of time steps
              \param DT Temporal Sampling intervall in seconds
              */
-            virtual void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) = 0;
+            virtual void run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives) = 0;
 
             /*! \brief Reset PML memory variables if PML is used 
             *

@@ -486,7 +486,7 @@ int main(int argc, const char *argv[])
                         }
                         *wavefieldsTemp = *wavefields;
 
-                        solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
+                        solver->run(*model, *wavefields, *derivatives);
                         /* Apply source and save seismogram */
                         SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
                         SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
@@ -520,7 +520,7 @@ int main(int argc, const char *argv[])
                         }
                         *wavefieldsTemp = *wavefields;
 
-                        solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
+                        solver->run(*modelPerShot, *wavefields, *derivatives);
                         /* Apply source and save seismogram */
                         SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
                         SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
@@ -644,7 +644,7 @@ int main(int argc, const char *argv[])
                         }
                         *wavefieldsTempEM = *wavefieldsEM;
                         
-                        solverEM->run(receiversEM, sourcesEM, *modelEM, *wavefieldsEM, *derivatives, tStep);
+                        solverEM->run(*modelEM, *wavefieldsEM, *derivatives);
                         /* Apply source and save seismogram */
                         SourceReceiverEM->applySource(sourcesEM.getSeismogramHandler(), *wavefieldsEM, tStep);
                         SourceReceiverEM->gatherSeismogram(receiversEM.getSeismogramHandler(), *wavefieldsEM, tStep);
@@ -677,7 +677,7 @@ int main(int argc, const char *argv[])
                         }
                         *wavefieldsTempEM = *wavefieldsEM;
 
-                        solverEM->run(receiversEM, sourcesEM, *modelPerShotEM, *wavefieldsEM, *derivatives, tStep);
+                        solverEM->run(*modelPerShotEM, *wavefieldsEM, *derivatives);
                         /* Apply source and save seismogram */
                         SourceReceiverEM->applySource(sourcesEM.getSeismogramHandler(), *wavefieldsEM, tStep);
                         SourceReceiverEM->gatherSeismogram(receiversEM.getSeismogramHandler(), *wavefieldsEM, tStep);

@@ -88,7 +88,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::resetCPML()
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
 {
     SCAI_REGION("ForwardSolver.timestep2Dacoustic");
 
