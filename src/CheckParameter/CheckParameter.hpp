@@ -185,10 +185,7 @@ namespace KITGPI
                     vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
                     vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
                 } else {
-                    std::cout << "model.getMagneticPermeability() here " << std::endl;
-                    std::cout << "model.getMagneticPermeability() = " << model.getMagneticPermeability()[0] << std::endl;
                     dist = model.getMagneticPermeability().getDistributionPtr();
-                    std::cout << "model.getVelocityEM() = " << model.getVelocityEM()[0] << std::endl;
                     vMaxTmp = model.getVelocityEM();
                     vMinTmp = vMaxTmp;
                 }

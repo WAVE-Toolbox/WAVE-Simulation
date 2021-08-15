@@ -1,10 +1,6 @@
 #include "FreeSurfaceAcoustic.hpp"
 using namespace scai;
 
-//! Default destructor
-template <typename ValueType>
-KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceAcoustic<ValueType>::~FreeSurfaceAcoustic(){};
-
 /*! \brief Initialitation of the free surface
  *
  \param dist Distribution of wavefields

@@ -24,7 +24,7 @@ namespace KITGPI
                 //! Default constructor
                 FreeSurfaceAcoustic(){};
 
-                virtual ~FreeSurfaceAcoustic() = 0;
+                virtual ~FreeSurfaceAcoustic(){};
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
 

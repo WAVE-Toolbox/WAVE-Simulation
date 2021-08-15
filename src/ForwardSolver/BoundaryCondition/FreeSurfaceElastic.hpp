@@ -24,7 +24,7 @@ namespace KITGPI
                 //! Default constructor
                 FreeSurfaceElastic(){};
 
-                virtual ~FreeSurfaceElastic() = 0;
+                virtual ~FreeSurfaceElastic(){};
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType /*DT*/) override;
 

@@ -25,7 +25,7 @@ namespace KITGPI
                 FreeSurfaceViscoelastic(){};
 
                 //! Default destructor
-                virtual ~FreeSurfaceViscoelastic() = 0;
+                virtual ~FreeSurfaceViscoelastic(){};
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
 

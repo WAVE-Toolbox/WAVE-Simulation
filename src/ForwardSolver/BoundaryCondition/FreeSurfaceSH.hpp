@@ -1,9 +1,5 @@
 #pragma once
 
-#include "../../Common/HostPrint.hpp"
-#include "../../Modelparameter/Modelparameter.hpp"
-#include "../Derivatives/Derivatives.hpp"
-#include "../Derivatives/FDTD3D.hpp"
 #include "FreeSurface.hpp"
 
 namespace KITGPI
@@ -24,14 +20,9 @@ namespace KITGPI
                 //! Default constructor
                 FreeSurfaceSH(){};
 
-                virtual ~FreeSurfaceSH() = 0;
+                virtual ~FreeSurfaceSH(){};
 
                 void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
-
-              protected:
-                using FreeSurface<ValueType>::active;
-
-                scai::lama::DenseVector<ValueType> setSurfaceZero; //!< Vector, which sets the wavefields at the surface to zero
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

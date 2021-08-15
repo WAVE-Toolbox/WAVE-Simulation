@@ -13,7 +13,7 @@
 
 #include "BoundaryCondition/ABS.hpp"
 #include "BoundaryCondition/CPML.hpp"
-#include "BoundaryCondition/FreeSurface.hpp"
+#include "BoundaryCondition/FreeSurfaceEM.hpp"
 
 namespace KITGPI
 {

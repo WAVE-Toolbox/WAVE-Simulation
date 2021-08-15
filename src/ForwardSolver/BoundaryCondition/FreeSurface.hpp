@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../Common/HostPrint.hpp"
 #include "../../Acquisition/Coordinates.hpp"
 #include "../../Common/HostPrint.hpp"
 #include "../Derivatives/Derivatives.hpp"

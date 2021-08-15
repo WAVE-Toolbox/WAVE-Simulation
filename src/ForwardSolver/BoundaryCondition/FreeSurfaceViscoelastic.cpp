@@ -1,10 +1,6 @@
 #include "FreeSurfaceViscoelastic.hpp"
 using namespace scai;
 
-//! Default destructor
-template <typename ValueType>
-KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<ValueType>::~FreeSurfaceViscoelastic(){};
-
 /*! \brief Scale horizontal update with model parameter
  *
  *

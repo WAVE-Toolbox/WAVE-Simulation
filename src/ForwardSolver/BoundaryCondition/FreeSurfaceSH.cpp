@@ -1,10 +1,6 @@
 #include "FreeSurfaceSH.hpp"
 using namespace scai;
 
-//! Default destructor
-template <typename ValueType>
-KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::~FreeSurfaceSH(){};
-
 /*! \brief Initialitation of the free surface
  *
  \param dist Distribution of wavefields
@@ -13,10 +9,7 @@ KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::~FreeSurface
  \param DT Temporal Sampling
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::init(scai::dmemo::DistributionPtr /*dist*/, Derivatives::Derivatives<ValueType> & /*derivatives*/, Acquisition::Coordinates<ValueType> const & /*modelCoordinates*/, ValueType /*DT*/)
-{
-//     COMMON_THROWEXCEPTION(" Stress-image method is not implemented for Love-Waves ");
-}
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<ValueType>::init(scai::dmemo::DistributionPtr /*dist*/, Derivatives::Derivatives<ValueType> & /*derivatives*/, Acquisition::Coordinates<ValueType> const & /*modelCoordinates*/, ValueType /*DT*/){}
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<float>;
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceSH<double>;

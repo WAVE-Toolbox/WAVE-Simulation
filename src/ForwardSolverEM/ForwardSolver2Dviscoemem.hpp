@@ -11,8 +11,6 @@
 
 #include "BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPML2D.hpp"
-#include "BoundaryCondition/FreeSurface2Demem.hpp"
-#include "SourceReceiverImpl/FDTD2Demem.hpp"
 
 namespace KITGPI
 {
@@ -47,7 +45,7 @@ namespace KITGPI
 
           private:
             /* Boundary Conditions */
-            BoundaryCondition::FreeSurface2Demem<ValueType> FreeSurface; //!< Free Surface boundary condition class
+            BoundaryCondition::FreeSurfaceEM<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolverEM<ValueType>::useFreeSurface;
 
             BoundaryCondition::ABSEM2D<ValueType> DampingBoundary; //!< Damping boundary condition class

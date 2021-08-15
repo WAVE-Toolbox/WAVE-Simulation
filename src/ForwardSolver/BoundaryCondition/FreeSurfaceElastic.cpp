@@ -1,10 +1,6 @@
 #include "FreeSurfaceElastic.hpp"
 using namespace scai;
 
-//! Default destructor
-template <typename ValueType>
-KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::~FreeSurfaceElastic(){};
-
 /*! \brief Scale horizontal  and vertical updates with model parameter
  * this will be used to exchange vertical with horizontal derivatives for the horizontal updates on the free surface 
  *
