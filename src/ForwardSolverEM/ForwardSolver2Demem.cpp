@@ -129,8 +129,6 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeo
     auto const &Dyf = derivatives.getDyf();
     
     lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();  
-   
-    SourceReceiverImpl::FDTD2Demem<ValueType> SourceReceiver(sources, receiver, wavefield);
 
     /* ----------------*/
     /* hz */
@@ -171,10 +169,6 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeo
     if (useDampingBoundary) {
         DampingBoundary.apply(eY, eX, hZ);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template <typename ValueType>

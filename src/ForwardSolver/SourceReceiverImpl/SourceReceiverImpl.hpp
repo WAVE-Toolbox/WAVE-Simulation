@@ -29,38 +29,33 @@ namespace KITGPI
                 typedef std::shared_ptr<SourceReceiverImpl<ValueType>> SourceReceiverImplPtr;
                 
                 //! Default constructor
-                SourceReceiverImpl() = delete;
-                explicit SourceReceiverImpl(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
+                SourceReceiverImpl(){};
                 //! Default destructor
                 ~SourceReceiverImpl(){};
+                                
+                virtual void init(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN) = 0;
+                virtual void applySource(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogram(Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
 
-                void applySource(scai::IndexType t);
-                void gatherSeismogram(scai::IndexType t);
-
-              protected:
+              protected:                
+                /* Common */
+                void applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
+                void gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
+                virtual void setContextPtrToTemporary(scai::hmemo::ContextPtr ctx) = 0;
+                
+                /* Seismic */
                 //! \brief Allying method for pressure source
                 virtual void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
-                virtual void applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                void applySourceSingle(Acquisition::Seismogram<ValueType> const &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
+                virtual void applySourceVX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySourceVY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySourceVZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
 
                 //! \brief Gather method for pressure seismogram
                 virtual void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
-                virtual void gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                virtual void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t);
-                void gatherSeismogramSingle(Acquisition::Seismogram<ValueType> &seismo, scai::lama::DenseVector<ValueType> &wavefieldSingle, scai::lama::DenseVector<ValueType> &temp, scai::IndexType t);
-
-                /* wavefields */
-                Wavefields::Wavefields<ValueType> &wavefield; //!< Wavefields
-
-                /* source */
-                Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources
-
-                /* receiver */
-                Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec; //!< Seismogram Handler of Receivers
-
+                virtual void gatherSeismogramVX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogramVY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                
                 /* Temporary memory */
                 scai::lama::DenseVector<ValueType> applySource_samplesVX; //!< Variable to apply velocity Source-samples in x-direction
                 scai::lama::DenseVector<ValueType> applySource_samplesVY; //!< Variable to apply velocity Source-samples in y-direction
@@ -73,8 +68,29 @@ namespace KITGPI
                 scai::lama::DenseVector<ValueType> applySource_samplesPressure;      //!< Variable to apply pressure Source-samples
                 scai::lama::DenseVector<ValueType> gatherSeismogram_samplesPressure; //!< Variable to gather pressure Source-samples
 
-              private:
-                void setContextPtrToTemporary(scai::hmemo::ContextPtr ctx);
+                /* EM */
+                //! \brief Allying method for pressure source
+                virtual void applySourceEZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySourceEX(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySourceEY(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySourceHZ(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+
+                //! \brief Gather method for pressure seismogram
+                virtual void gatherSeismogramEX(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogramEY(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogramEZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void gatherSeismogramHZ(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                
+                /* Temporary memory */
+                scai::lama::DenseVector<ValueType> applySource_samplesEZ; //!< Variable to apply velocity Source-samples in x-direction
+                scai::lama::DenseVector<ValueType> applySource_samplesEX; //!< Variable to apply velocity Source-samples in x-direction
+                scai::lama::DenseVector<ValueType> applySource_samplesEY; //!< Variable to apply velocity Source-samples in y-direction
+                scai::lama::DenseVector<ValueType> applySource_samplesHZ; //!< Variable to apply velocity Source-samples in z-direction
+
+                scai::lama::DenseVector<ValueType> gatherSeismogram_samplesEZ; //!< Variable to gather velocity Source-samples in x-direction
+                scai::lama::DenseVector<ValueType> gatherSeismogram_samplesEX; //!< Variable to gather velocity Source-samples in x-direction
+                scai::lama::DenseVector<ValueType> gatherSeismogram_samplesEY; //!< Variable to gather velocity Source-samples in y-direction
+                scai::lama::DenseVector<ValueType> gatherSeismogram_samplesHZ; //!< Variable to gather velocity Source-samples in z-direction                
             };
         }
     }

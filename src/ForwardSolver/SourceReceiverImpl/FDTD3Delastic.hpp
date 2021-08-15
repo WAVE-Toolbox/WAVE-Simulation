@@ -2,7 +2,7 @@
 
 #include <scai/lama.hpp>
 
-#include "SourceReceiverImpl.hpp"
+#include "SourceReceiverImplSeismic.hpp"
 
 namespace KITGPI
 {
@@ -16,18 +16,16 @@ namespace KITGPI
 
             //! \brief FDTD2Delastic class
             template <typename ValueType>
-            class FDTD3Delastic : public SourceReceiverImpl<ValueType>
+            class FDTD3Delastic : public SourceReceiverImplSeismic<ValueType>
             {
               public:
                 //! Default constructor
-                FDTD3Delastic() = delete;
+                FDTD3Delastic(){};
                 //! Default destructor
                 ~FDTD3Delastic(){};
 
-                using SourceReceiverImpl<ValueType>::SourceReceiverImpl;
-
-                void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
-                void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
+                void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
+                void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
 
               private:
                 /* Temporary memory */

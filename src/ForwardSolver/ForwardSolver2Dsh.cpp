@@ -127,8 +127,6 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     
     auto const &DybFreeSurface = derivatives.getDybFreeSurface();
     
-    SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
-
 //     if (useFreeSurface) {
 //         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
 //         //         FreeSurface.setModelparameter(model);
@@ -188,9 +186,6 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
         DampingBoundary.apply(Sxz, Syz, vZ);
     }
 
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Dsh<float>;

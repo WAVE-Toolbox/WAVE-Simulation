@@ -19,11 +19,10 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD3Dacoustic() = delete;
+                FDTD3Dacoustic(){};
                 //! Default destructor
                 ~FDTD3Dacoustic(){};
 
-                using FDTDacoustic<ValueType>::FDTDacoustic;
             };
         }
     }

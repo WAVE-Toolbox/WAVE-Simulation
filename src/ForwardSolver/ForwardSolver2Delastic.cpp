@@ -151,8 +151,6 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Matrix<ValueType> const *DinterpolateFull = derivatives.getInterFull();
     lama::Matrix<ValueType> const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
 
-    SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
-
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -287,10 +285,6 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
     if (useDampingBoundary) {
         DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Delastic<float>;

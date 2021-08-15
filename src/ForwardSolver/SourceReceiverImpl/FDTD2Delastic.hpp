@@ -2,7 +2,7 @@
 
 #include <scai/lama.hpp>
 
-#include "SourceReceiverImpl.hpp"
+#include "SourceReceiverImplSeismic.hpp"
 
 namespace KITGPI
 {
@@ -16,21 +16,19 @@ namespace KITGPI
 
             //! \brief FDTD2Delastic class
             template <typename ValueType>
-            class FDTD2Delastic : public SourceReceiverImpl<ValueType>
+            class FDTD2Delastic : public SourceReceiverImplSeismic<ValueType>
             {
               public:
                 //! Default constructor
-                FDTD2Delastic() = delete;
+                FDTD2Delastic(){};
                 //! Default destructor
                 ~FDTD2Delastic(){};
 
-                using SourceReceiverImpl<ValueType>::SourceReceiverImpl;
+                void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
+                void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
 
-                void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
-                void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefield, scai::IndexType t) override;
-
-                void applySourceVZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY sources can not be implemented in 2D elastic modeling")};
-                void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY receivers can not be implemented in 2D elastic modeling")};
+                void applySourceVZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY sources can not be implemented in 2D elastic modeling")};
+                void gatherSeismogramVZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY receivers can not be implemented in 2D elastic modeling")};
 
               private:
                 /* Temporary memory */

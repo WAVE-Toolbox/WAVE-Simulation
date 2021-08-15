@@ -169,8 +169,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     lama::Matrix<ValueType> const &DyfStaggeredZ = derivatives.getDyfStaggeredZ();
     lama::Matrix<ValueType> const &DybStaggeredZ = derivatives.getDybStaggeredZ();
 
-    SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
-
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -407,10 +405,6 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (useDampingBoundary) {
         DampingBoundary.apply(Sxx, Syy, Szz, Sxy, Sxz, Syz, vX, vY, vZ);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Delastic<float>;

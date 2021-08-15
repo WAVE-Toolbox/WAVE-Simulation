@@ -152,9 +152,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
     auto const &Dyb = derivatives.getDyb();
     auto const &DybFreeSurface = derivatives.getDybFreeSurface();
     auto const &Dyf = derivatives.getDyf();
-    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface();
-
-    SourceReceiverImpl::FDTD2Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
+    auto const &DyfFreeSurface = derivatives.getDyfFreeSurface(); 
 
     /* Get reference to required model vectors */
     auto const &tauS = model.getTauS();
@@ -296,10 +294,6 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
     if (useDampingBoundary) {
         DampingBoundary.apply(Sxx, Syy, Sxy, vX, vY);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Dviscoelastic<float>;

@@ -119,8 +119,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
     auto const *DinterpolateStaggeredZ = derivatives.getInterStaggeredZ();
 
-    SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
-
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -223,10 +221,6 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     if (useFreeSurface == 1) {
         FreeSurface.setSurfaceZero(p);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Dacoustic<float>;

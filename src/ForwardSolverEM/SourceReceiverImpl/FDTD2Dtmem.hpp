@@ -2,7 +2,7 @@
 
 #include <scai/lama.hpp>
 
-#include "SourceReceiverImpl.hpp"
+#include "SourceReceiverImplEM.hpp"
 
 namespace KITGPI
 {
@@ -20,18 +20,16 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD2Dtmem() = delete;
+                FDTD2Dtmem(){};
                 //! Default destructor
                 ~FDTD2Dtmem(){};
 
-                using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
-
-                void applySourceEX(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX sources can not be implemented in 2D tmem modeling")};
-                void gatherSeismogramEX(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX receivers can not be implemented in 2D tmem modeling")};
-                void applySourceEY(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EY sources can not be implemented in 2D tmem modeling")};
-                void gatherSeismogramEY(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EY receivers can not be implemented in 2D tmem modeling")};
-                void applySourceHZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("HZ sources can not be implemented in 2D tmem modeling")};
-                void gatherSeismogramHZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefield*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("HZ receivers can not be implemented in 2D tmem modeling")};
+                void applySourceEX(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX sources can not be implemented in 2D tmem modeling")};
+                void gatherSeismogramEX(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX receivers can not be implemented in 2D tmem modeling")};
+                void applySourceEY(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EY sources can not be implemented in 2D tmem modeling")};
+                void gatherSeismogramEY(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EY receivers can not be implemented in 2D tmem modeling")};
+                void applySourceHZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("HZ sources can not be implemented in 2D tmem modeling")};
+                void gatherSeismogramHZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("HZ receivers can not be implemented in 2D tmem modeling")};
 
               private:
                 /* Temporary memory */

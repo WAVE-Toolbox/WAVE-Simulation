@@ -12,7 +12,6 @@
 #include "BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPML2DAcoustic.hpp"
 #include "BoundaryCondition/FreeSurface2Dacoustic.hpp"
-#include "SourceReceiverImpl/FDTD2Dacoustic.hpp"
 
 namespace KITGPI
 {

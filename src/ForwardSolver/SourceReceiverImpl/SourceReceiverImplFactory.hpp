@@ -1,14 +1,18 @@
-
 #pragma once
 
 #include "SourceReceiverImpl.hpp"
+#include "SourceReceiverImplSeismic.hpp"
 
 #include "FDTD2Dacoustic.hpp"
 #include "FDTD2Delastic.hpp"
 #include "FDTD2Dsh.hpp"
-
 #include "FDTD3Dacoustic.hpp"
 #include "FDTD3Delastic.hpp"
+
+#include "../../ForwardSolverEM/SourceReceiverImpl/SourceReceiverImplEM.hpp"
+#include "../../ForwardSolverEM/SourceReceiverImpl/FDTD2Demem.hpp"
+#include "../../ForwardSolverEM/SourceReceiverImpl/FDTD2Dtmem.hpp"
+#include "../../ForwardSolverEM/SourceReceiverImpl/FDTD3Demem.hpp"
 
 namespace KITGPI
 {
@@ -37,7 +41,7 @@ namespace KITGPI
                 \param dimension Dimension of the model (2D, 3D)
                 \param type Simmulation type (acoustic, elsstic, viscoelastic)
                 */
-                static SourceReceiverImplPtr Create(std::string dimension, std::string type, Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
+                static SourceReceiverImplPtr Create(std::string dimension, std::string type);
             };
         }/* end namespace SourceReceiverImpl */
     } /* end namespace ForwardSolver */

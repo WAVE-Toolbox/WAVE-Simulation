@@ -23,6 +23,7 @@
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
 #include "ForwardSolverEM/ForwardSolverFactory.hpp"
+#include "ForwardSolver/SourceReceiverImpl/SourceReceiverImplFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
@@ -160,6 +161,9 @@ int main(int argc, const char *argv[])
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsEM(Wavefields::Factory<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolverEM<ValueType>::ForwardSolverPtr solverEM(ForwardSolver::FactoryEM<ValueType>::Create(dimension, equationType));
 
+    ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImplPtr SourceReceiver = ForwardSolver::SourceReceiverImpl::Factory<ValueType>::Create(dimension, equationType); 
+    ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImplPtr SourceReceiverEM = ForwardSolver::SourceReceiverImpl::Factory<ValueType>::Create(dimension, equationType); 
+    
     /* --------------------------------------- */
     /* Memory estimation                       */
     /* --------------------------------------- */
@@ -471,6 +475,8 @@ int main(int argc, const char *argv[])
                 /* Loop over time steps                    */
                 /* --------------------------------------- */
                 ValueType DTinv = 1 / config.get<ValueType>("DT");
+                SourceReceiver->init(sources.getSeismogramHandler(), receivers.getSeismogramHandler(), *wavefields);
+     
                 if (!useStreamConfig) {
                     for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
@@ -481,7 +487,10 @@ int main(int argc, const char *argv[])
                         *wavefieldsTemp = *wavefields;
 
                         solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
-
+                        /* Apply source and save seismogram */
+                        SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
+                        SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
+                        
                         if (randInd == 0 && decomposeType != 0) {
                             *wavefieldsTemp -= *wavefields;
                             *wavefieldsTemp *= -DTinv;
@@ -512,6 +521,9 @@ int main(int argc, const char *argv[])
                         *wavefieldsTemp = *wavefields;
 
                         solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
+                        /* Apply source and save seismogram */
+                        SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
+                        SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
 
                         if (randInd == 0 && decomposeType != 0) {
                             *wavefieldsTemp -= *wavefields;
@@ -621,6 +633,8 @@ int main(int argc, const char *argv[])
                 /* Loop over time steps                    */
                 /* --------------------------------------- */ 
                 ValueType DTinv = 1 / config.get<ValueType>("DT");
+                SourceReceiverEM->init(sourcesEM.getSeismogramHandler(), receiversEM.getSeismogramHandler(), *wavefieldsEM);
+     
                 if (!useStreamConfig) {
                     for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
@@ -631,6 +645,9 @@ int main(int argc, const char *argv[])
                         *wavefieldsTempEM = *wavefieldsEM;
                         
                         solverEM->run(receiversEM, sourcesEM, *modelEM, *wavefieldsEM, *derivatives, tStep);
+                        /* Apply source and save seismogram */
+                        SourceReceiverEM->applySource(sourcesEM.getSeismogramHandler(), *wavefieldsEM, tStep);
+                        SourceReceiverEM->gatherSeismogram(receiversEM.getSeismogramHandler(), *wavefieldsEM, tStep);
                         
                         if (randInd == 0 && decomposeType != 0) {
                             *wavefieldsTempEM -= *wavefieldsEM;
@@ -661,6 +678,9 @@ int main(int argc, const char *argv[])
                         *wavefieldsTempEM = *wavefieldsEM;
 
                         solverEM->run(receiversEM, sourcesEM, *modelPerShotEM, *wavefieldsEM, *derivatives, tStep);
+                        /* Apply source and save seismogram */
+                        SourceReceiverEM->applySource(sourcesEM.getSeismogramHandler(), *wavefieldsEM, tStep);
+                        SourceReceiverEM->gatherSeismogram(receiversEM.getSeismogramHandler(), *wavefieldsEM, tStep);
                         
                         if (randInd == 0 && decomposeType != 0) {
                             *wavefieldsTempEM -= *wavefieldsEM;

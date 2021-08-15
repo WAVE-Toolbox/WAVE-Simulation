@@ -9,6 +9,7 @@
 #include "../Modelparameter/Modelparameter.hpp"
 #include "../Wavefields/Wavefields.hpp"
 #include "Derivatives/Derivatives.hpp"
+#include "SourceReceiverImpl/SourceReceiverImplFactory.hpp"
 
 #include "BoundaryCondition/ABS.hpp"
 #include "BoundaryCondition/CPML.hpp"

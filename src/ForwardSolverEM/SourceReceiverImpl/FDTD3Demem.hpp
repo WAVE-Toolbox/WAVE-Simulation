@@ -2,7 +2,7 @@
 
 #include <scai/lama.hpp>
 
-#include "SourceReceiverImpl.hpp"
+#include "SourceReceiverImplEM.hpp"
 
 namespace KITGPI
 {
@@ -20,11 +20,9 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD3Demem() = delete;
+                FDTD3Demem(){};
                 //! Default destructor
                 ~FDTD3Demem(){};
-
-                using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
 
               private:
                 /* Temporary memory */

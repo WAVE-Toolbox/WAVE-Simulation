@@ -138,8 +138,6 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     auto const &Dyf = derivatives.getDyf();
     auto const &Dyb = derivatives.getDyb();
 
-    SourceReceiverImpl::FDTD2Dtmem<ValueType> SourceReceiver(sources, receiver, wavefield);
-
     /* ----------------*/
     /* hx */
     /* ----------------*/
@@ -189,10 +187,6 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     if (useDampingBoundary) {
         DampingBoundary.apply(eZ, hX, hY);
     }
-
-    /* Apply source and save seismogram */
-    SourceReceiver.applySource(t);
-    SourceReceiver.gatherSeismogram(t);
 }
 
 template <typename ValueType>
