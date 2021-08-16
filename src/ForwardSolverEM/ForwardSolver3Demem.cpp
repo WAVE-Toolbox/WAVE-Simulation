@@ -18,7 +18,7 @@ ValueType KITGPI::ForwardSolver::FD3Demem<ValueType>::estimateMemory(Configurati
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Demem<ValueType>::initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
+void KITGPI::ForwardSolver::FD3Demem<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefHX().getDistributionPtr() == model.getMagneticPermeability().getDistributionPtr(), "Distributions of wavefields and models are not the same");
@@ -51,7 +51,7 @@ void KITGPI::ForwardSolver::FD3Demem<ValueType>::initForwardSolver(Configuration
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Demem<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD3Demem<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
@@ -118,7 +118,7 @@ void KITGPI::ForwardSolver::FD3Demem<ValueType>::prepareForModelling(Modelparame
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Demem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD3Demem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
 {
 
     SCAI_REGION("timestep");
@@ -233,12 +233,6 @@ void KITGPI::ForwardSolver::FD3Demem<ValueType>::run(Modelparameter::Modelparame
     if (useDampingBoundary) {
         DampingBoundary.apply(eZ, eY, eX, hX, hY, hZ);
     }
-}
-
-template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Demem<ValueType>::runAdjoint(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
-{
-
 }
 
 template class KITGPI::ForwardSolver::FD3Demem<float>;

@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "ForwardSolver.hpp"
+#include "ForwardSolverSeismic.hpp"
 
 #include "BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPML2DAcoustic.hpp"
@@ -21,7 +21,7 @@ namespace KITGPI
 
         //! \brief 2-D Acoustic forward solver
         template <typename ValueType>
-        class FD2Dacoustic : public ForwardSolver<ValueType>
+        class FD2Dacoustic : public ForwardSolverSeismic<ValueType>
         {
 
           public:
@@ -55,8 +55,8 @@ namespace KITGPI
             using ForwardSolver<ValueType>::useConvPML;
 
             /* Auxiliary Vectors */
-            scai::lama::DenseVector<ValueType> update;
-            scai::lama::DenseVector<ValueType> update_temp;
+            using ForwardSolver<ValueType>::update;
+            using ForwardSolver<ValueType>::update_temp;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

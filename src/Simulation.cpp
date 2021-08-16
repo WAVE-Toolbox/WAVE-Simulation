@@ -13,16 +13,14 @@
 
 #include "Configuration/Configuration.hpp"
 #include "Configuration/ValueType.hpp"
-#include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
 
 #include "Acquisition/Receivers.hpp"
 #include "Acquisition/Sources.hpp"
-#include "ForwardSolver/ForwardSolver.hpp"
 
-#include "ForwardSolver/ForwardSolverFactory.hpp"
 #include "Modelparameter/ModelparameterFactory.hpp"
 #include "Wavefields/WavefieldsFactory.hpp"
-#include "ForwardSolverEM/ForwardSolverFactory.hpp"
+#include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
+#include "ForwardSolver/ForwardSolverFactory.hpp"
 #include "ForwardSolver/SourceReceiverImpl/SourceReceiverImplFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
@@ -159,7 +157,7 @@ int main(int argc, const char *argv[])
 
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr modelEM(Modelparameter::Factory<ValueType>::Create(equationType));
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsEM(Wavefields::Factory<ValueType>::Create(dimension, equationType));
-    ForwardSolver::ForwardSolverEM<ValueType>::ForwardSolverPtr solverEM(ForwardSolver::FactoryEM<ValueType>::Create(dimension, equationType));
+    ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solverEM(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
 
     ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImplPtr SourceReceiver = ForwardSolver::SourceReceiverImpl::Factory<ValueType>::Create(dimension, equationType); 
     ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImplPtr SourceReceiverEM = ForwardSolver::SourceReceiverImpl::Factory<ValueType>::Create(dimension, equationType); 

@@ -37,6 +37,28 @@ typename KITGPI::ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr KITGP
         return ForwardSolverPtr(new FD3Dviscoelastic<ValueType>);
     }
 
+    // 2D
+    if (dimension.compare("2d") == 0 && type.compare("tmem") == 0) {
+        return ForwardSolverPtr(new FD2Dtmem<ValueType>);
+    }
+    if (dimension.compare("2d") == 0 && type.compare("emem") == 0) {
+        return ForwardSolverPtr(new FD2Demem<ValueType>);
+    }
+    if (dimension.compare("2d") == 0 && type.compare("viscotmem") == 0) {
+        return ForwardSolverPtr(new FD2Dviscotmem<ValueType>);
+    }
+    if (dimension.compare("2d") == 0 && type.compare("viscoemem") == 0) {
+        return ForwardSolverPtr(new FD2Dviscoemem<ValueType>);
+    }
+
+    // 3D
+    if (dimension.compare("3d") == 0 && type.compare("emem") == 0) {
+        return ForwardSolverPtr(new FD3Demem<ValueType>);
+    }
+    if (dimension.compare("3d") == 0 && type.compare("viscoemem") == 0) {
+        return ForwardSolverPtr(new FD3Dviscoemem<ValueType>);
+    }
+
     return ForwardSolverPtr();
 };
 

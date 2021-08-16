@@ -18,7 +18,7 @@ ValueType KITGPI::ForwardSolver::FD2Dtmem<ValueType>::estimateMemory(Configurati
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
     SCAI_REGION("ForwardSolver.init2Dtmem");
     /* Check if distributions of wavefields and models are the same */
@@ -52,7 +52,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::initForwardSolver(Configuration
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
@@ -107,7 +107,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareForModelling(Modelparame
 \end{equation}
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
 {
     SCAI_REGION("ForwardSolver.timestep2Dtmem");
 
@@ -164,12 +164,6 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Modelparameter::Modelparame
     if (useDampingBoundary) {
         DampingBoundary.apply(eZ, hX, hY);
     }
-}
-
-template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::runAdjoint(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
-{
-
 }
 
 template class KITGPI::ForwardSolver::FD2Dtmem<float>;

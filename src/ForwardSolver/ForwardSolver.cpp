@@ -1,12 +1,12 @@
 #include "ForwardSolver.hpp"
 
 /*! \brief memory estimation wrapper for the boundarie conditions
-             *
-             *
-             \param config Configuration
-             \param dist Distribution of the wave fields
-             \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
-             */
+*
+*
+\param config Configuration
+\param dist Distribution of the wave fields
+\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+*/
 template <typename ValueType>
 ValueType KITGPI::ForwardSolver::ForwardSolver<ValueType>::estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPML<ValueType> &ConvPML)
 {

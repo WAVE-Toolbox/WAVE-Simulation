@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "ForwardSolver.hpp"
+#include "ForwardSolverSeismic.hpp"
 
 #include "BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPML2D.hpp"
@@ -22,7 +22,7 @@ namespace KITGPI
 
         //! \brief 2-D viscoelastic forward solver
         template <typename ValueType>
-        class FD2Dviscoelastic : public ForwardSolver<ValueType>
+        class FD2Dviscoelastic : public ForwardSolverSeismic<ValueType>
         {
 
           public:
@@ -56,8 +56,8 @@ namespace KITGPI
             using ForwardSolver<ValueType>::useConvPML;
 
             /* Auxiliary Vectors */
-            scai::lama::DenseVector<ValueType> update;
-            scai::lama::DenseVector<ValueType> update_temp;
+            using ForwardSolver<ValueType>::update;
+            using ForwardSolver<ValueType>::update_temp;
             scai::lama::DenseVector<ValueType> vxx;
             scai::lama::DenseVector<ValueType> vyy;
             scai::lama::DenseVector<ValueType> update2;

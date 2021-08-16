@@ -23,7 +23,7 @@ namespace KITGPI
                 //! Default destructor
                 virtual ~FreeSurfaceEM(){};
 
-                virtual void init(scai::dmemo::DistributionPtr dist, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
+                virtual void init(scai::dmemo::DistributionPtr dist, Derivatives::Derivatives<ValueType> &derivatives, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType DT) override;
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

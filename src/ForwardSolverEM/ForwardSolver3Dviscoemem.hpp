@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "ForwardSolver.hpp"
+#include "ForwardSolverEM.hpp"
 
 #include "../ForwardSolver/BoundaryCondition/ABS3D.hpp"
 #include "BoundaryCondition/CPMLEM3D.hpp"
@@ -32,31 +32,30 @@ namespace KITGPI
 
             ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
-            void run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) override;
-            void runAdjoint(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) override;
+            void run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives) override;
 
             void resetCPML() override;
 
             void prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT) override;
 
-            void prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
+            void prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 
-            void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) override;
+            void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) override;
 
           private:
             /* Boundary Conditions */
             BoundaryCondition::FreeSurfaceEM<ValueType> FreeSurface; //!< Free Surface boundary condition class
-            using ForwardSolverEM<ValueType>::useFreeSurface;
+            using ForwardSolver<ValueType>::useFreeSurface;
 
             BoundaryCondition::ABS3D<ValueType> DampingBoundary; //!< Damping boundary condition class
-            using ForwardSolverEM<ValueType>::useDampingBoundary;
+            using ForwardSolver<ValueType>::useDampingBoundary;
 
             BoundaryCondition::CPMLEM3D<ValueType> ConvPML; //!< Damping boundary condition class
-            using ForwardSolverEM<ValueType>::useConvPML;
+            using ForwardSolver<ValueType>::useConvPML;
 
             /* Auxiliary Vectors */
-            using ForwardSolverEM<ValueType>::update;
-            using ForwardSolverEM<ValueType>::update_temp;
+            using ForwardSolver<ValueType>::update;
+            using ForwardSolver<ValueType>::update_temp;
             using ForwardSolverEM<ValueType>::DT_temp;
             using ForwardSolverEM<ValueType>::CaAverageX;
             using ForwardSolverEM<ValueType>::CaAverageY;
