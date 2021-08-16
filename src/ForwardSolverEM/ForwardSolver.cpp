@@ -8,7 +8,7 @@
              \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
              */
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABSEM<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML)
+ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML)
 {
     if (config.get<IndexType>("DampingBoundary") == 1) {
         return (DampingBoundary.estimateMemory(config.get<scai::IndexType>("BoundaryWidth"), config.get<scai::IndexType>("FreeSurface"), dist, modelCoordinates));
@@ -31,7 +31,7 @@ ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::estimateBoundaryMem
  \param ConvPML PML object
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEM<ValueType> &FreeSurface, BoundaryCondition::ABSEM<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML)
+void KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEM<ValueType> &FreeSurface, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML)
 {
 
     useFreeSurface = config.get<scai::IndexType>("FreeSurface");

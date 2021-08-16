@@ -41,6 +41,37 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(lama::Vec
 template <typename ValueType>
 void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
     lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3,
+    lama::Vector<ValueType> &v4, lama::Vector<ValueType> &v5, lama::Vector<ValueType> &v6)
+{
+
+    SCAI_ASSERT_DEBUG(active, " ABS is not active ");
+
+    v1 *= damping;
+    v2 *= damping;
+    v3 *= damping;
+    v4 *= damping;
+    v5 *= damping;
+    v6 *= damping;
+}
+
+/*! \brief Application of the damping boundary
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ \param v1 DenseVector to apply damping boundary
+ \param v2 DenseVector to apply damping boundary
+ \param v3 DenseVector to apply damping boundary
+ \param v4 DenseVector to apply damping boundary
+ \param v5 DenseVector to apply damping boundary
+ \param v6 DenseVector to apply damping boundary
+ \param v7 DenseVector to apply damping boundary
+ \param v8 DenseVector to apply damping boundary
+ \param v9 DenseVector to apply damping boundary
+ */
+template <typename ValueType>
+void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
+    lama::Vector<ValueType> &v1, lama::Vector<ValueType> &v2, lama::Vector<ValueType> &v3,
     lama::Vector<ValueType> &v4, lama::Vector<ValueType> &v5, lama::Vector<ValueType> &v6,
     lama::Vector<ValueType> &v7, lama::Vector<ValueType> &v8, lama::Vector<ValueType> &v9)
 {
@@ -57,6 +88,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::apply(
     v8 *= damping;
     v9 *= damping;
 }
+
 //! \brief estimate memory for the absorbing boundary frame
 /*!
  *

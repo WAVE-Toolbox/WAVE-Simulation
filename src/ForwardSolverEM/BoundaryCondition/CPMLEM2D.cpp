@@ -1,107 +1,75 @@
-#include "CPML3D.hpp"
+#include "CPMLEM2D.hpp"
 using namespace scai;
 
 //! \brief resetting the CPMLEM memory variables
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::resetCPML()
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::resetCPML()
 {
     this->resetVector(psi_hyx);
     this->resetVector(psi_hzx);
     this->resetVector(psi_hxy);
     this->resetVector(psi_hzy);
-    this->resetVector(psi_hxz);
-    this->resetVector(psi_hyz);
 
-    this->resetVector(psi_ezx);
     this->resetVector(psi_eyx);
-    this->resetVector(psi_ezy);
+    this->resetVector(psi_ezx);
     this->resetVector(psi_exy);
-    this->resetVector(psi_eyz);
-    this->resetVector(psi_exz);
+    this->resetVector(psi_ezy);
 }
 
 //! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_ezx(scai::lama::DenseVector<ValueType> &ezx)
-{
-    this->applyCPMLEM(ezx, psi_ezx, a_x_half, b_x_half);
-}
-
-//! \brief application of cpml on the derivation of sxz in x direction
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_eyx(scai::lama::DenseVector<ValueType> &eyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_eyx(scai::lama::DenseVector<ValueType> &eyx)
 {
     this->applyCPMLEM(eyx, psi_eyx, a_x_half, b_x_half);
 }
 
-//! \brief application of cpml on the derivation of sxy in y direction
+//! \brief application of cpml on the derivation of sxy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_ezy(scai::lama::DenseVector<ValueType> &ezy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_ezx(scai::lama::DenseVector<ValueType> &ezx)
 {
-    this->applyCPMLEM(ezy, psi_ezy, a_y_half, b_y_half);
+    this->applyCPMLEM(ezx, psi_ezx, a_x_half, b_x_half);
 }
 
-//! \brief application of cpml on the derivation of syz in y direction
+//! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_exy(scai::lama::DenseVector<ValueType> &exy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_exy(scai::lama::DenseVector<ValueType> &exy)
 {
     this->applyCPMLEM(exy, psi_exy, a_y_half, b_y_half);
 }
 
-//! \brief application of cpml on the derivation of sxz in z direction
+//! \brief application of cpml on the derivation of sxy in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_eyz(scai::lama::DenseVector<ValueType> &eyz)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_ezy(scai::lama::DenseVector<ValueType> &ezy)
 {
-    this->applyCPMLEM(eyz, psi_eyz, a_z_half, b_z_half);
-}
-
-//! \brief application of cpml on the derivation of syz in z direction
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_exz(scai::lama::DenseVector<ValueType> &exz)
-{
-    this->applyCPMLEM(exz, psi_exz, a_z_half, b_z_half);
+    this->applyCPMLEM(ezy, psi_ezy, a_y_half, b_y_half);
 }
 
 //! \brief application of cpml on the derivation of hy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hyx(scai::lama::DenseVector<ValueType> &hyx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_hyx(scai::lama::DenseVector<ValueType> &hyx)
 {
-    this->applyCPMLEM(hyx, psi_hyx, a_x_half, b_x_half);
+    this->applyCPMLEM(hyx, psi_hyx, a_x, b_x);
 }
 
-//! \brief application of cpml on the derivation of hz in x direction
+//! \brief application of cpml on the derivation of hy in x direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hzx(scai::lama::DenseVector<ValueType> &hzx)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_hzx(scai::lama::DenseVector<ValueType> &hzx)
 {
     this->applyCPMLEM(hzx, psi_hzx, a_x, b_x);
 }
 
 //! \brief application of cpml on the derivation of hx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hxy(scai::lama::DenseVector<ValueType> &hxy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_hxy(scai::lama::DenseVector<ValueType> &hxy)
 {
     this->applyCPMLEM(hxy, psi_hxy, a_y, b_y);
 }
 
-//! \brief application of cpml on the derivation of hz in y direction
+//! \brief application of cpml on the derivation of hx in y direction
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hzy(scai::lama::DenseVector<ValueType> &hzy)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::apply_hzy(scai::lama::DenseVector<ValueType> &hzy)
 {
     this->applyCPMLEM(hzy, psi_hzy, a_y, b_y);
-}
-
-//! \brief application of cpml on the derivation of hx in z direction
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hxz(scai::lama::DenseVector<ValueType> &hxz)
-{
-    this->applyCPMLEM(hxz, psi_hxz, a_z, b_z);
-}
-
-//! \brief application of cpml on the derivation of hy in z direction
-template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hyz(scai::lama::DenseVector<ValueType> &hyz)
-{
-    this->applyCPMLEM(hyz, psi_hyz, a_z, b_z);
 }
 
 //! \brief estimate memory for the absorbing boundary frame
@@ -113,7 +81,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::apply_hyz(sc
   \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::estimateMemory(IndexType BoundaryWidth, IndexType useFreeSurface, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
 
     IndexType counter = 0;
@@ -131,7 +99,6 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::estimat
         IndexType width = std::ceil((float)BoundaryWidth / modelCoordinates.getDHFactor(layer));
         IndexType xDist = gdist.x / modelCoordinates.getDHFactor(layer);
         IndexType yDist = gdist.y / modelCoordinates.getDHFactor(layer);
-        IndexType zDist = gdist.z / modelCoordinates.getDHFactor(layer);
 
         if (xDist < width) {
             counter++;
@@ -147,13 +114,10 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::estimat
                 counter++;
             }
         }
-
-        if (zDist < width) {
-            counter++;
-        }
     }
-    IndexType sum=dist->getCommunicator().sum(counter);
-    IndexType numVectorsPerDim = 10;
+
+     IndexType sum=dist->getCommunicator().sum(counter);
+    IndexType numVectorsPerDim = 8;
     return(sum * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
@@ -162,16 +126,16 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::estimat
  *
  \param dist Distribution of the wavefield
  \param ctx Context
-\param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param DT Time sampling
  \param BoundaryWidth Width of damping boundary
- \param useFreeSurface Bool if free surface is in use
+ \param useFreeSurface Indicator which free surface is in use
  \param NPower degree of the damping profile
  \param CenterFrequencyCPML Center frequency inside the boundaries
  \param VMaxCPML Maximum p-wave velocity in the boundaries
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface)
+void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<ValueType>::init(scai::dmemo::DistributionPtr const dist, scai::hmemo::ContextPtr const ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, ValueType const DT, IndexType const BoundaryWidth, ValueType const NPower, ValueType const CenterFrequencyCPML, ValueType const VMaxCPML, scai::IndexType const useFreeSurface)
 {
     dmemo::CommunicatorPtr comm = dist->getCommunicatorPtr();
 
@@ -184,15 +148,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::d
     this->initVector(psi_hzx, ctx, dist);
     this->initVector(psi_hxy, ctx, dist);
     this->initVector(psi_hzy, ctx, dist);
-    this->initVector(psi_hxz, ctx, dist);
-    this->initVector(psi_hyz, ctx, dist);
 
-    this->initVector(psi_ezx, ctx, dist);
     this->initVector(psi_eyx, ctx, dist);
-    this->initVector(psi_ezy, ctx, dist);
+    this->initVector(psi_ezx, ctx, dist);
     this->initVector(psi_exy, ctx, dist);
-    this->initVector(psi_eyz, ctx, dist);
-    this->initVector(psi_exz, ctx, dist);
+    this->initVector(psi_ezy, ctx, dist);
 
     this->initVector(a_x, ctx, dist);
     this->initVector(b_x, ctx, dist);
@@ -203,11 +163,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::d
     this->initVector(b_y, ctx, dist);
     this->initVector(a_y_half, ctx, dist);
     this->initVector(b_y_half, ctx, dist);
-
-    this->initVector(a_z, ctx, dist);
-    this->initVector(b_z, ctx, dist);
-    this->initVector(a_z_half, ctx, dist);
-    this->initVector(b_z_half, ctx, dist);
 
     Acquisition::coordinate3D coordinate;
     Acquisition::coordinate3D gdist;
@@ -230,7 +185,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::d
 
     lama::VectorAssembly<ValueType> a_xAssembly, b_xAssembly, a_x_halfAssembly, b_x_halfAssembly;
     lama::VectorAssembly<ValueType> a_yAssembly, b_yAssembly, a_y_halfAssembly, b_y_halfAssembly;
-    lama::VectorAssembly<ValueType> a_zAssembly, b_zAssembly, a_z_halfAssembly, b_z_halfAssembly;
 
     hmemo::HArray<IndexType> ownedIndeces;
     dist->getOwnedIndexes(ownedIndeces);
@@ -245,7 +199,6 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::d
         IndexType width = std::ceil((float)BoundaryWidth / modelCoordinates.getDHFactor(layer));
         IndexType xDist = gdist.x / modelCoordinates.getDHFactor(layer);
         IndexType yDist = gdist.y / modelCoordinates.getDHFactor(layer);
-        IndexType zDist = gdist.z / modelCoordinates.getDHFactor(layer);
 
         if (xDist < width) {
             IndexType xCoord = coordinate.x / modelCoordinates.getDHFactor(layer);
@@ -278,40 +231,19 @@ void KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::init(scai::d
                 b_y_halfAssembly.push(ownedIndex, b.at(layer)[yDist]);
             }
         }
-
-        if (zDist < width) {
-            IndexType zCoord = coordinate.z / modelCoordinates.getDHFactor(layer);
-            if (zCoord < width) {
-                a_zAssembly.push(ownedIndex, a.at(layer)[zDist]);
-                b_zAssembly.push(ownedIndex, b.at(layer)[zDist]);
-                a_z_halfAssembly.push(ownedIndex, a_half.at(layer)[zDist]);
-                b_z_halfAssembly.push(ownedIndex, b_half.at(layer)[zDist]);
-            } else {
-                a_zAssembly.push(ownedIndex, a_half.at(layer)[zDist]);
-                b_zAssembly.push(ownedIndex, b_half.at(layer)[zDist]);
-                a_z_halfAssembly.push(ownedIndex, a.at(layer)[zDist]);
-                b_z_halfAssembly.push(ownedIndex, b.at(layer)[zDist]);
-            }
-        }
     }
 
     a_x.fillFromAssembly(a_xAssembly);
-    b_x.fillFromAssembly(b_xAssembly);
-    a_x_half.fillFromAssembly(a_x_halfAssembly);
-    b_x_half.fillFromAssembly(b_x_halfAssembly);
-
     a_y.fillFromAssembly(a_yAssembly);
-    b_y.fillFromAssembly(b_yAssembly);
+    a_x_half.fillFromAssembly(a_x_halfAssembly);
     a_y_half.fillFromAssembly(a_y_halfAssembly);
+    b_x.fillFromAssembly(b_xAssembly);
+    b_y.fillFromAssembly(b_yAssembly);
+    b_x_half.fillFromAssembly(b_x_halfAssembly);
     b_y_half.fillFromAssembly(b_y_halfAssembly);
-
-    a_z.fillFromAssembly(a_zAssembly);
-    b_z.fillFromAssembly(b_zAssembly);
-    a_z_half.fillFromAssembly(a_z_halfAssembly);
-    b_z_half.fillFromAssembly(b_z_halfAssembly);
 
     HOST_PRINT(comm, "", "Finished with initialization of the CPMLEM coefficients!\n\n");
 }
 
-template class KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<float>;
-template class KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<double>;
+template class KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<double>;
+template class KITGPI::ForwardSolver::BoundaryCondition::CPMLEM2D<float>;

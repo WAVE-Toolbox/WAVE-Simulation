@@ -9,8 +9,8 @@
 
 #include "ForwardSolver.hpp"
 
-#include "BoundaryCondition/ABS2D.hpp"
-#include "BoundaryCondition/CPML2D.hpp"
+#include "../ForwardSolver/BoundaryCondition/ABS2D.hpp"
+#include "BoundaryCondition/CPMLEM2D.hpp"
 
 namespace KITGPI
 {
@@ -48,7 +48,7 @@ namespace KITGPI
             BoundaryCondition::FreeSurfaceEM<ValueType> FreeSurface; //!< Free Surface boundary condition class
             using ForwardSolverEM<ValueType>::useFreeSurface;
 
-            BoundaryCondition::ABSEM2D<ValueType> DampingBoundary; //!< Damping boundary condition class
+            BoundaryCondition::ABS2D<ValueType> DampingBoundary; //!< Damping boundary condition class
             using ForwardSolverEM<ValueType>::useDampingBoundary;
 
             BoundaryCondition::CPMLEM2D<ValueType> ConvPML; //!< Damping boundary condition class

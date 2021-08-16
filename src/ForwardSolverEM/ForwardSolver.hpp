@@ -11,8 +11,8 @@
 #include "../ForwardSolver/Derivatives/Derivatives.hpp"
 #include "../ForwardSolver/SourceReceiverImpl/SourceReceiverImplFactory.hpp"
 
-#include "BoundaryCondition/ABS.hpp"
-#include "BoundaryCondition/CPML.hpp"
+#include "../ForwardSolver/BoundaryCondition/ABS.hpp"
+#include "BoundaryCondition/CPMLEM.hpp"
 #include "BoundaryCondition/FreeSurfaceEM.hpp"
 
 namespace KITGPI
@@ -43,13 +43,13 @@ namespace KITGPI
 
             virtual void prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT) = 0;
 
-            ValueType estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABSEM<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML);
+            ValueType estimateBoundaryMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML);
 
             virtual ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) = 0;
 
             virtual void prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) = 0;
 
-            void prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEM<ValueType> &FreeSurface, BoundaryCondition::ABSEM<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML);
+            void prepareBoundaries(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceEM<ValueType> &FreeSurface, BoundaryCondition::ABS<ValueType> &DampingBoundary, BoundaryCondition::CPMLEM<ValueType> &ConvPML);
 
             virtual void initForwardSolver(Configuration::Configuration const &config, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) = 0;
 
