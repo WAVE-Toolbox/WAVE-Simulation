@@ -43,6 +43,7 @@ namespace KITGPI
             void calcInverseAGC();
             void setInverseAGC(SeismogramHandler<ValueType> seismograms);
             void setIsSeismic(bool setIsSeismic);
+            bool getIsSeismic();
 
             Seismogram<ValueType> const &getSeismogram(SeismogramType type) const;
             Seismogram<ValueType> &getSeismogram(SeismogramType type);

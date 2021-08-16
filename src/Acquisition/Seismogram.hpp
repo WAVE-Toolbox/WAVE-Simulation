@@ -85,6 +85,7 @@ namespace KITGPI
             void setInstantaneousTrace(scai::IndexType instantaneousTraces);
             void setFrequencyAGC(ValueType setFrequencyAGC);
             void setIsSeismic(bool setIsSeismic);
+            bool getIsSeismic();
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);

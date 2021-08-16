@@ -581,6 +581,15 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setIsSeismic(bool setIsSeismic)
     isSeismic = setIsSeismic;
 }
 
+//! \brief Getter method to get isSeismic.
+/*!
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::Seismogram<ValueType>::getIsSeismic()
+{
+    return isSeismic;
+}
+
 //! \brief Getter method for #SeismogramType
 /*!
  *

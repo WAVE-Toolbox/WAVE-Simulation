@@ -406,7 +406,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setInverseAGC(Seismogram
     }
 }
 
-//! \brief Setter method to set isSeismic .
+//! \brief Setter method to set isSeismic
 /*!
  */
 template <typename ValueType>
@@ -416,6 +416,15 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setIsSeismic(bool setIsS
     for (auto &i : seismo) {
         i.setIsSeismic(setIsSeismic);
     }
+}
+
+//! \brief Getter method to get isSeismic
+/*!
+ */
+template <typename ValueType>
+bool KITGPI::Acquisition::SeismogramHandler<ValueType>::getIsSeismic()
+{
+    return isSeismic;
 }
 
 /*! \brief Overloading *= Operation
