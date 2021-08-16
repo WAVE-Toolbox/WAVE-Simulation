@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CPMLEM.hpp"
+#include "../../ForwardSolver/BoundaryCondition/CPML.hpp"
 
 namespace KITGPI
 {
@@ -11,13 +11,13 @@ namespace KITGPI
         namespace BoundaryCondition
         {
 
-            //! \brief Class for the usage of CPMLEM boundaries for 2-D FD Simulations
+            //! \brief Class for the usage of CPML boundaries for 2-D FD Simulations
             /*!
-			 * Calculation of the CPMLEM coefficients and the application of the cpml to the derivates for 2-D FD Simulations
+			 * Calculation of the CPML coefficients and the application of the cpml to the derivates for 2-D FD Simulations
 			 *
 			 */
             template <typename ValueType>
-            class CPMLEM2D : public CPMLEM<ValueType>
+            class CPMLEM2D : public CPML<ValueType>
             {
               public:
                 //! Default constructor
@@ -42,30 +42,30 @@ namespace KITGPI
                 void apply_hzy(scai::lama::DenseVector<ValueType> &hzy);
 
               private:
-                // For the CPMLEM Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
+                // For the CPML Sparse Vectors and Dense Vectors can be declared. The code will run without any further changes.
 
-                using CPMLEM<ValueType>::active;
-                typedef typename CPMLEM<ValueType>::VectorType VectorType;
+                using CPML<ValueType>::active;
+                typedef typename CPML<ValueType>::VectorType VectorType;
 
-                VectorType psi_hyx; //!< CPMLEM memory Variable
-                VectorType psi_hzx; //!< CPMLEM memory Variable
-                VectorType psi_hxy; //!< CPMLEM memory Variable
-                VectorType psi_hzy; //!< CPMLEM memory Variable
+                VectorType psi_hyx; //!< CPML memory Variable
+                VectorType psi_hzx; //!< CPML memory Variable
+                VectorType psi_hxy; //!< CPML memory Variable
+                VectorType psi_hzy; //!< CPML memory Variable
 
-                VectorType psi_eyx; //!< CPMLEM memory Variable
-                VectorType psi_ezx; //!< CPMLEM memory Variable
-                VectorType psi_exy; //!< CPMLEM memory Variable
-                VectorType psi_ezy; //!< CPMLEM memory Variable
+                VectorType psi_eyx; //!< CPML memory Variable
+                VectorType psi_ezx; //!< CPML memory Variable
+                VectorType psi_exy; //!< CPML memory Variable
+                VectorType psi_ezy; //!< CPML memory Variable
 
-                VectorType a_x;      //!< CPMLEM coefficient
-                VectorType a_y;      //!< CPMLEM coefficient
-                VectorType a_x_half; //!< CPMLEM coefficient for staggered gridpoints
-                VectorType a_y_half; //!< CPMLEM coefficient for staggered gridpoints
+                VectorType a_x;      //!< CPML coefficient
+                VectorType a_y;      //!< CPML coefficient
+                VectorType a_x_half; //!< CPML coefficient for staggered gridpoints
+                VectorType a_y_half; //!< CPML coefficient for staggered gridpoints
 
-                VectorType b_x;      //!< CPMLEM coefficient
-                VectorType b_y;      //!< CPMLEM coefficient
-                VectorType b_x_half; //!< CPMLEM coefficient for staggered gridpoint
-                VectorType b_y_half; //!< CPMLEM coefficient for staggered gridpoints
+                VectorType b_x;      //!< CPML coefficient
+                VectorType b_y;      //!< CPML coefficient
+                VectorType b_x_half; //!< CPML coefficient for staggered gridpoint
+                VectorType b_y_half; //!< CPML coefficient for staggered gridpoints
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */
