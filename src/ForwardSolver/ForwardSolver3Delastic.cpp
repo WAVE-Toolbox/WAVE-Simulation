@@ -117,7 +117,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelpar
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
 
     SCAI_REGION("timestep");
@@ -169,6 +169,8 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Modelparameter::Modelpar
     lama::Matrix<ValueType> const &DyfStaggeredZ = derivatives.getDyfStaggeredZ();
     lama::Matrix<ValueType> const &DybStaggeredZ = derivatives.getDybStaggeredZ();
 
+    SourceReceiverImpl::FDTD3Delastic<ValueType> SourceReceiver(sources, receiver, wavefield);
+    
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -405,6 +407,10 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Modelparameter::Modelpar
     if (useDampingBoundary) {
         DampingBoundary.apply(Sxx, Syy, Szz, Sxy, Sxz, Syz, vX, vY, vZ);
     }
+    
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Delastic<float>;

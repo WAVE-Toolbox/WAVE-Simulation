@@ -21,7 +21,6 @@
 #include "Wavefields/WavefieldsFactory.hpp"
 #include "ForwardSolver/Derivatives/DerivativesFactory.hpp"
 #include "ForwardSolver/ForwardSolverFactory.hpp"
-#include "ForwardSolver/SourceReceiverImpl/SourceReceiverImplFactory.hpp"
 
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
@@ -153,8 +152,6 @@ int main(int argc, const char *argv[])
     Modelparameter::Modelparameter<ValueType>::ModelparameterPtr model(Modelparameter::Factory<ValueType>::Create(equationType));
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefields(Wavefields::Factory<ValueType>::Create(dimension, equationType));
     ForwardSolver::ForwardSolver<ValueType>::ForwardSolverPtr solver(ForwardSolver::Factory<ValueType>::Create(dimension, equationType));
-
-    ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType>::SourceReceiverImplPtr SourceReceiver = ForwardSolver::SourceReceiverImpl::Factory<ValueType>::Create(dimension, equationType); 
     
     /* --------------------------------------- */
     /* Memory estimation                       */
@@ -412,8 +409,6 @@ int main(int argc, const char *argv[])
             /* Loop over time steps                    */
             /* --------------------------------------- */
             ValueType DTinv = 1 / config.get<ValueType>("DT");
-            SourceReceiver->init(sources.getSeismogramHandler(), receivers.getSeismogramHandler(), *wavefields);
-    
             if (!useStreamConfig) {
                 for (IndexType tStep = 0; tStep < tStepEnd; tStep++) {
 
@@ -423,10 +418,7 @@ int main(int argc, const char *argv[])
                     }
                     *wavefieldsTemp = *wavefields;
 
-                    solver->run(*model, *wavefields, *derivatives);
-                    /* Apply source and save seismogram */
-                    SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
-                    SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
+                    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
                     
                     if (randInd == 0 && decomposeType != 0) {
                         *wavefieldsTemp -= *wavefields;
@@ -457,10 +449,7 @@ int main(int argc, const char *argv[])
                     }
                     *wavefieldsTemp = *wavefields;
 
-                    solver->run(*modelPerShot, *wavefields, *derivatives);
-                    /* Apply source and save seismogram */
-                    SourceReceiver->applySource(sources.getSeismogramHandler(), *wavefields, tStep);
-                    SourceReceiver->gatherSeismogram(receivers.getSeismogramHandler(), *wavefields, tStep);
+                    solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
 
                     if (randInd == 0 && decomposeType != 0) {
                         *wavefieldsTemp -= *wavefields;

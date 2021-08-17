@@ -20,10 +20,12 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD2Dsh(){};
+                FDTD2Dsh() = delete;
                 //! Default destructor
                 ~FDTD2Dsh(){};
 
+                using SourceReceiverImplSeismic<ValueType>::SourceReceiverImplSeismic;
+                
                 void applySourcePressure(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("Pressure sources can not be implemented in SH modeling")};
                 void applySourceVX(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VX sources can not be implemented in SH modeling")};
                 void applySourceVY(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("VY sources can not be implemented in SH modeling")};

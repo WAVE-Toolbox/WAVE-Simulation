@@ -20,10 +20,12 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD3Demem(){};
+                FDTD3Demem() = delete;
                 //! Default destructor
                 ~FDTD3Demem(){};
 
+                using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
+                
               private:
                 /* Temporary memory */
             };

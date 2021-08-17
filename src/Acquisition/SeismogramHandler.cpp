@@ -422,7 +422,7 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setIsSeismic(bool setIsS
 /*!
  */
 template <typename ValueType>
-bool KITGPI::Acquisition::SeismogramHandler<ValueType>::getIsSeismic()
+bool KITGPI::Acquisition::SeismogramHandler<ValueType>::getIsSeismic() const
 {
     return isSeismic;
 }

@@ -8,7 +8,8 @@ using namespace scai;
  \param wavefieldIN Wavefield
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::init(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN)
+KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN)
+ : wavefield(wavefieldIN), seismogramHandlerSrc(sourceConfig.getSeismogramHandler()), seismogramHandlerRec(receiverConfig.getSeismogramHandler())
 {
     // Set source coordinate to receiver seismogram handler
     if (seismogramHandlerSrc.getNumTracesTotal() == 1) {
@@ -27,24 +28,22 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>:
 
 /*! \brief Gather seismogram.
  *
- \param seismogramHandlerRec Seismogram handler receiver
- \param wavefieldIN incoming wavefield
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::gatherSeismogram(Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::gatherSeismogram(scai::IndexType t)
 {
     if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EZ) > 0) {
-        gatherSeismogramEZ(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EZ), wavefieldIN, t);
+        gatherSeismogramEZ(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EZ), wavefield, t);
     }
     if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EX) > 0) {
-        gatherSeismogramEX(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EX), wavefieldIN, t);
+        gatherSeismogramEX(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EX), wavefield, t);
     }
     if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EY) > 0) {
-        gatherSeismogramEY(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EY), wavefieldIN, t);
+        gatherSeismogramEY(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::EY), wavefield, t);
     }
     if (seismogramHandlerRec.getNumTracesGlobal(Acquisition::SeismogramTypeEM::HZ) > 0) {
-        gatherSeismogramHZ(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::HZ), wavefieldIN, t);
+        gatherSeismogramHZ(seismogramHandlerRec.getSeismogram(Acquisition::SeismogramTypeEM::HZ), wavefield, t);
     }
 }
 
@@ -86,8 +85,6 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>:
 
 /*! \brief Gather Hz seismogram.
  *
- \param seismo Seismogram
- \param wavefieldIN incoming wavefield
  \param t Time-step
  */
 template <typename ValueType>
@@ -103,19 +100,19 @@ void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>:
  \param t Time-step
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::applySource(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t)
+void KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplEM<ValueType>::applySource(scai::IndexType t)
 {
     if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EZ) > 0) {
-        applySourceEZ(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EZ), wavefieldIN, t);
+        applySourceEZ(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EZ), wavefield, t);
     }
     if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EX) > 0) {
-        applySourceEX(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EX), wavefieldIN, t);
+        applySourceEX(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EX), wavefield, t);
     }
     if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramTypeEM::EY) > 0) {
-        applySourceEY(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EY), wavefieldIN, t);
+        applySourceEY(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::EY), wavefield, t);
     }
     if (seismogramHandlerSrc.getNumTracesGlobal(Acquisition::SeismogramTypeEM::HZ) > 0) {
-        applySourceHZ(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::HZ), wavefieldIN, t);
+        applySourceHZ(seismogramHandlerSrc.getSeismogram(Acquisition::SeismogramTypeEM::HZ), wavefield, t);
     }
 }
 

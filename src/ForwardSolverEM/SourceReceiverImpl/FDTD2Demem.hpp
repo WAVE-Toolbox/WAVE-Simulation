@@ -20,10 +20,12 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD2Demem(){};
+                FDTD2Demem() = delete;
                 //! Default destructor
                 ~FDTD2Demem(){};
 
+                using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
+                
                 void applySourceEZ(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ sources can not be implemented in EMEM modeling")};
                 void gatherSeismogramEZ(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EZ receivers can not be implemented in EMEM modeling")};
 

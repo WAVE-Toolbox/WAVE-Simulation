@@ -20,17 +20,28 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                SourceReceiverImplEM(){};
+                SourceReceiverImplEM() = delete;
+                explicit SourceReceiverImplEM(Acquisition::AcquisitionGeometry<ValueType> const &sourceConfig, Acquisition::AcquisitionGeometry<ValueType> &receiverConfig, Wavefields::Wavefields<ValueType> &wavefieldIN);
                 //! Default destructor
                 ~SourceReceiverImplEM(){};
-                            
-                void init(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN) override;    
-                void applySource(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
-                void gatherSeismogram(Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
+                           
+                using SourceReceiverImpl<ValueType>::SourceReceiverImpl;
+                
+                void applySource(scai::IndexType t) override;
+                void gatherSeismogram(scai::IndexType t) override;
 
               protected:           
                 /* Common */  
                 void setContextPtrToTemporary(scai::hmemo::ContextPtr ctx) override; 
+                /* wavefields */
+                Wavefields::Wavefields<ValueType> &wavefield; //!< Wavefields
+
+                /* source */
+                Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc; //!< Seismogram Handler of Sources
+
+                /* receiver */
+                Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec; //!< Seismogram Handler of Receivers
+
                 /* Seismic */
                 //! \brief Allying method for pressure source
                 virtual void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;

@@ -20,10 +20,12 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD2Dtmem(){};
+                FDTD2Dtmem() = delete;
                 //! Default destructor
                 ~FDTD2Dtmem(){};
 
+                using SourceReceiverImplEM<ValueType>::SourceReceiverImplEM;
+                
                 void applySourceEX(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX sources can not be implemented in 2D tmem modeling")};
                 void gatherSeismogramEX(Acquisition::Seismogram<ValueType> & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EX receivers can not be implemented in 2D tmem modeling")};
                 void applySourceEY(Acquisition::Seismogram<ValueType> const & /*seismo*/, Wavefields::Wavefields<ValueType> & /*wavefieldIN*/, scai::IndexType /*t*/) override{COMMON_THROWEXCEPTION("EY sources can not be implemented in 2D tmem modeling")};

@@ -20,10 +20,12 @@ namespace KITGPI
             {
               public:
                 //! Default constructor
-                FDTD2Delastic(){};
+                FDTD2Delastic() = delete;
                 //! Default destructor
                 ~FDTD2Delastic(){};
 
+                using SourceReceiverImplSeismic<ValueType>::SourceReceiverImplSeismic;
+                
                 void applySourcePressure(Acquisition::Seismogram<ValueType> const &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
                 void gatherSeismogramPressure(Acquisition::Seismogram<ValueType> &seismo, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) override;
 

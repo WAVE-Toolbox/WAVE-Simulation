@@ -33,9 +33,8 @@ namespace KITGPI
                 //! Default destructor
                 ~SourceReceiverImpl(){};
                                 
-                virtual void init(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN) = 0;
-                virtual void applySource(Acquisition::SeismogramHandler<ValueType> const &seismogramHandlerSrc, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
-                virtual void gatherSeismogram(Acquisition::SeismogramHandler<ValueType> &seismogramHandlerRec, Wavefields::Wavefields<ValueType> &wavefieldIN, scai::IndexType t) = 0;
+                virtual void applySource(scai::IndexType t) = 0;
+                virtual void gatherSeismogram(scai::IndexType t) = 0;
 
               protected:                
                 /* Common */

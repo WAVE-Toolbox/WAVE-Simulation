@@ -88,7 +88,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
 
     SCAI_REGION("timestep");
@@ -119,6 +119,8 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Modelparameter::Modelpa
     auto const *DinterpolateStaggeredX = derivatives.getInterStaggeredX();
     auto const *DinterpolateStaggeredZ = derivatives.getInterStaggeredZ();
 
+    SourceReceiverImpl::FDTD3Dacoustic<ValueType> SourceReceiver(sources, receiver, wavefield);
+    
     /* ----------------*/
     /* update velocity */
     /* ----------------*/
@@ -221,6 +223,10 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Modelparameter::Modelpa
     if (useFreeSurface == 1) {
         FreeSurface.setSurfaceZero(p);
     }
+    
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD3Dacoustic<float>;

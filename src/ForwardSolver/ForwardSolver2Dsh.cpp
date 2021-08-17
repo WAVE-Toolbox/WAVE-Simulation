@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Dshell");
 
@@ -126,7 +126,8 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Modelparameter::Modelparamete
     auto const &Dyb = derivatives.getDyb();
     
     auto const &DybFreeSurface = derivatives.getDybFreeSurface();
-    
+        
+    SourceReceiverImpl::FDTD2Dsh<ValueType> SourceReceiver(sources, receiver, wavefield);
 //     if (useFreeSurface) {
 //         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
 //         //         FreeSurface.setModelparameter(model);
@@ -186,6 +187,9 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Modelparameter::Modelparamete
         DampingBoundary.apply(Sxz, Syz, vZ);
     }
 
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Dsh<float>;

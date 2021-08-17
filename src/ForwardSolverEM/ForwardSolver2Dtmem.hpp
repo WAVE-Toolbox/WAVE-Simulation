@@ -11,6 +11,7 @@
 
 #include "../ForwardSolver/BoundaryCondition/ABS2D.hpp"
 #include "BoundaryCondition/CPMLEM2D.hpp"
+#include "SourceReceiverImpl/FDTD2Dtmem.hpp"
 
 namespace KITGPI
 {
@@ -32,7 +33,7 @@ namespace KITGPI
 
             ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
-            void run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives) override;
+            void run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t) override;
 
             void resetCPML() override;
 

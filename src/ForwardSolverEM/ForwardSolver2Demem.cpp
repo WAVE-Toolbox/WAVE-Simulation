@@ -111,7 +111,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::prepareForModelling(Modelparame
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Demem");
     
@@ -130,6 +130,8 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Modelparameter::Modelparame
     
     lama::Matrix<ValueType> const &DybStaggeredX = derivatives.getDybStaggeredX();  
 
+    SourceReceiverImpl::FDTD2Demem<ValueType> SourceReceiver(sources, receiver, wavefield);
+    
     /* ----------------*/
     /* hz */
     /* ----------------*/
@@ -169,6 +171,10 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Modelparameter::Modelparame
     if (useDampingBoundary) {
         DampingBoundary.apply(eY, eX, hZ);
     }
+    
+    /* Apply source and save seismogram */
+    SourceReceiver.applySource(t);
+    SourceReceiver.gatherSeismogram(t);
 }
 
 template class KITGPI::ForwardSolver::FD2Demem<float>;
