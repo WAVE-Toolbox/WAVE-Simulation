@@ -433,10 +433,10 @@ int main(int argc, const char *argv[])
 
                     if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
                         if (randInd == 1 && decomposeType != 0) {
-                            wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
-                            wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                            wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                            wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
                         } else {
-                            wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
+                            wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber), tStep, *derivatives, *model, config.get<IndexType>("FileFormat"));
                         }
                     }
                 }
@@ -464,10 +464,10 @@ int main(int argc, const char *argv[])
 
                     if (snapType > 0 && tStep >= Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT) && tStep <= Common::time2index(config.get<ValueType>("tlastSnapshot"), DT) && (tStep - Common::time2index(config.get<ValueType>("tFirstSnapshot"), DT)) % Common::time2index(config.get<ValueType>("tincSnapshot"), DT) == 0) {
                         if (randInd == 1 && decomposeType != 0) {
-                            wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
-                            wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT.", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                            wavefields->write(1, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                            wavefields->write(2, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".HilbertT", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
                         } else {
-                            wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber) + ".", tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
+                            wavefields->write(snapType, config.get<std::string>("WavefieldFileName") + ".shot_" + std::to_string(shotNumber), tStep, *derivatives, *modelPerShot, config.get<IndexType>("FileFormat"));
                         }
                     }
                 }
