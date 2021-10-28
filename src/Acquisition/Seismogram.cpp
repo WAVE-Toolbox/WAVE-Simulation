@@ -86,7 +86,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
             filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
         if (seismogramFormat == 5) {
             seismoFormat = 1;
-            dataResample = inverseAGC;
+            dataResample = inverseAGC * resampleMat;
             filenameTmp += ".inverseAGC";
         }
         
@@ -232,7 +232,7 @@ scai::lama::DenseMatrix<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
     if (data.getNumValues() > 0) {
         AGCSum = data;
         AGCSum.scale(0);
-        scai::IndexType NAGC = round(2.0 / (frequencyAGC * DT));
+        scai::IndexType NAGC = round(1.0 / (frequencyAGC * DT));
         scai::hmemo::HArray<ValueType> tempRow;
         for (IndexType i = 0; i < getNumTracesLocal(); i++) {
             data.getLocalStorage().getRow(tempRow, i);
@@ -294,7 +294,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::calcInverseAGC()
             if (waterLevel != 0) {
                 waterLevel *= 1e-3;
             } else {
-                waterLevel = 1;
+                waterLevel = 1e-3 * data.l2Norm() / getNumSamples() / getNumTracesGlobal();
             }
             for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
                 var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
@@ -320,8 +320,12 @@ void KITGPI::Acquisition::Seismogram<ValueType>::calcInverseAGC()
                     NWIN -= 1;
                 }
                 ValueType rmsTemp = sumTemp / NWIN;
-                rmsTemp = sqrt(rmsTemp);
-                rmsTemp = 1 / rmsTemp;
+                if (rmsTemp > 0) {
+                    rmsTemp = sqrt(rmsTemp);
+                    rmsTemp = 1 / rmsTemp;
+                } else {
+                    rmsTemp = 0;
+                }
                 scai::utilskernel::HArrayUtils::setVal(inverseAGCRow, tStep, rmsTemp, scai::common::BinaryOp::COPY);
             }
             inverseAGC.getLocalStorage().setRow(inverseAGCRow, i, scai::common::BinaryOp::COPY);

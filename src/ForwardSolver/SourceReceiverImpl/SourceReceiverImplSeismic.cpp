@@ -15,7 +15,7 @@ KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImplSeismic<ValueType>:
     if (seismogramHandlerSrc.getNumTracesTotal() == 1) {
         /* If only one source is injected in this simulation, the coordinate of this source is
          set to the receiver seismogram handler */
-        IndexType temp = seismogramHandlerSrc.getSeismogram((Acquisition::SeismogramType::P)).get1DCoordinates().getValue(0);
+        IndexType temp = sourceConfig.get1DCoordinates().getValue(0);
         seismogramHandlerRec.setSourceCoordinate(temp);
     } else {
         /* If more than one source is injected at the same time, the source coordinate is

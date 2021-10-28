@@ -1,11 +1,12 @@
 clearvars; close all;
 
 addpath('../configuration')
-config=conf('../configuration/configuration.txt');
+configFilename='../../../WAVE-Inversion/par/configuration/configuration_Bergmann1998_Homogeneous_TMEM2D.txt';
+config=conf(configFilename);
 
 %% Read seismogram
-component='p';
-shotnr=1;
+component='ez';
+shotnr=0;
 
 format=config.getValue('FileFormat');
 filename_base=config.getString('SeismogramFilename');
@@ -14,16 +15,17 @@ filename=['../',filename_base,'.shot_',num2str(shotnr),'.',component];
 seismogram=readSeismogram(filename,format);
 
 DT=config.getValue('seismoDT');
-
 T=1*DT:DT:size(seismogram,2)*DT;
+traceSkip=10;
 
 %% Plot seismogram
 figure
-for(trace=1:size(seismogram,1))
-plot(T,seismogram(trace,:)/max(abs(seismogram(trace,:)))+trace,'black');
-hold on
+for trace=size(seismogram,1)
+    %plot(T,seismogram(trace,:)/max(abs(seismogram(trace,:)))+trace,'black');
+    plot(T,seismogram(trace,:),'black');
+    hold on
 end
 title('Normalized traces')
 xlabel('Time in seconds')
 ylabel('Traces')
-axis([0 size(seismogram,2)*DT 0 size(seismogram,1)+1])
+%axis([0 size(seismogram,2)*DT 0 size(seismogram,1)+1])
