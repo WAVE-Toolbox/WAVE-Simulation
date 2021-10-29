@@ -30,50 +30,51 @@ namespace KITGPI
     namespace Modelparameter
     {
 
-        //! Class for Modelparameter for elastic simulations (Subsurface properties)
+        //! Class for Modelparameter for viscosh simulations (Subsurface properties)
         /*!
-         This class handels the modelparameter for the elastic finite-difference simulation.
+         This class handels the modelparameter for the viscosh finite-difference simulation.
          */
         template <typename ValueType>
-        class Elastic : public ModelparameterSeismic<ValueType>
+        class ViscoSH : public ModelparameterSeismic<ValueType>
         {
           public:
             //! Default constructor.
-            Elastic() { equationType = "elastic"; };
+            ViscoSH() { equationType = "viscosh"; };
 
             //! Destructor, releases all allocated resources.
-            ~Elastic(){};
+            ~ViscoSH(){};
 
-            explicit Elastic(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
-            explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityP_const, ValueType velocityS_const, ValueType rho_const);
-            explicit Elastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
+            explicit ViscoSH(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
+            explicit ViscoSH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit ViscoSH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             //! Copy Constructor.
-            Elastic(const Elastic &rhs);
+            ViscoSH(const ViscoSH &rhs);
 
             ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType pWaveModulus, ValueType sWaveModulus, ValueType rho_const);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) override;
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
+            void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            
             void write(std::string filename, scai::IndexType fileFormat) const override;
             void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) override;
 
             std::string getEquationType() const;
 
             /* Getter methods for not required parameters */
-            scai::lama::Vector<ValueType> const &getInverseDensity() override;
+            scai::lama::Vector<ValueType> const &getVelocityP() const override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
+            scai::lama::Vector<ValueType> const &getBulkModulusRockMatrix() const override;
             scai::lama::Vector<ValueType> const &getTauP() const override;
-            scai::lama::Vector<ValueType> const &getTauS() const override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() override;
             scai::lama::Vector<ValueType> const &getTauSAverageXY() const override;
-            scai::lama::Vector<ValueType> const &getTauSAverageXZ() override;
-            scai::lama::Vector<ValueType> const &getTauSAverageXZ() const override;
-            scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
-            scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
-            scai::IndexType getNumRelaxationMechanisms() const override;
-            ValueType getRelaxationFrequency() const override;
+            scai::lama::Vector<ValueType> const &getSWaveModulus() override;
+            scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            
             void calcRockMatrixParameter(Configuration::Configuration const &config) override;
             void calcWaveModulusFromPetrophysics() override;
             void calcPetrophysicsFromWaveModulus() override;
@@ -91,41 +92,39 @@ namespace KITGPI
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
 
             /* Overloading Operators */
-            KITGPI::Modelparameter::Elastic<ValueType> operator*(ValueType rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator*=(ValueType const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator+(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator+=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> operator-(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator-=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            KITGPI::Modelparameter::Elastic<ValueType> &operator=(KITGPI::Modelparameter::Elastic<ValueType> const &rhs);
-            
+            KITGPI::Modelparameter::ViscoSH<ValueType> operator*(ValueType rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> &operator*=(ValueType const &rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> operator+(KITGPI::Modelparameter::ViscoSH<ValueType> const &rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> &operator+=(KITGPI::Modelparameter::ViscoSH<ValueType> const &rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> operator-(KITGPI::Modelparameter::ViscoSH<ValueType> const &rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> &operator-=(KITGPI::Modelparameter::ViscoSH<ValueType> const &rhs);
+            KITGPI::Modelparameter::ViscoSH<ValueType> &operator=(KITGPI::Modelparameter::ViscoSH<ValueType> const &rhs);
+
           private:
-            void init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates);
+            void init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates){COMMON_THROWEXCEPTION("variable grid is not implemented in the viscosh case")};
             void calculateAveraging() override;
 
             using Modelparameter<ValueType>::equationType;
 
             using Modelparameter<ValueType>::dirtyFlagInverseDensity;
-            using Modelparameter<ValueType>::dirtyFlagPWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagSWaveModulus;
             using Modelparameter<ValueType>::dirtyFlagAveraging;
-            using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
-            using Modelparameter<ValueType>::velocityP;
             using Modelparameter<ValueType>::velocityS;
-            using Modelparameter<ValueType>::bulkModulusRockMatrix;   //!< Vector storing S-wave modulus.
+            using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
             using Modelparameter<ValueType>::densityRockMatrix;        //!< Vector storing Density.
             using Modelparameter<ValueType>::porosity; 
-            using Modelparameter<ValueType>::saturation; 
-            using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity.
+            using Modelparameter<ValueType>::saturation;
+            using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity. 
             using Modelparameter<ValueType>::DensityWater;
             using Modelparameter<ValueType>::DensityAir;
             using Modelparameter<ValueType>::CriticalPorosity;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
+
             void purgeMatrices() override;
 
             using Modelparameter<ValueType>::averageMatrixX;
@@ -141,15 +140,17 @@ namespace KITGPI
             using Modelparameter<ValueType>::sWaveModulusAverageXY;
             using Modelparameter<ValueType>::sWaveModulusAverageXZ;
             using Modelparameter<ValueType>::sWaveModulusAverageYZ;
-
-            /* Not required parameters */
-            using Modelparameter<ValueType>::tauP;
-            using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             using Modelparameter<ValueType>::tauSAverageXY;
             using Modelparameter<ValueType>::tauSAverageXZ;
             using Modelparameter<ValueType>::tauSAverageYZ;
+
+            /* Not required parameters */
+            using Modelparameter<ValueType>::pWaveModulus;
+            using Modelparameter<ValueType>::bulkModulusRockMatrix;
+            using Modelparameter<ValueType>::velocityP;
+            using Modelparameter<ValueType>::tauP;
         };
     }
 }

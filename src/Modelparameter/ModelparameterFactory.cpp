@@ -22,6 +22,9 @@ typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KI
     if (type.compare("sh") == 0) {
         return ModelparameterPtr(new SH<ValueType>);
     }
+    if (type.compare("viscosh") == 0) {
+        return ModelparameterPtr(new ViscoSH<ValueType>);
+    }
     
     if (type.compare("tmem") == 0) {
         return ModelparameterPtr(new TMEM<ValueType>);

@@ -64,13 +64,14 @@ namespace KITGPI
 
             std::string getEquationType() const;
             
-            /* Getter methods for not requiered parameters */
+            /* Getter methods for not required parameters */
             scai::lama::Vector<ValueType> const &getInverseDensity() override;
             
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() const override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
+            
             void calcRockMatrixParameter(Configuration::Configuration const &config) override;
             void calcWaveModulusFromPetrophysics() override;
             void calcPetrophysicsFromWaveModulus() override;

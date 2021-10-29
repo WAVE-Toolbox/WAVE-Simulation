@@ -3,6 +3,7 @@
 #include "Acoustic.hpp"
 #include "Elastic.hpp"
 #include "SH.hpp"
+#include "ViscoSH.hpp"
 #include "Viscoelastic.hpp"
 #include "Modelparameter.hpp"
 #include "ModelparameterSeismic.hpp"

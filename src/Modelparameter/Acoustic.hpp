@@ -62,7 +62,7 @@ namespace KITGPI
 
             std::string getEquationType() const;
 
-            /* Getter methods for not requiered parameters */
+            /* Getter methods for not required parameters */
             scai::lama::Vector<ValueType> const &getInverseDensity() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() override;
             scai::lama::Vector<ValueType> const &getSWaveModulus() const override;
@@ -136,7 +136,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseDensityAverageY;
             using Modelparameter<ValueType>::inverseDensityAverageZ;
 
-            /* Not requiered parameters */
+            /* Not required parameters */
             using Modelparameter<ValueType>::velocityS;
             using Modelparameter<ValueType>::sWaveModulus;
             using Modelparameter<ValueType>::tauP;

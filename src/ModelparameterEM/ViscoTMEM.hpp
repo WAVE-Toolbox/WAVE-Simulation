@@ -126,7 +126,7 @@ namespace KITGPI
             
             using Modelparameter<ValueType>::tauElectricDisplacement;
 
-            /* Not requiered parameters */
+            /* Not required parameters */
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXY;
             using Modelparameter<ValueType>::electricConductivityAverageX;
             using Modelparameter<ValueType>::electricConductivityAverageY;

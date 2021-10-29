@@ -65,7 +65,7 @@ namespace KITGPI
             using ForwardSolverEM<ValueType>::CdAverageX;
             using ForwardSolverEM<ValueType>::CdAverageY;
             
-            /* Not requiered coefficients */
+            /* Not required coefficients */
             using ForwardSolverEM<ValueType>::CaAverageZ;
             using ForwardSolverEM<ValueType>::CbAverageZ;
             using ForwardSolverEM<ValueType>::CdAverageZ;

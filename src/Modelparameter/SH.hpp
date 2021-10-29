@@ -62,7 +62,7 @@ namespace KITGPI
 
             std::string getEquationType() const;
 
-            /* Getter methods for not requiered parameters */
+            /* Getter methods for not required parameters */
 
             scai::lama::Vector<ValueType> const &getVelocityP() const override;
             scai::lama::Vector<ValueType> const &getPWaveModulus() override;
@@ -144,7 +144,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::sWaveModulusAverageXZ;
             using Modelparameter<ValueType>::sWaveModulusAverageYZ;
 
-            /* Not requiered parameters */
+            /* Not required parameters */
             using Modelparameter<ValueType>::pWaveModulus;
             using Modelparameter<ValueType>::bulkModulusRockMatrix;
             using Modelparameter<ValueType>::velocityP;

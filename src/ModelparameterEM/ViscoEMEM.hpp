@@ -66,7 +66,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getVelocityEM() override;
             scai::lama::Vector<ValueType> const &getVelocityEM() const override;
             
-            /* Getter methods for not requiered parameters */
+            /* Getter methods for not required parameters */
             
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -148,7 +148,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ;
             using Modelparameter<ValueType>::tauElectricDisplacement;
             
-            /* Not requiered parameters */
+            /* Not required parameters */
         };
     }
 }

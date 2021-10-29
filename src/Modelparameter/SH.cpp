@@ -10,7 +10,7 @@ using namespace scai;
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::SH<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
 {
-    /* 6 Parameter in SH modeling:  rho, Vs, invRho, sWaveModulus, sWaveModulusXZ, sWaveModulus YZ */
+    /* 6 Parameter in SH modeling:  rho, Vs, invRho, sWaveModulus, sWaveModulusXZ, sWaveModulusYZ */
     IndexType numParameter = 6;
     return (this->getMemoryUsage(dist, numParameter));
 }

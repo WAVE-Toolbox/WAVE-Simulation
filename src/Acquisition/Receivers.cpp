@@ -5,7 +5,7 @@
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param allSettings allSettings for receivers
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -34,7 +34,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(std::vector<receiverSetting
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
  \param acquisition_matrix Acquisition matrix (contains eg. seismogram coordinates and seismogram types)
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -52,7 +52,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(scai::lama::DenseMatrix<Val
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -86,7 +86,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -125,7 +125,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::initWholeSpace(Configuration::Co
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -167,7 +167,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
 
 /*! \brief Init based on the configuration class and the distribution of the wavefields
  *
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields

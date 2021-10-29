@@ -18,7 +18,7 @@ namespace KITGPI
 
         /*! \brief Abstract class to handle the wavefields for the forward modelling.
          *
-         * Wavefields implements some methods, which are requiered by all derived classes.
+         * Wavefields implements some methods, which are required by all derived classes.
          * As this class is an abstract class, all methods are protected.
          */
         template <typename ValueType>

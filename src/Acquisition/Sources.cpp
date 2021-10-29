@@ -7,7 +7,7 @@ using namespace scai;
 
 /*! \brief Init of a single shot based on the configuration class and the distribution of the wavefields
  \param allSettings vector of sourceSettings structs with settings for all shots
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields
@@ -45,7 +45,7 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
 
 /*! \brief Init with a signal matrix
  \param acquisition_matrix Dense Matrix which holds number of sources rows and number of source parameters columns
- \param config Configuration class, which is used to derive all requiered parameters
+ \param config Configuration class, which is used to derive all required parameters
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  \param ctx Context
  \param dist_wavefield Distribution of the wavefields

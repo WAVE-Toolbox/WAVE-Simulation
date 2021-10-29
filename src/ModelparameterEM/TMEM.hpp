@@ -61,7 +61,7 @@ namespace KITGPI
 
             std::string getEquationType() const;
             
-            /* Getter methods for not requiered parameters */
+            /* Getter methods for not required parameters */
             scai::lama::Vector<ValueType> const &getElectricConductivityOptical() override;
             scai::lama::Vector<ValueType> const &getDielectricPermittivityOptical() override;
             ValueType const &getTauElectricDisplacement() override;
@@ -122,7 +122,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageYZ;
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXZ;            
 
-            /* Not requiered parameters */
+            /* Not required parameters */
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXY;
             using Modelparameter<ValueType>::electricConductivityAverageX;
             using Modelparameter<ValueType>::electricConductivityAverageY;
