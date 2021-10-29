@@ -388,7 +388,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     Rxz *= viscoCoeff2;
     Sxz += DThalf * Rxz;
 
-    /* Update Syz and Syz */
+    /* Update Syz and Ryz */
     Syz += DThalf * Ryz;
     Ryz *= viscoCoeff1;
 

@@ -138,7 +138,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     if (DinterpolateStaggeredX) {
         /* interpolation for vz ghost points at the variable grid interfaces
         This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(vX);
         vX = *DinterpolateStaggeredX * update_temp;
@@ -162,7 +162,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     if (DinterpolateFull) {
         /* interpolation for vz ghost points at the variable grid interfaces
         This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(vY);
         vY = *DinterpolateFull * update_temp;
@@ -180,7 +180,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     if (DinterpolateStaggeredZ) {
         /* interpolation for vz ghost points at the variable grid interfaces
         This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(vZ);
         vZ = *DinterpolateStaggeredZ * update_temp;

@@ -6,6 +6,7 @@
 #include "ForwardSolver2Dacoustic.hpp"
 #include "ForwardSolver2Delastic.hpp"
 #include "ForwardSolver2Dsh.hpp"
+#include "ForwardSolver2Dviscosh.hpp"
 #include "ForwardSolver2Dviscoelastic.hpp"
 
 #include "ForwardSolver3Dacoustic.hpp"

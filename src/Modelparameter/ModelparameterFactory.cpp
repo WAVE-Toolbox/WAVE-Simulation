@@ -8,7 +8,7 @@ typename KITGPI::Modelparameter::Modelparameter<ValueType>::ModelparameterPtr KI
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
     // Assert correctness of input values
-    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0 || type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0, "Unkown type");
+    SCAI_ASSERT_ERROR(type.compare("acoustic") == 0 || type.compare("elastic") == 0 || type.compare("viscoelastic") == 0 || type.compare("sh") == 0 || type.compare("viscosh") == 0 || type.compare("emem") == 0 || type.compare("tmem") == 0 || type.compare("viscoemem") == 0 || type.compare("viscotmem") == 0, "Unkown type");
     
     if (type.compare("acoustic") == 0) {
         return ModelparameterPtr(new Acoustic<ValueType>);

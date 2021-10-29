@@ -241,7 +241,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (DinterpolateFull) {
         /* interpolation for vy ghost pointsa t the variable grid interfaces.
          This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(vY);
         vY = *DinterpolateFull * update_temp;
@@ -344,7 +344,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (DinterpolateStaggeredX) {
         /* interpolation for Sxy ghost points at the variable grid interfaces.
          This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(Sxy);
         Sxy = *DinterpolateStaggeredX * update_temp;
@@ -384,7 +384,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     if (DinterpolateStaggeredZ) {
         /* interpolation for Syz ghost points at the variable grid interfaces.
          This interpolation has no effect on the simulation.
-         Nethertheless it will be done to avoid abitrary values.
+         Nevertheless it will be done to avoid arbitrary values.
          This is helpful for applications like FWI*/
         update_temp.swap(Syz);
         Syz = *DinterpolateStaggeredZ * update_temp;

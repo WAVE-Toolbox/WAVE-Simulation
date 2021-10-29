@@ -20,17 +20,17 @@ namespace KITGPI
     namespace ForwardSolver
     {
 
-        //! \brief 2-D sh forward solver
+        //! \brief 2-D viscosh forward solver
         template <typename ValueType>
-        class FD2Dsh : public ForwardSolverSeismic<ValueType>
+        class FD2Dviscosh : public ForwardSolverSeismic<ValueType>
         {
 
           public:
             //! Default constructor
-            FD2Dsh(){};
+            FD2Dviscosh(){};
 
             //! Default destructor
-            ~FD2Dsh(){};
+            ~FD2Dviscosh(){};
 
             ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
@@ -42,7 +42,7 @@ namespace KITGPI
 
             void prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx) override;
 
-            void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/) override;
+            void initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT) override;
 
           private:
             /* Boundary Conditions */
@@ -58,6 +58,15 @@ namespace KITGPI
             /* Auxiliary Vectors */
             using ForwardSolver<ValueType>::update;
             using ForwardSolver<ValueType>::update_temp;
+            scai::lama::DenseVector<ValueType> update2;
+            scai::lama::DenseVector<ValueType> onePlusLtauS;
+            
+            IndexType numRelaxationMechanisms; // = Number of relaxation mechanisms
+            ValueType relaxationTime;          // = 1 / ( 2 * Pi * f_relax )
+            ValueType inverseRelaxationTime;   // = 1 / relaxationTime
+            ValueType viscoCoeff1;             // = 1 - DT / ( 2 * tau_Sigma_l )
+            ValueType viscoCoeff2;             // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
+            ValueType DThalf;                  // = DT / 2.0
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

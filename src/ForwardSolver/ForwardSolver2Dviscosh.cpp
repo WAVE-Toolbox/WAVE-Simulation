@@ -1,8 +1,8 @@
-#include "ForwardSolver2Dsh.hpp"
+#include "ForwardSolver2Dviscosh.hpp"
 using namespace scai;
 
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::FD2Dsh<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
+ValueType KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
@@ -18,9 +18,9 @@ ValueType KITGPI::ForwardSolver::FD2Dsh<ValueType>::estimateMemory(Configuration
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::initForwardSolver(Configuration::Configuration const &config, Derivatives::Derivatives<ValueType> &derivatives, Wavefields::Wavefields<ValueType> &wavefield, Modelparameter::Modelparameter<ValueType> const &model, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, ValueType DT)
 {
-    SCAI_REGION("ForwardSolver.init2Dsh");
+    SCAI_REGION("ForwardSolver.init2Dviscosh");
     /* Check if distributions of wavefields and models are the same */
     SCAI_ASSERT_ERROR(wavefield.getRefVZ().getDistributionPtr() == model.getDensity().getDistributionPtr(), "Distributions of wavefields and models are not the same");
 
@@ -35,9 +35,18 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::
     /* allocation of auxiliary vectors*/
     update.allocate(dist);
     update_temp.allocate(dist);
+    update2.allocate(dist);
 
     update.setContextPtr(ctx);
     update_temp.setContextPtr(ctx);
+    update2.setContextPtr(ctx);
+
+    numRelaxationMechanisms = model.getNumRelaxationMechanisms();
+    relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
+    inverseRelaxationTime = 1.0 / relaxationTime;
+    viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));
+    viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));
+    DThalf = DT / 2.0;
 }
 
 /*! \brief Initialitation of the boundary conditions
@@ -50,7 +59,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::prepareBoundaryConditions(Configuration::Configuration const &config, Acquisition::Coordinates<ValueType> const &modelCoordinates, Derivatives::Derivatives<ValueType> &derivatives, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx)
 {
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
@@ -60,7 +69,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareBoundaryConditions(Configu
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::resetCPML()
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::resetCPML()
 {
     if (useConvPML) {
         ConvPML.resetCPML();
@@ -74,15 +83,16 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::resetCPML()
 
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const & /*model*/, ValueType /*DT*/)
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType /*DT*/)
 {
-//     if (useFreeSurface == 1) {
-//         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
-//         //    FreeSurface.setModelparameter(model);
-//     }
+    /* Get reference to required model vectors */
+    lama::Vector<ValueType> const &tauS = model.getTauS();
+
+    onePlusLtauS = 1.0;
+    onePlusLtauS += numRelaxationMechanisms * tauS;
 }
 
-/*! \brief Running the 2-D sh foward solver
+/*! \brief Running the 2-D viscosh foward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *
@@ -105,19 +115,23 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
-    SCAI_REGION("ForwardSolver.timestep2Dsh");
+    SCAI_REGION("ForwardSolver.timestep2Dviscosh");
 
     /* Get references to required modelparameter */
     auto const &inverseDensity = model.getInverseDensity();
     auto const &sWaveModulusAverageXZ = model.getSWaveModulusAverageXZ();
     auto const &sWaveModulusAverageYZ = model.getSWaveModulusAverageYZ();
+    auto const &tauSAverageXZ = model.getTauSAverageXZ();
+    auto const &tauSAverageYZ = model.getTauSAverageYZ();
 
     /* Get references to required wavefields */
     auto &vZ = wavefield.getRefVZ();
     auto &Sxz = wavefield.getRefSxz();
     auto &Syz = wavefield.getRefSyz();
+    auto &Ryz = wavefield.getRefRyz();
+    auto &Rxz = wavefield.getRefRxz();
 
     /* Get references to required derivatives matrixes */
     auto const &Dxf = derivatives.getDxf();
@@ -159,6 +173,10 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     /*  update stress  */
     /* ----------------*/
 
+    /* Update Sxz and Rxz */
+    Sxz += DThalf * Rxz;
+    Rxz *= viscoCoeff1;
+    
     update = Dxf * vZ;
     if (useConvPML) {
         ConvPML.apply_vzx(update);
@@ -166,15 +184,33 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     update *= sWaveModulusAverageXZ;
 
+    update2 = inverseRelaxationTime * update;
+    update2 *= tauSAverageXZ;
+    Rxz -= update2;
+    update *= onePlusLtauS;
     Sxz += update;
 
+    Rxz *= viscoCoeff2;
+    Sxz += DThalf * Rxz;
+
+    /* Update Syz and Ryz */
+    Syz += DThalf * Ryz;
+    Ryz *= viscoCoeff1;
+    
     update = Dyf * vZ;
     if (useConvPML) {
         ConvPML.apply_vzy(update);
     }
     update *= sWaveModulusAverageYZ;
 
+    update2 = inverseRelaxationTime * update;
+    update2 *= tauSAverageYZ;
+    Ryz -= update2;
+    update *= onePlusLtauS;
     Syz += update;
+
+    Ryz *= viscoCoeff2;
+    Syz += DThalf * Ryz;
 
     /* Apply free surface to stress update */
 //     if (useFreeSurface) {
@@ -192,5 +228,5 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     SourceReceiver.gatherSeismogram(t);
 }
 
-template class KITGPI::ForwardSolver::FD2Dsh<float>;
-template class KITGPI::ForwardSolver::FD2Dsh<double>;
+template class KITGPI::ForwardSolver::FD2Dviscosh<float>;
+template class KITGPI::ForwardSolver::FD2Dviscosh<double>;
