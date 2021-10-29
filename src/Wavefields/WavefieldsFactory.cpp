@@ -27,6 +27,9 @@ typename KITGPI::Wavefields::Wavefields<ValueType>::WavefieldPtr KITGPI::Wavefie
     if (dimension.compare("2d") == 0 && type.compare("sh") == 0) {
         return WavefieldPtr(new FD2Dsh<ValueType>);
     }
+    if (dimension.compare("2d") == 0 && type.compare("viscosh") == 0) {
+        return WavefieldPtr(new FD2Dviscosh<ValueType>);
+    }
 
     // 3D
     if (dimension.compare("3d") == 0 && type.compare("acoustic") == 0) {

@@ -5,6 +5,7 @@
 #include "Wavefields2Dacoustic.hpp"
 #include "Wavefields2Delastic.hpp"
 #include "Wavefields2Dsh.hpp"
+#include "Wavefields2Dviscosh.hpp"
 #include "Wavefields2Dviscoelastic.hpp"
 #include "Wavefields3Dacoustic.hpp"
 #include "Wavefields3Delastic.hpp"
