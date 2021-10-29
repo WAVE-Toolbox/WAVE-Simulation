@@ -18,7 +18,7 @@ typename KITGPI::ForwardSolver::SourceReceiverImpl::SourceReceiverImpl<ValueType
     if (dimension.compare("2d") == 0 && (type.compare("elastic") == 0 || type.compare("viscoelastic") == 0)) {
         return SourceReceiverImplPtr(new FDTD2Delastic<ValueType>(sourceConfig, receiverConfig, wavefieldIN));
     }
-    if (dimension.compare("2d") == 0 && type.compare("sh") == 0) {
+    if (dimension.compare("2d") == 0 && (type.compare("sh") == 0 || type.compare("viscosh") == 0)) {
         return SourceReceiverImplPtr(new FDTD2Dsh<ValueType>(sourceConfig, receiverConfig, wavefieldIN));
     }
 

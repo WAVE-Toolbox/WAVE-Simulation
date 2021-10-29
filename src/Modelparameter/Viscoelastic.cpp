@@ -700,7 +700,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 {
     // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {
-        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density,velocityS,tauS and relaxationFrequency \n");
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density, velocityS, tauS and relaxationFrequency \n");
         this->calcModulusFromVelocity(velocityS, density, sWaveModulus);
         /* Set circular frequency w = 2 * pi * relaxation frequency */
         ValueType w_ref = 2.0 * M_PI * relaxationFrequency;

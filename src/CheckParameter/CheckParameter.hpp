@@ -182,7 +182,7 @@ namespace KITGPI
                 scai::lama::DenseVector<ValueType> vMinTmp;
                 if (isSeismic) {
                     dist = model.getDensity().getDistributionPtr();
-                    vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0) ? model.getVelocityS() : model.getVelocityP();
+                    vMaxTmp = (config.get<std::string>("equationType").compare("sh") == 0 || config.get<std::string>("equationType").compare("viscosh") == 0) ? model.getVelocityS() : model.getVelocityP();
                     vMinTmp = (config.get<std::string>("equationType").compare("acoustic") == 0) ? model.getVelocityP() : model.getVelocityS();
                 } else {
                     dist = model.getMagneticPermeability().getDistributionPtr();

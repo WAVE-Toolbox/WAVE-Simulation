@@ -296,6 +296,12 @@ namespace KITGPI
                 NumVectorPlusVector = 0;
                 NumPMLPerDim = 2;
             }
+            if (dimension.compare("2d") == 0 && type.compare("viscosh") == 0) {
+                NumMatrixVector = 4;
+                NumVectorAssignement = 7;
+                NumVectorPlusVector = 0;
+                NumPMLPerDim = 2;
+            }
 
             // 3D
             if (dimension.compare("3d") == 0 && type.compare("acoustic") == 0) {

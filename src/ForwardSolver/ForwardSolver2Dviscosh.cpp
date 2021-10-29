@@ -36,10 +36,12 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::initForwardSolver(Configurat
     update.allocate(dist);
     update_temp.allocate(dist);
     update2.allocate(dist);
+    onePlusLtauS.allocate(dist);
 
     update.setContextPtr(ctx);
     update_temp.setContextPtr(ctx);
     update2.setContextPtr(ctx);
+    onePlusLtauS.setContextPtr(ctx);
 
     numRelaxationMechanisms = model.getNumRelaxationMechanisms();
     relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
@@ -172,7 +174,6 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     /* ----------------*/
     /*  update stress  */
     /* ----------------*/
-
     /* Update Sxz and Rxz */
     Sxz += DThalf * Rxz;
     Rxz *= viscoCoeff1;
@@ -191,6 +192,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     Sxz += update;
 
     Rxz *= viscoCoeff2;
+//     std::cout<< "test 4" <<std::endl;
     Sxz += DThalf * Rxz;
 
     /* Update Syz and Ryz */
