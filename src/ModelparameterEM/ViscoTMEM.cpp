@@ -196,8 +196,8 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::init(Configuration::Configura
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscotmem) parameter from file...\n");
 
-        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -206,8 +206,8 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::init(Configuration::Configura
         Acquisition::Coordinates<ValueType> regularCoordinates(config.get<IndexType>("NX"), config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<ValueType>("DH"));
         dmemo::DistributionPtr regularDist(new dmemo::BlockDistribution(regularCoordinates.getNGridpoints(), dist->getCommunicatorPtr()));
 
-        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
         init(ctx, regularDist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "reading regular model finished\n\n")
 

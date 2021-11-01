@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD2Delastic<ValueType>::estimateMemory(Configur
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -44,7 +44,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::initForwardSolver(Configurat
     vyy.setContextPtr(ctx);
 }
 
-/*! \brief Initialitation of the boundary conditions (wrapper for prepareBoundaries in forwardsolver.cpp)
+/*! \brief Initialization of the boundary conditions (wrapper for prepareBoundaries in forwardsolver.cpp)
  *
  *
  \param config Configuration

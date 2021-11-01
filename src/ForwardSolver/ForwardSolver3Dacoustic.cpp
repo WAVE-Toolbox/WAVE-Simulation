@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::estimateMemory(Configu
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -49,7 +49,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::resetCPML()
     }
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

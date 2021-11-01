@@ -32,7 +32,7 @@ void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coo
     // refreshModulus();
     this->getSWaveModulus();
     this->getInverseDensity();
-    //sWaveModulus is not needed after avereging. The memory should be freed after calculating the averaging.
+    //sWaveModulus is not needed after averaging. The memory should be freed after calculating the averaging.
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();

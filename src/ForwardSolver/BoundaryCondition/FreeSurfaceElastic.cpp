@@ -46,7 +46,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceElastic<ValueType>::se
     scaleHorizontalUpdate *= temp;
 }
 
-/*! \brief Initialitation of the free surface
+/*! \brief Initialization of the free surface
  *
  *
  \param dist Distribution of wavefields

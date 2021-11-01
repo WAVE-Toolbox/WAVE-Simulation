@@ -212,7 +212,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(Configuration::Config
     } else {
         init(ctx, dist, config.get<ValueType>("velocityP"), config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauP"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
     }
-
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -233,7 +232,6 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(scai::hmemo::Conte
 {
     equationType = "viscoelastic";
     init(ctx, dist, velocityP_const, velocityS_const, rho_const, tauP_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model

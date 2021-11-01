@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::estimateMemory(Config
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -87,7 +87,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::prepareForModelling(Modelp
     CdAverageY = this->getAveragedCd(dielectricPermittivityAverageY, tauDielectricPermittivityAverageY, numRelaxationMechanisms, tauElectricDisplacement, DT);
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

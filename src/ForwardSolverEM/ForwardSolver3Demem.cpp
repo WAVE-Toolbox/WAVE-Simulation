@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD3Demem<ValueType>::estimateMemory(Configurati
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -41,7 +41,7 @@ void KITGPI::ForwardSolver::FD3Demem<ValueType>::initForwardSolver(Configuration
     DT_temp = DT;
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

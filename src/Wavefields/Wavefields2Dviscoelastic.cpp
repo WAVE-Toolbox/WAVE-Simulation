@@ -72,6 +72,9 @@ void KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::write(IndexType snapType, 
         IO::writeVector(Sxx, fileName + ".Sxx." + timeStep, fileFormat);
         IO::writeVector(Syy, fileName + ".Syy." + timeStep, fileFormat);
         IO::writeVector(Sxy, fileName + ".Sxy." + timeStep, fileFormat);
+        IO::writeVector(Rxx, fileName + ".Rxx." + timeStep, fileFormat);
+        IO::writeVector(Ryy, fileName + ".Ryy." + timeStep, fileFormat);
+        IO::writeVector(Rxy, fileName + ".Rxy." + timeStep, fileFormat);
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector());
@@ -243,6 +246,9 @@ KITGPI::Wavefields::FD2Dviscoelastic<ValueType> KITGPI::Wavefields::FD2Dviscoela
     result.Sxx = this->Sxx * rhs;
     result.Syy = this->Syy * rhs;
     result.Sxy = this->Sxy * rhs;
+    result.Rxx = this->Rxx * rhs;
+    result.Ryy = this->Ryy * rhs;
+    result.Rxy = this->Rxy * rhs;
     return result;
 }
 
@@ -281,6 +287,9 @@ KITGPI::Wavefields::FD2Dviscoelastic<ValueType> KITGPI::Wavefields::FD2Dviscoela
     result.Sxx = this->Sxx * rhs.Sxx;
     result.Syy = this->Syy * rhs.Syy;
     result.Sxy = this->Sxy * rhs.Sxy;
+    result.Rxx = this->Rxx * rhs.Rxx;
+    result.Ryy = this->Ryy * rhs.Ryy;
+    result.Rxy = this->Rxy * rhs.Rxy;
     return result;
 }
 

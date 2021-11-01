@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD2Dsh<ValueType>::estimateMemory(Configuration
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -40,7 +40,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::initForwardSolver(Configuration::
     update_temp.setContextPtr(ctx);
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

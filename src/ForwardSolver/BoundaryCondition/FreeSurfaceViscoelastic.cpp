@@ -89,7 +89,7 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurfaceViscoelastic<ValueType
     scaleRelaxationHorizontalUpdate /= relaxationTime;
 }
 
-/*! \brief Initialitation of the free surface
+/*! \brief Initialization of the free surface
  *
  *
  \param dist Distribution of wavefields

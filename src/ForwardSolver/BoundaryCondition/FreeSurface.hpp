@@ -27,7 +27,7 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface(){};
 
-                /*! \brief Initialitation of the free surface
+                /*! \brief Initialization of the free surface
                  *
                  *
                  \param dist Distribution of wavefields

@@ -32,7 +32,7 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::prepareForModelling(Acquisition
     // refreshModulus();
     this->getSWaveModulus();
     this->getInverseDensity();
-    //sWaveModulus is not needed after avereging. The memory should be freed after calculating the averaging.
+    //sWaveModulus is not needed after averaging. The memory should be freed after calculating the averaging.
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();
@@ -172,13 +172,14 @@ KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(Configuration::Configuration
 template <typename ValueType>
 void KITGPI::Modelparameter::ViscoSH<ValueType>::init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates)
 {
-    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for SH, variable grid is not available here!")
+    SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for ViscoSH, variable grid is not available here!")
     
     if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (ViscoSH) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -201,7 +202,6 @@ KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(scai::hmemo::ContextPtr ctx,
 {
     equationType = "viscosh";
     init(ctx, dist, velocityS_const, rho_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
@@ -464,8 +464,8 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::calculateAveraging()
         // sxz and syz are on the same spot as vx and vy in acoustic modeling
         this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageXZ, averageMatrixX);
         this->calcAveragedSWaveModulus(sWaveModulus, sWaveModulusAverageYZ, averageMatrixY);
-        this->calcAveragedSWaveModulus(tauS, tauSAverageXZ, averageMatrixX);
-        this->calcAveragedSWaveModulus(tauS, tauSAverageYZ, averageMatrixY);
+        this->calcAveragedParameter(tauS, tauSAverageXZ, averageMatrixX);
+        this->calcAveragedParameter(tauS, tauSAverageYZ, averageMatrixY);
         dirtyFlagAveraging = false;
     }
 }

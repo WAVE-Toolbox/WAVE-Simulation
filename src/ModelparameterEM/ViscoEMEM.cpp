@@ -193,8 +193,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(Configuration::Configura
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoemem) parameter from file...\n");
 
-        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
+        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 

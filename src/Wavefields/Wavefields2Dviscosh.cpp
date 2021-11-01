@@ -32,8 +32,8 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::init(scai::hmemo::ContextPtr ct
     this->initWavefield(VZ, ctx, dist);
     this->initWavefield(Sxz, ctx, dist);
     this->initWavefield(Syz, ctx, dist);
-    this->initWavefield(Ryz, ctx, dist);
     this->initWavefield(Rxz, ctx, dist);
+    this->initWavefield(Ryz, ctx, dist);
 }
 
 template <typename ValueType>
@@ -67,6 +67,8 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::write(IndexType snapType, std::
     case 2:
         IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
         IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
+        IO::writeVector(Rxz, fileName + ".Rxz." + timeStep, fileFormat);
+        IO::writeVector(Ryz, fileName + ".Ryz." + timeStep, fileFormat);
         break;
     case 3: {
         COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dviscosh.");
@@ -94,8 +96,8 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::resetWavefields()
     this->resetWavefield(VZ);
     this->resetWavefield(Sxz);
     this->resetWavefield(Syz);
-    this->resetWavefield(Ryz);
     this->resetWavefield(Rxz);
+    this->resetWavefield(Ryz);
 }
 
 /*! \brief Get numDimension (2)
@@ -212,6 +214,8 @@ KITGPI::Wavefields::FD2Dviscosh<ValueType> KITGPI::Wavefields::FD2Dviscosh<Value
     result.VZ = this->VZ * rhs;
     result.Sxz = this->Sxz * rhs;
     result.Syz = this->Syz * rhs;
+    result.Rxz = this->Rxz * rhs;
+    result.Ryz = this->Ryz * rhs;
     return result;
 }
 
@@ -247,6 +251,8 @@ KITGPI::Wavefields::FD2Dviscosh<ValueType> KITGPI::Wavefields::FD2Dviscosh<Value
     result.VZ = this->VZ * rhs.VZ;
     result.Sxz = this->Sxz * rhs.Sxz;
     result.Syz = this->Syz * rhs.Syz;
+    result.Rxz = this->Rxz * rhs.Rxz;
+    result.Ryz = this->Ryz * rhs.Ryz;
     return result;
 }
 

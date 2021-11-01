@@ -18,7 +18,7 @@ ValueType KITGPI::ForwardSolver::ForwardSolver<ValueType>::estimateBoundaryMemor
     return 0;
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::estimateMemory(Config
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  \param config Configuration
  \param derivatives Derivatives matrices
@@ -43,7 +43,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::initForwardSolver(Configur
     DT_temp = DT;
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration

@@ -1,7 +1,7 @@
 #include "FreeSurfaceSH.hpp"
 using namespace scai;
 
-/*! \brief Initialitation of the free surface
+/*! \brief Initialization of the free surface
  *
  \param dist Distribution of wavefields
  \param derivatives Derivative class

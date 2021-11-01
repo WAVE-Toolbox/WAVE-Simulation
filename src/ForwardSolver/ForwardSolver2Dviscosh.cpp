@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::estimateMemory(Configur
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  *
  \param config Configuration
@@ -51,7 +51,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::initForwardSolver(Configurat
     DThalf = DT / 2.0;
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration
@@ -184,7 +184,8 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     }
 
     update *= sWaveModulusAverageXZ;
-
+//     std::cout<< "inverseRelaxationTime = " << inverseRelaxationTime <<std::endl;
+//     std::cout<< "tauSAverageXZ.l2Norm() = " << tauSAverageXZ.l2Norm() <<std::endl;
     update2 = inverseRelaxationTime * update;
     update2 *= tauSAverageXZ;
     Rxz -= update2;
@@ -192,7 +193,6 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     Sxz += update;
 
     Rxz *= viscoCoeff2;
-//     std::cout<< "test 4" <<std::endl;
     Sxz += DThalf * Rxz;
 
     /* Update Syz and Ryz */

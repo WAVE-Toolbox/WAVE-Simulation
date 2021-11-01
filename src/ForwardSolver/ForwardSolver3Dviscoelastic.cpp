@@ -7,7 +7,7 @@ ValueType KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::estimateMemory(Con
     return (this->estimateBoundaryMemory(config, dist, modelCoordinates, DampingBoundary, ConvPML));
 }
 
-/*! \brief Initialitation of the ForwardSolver
+/*! \brief Initialization of the ForwardSolver
  *
  \param config Configuration
  \param derivatives Derivatives matrices
@@ -60,7 +60,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::initForwardSolver(Confi
     DThalf = DT / 2.0;
 }
 
-/*! \brief Initialitation of the boundary conditions
+/*! \brief Initialization of the boundary conditions
  *
  *
  \param config Configuration
