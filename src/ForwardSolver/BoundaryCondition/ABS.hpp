@@ -30,7 +30,7 @@ namespace KITGPI
 
                 bool active; //!< Bool if ABS method is active
 
-                //! \brief Initializsation of the Absorbing-Coefficient matrix
+                //! \brief Initialization of the Absorbing-Coefficient matrix
                 /*!
                  *
                  \param dist Distribution of the wavefield

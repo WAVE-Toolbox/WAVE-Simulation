@@ -157,7 +157,7 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::CPMLEM3D<ValueType>::estimat
     return(sum * sizeof(ValueType) * numVectorsPerDim / (1024 * 1024));
 }
 
-//! \brief Initializsation of the absorbing coefficient matrix
+//! \brief Initialization of the absorbing coefficient matrix
 /*!
  *
  \param dist Distribution of the wavefield

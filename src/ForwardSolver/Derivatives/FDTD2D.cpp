@@ -145,7 +145,7 @@ ValueType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(
 
     return (this->getMemoryUsage(dist, modelCoordinates, getNumDMatrices(), getNumInterpMatrices()));
 }
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield
@@ -155,7 +155,6 @@ ValueType KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::estimateMemory(
 template <typename ValueType>
 void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm)
 {
-
     SCAI_REGION("Derivatives.FDTD2D.initializeMatricesConst")
 
     HOST_PRINT(comm, "", "Initialization of the matrices Dxf, Dyf, Dxb and Dyb \n");
@@ -183,7 +182,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield
@@ -232,7 +231,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD2D<ValueType>::initializeMatrices(s
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield

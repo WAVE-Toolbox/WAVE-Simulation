@@ -140,7 +140,7 @@ ValueType KITGPI::ForwardSolver::BoundaryCondition::ABS3D<ValueType>::estimateMe
     return size;
 }
 
-//! \brief Initializsation of the absorbing coefficient matrix
+//! \brief Initialization of the absorbing coefficient matrix
 /*!
  *
  \param dist Distribution of the wavefield

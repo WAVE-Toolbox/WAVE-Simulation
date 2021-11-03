@@ -172,6 +172,8 @@ namespace KITGPI
 
                 //! \brief Getter method for spatial FD-order
                 scai::IndexType getSpatialFDorder() const;
+                
+                KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &operator=(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &rhs);
 
               protected:
                 virtual void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, ValueType DH, scai::dmemo::CommunicatorPtr comm) = 0;

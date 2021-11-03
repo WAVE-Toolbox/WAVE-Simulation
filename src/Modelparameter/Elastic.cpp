@@ -546,7 +546,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calcPetrophysicsFromWaveModulus
     this->setPorosity(porositytemp);
 }
 
-//! \brief Initializsation of the Averaging matrices
+//! \brief Initialization of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield

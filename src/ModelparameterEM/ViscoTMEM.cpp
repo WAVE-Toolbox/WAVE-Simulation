@@ -399,7 +399,7 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::write(std::string filename, s
     }
 };
 
-//! \brief Initializsation of the Averaging matrices
+//! \brief Initialization of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield

@@ -135,6 +135,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     //assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
+    IndexType Xmin = 0;
+    IndexType Xmax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -148,15 +150,30 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
             const auto layer = modelCoordinates.getLayer(coordinate);
             spatialFDorder = spatialFDorderVec[layer];
         }
-
+        
         for (j = 0; j < spatialFDorder; j++) {
 
-            if (!modelCoordinates.locatedOnInterface(coordinate))
+            if (!modelCoordinates.locatedOnInterface(coordinate)) {
                 X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
-            else
+                Xmin = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2 + 1);
+                Xmax = coordinate.x + modelCoordinates.getDHFactor(coordinate) * spatialFDorder / 2;
+            } else {
                 X = coordinate.x - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                Xmin = coordinate.x - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2 + 1);
+                Xmax = coordinate.x - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * spatialFDorder / 2;
+            }
 
-            if ((X >= 0) && (X < modelCoordinates.getNX())) {
+            if (Xmin < 0) {
+                spatialFDorder += 2 * Xmin; // the minimum of spatialFDorder is 2.
+                j--;
+            } else if (Xmax >= modelCoordinates.getNX()) {
+                spatialFDorder -= 2 * (Xmax - modelCoordinates.getNX() + 1); // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.x -= 1;
+                }
+                j--;
+            } else if ((Xmin >= 0) && (Xmax < modelCoordinates.getNX())) {
                 columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
@@ -165,6 +182,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxf(Acquisi
 
     DxfSparse = lama::zero<SparseFormat>(dist, dist);
     DxfSparse.fillFromAssembly(assembly);
+//     DxfSparse.writeToFile("model/DxfSparse.mtx");
 }
 
 //! \brief Calculate Dyf matrix
@@ -198,6 +216,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
+    IndexType Ymin = 0;
+    IndexType Ymax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
     ValueType DH = 0;
@@ -234,8 +254,20 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
         for (j = 0; j < spatialFDorder; j++) {
             Y = coordinate.y + dhFactor * (j - spatialFDorder / 2 + 1);
-
-            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+            Ymin = coordinate.y + dhFactor * (- spatialFDorder / 2 + 1);
+            Ymax = coordinate.y + dhFactor * spatialFDorder / 2;
+            
+            if (Ymin < 0) {
+                spatialFDorder += 2 * Ymin; // the minimum of spatialFDorder is 2.
+                j--;
+            } else if (Ymax >= modelCoordinates.getNY()) {
+                spatialFDorder -= 2 * (Ymax - modelCoordinates.getNY() + 1); // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.y -= 1;
+                }
+                j--;
+            } else if ((Ymin >= 0) && (Ymax < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / DH);
             }
@@ -244,6 +276,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyf(Acquisi
 
     DyfSparse = lama::zero<SparseFormat>(dist, dist);
     DyfSparse.fillFromAssembly(assembly);
+//     DyfSparse.writeToFile("model/DyfSparse.mtx");
 }
 
 //! \brief Calculate Dzf matrix
@@ -277,6 +310,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     // assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
+    IndexType Zmin = 0;
+    IndexType Zmax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -293,12 +328,27 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzf(Acquisi
 
         for (j = 0; j < spatialFDorder; j++) {
 
-            if (!modelCoordinates.locatedOnInterface(coordinate))
+            if (!modelCoordinates.locatedOnInterface(coordinate)) {
                 Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
-            else
+                Zmin = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2 + 1);
+                Zmax = coordinate.z + modelCoordinates.getDHFactor(coordinate) * spatialFDorder / 2;
+            } else {
                 Z = coordinate.z - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2 + 1);
+                Zmin = coordinate.z - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2 + 1);
+                Zmax = coordinate.z - dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * spatialFDorder / 2;
+            }
 
-            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
+            if (modelCoordinates.getNZ() > 0 && Zmin < 0) {
+                spatialFDorder += 2 * Zmin; // the minimum of spatialFDorder is 2.
+                j--;
+            } else if (modelCoordinates.getNZ() > 0 && Zmax >= modelCoordinates.getNZ()) {
+                spatialFDorder -= 2 * (Zmax - modelCoordinates.getNZ() + 1); // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.z -= 1;
+                }
+                j--;
+            } else if ((Zmin >= 0) && (Zmax < modelCoordinates.getNZ())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
@@ -377,6 +427,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyfFreeSurf
 
     DyfFreeSurfaceSparse = lama::zero<SparseFormat>(dist, dist);
     DyfFreeSurfaceSparse.fillFromAssembly(assembly);
+//     DyfFreeSurfaceSparse.writeToFile("model/DyfFreeSurfaceSparse.mtx");
 
     if (useHybridFreeSurface) {
         // define the stencil matrix for hybrid matrix
@@ -661,12 +712,14 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     //assembly.reserve(ownedIndexes.size() * 6);
     IndexType X = 0;
+    IndexType Xmin = 0;
+    IndexType Xmax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
 
     for (IndexType ownedIndex : hmemo::hostReadAccess(ownedIndexes)) {
 
-        Acquisition::coordinate3D const coordinate = modelCoordinates.index2coordinate(ownedIndex);
+        Acquisition::coordinate3D coordinate = modelCoordinates.index2coordinate(ownedIndex);
         const IndexType &dhFactor = modelCoordinates.getDHFactor(coordinate);
 
         auto spatialFDorder = spatialFDorderVec.at(0);
@@ -679,10 +732,25 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
 
             if (!modelCoordinates.locatedOnInterface(coordinate)) {
                 X = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                Xmin = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2);
+                Xmax = coordinate.x + modelCoordinates.getDHFactor(coordinate) * (spatialFDorder / 2 - 1);
             } else {
                 X = coordinate.x + (dhFactor / 3) + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
+                Xmin = coordinate.x + (dhFactor / 3) + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2);
+                Xmax = coordinate.x + (dhFactor / 3) + modelCoordinates.getDHFactor(coordinate) * (spatialFDorder / 2 - 1);
             }
-            if ((X >= 0) && (X < modelCoordinates.getNX())) {
+            
+            if (Xmin < 0) {
+                spatialFDorder += 2 * Xmin; // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.x += 1;
+                }
+                j--;
+            } else if (Xmax >= modelCoordinates.getNX()) {
+                spatialFDorder -= 2 * (Xmax - modelCoordinates.getNX() + 1); // the minimum of spatialFDorder is 2.
+                j--;
+            } else if ((Xmin >= 0) && (Xmax < modelCoordinates.getNX())) {
                 columnIndex = modelCoordinates.coordinate2index(X, coordinate.y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
@@ -691,6 +759,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDxb(Acquisi
 
     DxbSparse = lama::zero<SparseFormat>(dist, dist);
     DxbSparse.fillFromAssembly(assembly);
+//     DxbSparse.writeToFile("model/DxbSparse.mtx");
 }
 
 //! \brief Calculate Dyb matrix
@@ -709,6 +778,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Y = 0;
+    IndexType Ymin = 0;
+    IndexType Ymax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -737,6 +808,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
         for (j = 0; j < spatialFDorder; j++) {
 
             Y = coordinate.y + dhFactor * (j - spatialFDorder / 2);
+            Ymin = coordinate.y + dhFactor * (- spatialFDorder / 2);
+            Ymax = coordinate.y + dhFactor * (spatialFDorder / 2 - 1);
 
             // apply coordinate correction in the fine staggered grid (staggered in y-direction, coordinates are only correct for full grid points)
             if (modelCoordinates.locatedOnInterface(coordinate)) {
@@ -747,7 +820,17 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
                     Y += modelCoordinates.getDHFactor(layer + 1);
             }
 
-            if ((Y >= 0) && (Y < modelCoordinates.getNY())) {
+            if (Ymin < 0) {
+                spatialFDorder += 2 * Ymin; // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.y += 1;
+                }
+                j--;
+            } else if (Ymax >= modelCoordinates.getNY()) {
+                spatialFDorder -= 2 * (Ymax - modelCoordinates.getNY() + 1); // the minimum of spatialFDorder is 2.
+                j--;
+            } else if ((Ymin >= 0) && (Ymax < modelCoordinates.getNY())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, Y, coordinate.z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
@@ -756,6 +839,7 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDyb(Acquisi
 
     DybSparse = lama::zero<SparseFormat>(dist, dist);
     DybSparse.fillFromAssembly(assembly);
+//     DybSparse.writeToFile("model/DybSparse.mtx");
 }
 
 //! \brief Calculate Dyf sparse matrix
@@ -1100,6 +1184,8 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
     lama::MatrixAssembly<ValueType> assembly;
     //assembly.reserve(ownedIndexes.size() * 6);
     IndexType Z = 0;
+    IndexType Zmin = 0;
+    IndexType Zmax = 0;
     IndexType columnIndex = 0;
     IndexType j = 0;
 
@@ -1117,12 +1203,27 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::calcDzb(Acquisi
 
         for (j = 0; j < spatialFDorder; j++) {
 
-            if (!modelCoordinates.locatedOnInterface(coordinate))
+            if (!modelCoordinates.locatedOnInterface(coordinate)) {
                 Z = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
-            else
+                Zmin = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2);
+                Zmax = coordinate.z + modelCoordinates.getDHFactor(coordinate) * (spatialFDorder / 2 - 1);
+            } else {
                 Z = coordinate.z + dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (j - spatialFDorder / 2);
-
-            if ((Z >= 0) && (Z < modelCoordinates.getNZ())) {
+                Zmin = coordinate.z + dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (- spatialFDorder / 2);
+                Zmax = coordinate.z + dhFactor / 3 + modelCoordinates.getDHFactor(coordinate) * (spatialFDorder / 2 - 1);
+            }
+            
+            if (modelCoordinates.getNZ() > 0 && Zmin < 0) {
+                spatialFDorder += 2 * Zmin; // the minimum of spatialFDorder is 0.
+                if (spatialFDorder == 0) {
+                    spatialFDorder = 2;
+                    coordinate.z += 1;
+                }
+                j--;
+            } else if (modelCoordinates.getNZ() > 0 && Zmax >= modelCoordinates.getNZ()) {
+                spatialFDorder -= 2 * (Zmax - modelCoordinates.getNZ() + 1); // the minimum of spatialFDorder is 2.
+                j--;
+            } else if ((Zmin >= 0) && (Zmax < modelCoordinates.getNZ())) {
                 columnIndex = modelCoordinates.coordinate2index(coordinate.x, coordinate.y, Z);
                 assembly.push(ownedIndex, columnIndex, stencilFDmap[spatialFDorder].values()[j] / modelCoordinates.getDH(coordinate));
             }
@@ -1938,6 +2039,23 @@ void KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::setFDCoef()
                               1655620175512543.0 / 4611686018427387904.0,
                               -6448335830095439.0 / 295147905179352825856.0};
     stencilFDmap[12] = common::Stencil1D<ValueType>(12, FD12);
+}
+
+/*! \brief Overloading = Operation
+ *
+ \param rhs Derivatives which is copied.
+ */
+template <typename ValueType>
+KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> &KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType>::operator=(KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &rhs)
+{
+    Dxf = rhs.Dxf;
+    Dyf = rhs.Dyf;
+    Dzf = rhs.Dzf;
+    DxfSparse = rhs.DxfSparse;
+    DyfSparse = rhs.DyfSparse;
+    DzfSparse = rhs.DzfSparse;
+    
+    return *this;
 }
 
 template class KITGPI::ForwardSolver::Derivatives::Derivatives<float>;

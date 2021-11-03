@@ -407,7 +407,7 @@ void KITGPI::Modelparameter::SH<ValueType>::calcPetrophysicsFromWaveModulus()
     this->setPorosity(porositytemp);
 }
 
-//! \brief Initializsation of the Averaging matrices
+//! \brief Initialization of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield
@@ -417,7 +417,6 @@ void KITGPI::Modelparameter::SH<ValueType>::calcPetrophysicsFromWaveModulus()
 template <typename ValueType>
 void KITGPI::Modelparameter::SH<ValueType>::initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm)
 {
-
     if (dirtyFlagAveraging) {
         SCAI_REGION("Modelparameter.SH.initializeMatrices")
         HOST_PRINT(comm, "", "Preparation of the Average Matrix\n");

@@ -171,7 +171,7 @@ ValueType KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::estimateMemory(
     return (this->getMemoryUsage(dist, modelCoordinates, getNumDMatrices(), getNumInterpMatrices()));
 }
 
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield
@@ -218,7 +218,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield
@@ -300,7 +300,7 @@ void KITGPI::ForwardSolver::Derivatives::FDTD3D<ValueType>::initializeMatrices(s
     //HOST_PRINT(comm, "", "Finished with initialization of the matrices!\n");
 }
 
-//! \brief Initializsation of the derivative matrices
+//! \brief Initialization of the derivative matrices
 /*!
  *
  \param dist Distribution of the wavefield

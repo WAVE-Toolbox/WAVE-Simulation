@@ -22,6 +22,7 @@
 #endif
 
 #include "../Common/Common.hpp"
+#include <scai/common/Settings.hpp>
 #include <scai/common/ContextType.hpp>
 #include <scai/dmemo/CommunicatorStack.hpp>
 #include <scai/partitioning/Partitioning.hpp>
@@ -32,18 +33,19 @@ namespace KITGPI
 {
     //! \brief Partitioning namespace
     namespace Partitioning
-    {
+    {                
         /*! \brief inter node distribution define the grid topology by sizes NX, NY, and NZ from configuration
         *Attention: LAMA uses row-major indexing while WAVE-Simulation uses column-major, so switch dimensions, x-dimension has stride 1 z-dimension has stride 2 y-dimension has stride 3
         \param config configuration object
         \param commShot communicator of a shot domain
         */
-        // template <typename ValueType>
+        // template <typename ValueType>        
         IndexType getShotDomain(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll)
         {
             /* Definition of shot domains */
             IndexType shotDomainDefinition = config.get<int>("ShotDomainDefinition");
             IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
+            Common::checkNumShotDomains(numShotDomains, commAll);
             IndexType shotDomain = 0;                                           // will contain the domain to which this processor belongs
             if (shotDomainDefinition == 0) {
                 // Definition by number of shot domains

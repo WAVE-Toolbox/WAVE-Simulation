@@ -159,6 +159,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, " ========== "<< dimension <<" "<< equationType <<" Memory Estimation: ===========\n\n")
     ValueType memDerivatives = derivatives->estimateMemory(config, dist, modelCoordinates);
     IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
+    Common::checkNumShotDomains(numShotDomains, commAll);
     ValueType memWavefileds = wavefields->estimateMemory(dist);
     ValueType memModel = model->estimateMemory(dist);
     ValueType memSolver = solver->estimateMemory(config, dist, modelCoordinates);

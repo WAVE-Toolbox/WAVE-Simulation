@@ -530,7 +530,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcPetrophysicsFromWaveMo
     this->setPorosity(porositytemp);
 }
 
-//! \brief Initializsation of the Averaging matrices
+//! \brief Initialization of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield

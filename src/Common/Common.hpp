@@ -15,6 +15,7 @@
 #include "../Configuration/Configuration.hpp"
 #include "Hilbert.hpp"
 #include "medianfilter.hpp"
+#include "HostPrint.hpp"
 
 using namespace scai;
 namespace KITGPI
@@ -457,6 +458,18 @@ namespace KITGPI
 //             vecter1D = lama::cast<ValueType>(result);
             for (int i = 0; i < N; i++) {
                 vecter1D[i] = *(result + i);
+            }
+        }
+        
+        /*! \brief Adjust numShotDomains if commAll->getSize() < numShotDomains
+        \param numShotDomains number of shot domains
+        \param commAll the main communicator
+        */     
+        inline void checkNumShotDomains(IndexType &numShotDomains, scai::dmemo::CommunicatorPtr commAll)
+        {
+            if (commAll->getSize() < numShotDomains) {
+                HOST_PRINT(commAll, "\n NumShotDomains is set to be the number of MPI processes (" << commAll->getSize() << ")\n");
+                numShotDomains = commAll->getSize();
             }
         }
     }

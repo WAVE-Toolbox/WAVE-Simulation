@@ -375,7 +375,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calcPetrophysicsFromWaveModulu
  
 }
 
-//! \brief Initializsation of the Averaging matrices
+//! \brief Initialization of the Averaging matrices
 /*!
  *
  \param dist Distribution of the wavefield
