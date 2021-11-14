@@ -19,28 +19,36 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD2Dviscoemem<ValueType>::getContext
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dviscoemem<ValueType>::FD2Dviscoemem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD2Dviscoemem<ValueType>::FD2Dviscoemem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "viscoemem";
     numDimension = 2;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(HZ, ctx, dist);
     this->initWavefield(EX, ctx, dist);
     this->initWavefield(EY, ctx, dist);
-    this->initWavefield(RX, ctx, dist);
-    this->initWavefield(RY, ctx, dist);
+    
+    numRelaxationMechanisms = numRelaxationMechanisms_in;
+    scai::lama::DenseVector<ValueType> temp;
+    this->initWavefield(temp, ctx, dist);
+    RX.clear();
+    RY.clear();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX.push_back(temp);
+        RY.push_back(temp);
+    }
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD2Dviscoemem<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD2Dviscoemem<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 4 Wavefields in 2D viscoemem modeling: EX, RX, EY, RY, Hz */
-    IndexType numWavefields = 5;
+    IndexType numWavefields = 3 + 2 * numRelaxationMechanisms_in;
     return (this->getMemoryUsage(dist, numWavefields));
 }
 
@@ -91,8 +99,11 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::resetWavefields()
     this->resetWavefield(HZ);
     this->resetWavefield(EX);
     this->resetWavefield(EY);
-    this->resetWavefield(RX);
-    this->resetWavefield(RY);
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        this->resetWavefield(RX[l]);
+        this->resetWavefield(RY[l]);
+    }
 }
 
 /*! \brief Get numDimension (2)
@@ -136,7 +147,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoemem<ValueType>
 
 //! \brief Not valid in the 2Dviscoemem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscoemem<ValueType>::getRefRZ()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dviscoemem<ValueType>::getRefRZ()
 {
     COMMON_THROWEXCEPTION("There is no RZ wavefield in the 2Dviscoemem case.")
     return (RZ);
@@ -153,8 +164,11 @@ KITGPI::Wavefields::FD2Dviscoemem<ValueType> KITGPI::Wavefields::FD2Dviscoemem<V
     result.HZ = this->HZ * rhs;
     result.EX = this->EX * rhs;
     result.EY = this->EY * rhs;
-    result.RX = this->RX * rhs;
-    result.RY = this->RY * rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        result.RX[l] = this->RX[l] * rhs;
+        result.RY[l] = this->RY[l] * rhs;
+    }
+    
     return result;
 }
 
@@ -190,8 +204,11 @@ KITGPI::Wavefields::FD2Dviscoemem<ValueType> KITGPI::Wavefields::FD2Dviscoemem<V
     result.HZ = this->HZ * rhs.HZ;
     result.EX = this->EX * rhs.EX;
     result.EY = this->EY * rhs.EY;
-    result.RX = this->RX * rhs.RX;
-    result.RY = this->RY * rhs.RY;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        result.RX[l] = this->RX[l] * rhs.RX[l];
+        result.RY[l] = this->RY[l] * rhs.RY[l];
+    }
+    
     return result;
 }
 
@@ -229,8 +246,10 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::minusAssign(KITGPI::Wavefield
     HZ -= rhs.getRefHZ();
     EX -= rhs.getRefEX();
     EY -= rhs.getRefEY();
-    RX -= rhs.getRefRX();
-    RY -= rhs.getRefRY();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX[l] -= rhs.getRefRX()[l];
+        RY[l] -= rhs.getRefRY()[l];
+    }
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -243,8 +262,10 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::plusAssign(KITGPI::Wavefields
     HZ += rhs.getRefHZ();
     EX += rhs.getRefEX();
     EY += rhs.getRefEY();
-    RX += rhs.getRefRX();
-    RY += rhs.getRefRY();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX[l] += rhs.getRefRX()[l];
+        RY[l] += rhs.getRefRY()[l];
+    }
 }
 
 /*! \brief function for overloading *= Operation (called in base class)
@@ -257,8 +278,10 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::timesAssign(ValueType rhs)
     HZ *= rhs;
     EX *= rhs;
     EY *= rhs;
-    RX *= rhs;
-    RY *= rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX[l] *= rhs;
+        RY[l] *= rhs;
+    }
 }
 
 /*! \brief apply model transform to wavefields in inversion
@@ -271,8 +294,10 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::applyTransform(scai::lama::CS
     HZ = lhs * rhs.getRefHZ();
     EX = lhs * rhs.getRefEX();
     EY = lhs * rhs.getRefEY();
-    RX = lhs * rhs.getRefRX();
-    RY = lhs * rhs.getRefRY();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX[l] = lhs * rhs.getRefRX()[l];
+        RY[l] = lhs * rhs.getRefRY()[l];
+    }
 }
 
 template class KITGPI::Wavefields::FD2Dviscoemem<double>;

@@ -78,16 +78,16 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT)
 {
-    auto const &electricConductivityOptical = model.getElectricConductivityOptical();
-    auto const &dielectricPermittivityOptical = model.getDielectricPermittivityOptical();
+    auto const &electricConductivityEffectiveOptical = model.getElectricConductivityEffectiveOptical();
+    auto const &dielectricPermittivityEffectiveOptical = model.getDielectricPermittivityEffectiveOptical();
     auto const &dielectricPermittivity = model.getDielectricPermittivity();
     auto const &tauDielectricPermittivity = model.getTauDielectricPermittivity();
     ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
     scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
 
-    CaAverageZ = this->getAveragedCa(dielectricPermittivityOptical, electricConductivityOptical, DT);
+    CaAverageZ = this->getAveragedCa(dielectricPermittivityEffectiveOptical, electricConductivityEffectiveOptical, DT);
     
-    CbAverageZ = this->getAveragedCb(dielectricPermittivityOptical, electricConductivityOptical, DT);
+    CbAverageZ = this->getAveragedCb(dielectricPermittivityEffectiveOptical, electricConductivityEffectiveOptical, DT);
     
     Cc = this->getCc(tauElectricDisplacement, DT);
     
@@ -132,7 +132,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     auto &eZ = wavefield.getRefEZ();  
     auto &rZ = wavefield.getRefRZ();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();
     auto const &Dyf = derivatives.getDyf();
@@ -165,9 +165,9 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     /*  rZ */
     /* ----------------*/
     // numRelaxationMechanisms = 1
-    update = Cc * rZ;
+    update = Cc * rZ[0];
     update_temp = CdAverageZ * eZ;
-    rZ = update_temp + update;
+    rZ[0] = update_temp + update;
         
     /* ----------------*/
     /*  ez */
@@ -179,7 +179,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hxy(update_temp);
     }
     update -= update_temp;
-    update_temp = -DT_temp * rZ;
+    update_temp = -DT_temp * rZ[0];
     update += update_temp;
     update *= CbAverageZ;   
     update_temp = CaAverageZ * eZ;

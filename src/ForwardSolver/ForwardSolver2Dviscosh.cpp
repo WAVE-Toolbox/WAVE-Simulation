@@ -44,10 +44,16 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::initForwardSolver(Configurat
     onePlusLtauS.setContextPtr(ctx);
 
     numRelaxationMechanisms = model.getNumRelaxationMechanisms();
-    relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
-    inverseRelaxationTime = 1.0 / relaxationTime;
-    viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));
-    viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));
+    viscoCoeff1.clear();
+    viscoCoeff2.clear();
+    relaxationTime.clear();
+    inverseRelaxationTime.clear();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        relaxationTime.push_back(1.0 / (2.0 * M_PI * model.getRelaxationFrequency()[l])); // = 1 / ( 2 * Pi * f_relax )
+        inverseRelaxationTime.push_back(1.0 / relaxationTime[l]);
+        viscoCoeff1.push_back(1.0 - DT / (2.0 * relaxationTime[l]));
+        viscoCoeff2.push_back(1.0 / (1.0 + DT / (2.0 * relaxationTime[l])));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
+    }
     DThalf = DT / 2.0;
 }
 
@@ -134,8 +140,10 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     auto &Syz = wavefield.getRefSyz();
     auto &Ryz = wavefield.getRefRyz();
     auto &Rxz = wavefield.getRefRxz();
+//     std::cout<< "Rxz[l] = " << Rxz[l] <<std::endl;
+//     std::cout<< "viscoCoeff1[l] = " << viscoCoeff1[l] <<std::endl;
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();
     auto const &Dyf = derivatives.getDyf();
@@ -174,46 +182,48 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     /* ----------------*/
     /*  update stress  */
     /* ----------------*/
-    /* Update Sxz and Rxz */
-    Sxz += DThalf * Rxz;
-    Rxz *= viscoCoeff1;
     
+    /* Update Sxz and Rxz */
     update = Dxf * vZ;
     if (useConvPML) {
         ConvPML.apply_vzx(update);
     }
-
     update *= sWaveModulusAverageXZ;
-//     std::cout<< "inverseRelaxationTime = " << inverseRelaxationTime <<std::endl;
-//     std::cout<< "tauSAverageXZ.l2Norm() = " << tauSAverageXZ.l2Norm() <<std::endl;
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageXZ;
-    Rxz -= update2;
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Sxz += DThalf * Rxz[l];
+        Rxz[l] *= viscoCoeff1[l];
+        
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauSAverageXZ;
+        Rxz[l] -= update2;
+
+        Rxz[l] *= viscoCoeff2[l];
+        Sxz += DThalf * Rxz[l];
+    }
     update *= onePlusLtauS;
     Sxz += update;
 
-    Rxz *= viscoCoeff2;
-    Sxz += DThalf * Rxz;
-
     /* Update Syz and Ryz */
-    Syz += DThalf * Ryz;
-    Ryz *= viscoCoeff1;
-    
     update = Dyf * vZ;
     if (useConvPML) {
         ConvPML.apply_vzy(update);
     }
     update *= sWaveModulusAverageYZ;
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Syz += DThalf * Ryz[l];
+        Ryz[l] *= viscoCoeff1[l];
+        
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauSAverageYZ;
+        Ryz[l] -= update2;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageYZ;
-    Ryz -= update2;
+        Ryz[l] *= viscoCoeff2[l];
+        Syz += DThalf * Ryz[l];
+    }
     update *= onePlusLtauS;
     Syz += update;
-
-    Ryz *= viscoCoeff2;
-    Syz += DThalf * Ryz;
-
     /* Apply free surface to stress update */
 //     if (useFreeSurface) {
 //         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");

@@ -19,15 +19,15 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Delastic<ValueType>::getContextPtr()
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Delastic<ValueType>::FD2Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD2Delastic<ValueType>::FD2Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "elastic";
     numDimension = 2;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -37,7 +37,7 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::init(scai::hmemo::ContextPtr ct
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD2Delastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD2Delastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 5 Wavefields in 2D elastic modeling: Sxx,Syy,Sxy, Vx, Vy */
     IndexType numWavefields = 5;
@@ -168,7 +168,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxx()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 2D elastic case.")
     return (Rxx);
@@ -176,7 +176,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 2D elastic case.")
     return (Ryy);
@@ -184,7 +184,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRzz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D elastic case.")
     return (Rzz);
@@ -192,7 +192,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz wavefield in the 2D elastic case.")
     return (Ryz);
@@ -200,7 +200,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz wavefield in the 2D elastic case.")
     return (Rxz);
@@ -208,7 +208,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::
 
 //! \brief Not valid in the 2D elastic case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Delastic<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D elastic case.")
     return (Rxy);

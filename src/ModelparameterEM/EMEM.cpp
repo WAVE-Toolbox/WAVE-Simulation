@@ -412,19 +412,19 @@ std::string KITGPI::Modelparameter::EMEM<ValueType>::getEquationType() const
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::EMEM<ValueType>::getElectricConductivityOptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::EMEM<ValueType>::getElectricConductivityEffectiveOptical()
 {
-    COMMON_THROWEXCEPTION("electricConductivityOptical is not set for emem modelling")
-    return (electricConductivityOptical);
+    COMMON_THROWEXCEPTION("electricConductivityEffectiveOptical is not set for emem modelling")
+    return (electricConductivityEffectiveOptical);
 }
 
-/*! \brief Get reference to dielectricPermittivityOptical
+/*! \brief Get reference to dielectricPermittivityEffectiveOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::EMEM<ValueType>::getDielectricPermittivityOptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::EMEM<ValueType>::getDielectricPermittivityEffectiveOptical()
 {
     COMMON_THROWEXCEPTION("There is no tau parameter in an emem modelling")
-    return (dielectricPermittivityOptical);
+    return (dielectricPermittivityEffectiveOptical);
 }
 
 /*! \brief Get reference to tauElectricDisplacement
@@ -469,7 +469,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::EMEM<ValueType>::ge
 
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::EMEM<ValueType>::getRelaxationFrequency() const
+std::vector<ValueType> KITGPI::Modelparameter::EMEM<ValueType>::getRelaxationFrequency() const
 {
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an emem modelling")
     return (relaxationFrequency);

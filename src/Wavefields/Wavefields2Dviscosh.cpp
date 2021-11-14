@@ -19,28 +19,36 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Dviscosh<ValueType>::getContextPtr()
  /param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dviscosh<ValueType>::FD2Dviscosh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD2Dviscosh<ValueType>::FD2Dviscosh(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "viscosh";
     numDimension = 2;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscosh<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD2Dviscosh<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(VZ, ctx, dist);
     this->initWavefield(Sxz, ctx, dist);
     this->initWavefield(Syz, ctx, dist);
-    this->initWavefield(Rxz, ctx, dist);
-    this->initWavefield(Ryz, ctx, dist);
+    
+    numRelaxationMechanisms = numRelaxationMechanisms_in;
+    scai::lama::DenseVector<ValueType> temp;
+    this->initWavefield(temp, ctx, dist);
+    Rxz.clear();
+    Ryz.clear();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxz.push_back(temp);
+        Ryz.push_back(temp);
+    }
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD2Dviscosh<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD2Dviscosh<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 3 Wavefields in 2D viscosh modeling: Sxz, Syz, Vz, Rxz, Ryz */
-    IndexType numWavefields = 5;
+    IndexType numWavefields = 3 + 2 * numRelaxationMechanisms_in;
     return (this->getMemoryUsage(dist, numWavefields));
 }
 
@@ -67,8 +75,6 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::write(IndexType snapType, std::
     case 2:
         IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
         IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
-        IO::writeVector(Rxz, fileName + ".Rxz." + timeStep, fileFormat);
-        IO::writeVector(Ryz, fileName + ".Ryz." + timeStep, fileFormat);
         break;
     case 3: {
         COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dviscosh.");
@@ -96,8 +102,11 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::resetWavefields()
     this->resetWavefield(VZ);
     this->resetWavefield(Sxz);
     this->resetWavefield(Syz);
-    this->resetWavefield(Rxz);
-    this->resetWavefield(Ryz);
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        this->resetWavefield(Rxz[l]);
+        this->resetWavefield(Ryz[l]);
+    }
 }
 
 /*! \brief Get numDimension (2)
@@ -173,7 +182,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::
 
 //! \brief Not valid in the 2D viscosh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRxx()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx wavefield in the 2D viscosh case.")
     return (Rxx);
@@ -181,7 +190,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::
 
 //! \brief Not valid in the 2D viscosh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRyy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy wavefield in the 2D viscosh case.")
     return (Ryy);
@@ -189,7 +198,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::
 
 //! \brief Not valid in the 2D viscosh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRzz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz wavefield in the 2D viscosh case.")
     return (Rzz);
@@ -197,7 +206,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::
 
 //! \brief Not valid in the 2D viscosh case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRxy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dviscosh<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy wavefield in the 2D viscosh case.")
     return (Rxy);
@@ -214,8 +223,11 @@ KITGPI::Wavefields::FD2Dviscosh<ValueType> KITGPI::Wavefields::FD2Dviscosh<Value
     result.VZ = this->VZ * rhs;
     result.Sxz = this->Sxz * rhs;
     result.Syz = this->Syz * rhs;
-    result.Rxz = this->Rxz * rhs;
-    result.Ryz = this->Ryz * rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        result.Rxz[l] = this->Rxz[l] * rhs;
+        result.Ryz[l] = this->Ryz[l] * rhs;
+    }
+    
     return result;
 }
 
@@ -251,8 +263,11 @@ KITGPI::Wavefields::FD2Dviscosh<ValueType> KITGPI::Wavefields::FD2Dviscosh<Value
     result.VZ = this->VZ * rhs.VZ;
     result.Sxz = this->Sxz * rhs.Sxz;
     result.Syz = this->Syz * rhs.Syz;
-    result.Rxz = this->Rxz * rhs.Rxz;
-    result.Ryz = this->Ryz * rhs.Ryz;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        result.Rxz[l] = this->Rxz[l] * rhs.Rxz[l];
+        result.Ryz[l] = this->Ryz[l] * rhs.Ryz[l];
+    }
+    
     return result;
 }
 
@@ -290,8 +305,10 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::minusAssign(KITGPI::Wavefields:
     VZ -= rhs.getRefVZ();
     Syz -= rhs.getRefSyz();
     Sxz -= rhs.getRefSxz();
-    Rxz -= rhs.getRefRxz();
-    Ryz -= rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxz[l] -= rhs.getRefRxz()[l];
+        Ryz[l] -= rhs.getRefRyz()[l];
+    }
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -304,8 +321,10 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::plusAssign(KITGPI::Wavefields::
     VZ += rhs.getRefVZ();
     Syz += rhs.getRefSyz();
     Sxz += rhs.getRefSxz();
-    Rxz += rhs.getRefRxz();
-    Ryz += rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxz[l] += rhs.getRefRxz()[l];
+        Ryz[l] += rhs.getRefRyz()[l];
+    }
 }
 
 /*! \brief function for overloading *= Operation (called in base class)
@@ -318,8 +337,10 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::timesAssign(ValueType rhs)
     VZ *= rhs;
     Syz *= rhs;
     Sxz *= rhs;
-    Rxz *= rhs;
-    Ryz *= rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxz[l] *= rhs;
+        Ryz[l] *= rhs;
+    }
 }
 
 /*! \brief apply model transform to wavefields in inversion
@@ -332,8 +353,10 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::applyTransform(scai::lama::CSRS
     VZ = lhs * rhs.getRefVZ();
     Sxz = lhs * rhs.getRefSxz();
     Syz = lhs * rhs.getRefSyz();
-    Rxz = lhs * rhs.getRefRxz();
-    Ryz = lhs * rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxz[l] = lhs * rhs.getRefRxz()[l];
+        Ryz[l] = lhs * rhs.getRefRyz()[l];
+    }
 }
 
 template class KITGPI::Wavefields::FD2Dviscosh<float>;

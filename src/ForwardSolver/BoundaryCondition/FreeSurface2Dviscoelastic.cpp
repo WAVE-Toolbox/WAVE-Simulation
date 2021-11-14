@@ -12,9 +12,8 @@
  \param DThalf Time discretisation DT/2
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic<ValueType>::exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Rxx, ValueType DThalf)
+void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic<ValueType>::exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, std::vector<scai::lama::DenseVector<ValueType>> &Rxx, ValueType DThalf)
 {
-
     /* On the free surface the verical velocity derivarive can be expressed by 
     * vyy = ((2mu / pi ) -1) * (vxx+vzz) where mu = sWaveModulus * (1+L*tauS) and pi = pWaveModulus * (1+L*tauP)
     * The original update,
@@ -29,9 +28,11 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic<ValueTy
     SCAI_ASSERT_DEBUG(active, " FreeSurface is not active ");
 
     /* Undo Update of the relaxation parameter at the free surface */
-    temp = selectFreeSurface;
-    temp *= Rxx;
-    Sxx -= DThalf * temp;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        temp = selectFreeSurface;
+        temp *= Rxx[l];
+        Sxx -= DThalf * temp;
+    }
 
     /* Update the stress parameter at the free surface */
     /* vertical derivatives will be exchanged with horizontal derivatives (previous update will be undone) */
@@ -45,18 +46,20 @@ void KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic<ValueTy
 
     /* Update relaxation parameter at the free surface */
     /* vertical derivatives will be exchanged with horizontal derivatives (previous update will be undone) */
-    temp = scaleRelaxationHorizontalUpdate;
-    temp *= sumHorizonatlDerivative;
-    Rxx += temp; // Apply horizontal update
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        temp = scaleRelaxationHorizontalUpdate[l];
+        temp *= sumHorizonatlDerivative;
+        Rxx[l] += temp; // Apply horizontal update
 
-    temp = scaleRelaxationVerticalUpdate;
-    temp *= vyy;
-    Rxx -= temp;
+        temp = scaleRelaxationVerticalUpdate[l];
+        temp *= vyy;
+        Rxx[l] -= temp;
 
-    /* Apply update of the relaxation parameter to Sxx at the free surface */
-    temp = selectFreeSurface;
-    temp *= Rxx;
-    Sxx += DThalf * temp;
+        /* Apply update of the relaxation parameter to Sxx at the free surface */
+        temp = selectFreeSurface;
+        temp *= Rxx[l];
+        Sxx += DThalf * temp;
+    }
 }
 
 template class KITGPI::ForwardSolver::BoundaryCondition::FreeSurface2Dviscoelastic<float>;

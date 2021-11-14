@@ -79,12 +79,12 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT)
 {
-    auto const &electricConductivityOpticalAverageX = model.getElectricConductivityOpticalAverageX();
-    auto const &electricConductivityOpticalAverageY = model.getElectricConductivityOpticalAverageY();
-    auto const &electricConductivityOpticalAverageZ = model.getElectricConductivityOpticalAverageZ();
-    auto const &dielectricPermittivityOpticalAverageX = model.getDielectricPermittivityOpticalAverageX();
-    auto const &dielectricPermittivityOpticalAverageY = model.getDielectricPermittivityOpticalAverageY();
-    auto const &dielectricPermittivityOpticalAverageZ = model.getDielectricPermittivityOpticalAverageZ();
+    auto const &electricConductivityEffectiveOpticalAverageX = model.getElectricConductivityEffectiveOpticalAverageX();
+    auto const &electricConductivityEffectiveOpticalAverageY = model.getElectricConductivityEffectiveOpticalAverageY();
+    auto const &electricConductivityEffectiveOpticalAverageZ = model.getElectricConductivityEffectiveOpticalAverageZ();
+    auto const &dielectricPermittivityEffectiveOpticalAverageX = model.getDielectricPermittivityEffectiveOpticalAverageX();
+    auto const &dielectricPermittivityEffectiveOpticalAverageY = model.getDielectricPermittivityEffectiveOpticalAverageY();
+    auto const &dielectricPermittivityEffectiveOpticalAverageZ = model.getDielectricPermittivityEffectiveOpticalAverageZ();
     auto const &dielectricPermittivityAverageX = model.getDielectricPermittivityAverageX();
     auto const &dielectricPermittivityAverageY = model.getDielectricPermittivityAverageY();
     auto const &dielectricPermittivityAverageZ = model.getDielectricPermittivityAverageZ();
@@ -94,13 +94,13 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::prepareForModelling(Modelp
     ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
     scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
 
-    CaAverageX = this->getAveragedCa(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
-    CaAverageY = this->getAveragedCa(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
-    CaAverageZ = this->getAveragedCa(dielectricPermittivityOpticalAverageZ, electricConductivityOpticalAverageZ, DT);
+    CaAverageX = this->getAveragedCa(dielectricPermittivityEffectiveOpticalAverageX, electricConductivityEffectiveOpticalAverageX, DT);
+    CaAverageY = this->getAveragedCa(dielectricPermittivityEffectiveOpticalAverageY, electricConductivityEffectiveOpticalAverageY, DT);
+    CaAverageZ = this->getAveragedCa(dielectricPermittivityEffectiveOpticalAverageZ, electricConductivityEffectiveOpticalAverageZ, DT);
     
-    CbAverageX = this->getAveragedCb(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
-    CbAverageY = this->getAveragedCb(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
-    CbAverageZ = this->getAveragedCb(dielectricPermittivityOpticalAverageZ, electricConductivityOpticalAverageZ, DT);
+    CbAverageX = this->getAveragedCb(dielectricPermittivityEffectiveOpticalAverageX, electricConductivityEffectiveOpticalAverageX, DT);
+    CbAverageY = this->getAveragedCb(dielectricPermittivityEffectiveOpticalAverageY, electricConductivityEffectiveOpticalAverageY, DT);
+    CbAverageZ = this->getAveragedCb(dielectricPermittivityEffectiveOpticalAverageZ, electricConductivityEffectiveOpticalAverageZ, DT);
     
     Cc = this->getCc(tauElectricDisplacement, DT);
     
@@ -160,7 +160,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     auto &rY = wavefield.getRefRY();
     auto &rZ = wavefield.getRefRZ();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dzf = derivatives.getDzf();
     auto const &Dxb = derivatives.getDxb();
@@ -216,17 +216,17 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     /*  rX rY rZ */
     /* ----------------*/
     // numRelaxationMechanisms = 1
-    update = Cc * rX;
+    update = Cc * rX[0];
     update_temp = CdAverageX * eX;
-    rX = update_temp + update;
+    rX[0] = update_temp + update;
     
-    update = Cc * rY;
+    update = Cc * rY[0];
     update_temp = CdAverageY * eY;
-    rY = update_temp + update;
+    rY[0] = update_temp + update;
     
-    update = Cc * rZ;
+    update = Cc * rZ[0];
     update_temp = CdAverageZ * eZ;
-    rZ = update_temp + update;
+    rZ[0] = update_temp + update;
     
     /* ----------------*/
     /*  ex */
@@ -238,7 +238,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hyz(update_temp);
     }
     update -= update_temp;
-    update_temp = -DT_temp * rX;
+    update_temp = -DT_temp * rX[0];
     update += update_temp;
     update *= CbAverageX;    
     update_temp = CaAverageX * eX;
@@ -254,7 +254,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hzx(update_temp);
     }
     update -= update_temp;
-    update_temp = -DT_temp * rY;
+    update_temp = -DT_temp * rY[0];
     update += update_temp;
     update *= CbAverageY;   
     update_temp = CaAverageY * eY;
@@ -270,7 +270,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hxy(update_temp);
     }
     update -= update_temp;
-    update_temp = -DT_temp * rZ;
+    update_temp = -DT_temp * rZ[0];
     update += update_temp;
     update *= CbAverageZ;   
     update_temp = CaAverageZ * eZ;

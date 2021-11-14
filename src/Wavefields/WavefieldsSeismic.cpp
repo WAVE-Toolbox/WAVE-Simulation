@@ -222,42 +222,42 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueT
 
 //! \brief Getter routine for Rxx Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxx()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxx()
 {
     return (Rxx);
 }
 
 //! \brief Getter routine for Ryy Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRyy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRyy()
 {
     return (Ryy);
 }
 
 //! \brief Getter routine for Rzz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRzz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRzz()
 {
     return (Rzz);
 }
 
 //! \brief Getter routine for Ryz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRyz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRyz()
 {
     return (Ryz);
 }
 
 //! \brief Getter routine for Rxz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxz()
 {
     return (Rxz);
 }
 
 //! \brief Getter routine for Rxy Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRxy()
 {
     return (Rxy);
 }
@@ -411,7 +411,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueT
 
 //! \brief Getter routine for RX Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRX()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRX()
 {
     COMMON_THROWEXCEPTION("There is no RX in an Seismic modelling")
     return (RX);
@@ -419,7 +419,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueT
 
 //! \brief Getter routine for RY Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRY()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRY()
 {
     COMMON_THROWEXCEPTION("There is no RY in an Seismic modelling")
     return (RY);
@@ -427,7 +427,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueT
 
 //! \brief Getter routine for RZ Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRZ()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsSeismic<ValueType>::getRefRZ()
 {
     COMMON_THROWEXCEPTION("There is no RZ in an Seismic modelling")
     return (RZ);

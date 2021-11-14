@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::run(Acquisition::Acquisitio
     auto &vZ = wavefield.getRefVZ();
     auto &p = wavefield.getRefP();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dzf = derivatives.getDzf();
     auto const &Dxb = derivatives.getDxb();

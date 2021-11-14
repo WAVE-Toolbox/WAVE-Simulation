@@ -174,19 +174,31 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::init(Configuration::Configurati
 {
     SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for ViscoSH, variable grid is not available here!")
     
+    IndexType numRelaxationMechanisms_in = config.get<IndexType>("numRelaxationMechanisms");
+    SCAI_ASSERT(numRelaxationMechanisms_in <= 4, "numRelaxationMechanisms more than 4 is not available here!")
+    std::vector<ValueType> relaxationFrequency_in(numRelaxationMechanisms_in, 0);
+    for (int l=0; l<numRelaxationMechanisms_in; l++) {
+        if (l==0)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency");
+        if (l==1)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency2");
+        if (l==2)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency3");
+        if (l==3)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency4");
+    }
     if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (ViscoSH) from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
-        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
+        initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
-        init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauS"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
+        init(ctx, dist, config.get<ValueType>("velocityS"), config.get<ValueType>("rho"), config.get<ValueType>("tauS"), numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
     }
-
 }
 
 /*! \brief Constructor that is generating a homogeneous model
@@ -198,10 +210,10 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::init(Configuration::Configurati
  \param rho_const Density given as Scalar
  */
 template <typename ValueType>
-KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
     equationType = "viscosh";
-    init(ctx, dist, velocityS_const, rho_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in);
+    init(ctx, dist, velocityS_const, rho_const, tauS_const, numRelaxationMechanisms_in, relaxationFrequency_in, centerFrequencyCPML_in);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
@@ -213,9 +225,9 @@ KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(scai::hmemo::ContextPtr ctx,
  \param rho_const Density given as Scalar
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ViscoSH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::ViscoSH<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType velocityS_const, ValueType rho_const, ValueType tauS_const, IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
+    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in, centerFrequencyCPML_in);
     this->initModelparameter(velocityS, ctx, dist, velocityS_const);
     this->initModelparameter(density, ctx, dist, rho_const);
     this->initModelparameter(tauS, ctx, dist, tauS_const);
@@ -476,16 +488,17 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::calculateAveraging()
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ViscoSH<ValueType>::initRelaxationMechanisms(IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::ViscoSH<ValueType>::initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
     if (numRelaxationMechanisms_in < 1) {
         COMMON_THROWEXCEPTION("The number of relaxation mechanisms should be >0 in an viscosh simulation")
     }
-    if (relaxationFrequency_in <= 0) {
+    if (relaxationFrequency_in[0] <= 0) {
         COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an viscosh simulation")
     }
     numRelaxationMechanisms = numRelaxationMechanisms_in;
     relaxationFrequency = relaxationFrequency_in;
+    centerFrequencyCPML = centerFrequencyCPML_in;
 }
 
 /*! \brief calculate reflectivity from permittivity
@@ -556,14 +569,17 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ViscoSH<ValueType>:
 {
     // If the modulus is dirty, than recalculate
     if (dirtyFlagSWaveModulus) {
-        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density, velocityS, tauS and relaxationFrequency \n");
+        // The input vs is defined at the reference frequency, so the S-wave modulus must be scaled to the relaxed value where frequency equals zero, see eq.12 in Bohlen, 2002 or eq.2 in Fabien-Ouellet, et al., 2017.
+        HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density, velocityS, tauS, centerFrequencyCPML and relaxationFrequency \n");
         this->calcModulusFromVelocity(velocityS, density, sWaveModulus);
         /* Set circular frequency w = 2 * pi * relaxation frequency */
-        ValueType w_ref = 2.0 * M_PI * relaxationFrequency;
-        ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency);
+        ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+        ValueType sum = 0;
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            ValueType tauSigma = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
 
-        ValueType sum = w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
-
+            sum += w_ref * w_ref * tauSigma * tauSigma / (1.0 + w_ref * w_ref * tauSigma * tauSigma);
+        }
         /* Scaling the S-wave Modulus */
         auto temp = lama::eval<lama::DenseVector<ValueType>>(1.0 + sum * tauS);
         sWaveModulus = sWaveModulus / temp;

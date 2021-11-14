@@ -31,7 +31,7 @@ namespace KITGPI
             //! Default destructor
             ~FD3Delastic(){};
 
-            explicit FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit FD3Delastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in);
 
             void resetWavefields() override;
 
@@ -40,18 +40,18 @@ namespace KITGPI
 
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::lama::DenseVector<ValueType> &getRefP() override;
-            scai::lama::DenseVector<ValueType> &getRefRxx() override;
-            scai::lama::DenseVector<ValueType> &getRefRyy() override;
-            scai::lama::DenseVector<ValueType> &getRefRzz() override;
-            scai::lama::DenseVector<ValueType> &getRefRyz() override;
-            scai::lama::DenseVector<ValueType> &getRefRxz() override;
-            scai::lama::DenseVector<ValueType> &getRefRxy() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRxx() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRyy() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRzz() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRyz() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRxz() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRxy() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
-            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+            ValueType estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
             /* Overloading Operators */
             KITGPI::Wavefields::FD3Delastic<ValueType> operator*(ValueType rhs);
@@ -76,6 +76,7 @@ namespace KITGPI
             int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
+            using Wavefields<ValueType>::numRelaxationMechanisms;
 
             /* required wavefields */
             using Wavefields<ValueType>::VX;

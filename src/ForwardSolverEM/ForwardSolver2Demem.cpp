@@ -123,7 +123,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeo
     auto &eY = wavefield.getRefEY();
     auto &eX = wavefield.getRefEX();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();   
     auto const &Dyf = derivatives.getDyf();

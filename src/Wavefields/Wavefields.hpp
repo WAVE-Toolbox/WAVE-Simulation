@@ -45,14 +45,14 @@ namespace KITGPI
             virtual scai::hmemo::ContextPtr getContextPtr() = 0;
 
             //! \brief Initialization
-            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) = 0;
             
             virtual bool isFinite(scai::dmemo::DistributionPtr dist) = 0;
 
             ValueType getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numWavefields);
 
             //! \brief memory estimation
-            virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;
+            virtual ValueType estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) = 0;
 
             ValueType getMemoryWavefield(scai::dmemo::DistributionPtr dist);
 
@@ -106,12 +106,12 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> &getRefSxz() = 0;
             virtual scai::lama::DenseVector<ValueType> &getRefSxy() = 0;
 
-            virtual scai::lama::DenseVector<ValueType> &getRefRxx() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRyy() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRzz() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRyz() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRxz() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRxy() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxx() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRyy() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRzz() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRyz() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxz() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxy() = 0;
 
             /* EM */
             virtual scai::lama::DenseVector<ValueType> &getRefHX() = 0;
@@ -134,9 +134,9 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> &getRefEYright() = 0;
             virtual scai::lama::DenseVector<ValueType> &getRefEZright() = 0;
 
-            virtual scai::lama::DenseVector<ValueType> &getRefRX() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRY() = 0;
-            virtual scai::lama::DenseVector<ValueType> &getRefRZ() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRX() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRY() = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRZ() = 0;
           protected:
             /* Common */
             void resetWavefield(scai::lama::DenseVector<ValueType> &vector);
@@ -150,6 +150,7 @@ namespace KITGPI
             
             int numDimension;
             std::string equationType;
+            scai::IndexType numRelaxationMechanisms = 0; //!< Number of relaxation mechanisms
 
             /* Seismic */
             scai::lama::DenseVector<ValueType> VX;  //!< Wavefield for velocity in x
@@ -179,12 +180,12 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> VZleft;
             scai::lama::DenseVector<ValueType> VZright;
 
-            scai::lama::DenseVector<ValueType> Rxx; //!< Relaxation parameter
-            scai::lama::DenseVector<ValueType> Ryy; //!< Relaxation parameter
-            scai::lama::DenseVector<ValueType> Rzz; //!< Relaxation parameter
-            scai::lama::DenseVector<ValueType> Ryz; //!< Relaxation parameter
-            scai::lama::DenseVector<ValueType> Rxz; //!< Relaxation parameter
-            scai::lama::DenseVector<ValueType> Rxy; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Rxx; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Ryy; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Rzz; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Ryz; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Rxz; //!< Relaxation parameter
+            std::vector<scai::lama::DenseVector<ValueType>> Rxy; //!< Relaxation parameter
         
             /* EM */
             scai::lama::DenseVector<ValueType> HX;  //!< magnatic intensity Wavefield 
@@ -206,9 +207,9 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> EYright;  //!< electric intensity Wavefield
             scai::lama::DenseVector<ValueType> EZright;  //!< electric intensity Wavefield
 
-            scai::lama::DenseVector<ValueType> RX; //!< Relaxation parameter memory varible
-            scai::lama::DenseVector<ValueType> RY; //!< Relaxation parameter memory varible
-            scai::lama::DenseVector<ValueType> RZ; //!< Relaxation parameter memory varible
+            std::vector<scai::lama::DenseVector<ValueType>> RX; //!< Relaxation parameter memory varible
+            std::vector<scai::lama::DenseVector<ValueType>> RY; //!< Relaxation parameter memory varible
+            std::vector<scai::lama::DenseVector<ValueType>> RZ; //!< Relaxation parameter memory varible
         };
     }
 }

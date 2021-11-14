@@ -167,21 +167,21 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for RX Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRX()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRX()
 {
     return (RX);
 }
 
 //! \brief Getter routine for RY Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRY()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRY()
 {
     return (RY);
 }
 
 //! \brief Getter routine for RZ Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRZ()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRZ()
 {
     return (RZ);
 }
@@ -399,7 +399,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Rxx Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxx()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxx()
 {
     COMMON_THROWEXCEPTION("There is no Rxx in an EM modelling")
     return (Rxx);
@@ -407,7 +407,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Ryy Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRyy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRyy()
 {
     COMMON_THROWEXCEPTION("There is no Ryy in an EM modelling")
     return (Ryy);
@@ -415,7 +415,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Rzz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRzz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRzz()
 {
     COMMON_THROWEXCEPTION("There is no Rzz in an EM modelling")
     return (Rzz);
@@ -423,7 +423,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Ryz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRyz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRyz()
 {
     COMMON_THROWEXCEPTION("There is no Ryz in an EM modelling")
     return (Ryz);
@@ -431,7 +431,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Rxz Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxz()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxz()
 {
     COMMON_THROWEXCEPTION("There is no Rxz in an EM modelling")
     return (Rxz);
@@ -439,7 +439,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>:
 
 //! \brief Getter routine for Rxy Relaxation parameter
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxy()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::WavefieldsEM<ValueType>::getRefRxy()
 {
     COMMON_THROWEXCEPTION("There is no Rxy in an EM modelling")
     return (Rxy);

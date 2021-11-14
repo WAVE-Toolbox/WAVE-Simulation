@@ -413,10 +413,10 @@ namespace KITGPI
         \param vecter2D model/gradient parameter vector
         \param NX Number of grid points in x-direction
         \param NY Number of grid points in y-direction
-        \param spatialFDorder spatial FD order used in Derivatives calculation
+        \param spatialLength spatial length of the median filter window
         */     
         template<typename ValueType>
-        void applyMedianFilterTo2DVector(lama::DenseVector<ValueType> &vecter2D, IndexType NX, IndexType NY, IndexType spatialFDorder)
+        void applyMedianFilterTo2DVector(lama::DenseVector<ValueType> &vecter2D, IndexType NX, IndexType NY, IndexType spatialLength)
         {    
             typedef float element;
             element signal_2D[ NY * NX ] = {0};
@@ -427,7 +427,7 @@ namespace KITGPI
             element *result;
             result = (element *)malloc(NY * NX * sizeof(element));
 
-            medianfilter(signal_2D, result, NX, NY, spatialFDorder*2+1, 0);
+            medianfilter(signal_2D, result, NX, NY, spatialLength*2-1, 0);
             
             for (int i = 0; i < NY * NX; i++) {
                 vecter2D[i] = *(result + i);
@@ -438,10 +438,10 @@ namespace KITGPI
         /*! \brief Apply a 1D median filter to model/gradient parameter to filter out the extreme values
         \param vecter1D model/gradient parameter vector
         \param N Number of grid points
-        \param spatialFDorder spatial FD order used in Derivatives calculation
+        \param spatialLength spatial length of the median filter window
         */     
         template<typename ValueType>
-        void applyMedianFilterTo1DVector(lama::DenseVector<ValueType> &vecter1D, IndexType spatialFDorder)
+        void applyMedianFilterTo1DVector(lama::DenseVector<ValueType> &vecter1D, IndexType spatialLength)
         {    
             typedef float element;
             int N = vecter1D.size();
@@ -453,7 +453,7 @@ namespace KITGPI
             element *result;
             result = (element *)malloc(N * sizeof(element));
 
-            medianfilter(signal_1D, result, N, spatialFDorder*2+1);
+            medianfilter(signal_1D, result, N, spatialLength*2-1);
             
 //             vecter1D = lama::cast<ValueType>(result);
             for (int i = 0; i < N; i++) {

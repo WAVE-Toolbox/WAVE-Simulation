@@ -53,10 +53,16 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::initForwardSolver(Confi
     onePlusLtauS.setContextPtr(ctx);
 
     numRelaxationMechanisms = model.getNumRelaxationMechanisms();
-    relaxationTime = 1.0 / (2.0 * M_PI * model.getRelaxationFrequency());
-    inverseRelaxationTime = 1.0 / relaxationTime;
-    viscoCoeff1 = (1.0 - DT / (2.0 * relaxationTime));
-    viscoCoeff2 = 1.0 / (1.0 + DT / (2.0 * relaxationTime));
+    viscoCoeff1.clear();
+    viscoCoeff2.clear();
+    relaxationTime.clear();
+    inverseRelaxationTime.clear();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        relaxationTime.push_back(1.0 / (2.0 * M_PI * model.getRelaxationFrequency()[l])); // = 1 / ( 2 * Pi * f_relax )
+        inverseRelaxationTime.push_back(1.0 / relaxationTime[l]);
+        viscoCoeff1.push_back(1.0 - DT / (2.0 * relaxationTime[l]));
+        viscoCoeff2.push_back(1.0 / (1.0 + DT / (2.0 * relaxationTime[l])));              // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
+    }
     DThalf = DT / 2.0;
 }
 
@@ -159,7 +165,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     auto &Rxz = wavefield.getRefRxz();
     auto &Rxy = wavefield.getRefRxy();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dzf = derivatives.getDzf();
     auto const &Dxb = derivatives.getDxb();
@@ -275,20 +281,22 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += vzz;
     update *= pWaveModulus;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauP;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauP;
 
-    Sxx += DThalf * Rxx;
-    Rxx *= viscoCoeff1;
-    Rxx -= update2;
+        Sxx += DThalf * Rxx[l];
+        Rxx[l] *= viscoCoeff1[l];
+        Rxx[l] -= update2;
 
-    Syy += DThalf * Ryy;
-    Ryy *= viscoCoeff1;
-    Ryy -= update2;
+        Syy += DThalf * Ryy[l];
+        Ryy[l] *= viscoCoeff1[l];
+        Ryy[l] -= update2;
 
-    Szz += DThalf * Rzz;
-    Rzz *= viscoCoeff1;
-    Rzz -= update2;
+        Szz += DThalf * Rzz[l];
+        Rzz[l] *= viscoCoeff1[l];
+        Rzz[l] -= update2;
+    }
 
     update *= onePlusLtauP;
     Sxx += update;
@@ -300,47 +308,50 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update *= sWaveModulus;
     update *= 2.0;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Rxx += update2;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauS;
+        Rxx[l] += update2;
+
+        Rxx[l] *= viscoCoeff2[l];
+        Sxx += DThalf * Rxx[l];
+    }
     update *= onePlusLtauS;
     Sxx -= update;
-
-    Rxx *= viscoCoeff2;
-    Sxx += DThalf * Rxx;
 
     /* Update Syy and Ryy */
     update = vxx + vzz;
     update *= sWaveModulus;
     update *= 2.0;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Ryy += update2;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauS;
+        Ryy[l] += update2;
+
+        Ryy[l] *= viscoCoeff2[l];
+        Syy += DThalf * Ryy[l];
+    }
     update *= onePlusLtauS;
     Syy -= update;
-
-    Ryy *= viscoCoeff2;
-    Syy += DThalf * Ryy;
 
     /* Update Szz and Szz */
     update = vxx + vyy;
     update *= sWaveModulus;
     update *= 2.0;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauS;
-    Rzz += update2;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauS;
+        Rzz[l] += update2;
+
+        Rzz[l] *= viscoCoeff2[l];
+        Szz += DThalf * Rzz[l];
+    }
     update *= onePlusLtauS;
     Szz -= update;
 
-    Rzz *= viscoCoeff2;
-    Szz += DThalf * Rzz;
-
     /* Update Sxy and Rxy*/
-    Sxy += DThalf * Rxy;
-    Rxy *= viscoCoeff1;
-
     update = Dyf * vX;
     if (useConvPML) {
         ConvPML.apply_vxy(update);
@@ -353,19 +364,21 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
 
     update *= sWaveModulusAverageXY;
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageXY;
-    Rxy -= update2;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Sxy += DThalf * Rxy[l];
+        Rxy[l] *= viscoCoeff1[l];
+
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauSAverageXY;
+        Rxy[l] -= update2;
+
+        Rxy[l] *= viscoCoeff2[l];
+        Sxy += DThalf * Rxy[l];
+    }
     update *= onePlusLtauS;
     Sxy += update;
 
-    Rxy *= viscoCoeff2;
-    Sxy += DThalf * Rxy;
-
     /* Update Sxz and Rxz */
-    Sxz += DThalf * Rxz;
-    Rxz *= viscoCoeff1;
-
     update = Dzf * vX;
     if (useConvPML) {
         ConvPML.apply_vxz(update);
@@ -378,20 +391,22 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += update_temp;
 
     update *= sWaveModulusAverageXZ;
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Sxz += DThalf * Rxz[l];
+        Rxz[l] *= viscoCoeff1[l];
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageXZ;
-    Rxz -= update2;
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauSAverageXZ;
+        Rxz[l] -= update2;
+
+        Rxz[l] *= viscoCoeff2[l];
+        Sxz += DThalf * Rxz[l];
+    }
     update *= onePlusLtauS;
     Sxz += update;
 
-    Rxz *= viscoCoeff2;
-    Sxz += DThalf * Rxz;
-
     /* Update Syz and Ryz */
-    Syz += DThalf * Ryz;
-    Ryz *= viscoCoeff1;
-
     update = Dzf * vY;
     if (useConvPML) {
         ConvPML.apply_vyz(update);
@@ -403,22 +418,29 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     }
     update += update_temp;
     update *= sWaveModulusAverageYZ;
+    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Syz += DThalf * Ryz[l];
+        Ryz[l] *= viscoCoeff1[l];
 
-    update2 = inverseRelaxationTime * update;
-    update2 *= tauSAverageYZ;
-    Ryz -= update2;
+        update2 = inverseRelaxationTime[l] * update;
+        update2 *= tauSAverageYZ;
+        Ryz[l] -= update2;
+
+        Ryz[l] *= viscoCoeff2[l];
+        Syz += DThalf * Ryz[l];
+    }
     update *= onePlusLtauS;
     Syz += update;
-
-    Ryz *= viscoCoeff2;
-    Syz += DThalf * Ryz;
 
     /* Apply free surface to stress update */
     if (useFreeSurface == 1) {
         update = vxx + vzz;
         FreeSurface.exchangeHorizontalUpdate(update, vyy, Sxx, Szz, Rxx, Rzz, DThalf);
         FreeSurface.setSurfaceZero(Syy);
-        FreeSurface.setSurfaceZero(Ryy);
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            FreeSurface.setSurfaceZero(Ryy[l]);
+        }
     }
 
     /* Apply the damping boundary */

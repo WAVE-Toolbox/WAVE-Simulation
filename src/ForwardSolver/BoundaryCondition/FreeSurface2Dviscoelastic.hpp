@@ -25,7 +25,7 @@ namespace KITGPI
                 //! Default destructor
                 ~FreeSurface2Dviscoelastic(){};
 
-                void exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, scai::lama::Vector<ValueType> &Rxx, ValueType DThalf);
+                void exchangeHorizontalUpdate(scai::lama::Vector<ValueType> &sumHorizonatlDerivative, scai::lama::Vector<ValueType> &vyy, scai::lama::Vector<ValueType> &Sxx, std::vector<scai::lama::DenseVector<ValueType>> &Rxx, ValueType DThalf);
 
               private:
                 using FreeSurfaceViscoelastic<ValueType>::scaleStressHorizontalUpdate;     //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
@@ -34,6 +34,7 @@ namespace KITGPI
                 using FreeSurfaceViscoelastic<ValueType>::scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
                 using FreeSurfaceViscoelastic<ValueType>::selectFreeSurface;
                 using FreeSurfaceViscoelastic<ValueType>::temp; //!< temporary Sparse Vector (lives as long as the forward solver)
+                using FreeSurfaceViscoelastic<ValueType>::numRelaxationMechanisms;
                 using FreeSurfaceViscoelastic<ValueType>::active;
             };
         } /* end namespace BoundaryCondition */

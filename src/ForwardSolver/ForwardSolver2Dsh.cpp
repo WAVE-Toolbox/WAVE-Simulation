@@ -119,7 +119,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     auto &Sxz = wavefield.getRefSxz();
     auto &Syz = wavefield.getRefSyz();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();
     auto const &Dyf = derivatives.getDyf();

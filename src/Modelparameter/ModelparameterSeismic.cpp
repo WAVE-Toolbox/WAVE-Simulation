@@ -20,7 +20,7 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::prepareForInversi
 /*! \brief Set relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setRelaxationFrequency(ValueType const setRelaxationFrequency)
+void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setRelaxationFrequency(std::vector<ValueType> const setRelaxationFrequency)
 {
     dirtyFlagSWaveModulus = true; // the modulus vector is now dirty
     dirtyFlagPWaveModulus = true; // the modulus vector is now dirty
@@ -782,56 +782,56 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setDielectricPerm
     COMMON_THROWEXCEPTION("There is no setDielectricPermittivity in an Seismic modelling")
 }
 
-/*! \brief Get const reference to electricConductivityOptical
+/*! \brief Get const reference to electricConductivityEffectiveOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOptical()
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOptical in an Seismic modelling")    
-    return (electricConductivityOptical);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOptical in an Seismic modelling")    
+    return (electricConductivityEffectiveOptical);
 }
-/*! \brief Get const reference to electricConductivityOptical
+/*! \brief Get const reference to electricConductivityEffectiveOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOptical() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOptical() const
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOptical in an Seismic modelling")
-    return (electricConductivityOptical);
-}
-
-/*! \brief Set electricConductivityOptical model parameter
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setElectricConductivityOptical(scai::lama::Vector<ValueType> const &setElectricConductivityOptical)
-{
-    COMMON_THROWEXCEPTION("There is no setElectricConductivityOptical in an Seismic modelling")
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOptical in an Seismic modelling")
+    return (electricConductivityEffectiveOptical);
 }
 
-/*! \brief Get const reference to dielectricPermittivityOptical
+/*! \brief Set electricConductivityEffectiveOptical model parameter
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOptical()
+void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setElectricConductivityEffectiveOptical(scai::lama::Vector<ValueType> const &setElectricConductivityEffectiveOptical)
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOptical in an Seismic modelling")
+    COMMON_THROWEXCEPTION("There is no setElectricConductivityEffectiveOptical in an Seismic modelling")
+}
+
+/*! \brief Get const reference to dielectricPermittivityEffectiveOptical
+ */
+template <typename ValueType>
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOptical()
+{
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOptical in an Seismic modelling")
     
-    return (dielectricPermittivityOptical);
+    return (dielectricPermittivityEffectiveOptical);
 }
 
-/*! \brief Get const reference to dielectricPermittivityOptical
+/*! \brief Get const reference to dielectricPermittivityEffectiveOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOptical() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOptical() const
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOptical in an Seismic modelling")
-    return (dielectricPermittivityOptical);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOptical in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOptical);
 }
 
-/*! \brief Set dielectricPermittivityOptical model parameter
+/*! \brief Set dielectricPermittivityEffectiveOptical model parameter
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setDielectricPermittivityOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityOptical)
+void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setDielectricPermittivityEffectiveOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityEffectiveOptical)
 {
-    COMMON_THROWEXCEPTION("There is no setDielectricPermittivityOptical in an Seismic modelling")
+    COMMON_THROWEXCEPTION("There is no setDielectricPermittivityEffectiveOptical in an Seismic modelling")
 }
 
 /*! \brief Get const reference to tauElectricConductivity */
@@ -1076,113 +1076,113 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
     return (dielectricPermittivityAverageZ);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in x-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageX()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageX()
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageX in an Seismic modelling")
-    return (electricConductivityOpticalAverageX);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageX in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageX);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in x-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageX() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageX() const
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageX in an Seismic modelling")
-    return (electricConductivityOpticalAverageX);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageX in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageX);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in y-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageY()
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageY in an Seismic modelling")
-    return (electricConductivityOpticalAverageY);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageY in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageY);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in y-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageY() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageY() const
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageY in an Seismic modelling")
-    return (electricConductivityOpticalAverageY);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageY in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageY);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in z-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageZ()
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageZ in an Seismic modelling")
-    return (electricConductivityOpticalAverageZ);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageZ in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageZ);
 }
 
-/*! \brief Get const reference to averaged electricConductivityOptical in z-direction
+/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityOpticalAverageZ() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityEffectiveOpticalAverageZ() const
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOpticalAverageZ in an Seismic modelling")
-    return (electricConductivityOpticalAverageZ);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOpticalAverageZ in an Seismic modelling")
+    return (electricConductivityEffectiveOpticalAverageZ);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in x-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageX()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageX()
 {
     // If Averaging is outdated or has to be 
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageX in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageX);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageX in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageX);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in x-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageX() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageX() const
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageX in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageX);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageX in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageX);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in y-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageY()
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageY in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageY);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageY in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageY);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in y-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageY() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageY() const
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageY in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageY);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageY in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageY);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in z-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageZ()
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageZ in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageZ);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageZ in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageZ);
 }
 
-/*! \brief Get const reference to averaged dielectricPermittivityOptical in z-direction
+/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityOpticalAverageZ() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityEffectiveOpticalAverageZ() const
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOpticalAverageZ in an Seismic modelling")
-    return (dielectricPermittivityOpticalAverageZ);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOpticalAverageZ in an Seismic modelling")
+    return (dielectricPermittivityEffectiveOpticalAverageZ);
 }
 
 /*! \brief Get const reference to averaged tauDielectricPermittivity in x-direction

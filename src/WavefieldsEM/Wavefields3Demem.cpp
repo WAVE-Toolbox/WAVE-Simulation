@@ -19,15 +19,15 @@ hmemo::ContextPtr KITGPI::Wavefields::FD3Demem<ValueType>::getContextPtr()
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Demem<ValueType>::FD3Demem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD3Demem<ValueType>::FD3Demem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "emem";
     numDimension = 3;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Demem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD3Demem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(HX, ctx, dist);
     this->initWavefield(HY, ctx, dist);
@@ -38,7 +38,7 @@ void KITGPI::Wavefields::FD3Demem<ValueType>::init(scai::hmemo::ContextPtr ctx, 
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD3Demem<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD3Demem<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 6 Wavefields in 3D emem modeling: EZ,EY,EX, HX, HY, HZ */
     IndexType numWavefields = 6;
@@ -126,7 +126,7 @@ std::string KITGPI::Wavefields::FD3Demem<ValueType>::getEquationType() const
 
 //! \brief Not valid in the 3D emem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRX()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRX()
 {
     COMMON_THROWEXCEPTION("There is no RX wavefield in the 3D emem case.")
     return (RX);
@@ -134,7 +134,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::get
 
 //! \brief Not valid in the 3D emem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRY()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRY()
 {
     COMMON_THROWEXCEPTION("There is no RY wavefield in the 3D emem case.")
     return (RY);
@@ -142,7 +142,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::get
 
 //! \brief Not valid in the 3D emem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRZ()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD3Demem<ValueType>::getRefRZ()
 {
     COMMON_THROWEXCEPTION("There is no RZ wavefield in the 3D emem case.")
     return (RZ);

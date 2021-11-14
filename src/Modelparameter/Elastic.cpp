@@ -666,7 +666,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Elastic<ValueType>:
 
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency() const
+std::vector<ValueType> KITGPI::Modelparameter::Elastic<ValueType>::getRelaxationFrequency() const
 {
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an elastic modelling")
     return (relaxationFrequency);

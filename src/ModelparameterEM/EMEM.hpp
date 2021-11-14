@@ -62,15 +62,15 @@ namespace KITGPI
             std::string getEquationType() const;
 
             /* Getter methods for not required parameters */
-            scai::lama::Vector<ValueType> const &getElectricConductivityOptical() override;
-            scai::lama::Vector<ValueType> const &getDielectricPermittivityOptical() override;
+            scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() override;
+            scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() override;
             ValueType const &getTauElectricDisplacement() override;
             ValueType const &getTauElectricDisplacement() const override;
             scai::lama::Vector<ValueType> const &getTauElectricConductivity() const override;
             scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const override;
             
             scai::IndexType getNumRelaxationMechanisms() const override;
-            ValueType getRelaxationFrequency() const override;
+            std::vector<ValueType> getRelaxationFrequency() const override;
             
             void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) override;
 
@@ -134,20 +134,21 @@ namespace KITGPI
             using Modelparameter<ValueType>::dielectricPermittivityAverageX;
             
             /* Not required parameters */
-            using Modelparameter<ValueType>::dirtyFlagElectricConductivityOptical;
-            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityOptical;
-            using Modelparameter<ValueType>::electricConductivityOptical;
-            using Modelparameter<ValueType>::dielectricPermittivityOptical;
+            using Modelparameter<ValueType>::dirtyFlagElectricConductivityEffectiveOptical;
+            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityEffectiveOptical;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOptical;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOptical;
             using Modelparameter<ValueType>::tauElectricConductivity;
             using Modelparameter<ValueType>::tauDielectricPermittivity;
             using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::centerFrequencyCPML;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageX;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageY;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageZ;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageX;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageY;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageZ;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageX;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageY;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageZ;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageX;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageY;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageZ;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageX;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageY;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ;

@@ -37,7 +37,7 @@ namespace KITGPI
                 ValueType estimateMemory(scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
                 ValueType estimateMemory(Configuration::Configuration const &config, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
 
-                /* non-required matrixes */
+                /* non-required matrices */
                 scai::lama::Matrix<ValueType> const &getDzf() const override;
                 scai::lama::Matrix<ValueType> const &getDzb() const override;
 
@@ -63,7 +63,7 @@ namespace KITGPI
                 using Derivatives<ValueType>::DxbSparse;
                 using Derivatives<ValueType>::DybSparse;
 
-                /* non-required matrixes */
+                /* non-required matrices */
                 using Derivatives<ValueType>::Dzf;
                 using Derivatives<ValueType>::Dzb;
                 using Derivatives<ValueType>::DzfSparse;

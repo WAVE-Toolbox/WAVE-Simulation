@@ -31,7 +31,7 @@ namespace KITGPI
             //! Default destructor
             ~FD3Dviscoemem(){};
 
-            explicit FD3Dviscoemem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit FD3Dviscoemem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in);
 
             void resetWavefields() override;
 
@@ -41,9 +41,9 @@ namespace KITGPI
             /* Getter routines for non-required wavefields: Will throw an error */
             scai::hmemo::ContextPtr getContextPtr() override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
-            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+            ValueType estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
             /* Overloading Operators */
             KITGPI::Wavefields::FD3Dviscoemem<ValueType> operator*(ValueType rhs);
@@ -69,6 +69,7 @@ namespace KITGPI
             int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
+            using Wavefields<ValueType>::numRelaxationMechanisms;
 
             /* required wavefields */
             using Wavefields<ValueType>::HX;

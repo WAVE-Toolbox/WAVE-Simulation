@@ -82,7 +82,7 @@ namespace KITGPI
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() override;
             scai::lama::Vector<ValueType> const &getTauSAverageYZ() const override;
             scai::IndexType getNumRelaxationMechanisms() const override;
-            ValueType getRelaxationFrequency() const override;
+            std::vector<ValueType> getRelaxationFrequency() const override;
             void calcRockMatrixParameter(Configuration::Configuration const &config) override;
             void calcWaveModulusFromPetrophysics() override;
             void calcPetrophysicsFromWaveModulus() override;
@@ -142,6 +142,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::tauP;
             using Modelparameter<ValueType>::tauS;
             using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::centerFrequencyCPML;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
             using Modelparameter<ValueType>::sWaveModulusAverageXY;
             using Modelparameter<ValueType>::sWaveModulusAverageXZ;

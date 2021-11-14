@@ -19,15 +19,15 @@ hmemo::ContextPtr KITGPI::Wavefields::FD2Dtmem<ValueType>::getContextPtr()
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD2Dtmem<ValueType>::FD2Dtmem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD2Dtmem<ValueType>::FD2Dtmem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "tmem";
     numDimension = 2;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dtmem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(HX, ctx, dist);
     this->initWavefield(HY, ctx, dist);
@@ -39,7 +39,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::init(scai::hmemo::ContextPtr ctx, 
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD2Dtmem<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD2Dtmem<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 3 Wavefields in 2D tmem modeling: HX, HY, EZ */
     IndexType numWavefields = 3;
@@ -212,7 +212,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::get
 
 //! \brief Not valid in the 2D tmem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRX()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRX()
 {
     COMMON_THROWEXCEPTION("There is no RX wavefield in the 2D tmem case.")
     return (RX);
@@ -220,7 +220,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::get
 
 //! \brief Not valid in the 2D tmem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRY()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRY()
 {
     COMMON_THROWEXCEPTION("There is no RY wavefield in the 2D tmem case.")
     return (RY);
@@ -228,7 +228,7 @@ scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::get
 
 //! \brief Not valid in the 2D tmem case
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRZ()
+std::vector<scai::lama::DenseVector<ValueType>> &KITGPI::Wavefields::FD2Dtmem<ValueType>::getRefRZ()
 {
     COMMON_THROWEXCEPTION("There is no RZ wavefield in the 2D tmem case.")
     return (RZ);

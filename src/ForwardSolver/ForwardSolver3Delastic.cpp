@@ -145,7 +145,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     auto &Sxz = wavefield.getRefSxz();
     auto &Sxy = wavefield.getRefSxy();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dzf = derivatives.getDzf();
     auto const &Dxb = derivatives.getDxb();

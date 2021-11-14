@@ -62,10 +62,10 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> onePlusLtauS;
             
             IndexType numRelaxationMechanisms; // = Number of relaxation mechanisms
-            ValueType relaxationTime;          // = 1 / ( 2 * Pi * f_relax )
-            ValueType inverseRelaxationTime;   // = 1 / relaxationTime
-            ValueType viscoCoeff1;             // = 1 - DT / ( 2 * tau_Sigma_l )
-            ValueType viscoCoeff2;             // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
+            std::vector<ValueType> relaxationTime;          // = 1 / ( 2 * Pi * f_relax )
+            std::vector<ValueType> inverseRelaxationTime;   // = 1 / relaxationTime
+            std::vector<ValueType> viscoCoeff1;             // = 1 - DT / ( 2 * tau_Sigma_l )
+            std::vector<ValueType> viscoCoeff2;             // = ( 1.0 + DT / ( 2 * tau_Sigma_l ) ) ^ - 1
             ValueType DThalf;                  // = DT / 2.0
         };
     } /* end namespace ForwardSolver */

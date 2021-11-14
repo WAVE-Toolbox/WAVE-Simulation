@@ -147,7 +147,7 @@ scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<Value
 
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
+std::vector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getRelaxationFrequency() const
 {
     return (relaxationFrequency);
 }

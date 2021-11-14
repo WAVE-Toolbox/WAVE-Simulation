@@ -19,15 +19,15 @@ scai::hmemo::ContextPtr KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::getCont
  \param dist Distribution
  */
 template <typename ValueType>
-KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::FD3Dviscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::FD3Dviscoelastic(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     equationType = "viscoelastic";
     numDimension = 3;
-    init(ctx, dist);
+    init(ctx, dist, numRelaxationMechanisms_in);
 }
 
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     this->initWavefield(VX, ctx, dist);
     this->initWavefield(VY, ctx, dist);
@@ -38,19 +38,31 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::init(scai::hmemo::ContextP
     this->initWavefield(Syz, ctx, dist);
     this->initWavefield(Sxz, ctx, dist);
     this->initWavefield(Sxy, ctx, dist);
-    this->initWavefield(Rxx, ctx, dist);
-    this->initWavefield(Ryy, ctx, dist);
-    this->initWavefield(Rzz, ctx, dist);
-    this->initWavefield(Ryz, ctx, dist);
-    this->initWavefield(Rxz, ctx, dist);
-    this->initWavefield(Rxy, ctx, dist);
+    
+    numRelaxationMechanisms = numRelaxationMechanisms_in;
+    scai::lama::DenseVector<ValueType> temp;
+    this->initWavefield(temp, ctx, dist);
+    Rxx.clear();
+    Ryy.clear();
+    Rzz.clear();
+    Ryz.clear();
+    Rxz.clear();
+    Rxy.clear();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx.push_back(temp);
+        Ryy.push_back(temp);
+        Rzz.push_back(temp);
+        Ryz.push_back(temp);
+        Rxz.push_back(temp);
+        Rxy.push_back(temp);
+    }
 }
 
 template <typename ValueType>
-ValueType KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist)
+ValueType KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in)
 {
     /* 15 Wavefields in 2D acoustic modeling: Sxx,Syy,Szz,Sxy,Sxz,Syz,Rxx,Ryy,Rzz,Rxy,Rxz,Ryz, Vx, Vy, Vz */
-    IndexType numWavefields = 15;
+    IndexType numWavefields = 9 + 6 * numRelaxationMechanisms_in;
     return (this->getMemoryUsage(dist, numWavefields));
 }
 
@@ -125,12 +137,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::resetWavefields()
     this->resetWavefield(Syz);
     this->resetWavefield(Sxz);
     this->resetWavefield(Sxy);
-    this->resetWavefield(Rxx);
-    this->resetWavefield(Ryy);
-    this->resetWavefield(Rzz);
-    this->resetWavefield(Ryz);
-    this->resetWavefield(Rxz);
-    this->resetWavefield(Rxy);
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        this->resetWavefield(Rxx[l]);
+        this->resetWavefield(Ryy[l]);
+        this->resetWavefield(Rzz[l]);
+        this->resetWavefield(Ryz[l]);
+        this->resetWavefield(Rxz[l]);
+        this->resetWavefield(Rxy[l]);
+    }
 }
 
 /*! \brief Get numDimension (3)
@@ -315,12 +329,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::minusAssign(KITGPI::Wavefi
     Sxy -= rhs.getRefSxy();
     Sxz -= rhs.getRefSxz();
     Syz -= rhs.getRefSyz();
-    Rxx -= rhs.getRefRxx();
-    Ryy -= rhs.getRefRyy();
-    Rzz -= rhs.getRefRzz();
-    Rxy -= rhs.getRefRxy();
-    Rxz -= rhs.getRefRxz();
-    Ryz -= rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx[l] -= rhs.getRefRxx()[l];
+        Ryy[l] -= rhs.getRefRyy()[l];
+        Rzz[l] -= rhs.getRefRzz()[l];
+        Rxy[l] -= rhs.getRefRxy()[l];
+        Rxz[l] -= rhs.getRefRxz()[l];
+        Ryz[l] -= rhs.getRefRyz()[l];
+    }
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -339,12 +355,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::plusAssign(KITGPI::Wavefie
     Sxy += rhs.getRefSxy();
     Sxz += rhs.getRefSxz();
     Syz += rhs.getRefSyz();
-    Rxx += rhs.getRefRxx();
-    Ryy += rhs.getRefRyy();
-    Rzz += rhs.getRefRzz();
-    Rxy += rhs.getRefRxy();
-    Rxz += rhs.getRefRxz();
-    Ryz += rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx[l] += rhs.getRefRxx()[l];
+        Ryy[l] += rhs.getRefRyy()[l];
+        Rzz[l] += rhs.getRefRzz()[l];
+        Rxy[l] += rhs.getRefRxy()[l];
+        Rxz[l] += rhs.getRefRxz()[l];
+        Ryz[l] += rhs.getRefRyz()[l];
+    }
 }
 
 /*! \brief function for overloading *= Operation (called in base class)
@@ -363,12 +381,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::timesAssign(ValueType rhs)
     Sxy *= rhs;
     Sxz *= rhs;
     Syz *= rhs;
-    Rxx *= rhs;
-    Ryy *= rhs;
-    Rzz *= rhs;
-    Rxy *= rhs;
-    Rxz *= rhs;
-    Ryz *= rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx[l] *= rhs;
+        Ryy[l] *= rhs;
+        Rzz[l] *= rhs;
+        Rxy[l] *= rhs;
+        Rxz[l] *= rhs;
+        Ryz[l] *= rhs;
+    }
 }
 
 /*! \brief apply model transform to wavefields in inversion
@@ -387,12 +407,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::applyTransform(scai::lama:
     Sxy = lhs * rhs.getRefSxy();
     Sxz = lhs * rhs.getRefSxz();
     Syz = lhs * rhs.getRefSyz();
-    Rxx = lhs * rhs.getRefRxx();
-    Ryy = lhs * rhs.getRefRyy();
-    Rzz = lhs * rhs.getRefRzz();
-    Rxy = lhs * rhs.getRefRxy();
-    Rxz = lhs * rhs.getRefRxz();
-    Ryz = lhs * rhs.getRefRyz();
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx[l] = lhs * rhs.getRefRxx()[l];
+        Ryy[l] = lhs * rhs.getRefRyy()[l];
+        Rzz[l] = lhs * rhs.getRefRzz()[l];
+        Rxy[l] = lhs * rhs.getRefRxy()[l];
+        Rxz[l] = lhs * rhs.getRefRxz()[l];
+        Ryz[l] = lhs * rhs.getRefRyz()[l];
+    }
 }
 
 template class KITGPI::Wavefields::FD3Dviscoelastic<float>;

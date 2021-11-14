@@ -425,19 +425,19 @@ std::string KITGPI::Modelparameter::TMEM<ValueType>::getEquationType() const
  *
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getElectricConductivityOptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getElectricConductivityEffectiveOptical()
 {
-    COMMON_THROWEXCEPTION("There is no electricConductivityOptical in an tmem modelling")
-    return (electricConductivityOptical);
+    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOptical in an tmem modelling")
+    return (electricConductivityEffectiveOptical);
 }
 
-/*! \brief Get reference to dielectricPermittivityOptical
+/*! \brief Get reference to dielectricPermittivityEffectiveOptical
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getDielectricPermittivityOptical()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getDielectricPermittivityEffectiveOptical()
 {
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityOptical in an tmem modelling")
-    return (dielectricPermittivityOptical);
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOptical in an tmem modelling")
+    return (dielectricPermittivityEffectiveOptical);
 }
 
 /*! \brief Get reference to tauElectricDisplacement
@@ -482,7 +482,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::ge
 
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::TMEM<ValueType>::getRelaxationFrequency() const
+std::vector<ValueType> KITGPI::Modelparameter::TMEM<ValueType>::getRelaxationFrequency() const
 {
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an tmem modelling")
     return (relaxationFrequency);

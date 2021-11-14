@@ -64,10 +64,10 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT)
 {
-    auto const &electricConductivityOpticalAverageX = model.getElectricConductivityOpticalAverageX();
-    auto const &electricConductivityOpticalAverageY = model.getElectricConductivityOpticalAverageY();
-    auto const &dielectricPermittivityOpticalAverageX = model.getDielectricPermittivityOpticalAverageX();
-    auto const &dielectricPermittivityOpticalAverageY = model.getDielectricPermittivityOpticalAverageY();
+    auto const &electricConductivityEffectiveOpticalAverageX = model.getElectricConductivityEffectiveOpticalAverageX();
+    auto const &electricConductivityEffectiveOpticalAverageY = model.getElectricConductivityEffectiveOpticalAverageY();
+    auto const &dielectricPermittivityEffectiveOpticalAverageX = model.getDielectricPermittivityEffectiveOpticalAverageX();
+    auto const &dielectricPermittivityEffectiveOpticalAverageY = model.getDielectricPermittivityEffectiveOpticalAverageY();
     auto const &dielectricPermittivityAverageX = model.getDielectricPermittivityAverageX();
     auto const &dielectricPermittivityAverageY = model.getDielectricPermittivityAverageY();
     auto const &tauDielectricPermittivityAverageX = model.getTauDielectricPermittivityAverageX();
@@ -75,11 +75,11 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::prepareForModelling(Modelp
     ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
     scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
 
-    CaAverageX = this->getAveragedCa(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
-    CaAverageY = this->getAveragedCa(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
+    CaAverageX = this->getAveragedCa(dielectricPermittivityEffectiveOpticalAverageX, electricConductivityEffectiveOpticalAverageX, DT);
+    CaAverageY = this->getAveragedCa(dielectricPermittivityEffectiveOpticalAverageY, electricConductivityEffectiveOpticalAverageY, DT);
     
-    CbAverageX = this->getAveragedCb(dielectricPermittivityOpticalAverageX, electricConductivityOpticalAverageX, DT);
-    CbAverageY = this->getAveragedCb(dielectricPermittivityOpticalAverageY, electricConductivityOpticalAverageY, DT);
+    CbAverageX = this->getAveragedCb(dielectricPermittivityEffectiveOpticalAverageX, electricConductivityEffectiveOpticalAverageX, DT);
+    CbAverageY = this->getAveragedCb(dielectricPermittivityEffectiveOpticalAverageY, electricConductivityEffectiveOpticalAverageY, DT);
     
     Cc = this->getCc(tauElectricDisplacement, DT);
     
@@ -138,7 +138,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     auto &rX = wavefield.getRefRX();
     auto &rY = wavefield.getRefRY();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     auto const &Dxf = derivatives.getDxf();
     auto const &Dxb = derivatives.getDxb();   
     auto const &Dyf = derivatives.getDyf();
@@ -164,13 +164,13 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     /*  rX rY */
     /* ----------------*/
     // numRelaxationMechanisms = 1
-    update = Cc * rX;
+    update = Cc * rX[0];
     update_temp = CdAverageX * eX;
-    rX = update_temp + update;
+    rX[0] = update_temp + update;
     
-    update = Cc * rY;
+    update = Cc * rY[0];
     update_temp = CdAverageY * eY;
-    rY = update_temp + update;
+    rY[0] = update_temp + update;
     
     /* ----------------*/
     /*  ex */
@@ -179,7 +179,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
     if (useConvPML) {
         ConvPML.apply_hzy(update);
     }
-    update_temp = -DT_temp * rX;
+    update_temp = -DT_temp * rX[0];
     update += update_temp;
     update *= CbAverageX;    
     update_temp = CaAverageX * eX;
@@ -193,7 +193,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hzx(update_temp);
     }
     update = -update_temp;
-    update_temp = -DT_temp * rY;
+    update_temp = -DT_temp * rY[0];
     update += update_temp;
     update *= CbAverageY;   
     update_temp = CaAverageY * eY;

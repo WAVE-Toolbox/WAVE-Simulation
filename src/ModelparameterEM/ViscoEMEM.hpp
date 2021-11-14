@@ -45,7 +45,7 @@ namespace KITGPI
             ~ViscoEMEM(){};
 
             explicit ViscoEMEM(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates);
-            explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in);
             explicit ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat);
 
             //! Copy Constructor.
@@ -53,11 +53,11 @@ namespace KITGPI
 
             ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in);
             void init(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates) override;
             void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, scai::IndexType fileFormat) override;
 
-            void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in);
+            void initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in);
 
             void write(std::string filename, scai::IndexType fileFormat) const override;
 
@@ -100,8 +100,8 @@ namespace KITGPI
 
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocivityEM;            
-            using Modelparameter<ValueType>::dirtyFlagElectricConductivityOptical;
-            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityOptical;
+            using Modelparameter<ValueType>::dirtyFlagElectricConductivityEffectiveOptical;
+            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityEffectiveOptical;
             
             using Modelparameter<ValueType>::velocivityEM;
             using Modelparameter<ValueType>::magneticPermeability;
@@ -112,11 +112,12 @@ namespace KITGPI
             using Modelparameter<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
             using Modelparameter<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
-            using Modelparameter<ValueType>::electricConductivityOptical;
-            using Modelparameter<ValueType>::dielectricPermittivityOptical;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOptical;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOptical;
             using Modelparameter<ValueType>::tauElectricConductivity;
             using Modelparameter<ValueType>::tauDielectricPermittivity;
             using Modelparameter<ValueType>::relaxationFrequency;
+            using Modelparameter<ValueType>::centerFrequencyCPML;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
 
             void initializeMatrices(scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx, Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::dmemo::CommunicatorPtr comm) override;
@@ -133,12 +134,12 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageYZ;
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXZ;
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXY;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageY;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageX;
-            using Modelparameter<ValueType>::electricConductivityOpticalAverageZ;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageX;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageY;
-            using Modelparameter<ValueType>::dielectricPermittivityOpticalAverageZ;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageY;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageX;
+            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageZ;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageX;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageY;
+            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageZ;
             
             using Modelparameter<ValueType>::dielectricPermittivityAverageX;
             using Modelparameter<ValueType>::dielectricPermittivityAverageY;

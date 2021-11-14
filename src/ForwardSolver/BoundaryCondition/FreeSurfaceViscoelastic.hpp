@@ -37,9 +37,10 @@ namespace KITGPI
                 scai::lama::SparseVector<ValueType> selectFreeSurface;               //!< Vector, which sets everything besides the free surface to zero
                 scai::lama::SparseVector<ValueType> scaleStressVerticalUpdate;       //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
                 scai::lama::SparseVector<ValueType> scaleStressHorizontalUpdate;     //!< Vector, which scales the horizontal stress updates to exchange vertical with horizontal derivatives
-                scai::lama::SparseVector<ValueType> scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
-                scai::lama::SparseVector<ValueType> scaleRelaxationHorizontalUpdate; //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivativesrelaxation mechanism
+                std::vector<scai::lama::SparseVector<ValueType>> scaleRelaxationVerticalUpdate;   //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivatives
+                std::vector<scai::lama::SparseVector<ValueType>> scaleRelaxationHorizontalUpdate; //!< Vector, which scales the horizontal relaxation updates to exchange vertical with horizontal derivativesrelaxation mechanism
                 scai::lama::SparseVector<ValueType> temp;                            //!< temporary Sparse Vector (lives as long as the forward solver)
+                scai::IndexType numRelaxationMechanisms;
             };
         } /* end namespace BoundaryCondition */
     }     /* end namespace ForwardSolver */

@@ -542,7 +542,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::SH<ValueType>::getT
 
 /*! \brief Getter method for relaxation frequency */
 template <typename ValueType>
-ValueType KITGPI::Modelparameter::SH<ValueType>::getRelaxationFrequency() const
+std::vector<ValueType> KITGPI::Modelparameter::SH<ValueType>::getRelaxationFrequency() const
 {
     COMMON_THROWEXCEPTION("There is no relaxationFrequency parameter in an sh modelling")
     return (relaxationFrequency);

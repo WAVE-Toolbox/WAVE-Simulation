@@ -30,8 +30,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::prepareForModelling(Acquisiti
 
     //refreshModulus
     this->getTauElectricDisplacement();
-    this->getElectricConductivityOptical();
-    this->getDielectricPermittivityOptical();
+    this->getElectricConductivityEffectiveOptical();
+    this->getDielectricPermittivityEffectiveOptical();
     this->getVelocityEM();
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
@@ -64,8 +64,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
     
     dirtyFlagAveraging = true;      // If EM-parameters will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true;   // the velocity vector is now dirty
-    dirtyFlagElectricConductivityOptical = true; // the electricConductivity vector is now dirty
-    dirtyFlagDielectricPermittivityOptical = true; // the dielectricPermittivityOptical vector is now dirty
+    dirtyFlagElectricConductivityEffectiveOptical = true; // the electricConductivity vector is now dirty
+    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the dielectricPermittivityEffectiveOptical vector is now dirty
           
     if (config.getAndCatch("inversionType", 1) == 3 || config.getAndCatch("parameterisation", 0) == 1 || config.getAndCatch("parameterisation", 0) == 2) {
         Common::searchAndReplace<ValueType>(porosity, config.getAndCatch("lowerPorosityTh", 0.0), config.getAndCatch("lowerPorosityTh", 0.0), 1);
@@ -189,17 +189,30 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(Configuration::Configura
 {
     SCAI_ASSERT(config.get<IndexType>("ModelRead") != 2, "Read variable model not available for ViscoEMEM, variable grid is not available here!")
     
+    IndexType numRelaxationMechanisms_in = config.get<IndexType>("numRelaxationMechanisms");
+    SCAI_ASSERT(numRelaxationMechanisms_in <= 4, "numRelaxationMechanisms more than 4 is not available here!")
+    std::vector<ValueType> relaxationFrequency_in(numRelaxationMechanisms_in, 0);
+    for (int l=0; l<numRelaxationMechanisms_in; l++) {
+        if (l==0)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency");
+        if (l==1)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency2");
+        if (l==2)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency3");
+        if (l==3)
+            relaxationFrequency_in[l] = config.get<ValueType>("relaxationFrequency4");
+    }
     if (config.get<IndexType>("ModelRead") == 1) {
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model (viscoemem) parameter from file...\n");
 
         init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
-        initRelaxationMechanisms(config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency")); 
+        initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML")); 
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
-        init(ctx, dist, config.get<ValueType>("muEMr"), config.get<ValueType>("sigmaEM"), config.get<ValueType>("epsilonEMr"), config.get<ValueType>("tauSigmaEMr"), config.get<ValueType>("tauEpsilonEM"), config.get<IndexType>("numRelaxationMechanisms"), config.get<ValueType>("relaxationFrequency"));
+        init(ctx, dist, config.get<ValueType>("muEMr"), config.get<ValueType>("sigmaEM"), config.get<ValueType>("epsilonEMr"), config.get<ValueType>("tauSigmaEMr"), config.get<ValueType>("tauEpsilonEM"), numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
     }
 }
 
@@ -217,10 +230,10 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(Configuration::Configura
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-KITGPI::Modelparameter::ViscoEMEM<ValueType>::ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+KITGPI::Modelparameter::ViscoEMEM<ValueType>::ViscoEMEM(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
     equationType = "viscoemem";
-    init(ctx, dist, magneticPermeability_const, electricConductivity_const, dielectricPermittivity_const, tauElectricConductivity_const, tauDielectricPermittivity_const, numRelaxationMechanisms_in, relaxationFrequency_in);
+    init(ctx, dist, magneticPermeability_const, electricConductivity_const, dielectricPermittivity_const, tauElectricConductivity_const, tauDielectricPermittivity_const, numRelaxationMechanisms_in, relaxationFrequency_in, centerFrequencyCPML_in);
 }
 
 /*! \brief Initialisation that is generating a homogeneous model
@@ -237,7 +250,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType>::ViscoEMEM(scai::hmemo::ContextPtr 
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, ValueType magneticPermeability_const, ValueType electricConductivity_const, ValueType dielectricPermittivity_const, ValueType tauElectricConductivity_const, ValueType tauDielectricPermittivity_const, scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
     dielectricPermittivity_const *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
     magneticPermeability_const *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
@@ -246,7 +259,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
     this->initModelparameter(electricConductivity, ctx, dist, electricConductivity_const);
     this->initModelparameter(dielectricPermittivity, ctx, dist, dielectricPermittivity_const);
     
-    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in);
+    initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in, centerFrequencyCPML_in);
     tauElectricConductivity_const *= this->getTauElectricDisplacement(); // calculate the real tauElectricConductivity
     
     this->initModelparameter(tauElectricConductivity, ctx, dist, tauElectricConductivity_const);
@@ -315,15 +328,15 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType>::ViscoEMEM(const ViscoEMEM &rhs)
     porosity = rhs.porosity;
     saturation = rhs.saturation;
     
-    electricConductivityOptical = rhs.electricConductivityOptical;
-    dielectricPermittivityOptical = rhs.dielectricPermittivityOptical;
+    electricConductivityEffectiveOptical = rhs.electricConductivityEffectiveOptical;
+    dielectricPermittivityEffectiveOptical = rhs.dielectricPermittivityEffectiveOptical;
     tauElectricConductivity = rhs.tauElectricConductivity;
     tauDielectricPermittivity = rhs.tauDielectricPermittivity;
     tauElectricDisplacement = rhs.tauElectricDisplacement;
     relaxationFrequency = rhs.relaxationFrequency;
     numRelaxationMechanisms = rhs.numRelaxationMechanisms;
-    dirtyFlagElectricConductivityOptical = rhs.dirtyFlagElectricConductivityOptical;
-    dirtyFlagDielectricPermittivityOptical = rhs.dirtyFlagDielectricPermittivityOptical;
+    dirtyFlagElectricConductivityEffectiveOptical = rhs.dirtyFlagElectricConductivityEffectiveOptical;
+    dirtyFlagDielectricPermittivityEffectiveOptical = rhs.dirtyFlagDielectricPermittivityEffectiveOptical;
 }
 
 /*! \brief Write model to an external file
@@ -407,13 +420,13 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::calculateAveraging()
         this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXZ, averageMatrixXZ);
         this->calcInverseAveragedParameter(magneticPermeability, inverseMagneticPermeabilityAverageXY, averageMatrixXY);
                 
-        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageX, averageMatrixX);
-        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageY, averageMatrixY);
-        this->calcAveragedParameter(electricConductivityOptical, electricConductivityOpticalAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(electricConductivityEffectiveOptical, electricConductivityEffectiveOpticalAverageX, averageMatrixX);
+        this->calcAveragedParameter(electricConductivityEffectiveOptical, electricConductivityEffectiveOpticalAverageY, averageMatrixY);
+        this->calcAveragedParameter(electricConductivityEffectiveOptical, electricConductivityEffectiveOpticalAverageZ, averageMatrixZ);
         
-        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageX, averageMatrixX);
-        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageY, averageMatrixY);
-        this->calcAveragedParameter(dielectricPermittivityOptical, dielectricPermittivityOpticalAverageZ, averageMatrixZ);
+        this->calcAveragedParameter(dielectricPermittivityEffectiveOptical, dielectricPermittivityEffectiveOpticalAverageX, averageMatrixX);
+        this->calcAveragedParameter(dielectricPermittivityEffectiveOptical, dielectricPermittivityEffectiveOpticalAverageY, averageMatrixY);
+        this->calcAveragedParameter(dielectricPermittivityEffectiveOptical, dielectricPermittivityEffectiveOpticalAverageZ, averageMatrixZ);
         
         this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageX, averageMatrixX);
         this->calcAveragedParameter(dielectricPermittivity, dielectricPermittivityAverageY, averageMatrixY);
@@ -433,16 +446,17 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::calculateAveraging()
  \param relaxationFrequency_in Relaxation frequency
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ViscoEMEM<ValueType>::initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, ValueType relaxationFrequency_in)
+void KITGPI::Modelparameter::ViscoEMEM<ValueType>::initRelaxationMechanisms(scai::IndexType numRelaxationMechanisms_in, std::vector<ValueType> relaxationFrequency_in, ValueType centerFrequencyCPML_in)
 {
     if (numRelaxationMechanisms_in < 1) {
         COMMON_THROWEXCEPTION("The number of relaxation mechanisms should be >0 in an visco-emem simulation")
     }
-    if (relaxationFrequency_in <= 0) {
+    if (relaxationFrequency_in[0] <= 0) {
         COMMON_THROWEXCEPTION("The relaxation frequency should be >=0 in an visco-emem simulation")
     }
     numRelaxationMechanisms = numRelaxationMechanisms_in;
     relaxationFrequency = relaxationFrequency_in;
+    centerFrequencyCPML = centerFrequencyCPML_in;
 }
 
 /*! \brief Get equationType (viscoemem)
@@ -455,15 +469,15 @@ std::string KITGPI::Modelparameter::ViscoEMEM<ValueType>::getEquationType() cons
 
 /*! \brief Get const reference to EM-wave velocity
  * 
- * If EM-Wave velocity is dirty eg. because the EM-Wave velocity was modified, EM-Wave velocity will be calculated from magneticPermeability and dielectricPermittivityOptical.
+ * If EM-Wave velocity is dirty eg. because the EM-Wave velocity was modified, EM-Wave velocity will be calculated from magneticPermeability and dielectricPermittivityEffectiveOptical.
  */
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ViscoEMEM<ValueType>::getVelocityEM()
 {
     // If the modulus is dirty, then recalculate
     if (dirtyFlagVelocivityEM) {
-        HOST_PRINT(dielectricPermittivityOptical.getDistributionPtr()->getCommunicatorPtr(), "", "EM-Wave velocity will be calculated from magneticPermeability and dielectricPermittivityOptical\n");
-        this->calcVelocityFromModulus(dielectricPermittivityOptical, magneticPermeability, velocivityEM);
+        HOST_PRINT(dielectricPermittivityEffectiveOptical.getDistributionPtr()->getCommunicatorPtr(), "", "EM-Wave velocity will be calculated from magneticPermeability and dielectricPermittivityEffectiveOptical\n");
+        this->calcVelocityFromModulus(dielectricPermittivityEffectiveOptical, magneticPermeability, velocivityEM);
         dirtyFlagVelocivityEM = false;
     }
     return (velocivityEM);
@@ -520,8 +534,8 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     tauElectricConductivity *= rhs;
     tauDielectricPermittivity *= rhs;
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
     return *this;
 }
 
@@ -556,8 +570,8 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     tauElectricConductivity += rhs.tauElectricConductivity;
     tauDielectricPermittivity += rhs.tauDielectricPermittivity;
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
     return *this;
 }
 
@@ -592,8 +606,8 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     tauElectricConductivity -= rhs.tauElectricConductivity;
     tauDielectricPermittivity -= rhs.tauDielectricPermittivity;
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
     return *this;
 }
 
@@ -622,8 +636,8 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     relaxationFrequency = rhs.relaxationFrequency;
     numRelaxationMechanisms = rhs.numRelaxationMechanisms;
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
     return *this;
 }
 
@@ -652,8 +666,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::assign(KITGPI::Modelparameter
     relaxationFrequency = rhs.getRelaxationFrequency();
     numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
 }
 
 /*! \brief function for overloading -= Operation (called in base class)
@@ -675,8 +689,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::minusAssign(KITGPI::Modelpara
     tauElectricConductivity -= rhs.getTauElectricConductivity();
     tauDielectricPermittivity -= rhs.getTauDielectricPermittivity();
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
 }
 
 /*! \brief function for overloading += Operation (called in base class)
@@ -698,8 +712,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::plusAssign(KITGPI::Modelparam
     tauElectricConductivity += rhs.getTauElectricConductivity();
     tauDielectricPermittivity += rhs.getTauDielectricPermittivity();
     
-    dirtyFlagElectricConductivityOptical = true;
-    dirtyFlagDielectricPermittivityOptical = true;
+    dirtyFlagElectricConductivityEffectiveOptical = true;
+    dirtyFlagDielectricPermittivityEffectiveOptical = true;
 }
 
 template class KITGPI::Modelparameter::ViscoEMEM<float>;

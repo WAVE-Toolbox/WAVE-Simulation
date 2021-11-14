@@ -31,7 +31,7 @@ namespace KITGPI
             //! Default destructor
             ~FD2Dviscotmem(){};
 
-            explicit FD2Dviscotmem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);
+            explicit FD2Dviscotmem(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in);
 
             void resetWavefields() override;
 
@@ -42,14 +42,14 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> &getRefHZ() override;
             scai::lama::DenseVector<ValueType> &getRefEX() override;
             scai::lama::DenseVector<ValueType> &getRefEY() override;
-            scai::lama::DenseVector<ValueType> &getRefRX() override;
-            scai::lama::DenseVector<ValueType> &getRefRY() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRX() override;
+            std::vector<scai::lama::DenseVector<ValueType>> &getRefRY() override;
 
             scai::hmemo::ContextPtr getContextPtr() override;
 
-            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) override;
+            void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
-            ValueType estimateMemory(scai::dmemo::DistributionPtr dist) override;
+            ValueType estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) override;
 
             /* Overloading Operators */
             KITGPI::Wavefields::FD2Dviscotmem<ValueType> operator*(ValueType rhs);
@@ -75,6 +75,7 @@ namespace KITGPI
             int NumDimension;
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
+            using Wavefields<ValueType>::numRelaxationMechanisms;
 
             /* required wavefields */
             using Wavefields<ValueType>::HX;  //!< magnatic intensity Wavefield 

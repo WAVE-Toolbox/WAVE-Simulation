@@ -134,7 +134,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::run(Acquisition::Acquisition
 
     lama::Vector<ValueType> &Sxy = wavefield.getRefSxy();
 
-    /* Get references to required derivatives matrixes */
+    /* Get references to required derivatives matrices */
     lama::Matrix<ValueType> const &Dxf = derivatives.getDxf();
     lama::Matrix<ValueType> const &Dxb = derivatives.getDxb();
 

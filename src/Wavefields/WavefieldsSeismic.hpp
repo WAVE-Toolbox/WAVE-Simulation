@@ -43,12 +43,12 @@ namespace KITGPI
             virtual scai::hmemo::ContextPtr getContextPtr() = 0;
 
             //! \brief Initialization
-            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist) = 0;
+            virtual void init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) = 0;
             
             bool isFinite(scai::dmemo::DistributionPtr dist) override;
 
             //! \brief memory estimation
-            virtual ValueType estimateMemory(scai::dmemo::DistributionPtr dist) = 0;
+            virtual ValueType estimateMemory(dmemo::DistributionPtr dist, scai::IndexType numRelaxationMechanisms_in) = 0;
 
             virtual void write(scai::IndexType snapType, std::string baseName, scai::IndexType t, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, Modelparameter::Modelparameter<ValueType> const &model, scai::IndexType fileFormat) = 0;
 
@@ -90,12 +90,12 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> &getRefSxz() override;
             virtual scai::lama::DenseVector<ValueType> &getRefSxy() override;
 
-            virtual scai::lama::DenseVector<ValueType> &getRefRxx() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRyy() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRzz() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRyz() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRxz() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRxy() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxx() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRyy() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRzz() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRyz() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxz() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRxy() override;
 
             /* EM */
             virtual scai::lama::DenseVector<ValueType> &getRefHX() override;
@@ -118,9 +118,9 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> &getRefEYright() override;
             virtual scai::lama::DenseVector<ValueType> &getRefEZright() override;
 
-            virtual scai::lama::DenseVector<ValueType> &getRefRX() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRY() override;
-            virtual scai::lama::DenseVector<ValueType> &getRefRZ() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRX() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRY() override;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> &getRefRZ() override;
 
           protected:
             /* Common */
@@ -131,6 +131,7 @@ namespace KITGPI
 
             using Wavefields<ValueType>::numDimension;
             using Wavefields<ValueType>::equationType;
+            using Wavefields<ValueType>::numRelaxationMechanisms;
             
             /* Seismic */
             using Wavefields<ValueType>::VX;  //!< Wavefield for velocity in x

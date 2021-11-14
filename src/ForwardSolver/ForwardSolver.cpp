@@ -1,6 +1,6 @@
 #include "ForwardSolver.hpp"
 
-/*! \brief memory estimation wrapper for the boundarie conditions
+/*! \brief memory estimation wrapper for the boundary conditions
 *
 *
 \param config Configuration

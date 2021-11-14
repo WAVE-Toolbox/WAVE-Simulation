@@ -65,6 +65,7 @@ int main(int argc, const char *argv[])
     
     std::string dimension = config.get<std::string>("dimension");
     std::string equationType = config.get<std::string>("equationType");
+    IndexType numRelaxationMechanisms = config.get<IndexType>("numRelaxationMechanisms");
 
     /* inter node communicator */
     dmemo::CommunicatorPtr commAll = dmemo::Communicator::getCommunicatorPtr(); // default communicator, set by environment variable SCAI_COMMUNICATOR
@@ -160,7 +161,7 @@ int main(int argc, const char *argv[])
     ValueType memDerivatives = derivatives->estimateMemory(config, dist, modelCoordinates);
     IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // total number of shot domains
     Common::checkNumShotDomains(numShotDomains, commAll);
-    ValueType memWavefileds = wavefields->estimateMemory(dist);
+    ValueType memWavefileds = wavefields->estimateMemory(dist, numRelaxationMechanisms);
     ValueType memModel = model->estimateMemory(dist);
     ValueType memSolver = solver->estimateMemory(config, dist, modelCoordinates);
     ValueType memTotal = memDerivatives + memWavefileds + memModel + memSolver;
@@ -215,7 +216,7 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     SCAI_REGION("WAVE-Simulation.initWavefields")
     start_t = common::Walltime::get();
-    wavefields->init(ctx, dist);
+    wavefields->init(ctx, dist, numRelaxationMechanisms);
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing wavefield in " << end_t - start_t << " sec.\n\n");
 
@@ -251,7 +252,7 @@ int main(int argc, const char *argv[])
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();
-        SCAI_ASSERT_ERROR(numshots == numCuts, "numshots != numCuts"); // check whether model pershot has been applied sucessfully.
+        SCAI_ASSERT_ERROR(numshots == numCuts, "numshots != numCuts"); // check whether model pershot has been applied successfully.
         Acquisition::writeCutCoordToFile(config.get<std::string>("cutCoordinatesFilename"), cutCoordinates, uniqueShotNos);        
     }
     
