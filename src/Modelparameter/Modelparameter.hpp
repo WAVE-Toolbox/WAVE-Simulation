@@ -64,6 +64,7 @@ namespace KITGPI
             virtual void write(std::string filename, scai::IndexType fileFormat) const = 0;
             virtual void writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat) = 0;
 
+            ValueType const getCenterFrequencyCPML() const;
             virtual std::string getEquationType() const = 0;
             virtual scai::IndexType getNumRelaxationMechanisms() const;
             virtual std::vector<ValueType> getRelaxationFrequency() const;
@@ -182,12 +183,6 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() = 0;
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() const = 0;
             
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() const = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() const = 0;
-            virtual ValueType const &getTauElectricDisplacement() = 0;
-            virtual ValueType const &getTauElectricDisplacement() const = 0;
             virtual scai::lama::Vector<ValueType> const &getTauElectricConductivity() const = 0;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const = 0;
 
@@ -198,8 +193,6 @@ namespace KITGPI
             virtual void setElectricConductivity(scai::lama::Vector<ValueType> const &setElectricConductivity) = 0;
             virtual void setDielectricPermittivity(scai::lama::Vector<ValueType> const &setDielectricPermittivity) = 0;
             
-            virtual void setElectricConductivityEffectiveOptical(scai::lama::Vector<ValueType> const &setElectricConductivityEffectiveOptical) = 0;
-            virtual void setDielectricPermittivityEffectiveOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityEffectiveOptical) = 0;
             virtual void setTauElectricConductivity(scai::lama::Vector<ValueType> const &setTauElectricConductivity) = 0;
             virtual void setTauDielectricPermittivity(scai::lama::Vector<ValueType> const &setTauDielectricPermittivity) = 0;
             
@@ -240,19 +233,12 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ() = 0;
             virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ() const = 0;
             
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageX() = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageX() const = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageY() = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageY() const = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageZ() = 0;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageZ() const = 0;            
-            
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageX() = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageX() const = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageY() = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageY() const = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageZ() = 0;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageZ() const = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageX() = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageX() const = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageY() = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageY() const = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageZ() = 0;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageZ() const = 0;
             
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX() = 0;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX() const = 0;
@@ -357,8 +343,6 @@ namespace KITGPI
 
             /* EM */
             bool dirtyFlagVelocivityEM = true;   //!< ==true if EM-wave velocity has to be recalculated; ==false if velocity is up to date
-            bool dirtyFlagElectricConductivityEffectiveOptical = true; //!< ==true if electricConductivityEffectiveOptical has to be recalulated;
-            bool dirtyFlagDielectricPermittivityEffectiveOptical = true; //!< ==true if dielectricPermittivityEffectiveOptical has to be recalulated;
             
             ValueType aArchie;
             ValueType mArchie;
@@ -375,8 +359,6 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> electricConductivity; //!< Vector storing EM-wave velocity.
             scai::lama::DenseVector<ValueType> dielectricPermittivity; //!< Vector storing dielectricPermittivity.
             
-            scai::lama::DenseVector<ValueType> electricConductivityEffectiveOptical; //!< Vector storing dielectricPermittivityEffectiveOptical for visco-emem modelling.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOptical; //!< Vector storing dielectricPermittivityEffectiveOptical for visco-emem modelling.
             scai::lama::DenseVector<ValueType> tauElectricConductivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
             scai::lama::DenseVector<ValueType> tauDielectricPermittivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
             
@@ -393,17 +375,14 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> dielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
             scai::lama::DenseVector<ValueType> dielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
             
-            scai::lama::DenseVector<ValueType> electricConductivityEffectiveOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> electricConductivityEffectiveOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> electricConductivityEffectiveOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.          
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.              
+            scai::lama::DenseVector<ValueType> tauElectricConductivityAverageX; //!< Vector storing averaged modulus in x-direction.
+            scai::lama::DenseVector<ValueType> tauElectricConductivityAverageY; //!< Vector storing averaged modulus in y-direction.
+            scai::lama::DenseVector<ValueType> tauElectricConductivityAverageZ; //!< Vector storing averaged modulus in z-direction.              
             scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageX; //!< Vector storing averaged modulus in x-direction.
             scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
             scai::lama::DenseVector<ValueType> tauDielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
 
-            ValueType tauElectricDisplacement;     // relaxation time of electric displacement
+            std::vector<ValueType> relaxationTime;     // relaxation time of electric displacement
             
           private:
             void allocateModelparameter(scai::lama::Vector<ValueType> &vector, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist);

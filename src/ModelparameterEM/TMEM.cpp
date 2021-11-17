@@ -421,45 +421,6 @@ std::string KITGPI::Modelparameter::TMEM<ValueType>::getEquationType() const
     return (equationType);
 }
 
-/*! \brief Get reference to inverse magneticPermeability
- *
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getElectricConductivityEffectiveOptical()
-{
-    COMMON_THROWEXCEPTION("There is no electricConductivityEffectiveOptical in an tmem modelling")
-    return (electricConductivityEffectiveOptical);
-}
-
-/*! \brief Get reference to dielectricPermittivityEffectiveOptical
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::TMEM<ValueType>::getDielectricPermittivityEffectiveOptical()
-{
-    COMMON_THROWEXCEPTION("There is no dielectricPermittivityEffectiveOptical in an tmem modelling")
-    return (dielectricPermittivityEffectiveOptical);
-}
-
-/*! \brief Get reference to tauElectricDisplacement
- *
- */
-template <typename ValueType> 
-ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauElectricDisplacement()
-{
-    COMMON_THROWEXCEPTION("There is no tauElectricDisplacement parameter in an tmem modelling")
-    return (tauElectricDisplacement);
-}
-
-/*! \brief Get reference to tauElectricDisplacement
- *
- */
-template <typename ValueType> 
-ValueType const &KITGPI::Modelparameter::TMEM<ValueType>::getTauElectricDisplacement() const
-{
-    COMMON_THROWEXCEPTION("There is no tauElectricDisplacement parameter in an tmem modelling")
-    return (tauElectricDisplacement);
-}
-
 /*! \brief Get reference to tauElectricConductivity
  *
  */

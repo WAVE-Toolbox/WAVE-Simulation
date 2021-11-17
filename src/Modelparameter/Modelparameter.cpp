@@ -4,11 +4,19 @@
 using namespace scai;
 using namespace KITGPI;
 
+/*! \brief Getter method for memory usage */
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getMemoryUsage(scai::dmemo::DistributionPtr dist, scai::IndexType numParameter)
 {
     ValueType size = getMemoryModel(dist) / 1024 / 1024 * numParameter;
     return size;
+}
+
+/*! \brief Getter method for center frequency of CPML */
+template <typename ValueType>
+ValueType const KITGPI::Modelparameter::Modelparameter<ValueType>::getCenterFrequencyCPML() const
+{
+    return (centerFrequencyCPML);
 }
 
 //! \brief calculate and return memory usage the of a single ModelParameter

@@ -78,20 +78,29 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::resetCPML()
 template <typename ValueType>
 void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::prepareForModelling(Modelparameter::Modelparameter<ValueType> const &model, ValueType DT)
 {
-    auto const &electricConductivityEffectiveOptical = model.getElectricConductivityEffectiveOptical();
-    auto const &dielectricPermittivityEffectiveOptical = model.getDielectricPermittivityEffectiveOptical();
+    scai::lama::DenseVector<ValueType> electricConductivityEffectiveOptical;
+    scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOptical;
     auto const &dielectricPermittivity = model.getDielectricPermittivity();
+    auto const &electricConductivity = model.getElectricConductivity();
     auto const &tauDielectricPermittivity = model.getTauDielectricPermittivity();
-    ValueType tauElectricDisplacement = model.getTauElectricDisplacement();
-    scai::IndexType numRelaxationMechanisms = model.getNumRelaxationMechanisms();
+    auto const &tauElectricConductivity = model.getTauElectricConductivity();
+    
+    numRelaxationMechanisms = model.getNumRelaxationMechanisms();
+    std::vector<ValueType> relaxationTime;          // = 1 / ( 2 * Pi * f_relax )
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        relaxationTime.push_back(1.0 / (2.0 * M_PI * model.getRelaxationFrequency()[l])); // = 1 / ( 2 * Pi * f_relax )
+    }
+    
+    dielectricPermittivityEffectiveOptical = this->getDielectricPermittivityEffectiveOptical(dielectricPermittivity, electricConductivity, tauDielectricPermittivity, tauElectricConductivity, model.getDielectricPermittivityVacuum());
+    electricConductivityEffectiveOptical = this->getElectricConductivityEffectiveOptical(dielectricPermittivity, electricConductivity, tauDielectricPermittivity, numRelaxationMechanisms, relaxationTime);
 
     CaAverageZ = this->getAveragedCa(dielectricPermittivityEffectiveOptical, electricConductivityEffectiveOptical, DT);
     
     CbAverageZ = this->getAveragedCb(dielectricPermittivityEffectiveOptical, electricConductivityEffectiveOptical, DT);
+        
+    Cc = this->getCc(numRelaxationMechanisms, relaxationTime, DT);
     
-    Cc = this->getCc(tauElectricDisplacement, DT);
-    
-    CdAverageZ = this->getAveragedCd(dielectricPermittivity, tauDielectricPermittivity, numRelaxationMechanisms, tauElectricDisplacement, DT);
+    CdAverageZ = this->getAveragedCd(dielectricPermittivity, tauDielectricPermittivity, numRelaxationMechanisms, relaxationTime, DT);
 }
 
 /*! \brief Running the 2-D tmem foward solver
@@ -162,12 +171,13 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
     hY -= update;
     
     /* ----------------*/
-    /*  rZ */
-    /* ----------------*/
-    // numRelaxationMechanisms = 1
-    update = Cc * rZ[0];
-    update_temp = CdAverageZ * eZ;
-    rZ[0] = update_temp + update;
+    /*  rZ             */
+    /* ----------------*/    
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update = Cc[l] * rZ[l];
+        update_temp = CdAverageZ[l] * eZ;
+        rZ[l] = update_temp + update;
+    }
         
     /* ----------------*/
     /*  ez */
@@ -179,8 +189,9 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::run(Acquisition::Acquisiti
         ConvPML.apply_hxy(update_temp);
     }
     update -= update_temp;
-    update_temp = -DT_temp * rZ[0];
-    update += update_temp;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        update -= DT_temp * rZ[l];
+    }
     update *= CbAverageZ;   
     update_temp = CaAverageZ * eZ;
     eZ = update_temp + update; 

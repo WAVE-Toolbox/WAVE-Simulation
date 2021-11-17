@@ -65,8 +65,8 @@ namespace KITGPI
             virtual scai::lama::DenseVector<ValueType> getAveragedCinv(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT) = 0;
             virtual scai::lama::DenseVector<ValueType> getAveragedCa(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT) = 0;
             virtual scai::lama::DenseVector<ValueType> getAveragedCb(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivity, scai::lama::Vector<ValueType> const &vecAvElectricConductivity, ValueType DT) = 0;
-            virtual ValueType getCc(ValueType tauElectricDisplacement, ValueType DT) = 0;
-            virtual scai::lama::DenseVector<ValueType> getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, ValueType tauElectricDisplacement, ValueType DT) = 0;                  
+            virtual std::vector<ValueType> getCc(scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT) = 0;
+            virtual std::vector<scai::lama::DenseVector<ValueType>> getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT) = 0;                  
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

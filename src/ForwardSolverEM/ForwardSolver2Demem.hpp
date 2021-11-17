@@ -57,7 +57,6 @@ namespace KITGPI
             /* Auxiliary Vectors */
             using ForwardSolver<ValueType>::update;
             using ForwardSolver<ValueType>::update_temp;
-            using ForwardSolverEM<ValueType>::DT_temp;
             using ForwardSolverEM<ValueType>::CaAverageX;
             using ForwardSolverEM<ValueType>::CaAverageY;
             using ForwardSolverEM<ValueType>::CbAverageX;

@@ -424,7 +424,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::calculateAveraging()
     }
 }
 
-/*! \brief calculate reflectivity from permittivity
+/*! \brief calculate reflectivity
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::Acoustic<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)

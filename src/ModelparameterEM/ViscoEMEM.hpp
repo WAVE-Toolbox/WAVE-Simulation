@@ -100,8 +100,6 @@ namespace KITGPI
 
             using Modelparameter<ValueType>::dirtyFlagAveraging;
             using Modelparameter<ValueType>::dirtyFlagVelocivityEM;            
-            using Modelparameter<ValueType>::dirtyFlagElectricConductivityEffectiveOptical;
-            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityEffectiveOptical;
             
             using Modelparameter<ValueType>::velocivityEM;
             using Modelparameter<ValueType>::magneticPermeability;
@@ -112,8 +110,6 @@ namespace KITGPI
             using Modelparameter<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
             using Modelparameter<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
-            using Modelparameter<ValueType>::electricConductivityEffectiveOptical;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOptical;
             using Modelparameter<ValueType>::tauElectricConductivity;
             using Modelparameter<ValueType>::tauDielectricPermittivity;
             using Modelparameter<ValueType>::relaxationFrequency;
@@ -134,20 +130,21 @@ namespace KITGPI
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageYZ;
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXZ;
             using Modelparameter<ValueType>::inverseMagneticPermeabilityAverageXY;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageY;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageX;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageZ;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageX;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageY;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageZ;
+            
+            using Modelparameter<ValueType>::electricConductivityAverageY;
+            using Modelparameter<ValueType>::electricConductivityAverageX;
+            using Modelparameter<ValueType>::electricConductivityAverageZ;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageY;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageX;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageZ;
             
             using Modelparameter<ValueType>::dielectricPermittivityAverageX;
             using Modelparameter<ValueType>::dielectricPermittivityAverageY;
-            using Modelparameter<ValueType>::dielectricPermittivityAverageZ;
+            using Modelparameter<ValueType>::dielectricPermittivityAverageZ;            
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageX;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageY;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ;
-            using Modelparameter<ValueType>::tauElectricDisplacement;
+            using Modelparameter<ValueType>::relaxationTime;
             
             /* Not required parameters */
         };

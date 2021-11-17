@@ -473,7 +473,7 @@ The \textit{Standard Staggered Grid} (SSG) \citep{virieux1986p,levander1988fourt
 	\draw [->] (16.center) to (21.center);
     \end{pgfonlayer}
 \end{tikzpicture}
-\caption[]{Representation of the SSG with the distribution of material and wavefield parameter of acoustic and viscoelastic wave \citep{graves1996simulating} and visco-EM wave \citep{yee1966numerical} in 3D. The seismic wavefields include one pressure value $p$ (only for acoustic wave), six stress values $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ and corresponding $6L$ memory variables $r_{xxl}, r_{yyl}, r_{zzl}, r_{xyl}, r_{xzl}, r_{yzl}$ ($l=1,...,L$), three components of particle velocity $v_x, v_y, v_z$. The seismic material parameters include $\lambda, \mu, \tau^p, \tau^s, \rho$. The visco-EM wavefields include three components of electric fields $E_x, E_y, E_z$ and corresponding $3L$ memory variables $r_{xl}, r_{yl}, r_{zl}$ ($l=1,...,L$), three components of magnetic fields $H_x, H_y, H_z$. The visco-EM material parameters include $\mu_m, \varepsilon, \sigma_e, \tau_{\varepsilon}, \tau_{\sigma e}$. The seismic and visco-EM material parameters $\mathbf{m}$ are located at the integer points or averaged by $i$-direction ($\mathbf{m}_i$) or averaged by $ij$-plane ($\mathbf{m}_{ij}$).}
+\caption[]{Representation of the SSG with the distribution of material and wavefield parameter of acoustic and viscoelastic wave \citep{graves1996simulating} and visco-EM wave \citep{yee1966numerical} in 3D. The seismic wavefields include one pressure value $p$ (only for acoustic wave), six stress values $\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \sigma_{xy}, \sigma_{xz}, \sigma_{yz}$ and corresponding $6L$ memory variables $r_{xxl}, r_{yyl}, r_{zzl}, r_{xyl}, r_{xzl}, r_{yzl}$ ($l=1,...,L$), three components of particle velocity $v_x, v_y, v_z$. The seismic material parameters include $\lambda, \mu, \tau^p, \tau^s, \rho$. The visco-EM wavefields include three components of electric fields $E_x, E_y, E_z$ and corresponding $3L$ memory variables $r_{xl}, r_{yl}, r_{zl}$ ($l=1,...,L$), three components of magnetic fields $H_x, H_y, H_z$. The visco-EM material parameters include $\mu_m, \varepsilon, \sigma_e, \tau_{\varepsilon}, \tau_{\sigma}$. The seismic and visco-EM material parameters $\mathbf{m}$ are located at the integer points or averaged by $i$-direction ($\mathbf{m}_i$) or averaged by $ij$-plane ($\mathbf{m}_{ij}$).}
 \label{fig:StagGrid3D}
 \end{figure}
 
@@ -1706,19 +1706,38 @@ Maxwell equation in dispersive media.
 \label{eqn:ViscoEM2}
 \begin{aligned}
   &\mu_{m} \pdv{ \mathbf{H}}{t} = -\nabla \times \mathbf{E} \\
-  &\varepsilon^\infty \pdv{ \mathbf{E}}{t} + \sigma^\infty_{e} \mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} - \sum_{l=1}^L \mathbf{r}_{l} \\
-  &\pdv{\mathbf{r}_{l}}{t} + \frac{1}{\tau_{Dl}} \mathbf{r}_{l} = -\varepsilon^s \frac{\tau_{\varepsilon }}{L \tau_{Dl}^2} \mathbf{E} 
+  &\varepsilon^e_\infty \pdv{ \mathbf{E}}{t} + \sigma_\infty^{e} \mathbf{E} + \mathbf{J}_s = \nabla \times \mathbf{H} - \sum_{l=1}^L \mathbf{r}_{l} \\
+  &\pdv{\mathbf{r}_{l}}{t} + \frac{1}{\tau_{Dl}} \mathbf{r}_{l} = -\varepsilon_s \frac{\tau_{\varepsilon }}{L \tau_{Dl}^2} \mathbf{E} 
 \end{aligned}
 \end{equation}
-where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity and optical conductivity, respectively. $\varepsilon^\infty$ and $\sigma^\infty_{e}$ in non-dispersive case where $\tau_{\varepsilon } = 0$ and $\tau_{\sigma e} = 0$ are simplified to $\varepsilon^s$ and $\sigma^s_{e}$, respectively.
+where $\varepsilon^e_\infty$ and $\sigma_\infty^{e}$ are the effective optical permittivity and effective optical conductivity, respectively. $\varepsilon^e_\infty$ and $\sigma_\infty^{e}$ in non-dispersive case where $\tau_{\varepsilon } = 0$ and $\tau_{\sigma} = 0$ are simplified to the static permittivity $\varepsilon_s$ and static conductivity $\sigma_s$, respectively.
 \begin{equation}
 \label{eqn:ViscoParameter}
 \begin{aligned}
-  \varepsilon^\infty = \varepsilon^s \left( 1-\tau_{\varepsilon} \right) + \sigma^s_{e} \tau_{\sigma e}, \quad
-  \sigma^\infty_{e} = \sigma^s_{e} + \varepsilon^s \frac{1 }{L} \sum_{l=1}^L \frac{\tau_{\varepsilon }}{\tau_{Dl}}
+  \varepsilon^e_\infty = \varepsilon_s \left( 1-\tau_{\varepsilon} \right) + \sigma_s \tau_{\sigma}, \quad
+  \sigma_\infty^{e} = \sigma_s + \varepsilon_s \frac{\tau_{\varepsilon } }{L} \sum_{l=1}^L \frac{1}{\tau_{Dl}}
 \end{aligned}
 \end{equation} 
-\par We call Eq. \ref{eqn:ViscoEM2} as visco-EM wave equation because the defination of memory variable is similar with that in visco-elastic equation. By using the new form of EM wave equation introduced above, we can achieve the FWI of EM waves in dispersive media \citep{qin2020full}.
+
+We call Eq. \ref{eqn:ViscoEM2} as visco-EM wave equation because the definition of memory variable is similar with that in visco-elastic equation. By using the new form of EM wave equation introduced above, we can achieve the FWI of EM waves in dispersive media \citep{qin2020full}. We use the real effective permittivity $\varepsilon^e$ and real effective conductivity $\sigma^e$ at the reference angular frequency $\omega_0$ rather than $\varepsilon_s$ and $\sigma_s$ as the input and output parameters of GPR FWI, where $\omega_0$ is set as the peak frequency of the source wavelet. Thus we ensure the physical consistency of the results obtained by the dispersive GPR FWI and non-dispersive GPR FWI. The transformation between the static parameters and the real effective parameters is shown below.
+\begin{equation}
+\label{eqn:realEffectiveParameters3}
+\begin{cases}
+ \varepsilon^e(\omega_0) = \varepsilon_s a + \sigma_s \tau_{\sigma} \\
+ \sigma^e(\omega_0) = \sigma_s + \varepsilon_s b 
+\end{cases} \hspace{-0.4cm} \Leftrightarrow
+\begin{cases} 
+ \varepsilon_s = [\varepsilon^e(\omega_0)-\sigma^e(\omega_0)\tau_{\sigma}]/(a-b\tau_{\sigma}) \\
+ \sigma_s = \sigma^e(\omega_0) - \varepsilon_s b
+ \end{cases}
+\end{equation}
+with
+\begin{equation}
+\begin{aligned}
+ &a = 1 - \frac{1 }{L} \sum_{l=1}^L {\frac{\omega_0^2\tau_{D l}^2}{1+\omega_0^2\tau_{D l}^2}} \tau_{\varepsilon} \\
+ &b =  \frac{ 1 }{L} \sum_{l=1}^L \frac{ \omega_0^2 \tau_{Dl}}{ 1 + \omega_0^2 \tau_{Dl}^2 } \tau_{\varepsilon} 
+ \end{aligned}
+\end{equation}
 
 \section{Discretization of visco-EM wave equation}
 3D visco-EM wave equation and FD discretization by usage of the SSG in isotropic media Fig.\ref{fig:StagGrid3D} are given as:
@@ -1727,12 +1746,12 @@ where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity 
   &\mu_{m} \pdv{H_{x}}{t} = -\pdv{E_z}{y} + \pdv{E_y}{z}\\
   &\mu_{m} \pdv{H_{y}}{t} = -\pdv{E_x}{z} + \pdv{E_z}{x}\\
   &\mu_{m} \pdv{H_{z}}{t} = -\pdv{E_y}{x} + \pdv{E_x}{y}\\
-  &\varepsilon^\infty_{x} \pdv{E_{x}}{t} + \sigma^\infty_{ex} E_{x} + J_{sx} = \pdv{H_z}{y} - \pdv{H_y}{z} - \sum_{l=1}^L r_{xl} \\
-  &\varepsilon^\infty_{y} \pdv{E_{y}}{t} + \sigma^\infty_{ey} E_{y} + J_{sy} = \pdv{H_x}{z} - \pdv{H_z}{x} - \sum_{l=1}^L r_{yl} \\
-  &\varepsilon^\infty_{z} \pdv{E_{z}}{t} + \sigma^\infty_{ez} E_{z} + J_{sz} = \pdv{H_y}{x} - \pdv{H_x}{y} - \sum_{l=1}^L r_{zl} \\
-  &\pdv{r_{xl}}{t} + \frac{1}{\tau_{Dl} } r_{xl} = -\varepsilon^s_{x} \frac{\tau_{\varepsilon x}}{L \tau_{Dl}^2} E_{x}\\
-  &\pdv{r_{yl}}{t} + \frac{1}{\tau_{Dl} } r_{yl} = -\varepsilon^s_{y} \frac{\tau_{\varepsilon y}}{L \tau_{Dl}^2} E_{y}\\
-  &\pdv{r_{zl}}{t} + \frac{1}{\tau_{Dl} } r_{zl} = -\varepsilon^s_{z} \frac{\tau_{\varepsilon z}}{L \tau_{Dl}^2} E_{z}
+  &\varepsilon^e_{\infty x} \pdv{E_{x}}{t} + \sigma^e_{\infty x} E_{x} + J_{sx} = \pdv{H_z}{y} - \pdv{H_y}{z} - \sum_{l=1}^L r_{xl} \\
+  &\varepsilon^e_{\infty y} \pdv{E_{y}}{t} + \sigma^e_{\infty y} E_{y} + J_{sy} = \pdv{H_x}{z} - \pdv{H_z}{x} - \sum_{l=1}^L r_{yl} \\
+  &\varepsilon^e_{\infty z} \pdv{E_{z}}{t} + \sigma^e_{\infty z} E_{z} + J_{sz} = \pdv{H_y}{x} - \pdv{H_x}{y} - \sum_{l=1}^L r_{zl} \\
+  &\pdv{r_{xl}}{t} + \frac{1}{\tau_{Dl} } r_{xl} = -\varepsilon_{s x} \frac{\tau_{\varepsilon x}}{L \tau_{Dl}^2} E_{x}\\
+  &\pdv{r_{yl}}{t} + \frac{1}{\tau_{Dl} } r_{yl} = -\varepsilon_{s y} \frac{\tau_{\varepsilon y}}{L \tau_{Dl}^2} E_{y}\\
+  &\pdv{r_{zl}}{t} + \frac{1}{\tau_{Dl} } r_{zl} = -\varepsilon_{s z} \frac{\tau_{\varepsilon z}}{L \tau_{Dl}^2} E_{z}
 \end{aligned}
 \end{equation}
 \begin{equation}
@@ -1740,34 +1759,33 @@ where $\varepsilon^\infty$ and $\sigma^\infty_{e}$ are the optical permittivity 
   &H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{x,i,j+\frac{1}{2},k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{myz}^{-1}  \left(- \left.\pdv{ E_{z}}{y}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} + \left.\pdv{ E_{y}}{z}\right\rvert_{i,j+\frac{1}{2},k+\frac{1}{2}}^{n} \right)\\
   &H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n+\frac{1}{2}} = H_{y,i+\frac{1}{2},j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxz}^{-1}  \left(- \left.\pdv{ E_{x}}{z}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} + \left.\pdv{ E_z}{x}\right\rvert_{i+\frac{1}{2},j,k+\frac{1}{2}}^{n} \right)\\
   &H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n+\frac{1}{2}} = H_{z,i+\frac{1}{2},j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot \mu_{mxy}^{-1}  \left(- \left.\pdv{ E_y}{x}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} + \left.\pdv{ E_x}{y}\right\rvert_{i+\frac{1}{2},j+\frac{1}{2},k}^{n} \right)\\
-  &E_{x,i+\frac{1}{2},j,k}^{n+1} = C_{ax} E_{x,i+\frac{1}{2},j,k}^{n} + \Delta t \cdot C_{bx} \left( \left.\pdv{ H_z}{y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \left.\pdv{ H_y}{z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \sum_{l=1}^L \left. r_{xl}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - J_{sx} \right)\\ 
-  &E_{y,i,j+\frac{1}{2},k}^{n+1} = C_{ay} E_{y,i,j+\frac{1}{2},k}^{n} + \Delta t \cdot C_{by} \left( \left.\pdv{ H_x}{z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \left.\pdv{ H_z}{x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \sum_{l=1}^L \left. r_{yl}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - J_{sy} \right)\\
-  &E_{z,i,j,k+\frac{1}{2}}^{n+1} = C_{az} E_{z,i,j,k+\frac{1}{2}}^{n} + \Delta t \cdot C_{bz} \left( \left.\pdv{ H_y}{x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \left.\pdv{ H_x}{y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \sum_{l=1}^L \left. r_{zl}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - J_{sz} \right)\\
   &r_{xl,i+\frac{1}{2},j,k}^{n+\frac{1}{2}} = C_{c l} r_{xl,i+\frac{1}{2},j,k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d x l} \left.E_x \right\rvert_{i+\frac{1}{2},j,k}^{n}\\
   &r_{yl,i,j+\frac{1}{2},k}^{n+\frac{1}{2}} = C_{c l} r_{yl,i,j+\frac{1}{2},k}^{n-\frac{1}{2}} + \Delta t \cdot C_{d y l} \left.E_y \right\rvert_{i,j+\frac{1}{2},k}^{n}\\
-  &r_{zl,i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} = C_{c l} r_{zl,i,j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot C_{d z l} \left.E_z \right\rvert_{i,j,k+\frac{1}{2}}^{n}
+  &r_{zl,i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} = C_{c l} r_{zl,i,j,k+\frac{1}{2}}^{n-\frac{1}{2}} + \Delta t \cdot C_{d z l} \left.E_z \right\rvert_{i,j,k+\frac{1}{2}}^{n}\\
+  &E_{x,i+\frac{1}{2},j,k}^{n+1} = C_{ax} E_{x,i+\frac{1}{2},j,k}^{n} + \Delta t \cdot C_{bx} \left( \left.\pdv{ H_z}{y}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \left.\pdv{ H_y}{z}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - \sum_{l=1}^L \left.r_{xl}\right\rvert_{i+\frac{1}{2},j,k}^{n+\frac{1}{2}} - J_{sx} \right)\\ 
+  &E_{y,i,j+\frac{1}{2},k}^{n+1} = C_{ay} E_{y,i,j+\frac{1}{2},k}^{n} + \Delta t \cdot C_{by} \left( \left.\pdv{ H_x}{z}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \left.\pdv{ H_z}{x}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - \sum_{l=1}^L \left.r_{yl}\right\rvert_{i,j+\frac{1}{2},k}^{n+\frac{1}{2}} - J_{sy} \right)\\
+  &E_{z,i,j,k+\frac{1}{2}}^{n+1} = C_{az} E_{z,i,j,k+\frac{1}{2}}^{n} + \Delta t \cdot C_{bz} \left( \left.\pdv{ H_y}{x}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \left.\pdv{ H_x}{y}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - \sum_{l=1}^L \left.r_{zl}\right\rvert_{i,j,k+\frac{1}{2}}^{n+\frac{1}{2}} - J_{sz} \right)
 \end{aligned}
 \end{equation}
 where
 \begin{align*}
-  &C_{ai} = \left( 1 - \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right) \left( 1 + \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right)^{-1}, \quad
-  C_{bi} = \frac{1}{\varepsilon^\infty_{i}} \left( 1 + \frac{\sigma^\infty_{ei} \Delta t}{2 \varepsilon^\infty_{i}} \right)^{-1}\\
+  &C_{ai} = \left( 1 - \frac{\sigma^e_{\infty i} \Delta t}{2 \varepsilon^e_{\infty i}} \right) \left( 1 + \frac{\sigma^e_{\infty i} \Delta t}{2 \varepsilon^e_{\infty i}} \right)^{-1}, \quad
+  C_{bi} = \frac{1}{\varepsilon^e_{\infty i}} \left( 1 + \frac{\sigma^e_{\infty i} \Delta t}{2 \varepsilon^e_{\infty i}} \right)^{-1}\\
   &C_{c l} = \left( 1 - \frac{ \Delta t}{2 \tau_{Dl}} \right) \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}, \quad
-  C_{d i l} = -\varepsilon^s_{i} \frac{\tau_{\varepsilon i l}}{L \tau_{Dl}^2} \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}, \quad  i = x,y,z\\
-  &\varepsilon^s_{x} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i+1,j,k}}{2}, \quad
-  \varepsilon^s_{y} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i,j+1,k}}{2}, \quad
-  \varepsilon^s_{z} = \frac{\varepsilon^s_{i,j,k} + \varepsilon^s_{i,j,k+1}}{2} \\
-  &\varepsilon^\infty_{x} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i+1,j,k}}{2}, \quad
-  \varepsilon^\infty_{y} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i,j+1,k}}{2}, \quad
-  \varepsilon^\infty_{z} = \frac{\varepsilon^\infty_{i,j,k} + \varepsilon^\infty_{i,j,k+1}}{2} \\
-  &\sigma^\infty_{ex} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i+1,j,k}}{2}, \quad
-  \sigma^\infty_{ey} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i,j+1,k}}{2}, \quad
-  \sigma^\infty_{ez} = \frac{\sigma^\infty_{e,i,j,k} + \sigma^\infty_{e,i,j,k+1}}{2} \\
+  C_{d i l} = -\varepsilon_{s i} \frac{\tau_{\varepsilon i}}{L \tau_{Dl}^2} \left( 1 + \frac{ \Delta t}{2 \tau_{Dl}} \right)^{-1}, \quad  i = x,y,z\\
+  &\varepsilon_{s x} = \frac{\varepsilon_{s, i,j,k} + \varepsilon_{s, i+1,j,k}}{2}, \quad
+  \varepsilon_{s y} = \frac{\varepsilon_{s, i,j,k} + \varepsilon_{s, i,j+1,k}}{2}, \quad
+  \varepsilon_{s z} = \frac{\varepsilon_{s, i,j,k} + \varepsilon_{s, i,j,k+1}}{2} \\
+  &\varepsilon^e_{\infty x} = \frac{\varepsilon^e_{\infty, i,j,k} + \varepsilon^e_{\infty, i+1,j,k}}{2}, \quad
+  \varepsilon^e_{\infty y} = \frac{\varepsilon^e_{\infty, i,j,k} + \varepsilon^e_{\infty, i,j+1,k}}{2}, \quad
+  \varepsilon^e_{\infty z} = \frac{\varepsilon^e_{\infty, i,j,k} + \varepsilon^e_{\infty, i,j,k+1}}{2} \\
+  &\sigma^e_{\infty x} = \frac{\sigma^e_{\infty ,i,j,k} + \sigma^e_{\infty ,i+1,j,k}}{2}, \quad
+  \sigma^e_{\infty y} = \frac{\sigma^e_{\infty ,i,j,k} + \sigma^e_{\infty ,i,j+1,k}}{2}, \quad
+  \sigma^e_{\infty z} = \frac{\sigma^e_{\infty ,i,j,k} + \sigma^e_{\infty ,i,j,k+1}}{2} \\
   &\tau_{\varepsilon x} = \frac{\tau_{\varepsilon ,i,j,k} + \tau_{\varepsilon ,i+1,j,k}}{2}, \quad
   \tau_{\varepsilon y} = \frac{\tau_{\varepsilon ,i,j,k} + \tau_{\varepsilon ,i,j+1,k}}{2}, \quad
   \tau_{\varepsilon z} = \frac{\tau_{\varepsilon ,i,j,k} + \tau_{\varepsilon ,i,j,k+1}}{2} 
 \end{align*}
-
 
 \section{Matrix-vector formalism of visco-EM wave}
 All discrete components of the 3D visco-EM wavefield in matrix-vector notation are: 
@@ -1776,12 +1794,12 @@ All discrete components of the 3D visco-EM wavefield in matrix-vector notation a
   &\vec{H}_{x}^{n+\frac{1}{2}} = \vec{H}_{x}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{myz}^{-1}\right)  \left(- \underline{D}_{\,y,f}^q \vec{E}_{z}^{n} + \underline{D}_{\,z,f}^q \vec{E}_{y}^{n} \right)\\
   &\vec{H}_{y}^{n+\frac{1}{2}} = \vec{H}_{y}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxz}^{-1}\right)  \left(- \underline{D}_{\,z,f}^q \vec{E}_{x}^{n} + \underline{D}_{\,x,f}^q \vec{E}_z^{n} \right)\\
   &\vec{H}_{z}^{n+\frac{1}{2}} = \vec{H}_{z}^{n-\frac{1}{2}} + \frac{\Delta t}{\Delta h} \cdot  \mathrm{diag} \left(\vec{\mu}_{mxy}^{-1}\right)  \left(- \underline{D}_{\,x,f}^q \vec{E}_y^{n} + \underline{D}_{\,y,f}^q \vec{E}_x^{n} \right)\\  
-  &\vec{E}_{x}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ax}\right) \vec{E}_{x}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bx}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,y,b}^q \vec{H}_z^{n+\frac{1}{2}} - \underline{D}_{\,z,b}^q \vec{H}_y^{n+\frac{1}{2}} \right) - \sum_{l=1}^L \vec{r}_{xl}^{n+\frac{1}{2}} - J_{sx} \right]\\ 
-  &\vec{E}_{y}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ay}\right) \vec{E}_{y}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{by}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,z,b}^q  \vec{H}_x^{n+\frac{1}{2}} - \underline{D}_{\,x,b}^q \vec{H}_z^{n+\frac{1}{2}} \right) - \sum_{l=1}^L \vec{r}_{ly}^{n+\frac{1}{2}} - J_{sy} \right]\\ 
-  &\vec{E}_{z}^{n+1} =  \mathrm{diag} \left(\vec{C}_{az}\right) \vec{E}_{z}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bz}\right) \left[ \frac{1}{\Delta h} \left(\underline{D}_{\,x,b}^q \vec{H}_y^{n+\frac{1}{2}} - \underline{D}_{\,y,b}^q \vec{H}_x^{n+\frac{1}{2}} \right) - \sum_{l=1}^L \vec{r}_{zl}^{n+\frac{1}{2}} - J_{sz} \right]\\ 
   &\vec{r}_{xl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{xl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d x l}\right) \vec{E}_{x}^{n} \\
-  &\vec{r}_{ly}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{ly}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d y l}\right) \vec{E}_{y}^{n}\\
-  &\vec{r}_{zl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{zl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d z l}\right) \vec{E}_{z}^{n}
+  &\vec{r}_{yl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{yl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d y l}\right) \vec{E}_{y}^{n}\\
+  &\vec{r}_{zl}^{n+\frac{1}{2}} =  C_{c l} \vec{r}_{zl}^{n-\frac{1}{2}} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{d z l}\right) \vec{E}_{z}^{n}\\
+  &\vec{E}_{x}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ax}\right) \vec{E}_{x}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bx}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,y,b}^q \vec{H}_z^{n+\frac{1}{2}} - \underline{D}_{\,z,b}^q \vec{H}_y^{n+\frac{1}{2}} \right) - \sum_{l=1}^L \vec{r}_{xl}^{n+\frac{1}{2}} - J_{sx} \right]\\ 
+  &\vec{E}_{y}^{n+1} =  \mathrm{diag} \left(\vec{C}_{ay}\right) \vec{E}_{y}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{by}\right) \left[ \frac{1}{\Delta h} \left( \underline{D}_{\,z,b}^q  \vec{H}_x^{n+\frac{1}{2}} - \underline{D}_{\,x,b}^q \vec{H}_z^{n+\frac{1}{2}} \right) - \sum_{l=1}^L \vec{r}_{yl}^{n+\frac{1}{2}} - J_{sy} \right]\\ 
+  &\vec{E}_{z}^{n+1} =  \mathrm{diag} \left(\vec{C}_{az}\right) \vec{E}_{z}^{n} + \Delta t \cdot \mathrm{diag} \left(\vec{C}_{bz}\right) \left[ \frac{1}{\Delta h} \left(\underline{D}_{\,x,b}^q \vec{H}_y^{n+\frac{1}{2}} - \underline{D}_{\,y,b}^q \vec{H}_x^{n+\frac{1}{2}} \right) - \sum_{l=1}^L  \vec{r}_{zl}^{n+\frac{1}{2}} - J_{sz} \right]
 \end{aligned}
 \end{equation}
 

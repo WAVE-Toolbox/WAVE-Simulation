@@ -69,7 +69,7 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
 
 /*! \brief calculate Cc
  *
- \param tauElectricDisplacement relaxtiontime of electric displacement
+ \param relaxationTime relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -77,10 +77,12 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueT
  \end{align*}
  */
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tauElectricDisplacement, ValueType DT)
+std::vector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT)
 {
-    ValueType Cc;
-    Cc = (1 - 0.5 * DT / tauElectricDisplacement) / (1 + 0.5 * DT / tauElectricDisplacement);
+    std::vector<ValueType> Cc;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Cc.push_back((1 - 0.5 * DT / relaxationTime[l]) / (1 + 0.5 * DT / relaxationTime[l]));
+    }
     
     return Cc;
 }
@@ -89,7 +91,7 @@ ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tau
  *
  \param vecAvDielectricPermittivitystatic static Dielectric Permittivity
  \param vecAvTauDielectricPermittivity relaxtiontime of Dielectric Permittivity
- \param tauElectricDisplacement relaxtiontime of electric displacement
+ \param relaxationTime relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -97,17 +99,58 @@ ValueType KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getCc(ValueType tau
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, ValueType tauElectricDisplacement, ValueType DT)
+std::vector<scai::lama::DenseVector<ValueType>> KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT)
 {
-    scai::lama::DenseVector<ValueType> averagedCd;
+    std::vector<scai::lama::DenseVector<ValueType>> averagedCd;
     ValueType tempValue;
-    tempValue = 1 / (1 + 0.5 * DT / tauElectricDisplacement);
-    tempValue /= (numRelaxationMechanisms * tauElectricDisplacement * tauElectricDisplacement);
-    averagedCd = vecAvTauDielectricPermittivity * tempValue;
-    averagedCd *= vecAvDielectricPermittivitystatic;
-    averagedCd *= -DT; // please note here we include DT into the coefficient
+    scai::lama::DenseVector<ValueType> temp;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        tempValue = 1 / (1 + 0.5 * DT / relaxationTime[l]);
+        tempValue /= (numRelaxationMechanisms * relaxationTime[l] * relaxationTime[l]);
+        temp = vecAvTauDielectricPermittivity * tempValue;
+        temp *= vecAvDielectricPermittivitystatic;
+        temp *= -DT; // please note here we include DT into the coefficient
+        averagedCd.push_back(temp);
+    }
     
     return averagedCd;
+}
+
+/*! \brief Get const reference to electricConductivityEffectiveOptical
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getElectricConductivityEffectiveOptical(scai::lama::Vector<ValueType> const &dielectricPermittivityStatic, scai::lama::Vector<ValueType> const &electricConductivityStatic, scai::lama::Vector<ValueType> const &tauDielectricPermittivityAverage, scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime)
+{  
+    scai::lama::DenseVector<ValueType> electricConductivityEffectiveOptical;
+    ValueType sum = 0;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        sum += 1.0 / relaxationTime[l];
+    }
+    sum /= numRelaxationMechanisms;
+    electricConductivityEffectiveOptical = tauDielectricPermittivityAverage * sum;    
+    electricConductivityEffectiveOptical *= dielectricPermittivityStatic;
+    electricConductivityEffectiveOptical += electricConductivityStatic;
+    
+    return (electricConductivityEffectiveOptical);
+}
+
+/*! \brief Get const reference to dielectricPermittivityEffectiveOptical
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::ForwardSolver::ForwardSolverEM<ValueType>::getDielectricPermittivityEffectiveOptical(scai::lama::Vector<ValueType> const &dielectricPermittivityStatic, scai::lama::Vector<ValueType> const &electricConductivityStatic, scai::lama::Vector<ValueType> const &tauDielectricPermittivityAverage, scai::lama::Vector<ValueType> const &tauElectricConductivityAverage, ValueType DielectricPermittivityVacuum)
+{
+    scai::lama::DenseVector<ValueType> dielectricPermittivityEffectiveOptical;
+    scai::lama::DenseVector<ValueType> temp;
+    
+    dielectricPermittivityEffectiveOptical = 1 - tauDielectricPermittivityAverage;      
+    dielectricPermittivityEffectiveOptical *= dielectricPermittivityStatic;
+    temp = electricConductivityStatic * tauElectricConductivityAverage;
+    dielectricPermittivityEffectiveOptical += temp;
+    
+    // optical dielectric permittivity should be larger than the dielectric permittivity of vacuum
+    Common::searchAndReplace<ValueType>(dielectricPermittivityEffectiveOptical, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    
+    return (dielectricPermittivityEffectiveOptical);
 }
 
 template class KITGPI::ForwardSolver::ForwardSolverEM<double>;

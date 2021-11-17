@@ -60,7 +60,7 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverSeismic<V
 
 /*! \brief calculate Cc
  *
- \param tauElectricDisplacement relaxtiontime of electric displacement
+ \param relaxationTime relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -68,9 +68,9 @@ scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverSeismic<V
  \end{align*}
  */
 template <typename ValueType>
-ValueType KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getCc(ValueType tauElectricDisplacement, ValueType DT)
+std::vector<ValueType> KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getCc(scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT)
 {
-    ValueType Cc;
+    std::vector<ValueType> Cc;
     COMMON_THROWEXCEPTION("There is no Cc in an Seismic modelling")
     
     return Cc;
@@ -80,7 +80,7 @@ ValueType KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getCc(ValueTyp
  *
  \param vecAvDielectricPermittivitystatic static Dielectric Permittivity
  \param vecAvTauDielectricPermittivity relaxtiontime of Dielectric Permittivity
- \param tauElectricDisplacement relaxtiontime of electric displacement
+ \param relaxationTime relaxtiontime of electric displacement
  \param DT time step
  
  \begin{align*}
@@ -88,9 +88,9 @@ ValueType KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getCc(ValueTyp
  \end{align*}
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, ValueType tauElectricDisplacement, ValueType DT)
+std::vector<scai::lama::DenseVector<ValueType>> KITGPI::ForwardSolver::ForwardSolverSeismic<ValueType>::getAveragedCd(scai::lama::Vector<ValueType> const &vecAvDielectricPermittivitystatic, scai::lama::Vector<ValueType> const &vecAvTauDielectricPermittivity, scai::IndexType numRelaxationMechanisms, std::vector<ValueType> relaxationTime, ValueType DT)
 {
-    scai::lama::DenseVector<ValueType> averagedCd;
+    std::vector<scai::lama::DenseVector<ValueType>> averagedCd;
     COMMON_THROWEXCEPTION("There is no averagedCd in an Seismic modelling")
     
     return averagedCd;

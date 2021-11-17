@@ -145,12 +145,6 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() override;
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() const override;
             
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() const override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() const override;
-            virtual ValueType const &getTauElectricDisplacement() override;
-            virtual ValueType const &getTauElectricDisplacement() const override;
             virtual scai::lama::Vector<ValueType> const &getTauElectricConductivity() const override;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const override;
 
@@ -161,8 +155,6 @@ namespace KITGPI
             virtual void setElectricConductivity(scai::lama::Vector<ValueType> const &setElectricConductivity) override;
             virtual void setDielectricPermittivity(scai::lama::Vector<ValueType> const &setDielectricPermittivity) override;
             
-            virtual void setElectricConductivityEffectiveOptical(scai::lama::Vector<ValueType> const &setElectricConductivityEffectiveOptical) override;
-            virtual void setDielectricPermittivityEffectiveOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityEffectiveOptical) override;
             virtual void setTauElectricConductivity(scai::lama::Vector<ValueType> const &setTauElectricConductivity) override;
             virtual void setTauDielectricPermittivity(scai::lama::Vector<ValueType> const &setTauDielectricPermittivity) override;
             
@@ -203,19 +195,12 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ() override;
             virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityAverageZ() const override;
             
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageX() override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageX() const override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageY() override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageY() const override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageZ() override;
-            virtual scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOpticalAverageZ() const override;            
-            
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageX() override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageX() const override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageY() override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageY() const override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageZ() override;
-            virtual scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOpticalAverageZ() const override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageX() override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageX() const override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageY() override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageY() const override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageZ() override;
+            virtual scai::lama::Vector<ValueType> const &getTauElectricConductivityAverageZ() const override;
             
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX() override;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivityAverageX() const override;
@@ -306,8 +291,6 @@ namespace KITGPI
             
             /* EM */
             using Modelparameter<ValueType>::dirtyFlagVelocivityEM;   //!< ==true if EM-wave velocity has to be recalculated; ==false if velocity is up to date
-            using Modelparameter<ValueType>::dirtyFlagElectricConductivityEffectiveOptical; //!< ==true if electricConductivityEffectiveOptical has to be recalulated;
-            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityEffectiveOptical; //!< ==true if dielectricPermittivityEffectiveOptical has to be recalulated;
 
             using Modelparameter<ValueType>::aArchie;
             using Modelparameter<ValueType>::mArchie;
@@ -324,8 +307,6 @@ namespace KITGPI
             using Modelparameter<ValueType>::electricConductivity; //!< Vector storing EM-wave velocity.
             using Modelparameter<ValueType>::dielectricPermittivity; //!< Vector storing dielectricPermittivity.
             
-            using Modelparameter<ValueType>::electricConductivityEffectiveOptical; //!< Vector storing dielectricPermittivityEffectiveOptical for visco-emem modelling.
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOptical; //!< Vector storing dielectricPermittivityEffectiveOptical for visco-emem modelling.
             using Modelparameter<ValueType>::tauElectricConductivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
             using Modelparameter<ValueType>::tauDielectricPermittivity; //!< Vector storing tauDielectricPermittivity for visco-emem modelling.
             
@@ -342,17 +323,14 @@ namespace KITGPI
             using Modelparameter<ValueType>::dielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
             using Modelparameter<ValueType>::dielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
             
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.          
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageX; //!< Vector storing averaged modulus in x-direction.
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageY; //!< Vector storing averaged modulus in y-direction.
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageZ; //!< Vector storing averaged modulus in z-direction.              
+            using Modelparameter<ValueType>::tauElectricConductivityAverageX; //!< Vector storing averaged modulus in x-direction.
+            using Modelparameter<ValueType>::tauElectricConductivityAverageY; //!< Vector storing averaged modulus in y-direction.
+            using Modelparameter<ValueType>::tauElectricConductivityAverageZ; //!< Vector storing averaged modulus in z-direction.          
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageX; //!< Vector storing averaged modulus in x-direction.
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageY; //!< Vector storing averaged modulus in y-direction.
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
          
-            using Modelparameter<ValueType>::tauElectricDisplacement;     // relaxation time of electric displacement
+            using Modelparameter<ValueType>::relaxationTime;     // relaxation time of electric displacement
 
         };
     }

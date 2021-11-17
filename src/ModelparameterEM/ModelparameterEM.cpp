@@ -26,8 +26,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setRelaxationFrequency
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true; // the velocity vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
-    dirtyFlagElectricConductivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     relaxationFrequency = setRelaxationFrequency;
 }
 
@@ -38,8 +36,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setNumRelaxationMechan
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true; // the velocity vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
-    dirtyFlagElectricConductivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     numRelaxationMechanisms = setNumRelaxationMechanisms;
 }
 
@@ -98,7 +94,8 @@ ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauDiele
 template <typename ValueType>
 ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityReference() const
 {        
-    ValueType TauElectricConductivityReference = 10 * TauDielectricPermittivityReference * this->getTauElectricDisplacement(); 
+    ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+    ValueType TauElectricConductivityReference = 10 * TauDielectricPermittivityReference / w_ref; 
     return (TauElectricConductivityReference);
 }
 
@@ -350,8 +347,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setElectricConductivit
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true;   // the velocity vector is now dirty
-    dirtyFlagElectricConductivityEffectiveOptical = true; // the visco Modulus vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     electricConductivity = setElectricConductivity;
 }
 
@@ -370,104 +365,109 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDielectricPermittiv
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true; // the velocity vector is now dirty
-    dirtyFlagElectricConductivityEffectiveOptical = true; // the visco Modulus vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     dielectricPermittivity = setDielectricPermittivity;
 }
 
-/*! \brief Get const reference to electricConductivityEffectiveOptical
+/*! \brief Get const reference to electricConductivityRealEffective
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOptical()
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityRealEffective() const
 {
-    // If the modulus is dirty, then recalculate
-    if (dirtyFlagElectricConductivityEffectiveOptical) {
-        HOST_PRINT(electricConductivity.getDistributionPtr()->getCommunicatorPtr(), "electricConductivityEffectiveOptical will be calculated from\n dielectricPermittivity, electricConductivity, tauDielectricPermittivity\n, tauElectricDisplacement and numRelaxationMechanisms \n");              
-        electricConductivityEffectiveOptical = tauDielectricPermittivity / tauElectricDisplacement;    
-        electricConductivityEffectiveOptical *= numRelaxationMechanisms; // numRelaxationMechanisms = 1
-        electricConductivityEffectiveOptical /= numRelaxationMechanisms;
-        electricConductivityEffectiveOptical *= dielectricPermittivity;
-        electricConductivityEffectiveOptical += electricConductivity;
-        dirtyFlagElectricConductivityEffectiveOptical = false;
+    scai::lama::DenseVector<ValueType> electricConductivityRealEffective;
+    scai::lama::DenseVector<ValueType> b_temp;
+    ValueType b_sum = 0;
+    ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
     }
+    b_sum /= numRelaxationMechanisms;
+    b_temp = b_sum * tauDielectricPermittivity;
     
-    return (electricConductivityEffectiveOptical);
-}
-/*! \brief Get const reference to electricConductivityEffectiveOptical
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOptical() const
-{
-    SCAI_ASSERT(dirtyFlagElectricConductivityEffectiveOptical == false, "electricConductivityEffectiveOptical has to be recalculated! ");
+    electricConductivityRealEffective = dielectricPermittivity * b_temp;   
+    electricConductivityRealEffective += electricConductivity;
     
-    return (electricConductivityEffectiveOptical);
+    return (electricConductivityRealEffective);
 }
 
-/*! \brief Set electricConductivityEffectiveOptical model parameter
+/*! \brief Get const reference to dielectricPermittivityRealEffective
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setElectricConductivityEffectiveOptical(scai::lama::Vector<ValueType> const &setElectricConductivityEffectiveOptical)
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityRealEffective() const
 {
-    dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
-    electricConductivityEffectiveOptical = setElectricConductivityEffectiveOptical;
-}
-
-/*! \brief Get const reference to dielectricPermittivityEffectiveOptical
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOptical()
-{
-    // If the modulus is dirty, then recalculate
-    if (dirtyFlagDielectricPermittivityEffectiveOptical) {
-        HOST_PRINT(dielectricPermittivity.getDistributionPtr()->getCommunicatorPtr(), "dielectricPermittivityEffectiveOptical will be calculated from\n dielectricPermittivity, electricConductivity, tauDielectricPermittivity\n, tauElectricConductivity and numRelaxationMechanisms \n");
-        scai::lama::DenseVector<ValueType> temp;
-        temp = numRelaxationMechanisms * tauDielectricPermittivity;  // numRelaxationMechanisms = 1
-        temp /= numRelaxationMechanisms;
-        dielectricPermittivityEffectiveOptical = 1 - temp;      
-        dielectricPermittivityEffectiveOptical *= dielectricPermittivity;
-        temp = electricConductivity * tauElectricConductivity;
-        dielectricPermittivityEffectiveOptical += temp;
-        
-        // optical dielectric permittivity should be larger than the dielectric permittivity of vacuum
-        Common::searchAndReplace<ValueType>(dielectricPermittivityEffectiveOptical, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
-        
-        dirtyFlagDielectricPermittivityEffectiveOptical = false;
+    scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective;
+    scai::lama::DenseVector<ValueType> a_temp;
+    ValueType a_sum = 0;
+    ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        a_sum += (w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
     }
+    a_sum /= numRelaxationMechanisms;
+    a_temp = a_sum * tauDielectricPermittivity;
+    a_temp = 1 - a_temp;
     
-    return (dielectricPermittivityEffectiveOptical);
+    dielectricPermittivityRealEffective = dielectricPermittivity * a_temp;
+    a_temp = electricConductivity * tauElectricConductivity;
+    dielectricPermittivityRealEffective += a_temp;
+    
+    return (dielectricPermittivityRealEffective);
 }
 
-/*! \brief Get const reference to dielectricPermittivityEffectiveOptical
+/*! \brief Get const reference to electricConductivityStatic
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOptical() const
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective)
 {
-    SCAI_ASSERT(dirtyFlagDielectricPermittivityEffectiveOptical == false, "dielectricPermittivityEffectiveOptical has to be recalculated! ");
-    return (dielectricPermittivityEffectiveOptical);
+    scai::lama::DenseVector<ValueType> dielectricPermittivityStatic;
+    scai::lama::DenseVector<ValueType> electricConductivityStatic;
+    scai::lama::DenseVector<ValueType> b_temp;
+    ValueType b_sum = 0;
+    ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+    }
+    b_sum /= numRelaxationMechanisms;
+    b_temp = b_sum * tauDielectricPermittivity;
+    
+    dielectricPermittivityStatic = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
+    b_temp *= dielectricPermittivityStatic;
+    electricConductivityStatic = electricConductivityRealEffective - b_temp;
+    
+    return (electricConductivityStatic);
 }
 
-/*! \brief Set dielectricPermittivityEffectiveOptical model parameter
+/*! \brief Get const reference to dielectricPermittivityStatic
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setDielectricPermittivityEffectiveOptical(scai::lama::Vector<ValueType> const &setDielectricPermittivityEffectiveOptical)
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective)
 {
-    dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
-    dielectricPermittivityEffectiveOptical = setDielectricPermittivityEffectiveOptical;
-}
-
-/*! \brief Get const reference to tauElectricConductivity */
-template <typename ValueType>
-ValueType const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricDisplacement()
-{
-    tauElectricDisplacement = 1.0 / (2.0 * M_PI * this->getRelaxationFrequency()[0]); 
-    return (tauElectricDisplacement);
-}
-
-/*! \brief Get const reference to tauElectricConductivity */
-template <typename ValueType>
-ValueType const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricDisplacement() const
-{
-    return (tauElectricDisplacement);
+    scai::lama::DenseVector<ValueType> dielectricPermittivityStatic;
+    scai::lama::DenseVector<ValueType> a_temp;
+    scai::lama::DenseVector<ValueType> b_temp;
+    ValueType a_sum = 0;
+    ValueType b_sum = 0;
+    ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        a_sum += (w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+    }
+    a_sum /= numRelaxationMechanisms;
+    b_sum /= numRelaxationMechanisms;
+    a_temp = a_sum * tauDielectricPermittivity;
+    a_temp = 1 - a_temp;
+    b_temp = b_sum * tauDielectricPermittivity;
+    
+    b_temp *= tauElectricConductivity;
+    a_temp -= b_temp;
+    
+    b_temp = electricConductivityRealEffective * tauElectricConductivity;
+    dielectricPermittivityStatic = dielectricPermittivityRealEffective - b_temp;
+    dielectricPermittivityStatic /= a_temp;
+    
+    return (dielectricPermittivityStatic);
 }
 
 /*! \brief Get const reference to tauElectricConductivity */
@@ -483,7 +483,6 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setTauElectricConducti
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true; // the velocity vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     tauElectricConductivity = setTauElectricConductivity;
 }
 
@@ -500,12 +499,10 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::setTauDielectricPermit
 {
     dirtyFlagAveraging = true;    // If modulus will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true; // the velocity vector is now dirty
-    dirtyFlagElectricConductivityEffectiveOptical = true; // the visco Modulus vector is now dirty
-    dirtyFlagDielectricPermittivityEffectiveOptical = true; // the visco Modulus vector is now dirty
     tauDielectricPermittivity = setTauDielectricPermittivity;
 }
 
-/*! \brief calculate reflectivity from permittivity
+/*! \brief calculate reflectivity
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
@@ -756,130 +753,67 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<Va
     return (dielectricPermittivityAverageZ);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in x-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageX()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageX()
 {
     // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
-    return (electricConductivityEffectiveOpticalAverageX);
+    return (tauElectricConductivityAverageX);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in x-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in x-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageX() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageX() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (electricConductivityEffectiveOpticalAverageX);
+    return (tauElectricConductivityAverageX);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in y-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageY()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageY()
 {
     // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
-    return (electricConductivityEffectiveOpticalAverageY);
+    return (tauElectricConductivityAverageY);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in y-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in y-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageY() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageY() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (electricConductivityEffectiveOpticalAverageY);
+    return (tauElectricConductivityAverageY);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in z-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageZ()
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageZ()
 {
     // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
-    return (electricConductivityEffectiveOpticalAverageZ);
+    return (tauElectricConductivityAverageZ);
 }
 
-/*! \brief Get const reference to averaged electricConductivityEffectiveOptical in z-direction
+/*! \brief Get const reference to averaged tauElectricConductivity in z-direction
  */
 template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityEffectiveOpticalAverageZ() const
+scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getTauElectricConductivityAverageZ() const
 {
     SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (electricConductivityEffectiveOpticalAverageZ);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in x-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageX()
-{
-    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
-    if (dirtyFlagAveraging == true) {
-        calculateAveraging();
-    }
-    return (dielectricPermittivityEffectiveOpticalAverageX);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in x-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageX() const
-{
-    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (dielectricPermittivityEffectiveOpticalAverageX);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in y-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageY()
-{
-    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
-    if (dirtyFlagAveraging == true) {
-        calculateAveraging();
-    }
-    return (dielectricPermittivityEffectiveOpticalAverageY);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in y-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageY() const
-{
-    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (dielectricPermittivityEffectiveOpticalAverageY);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in z-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageZ()
-{
-    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
-    if (dirtyFlagAveraging == true) {
-        calculateAveraging();
-    }
-    return (dielectricPermittivityEffectiveOpticalAverageZ);
-}
-
-/*! \brief Get const reference to averaged dielectricPermittivityEffectiveOptical in z-direction
- */
-template <typename ValueType>
-scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityEffectiveOpticalAverageZ() const
-{
-    SCAI_ASSERT(dirtyFlagAveraging == false, "Averaging has to be recalculated! ");
-    return (dielectricPermittivityEffectiveOpticalAverageZ);
+    return (tauElectricConductivityAverageZ);
 }
 
 /*! \brief Get const reference to averaged tauDielectricPermittivity in x-direction

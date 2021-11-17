@@ -62,10 +62,6 @@ namespace KITGPI
             std::string getEquationType() const;
             
             /* Getter methods for not required parameters */
-            scai::lama::Vector<ValueType> const &getElectricConductivityEffectiveOptical() override;
-            scai::lama::Vector<ValueType> const &getDielectricPermittivityEffectiveOptical() override;
-            ValueType const &getTauElectricDisplacement() override;
-            ValueType const &getTauElectricDisplacement() const override;
             scai::lama::Vector<ValueType> const &getTauElectricConductivity() const override;
             scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const override;
             
@@ -130,25 +126,18 @@ namespace KITGPI
             using Modelparameter<ValueType>::dielectricPermittivityAverageX;
             using Modelparameter<ValueType>::dielectricPermittivityAverageY;
             using Modelparameter<ValueType>::dielectricPermittivityAverageZ;
-            using Modelparameter<ValueType>::dirtyFlagElectricConductivityEffectiveOptical;
-            using Modelparameter<ValueType>::dirtyFlagDielectricPermittivityEffectiveOptical;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOptical;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOptical;
             using Modelparameter<ValueType>::tauElectricConductivity;
             using Modelparameter<ValueType>::tauDielectricPermittivity;
             using Modelparameter<ValueType>::relaxationFrequency;
             using Modelparameter<ValueType>::centerFrequencyCPML;
             using Modelparameter<ValueType>::numRelaxationMechanisms;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageX;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageY;
-            using Modelparameter<ValueType>::electricConductivityEffectiveOpticalAverageZ;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageX;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageY;
-            using Modelparameter<ValueType>::dielectricPermittivityEffectiveOpticalAverageZ;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageX;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageY;
+            using Modelparameter<ValueType>::tauElectricConductivityAverageZ;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageX;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageY;
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ;
-            using Modelparameter<ValueType>::tauElectricDisplacement;
+            using Modelparameter<ValueType>::relaxationTime;
         };
     }
 }

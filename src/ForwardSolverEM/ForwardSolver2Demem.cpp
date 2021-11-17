@@ -38,8 +38,6 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::initForwardSolver(Configuration
 
     update.setContextPtr(ctx);
     update_temp.setContextPtr(ctx);
-    
-    DT_temp = DT;
 }
 
 /*! \brief Initialization of the boundary conditions

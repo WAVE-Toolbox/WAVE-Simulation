@@ -56,7 +56,6 @@ namespace KITGPI
             /* Auxiliary Vectors */
             using ForwardSolver<ValueType>::update;
             using ForwardSolver<ValueType>::update_temp;
-            using ForwardSolverEM<ValueType>::DT_temp;
             using ForwardSolverEM<ValueType>::CaAverageX;
             using ForwardSolverEM<ValueType>::CaAverageY;
             using ForwardSolverEM<ValueType>::CbAverageX;
@@ -71,6 +70,7 @@ namespace KITGPI
             using ForwardSolverEM<ValueType>::CdAverageZ;
 
             IndexType numRelaxationMechanisms; // = Number of relaxation mechanisms
+            ValueType DT_temp;
         };
     } /* end namespace ForwardSolver */
 } /* end namespace KITGPI */

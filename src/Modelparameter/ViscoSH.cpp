@@ -191,8 +191,8 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::init(Configuration::Configurati
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Reading model parameter (ViscoSH) from file...\n");
 
-        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
         initRelaxationMechanisms(numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
+        init(ctx, dist, config.get<std::string>("ModelFilename"), config.get<IndexType>("FileFormat"));
 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
@@ -501,7 +501,7 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::initRelaxationMechanisms(scai::
     centerFrequencyCPML = centerFrequencyCPML_in;
 }
 
-/*! \brief calculate reflectivity from permittivity
+/*! \brief calculate reflectivity
  */
 template <typename ValueType>
 void KITGPI::Modelparameter::ViscoSH<ValueType>::calcReflectivity(Acquisition::Coordinates<ValueType> const &modelCoordinates, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives, ValueType DT)
