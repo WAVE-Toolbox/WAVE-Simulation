@@ -83,6 +83,11 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std
         IO::writeVector(EX, fileName + ".EX." + timeStep, fileFormat);
         IO::writeVector(EY, fileName + ".EY." + timeStep, fileFormat);
         IO::writeVector(EZ, fileName + ".EZ." + timeStep, fileFormat);
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            IO::writeVector(RX[l], fileName + ".RX" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(RY[l], fileName + ".RY" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(RZ[l], fileName + ".RZ" + std::to_string(l+1) + "." + timeStep, fileFormat);
+        }
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(HX.newVector());

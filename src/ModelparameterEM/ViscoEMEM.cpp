@@ -45,7 +45,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
     scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective = this->getDielectricPermittivityRealEffective();
     scai::lama::DenseVector<ValueType> electricConductivityRealEffective = this->getElectricConductivityRealEffective();
     dielectricPermittivityRealEffective /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
-    tauElectricConductivity *= (2.0 * M_PI * centerFrequencyCPML);  // calculate the relative tauElectricConductivity
+    ValueType relaxationTime_ref = 1.0 / (2.0 * M_PI * centerFrequencyCPML);
+    tauElectricConductivity /= relaxationTime_ref;  // calculate the relative tauElectricConductivity
     
     lama::DenseVector<ValueType> mask; //mask to restore vacuum
     mask = dielectricPermittivityRealEffective-1;
@@ -77,7 +78,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
     porosity *= mask;
     saturation *= mask;
     
-    tauElectricConductivity /= (2.0 * M_PI * centerFrequencyCPML);  // calculate the real tauElectricConductivity
+    tauElectricConductivity *= relaxationTime_ref;  // calculate the real tauElectricConductivity
     dielectricPermittivityRealEffective -= 1;
     dielectricPermittivityRealEffective *= mask;
     dielectricPermittivityRealEffective += 1;
@@ -261,7 +262,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
     this->initModelparameter(electricConductivity, ctx, dist, electricConductivity_const);
     this->initModelparameter(dielectricPermittivity, ctx, dist, dielectricPermittivity_const);
     
-    tauElectricConductivity_const /= (2.0 * M_PI * centerFrequencyCPML); // calculate the real tauElectricConductivity
+    ValueType relaxationTime_ref = 1.0 / (2.0 * M_PI * centerFrequencyCPML);
+    tauElectricConductivity_const *= relaxationTime_ref; // calculate the real tauElectricConductivity
     
     this->initModelparameter(tauElectricConductivity, ctx, dist, tauElectricConductivity_const);
     this->initModelparameter(tauDielectricPermittivity, ctx, dist, tauDielectricPermittivity_const);
@@ -312,7 +314,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
     }
             
     magneticPermeability *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
-    tauElectricConductivity /= (2.0 * M_PI * centerFrequencyCPML); // calculate the real tauElectricConductivity
+    ValueType relaxationTime_ref = 1.0 / (2.0 * M_PI * centerFrequencyCPML);
+    tauElectricConductivity *= relaxationTime_ref; // calculate the real tauElectricConductivity
     dielectricPermittivityRealEffective *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
     
     dielectricPermittivity = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
@@ -352,7 +355,8 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::write(std::string filename, s
     scai::lama::DenseVector<ValueType> electricConductivityRealEffective = this->getElectricConductivityRealEffective();
     
     magneticPermeabilitytemp /= MagneticPermeabilityVacuum;  // calculate the relative magneticPermeability
-    tauElectricConductivitytemp *= (2.0 * M_PI * centerFrequencyCPML);  // calculate the relative tauElectricConductivity
+    ValueType relaxationTime_ref = 1.0 / (2.0 * M_PI * centerFrequencyCPML);
+    tauElectricConductivitytemp /= relaxationTime_ref;  // calculate the relative tauElectricConductivity
     dielectricPermittivityRealEffective /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
     
     IO::writeVector(magneticPermeabilitytemp, filename + ".muEMr", fileFormat);

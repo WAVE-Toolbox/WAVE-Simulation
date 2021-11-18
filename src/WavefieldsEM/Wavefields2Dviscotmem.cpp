@@ -73,6 +73,9 @@ void KITGPI::Wavefields::FD2Dviscotmem<ValueType>::write(IndexType snapType, std
         break;
     case 2:
         IO::writeVector(EZ, fileName + ".EZ." + timeStep, fileFormat);
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            IO::writeVector(RZ[l], fileName + ".RZ" + std::to_string(l+1) + "." + timeStep, fileFormat);
+        }
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(HX.newVector());

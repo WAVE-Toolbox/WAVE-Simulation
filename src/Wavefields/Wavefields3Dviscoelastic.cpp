@@ -95,6 +95,14 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::write(IndexType snapType, 
         IO::writeVector(Sxy, fileName + ".Sxy." + timeStep, fileFormat);
         IO::writeVector(Sxz, fileName + ".Sxz." + timeStep, fileFormat);
         IO::writeVector(Syz, fileName + ".Syz." + timeStep, fileFormat);
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            IO::writeVector(Rxx[l], fileName + ".Rxx" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(Ryy[l], fileName + ".Ryy" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(Rzz[l], fileName + ".Rzz" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(Rxy[l], fileName + ".Rxy" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(Rxz[l], fileName + ".Rxz" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(Ryz[l], fileName + ".Ryz" + std::to_string(l+1) + "." + timeStep, fileFormat);
+        }
         break;
     case 3: {
         std::unique_ptr<lama::Vector<ValueType>> curl_Ptr(VX.newVector());

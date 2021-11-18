@@ -387,6 +387,9 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     electricConductivityRealEffective = dielectricPermittivity * b_temp;   
     electricConductivityRealEffective += electricConductivity;
     
+    // real effective electric conductivity should be larger than zero
+    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, 0, 0, 1); 
+    
     return (electricConductivityRealEffective);
 }
 
@@ -411,6 +414,9 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     a_temp = electricConductivity * tauElectricConductivity;
     dielectricPermittivityRealEffective += a_temp;
     
+    // real effective dielectric permittivity should be larger than the dielectric permittivity of vacuum
+    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    
     return (dielectricPermittivityRealEffective);
 }
 
@@ -434,6 +440,9 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     dielectricPermittivityStatic = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
     b_temp *= dielectricPermittivityStatic;
     electricConductivityStatic = electricConductivityRealEffective - b_temp;
+    
+    // static electric conductivity should be larger than zero
+    Common::searchAndReplace<ValueType>(electricConductivityStatic, 0, 0, 1); 
     
     return (electricConductivityStatic);
 }
@@ -466,6 +475,9 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     b_temp = electricConductivityRealEffective * tauElectricConductivity;
     dielectricPermittivityStatic = dielectricPermittivityRealEffective - b_temp;
     dielectricPermittivityStatic /= a_temp;
+    
+    // static dielectric permittivity should be larger than the dielectric permittivity of vacuum
+    Common::searchAndReplace<ValueType>(dielectricPermittivityStatic, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
     
     return (dielectricPermittivityStatic);
 }

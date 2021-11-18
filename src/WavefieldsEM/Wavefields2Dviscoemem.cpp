@@ -75,6 +75,10 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::write(IndexType snapType, std
     case 2:
         IO::writeVector(EX, fileName + ".EX." + timeStep, fileFormat);
         IO::writeVector(EY, fileName + ".EY." + timeStep, fileFormat);
+        for (int l=0; l<numRelaxationMechanisms; l++) {
+            IO::writeVector(RX[l], fileName + ".RX" + std::to_string(l+1) + "." + timeStep, fileFormat);
+            IO::writeVector(RY[l], fileName + ".RY" + std::to_string(l+1) + "." + timeStep, fileFormat);
+        }
         break;
     case 3: {
         COMMON_THROWEXCEPTION("Not implemented in Wavefields2Dviscoemem.");
