@@ -88,7 +88,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::resetCPML()
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
 {
     SCAI_REGION("ForwardSolver.timestep2Dacoustic");
 
@@ -123,7 +123,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         ConvPML.apply_p_x(update);
     }
     update *= inverseDensityAverageX;
-    vX += update;
+    vX += adjSign * update;
 
     if (DinterpolateStaggeredX) {
         /* interpolation for vz ghost points at the variable grid interfaces
@@ -145,7 +145,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::run(Acquisition::Acquisitio
         ConvPML.apply_p_y(update);
     }
     update *= inverseDensityAverageY;
-    vY += update;
+    vY += adjSign * update;
 
     if (DinterpolateFull) {
         /* interpolation for vz ghost points at the variable grid interfaces

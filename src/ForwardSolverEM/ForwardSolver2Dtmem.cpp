@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareForModelling(Modelparame
 \end{equation}
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
+void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
 {
     SCAI_REGION("ForwardSolver.timestep2Dtmem");
 
