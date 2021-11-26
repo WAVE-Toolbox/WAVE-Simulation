@@ -129,7 +129,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::prepareForModelling(Mod
  \param t current timestep
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep3Dviscoelastic");
 
@@ -209,7 +209,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += update_temp;
 
     update *= inverseDensityAverageX;
-    vX += adjSign * update;
+    vX += update;
 
     update = Dxb * Sxy;
     if (useConvPML) {
@@ -235,7 +235,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += update_temp;
 
     update *= inverseDensityAverageY;
-    vY += adjSign * update;
+    vY += update;
 
     update = Dxb * Sxz;
     if (useConvPML) {
@@ -261,7 +261,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += update_temp;
 
     update *= inverseDensityAverageZ;
-    vZ += adjSign * update;
+    vZ += update;
 
     /* ----------------*/
     /* stress update */
@@ -299,9 +299,9 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
     }
 
     update *= onePlusLtauP;
-    Sxx += adjSign * update;
-    Syy += adjSign * update;
-    Szz += adjSign * update;
+    Sxx += update;
+    Syy += update;
+    Szz += update;
 
     /* Update Sxx and Rxx */
     update = vyy + vzz;
@@ -317,7 +317,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Sxx += DThalf * Rxx[l];
     }
     update *= onePlusLtauS;
-    Sxx -= adjSign * update;
+    Sxx -= update;
 
     /* Update Syy and Ryy */
     update = vxx + vzz;
@@ -333,7 +333,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Syy += DThalf * Ryy[l];
     }
     update *= onePlusLtauS;
-    Syy -= adjSign * update;
+    Syy -= update;
 
     /* Update Szz and Szz */
     update = vxx + vyy;
@@ -349,7 +349,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Szz += DThalf * Rzz[l];
     }
     update *= onePlusLtauS;
-    Szz -= adjSign * update;
+    Szz -= update;
 
     /* Update Sxy and Rxy*/
     update = Dyf * vX;
@@ -376,7 +376,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Sxy += DThalf * Rxy[l];
     }
     update *= onePlusLtauS;
-    Sxy += adjSign * update;
+    Sxy += update;
 
     /* Update Sxz and Rxz */
     update = Dzf * vX;
@@ -404,7 +404,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Sxz += DThalf * Rxz[l];
     }
     update *= onePlusLtauS;
-    Sxz += adjSign * update;
+    Sxz += update;
 
     /* Update Syz and Ryz */
     update = Dzf * vY;
@@ -431,7 +431,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Syz += DThalf * Ryz[l];
     }
     update *= onePlusLtauS;
-    Syz += adjSign * update;
+    Syz += update;
 
     /* Apply free surface to stress update */
     if (useFreeSurface == 1) {

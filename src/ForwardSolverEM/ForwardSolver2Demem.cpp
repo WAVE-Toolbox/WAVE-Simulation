@@ -109,7 +109,7 @@ void KITGPI::ForwardSolver::FD2Demem<ValueType>::prepareForModelling(Modelparame
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD2Demem<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Demem");
     

@@ -281,7 +281,6 @@ int main(int argc, const char *argv[])
     start_t = common::Walltime::get();
     ValueType DT = config.get<ValueType>("DT");
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
-    IndexType adjSign = 1;
     if (!useStreamConfig) {
         solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, DT);
     } else {
@@ -421,7 +420,7 @@ int main(int argc, const char *argv[])
                     }
                     *wavefieldsTemp = *wavefields;
 
-                    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep, adjSign);
+                    solver->run(receivers, sources, *model, *wavefields, *derivatives, tStep);
                     
                     if (randInd == 0 && decomposeType != 0) {
                         *wavefieldsTemp -= *wavefields;
@@ -452,7 +451,7 @@ int main(int argc, const char *argv[])
                     }
                     *wavefieldsTemp = *wavefields;
 
-                    solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep, adjSign);
+                    solver->run(receivers, sources, *modelPerShot, *wavefields, *derivatives, tStep);
 
                     if (randInd == 0 && decomposeType != 0) {
                         *wavefieldsTemp -= *wavefields;

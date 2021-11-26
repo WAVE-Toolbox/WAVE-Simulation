@@ -117,7 +117,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelpar
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
 
     SCAI_REGION("timestep");
@@ -201,7 +201,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     }
     update += update_temp;
     update *= inverseDensityAverageX;
-    vX += adjSign * update;
+    vX += update;
 
     if (DinterpolateStaggeredX) {
         /* interpolation for vx ghost points at the variable grid interfaces*/
@@ -236,7 +236,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update += update_temp;
 
     update *= inverseDensityAverageY;
-    vY += adjSign * update;
+    vY += update;
 
     if (DinterpolateFull) {
         /* interpolation for vy ghost pointsa t the variable grid interfaces.
@@ -274,7 +274,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update += update_temp;
 
     update *= inverseDensityAverageZ;
-    vZ += adjSign * update;
+    vZ += update;
 
     if (DinterpolateStaggeredZ) {
         /* interpolation for vz ghost points at the variable grid interfaces*/
@@ -299,19 +299,19 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     update += vzz;
     update *= pWaveModulus;
 
-    Sxx += adjSign * update;
-    Syy += adjSign * update;
-    Szz += adjSign * update;
+    Sxx += update;
+    Syy += update;
+    Szz += update;
 
     update = vyy + vzz;
     update *= sWaveModulus;
-    Sxx -= adjSign * 2.0 * update;
+    Sxx -= 2.0 * update;
     update = vxx + vzz;
     update *= sWaveModulus;
-    Syy -= adjSign * 2.0 * update;
+    Syy -= 2.0 * update;
     update = vxx + vyy;
     update *= sWaveModulus;
-    Szz -= adjSign * 2.0 * update;
+    Szz -= 2.0 * update;
 
     if (DinterpolateFull) {
         // interpolation for Sxx/Sxx/Szz ghost points at the variable grid interfaces.
@@ -339,7 +339,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     update += update_temp;
     update *= sWaveModulusAverageXY;
-    Sxy += adjSign * update;
+    Sxy += update;
 
     if (DinterpolateStaggeredX) {
         /* interpolation for Sxy ghost points at the variable grid interfaces.
@@ -361,7 +361,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
 
     update += update_temp;
     update *= sWaveModulusAverageXZ;
-    Sxz += adjSign * update;
+    Sxz += update;
 
     if (DinterpolateStaggeredXZ) {
         // interpolation for missing shear stress xz points
@@ -379,7 +379,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::run(Acquisition::Acquisition
     }
     update += update_temp;
     update *= sWaveModulusAverageYZ;
-    Syz += adjSign * update;
+    Syz += update;
 
     if (DinterpolateStaggeredZ) {
         /* interpolation for Syz ghost points at the variable grid interfaces.

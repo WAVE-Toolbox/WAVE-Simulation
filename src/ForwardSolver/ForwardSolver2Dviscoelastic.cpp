@@ -127,7 +127,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::prepareBoundaryConditio
  \param t current timesample 
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Dviscoelastic");
 
@@ -185,7 +185,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
     }
     update += update_temp;
     update *= inverseDensityAverageX;
-    vX += adjSign * update;
+    vX += update;
 
     update = Dxb * Sxy;
     if (useConvPML) {
@@ -204,7 +204,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
     update += update_temp;
 
     update *= inverseDensityAverageY;
-    vY += adjSign * update;
+    vY += update;
 
     /* ----------------*/
     /* pressure update */
@@ -234,8 +234,8 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Ryy[l] -= update2;
     }
     update *= onePlusLtauP;
-    Sxx += adjSign * update;
-    Syy += adjSign * update;
+    Sxx += update;
+    Syy += update;
 
     /* Update Sxx and Rxx */
     update = vyy;
@@ -252,7 +252,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Sxx += DThalf * Rxx[l];
     }
     update *= onePlusLtauS;
-    Sxx -= adjSign * update;
+    Sxx -= update;
 
     /* Update Syy and Ryy */
     update = vxx;
@@ -268,7 +268,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Syy += DThalf * Ryy[l];
     }
     update *= onePlusLtauS;
-    Syy -= adjSign * update;
+    Syy -= update;
 
     /* Update Sxy and Rxy*/
     update = Dyf * vX;
@@ -296,7 +296,7 @@ void KITGPI::ForwardSolver::FD2Dviscoelastic<ValueType>::run(Acquisition::Acquis
         Sxy += DThalf * Rxy[l];
     }
     update *= onePlusLtauS;
-    Sxy += adjSign * update;
+    Sxy += update;
 
     /* Apply free surface to stress update */
     if (useFreeSurface) {

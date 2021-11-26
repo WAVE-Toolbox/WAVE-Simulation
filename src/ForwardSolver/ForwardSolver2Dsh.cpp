@@ -105,7 +105,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Dsh");
 
@@ -153,7 +153,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     update += update_temp;
 
     update *= inverseDensity;
-    vZ += adjSign * update;
+    vZ += update;
 
     /* ----------------*/
     /*  update stress  */
@@ -166,7 +166,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
 
     update *= sWaveModulusAverageXZ;
 
-    Sxz += adjSign * update;
+    Sxz += update;
 
     update = Dyf * vZ;
     if (useConvPML) {
@@ -174,7 +174,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::run(Acquisition::AcquisitionGeome
     }
     update *= sWaveModulusAverageYZ;
 
-    Syz += adjSign * update;
+    Syz += update;
 
     /* Apply free surface to stress update */
 //     if (useFreeSurface) {

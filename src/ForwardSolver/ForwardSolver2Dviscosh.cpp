@@ -123,7 +123,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::prepareForModelling(Modelpar
  *
  */
 template <typename ValueType>
-void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t, scai::IndexType adjSign)
+void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::AcquisitionGeometry<ValueType> &receiver, Acquisition::AcquisitionGeometry<ValueType> const &sources, Modelparameter::Modelparameter<ValueType> const &model, Wavefields::Wavefields<ValueType> &wavefield, Derivatives::Derivatives<ValueType> const &derivatives, scai::IndexType t)
 {
     SCAI_REGION("ForwardSolver.timestep2Dviscosh");
 
@@ -177,7 +177,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
     update += update_temp;
 
     update *= inverseDensity;
-    vZ += adjSign * update;
+    vZ += update;
 
     /* ----------------*/
     /*  update stress  */
@@ -202,7 +202,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
         Sxz += DThalf * Rxz[l];
     }
     update *= onePlusLtauS;
-    Sxz += adjSign * update;
+    Sxz += update;
 
     /* Update Syz and Ryz */
     update = Dyf * vZ;
@@ -223,7 +223,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::run(Acquisition::Acquisition
         Syz += DThalf * Ryz[l];
     }
     update *= onePlusLtauS;
-    Syz += adjSign * update;
+    Syz += update;
     /* Apply free surface to stress update */
 //     if (useFreeSurface) {
 //         SCAI_ASSERT(useFreeSurface != true, " Stress-image method is not implemented for Love-Waves ");
