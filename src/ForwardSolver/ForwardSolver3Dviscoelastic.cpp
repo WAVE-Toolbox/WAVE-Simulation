@@ -117,7 +117,7 @@ void KITGPI::ForwardSolver::FD3Dviscoelastic<ValueType>::prepareForModelling(Mod
     }
 }
 
-/*! \brief Running the 3-D viscoelastic foward solver
+/*! \brief Running the 3-D viscoelastic forward solver
  *
  * Start the 3-D forward solver as defined by the given parameters
  *

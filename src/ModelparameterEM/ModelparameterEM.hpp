@@ -146,10 +146,10 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() override;
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() const override;
             
-            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityRealEffective() const;
-            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityRealEffective() const;
-            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityStatic(scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> electricConductivityRealEffective);
-            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> electricConductivityRealEffective);
+            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityRealEffective() const override;
+            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityRealEffective() const override;
+            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType) override;
+            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType) override;
             
             virtual scai::lama::Vector<ValueType> const &getTauElectricConductivity() const override;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const override;

@@ -64,7 +64,7 @@ void KITGPI::ForwardSolver::FD3Dacoustic<ValueType>::prepareBoundaryConditions(C
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
-/*! \brief Running the 3-D acoustic foward solver
+/*! \brief Running the 3-D acoustic forward solver
  *
  * Start the 3-D forward solver as defined by the given parameters
  *

@@ -782,6 +782,50 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setDielectricPerm
     COMMON_THROWEXCEPTION("There is no setDielectricPermittivity in an Seismic modelling")
 }
 
+/*! \brief Get const reference to electricConductivityRealEffective
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityRealEffective() const
+{
+    scai::lama::DenseVector<ValueType> electricConductivityRealEffective;
+    COMMON_THROWEXCEPTION("There is no electricConductivityRealEffective in an Seismic modelling")
+    
+    return (electricConductivityRealEffective);
+}
+
+/*! \brief Get const reference to dielectricPermittivityRealEffective
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityRealEffective() const
+{
+    scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective;
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityRealEffective in an Seismic modelling")
+    
+    return (dielectricPermittivityRealEffective);
+}
+
+/*! \brief Get const reference to electricConductivityStatic
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType)
+{
+    scai::lama::DenseVector<ValueType> electricConductivityStatic;
+    COMMON_THROWEXCEPTION("There is no electricConductivityStatic in an Seismic modelling")
+    
+    return (electricConductivityStatic);
+}
+
+/*! \brief Get const reference to dielectricPermittivityStatic
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType)
+{
+    scai::lama::DenseVector<ValueType> dielectricPermittivityStatic;
+    COMMON_THROWEXCEPTION("There is no dielectricPermittivityStatic in an Seismic modelling")
+    
+    return (dielectricPermittivityStatic);
+}
+
 /*! \brief Get const reference to tauElectricConductivity */
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getTauElectricConductivity() const

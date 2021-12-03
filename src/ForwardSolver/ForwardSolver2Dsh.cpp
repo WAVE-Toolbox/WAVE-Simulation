@@ -82,7 +82,7 @@ void KITGPI::ForwardSolver::FD2Dsh<ValueType>::prepareForModelling(Modelparamete
 //     }
 }
 
-/*! \brief Running the 2-D sh foward solver
+/*! \brief Running the 2-D sh forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

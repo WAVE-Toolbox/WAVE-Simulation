@@ -65,7 +65,7 @@ void KITGPI::ForwardSolver::FD2Dacoustic<ValueType>::resetCPML()
     }
 }
 
-/*! \brief Running the 2-D acoustic foward solver
+/*! \brief Running the 2-D acoustic forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

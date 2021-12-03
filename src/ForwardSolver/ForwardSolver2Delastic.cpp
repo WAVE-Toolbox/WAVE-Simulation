@@ -85,7 +85,7 @@ void KITGPI::ForwardSolver::FD2Delastic<ValueType>::prepareForModelling(Modelpar
     }
 }
 
-/*! \brief Running the 2-D elastic foward solver
+/*! \brief Running the 2-D elastic forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

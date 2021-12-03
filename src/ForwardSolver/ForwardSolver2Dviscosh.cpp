@@ -100,7 +100,7 @@ void KITGPI::ForwardSolver::FD2Dviscosh<ValueType>::prepareForModelling(Modelpar
     onePlusLtauS += numRelaxationMechanisms * tauS;
 }
 
-/*! \brief Running the 2-D viscosh foward solver
+/*! \brief Running the 2-D viscosh forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

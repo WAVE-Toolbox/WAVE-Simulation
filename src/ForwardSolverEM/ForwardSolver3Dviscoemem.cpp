@@ -130,7 +130,7 @@ void KITGPI::ForwardSolver::FD3Dviscoemem<ValueType>::prepareForModelling(Modelp
     CdAverageZ = this->getAveragedCd(dielectricPermittivityAverageZ, tauDielectricPermittivityAverageZ, numRelaxationMechanisms, relaxationTime, DT);
 }
 
-/*! \brief Running the 3-D visco-emem foward solver
+/*! \brief Running the 3-D visco-emem forward solver
  *
  * Start the 3-D forward solver as defined by the given parameters
  *

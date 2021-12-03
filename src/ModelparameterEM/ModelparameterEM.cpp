@@ -375,14 +375,14 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
 {
     scai::lama::DenseVector<ValueType> electricConductivityRealEffective;
     scai::lama::DenseVector<ValueType> b_temp;
-    ValueType b_sum = 0;
+    ValueType b_average = 0;
     ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
     for (int l=0; l<numRelaxationMechanisms; l++) {
-        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
-        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+        ValueType relaxationTime = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        b_average += (w_ref * w_ref * relaxationTime / (1 + w_ref * w_ref * relaxationTime * relaxationTime));
     }
-    b_sum /= numRelaxationMechanisms;
-    b_temp = b_sum * tauDielectricPermittivity;
+    b_average /= numRelaxationMechanisms;
+    b_temp = b_average * tauDielectricPermittivity;
     
     electricConductivityRealEffective = dielectricPermittivity * b_temp;   
     electricConductivityRealEffective += electricConductivity;
@@ -400,14 +400,14 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
 {
     scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective;
     scai::lama::DenseVector<ValueType> a_temp;
-    ValueType a_sum = 0;
+    ValueType a_average = 0;
     ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
     for (int l=0; l<numRelaxationMechanisms; l++) {
-        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
-        a_sum += (w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+        ValueType relaxationTime = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        a_average += (w_ref * w_ref * relaxationTime * relaxationTime / (1 + w_ref * w_ref * relaxationTime * relaxationTime));
     }
-    a_sum /= numRelaxationMechanisms;
-    a_temp = a_sum * tauDielectricPermittivity;
+    a_average /= numRelaxationMechanisms;
+    a_temp = a_average * tauDielectricPermittivity;
     a_temp = 1 - a_temp;
     
     dielectricPermittivityRealEffective = dielectricPermittivity * a_temp;
@@ -423,21 +423,27 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
 /*! \brief Get const reference to electricConductivityStatic
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective)
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType)
 {
     scai::lama::DenseVector<ValueType> dielectricPermittivityStatic;
     scai::lama::DenseVector<ValueType> electricConductivityStatic;
     scai::lama::DenseVector<ValueType> b_temp;
-    ValueType b_sum = 0;
+    ValueType b_average = 0;
     ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
     for (int l=0; l<numRelaxationMechanisms; l++) {
-        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
-        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+        ValueType relaxationTime = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        b_average += (w_ref * w_ref * relaxationTime / (1 + w_ref * w_ref * relaxationTime * relaxationTime));
     }
-    b_sum /= numRelaxationMechanisms;
-    b_temp = b_sum * tauDielectricPermittivity;
+    b_average /= numRelaxationMechanisms;
+    b_temp = b_average * tauDielectricPermittivity;
     
-    dielectricPermittivityStatic = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
+    if (calculateType == 1) {
+        // calculate dielectricPermittivityStatic by electricConductivityRealEffective only
+        dielectricPermittivityStatic = dielectricPermittivityRealEffective;
+    } else if (calculateType == 2) {
+        // calculate dielectricPermittivityStatic by dielectricPermittivityRealEffective and electricConductivityRealEffective
+        dielectricPermittivityStatic = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective, calculateType);
+    }
     b_temp *= dielectricPermittivityStatic;
     electricConductivityStatic = electricConductivityRealEffective - b_temp;
     
@@ -450,32 +456,41 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
 /*! \brief Get const reference to dielectricPermittivityStatic
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective)
+scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType)
 {
     scai::lama::DenseVector<ValueType> dielectricPermittivityStatic;
     scai::lama::DenseVector<ValueType> a_temp;
     scai::lama::DenseVector<ValueType> b_temp;
-    ValueType a_sum = 0;
-    ValueType b_sum = 0;
+    ValueType a_average = 0;
+    ValueType b_average = 0;
     ValueType w_ref = 2.0 * M_PI * centerFrequencyCPML;
     for (int l=0; l<numRelaxationMechanisms; l++) {
-        ValueType tauElectricDisplacement = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
-        a_sum += (w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
-        b_sum += (w_ref * w_ref * tauElectricDisplacement / (1 + w_ref * w_ref * tauElectricDisplacement * tauElectricDisplacement));
+        ValueType relaxationTime = 1.0 / (2.0 * M_PI * relaxationFrequency[l]);
+        a_average += (w_ref * w_ref * relaxationTime * relaxationTime / (1 + w_ref * w_ref * relaxationTime * relaxationTime));
+        b_average += (w_ref * w_ref * relaxationTime / (1 + w_ref * w_ref * relaxationTime * relaxationTime));
     }
-    a_sum /= numRelaxationMechanisms;
-    b_sum /= numRelaxationMechanisms;
-    a_temp = a_sum * tauDielectricPermittivity;
+    a_average /= numRelaxationMechanisms;
+    b_average /= numRelaxationMechanisms;
+    a_temp = a_average * tauDielectricPermittivity;
     a_temp = 1 - a_temp;
-    b_temp = b_sum * tauDielectricPermittivity;
+    b_temp = b_average * tauDielectricPermittivity;
     
-    b_temp *= tauElectricConductivity;
-    a_temp -= b_temp;
-    
-    b_temp = electricConductivityRealEffective * tauElectricConductivity;
-    dielectricPermittivityStatic = dielectricPermittivityRealEffective - b_temp;
-    dielectricPermittivityStatic /= a_temp;
-    
+    if (calculateType == 1) {
+        // calculate dielectricPermittivityStatic by dielectricPermittivityRealEffective only
+        scai::lama::DenseVector<ValueType> electricConductivityStatic = electricConductivityRealEffective;
+        b_temp = electricConductivityStatic * tauElectricConductivity;
+        b_temp = dielectricPermittivityRealEffective - b_temp;
+        
+        dielectricPermittivityStatic = b_temp / a_temp;
+    } else if (calculateType == 2) {
+        // calculate dielectricPermittivityStatic by dielectricPermittivityRealEffective and electricConductivityRealEffective
+        b_temp *= tauElectricConductivity;
+        a_temp -= b_temp;
+        
+        b_temp = electricConductivityRealEffective * tauElectricConductivity;
+        dielectricPermittivityStatic = dielectricPermittivityRealEffective - b_temp;
+        dielectricPermittivityStatic /= a_temp;
+    }
     // static dielectric permittivity should be larger than the dielectric permittivity of vacuum
     Common::searchAndReplace<ValueType>(dielectricPermittivityStatic, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
     

@@ -91,7 +91,7 @@ void KITGPI::ForwardSolver::FD3Demem<ValueType>::prepareForModelling(Modelparame
     CbAverageZ = this->getAveragedCb(dielectricPermittivityAverageZ, electricConductivityAverageZ, DT);
 }
 
-/*! \brief Running the 3-D emem foward solver
+/*! \brief Running the 3-D emem forward solver
  *
  * Start the 3-D forward solver as defined by the given parameters
  *

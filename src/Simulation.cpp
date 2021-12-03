@@ -172,7 +172,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, " -  Boundary Condition Vectors \t" << memSolver << " MB\n");
     HOST_PRINT(commAll, "\n Memory Usage (total / per partition): \n " << memTotal << " / " << memTotal / dist->getNumPartitions() << " MB ");
     if (numShotDomains > 1)
-        HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot Domains ): \n " << memTotal * numShotDomains << " MB  ");
+        HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot Domains): \n " << memTotal * numShotDomains << " MB  ");
 
     HOST_PRINT(commAll, "\n\n ===========================================================\n\n")
 

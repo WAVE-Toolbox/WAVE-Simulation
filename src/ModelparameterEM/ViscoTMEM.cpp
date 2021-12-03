@@ -85,8 +85,9 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::applyThresholds(Configuration
     dielectricPermittivityRealEffective += 1;
     dielectricPermittivityRealEffective *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
     
-    dielectricPermittivity = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
-    electricConductivity = this->getElectricConductivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
+    IndexType calculateType = 2;
+    dielectricPermittivity = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective, calculateType);
+    electricConductivity = this->getElectricConductivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective, calculateType);
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -363,8 +364,9 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::init(scai::hmemo::ContextPtr 
     tauElectricConductivity *= relaxationTime_ref; // calculate the real tauElectricConductivity
     dielectricPermittivityRealEffective *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
     
-    dielectricPermittivity = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
-    electricConductivity = this->getElectricConductivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective);
+    IndexType calculateType = 2;
+    dielectricPermittivity = this->getDielectricPermittivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective, calculateType);
+    electricConductivity = this->getElectricConductivityStatic(dielectricPermittivityRealEffective, electricConductivityRealEffective, calculateType);
 }
 
 //! \brief Copy constructor
@@ -383,8 +385,10 @@ KITGPI::Modelparameter::ViscoTMEM<ValueType>::ViscoTMEM(const ViscoTMEM &rhs)
     
     tauElectricConductivity = rhs.tauElectricConductivity;
     tauDielectricPermittivity = rhs.tauDielectricPermittivity;
-    relaxationFrequency = rhs.relaxationFrequency;
-    numRelaxationMechanisms = rhs.numRelaxationMechanisms;
+    
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
 }
 
 /*! \brief Write model to an external file
@@ -647,8 +651,10 @@ KITGPI::Modelparameter::ViscoTMEM<ValueType> &KITGPI::Modelparameter::ViscoTMEM<
     
     tauElectricConductivity = rhs.tauElectricConductivity;
     tauDielectricPermittivity = rhs.tauDielectricPermittivity;
-    relaxationFrequency = rhs.relaxationFrequency;
-    numRelaxationMechanisms = rhs.numRelaxationMechanisms;
+    
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
 
     return *this;
 }
@@ -675,7 +681,8 @@ void KITGPI::Modelparameter::ViscoTMEM<ValueType>::assign(KITGPI::Modelparameter
     tauElectricConductivity = rhs.getTauElectricConductivity();
     tauDielectricPermittivity = rhs.getTauDielectricPermittivity();
     relaxationFrequency = rhs.getRelaxationFrequency();
-    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
+    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms(); 
+    centerFrequencyCPML = rhs.getCenterFrequencyCPML();
 }
 
 /*! \brief function for overloading -= Operation (called in base class)

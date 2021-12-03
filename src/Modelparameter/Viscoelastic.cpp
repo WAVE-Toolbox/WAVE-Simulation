@@ -327,8 +327,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
     density = rhs.density;
     tauS = rhs.tauS;
     tauP = rhs.tauP;
-    relaxationFrequency = rhs.relaxationFrequency;
-    numRelaxationMechanisms = rhs.numRelaxationMechanisms;
+    
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
+    
     dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
     dirtyFlagPWaveModulus = rhs.dirtyFlagPWaveModulus;
     dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
@@ -872,8 +875,11 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     density = rhs.density;
     tauS = rhs.tauS;
     tauP = rhs.tauP;
-    relaxationFrequency = rhs.relaxationFrequency;
-    numRelaxationMechanisms = rhs.numRelaxationMechanisms;
+    
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
+    
     porosity = rhs.porosity;
     saturation = rhs.saturation;
     
@@ -900,10 +906,13 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparame
     density = rhs.getDensity();
     tauS = rhs.getTauS();
     tauP = rhs.getTauP();
-    relaxationFrequency = rhs.getRelaxationFrequency();
-    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    
+    relaxationFrequency = rhs.getRelaxationFrequency();
+    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms(); 
+    centerFrequencyCPML = rhs.getCenterFrequencyCPML();
+    
     
     bulkModulusRockMatrix = rhs.getBulkModulusRockMatrix();
     shearModulusRockMatrix = rhs.getShearModulusRockMatrix();

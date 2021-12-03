@@ -117,7 +117,7 @@ void KITGPI::ForwardSolver::FD2Dviscoemem<ValueType>::prepareBoundaryConditions(
     this->prepareBoundaries(config, modelCoordinates, derivatives, dist, ctx, FreeSurface, DampingBoundary, ConvPML);
 }
 
-/*! \brief Running the 2-D visco-emem foward solver
+/*! \brief Running the 2-D visco-emem forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

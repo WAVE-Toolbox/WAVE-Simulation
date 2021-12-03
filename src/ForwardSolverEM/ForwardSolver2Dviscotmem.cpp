@@ -103,7 +103,7 @@ void KITGPI::ForwardSolver::FD2Dviscotmem<ValueType>::prepareForModelling(Modelp
     CdAverageZ = this->getAveragedCd(dielectricPermittivity, tauDielectricPermittivity, numRelaxationMechanisms, relaxationTime, DT);
 }
 
-/*! \brief Running the 2-D tmem foward solver
+/*! \brief Running the 2-D tmem forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

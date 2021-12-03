@@ -86,7 +86,7 @@ void KITGPI::ForwardSolver::FD3Delastic<ValueType>::prepareForModelling(Modelpar
     }
 }
 
-/*! \brief Running the 3-D elastic foward solver
+/*! \brief Running the 3-D elastic forward solver
  *
  * Start the 3-D forward solver as defined by the given parameters
  *

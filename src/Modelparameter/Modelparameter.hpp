@@ -183,6 +183,11 @@ namespace KITGPI
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() = 0;
             virtual scai::lama::Vector<ValueType> const &getVelocityEM() const = 0;
             
+            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityRealEffective() const = 0;
+            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityRealEffective() const = 0;
+            virtual scai::lama::DenseVector<ValueType> const getElectricConductivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType) = 0;
+            virtual scai::lama::DenseVector<ValueType> const getDielectricPermittivityStatic(scai::lama::DenseVector<ValueType> const dielectricPermittivityRealEffective, scai::lama::DenseVector<ValueType> const electricConductivityRealEffective, scai::IndexType calculateType) = 0;
+            
             virtual scai::lama::Vector<ValueType> const &getTauElectricConductivity() const = 0;
             virtual scai::lama::Vector<ValueType> const &getTauDielectricPermittivity() const = 0;
 

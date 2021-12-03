@@ -356,10 +356,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setInverseAGC(scai::lama::Dense
     useAGC = true;
 }
 
-//! \brief Normalize the seismogram-traces
+//! \brief get the l2 norm of each seismogram trace.
 /*!
  *
- * This method normalized the traces of the seismogram after the time stepping.
+ * This method get the l2 norm of the traces of the seismogram.
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceL2norm()
@@ -367,23 +367,22 @@ scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
     scai::lama::DenseVector<ValueType> tempRow;
     scai::lama::DenseVector<ValueType> traceL2Norm;
     traceL2Norm.allocate(data.getRowDistributionPtr());
-    traceL2Norm = 1.0; // in this state the taper does nothing when applied
+    traceL2Norm = 0.0; 
     traceL2Norm.setContextPtr(data.getContextPtr());
     
     if (data.getNumValues() > 0) {
         for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             data.getRow(tempRow, i);
             traceL2Norm.setValue(i, tempRow.l2Norm());
-            if (traceL2Norm.getValue(i)==0) traceL2Norm.setValue(i,1);
         }
     }
     return traceL2Norm;
 }
 
-//! \brief Normalize the seismogram-traces
+//! \brief get the sum of each seismogram trace
 /*!
  *
- * This method normalized the traces of the seismogram after the time stepping.
+ * This method get the sum of the traces of the seismogram.
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceSum()
@@ -391,14 +390,13 @@ scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
     scai::lama::DenseVector<ValueType> tempRow;
     scai::lama::DenseVector<ValueType> traceSum;
     traceSum.allocate(data.getRowDistributionPtr());
-    traceSum = 1.0; // in this state the taper does nothing when applied
+    traceSum = 0.0;
     traceSum.setContextPtr(data.getContextPtr());
     
     if (data.getNumValues() > 0) {
         for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             data.getRow(tempRow, i);
             traceSum.setValue(i, tempRow.sum());
-            if (traceSum.getValue(i)==0) traceSum.setValue(i,1);
         }
     }
     return traceSum;

@@ -83,7 +83,7 @@ void KITGPI::ForwardSolver::FD2Dtmem<ValueType>::prepareForModelling(Modelparame
     CbAverageZ = this->getAveragedCb(dielectricPermittivity, electricConductivity, DT);
 }
 
-/*! \brief Running the 2-D tmem foward solver
+/*! \brief Running the 2-D tmem forward solver
  *
  * Start the 2-D forward solver as defined by the given parameters
  *

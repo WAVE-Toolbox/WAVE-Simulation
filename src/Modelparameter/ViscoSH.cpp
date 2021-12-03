@@ -283,8 +283,11 @@ KITGPI::Modelparameter::ViscoSH<ValueType>::ViscoSH(const ViscoSH &rhs)
     density = rhs.density;
     inverseDensity = rhs.inverseDensity;
     tauS = rhs.tauS;
-    relaxationFrequency = rhs.relaxationFrequency;
-    numRelaxationMechanisms = rhs.numRelaxationMechanisms;
+    
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
+    
     dirtyFlagInverseDensity = rhs.dirtyFlagInverseDensity;
     dirtyFlagSWaveModulus = rhs.dirtyFlagSWaveModulus;
     
@@ -755,6 +758,10 @@ KITGPI::Modelparameter::ViscoSH<ValueType> &KITGPI::Modelparameter::ViscoSH<Valu
     porosity = rhs.porosity;
     saturation = rhs.saturation;
     
+    relaxationFrequency = rhs.relaxationFrequency;    
+    numRelaxationMechanisms = rhs.numRelaxationMechanisms; 
+    centerFrequencyCPML = rhs.centerFrequencyCPML;
+    
     shearModulusRockMatrix = rhs.shearModulusRockMatrix;
     densityRockMatrix = rhs.densityRockMatrix;
     
@@ -779,6 +786,10 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::assign(KITGPI::Modelparameter::
     
     shearModulusRockMatrix = rhs.getShearModulusRockMatrix();
     densityRockMatrix = rhs.getDensityRockMatrix();
+    
+    relaxationFrequency = rhs.getRelaxationFrequency();
+    numRelaxationMechanisms = rhs.getNumRelaxationMechanisms(); 
+    centerFrequencyCPML = rhs.getCenterFrequencyCPML();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
