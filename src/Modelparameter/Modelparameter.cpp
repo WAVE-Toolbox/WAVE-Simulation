@@ -137,7 +137,7 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<Va
  \param cutCoordinate coordinate where to cut the pershot
  */
 template <typename ValueType>
-scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
+scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidthLeft, scai::IndexType boundaryWidthRight)
 {
     scai::lama::SparseVector<ValueType> shrinkVector(distBig, 0.0); //!< Shrink Multiplication matrix
       
@@ -158,9 +158,14 @@ scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<Value
     
     // damp the boundary boarders
     for (IndexType y = 0; y < modelCoordinatesBig.getNY(); y++) {
-        for (IndexType i = 0; i < boundaryWidth; i++) {
-            ValueType tmp = i / (ValueType)boundaryWidth;
+        for (IndexType i = 0; i < boundaryWidthLeft; i++) {
+            ValueType tmp = sin(i * M_PI / ((ValueType)boundaryWidthLeft * 2.0));
+            tmp *= tmp;
             shrinkVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+i, y, 0)] = tmp;
+        }
+        for (IndexType i = 0; i < boundaryWidthRight; i++) {
+            ValueType tmp = sin(i * M_PI / ((ValueType)boundaryWidthRight * 2.0));
+            tmp *= tmp;
             shrinkVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+modelCoordinates.getNX()-1-i, y, 0)] = tmp;
         }
     }
