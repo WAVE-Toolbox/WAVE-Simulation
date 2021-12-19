@@ -28,6 +28,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configurat
     scai::IndexType DHInversion = 1;
     init(config, DHInversion);
 }
+
 /*! \brief constructor for variable grid (to reduce inversion memery)
  *
  \param config Configuration class
@@ -40,12 +41,14 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, scai::IndexType DHInversion) {
-    
-    NX=config.get<IndexType>("NX")/DHInversion;
-    NY=config.get<IndexType>("NY")/DHInversion;
-    NZ=config.get<IndexType>("NZ")/DHInversion;
-    DH=config.get<ValueType>("DH")*DHInversion;
+void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, scai::IndexType DHInversion) {    
+    NX = config.get<IndexType>("NX") / DHInversion;
+    NY = config.get<IndexType>("NY") / DHInversion;
+    NZ = config.get<IndexType>("NZ") / DHInversion;
+    DH = config.get<ValueType>("DH") * DHInversion;
+    x0 = config.getAndCatch("x0", 0.0);
+    y0 = config.getAndCatch("y0", 0.0);
+    z0 = config.getAndCatch("z0", 0.0);
     
     if (config.get<bool>("useVariableGrid")) {
         VariableGrid = true;
@@ -310,6 +313,36 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getDH() const
     return (DH);
 }
 
+/*! \brief getter function for x0
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getX0() const
+{
+    return (x0);
+}
+
+/*! \brief getter function for y0
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getY0() const
+{
+    return (y0);
+}
+
+/*! \brief getter function for DH
+ *
+ *
+ */
+template <typename ValueType>
+ValueType KITGPI::Acquisition::Coordinates<ValueType>::getZ0() const
+{
+    return (z0);
+}
+
 /*! \brief getter function for NX
  *
  *
@@ -380,6 +413,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getLayer(coordinate3D coo
     }
     return (layer);
 }
+
 /*! \brief getter function for number of layers
  *
 
@@ -389,6 +423,7 @@ IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNumLayers() const
 {
     return (numLayers);
 }
+
 /*! \brief getter function for DH
  \param layer layer of the variable grid
  *

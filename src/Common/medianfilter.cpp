@@ -98,8 +98,8 @@ void _medianfilter(const element* image, element* result, int NX, int NY, int ks
             //   Find position of minimum element
             int min = j;
             for (int l = j + 1; l < ksize2; ++l)
-            if (window[l] < window[min])
-               min = l;
+                if (window[l] < window[min])
+                    min = l;
             //   Put found minimum element in its place
             const element temp = window[j];
             window[j] = window[min];
@@ -137,10 +137,10 @@ void medianfilter(element* image, element* result, int NX, int NY, int ksize, in
             extension[(NX + 2*kBoundary) * (i + kBoundary + 1) - j -1] = image[NX * (i + 1) - 1];
         }
       } else {
-            for (int j = 0; j < kBoundary; ++j) {
-                extension[(NX + 2*kBoundary) * (i + kBoundary) + j] = 0;
-                extension[(NX + 2*kBoundary) * (i + kBoundary + 1) - j -1] = 0;
-            }
+        for (int j = 0; j < kBoundary; ++j) {
+            extension[(NX + 2*kBoundary) * (i + kBoundary) + j] = 0;
+            extension[(NX + 2*kBoundary) * (i + kBoundary + 1) - j -1] = 0;
+        }
       }
    }
    for (int j = 0; j < kBoundary; ++j)

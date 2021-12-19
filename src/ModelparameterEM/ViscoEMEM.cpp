@@ -124,49 +124,6 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::getModelPerShot(KITGPI::Model
     modelPerShot.setSaturation(temp);
 }
 
-/*! \brief If stream configuration is used, set a pershot model into the big model
- \param modelPerShot pershot model
- \param modelCoordinates coordinate class object of the pershot
- \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinate cut coordinate 
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::ViscoEMEM<ValueType>::setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
-{
-    auto distBig = dielectricPermittivity.getDistributionPtr();
-    auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
-//     auto comm = dist.getCommunicatorPtr();
-
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
-    shrinkMatrix.assignTranspose(shrinkMatrix);
-    
-    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate, boundaryWidth);
-    scai::lama::SparseVector<ValueType> restoreVector;
-    restoreVector = 1.0 - eraseVector;
-    
-    lama::DenseVector<ValueType> temp;
-    
-    temp = shrinkMatrix * modelPerShot.getDielectricPermittivity(); //transform pershot into big model
-    temp *= restoreVector;
-    dielectricPermittivity *= eraseVector;
-    dielectricPermittivity += temp; //take over the values
-  
-    temp = shrinkMatrix * modelPerShot.getElectricConductivity(); //transform pershot into big model
-    temp *= restoreVector;
-    electricConductivity *= eraseVector;
-    electricConductivity += temp; //take over the values
-    
-    temp = shrinkMatrix * modelPerShot.getTauDielectricPermittivity(); //transform pershot into big model
-    temp *= restoreVector;
-    tauDielectricPermittivity *= eraseVector;
-    tauDielectricPermittivity += temp; //take over the values
-  
-    temp = shrinkMatrix * modelPerShot.getTauElectricConductivity(); //transform pershot into big model
-    temp *= restoreVector;
-    tauElectricConductivity *= eraseVector;
-    tauElectricConductivity += temp; //take over the values
-}
-
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class

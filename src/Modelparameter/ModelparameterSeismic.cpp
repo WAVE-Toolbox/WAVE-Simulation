@@ -11,6 +11,7 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::prepareForInversi
 {
     HOST_PRINT(comm, "", "Preparation of the model parameters inversion\n");
     this->setParameterisation(config.getAndCatch("parameterisation", 0));
+    this->setEffectiveParameterisation(config.getAndCatch("effectiveParameterisation", 0));
     this->setInversionType(config.getAndCatch("inversionType", 1));
     this->setGradientType(config.getAndCatch("gradientType", 0));
     this->setDecomposeType(config.getAndCatch("decomposeType", 0));

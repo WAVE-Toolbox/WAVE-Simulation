@@ -82,8 +82,7 @@ namespace KITGPI
             void applyThresholds(Configuration::Configuration const &config) override;
 
             void getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) override;
-            void setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) override;
-            
+
             void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;
             void assign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) override;

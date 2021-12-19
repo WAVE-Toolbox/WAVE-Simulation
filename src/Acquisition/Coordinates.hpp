@@ -76,6 +76,9 @@ namespace KITGPI
             Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh, std::vector<scai::IndexType> &dhFactor, std::vector<int> &interface);
             
             ValueType getDH() const;
+            ValueType getX0() const;
+            ValueType getY0() const;
+            ValueType getZ0() const;
             scai::IndexType getNX() const;
             scai::IndexType getNY() const;
             scai::IndexType getNZ() const;
@@ -118,6 +121,9 @@ namespace KITGPI
             scai::IndexType NY; //!< Number of gridpoints in y direction
             scai::IndexType NZ; //!< Number of gridpoints in z direction
             ValueType DH;       //!< Gridspacing in m
+            ValueType x0 = 0.0;       //!< the starting x coordinate in m
+            ValueType y0 = 0.0;       //!< the starting y coordinate in m
+            ValueType z0 = 0.0;       //!< the starting z coordinate in m
 
             std::vector<scai::IndexType> dhFactor; //!< factors of the gridspacing relativ to the finest gridspacing in the model (must be 3^n)
             std::vector<int> interface;            //!< interfaces of the variable grid relative to the aquidistant grid with the gridspacing 1*DH

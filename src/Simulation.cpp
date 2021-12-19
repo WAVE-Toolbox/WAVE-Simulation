@@ -237,7 +237,7 @@ int main(int argc, const char *argv[])
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
         sources.getAcquisitionSettings(configBig, sourceSettingsBig);
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig);
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
     } else {
         sources.getAcquisitionSettings(config, sourceSettings);

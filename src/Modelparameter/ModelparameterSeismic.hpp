@@ -233,6 +233,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity.
 
             using Modelparameter<ValueType>::parameterisation;
+            using Modelparameter<ValueType>::effectiveParameterisation;
             using Modelparameter<ValueType>::inversionType;
             using Modelparameter<ValueType>::gradientType;
             using Modelparameter<ValueType>::decomposeType;

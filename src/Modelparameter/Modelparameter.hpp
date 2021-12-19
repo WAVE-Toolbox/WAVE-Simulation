@@ -87,6 +87,8 @@ namespace KITGPI
             
             scai::IndexType getParameterisation() const;
             void setParameterisation(scai::IndexType const setParameterisation);
+            bool getEffectiveParameterisation() const;
+            void setEffectiveParameterisation(bool const setEffectiveParameterisation);
             scai::IndexType getInversionType() const;
             void setInversionType(scai::IndexType const setInversionType);
             scai::IndexType getGradientType() const;
@@ -101,11 +103,10 @@ namespace KITGPI
             virtual void applyThresholds(Configuration::Configuration const &config) = 0;
             
             virtual void getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate) = 0;
-            virtual void setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth) = 0;
-            
+
             typedef scai::lama::CSRSparseMatrix<ValueType> SparseFormat; //!< Declare Sparse-Matrix
             SparseFormat getShrinkMatrix(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate);            
-            scai::lama::SparseVector<ValueType> getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth);
+            scai::lama::SparseVector<ValueType> getShrinkVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth);
             
             virtual void minusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
             virtual void plusAssign(KITGPI::Modelparameter::Modelparameter<ValueType> const &rhs) = 0;
@@ -280,7 +281,8 @@ namespace KITGPI
             
             bool dirtyFlagAveraging = true;      //!< ==true if averaged P/S-wave modulus has to be recalculated; ==false if averaged modulus is up to date
             
-            scai::IndexType parameterisation = true;
+            scai::IndexType parameterisation = 0;
+            bool effectiveParameterisation = 0;
             scai::IndexType inversionType = 0;
             scai::IndexType gradientType = 0;
             scai::IndexType decomposeType = 0;

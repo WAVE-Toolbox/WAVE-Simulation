@@ -104,38 +104,6 @@ void KITGPI::Modelparameter::EMEM<ValueType>::getModelPerShot(KITGPI::Modelparam
     modelPerShot.setSaturation(temp);
 }
 
-/*! \brief If stream configuration is used, set a pershot model into the big model
- \param modelPerShot pershot model
- \param modelCoordinates coordinate class object of the pershot
- \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinate cut coordinate 
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::EMEM<ValueType>::setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
-{
-    auto distBig = dielectricPermittivity.getDistributionPtr();
-    auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
-
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
-    shrinkMatrix.assignTranspose(shrinkMatrix);
-    
-    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate, boundaryWidth);
-    scai::lama::SparseVector<ValueType> restoreVector;
-    restoreVector = 1.0 - eraseVector;
-    
-    lama::DenseVector<ValueType> temp;
-    
-    temp = shrinkMatrix * modelPerShot.getDielectricPermittivity(); //transform pershot into big model
-    temp *= restoreVector;
-    dielectricPermittivity *= eraseVector;
-    dielectricPermittivity += temp; //take over the values
-  
-    temp = shrinkMatrix * modelPerShot.getElectricConductivity(); //transform pershot into big model
-    temp *= restoreVector;
-    electricConductivity *= eraseVector;
-    electricConductivity += temp; //take over the values
-}
-
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class
@@ -183,7 +151,6 @@ void KITGPI::Modelparameter::EMEM<ValueType>::init(Configuration::Configuration 
     } else {
         init(ctx, dist, config.get<ValueType>("muEMr"), config.get<ValueType>("sigmaEM"), config.get<ValueType>("epsilonEMr"));
     }
-
 }
 
 /*! \brief initialisation function which creates a variable grid model on top of a regular model
@@ -195,7 +162,6 @@ void KITGPI::Modelparameter::EMEM<ValueType>::init(Configuration::Configuration 
 template <typename ValueType>
 void KITGPI::Modelparameter::EMEM<ValueType>::init(scai::dmemo::DistributionPtr variableDist, Acquisition::Coordinates<ValueType> const &variableCoordinates, Acquisition::Coordinates<ValueType> const &regularCoordinates)
 {
-
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     variableDist->getOwnedIndexes(ownedIndexes);
 

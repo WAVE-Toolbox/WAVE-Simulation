@@ -324,7 +324,7 @@ namespace KITGPI
         \param sourceSettingsBig sourceSettings for the big model
         */
         template <typename ValueType>
-        inline void getCutCoord(std::vector<KITGPI::Acquisition::coordinate3D> &cutCoordinates, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig)
+        inline void getCutCoord(std::vector<KITGPI::Acquisition::coordinate3D> &cutCoordinates, std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig, Coordinates<ValueType> const &modelCoordinates, Coordinates<ValueType> const &modelCoordinatesBig)
         {
             cutCoordinates.clear();
             std::vector<scai::IndexType> uniqueShotNos;
@@ -336,6 +336,12 @@ namespace KITGPI
                 uniqueShotNosX.push_back(sourceSettingsBig[i].sourceCoords.x);
             }
             auto minX = min(uniqueShotNosX.begin(), uniqueShotNosX.end());
+            ValueType x0 = modelCoordinates.getX0();
+            ValueType x0Big = modelCoordinatesBig.getX0();
+            ValueType DH = modelCoordinates.getDH();
+            ValueType DHBig = modelCoordinatesBig.getDH();
+            SCAI_ASSERT(x0 == x0Big, "x0 != x0Big");
+            SCAI_ASSERT(DH == DHBig, "DH != DHBig");
             for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {               
                 coordinate.x = sourceSettingsBig[i].sourceCoords.x - *minX;
                 coordinate.y = 0;

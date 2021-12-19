@@ -43,6 +43,20 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setParameterisation(scai
     parameterisation = setParameterisation;
 }
 
+/*! \brief Getter method for parameterisation */
+template <typename ValueType>
+bool KITGPI::Modelparameter::Modelparameter<ValueType>::getEffectiveParameterisation() const
+{
+    return (effectiveParameterisation);
+}
+
+/*! \brief Set method for parameterisation */
+template <typename ValueType>
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setEffectiveParameterisation(bool const setEffectiveParameterisation)
+{
+    effectiveParameterisation = setEffectiveParameterisation;
+}
+
 /*! \brief Getter method for inversionType */
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getInversionType() const
@@ -115,7 +129,7 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<Va
     return shrinkMatrix;
 }
 
-/*! \brief Get erase-vector that erases the old values in the big model
+/*! \brief Get shrink-vector that shrinks the old values in the big model
  \param dist Distribution of the pershot
  \param distBig Distribution of the big model
  \param modelCoordinates coordinate class object of the pershot
@@ -123,9 +137,9 @@ scai::lama::CSRSparseMatrix<ValueType> KITGPI::Modelparameter::Modelparameter<Va
  \param cutCoordinate coordinate where to cut the pershot
  */
 template <typename ValueType>
-scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getEraseVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
+scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getShrinkVector(scai::dmemo::DistributionPtr dist, scai::dmemo::DistributionPtr distBig, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
 {
-    scai::lama::SparseVector<ValueType> eraseVector(distBig, 1.0); //!< Shrink Multiplication matrix
+    scai::lama::SparseVector<ValueType> shrinkVector(distBig, 0.0); //!< Shrink Multiplication matrix
       
     hmemo::HArray<IndexType> ownedIndexes; // all (global) points owned by this process
     dist->getOwnedIndexes(ownedIndexes);
@@ -138,19 +152,19 @@ scai::lama::SparseVector<ValueType> KITGPI::Modelparameter::Modelparameter<Value
         coordinate.y += cutCoordinate.y;
         coordinate.z += cutCoordinate.z;
         indexBig = modelCoordinatesBig.coordinate2index(coordinate);
-        assembly.push(indexBig, 0.0);
+        assembly.push(indexBig, 1.0);
     }
-    eraseVector.fillFromAssembly(assembly);
+    shrinkVector.fillFromAssembly(assembly);
     
     // damp the boundary boarders
     for (IndexType y = 0; y < modelCoordinatesBig.getNY(); y++) {
         for (IndexType i = 0; i < boundaryWidth; i++) {
-            ValueType tmp = (ValueType)1.0 - (i + 1) / (ValueType)boundaryWidth;
-            eraseVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+i, y, 0)] = tmp;
-            eraseVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+modelCoordinates.getNX()-1-i, y, 0)] = tmp;
+            ValueType tmp = i / (ValueType)boundaryWidth;
+            shrinkVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+i, y, 0)] = tmp;
+            shrinkVector[modelCoordinatesBig.coordinate2index(cutCoordinate.x+modelCoordinates.getNX()-1-i, y, 0)] = tmp;
         }
     }
-    return eraseVector;
+    return shrinkVector;
 }
 
 /*! \brief Getter method for relaxation frequency */

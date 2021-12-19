@@ -65,6 +65,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
     if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig);
                 
@@ -73,7 +74,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         Acquisition::Sources<ValueType> sources;
         sources.getAcquisitionSettings(configBig, sourceSettingsBig);
         std::vector<Acquisition::coordinate3D> cutCoordinates;
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig);
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
     } else {
         getAcquisitionSettings(config, allSettings);
@@ -138,6 +139,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
     if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber);
                 
@@ -149,7 +151,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
         std::vector<Acquisition::coordinate3D> cutCoordinates;
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig);
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
     } else {
         getAcquisitionSettings(config, allSettings, shotNumber);
@@ -180,6 +182,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
     if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
         std::vector<receiverSettings> allSettingsBig;
         getAcquisitionSettings(configBig, allSettingsBig, shotNumber, numshots);
         
@@ -191,7 +194,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
         std::vector<Acquisition::coordinate3D> cutCoordinates;
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig);
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
     } else {
         getAcquisitionSettings(config, allSettings, shotNumber, numshots);

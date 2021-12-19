@@ -100,48 +100,6 @@ void KITGPI::Modelparameter::SH<ValueType>::getModelPerShot(KITGPI::Modelparamet
     modelPerShot.setSaturation(temp);
 }
 
-/*! \brief If stream configuration is used, get a pershot model from the big model
- \param modelPerShot pershot model
- \param modelCoordinates coordinate class object of the pershot
- \param modelCoordinatesBig coordinate class object of the big model
- \param cutCoordinate cut coordinate 
- */
-template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::setModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate, scai::IndexType boundaryWidth)
-{
-    auto distBig = density.getDistributionPtr();
-    auto dist = modelPerShot.getDensity().getDistributionPtr();
-
-    scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
-    shrinkMatrix.assignTranspose(shrinkMatrix);
-    
-    scai::lama::SparseVector<ValueType> eraseVector = this->getEraseVector(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate, boundaryWidth);
-    scai::lama::SparseVector<ValueType> restoreVector;
-    restoreVector = 1.0 - eraseVector;
-    
-    lama::DenseVector<ValueType> temp;
-    
-    temp = shrinkMatrix * modelPerShot.getVelocityS(); //transform pershot into big model
-    temp *= restoreVector;
-    velocityS *= eraseVector;
-    velocityS += temp; //take over the values
-
-    temp = shrinkMatrix * modelPerShot.getDensity(); //transform pershot into big model
-    temp *= restoreVector;
-    density *= eraseVector;
-    density += temp; //take over the values
-    
-    temp = shrinkMatrix * modelPerShot.getPorosity(); //transform pershot into big model
-    temp *= restoreVector;
-    porosity *= eraseVector;
-    porosity += temp; //take over the values
-    
-    temp = shrinkMatrix * modelPerShot.getSaturation(); //transform pershot into big model
-    temp *= restoreVector;
-    saturation *= eraseVector;
-    saturation += temp; //take over the values
-}
-
 /*! \brief Constructor that is using the Configuration class
  *
  \param config Configuration class
