@@ -294,7 +294,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
     
     /* --------------------------------------- */
-    /* Hilbet handler                          */
+    /* Hilbert handler                          */
     /* --------------------------------------- */
     IndexType snapType = config.get<IndexType>("snapType");
     Hilbert::HilbertFFT<ValueType> hilbertHandlerTime;
@@ -319,6 +319,7 @@ int main(int argc, const char *argv[])
         solver->prepareForModelling(*model, DT);
     }
     
+    IndexType shotIncr = config.getAndCatch("shotIncr", 1);
     IndexType maxcount = 1;    
     std::vector<scai::IndexType> shotHistory(numshots, 0);
     std::vector<scai::IndexType> uniqueShotInds; 
@@ -340,13 +341,13 @@ int main(int argc, const char *argv[])
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0));
+            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0), shotIncr);
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numRand << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
-        for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
+        for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd += shotIncr) {
             SCAI_REGION("WAVE-Simulation.shotLoop")
             if (config.getAndCatch("useRandomSource", 0) == 0) {  
                 shotIndTrue = shotInd;
