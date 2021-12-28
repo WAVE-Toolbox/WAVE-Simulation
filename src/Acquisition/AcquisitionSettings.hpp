@@ -376,7 +376,7 @@ namespace KITGPI
         \param useRandomSource useRandomSource
         */
         template <typename ValueType>
-        void getRandomShotInds(std::vector<scai::IndexType> &uniqueShotInds, std::vector<scai::IndexType> &shotHistory, scai::IndexType numshots, scai::IndexType maxcount, scai::IndexType useRandomSource, scai::IndexType shotIncr)
+        void getRandomShotInds(std::vector<scai::IndexType> &uniqueShotInds, std::vector<scai::IndexType> &shotHistory, scai::IndexType numshots, scai::IndexType maxcount, scai::IndexType useRandomSource)
         {  
             scai::IndexType numShotDomains = uniqueShotInds.size();
             scai::IndexType randomShotInd;
@@ -404,7 +404,7 @@ namespace KITGPI
             } else if (useRandomSource == 2) {
                 scai::IndexType startShotInd = 0;
                 if (shotHistory[0] != shotHistory[numshots-1]) {
-                    for (scai::IndexType shotInd = 0; shotInd < numshots-1; shotInd += shotIncr) { 
+                    for (scai::IndexType shotInd = 0; shotInd < numshots-1; shotInd++) { 
                         if (shotHistory[shotInd] != shotHistory[shotInd+1]) {
                             startShotInd = shotInd + 1;
                         }

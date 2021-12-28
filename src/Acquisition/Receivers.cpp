@@ -72,7 +72,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         scai::IndexType shotIndTrue = 0;
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
         Acquisition::Sources<ValueType> sources;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig);
+        ValueType shotIncr = 0; 
+        std::vector<IndexType> shotIndIncr;
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr);// to get cutCoordinates
         std::vector<Acquisition::coordinate3D> cutCoordinates;
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
@@ -82,6 +84,74 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     
     CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr()); 
 
+    init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
+}
+
+/*! \brief Init based on the configuration class and the distribution of the wavefields
+ *
+ \param config Configuration class, which is used to derive all required parameters
+ \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
+ \param ctx Context
+ \param dist_wavefield Distribution of the wavefields
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
+{
+    std::vector<receiverSettings> allSettings;
+    
+    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+    if (useStreamConfig) {
+        Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
+        Acquisition::Sources<ValueType> sources;
+        ValueType shotIncr = 0; 
+        std::vector<IndexType> shotIndIncr;
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr); // to get numshots
+        std::vector<scai::IndexType> uniqueShotNos;
+        Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
+        IndexType numshots = uniqueShotNos.size();
+        shotIncr = config.getAndCatch("shotIncr", 0);
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr); // to get shotIndIncr
+        Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
+        
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
+        std::vector<receiverSettings> allSettingsBig;
+        if (configBig.get<scai::IndexType>("useReceiversPerShot") == 1) {
+            getAcquisitionSettings(configBig, allSettingsBig, shotNumber);
+        } else if (configBig.get<scai::IndexType>("useReceiversPerShot") == 2) {
+            getAcquisitionSettings(configBig, allSettingsBig, shotNumber, numshots, shotIndIncr);
+        }
+        
+        scai::IndexType shotIndTrue = 0;
+        Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
+        std::vector<Acquisition::coordinate3D> cutCoordinates;
+        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
+        Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
+    } else {
+        if (config.get<scai::IndexType>("useReceiversPerShot") == 1) {
+            getAcquisitionSettings(config, allSettings, shotNumber);
+        } else if (config.get<scai::IndexType>("useReceiversPerShot") == 2) {
+            std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;  
+            Acquisition::Sources<ValueType> sources;
+            ValueType shotIncr = 0; 
+            std::vector<IndexType> shotIndIncr;
+            sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr); // to get numshots
+            std::vector<scai::IndexType> uniqueShotNos;
+            Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
+            IndexType numshots = uniqueShotNos.size();
+            shotIncr = config.getAndCatch("shotIncr", 0);
+            sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr); // to get shotIndIncr
+            getAcquisitionSettings(config, allSettings, shotNumber, numshots, shotIndIncr);
+        }
+    }
+    
+    try {
+        CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
+    } catch (scai::common::Exception &e) {
+        HOST_PRINT(dist_wavefield->getCommunicatorPtr(), "Message from receiver.cpp init: Error while reading receiver settings for shot " << shotNumber);
+        COMMON_THROWEXCEPTION("e.what()");
+    }
+    
     init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
 }
 
@@ -124,92 +194,6 @@ void KITGPI::Acquisition::Receivers<ValueType>::initWholeSpace(Configuration::Co
     init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
 }
 
-/*! \brief Init based on the configuration class and the distribution of the wavefields
- *
- \param config Configuration class, which is used to derive all required parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber)
-{
-    std::vector<receiverSettings> allSettings;
-    
-    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
-    if (useStreamConfig) {
-        Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
-        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
-        std::vector<receiverSettings> allSettingsBig;
-        getAcquisitionSettings(configBig, allSettingsBig, shotNumber);
-                
-        scai::IndexType shotIndTrue = 0;
-        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
-        Acquisition::Sources<ValueType> sources;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig);
-        std::vector<scai::IndexType> uniqueShotNos;
-        Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
-        Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
-        std::vector<Acquisition::coordinate3D> cutCoordinates;
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
-        Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
-    } else {
-        getAcquisitionSettings(config, allSettings, shotNumber);
-    }
-    
-    try {
-        CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
-    } catch (scai::common::Exception &e) {
-        HOST_PRINT(dist_wavefield->getCommunicatorPtr(), "Message from receiver.cpp init: Error while reading receiver settings for shot " << shotNumber);
-        COMMON_THROWEXCEPTION("e.what()");
-    }
-    
-    init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
-}
-
-/*! \brief Init based on the configuration class and the distribution of the wavefields
- *
- \param config Configuration class, which is used to derive all required parameters
- \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
- \param ctx Context
- \param dist_wavefield Distribution of the wavefields
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuration const &config, Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist_wavefield, scai::IndexType shotNumber, scai::IndexType numshots)
-{
-    std::vector<receiverSettings> allSettings;
-    
-    bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
-    if (useStreamConfig) {
-        Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
-        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
-        std::vector<receiverSettings> allSettingsBig;
-        getAcquisitionSettings(configBig, allSettingsBig, shotNumber, numshots);
-        
-        scai::IndexType shotIndTrue = 0;
-        std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
-        Acquisition::Sources<ValueType> sources;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig);
-        std::vector<scai::IndexType> uniqueShotNos;
-        Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
-        Acquisition::getuniqueShotInd(shotIndTrue, uniqueShotNos, shotNumber);
-        std::vector<Acquisition::coordinate3D> cutCoordinates;
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
-        Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
-    } else {
-        getAcquisitionSettings(config, allSettings, shotNumber, numshots);
-    }
-    
-    try {
-        CheckParameter::checkReceivers(allSettings, modelCoordinates, dist_wavefield->getCommunicatorPtr());
-    } catch (scai::common::Exception &e) {
-        HOST_PRINT(dist_wavefield->getCommunicatorPtr(), "Message from receiver.cpp init: Error while reading receiver settings for shot " << shotNumber);
-        COMMON_THROWEXCEPTION("e.what()");
-    }
-    
-    init(allSettings, config, modelCoordinates, ctx, dist_wavefield);
-}
-
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::checkRequiredNumParameter(scai::IndexType numParameterCheck)
 {
@@ -246,13 +230,11 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
 template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber)
 {
-    if (config.get<scai::IndexType>("useReceiversPerShot") == 1) {
-        if (config.get<bool>("initReceiverFromSU")) {
-            su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), config.get<ValueType>("DH"));
-        } else {
-            readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
-        }
-    } 
+    if (config.get<bool>("initReceiverFromSU")) {
+        su.readAllSettingsFromSU(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber), config.get<ValueType>("DH"));
+    } else {
+        readAllSettings(allSettings, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber) + ".txt");
+    }
 }
 
 /*! \brief Gets the Acquisition Matrix
@@ -263,34 +245,35 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
  \param acqMat Acquisition Matrix
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots)
+void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr)
 {
-    if (config.get<scai::IndexType>("useReceiversPerShot") == 2) {
-        std::vector<receiverSettings> allSettingsTemp;
-        allSettings.clear();
-        if (config.get<bool>("initReceiverFromSU")) {
-            su.readAllSettingsFromSU(allSettingsTemp, config.get<std::string>("ReceiverFilename"), config.get<ValueType>("DH"));
-        } else {
-            readAllSettings(allSettingsTemp, std::string(config.get<std::string>("ReceiverFilename") + ".txt"));
+    std::vector<receiverSettings> receiverSettings;
+    allSettings.clear();
+    if (config.get<bool>("initReceiverFromSU")) {
+        su.readAllSettingsFromSU(receiverSettings, config.get<std::string>("ReceiverFilename"), config.get<ValueType>("DH"));
+    } else {
+        readAllSettings(receiverSettings, std::string(config.get<std::string>("ReceiverFilename") + ".txt"));
+    }
+    std::string filenameTmp = config.get<std::string>("ReceiverFilename") + ".mark";
+    scai::lama::CSRSparseMatrix<ValueType> receiverMarkMatrix;
+    receiverMarkMatrix.allocate(numshots, receiverSettings.size()+1);        
+    IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
+    scai::lama::SparseVector<ValueType> receiverMarkVector;
+    scai::IndexType numshotsIncr = shotIndIncr.size();
+    if (numshotsIncr > numshots) // in case of supershot
+        numshotsIncr = numshots;
+    for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+        receiverMarkMatrix.getRow(receiverMarkVector, shotIndIncr[shotInd]);
+        if (receiverMarkVector[0] == shotNumber) {
+            break;
+        } else if (shotIndIncr[shotInd] == numshots - 1) {
+            SCAI_ASSERT(receiverMarkVector[0] == shotNumber, "receiverMarkVector[0] != shotNumber");
         }
-        std::string filenameTmp = config.get<std::string>("ReceiverFilename") + ".mark";
-        scai::lama::CSRSparseMatrix<ValueType> receiverMarkMatrix;
-        receiverMarkMatrix.allocate(numshots, allSettingsTemp.size()+1);        
-        IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
-        scai::lama::SparseVector<ValueType> receiverMarkVector;
-        for (scai::IndexType shotInd = 0; shotInd < numshots; shotInd++) {
-            receiverMarkMatrix.getRow(receiverMarkVector, shotInd);
-            if (receiverMarkVector[0] == shotNumber) {
-                break;
-            } else if (shotInd == numshots - 1) {
-                SCAI_ASSERT(receiverMarkVector[0] == shotNumber, "receiverMarkVector[0] != shotNumber");
-            }
-        }
-                    
-        for (scai::IndexType iMark = 0; iMark < receiverMarkVector.size()-1; iMark++) {
-            if (receiverMarkVector[iMark+1] != 0) {
-                allSettings.push_back(allSettingsTemp[iMark]);
-            }
+    }
+                
+    for (scai::IndexType iMark = 0; iMark < receiverMarkVector.size()-1; iMark++) {
+        if (receiverMarkVector[iMark+1] != 0) {
+            allSettings.push_back(receiverSettings[iMark]);
         }
     }
 }

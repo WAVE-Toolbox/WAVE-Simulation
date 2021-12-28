@@ -423,15 +423,54 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
  *
  \param config Configuration
- \param acqMat Acquisition Matrix
+ \param allSettings sourceSettings
+ \param shotIncr shot increments in meters
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr)
 {
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
     if (config.get<bool>("initSourcesFromSU"))
-        su.readAllSettingsFromSU(allSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
+        su.readAllSettingsFromSU(sourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
     else
-        readAllSettings(allSettings, config.get<std::string>("SourceFilename") + ".txt");
+        readAllSettings(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
+    IndexType numshots = sourceSettings.size();
+    shotIndIncr.clear();
+    if (numshots > 1 && shotIncr > config.get<ValueType>("DH")) {
+        std::vector<IndexType> sourceLength; 
+        if (abs(sourceSettings[0].sourceCoords.x-sourceSettings[1].sourceCoords.x) > abs(sourceSettings[0].sourceCoords.y-sourceSettings[1].sourceCoords.y)) {
+            for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
+                sourceLength.push_back(sourceSettings[shotInd].sourceCoords.x);
+            }
+        } else if (abs(sourceSettings[0].sourceCoords.x-sourceSettings[1].sourceCoords.x) < abs(sourceSettings[0].sourceCoords.y-sourceSettings[1].sourceCoords.y)) {
+            for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
+                sourceLength.push_back(sourceSettings[shotInd].sourceCoords.y);
+            }
+        }
+        IndexType shotIncrInd = sourceLength[0];
+        IndexType shotIncrGrid = floor(shotIncr / config.get<ValueType>("DH"));
+        allSettings.clear();
+        for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
+            if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
+                if (abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
+                    allSettings.push_back(sourceSettings[shotInd]);
+                    shotIndIncr.push_back(shotInd);
+                } else {
+                    allSettings.push_back(sourceSettings[shotInd+1]);
+                    shotIndIncr.push_back(shotInd+1);
+                }
+                shotIncrInd += shotIncrGrid;
+            } else if (shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
+                allSettings.push_back(sourceSettings[shotInd+1]);
+                shotIndIncr.push_back(shotInd+1);
+            }
+        } 
+    } else {
+        allSettings = sourceSettings;
+        for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
+            shotIndIncr.push_back(shotInd);
+        }
+    }
 }
 
 template <typename ValueType>
@@ -452,6 +491,39 @@ void KITGPI::Acquisition::Sources<ValueType>::acqMat2settings(scai::lama::DenseM
             allSettings[row].fc = read_acquisition_temp_HA[row * 10 + 7];
             allSettings[row].amp = read_acquisition_temp_HA[row * 10 + 8];
             allSettings[row].tShift = read_acquisition_temp_HA[row * 10 + 9];
+        }
+    }
+}
+
+/*! \brief Gets the Acquisition Matrix
+ *
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
+ *
+ \param config Configuration
+ \param allSettings sourceSettings
+ \param shotIncr shot increments in meters
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<IndexType> uniqueShotNos)
+{
+    ValueType shotIncr = config.getAndCatch("shotIncr", 0);
+    if (shotIncr > config.get<ValueType>("DH")) {
+        SCAI_ASSERT_ERROR(shotIndIncr.size() == uniqueShotNos.size(), "shotIndIncr.size() != uniqueShotNos.size()"); // check whether shotIncr has been applied successfully.
+        std::string filename;
+        bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+        if (useStreamConfig) {
+            Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+            filename = configBig.get<std::string>("SourceFilename") + ".shotIncr.txt";
+        } else {
+            filename = config.get<std::string>("SourceFilename") + ".shotIncr.txt";
+        }
+        IndexType numshotsIncr = shotIndIncr.size();
+        std::ofstream outputFile; 
+        outputFile.open(filename);
+        outputFile << "# Shot indices (shotIncr = " << shotIncr << " m)\n"; 
+        outputFile << "# Shot index | shot number\n"; 
+        for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+            outputFile << std::setw(12) << shotIndIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
         }
     }
 }

@@ -234,21 +234,23 @@ int main(int argc, const char *argv[])
 
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;    
     std::vector<Acquisition::coordinate3D> cutCoordinates;
+    ValueType shotIncr = config.getAndCatch("shotIncr", 0);
+    std::vector<IndexType> shotIndIncr;
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig);
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr);
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
     } else {
-        sources.getAcquisitionSettings(config, sourceSettings);
+        sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr);
     }
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
     std::vector<scai::IndexType> uniqueShotNos;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
-    CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     IndexType numshots = uniqueShotNos.size();
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
+    sources.writeShotIndIncr(config, shotIndIncr, uniqueShotNos);
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();
@@ -294,7 +296,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
     
     /* --------------------------------------- */
-    /* Hilbert handler                          */
+    /* Hilbert handler                         */
     /* --------------------------------------- */
     IndexType snapType = config.get<IndexType>("snapType");
     Hilbert::HilbertFFT<ValueType> hilbertHandlerTime;
@@ -319,7 +321,6 @@ int main(int argc, const char *argv[])
         solver->prepareForModelling(*model, DT);
     }
     
-    IndexType shotIncr = config.getAndCatch("shotIncr", 1);
     IndexType maxcount = 1;    
     std::vector<scai::IndexType> shotHistory(numshots, 0);
     std::vector<scai::IndexType> uniqueShotInds; 
@@ -341,13 +342,13 @@ int main(int argc, const char *argv[])
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
-            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0), shotIncr);
+            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0));
             end_t = common::Walltime::get();
             HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numRand << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
         }
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
-        for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd += shotIncr) {
+        for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
             SCAI_REGION("WAVE-Simulation.shotLoop")
             if (config.getAndCatch("useRandomSource", 0) == 0) {  
                 shotIndTrue = shotInd;
@@ -391,10 +392,8 @@ int main(int argc, const char *argv[])
                 }
             }
 
-            if (config.get<IndexType>("useReceiversPerShot") == 1) {
+            if (config.get<IndexType>("useReceiversPerShot") != 0) {
                 receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
-            } else if (config.get<IndexType>("useReceiversPerShot") == 2) {
-                receivers.init(config, modelCoordinates, ctx, dist, shotNumber, numshots);
             }
 
             if (randInd == 1 && decomposeType != 0) {
