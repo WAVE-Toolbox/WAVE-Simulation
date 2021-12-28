@@ -234,7 +234,7 @@ int main(int argc, const char *argv[])
 
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;    
     std::vector<Acquisition::coordinate3D> cutCoordinates;
-    ValueType shotIncr = config.getAndCatch("shotIncr", 0);
+    ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
     std::vector<IndexType> shotIndIncr;
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;

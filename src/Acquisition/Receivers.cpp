@@ -110,7 +110,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         std::vector<scai::IndexType> uniqueShotNos;
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         IndexType numshots = uniqueShotNos.size();
-        shotIncr = config.getAndCatch("shotIncr", 0);
+        shotIncr = config.getAndCatch("shotIncr", 0.0);
         sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr); // to get shotIndIncr
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         
@@ -139,7 +139,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
             std::vector<scai::IndexType> uniqueShotNos;
             Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
             IndexType numshots = uniqueShotNos.size();
-            shotIncr = config.getAndCatch("shotIncr", 0);
+            shotIncr = config.getAndCatch("shotIncr", 0.0);
             sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr); // to get shotIndIncr
             getAcquisitionSettings(config, allSettings, shotNumber, numshots, shotIndIncr);
         }

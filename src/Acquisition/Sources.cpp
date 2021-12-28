@@ -447,20 +447,26 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
                 sourceLength.push_back(sourceSettings[shotInd].sourceCoords.y);
             }
         }
+        IndexType numshotsIncr = 0;
         IndexType shotIncrInd = sourceLength[0];
-        IndexType shotIncrGrid = floor(shotIncr / config.get<ValueType>("DH"));
         allSettings.clear();
+        allSettings.push_back(sourceSettings[0]);
+        shotIndIncr.push_back(0);
+        IndexType shotIncrStep = floor(shotIncr / config.get<ValueType>("DH"));
         for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
             if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
-                if (abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
+                if (shotIndIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
                     allSettings.push_back(sourceSettings[shotInd]);
                     shotIndIncr.push_back(shotInd);
-                } else {
+                    numshotsIncr++; // to avoid repeat
+                } else if (shotIndIncr[numshotsIncr] != shotInd+1 && abs(shotIncrInd - sourceLength[shotInd]) >= abs(shotIncrInd - sourceLength[shotInd+1])) {
                     allSettings.push_back(sourceSettings[shotInd+1]);
                     shotIndIncr.push_back(shotInd+1);
+                    numshotsIncr++; // to avoid repeat
                 }
-                shotIncrInd += shotIncrGrid;
-            } else if (shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
+                shotIncrInd += shotIncrStep;
+                shotInd--; // to avoid that some locations are skipped
+            } else if (shotIndIncr[numshotsIncr] != shotInd+1 && shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
                 allSettings.push_back(sourceSettings[shotInd+1]);
                 shotIndIncr.push_back(shotInd+1);
             }
@@ -473,6 +479,43 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
     }
 }
 
+/*! \brief Write the shot indices and shot numbers
+ *
+ \param config Configuration
+ \param shotIndIncr shot indices
+ \param uniqueShotNos shot numbers
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<IndexType> uniqueShotNos)
+{
+    ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
+    if (shotIncr > config.get<ValueType>("DH")) {
+        SCAI_ASSERT_ERROR(shotIndIncr.size() == uniqueShotNos.size(), "shotIndIncr.size() != uniqueShotNos.size()"); // check whether shotIncr has been applied successfully.
+        std::string filename;
+        bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+        if (useStreamConfig) {
+            Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+            filename = configBig.get<std::string>("SourceFilename") + ".shotIncr.txt";
+        } else {
+            filename = config.get<std::string>("SourceFilename") + ".shotIncr.txt";
+        }
+        IndexType numshotsIncr = shotIndIncr.size();
+        std::ofstream outputFile; 
+        outputFile.open(filename);
+        outputFile << "# Shot indices (shotIncr = " << shotIncr << " m, numshots = " << numshotsIncr << ")\n"; 
+        outputFile << "# Shot index | shot number\n"; 
+        for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+            outputFile << std::setw(12) << shotIndIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
+        }
+    }
+}
+
+/*! \brief Gets the Acquisition settings from Matrix
+ *
+ \param acqMat Matrix defined by user
+ \param allSettings sourceSettings
+ \param dist_wavefield dist_wavefield
+ */
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<sourceSettings<ValueType>> &allSettings, scai::dmemo::DistributionPtr dist_wavefield)
 {
@@ -491,39 +534,6 @@ void KITGPI::Acquisition::Sources<ValueType>::acqMat2settings(scai::lama::DenseM
             allSettings[row].fc = read_acquisition_temp_HA[row * 10 + 7];
             allSettings[row].amp = read_acquisition_temp_HA[row * 10 + 8];
             allSettings[row].tShift = read_acquisition_temp_HA[row * 10 + 9];
-        }
-    }
-}
-
-/*! \brief Gets the Acquisition Matrix
- *
- * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
- *
- \param config Configuration
- \param allSettings sourceSettings
- \param shotIncr shot increments in meters
- */
-template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<IndexType> uniqueShotNos)
-{
-    ValueType shotIncr = config.getAndCatch("shotIncr", 0);
-    if (shotIncr > config.get<ValueType>("DH")) {
-        SCAI_ASSERT_ERROR(shotIndIncr.size() == uniqueShotNos.size(), "shotIndIncr.size() != uniqueShotNos.size()"); // check whether shotIncr has been applied successfully.
-        std::string filename;
-        bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
-        if (useStreamConfig) {
-            Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
-            filename = configBig.get<std::string>("SourceFilename") + ".shotIncr.txt";
-        } else {
-            filename = config.get<std::string>("SourceFilename") + ".shotIncr.txt";
-        }
-        IndexType numshotsIncr = shotIndIncr.size();
-        std::ofstream outputFile; 
-        outputFile.open(filename);
-        outputFile << "# Shot indices (shotIncr = " << shotIncr << " m)\n"; 
-        outputFile << "# Shot index | shot number\n"; 
-        for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
-            outputFile << std::setw(12) << shotIndIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
         }
     }
 }
