@@ -9,6 +9,7 @@
 #include <string>
 
 #include "../Common/Common.hpp"
+#include <complex>
 
 namespace KITGPI
 {
@@ -36,12 +37,12 @@ namespace KITGPI
             //
           private:
             scai::IndexType zeroPadding;
-            scai::lama::DenseVector<ComplexValueType> transFcn;
+            scai::lama::DenseVector<ComplexValueType> filter;
             ValueType df;
             ValueType fNyquist;
 
             scai::IndexType calcZeroPadding(scai::IndexType nt);
-            void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector);
+            void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector) const;
             void calcFrequencyMat(std::string filterType, scai::IndexType order, ValueType fc, scai::lama::DenseVector<ValueType> &frequencyVector, scai::lama::DenseMatrix<ComplexValueType> &frequencyMat);
 
             void calcButterPoly(scai::IndexType order, scai::lama::DenseVector<ValueType> &poly);

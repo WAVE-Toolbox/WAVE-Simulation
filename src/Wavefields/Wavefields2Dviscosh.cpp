@@ -89,12 +89,12 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::write(IndexType snapType, std::
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeType decomposeType
+ \param decomposeWavefieldType decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscosh<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dviscosh<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 { 
 }
 

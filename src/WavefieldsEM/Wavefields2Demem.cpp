@@ -77,7 +77,7 @@ void KITGPI::Wavefields::FD2Demem<ValueType>::write(IndexType snapType, std::str
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Demem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Demem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
 }
 

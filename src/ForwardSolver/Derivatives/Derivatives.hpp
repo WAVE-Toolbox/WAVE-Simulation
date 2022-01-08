@@ -17,25 +17,25 @@ namespace KITGPI
     {
         namespace BoundaryCondition
         {
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Delastic;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Dacoustic;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Dviscoelastic;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Dsh;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurfaceElastic;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurfaceAcoustic;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurfaceViscoelastic;
         }
     }
@@ -47,16 +47,16 @@ namespace KITGPI
     {
         namespace BoundaryCondition
         {
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Demem;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurface2Dtmem;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurfaceEMEM;
 
-            template <typename Type>
+            template <typename ValueType>
             class FreeSurfaceTMEM;
         }
     }

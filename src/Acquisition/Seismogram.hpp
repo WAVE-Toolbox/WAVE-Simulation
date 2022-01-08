@@ -86,6 +86,10 @@ namespace KITGPI
             void setFrequencyAGC(ValueType setFrequencyAGC);
             void setIsSeismic(bool setIsSeismic);
             bool getIsSeismic() const;
+            void setOffset(scai::lama::DenseVector<ValueType> setOffset);
+            scai::lama::DenseVector<ValueType> getOffset() const;
+            void setRefTrace(scai::lama::DenseVector<ValueType> setRefTrace);
+            scai::lama::DenseVector<ValueType> getRefTrace() const;
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -112,6 +116,8 @@ namespace KITGPI
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
             scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
+            scai::lama::DenseVector<ValueType> offset;
+            scai::lama::DenseVector<ValueType> refTrace;
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;

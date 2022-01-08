@@ -111,17 +111,17 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(IndexType snapType, std:
 }
 
 /*! \brief decompose wavefields to parts by Poynting vector.
- \param decomposeType decomposeType
+ \param decomposeWavefieldType decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
-    if (decomposeType > 0) {
+    if (decomposeWavefieldType > 0) {
         lama::DenseVector<ValueType> Poynting1;
         lama::DenseVector<ValueType> Poynting2;
-        if (decomposeType == 1) {  
+        if (decomposeWavefieldType == 1) {  
             // for all
             Poynting1 = -P;
             Poynting1 *= VY;
@@ -183,7 +183,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposeT
             VYdown += 1;
             VYdown.unaryOp(VYdown, common::UnaryOp::SIGN);
             VYdown *= VY;
-        } else if (decomposeType == 2) {  
+        } else if (decomposeWavefieldType == 2) {  
             // for all
             Poynting1 = -P;
             Poynting1 *= VX;

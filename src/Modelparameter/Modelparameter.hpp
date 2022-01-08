@@ -95,6 +95,7 @@ namespace KITGPI
             void setGradientType(scai::IndexType const setGradientType);
             scai::IndexType getDecomposeType() const;
             void setDecomposeType(scai::IndexType const setDecomposeType);
+            ValueType getVmin();
             
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -285,7 +286,7 @@ namespace KITGPI
             bool effectiveParameterisation = 0;
             scai::IndexType inversionType = 0;
             scai::IndexType gradientType = 0;
-            scai::IndexType decomposeType = 0;
+            scai::IndexType decomposeWavefieldType = 0;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
             std::string equationType;
             

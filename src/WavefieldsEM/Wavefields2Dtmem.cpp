@@ -101,17 +101,17 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::write(IndexType snapType, std::str
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeType decomposeType
+ \param decomposeWavefieldType decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
-    if (decomposeType > 0) {
+    if (decomposeWavefieldType > 0) {
         lama::DenseVector<ValueType> Poynting1;
         lama::DenseVector<ValueType> Poynting2;
-        if (decomposeType == 1) {              
+        if (decomposeWavefieldType == 1) {              
             Poynting1 = EZ;
             Poynting1 *= HX;
             
@@ -133,7 +133,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeType,
             EZdown += 1;
             EZdown.unaryOp(EZdown, common::UnaryOp::SIGN);
             EZdown *= EZ;
-        } else if (decomposeType == 2) {            
+        } else if (decomposeWavefieldType == 2) {            
             Poynting1 = EZ;
             Poynting1 *= HY;
             Poynting1 *= -1;

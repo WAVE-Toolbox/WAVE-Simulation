@@ -92,7 +92,7 @@ void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::write(IndexType snapType, std
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dviscoemem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
 }
 /*! \brief Set all wavefields to zero.

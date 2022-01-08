@@ -25,6 +25,8 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     frequencyAGC = rhs.frequencyAGC;
     inverseAGC = rhs.inverseAGC;
     isSeismic = rhs.isSeismic;
+    offset = rhs.offset;
+    refTrace = rhs.refTrace;
 }
 //! \brief swap function
 /*!
@@ -45,7 +47,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(frequencyAGC, rhs.frequencyAGC);
     std::swap(isSeismic, rhs.isSeismic);
     data.swap(rhs.data);
+    resampleMat.swap(rhs.resampleMat);
     inverseAGC.swap(rhs.inverseAGC);
+    offset.swap(rhs.offset);
+    refTrace.swap(rhs.refTrace);
 }
 
 //! \brief Setter method for the context ptr
@@ -117,6 +122,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
                 IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
                 break;
             }
+        }
+        if (refTrace.maxNorm() != 0) {
+            filenameTmp += ".refTrace";            
+            IO::writeVector(refTrace, filenameTmp, seismoFormat);
         }
     }
 }
@@ -590,6 +599,42 @@ template <typename ValueType>
 bool KITGPI::Acquisition::Seismogram<ValueType>::getIsSeismic() const
 {
     return isSeismic;
+}
+
+//! \brief Setter method to set offset
+/*!
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setOffset(scai::lama::DenseVector<ValueType> setOffset)
+{
+    offset = setOffset;
+}
+
+//! \brief Getter method to get offset
+/*!
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getOffset() const
+{
+    return offset;
+}
+
+//! \brief Setter method to set offset
+/*!
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::setRefTrace(scai::lama::DenseVector<ValueType> setRefTrace)
+{
+    refTrace = setRefTrace;
+}
+
+//! \brief Getter method to get offset
+/*!
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getRefTrace() const
+{
+    return refTrace;
 }
 
 //! \brief Getter method for #SeismogramType

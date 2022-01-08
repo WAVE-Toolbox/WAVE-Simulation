@@ -85,18 +85,42 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientType(scai::In
     gradientType = setGradientType;
 }
 
-/*! \brief Getter method for decomposeType */
+/*! \brief Getter method for decomposeWavefieldType */
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getDecomposeType() const
 {
-    return (decomposeType);
+    return (decomposeWavefieldType);
 }
 
-/*! \brief Set method for decomposeType */
+/*! \brief Set method for decomposeWavefieldType */
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
 {
-    decomposeType = setDecomposeType;
+    decomposeWavefieldType = setDecomposeType;
+}
+
+/*! \brief Getter method for vim */
+template <typename ValueType>
+ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getVmin()
+{    
+    scai::lama::DenseVector<ValueType> vMinVec;
+    bool isSeismic = Common::checkEquationType<ValueType>(equationType);
+    if (isSeismic) {
+        if (equationType == "sh" || equationType == "viscosh" || equationType == "elastic" || equationType == "viscoelastic") {
+            vMinVec = this->getVelocityS();
+        } else if (equationType == "acoustic") {
+            vMinVec = this->getVelocityP();
+        }
+    } else {
+        vMinVec = this->getVelocityEM();
+    }
+    ValueType vMin = vMinVec.min();
+    if (vMin <= 1.0) {        
+        Common::searchAndReplace<ValueType>(vMinVec, 1.0, vMinVec.max(), 3);
+        vMin = vMinVec.min();
+    }
+    
+    return (vMin);
 }
 
 /*! \brief Get matrix that multiplies with model matrices to get a pershot

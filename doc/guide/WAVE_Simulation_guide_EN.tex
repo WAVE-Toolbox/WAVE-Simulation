@@ -1095,6 +1095,7 @@ As mentioned in the quick guide, the configuration can be found in \shellcmd{par
 	coordinateFilename & Filename of the coordinates & string & \begin{tabular}{@{}l@{}}\shellcmd{configuration/} \\\shellcmd{coordinates}\end{tabular} \\
 	ShotDomainDefinition & Define domains by ProcNS, node id or var \shellcmd{DOMAIN}  & int & \num{0} \\
 	NumShotDomains & Define number of shot domains & int & \num{1} \\
+	ShotIncr & Increment of shots in meters & double & \num{1.0} \\
 	\bottomrule
 	\end{tabular}
 	\end{adjustbox}
@@ -1128,7 +1129,8 @@ Variable FD operators can be used by \verb+useVariableFDoperators+ $=1$.
 If a graph distribution is used (\verb+partitioning+ $=2$), you can choose in \verb+graphPartitionTool+ other partitioning tools (geographer, geoKmeans, geoHierKM, geoSFC, zoltanRIB, zoltanRCB, zoltanMJ, parMetisGeom or parMetisGraph).
 The grid configuration can be read from a file and partitions and used coordinates can be written to disk if needed for plotting.
 
-The last two parameters configure the shot domain parallelisation where two shot domains can be computed simultaneously. 
+The last three parameters configure the shot domain parallelisation where two shot domains can be computed simultaneously. 
+\verb+ShotIncr+ is used when hundreds shots are available but you want to simulate only a part of them, in such case the shots can be selected with a spatial increment of \verb+ShotIncr+ meters.
 \verb+ShotDomainDefinition+ defines the domains by either ProcNS ($=0$), node id ($=1$) or an environment variable \shellcmd{DOMAIN} ($=2$).
 If set to 0, the number of simultaneously computed shots is set by \verb+NumShotDomains+. If set to 1, the shot domains are set by nodes. Each node processes one domain. If set to 2, an environment variable called \shellcmd{DOMAIN} defines the domains.
 Heterogenous clusters benefit if \verb+ShotDomainDefinition+ is set to 1 or 2. If set to 2, the load balance can be adjusted by another environment variable called \shellcmd{WEIGHT} (1.0 is default) which weights each domain. 
@@ -1302,7 +1304,7 @@ Furthermore, the sources or receivers can be initialized from SU files if \verb+
 	tFirstSnapshot & Time of first snapshot in seconds & double & \num{0.1} \\
 	tLastSnapshot & Time of last snapshot in seconds & double & \num{2.2} \\
 	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
-	decomposeType & decompose wavefield (0, 1, 2) & int & \num{1} \\
+	decomposeWavefieldType & decompose wavefield (0, 1, 2) & int & \num{1} \\
 	\midrule
     verbose        & display detailed output                          &  int   & 0 \\	
 	\bottomrule
@@ -1310,7 +1312,7 @@ Furthermore, the sources or receivers can be initialized from SU files if \verb+
 	\end{adjustbox}
 \end{table}	
 In the last section in \ref{tab:config_snapshots} you can set the properties of the wavefield snapshots to save. \verb+snapType+ sets the wavefield type that should be saved ($0=$ no save, $1=$ save velocities in seismic case and magnetic field in GPR case, $2=$ save pressure/stress in seismic case and electric field in GPR case, $3=$ save energy in seismic case). 
-The snapshots are stored in the directory chosen in \verb+WavefieldFilename+. Snapshots start at time \verb+tFirstSnapshot+, end at time \verb+tLastSnapshot+ and have an interval of \verb+tIncSnapshot+. One can decompose the wavefield to separate parts using Poynting vector method \citep{yoon2006reverse,yan2013improving}. \verb+decomposeType+=1 can separate the wavefield to up- and down-going wavefields, and \verb+decomposeType+=2 can separate the wavefield to left- and right-going wavefields. There are two ways to calculate the Poynting vector. Taking the pressure wavefield in acoustic wave as an example, one way is using the stress tensor and particle velocity (equation 1 in  \cite{yan2013improving}), another way is using the time derivative and spatial derivative of pressure wavefield itself (equation 2 in  \cite{yan2013improving}). In the second way, Hilbert transformation of the source signal and one more forward modelling is required  \citep{wang2016up}. We use these two ways together to suppress the instabilities of Poynting vector existed in some local positions.
+The snapshots are stored in the directory chosen in \verb+WavefieldFilename+. Snapshots start at time \verb+tFirstSnapshot+, end at time \verb+tLastSnapshot+ and have an interval of \verb+tIncSnapshot+. One can decompose the wavefield to separate parts using Poynting vector method \citep{yoon2006reverse,yan2013improving}. \verb+decomposeWavefieldType+=1 can separate the wavefield to up- and down-going wavefields, and \verb+decomposeWavefieldType+=2 can separate the wavefield to left- and right-going wavefields. There are two ways to calculate the Poynting vector. Taking the pressure wavefield in acoustic wave as an example, one way is using the stress tensor and particle velocity (equation 1 in  \cite{yan2013improving}), another way is using the time derivative and spatial derivative of pressure wavefield itself (equation 2 in  \cite{yan2013improving}). In the second way, Hilbert transformation of the source signal and one more forward modelling is required  \citep{wang2016up}. We use these two ways together to suppress the instabilities of Poynting vector existed in some local positions.
 
 At the end of configuration file, one can set \verb+verbose+ = 0 to briefly display the key points of the program running, or \verb+verbose+ = 1 to show all the status messages which can be confusing if shots are run in parallel. However, \verb+verbose+ = 1 would help you find the bugs much faster when you develop and debug a new feature in WAVE-Simulation.
 

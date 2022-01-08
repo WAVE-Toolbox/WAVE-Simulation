@@ -122,12 +122,12 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::write(IndexType snapType, 
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeType decomposeType
+ \param decomposeWavefieldType decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::decompose(IndexType decomposeType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 { 
 }
 

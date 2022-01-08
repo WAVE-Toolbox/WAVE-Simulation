@@ -122,14 +122,14 @@ void KITGPI::Wavefields::Wavefields<ValueType>::calcTransformMatrixXYZ(KITGPI::A
 }
 
 /*! \brief Initialize wavefield transform matrix to XYZ
- \param decomposeType decomposeType used to identify coordinate
+ \param decomposeWavefieldType decomposeWavefieldType used to identify coordinate
  \param dist distribution
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::initTransformMatrixXYZ(IndexType decomposeType, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
+void KITGPI::Wavefields::Wavefields<ValueType>::initTransformMatrixXYZ(IndexType decomposeWavefieldType, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
 {    
-    if (decomposeType != 0) {
+    if (decomposeWavefieldType != 0) {
         transformMatrixYXZ = lama::zero<SparseFormat>(dist, dist);
         transformMatrixYXZ.setContextPtr(ctx);
         transformMatrixXZY = lama::zero<SparseFormat>(dist, dist);

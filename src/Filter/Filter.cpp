@@ -11,7 +11,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
     SCAI_ASSERT_ERROR(nt != 0, "Can't initialize filter with nt = 0")
     zeroPadding = Common::calcNextPowTwo<ValueType>(nt) - nt;
     scai::IndexType filterLength = zeroPadding + nt;
-    transFcn.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
+    filter.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
     df = 1 / (filterLength * dt);
     fNyquist = 1 / (2 * dt);
 }
@@ -20,7 +20,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
  \param frequencyVector Vector which should store the frequency range
  */
 template <typename ValueType>
-void KITGPI::Filter::Filter<ValueType>::calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector)
+void KITGPI::Filter::Filter<ValueType>::calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector) const
 {
     long nFreq = fNyquist / df;
     scai::lama::DenseVector<ValueType> fPos = scai::lama::linearDenseVector<ValueType>(nFreq + 1, 0.0, df);
@@ -141,11 +141,11 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthFilt(std::string filterTy
     calcFrequencyVector(freqVec);
 
     if (filterType == "lp") {
-        calcButterworthLp(transFcn, freqVec, order, fc1);
+        calcButterworthLp(filter, freqVec, order, fc1);
     } else if (filterType == "hp") {
-        calcButterworthHp(transFcn, freqVec, order, fc1);
+        calcButterworthHp(filter, freqVec, order, fc1);
     } else if (filterType == "bp") {
-        calcButterworthBp(transFcn, freqVec, order, fc1, fc2);
+        calcButterworthBp(filter, freqVec, order, fc1, fc2);
     } else {
         COMMON_THROWEXCEPTION("Invalid filter type.");
     }
@@ -229,7 +229,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
     scai::lama::fft<ComplexValueType>(fSignal);
 
-    fSignal *= transFcn;
+    fSignal *= filter;
     fSignal /= len; // proper fft normalization
 
     scai::lama::ifft<ComplexValueType>(fSignal);
@@ -254,7 +254,7 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
 
     scai::lama::fft<ComplexValueType>(fSignal, 1);
 
-    fSignal.scaleColumns(transFcn);
+    fSignal.scaleColumns(filter);
 
     fSignal *= (1.0 / ValueType(len)); // proper fft normalization
 
