@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <string>
 #include <scai/dmemo.hpp>
 #include <scai/lama.hpp>
 
@@ -36,7 +37,7 @@ namespace KITGPI
             Seismogram(const Seismogram &rhs);
 
             void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
-            void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const;
+            void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates);
             void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
             //void read(scai::IndexType const SeismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
@@ -90,6 +91,7 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> getOffset() const;
             void setRefTrace(scai::lama::DenseVector<ValueType> setRefTrace);
             scai::lama::DenseVector<ValueType> getRefTrace() const;
+            std::string getFilename() const;
 
             /* Overloading Operators */
             KITGPI::Acquisition::Seismogram<ValueType> operator*=(ValueType const &rhs);
@@ -112,6 +114,7 @@ namespace KITGPI
             SeismogramTypeEM seismoTypeEM;                                    //!< Type of trace as #SeismogramTypeEM
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
             scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
+            std::string filenameBase;
 
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data

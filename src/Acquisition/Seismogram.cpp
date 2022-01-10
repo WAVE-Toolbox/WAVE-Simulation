@@ -27,6 +27,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     isSeismic = rhs.isSeismic;
     offset = rhs.offset;
     refTrace = rhs.refTrace;
+    filenameBase = rhs.filenameBase;
 }
 //! \brief swap function
 /*!
@@ -46,6 +47,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(outputInstantaneous, rhs.outputInstantaneous);
     std::swap(frequencyAGC, rhs.frequencyAGC);
     std::swap(isSeismic, rhs.isSeismic);
+    std::swap(filenameBase, rhs.filenameBase);
     data.swap(rhs.data);
     resampleMat.swap(rhs.resampleMat);
     inverseAGC.swap(rhs.inverseAGC);
@@ -77,7 +79,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
  \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
+void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates)
 {
     if (data.getNumValues() > 0) {
         scai::lama::DenseMatrix<ValueType> dataResample;
@@ -89,6 +91,9 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
             filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
         else
             filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
+        
+        filenameBase = filenameTmp; // used for outputting the related terms in objective function
+        
         if (seismogramFormat == 5) {
             seismoFormat = 1;
             dataResample = inverseAGC * resampleMat;
@@ -635,6 +640,16 @@ template <typename ValueType>
 scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getRefTrace() const
 {
     return refTrace;
+}
+
+//! \brief Getter method to get filenameBase which must be assigned when calling write()
+/*!
+ */
+template <typename ValueType>
+std::string KITGPI::Acquisition::Seismogram<ValueType>::getFilename() const
+{
+    SCAI_ASSERT_ERROR(!filenameBase.empty(), "filenameBase is empty!")
+    return filenameBase;
 }
 
 //! \brief Getter method for #SeismogramType

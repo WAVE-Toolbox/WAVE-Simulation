@@ -13,9 +13,9 @@ using namespace scai;
  \param modelCoordinates Coordinate class, which eg. maps 3D coordinates to 1D model indices
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates) const
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates)
 {
-    for (auto const &i : seismo) {
+    for (auto &i : seismo) {
         i.write(seismogramFormat, filename, modelCoordinates);
     }
 }
