@@ -356,10 +356,7 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
 
         signals.getData().getRow(temp, i);
 
-        if (isSeismic)
-            seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
-        else
-            seismograms.getSeismogram(static_cast<SeismogramTypeEM>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
+        seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
 
         ++count[tempIndexType];
     }

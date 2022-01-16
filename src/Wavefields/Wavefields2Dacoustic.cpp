@@ -111,17 +111,17 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::write(IndexType snapType, std:
 }
 
 /*! \brief decompose wavefields to parts by Poynting vector.
- \param decomposeWavefieldType decomposeWavefieldType
+ \param decomposition decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
-    if (decomposeWavefieldType > 0) {
+    if (decomposition > 0) {
         lama::DenseVector<ValueType> Poynting1;
         lama::DenseVector<ValueType> Poynting2;
-        if (decomposeWavefieldType == 1) {  
+        if (decomposition == 1) {  
             // for all
             Poynting1 = -P;
             Poynting1 *= VY;
@@ -183,7 +183,7 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::decompose(IndexType decomposeW
             VYdown += 1;
             VYdown.unaryOp(VYdown, common::UnaryOp::SIGN);
             VYdown *= VY;
-        } else if (decomposeWavefieldType == 2) {  
+        } else if (decomposition == 2) {  
             // for all
             Poynting1 = -P;
             Poynting1 *= VX;
@@ -540,6 +540,30 @@ void KITGPI::Wavefields::FD2Dacoustic<ValueType>::plusAssign(KITGPI::Wavefields:
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    P *= rhs;
+    Pup *= rhs;
+    Pdown *= rhs;
+    Pleft *= rhs;
+    Pright *= rhs;
+    VXup *= rhs;
+    VXdown *= rhs;
+    VXleft *= rhs;
+    VXright *= rhs;
+    VYup *= rhs;
+    VYdown *= rhs;
+    VYleft *= rhs;
+    VYright *= rhs;
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dacoustic<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     VX *= rhs;
     VY *= rhs;

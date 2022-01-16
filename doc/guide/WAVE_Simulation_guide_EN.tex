@@ -1304,7 +1304,8 @@ Furthermore, the sources or receivers can be initialized from SU files if \verb+
 	tFirstSnapshot & Time of first snapshot in seconds & double & \num{0.1} \\
 	tLastSnapshot & Time of last snapshot in seconds & double & \num{2.2} \\
 	tIncSnapshot & Time interval between snapshots  in seconds & double & \num{0.1} \\
-	decomposeWavefieldType & decompose wavefield (0, 1, 2) & int & \num{1} \\
+	decomposition & decompose wavefield (0, 1, 2) & int & \num{1} \\
+	compensation & compensate wavefield (0, 1, 2) & int & \num{1} \\
 	\midrule
     verbose        & display detailed output                          &  int   & 0 \\	
 	\bottomrule
@@ -1312,7 +1313,7 @@ Furthermore, the sources or receivers can be initialized from SU files if \verb+
 	\end{adjustbox}
 \end{table}	
 In the last section in \ref{tab:config_snapshots} you can set the properties of the wavefield snapshots to save. \verb+snapType+ sets the wavefield type that should be saved ($0=$ no save, $1=$ save velocities in seismic case and magnetic field in GPR case, $2=$ save pressure/stress in seismic case and electric field in GPR case, $3=$ save energy in seismic case). 
-The snapshots are stored in the directory chosen in \verb+WavefieldFilename+. Snapshots start at time \verb+tFirstSnapshot+, end at time \verb+tLastSnapshot+ and have an interval of \verb+tIncSnapshot+. One can decompose the wavefield to separate parts using Poynting vector method \citep{yoon2006reverse,yan2013improving}. \verb+decomposeWavefieldType+=1 can separate the wavefield to up- and down-going wavefields, and \verb+decomposeWavefieldType+=2 can separate the wavefield to left- and right-going wavefields. There are two ways to calculate the Poynting vector. Taking the pressure wavefield in acoustic wave as an example, one way is using the stress tensor and particle velocity (equation 1 in  \cite{yan2013improving}), another way is using the time derivative and spatial derivative of pressure wavefield itself (equation 2 in  \cite{yan2013improving}). In the second way, Hilbert transformation of the source signal and one more forward modelling is required  \citep{wang2016up}. We use these two ways together to suppress the instabilities of Poynting vector existed in some local positions.
+The snapshots are stored in the directory chosen in \verb+WavefieldFilename+. Snapshots start at time \verb+tFirstSnapshot+, end at time \verb+tLastSnapshot+ and have an interval of \verb+tIncSnapshot+. One can decompose the wavefield to separate parts using Poynting vector method \citep{yoon2006reverse,yan2013improving}. \verb+decomposition+=1 can separate the wavefield to up- and down-going wavefields, and \verb+decomposition+=2 can separate the wavefield to left- and right-going wavefields. There are two ways to calculate the Poynting vector. Taking the pressure wavefield in acoustic wave as an example, one way is using the stress tensor and particle velocity (equation 1 in  \cite{yan2013improving}), another way is using the time derivative and spatial derivative of pressure wavefield itself (equation 2 in  \cite{yan2013improving}). In the second way, Hilbert transformation of the source signal and one more forward modelling is required  \citep{wang2016up}. We use these two ways together to suppress the instabilities of Poynting vector existed in some local positions. In EM wave, one can use \verb+compensation+=1 to compensate the energy loss caused by electric conductivity ($\exp(\sigma t/\varepsilon)$), which will be useful in forming the gradient of FWI.
 
 At the end of configuration file, one can set \verb+verbose+ = 0 to briefly display the key points of the program running, or \verb+verbose+ = 1 to show all the status messages which can be confusing if shots are run in parallel. However, \verb+verbose+ = 1 would help you find the bugs much faster when you develop and debug a new feature in WAVE-Simulation.
 
@@ -1327,7 +1328,7 @@ The source file contains columns filled with information about the source number
 \end{verbatim}
 where each row is one shot. Each shot with the same shot number is modelled in one simulation, whereas each shot number is simulated individually. Thus, the example shows two shot simulations, one with one shot, the other with two.
 The coordinates in (x, y, z) are given in grid points. There are three different source types, pressure (1 = P or eZ), velocity in x- (2 = vX or eX), y- (3 = vY or eY), and z-direction (4 = vZ or hZ). 
-The wavelet type can be set as 1 = synthetic signal or 0 = own signal and its shape can be set as a 1 = Ricker wavelet, 2 = Fuchs-M\"uller signal, 3 = $\sin^3$ function, 4 = First derivative of Gaussian, 5 = Spike/Delta signal, 6 = integral of $\sin^3$, and 7 = Ricker wavelet used in GprMax which is a GPR simulation software  \citep{giannopoulos2005modelling}. 
+The wavelet type can be set as 1 = synthetic signal or 0 = own signal and its shape can be set as a 1 = Ricker wavelet, 2 = Fuchs-M\"uller signal, 3 = $\sin^3$ function, 4 = First derivative of Gaussian, 5 = Spike/Delta signal, 6 = integral of $\sin^3$, 7 = Ricker wavelet used in GprMax which is a GPR simulation software  \citep{giannopoulos2005modelling} and 8 = Berlage wavelet \citep{aldridge1990berlage}. 
 Further information can be found in chapter \ref{sec:sourcesignal}.
 Center frequency is to be set in Hz, the Amplitude scales the maximum amplitude of the wavefields and output seismograms and the time shift is defined in seconds.
 
@@ -1349,7 +1350,7 @@ where each row is one receiver with its grid coordinates in (x, y, z) and receiv
 Please note you have to reshape this mark matrix to a vector and save it as mtx format.
 
 \subsection{Source Signal}\label{sec:sourcesignal}
-There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, and Ricker wavelet of GprMax (The last wavelet type are not ploted in this manual but you can find it from GprMax user manual \url{http://docs.gprmax.com/en/latest/}). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
+There are two ways to choose a source signal used for modelling the wavefield. First a synthetic source signal can be used to calculate the wave fields. The Software contains different source signals which can be chosen from. A visualisation of the signals is show in figure \ref{fig:Signal}. The built in wavelets are a signal given by the first derivative of the Gaussian, $\int sin^3$ wavelet, Ricker wavelet, $sin^3$ wavelet, Fuchs-M\"uller signal, a spike signal, Ricker wavelet of GprMax (This wavelet type are not ploted in this manual but you can find it from GprMax user manual \url{http://docs.gprmax.com/en/latest/}) and Berlage wavelet (see figure 1 in \cite{aldridge1990berlage}). The corresponding equations are given by equation \ref{eqn:SignalStart} to \ref{eqn:SignalEnd}, where $A$ is the wavelet amplitude.
 \begin{figure}[h!]
 \centering
 	\includegraphics[width=.7\textwidth]{images/Signal_Plot.png}
@@ -1390,10 +1391,12 @@ There are two ways to choose a source signal used for modelling the wavefield. F
 	\quad 0 & \qquad \text{otherwise}
 	\end{cases}
 \intertext{\item Ricker wavelet of GprMax:}
-	f(t) &=-A \cdot 2 \cdot \zeta \cdot \sqrt{e^{1/2\zeta}} \cdot e^{-\zeta \tau^2} \cdot \tau \quad \text{with} \quad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.0}{f_c}-T_s\right), \zeta = 2 \pi^2 f^2
+	f(t) &=-A \cdot 2 \cdot \zeta \cdot \sqrt{e^{1/2\zeta}} \cdot e^{-\zeta \tau^2} \cdot \tau \quad \text{with} \quad \tau=\pi\cdot f_c\cdot\left(t - \frac{1.0}{f_c}-T_s\right), \zeta = 2 \pi^2 f_c^2
+\intertext{\item Berlage wavelet ($H(\tau)$ is Heaviside function):}
+	f(t) &=A \cdot H(\tau) \cdot \tau^n \cdot e^{-\alpha \tau} \cdot \cos(2 \pi f_c \tau) \quad \text{with} \quad \tau=t - \frac{1.0}{f_c}-T_s, \alpha = 2 f_c, n=2
 \end{align}
 \end{itemize}
-To create different source signals the \shellcmd{source.mtx} file can be generated with either the \shellcmd{createSource.m} or the \shellcmd{createSource.py} script. The scripts give the options to change the source type, the wavelet type, the wavelet shape ($1=$ Ricker, $2=$ Fuchs-M\"uller, $3=sin^3$, $4=$ FGaussian, $5=$ Spike, $6=$ Integral of $sin^3$, and $7=$ Ricker wavelet of GprMax), the center frequency in Hz, the Amplitude and the timeshift in s.  \\
+To create different source signals the \shellcmd{source.mtx} file can be generated with either the \shellcmd{createSource.m} or the \shellcmd{createSource.py} script. The scripts give the options to change the source type, the wavelet type, the wavelet shape ($1=$ Ricker, $2=$ Fuchs-M\"uller, $3=sin^3$, $4=$ FGaussian, $5=$ Spike, $6=$ Integral of $sin^3$, $7=$ Ricker wavelet of GprMax and $8=$ Berlage wavelet), the center frequency in Hz, the Amplitude and the timeshift in s.  \\
 The second way of setting a source function is using your own signal. There are two possibilities to do so. The first is using the same source signal for all shots and the second is using an individual signal for each shot. In both cases the source signal is read from the lines in the file set by \verb+SourceSignalFilename+. If you set the wavelet type to 2 only the first line of the source signal file is used as wavelet for all shots. If it's set to 3 the lines in this files are used successively for each shot. It's also possible to combine wavelet type 1 and 2 or 1 and 3. Only the combination 2 and 3 is prohibited. If you use your own source signal you have to take care that it has the same length and sampling as your simulation time. Also the file must have as many lines as you have sources with wavelet type 3. 
 
 \clearpage

@@ -85,21 +85,21 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientType(scai::In
     gradientType = setGradientType;
 }
 
-/*! \brief Getter method for decomposeWavefieldType */
+/*! \brief Getter method for decomposition */
 template <typename ValueType>
 IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getDecomposeType() const
 {
-    return (decomposeWavefieldType);
+    return (decomposition);
 }
 
-/*! \brief Set method for decomposeWavefieldType */
+/*! \brief Set method for decomposition */
 template <typename ValueType>
 void KITGPI::Modelparameter::Modelparameter<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
 {
-    decomposeWavefieldType = setDecomposeType;
+    decomposition = setDecomposeType;
 }
 
-/*! \brief Getter method for vim */
+/*! \brief Getter method for vmim */
 template <typename ValueType>
 ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getVmin()
 {    
@@ -121,6 +121,24 @@ ValueType KITGPI::Modelparameter::Modelparameter<ValueType>::getVmin()
     }
     
     return (vMin);
+}
+
+/*! \brief Getter method for compensation */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Modelparameter::Modelparameter<ValueType>::getCompensation(ValueType DT, scai::IndexType tStep) const
+{    
+    scai::lama::DenseVector<ValueType> compensation;
+    bool isSeismic = Common::checkEquationType<ValueType>(equationType);
+    if (isSeismic) {
+        COMMON_THROWEXCEPTION("There is no compensation in an Seismic modelling")
+    } else {
+        compensation = this->getElectricConductivity();
+        compensation /= this->getDielectricPermittivity();
+        compensation *= tStep * DT;
+        compensation.unaryOp(compensation, common::UnaryOp::EXP);
+    }
+    
+    return (compensation);
 }
 
 /*! \brief Get matrix that multiplies with model matrices to get a pershot

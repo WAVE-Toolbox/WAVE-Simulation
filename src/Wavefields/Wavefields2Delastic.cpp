@@ -89,12 +89,12 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::write(IndexType snapType, std::
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeWavefieldType decomposeWavefieldType
+ \param decomposition decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Delastic<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Delastic<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 { 
 }
 
@@ -358,6 +358,20 @@ void KITGPI::Wavefields::FD2Delastic<ValueType>::plusAssign(KITGPI::Wavefields::
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Delastic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Sxy *= rhs;
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Delastic<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     VX *= rhs;
     VY *= rhs;

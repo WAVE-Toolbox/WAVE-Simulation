@@ -109,7 +109,7 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::write(IndexType snapType, std
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
 }
 
@@ -334,6 +334,26 @@ void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::plusAssign(KITGPI::Wavefields
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::timesAssign(ValueType rhs)
+{
+    HX *= rhs;
+    HY *= rhs;
+    HZ *= rhs;
+    EX *= rhs;
+    EY *= rhs;
+    EZ *= rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        RX[l] *= rhs;
+        RY[l] *= rhs;
+        RZ[l] *= rhs;
+    }
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dviscoemem<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     HX *= rhs;
     HY *= rhs;

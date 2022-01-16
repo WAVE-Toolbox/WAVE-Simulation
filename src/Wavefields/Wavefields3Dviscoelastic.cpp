@@ -122,12 +122,12 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::write(IndexType snapType, 
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeWavefieldType decomposeWavefieldType
+ \param decomposition decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 { 
 }
 
@@ -379,6 +379,32 @@ void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::plusAssign(KITGPI::Wavefie
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::timesAssign(ValueType rhs)
+{
+    VX *= rhs;
+    VY *= rhs;
+    VZ *= rhs;
+    Sxx *= rhs;
+    Syy *= rhs;
+    Szz *= rhs;
+    Sxy *= rhs;
+    Sxz *= rhs;
+    Syz *= rhs;
+    for (int l=0; l<numRelaxationMechanisms; l++) {
+        Rxx[l] *= rhs;
+        Ryy[l] *= rhs;
+        Rzz[l] *= rhs;
+        Rxy[l] *= rhs;
+        Rxz[l] *= rhs;
+        Ryz[l] *= rhs;
+    }
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD3Dviscoelastic<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     VX *= rhs;
     VY *= rhs;

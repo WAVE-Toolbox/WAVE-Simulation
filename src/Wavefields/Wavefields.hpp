@@ -63,11 +63,12 @@ namespace KITGPI
             virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void timesAssign(ValueType rhs) = 0;
+            virtual void timesAssign(scai::lama::DenseVector<ValueType> rhs) = 0;
             
             virtual void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;        
-            virtual void decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) = 0;    
+            virtual void decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) = 0;    
             
-            void initTransformMatrixXYZ(IndexType decomposeWavefieldType, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx);
+            void initTransformMatrixXYZ(IndexType decomposition, scai::dmemo::DistributionPtr dist, scai::hmemo::ContextPtr ctx);
             void calcTransformMatrixXYZ(KITGPI::Acquisition::Coordinates<ValueType> modelCoordinates);
             scai::lama::CSRSparseMatrix<ValueType> const &getTransformMatrixYXZ();
             scai::lama::CSRSparseMatrix<ValueType> const &getTransformMatrixXZY();
@@ -76,6 +77,7 @@ namespace KITGPI
             KITGPI::Wavefields::Wavefields<ValueType> &operator-=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator+=(KITGPI::Wavefields::Wavefields<ValueType> &rhs);
             KITGPI::Wavefields::Wavefields<ValueType> &operator*=(ValueType rhs);
+            KITGPI::Wavefields::Wavefields<ValueType> &operator*=(scai::lama::DenseVector<ValueType> rhs);
 
             /* Seismic */
             virtual scai::lama::DenseVector<ValueType> &getRefVX() = 0;

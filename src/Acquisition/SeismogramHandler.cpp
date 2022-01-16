@@ -399,10 +399,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::SeismogramHandler<ValueType>::setInverseAGC(SeismogramHandler<ValueType> seismograms)
 {
     for (int i = 0; i < NUM_ELEMENTS_SEISMOGRAMTYPE; i++) {
-        if (isSeismic)
-            seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramType>(i)).getInverseAGC());
-        else
-            seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramTypeEM>(i)).getInverseAGC());
+        seismo[i].setInverseAGC(seismograms.getSeismogram(static_cast<Acquisition::SeismogramType>(i)).getInverseAGC());
     }
 }
 

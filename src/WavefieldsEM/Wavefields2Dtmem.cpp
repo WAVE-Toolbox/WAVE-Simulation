@@ -101,17 +101,17 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::write(IndexType snapType, std::str
 }
 
 /*! \brief decompose wavefields to parts.
- \param decomposeWavefieldType decomposeWavefieldType
+ \param decomposition decomposeWavefieldType
  \param wavefieldsDerivative the time derivative of wavefields
  \param derivatives the spatial derivatives
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
-    if (decomposeWavefieldType > 0) {
+    if (decomposition > 0) {
         lama::DenseVector<ValueType> Poynting1;
         lama::DenseVector<ValueType> Poynting2;
-        if (decomposeWavefieldType == 1) {              
+        if (decomposition == 1) {              
             Poynting1 = EZ;
             Poynting1 *= HX;
             
@@ -133,7 +133,7 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::decompose(IndexType decomposeWavef
             EZdown += 1;
             EZdown.unaryOp(EZdown, common::UnaryOp::SIGN);
             EZdown *= EZ;
-        } else if (decomposeWavefieldType == 2) {            
+        } else if (decomposition == 2) {            
             Poynting1 = EZ;
             Poynting1 *= HY;
             Poynting1 *= -1;
@@ -388,6 +388,22 @@ void KITGPI::Wavefields::FD2Dtmem<ValueType>::plusAssign(KITGPI::Wavefields::Wav
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Dtmem<ValueType>::timesAssign(ValueType rhs)
+{
+    HX *= rhs;
+    HY *= rhs;
+    EZ *= rhs;
+    EZup *= rhs;
+    EZdown *= rhs;
+    EZleft *= rhs;
+    EZright *= rhs;
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Dtmem<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     HX *= rhs;
     HY *= rhs;

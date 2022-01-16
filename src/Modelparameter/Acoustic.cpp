@@ -64,7 +64,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::applyThresholds(Configuration:
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
-    if (config.getAndCatch("gradientType", 0) > 1 && config.getAndCatch("decomposeWavefieldType", 0) == 0) {
+    if (config.getAndCatch("gradientType", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
     }

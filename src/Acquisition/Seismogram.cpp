@@ -98,6 +98,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
             seismoFormat = 1;
             dataResample = inverseAGC * resampleMat;
             filenameTmp += ".inverseAGC";
+        } else if (refTrace.maxNorm() != 0) {
+            IO::writeVector(refTrace, filenameTmp + ".refTrace", seismoFormat);
         }
         
         switch (seismoFormat) {
@@ -127,10 +129,6 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
                 IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
                 break;
             }
-        }
-        if (refTrace.maxNorm() != 0) {
-            filenameTmp += ".refTrace";            
-            IO::writeVector(refTrace, filenameTmp, seismoFormat);
         }
     }
 }

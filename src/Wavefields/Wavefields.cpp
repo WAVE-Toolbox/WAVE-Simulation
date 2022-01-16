@@ -90,6 +90,17 @@ KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueT
     return *this;
 }
 
+/*! \brief Overloading *= Operation
+ *
+ \param rhs Scalar which is multiplied.
+ */
+template <typename ValueType>
+KITGPI::Wavefields::Wavefields<ValueType> &KITGPI::Wavefields::Wavefields<ValueType>::operator*=(scai::lama::DenseVector<ValueType> rhs)
+{
+    timesAssign(rhs);
+    return *this;
+}
+
 /*! \brief calculate a matrix to transform wavefield from XZY to YXZ
  * \param modelCoordinates coordinates of the original model
  * \param modelCoordinatesInversion coordinates of the averaged model
@@ -122,14 +133,14 @@ void KITGPI::Wavefields::Wavefields<ValueType>::calcTransformMatrixXYZ(KITGPI::A
 }
 
 /*! \brief Initialize wavefield transform matrix to XYZ
- \param decomposeWavefieldType decomposeWavefieldType used to identify coordinate
+ \param decomposition decomposeWavefieldType used to identify coordinate
  \param dist distribution
  \param ctx Context
  */
 template <typename ValueType>
-void KITGPI::Wavefields::Wavefields<ValueType>::initTransformMatrixXYZ(IndexType decomposeWavefieldType, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
+void KITGPI::Wavefields::Wavefields<ValueType>::initTransformMatrixXYZ(IndexType decomposition, dmemo::DistributionPtr dist, hmemo::ContextPtr ctx)
 {    
-    if (decomposeWavefieldType != 0) {
+    if (decomposition != 0) {
         transformMatrixYXZ = lama::zero<SparseFormat>(dist, dist);
         transformMatrixYXZ.setContextPtr(ctx);
         transformMatrixXZY = lama::zero<SparseFormat>(dist, dist);

@@ -36,7 +36,7 @@ void KITGPI::Acquisition::SourceSignal::Berlage<ValueType>::calc(scai::lama::Den
     /*
      *  Aldridge, David F. "The Berlage wavelet." Geophysics 55.11 (1990): 1508-1511.
      *  t=0:DT:(NT*DT-DT); t=t-1.0/FC-Tshift;
-     *  tau=2*pi*FC*t; n=2; alpha=6*FC;     
+     *  tau=2*pi*FC*t; n=2; alpha=2*FC;     
      *  signal=cos(tau);
      *  tau=heaviside(t).*t.^n.*exp(-alpha.*t);
      *  signal*=tau;

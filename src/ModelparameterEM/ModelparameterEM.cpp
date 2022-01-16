@@ -14,7 +14,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Co
     this->setEffectiveParameterisation(config.getAndCatch("effectiveParameterisation", 0));
     this->setInversionType(config.getAndCatch("inversionType", 1));
     this->setGradientType(config.getAndCatch("gradientType", 0));
-    this->setDecomposeType(config.getAndCatch("decomposeWavefieldType", 0));
+    this->setDecomposeType(config.getAndCatch("decomposition", 0));
     calcElectricConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");

@@ -96,6 +96,7 @@ namespace KITGPI
             scai::IndexType getDecomposeType() const;
             void setDecomposeType(scai::IndexType const setDecomposeType);
             ValueType getVmin();
+            scai::lama::DenseVector<ValueType> getCompensation(ValueType DT, scai::IndexType tStep) const;
             
             /*! \brief Prepare the model parameters for modelling */
             virtual void prepareForModelling(Acquisition::Coordinates<ValueType> const &modelCoordinates, scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, scai::dmemo::CommunicatorPtr comm) = 0;
@@ -286,7 +287,7 @@ namespace KITGPI
             bool effectiveParameterisation = 0;
             scai::IndexType inversionType = 0;
             scai::IndexType gradientType = 0;
-            scai::IndexType decomposeWavefieldType = 0;
+            scai::IndexType decomposition = 0;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
             std::string equationType;
             

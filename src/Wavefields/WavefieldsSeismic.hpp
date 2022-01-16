@@ -57,9 +57,10 @@ namespace KITGPI
             virtual void plusAssign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void assign(KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;
             virtual void timesAssign(ValueType rhs) = 0;
+            virtual void timesAssign(scai::lama::DenseVector<ValueType> rhs) = 0;
             
             virtual void applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs) = 0;        
-            virtual void decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) = 0;    
+            virtual void decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives) = 0;    
             
             /* Seismic */
             virtual scai::lama::DenseVector<ValueType> &getRefVX() override;

@@ -77,7 +77,7 @@ void KITGPI::Wavefields::FD2Demem<ValueType>::write(IndexType snapType, std::str
 /*! \brief Set all wavefields to zero.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Demem<ValueType>::decompose(IndexType decomposeWavefieldType, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
+void KITGPI::Wavefields::FD2Demem<ValueType>::decompose(IndexType decomposition, KITGPI::Wavefields::Wavefields<ValueType> &wavefieldsDerivative, KITGPI::ForwardSolver::Derivatives::Derivatives<ValueType> const &derivatives)
 {    
 }
 
@@ -255,6 +255,18 @@ void KITGPI::Wavefields::FD2Demem<ValueType>::plusAssign(KITGPI::Wavefields::Wav
  */
 template <typename ValueType>
 void KITGPI::Wavefields::FD2Demem<ValueType>::timesAssign(ValueType rhs)
+{
+    HZ *= rhs;
+    EX *= rhs;
+    EY *= rhs;
+}
+
+/*! \brief function for overloading *= Operation (called in base class)
+ *
+ \param rhs Scalar is multiplied.
+ */
+template <typename ValueType>
+void KITGPI::Wavefields::FD2Demem<ValueType>::timesAssign(scai::lama::DenseVector<ValueType> rhs)
 {
     HZ *= rhs;
     EX *= rhs;
