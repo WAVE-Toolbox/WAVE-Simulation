@@ -267,7 +267,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
-    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
         this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
     } else {
         this->initModelparameter(reflectivity, ctx, dist, 0.0);
@@ -314,7 +314,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::write(std::string filename, scai::
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
     }
-    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
         IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };

@@ -93,8 +93,8 @@ namespace KITGPI
             void setInversionType(scai::IndexType const setInversionType);
             scai::IndexType getGradientType() const;
             void setGradientType(scai::IndexType const setGradientType);
-            scai::IndexType getDecomposeType() const;
-            void setDecomposeType(scai::IndexType const setDecomposeType);
+            scai::IndexType getDecomposition() const;
+            void setDecomposition(scai::IndexType const setDecomposition);
             ValueType getVmin();
             scai::lama::DenseVector<ValueType> getCompensation(ValueType DT, scai::IndexType tStep) const;
             

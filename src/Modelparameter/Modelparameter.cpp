@@ -87,16 +87,16 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientType(scai::In
 
 /*! \brief Getter method for decomposition */
 template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getDecomposeType() const
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getDecomposition() const
 {
     return (decomposition);
 }
 
 /*! \brief Set method for decomposition */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setDecomposeType(scai::IndexType const setDecomposeType)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setDecomposition(scai::IndexType const setDecomposition)
 {
-    decomposition = setDecomposeType;
+    decomposition = setDecomposition;
 }
 
 /*! \brief Getter method for vmim */

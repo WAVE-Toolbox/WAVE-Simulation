@@ -190,7 +190,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
                 scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
-        } else if (normalizeTraces == 2) { // normalized by the l2 norm
+        } else if (normalizeTraces >= 2) { // normalized by the l2 norm
             for (IndexType i = 0; i < getNumTracesLocal(); i++) {
                 data.getLocalStorage().getRow(tempRow, i);
                 ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
@@ -198,35 +198,28 @@ void KITGPI::Acquisition::Seismogram<ValueType>::normalizeTrace(scai::IndexType 
                 scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
                 data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
-        } else if (normalizeTraces == 3 && useAGC) { // normalized by AGC
-            data.binaryOp(data, common::BinaryOp::MULT, inverseAGC);
-            // normalized to the l2 norm
-            for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-                data.getLocalStorage().getRow(tempRow, i);
-                ValueType tempMax = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
-                if (tempMax == 0) tempMax = 1;
-                scai::utilskernel::HArrayUtils::setScalar(tempRow, tempMax, scai::common::BinaryOp::DIVIDE);
-                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
-            }
-            useAGC = false;
-        } else if (normalizeTraces == 4) { // normalized by the envelope
-            scai::lama::DenseMatrix<ValueType> dataEnvelope(data);
-            Common::calcEnvelope(dataEnvelope);
-            ValueType waterLevel = 1e-3;
-            for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-                scai::hmemo::HArray<ValueType> tempRowEnvelope;
-                scai::hmemo::HArray<ValueType> tempRowWaterLevel;
-                data.getLocalStorage().getRow(tempRow, i);
-                dataEnvelope.getLocalStorage().getRow(tempRowEnvelope, i); 
-                ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope);
-                if (tempMax != 0) {
-                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope));
-                } else {
-                    scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * waterLevel);
+            if (normalizeTraces == 3 && useAGC) { // normalized by AGC
+                data.binaryOp(data, common::BinaryOp::MULT, inverseAGC);
+                useAGC = false;
+            } else if (normalizeTraces == 4) { // normalized by the envelope
+                scai::lama::DenseMatrix<ValueType> dataEnvelope(data);
+                Common::calcEnvelope(dataEnvelope);
+                ValueType waterLevel = 1e-3;
+                for (IndexType i = 0; i < getNumTracesLocal(); i++) {
+                    scai::hmemo::HArray<ValueType> tempRowEnvelope;
+                    scai::hmemo::HArray<ValueType> tempRowWaterLevel;
+                    data.getLocalStorage().getRow(tempRow, i);
+                    dataEnvelope.getLocalStorage().getRow(tempRowEnvelope, i); 
+                    ValueType tempMax = scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope);
+                    if (tempMax != 0) {
+                        scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * scai::utilskernel::HArrayUtils::maxNorm(tempRowEnvelope));
+                    } else {
+                        scai::utilskernel::HArrayUtils::setSameValue(tempRowWaterLevel, getNumSamples(), waterLevel * waterLevel);
+                    }
+                    scai::utilskernel::HArrayUtils::binaryOp(tempRowEnvelope, tempRowEnvelope, tempRowWaterLevel, scai::common::BinaryOp::ADD);
+                    scai::utilskernel::HArrayUtils::binaryOp(tempRow, tempRow, tempRowEnvelope, scai::common::BinaryOp::DIVIDE);
+                    data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
                 }
-                scai::utilskernel::HArrayUtils::binaryOp(tempRowEnvelope, tempRowEnvelope, tempRowWaterLevel, scai::common::BinaryOp::ADD);
-                scai::utilskernel::HArrayUtils::binaryOp(tempRow, tempRow, tempRowEnvelope, scai::common::BinaryOp::DIVIDE);
-                data.getLocalStorage().setRow(tempRow, i, scai::common::BinaryOp::COPY);
             }
         }
     }
@@ -242,27 +235,34 @@ scai::lama::DenseMatrix<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::g
 {    
     scai::lama::DenseMatrix<ValueType> AGCSum;
     if (data.getNumValues() > 0) {
+        scai::lama::DenseMatrix<ValueType> dataNorm = data;
+        normalizeTrace(2); // normalize data before AGC
         AGCSum = data;
+        data = dataNorm;
+        dataNorm = AGCSum;
         AGCSum.scale(0);
         scai::IndexType NAGC = round(1.0 / (frequencyAGC * DT));
+        scai::IndexType NT = getNumSamples();
+        if (NAGC > NT / 2)
+            NAGC = NT / 2;
         scai::hmemo::HArray<ValueType> tempRow;
         for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-            data.getLocalStorage().getRow(tempRow, i);
+            dataNorm.getLocalStorage().getRow(tempRow, i);
             scai::hmemo::HArray<ValueType> AGCSumRow(tempRow);
             ValueType var = 0;
             ValueType sumTemp = 0;
             ValueType NWIN = NAGC;
-            for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
+            for (IndexType tStep = NT-NAGC; tStep < NT; tStep++) {
                 var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
                 sumTemp += var;
             }
-            for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
+            for (IndexType tStep = NT-1; tStep >= 0; tStep--) {
                 // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
-                if (tStep >= getNumSamples()-NAGC) { // ramping on
+                if (tStep >= NT-NAGC) { // ramping on
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var;
                     NWIN += 1;
-                } else if (tStep >= NAGC && tStep < getNumSamples()-NAGC) { // middle range -- full rms window 
+                } else if (tStep >= NAGC && tStep < NT-NAGC) { // middle range -- full rms window 
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var;
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
@@ -290,37 +290,44 @@ void KITGPI::Acquisition::Seismogram<ValueType>::calcInverseAGC()
 {    
     if (data.getNumValues() > 0) {
         useAGC = true;
+        scai::lama::DenseMatrix<ValueType> dataNorm = data;
+        normalizeTrace(2); // normalize data before AGC
         inverseAGC = data;
+        data = dataNorm;
+        dataNorm = inverseAGC;
         inverseAGC.scale(0);
-        scai::IndexType NAGC = round(2.0 / (frequencyAGC * DT));
+        scai::IndexType NAGC = round(1.0 / (frequencyAGC * DT));
+        scai::IndexType NT = getNumSamples();
+        if (NAGC > NT / 2)
+            NAGC = NT / 2;
         scai::hmemo::HArray<ValueType> tempRow;
         for (IndexType i = 0; i < getNumTracesLocal(); i++) {
-            data.getLocalStorage().getRow(tempRow, i);
+            dataNorm.getLocalStorage().getRow(tempRow, i);
             scai::hmemo::HArray<ValueType> inverseAGCRow(tempRow);
             ValueType var = 0;
             ValueType sumTemp = 0;
             ValueType NWIN = NAGC;
             ValueType waterLevel = scai::utilskernel::HArrayUtils::l2Norm(tempRow);
             waterLevel *= waterLevel;
-            waterLevel /= getNumSamples();
+            waterLevel /= NT;
             if (waterLevel != 0) {
                 waterLevel *= 1e-3;
             } else {
-                waterLevel = 1e-3 * data.l2Norm() / getNumSamples() / getNumTracesGlobal();
+                waterLevel = 1e-3 * dataNorm.l2Norm() / NT / getNumTracesGlobal();
             }
-            for (IndexType tStep = getNumSamples()-NAGC; tStep < getNumSamples(); tStep++) {
+            for (IndexType tStep = NT-NAGC; tStep < NT; tStep++) {
                 var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep);
                 sumTemp += var * var;
                 sumTemp += waterLevel;
             }
-            for (IndexType tStep = getNumSamples()-1; tStep >= 0; tStep--) {
+            for (IndexType tStep = NT-1; tStep >= 0; tStep--) {
                 // we have to use decreasing time step because increasing time step generates many negative values in sumTemp which may be caused by zero parts in simulated data.
-                if (tStep >= getNumSamples()-NAGC) { // ramping on
+                if (tStep >= NT-NAGC) { // ramping on
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var * var;
                     sumTemp += waterLevel;
                     NWIN += 1;
-                } else if (tStep >= NAGC && tStep < getNumSamples()-NAGC) { // middle range -- full rms window 
+                } else if (tStep >= NAGC && tStep < NT-NAGC) { // middle range -- full rms window 
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep-NAGC);
                     sumTemp += var * var;
                     var = scai::utilskernel::HArrayUtils::getVal(tempRow, tStep+NAGC);
@@ -377,18 +384,18 @@ template <typename ValueType>
 scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getTraceL2norm()
 {    
     scai::lama::DenseVector<ValueType> tempRow;
-    scai::lama::DenseVector<ValueType> traceL2Norm;
-    traceL2Norm.allocate(data.getRowDistributionPtr());
-    traceL2Norm = 0.0; 
-    traceL2Norm.setContextPtr(data.getContextPtr());
+    scai::lama::DenseVector<ValueType> traceL2norm;
+    traceL2norm.allocate(data.getRowDistributionPtr());
+    traceL2norm = 0.0; 
+    traceL2norm.setContextPtr(data.getContextPtr());
     
     if (data.getNumValues() > 0) {
         for (IndexType i = 0; i < getNumTracesGlobal(); i++) {
             data.getRow(tempRow, i);
-            traceL2Norm.setValue(i, tempRow.l2Norm());
+            traceL2norm.setValue(i, tempRow.l2Norm());
         }
     }
-    return traceL2Norm;
+    return traceL2norm;
 }
 
 //! \brief get the sum of each seismogram trace

@@ -255,7 +255,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::init(scai::hmemo::ContextPtr c
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
-    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
         this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
     } else {
         this->initModelparameter(reflectivity, ctx, dist, 0.0);
@@ -293,7 +293,7 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::write(std::string filename, sc
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
     }
-    if (this->getGradientType() != 0 && this->getDecomposeType() == 0) {
+    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
         IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
