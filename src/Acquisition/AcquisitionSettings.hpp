@@ -117,7 +117,7 @@ namespace KITGPI
         {
             settings.clear();
             for (unsigned i = 0; i < allSettings.size(); i++) {
-                if (allSettings[i].sourceNo == shotNumber) {
+                if (std::abs(allSettings[i].sourceNo) == shotNumber) {
                     settings.push_back(allSettings[i]);
                 }
             }
@@ -168,12 +168,12 @@ namespace KITGPI
         inline void calcuniqueShotNo(std::vector<scai::IndexType> &uniqueShotNo, std::vector<sourceSettings<ValueType>> sourceSettings)
         {
             uniqueShotNo.clear();
-            uniqueShotNo.push_back(sourceSettings[0].sourceNo);
+            uniqueShotNo.push_back(std::abs(sourceSettings[0].sourceNo));
             for (unsigned i = 0; i < sourceSettings.size(); i++) {
                 if (std::find(uniqueShotNo.begin(), uniqueShotNo.end(), sourceSettings[i].sourceNo) != uniqueShotNo.end()) {
                     // shotNo already included
-                } else {
-                    uniqueShotNo.push_back(sourceSettings[i].sourceNo);
+                } else { // only the positive shotnr can be used
+                    uniqueShotNo.push_back(std::abs(sourceSettings[i].sourceNo));
                 }
             }
         }
@@ -331,19 +331,24 @@ namespace KITGPI
             Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
             Acquisition::coordinate3D coordinate;
             SCAI_ASSERT(sourceSettingsBig.size() == uniqueShotNos.size(), "sourceSettingsBig.size() != uniqueShotNos.size()");
-            std::vector<scai::IndexType> uniqueShotNosX;
+            std::vector<scai::IndexType> uniqueShotX;
             for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {               
-                uniqueShotNosX.push_back(sourceSettingsBig[i].sourceCoords.x);
+                uniqueShotX.push_back(sourceSettingsBig[i].sourceCoords.x);
             }
-            auto minX = min(uniqueShotNosX.begin(), uniqueShotNosX.end());
+            auto minX = min(uniqueShotX.begin(), uniqueShotX.end());
             ValueType x0 = modelCoordinates.getX0();
             ValueType x0Big = modelCoordinatesBig.getX0();
             ValueType DH = modelCoordinates.getDH();
             ValueType DHBig = modelCoordinatesBig.getDH();
             SCAI_ASSERT(x0 == x0Big, "x0 != x0Big");
             SCAI_ASSERT(DH == DHBig, "DH != DHBig");
-            for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {               
-                coordinate.x = sourceSettingsBig[i].sourceCoords.x - *minX;
+            scai::IndexType sourceCoordsX = 0;
+            for (unsigned i = 0; i < sourceSettingsBig.size(); i++) {    
+                if (sourceSettingsBig[i].sourceNo >= 0) {
+                    sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
+                } // if sourceSettingsBig[i].sourceNo < 0, the previous sourceCoordsX will be used.
+                SCAI_ASSERT(sourceCoordsX != 0, "sourceCoordsX cannot be 0 when sourceSettingsBig[i].sourceNo < 0");
+                coordinate.x = sourceCoordsX - *minX;
                 coordinate.y = 0;
                 coordinate.z = 0;
                 cutCoordinates.push_back(coordinate);
