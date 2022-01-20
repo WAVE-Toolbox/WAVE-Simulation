@@ -45,7 +45,8 @@ namespace KITGPI
 
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings);
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber);
-            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr);
+            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr, std::vector<sourceSettings<ValueType>> sourceSettingsEncode);
+            void writeReceiverMark(std::string filename);
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
@@ -53,6 +54,7 @@ namespace KITGPI
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
             void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);
             suHandler<ValueType> su;
+            scai::lama::SparseVector<ValueType> receiverMarkVector;
         };
     }
 }

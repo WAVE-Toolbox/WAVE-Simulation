@@ -424,7 +424,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  \param shotIncr shot increments in meters
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr, std::vector<sourceSettings<ValueType>> &sourceSettingsEncode)
 {
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
     if (config.get<bool>("initSourcesFromSU"))
@@ -474,6 +474,24 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
             shotIndIncr.push_back(shotInd);
         }
     }
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    if (useSourceEncode != 0) {
+        sourceSettingsEncode = allSettings;
+        scai::IndexType numshotsIncr = shotIndIncr.size();
+        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
+        if (useSourceEncode == 1) {
+            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd * numShotDomains / numshotsIncr;
+            }
+        } else if (useSourceEncode == 2) {
+            std::srand((int)time(0));
+            scai::IndexType randomShotInd;                
+            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {    
+                randomShotInd = std::rand() % numShotDomains;
+                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + randomShotInd;
+            }
+        }
+    }
 }
 
 /*! \brief Write the shot indices and shot numbers
@@ -503,6 +521,36 @@ void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Co
         outputFile << "# Shot index | shot number\n"; 
         for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
             outputFile << std::setw(12) << shotIndIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
+        }
+    }
+}
+
+/*! \brief Write the shot indices and shot numbers
+ *
+ \param config Configuration
+ \param sourceSettingsEncode shot indices selected
+ \param uniqueShotNosEncode new shot numbers
+ \param uniqueShotNos original shot numbers
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, std::vector<IndexType> uniqueShotNosEncode, std::vector<IndexType> uniqueShotNos)
+{
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    if (useSourceEncode != 0) {
+        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
+        IndexType numshots = uniqueShotNos.size(); // the number of all shots
+        SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == uniqueShotNos.size(), "sourceSettingsEncode.size() != uniqueShotNos.size()"); // check whether sourceSettingsEncode has been applied successfully.
+        std::string filename = config.get<std::string>("SourceFilename") + ".encode.txt";
+        std::ofstream outputFile; 
+        outputFile.open(filename);
+        outputFile << "# Shot number used in source encode (numShotDomains = " << numShotDomains << ", numshots = " << numshots << ")\n"; 
+        outputFile << "# Shot number | shot number (original)\n"; 
+        for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
+            outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
+            for (int shotInd = 0; shotInd < numshots; shotInd++) { 
+                outputFile << std::setw(5) << uniqueShotNos[shotInd];
+            }
+            outputFile << "\n";
         }
     }
 }

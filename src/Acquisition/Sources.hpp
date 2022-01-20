@@ -41,8 +41,9 @@ namespace KITGPI
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType> rowinds);
 
-            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr);
+            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr, std::vector<sourceSettings<ValueType>> &sourceSettingsEncode);
             void writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<scai::IndexType> uniqueShotNos);
+            void writeSourceEncode(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, std::vector<IndexType> uniqueShotNosEncode, std::vector<IndexType> uniqueShotNos);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
 

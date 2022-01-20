@@ -232,25 +232,35 @@ int main(int argc, const char *argv[])
         receivers.init(config, modelCoordinates, ctx, dist);
     }
 
-    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;    
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsEncode; 
     std::vector<Acquisition::coordinate3D> cutCoordinates;
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
-    std::vector<IndexType> shotIndIncr;
+    std::vector<IndexType> shotIndIncr;   
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr);
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr, sourceSettingsEncode);
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
     } else {
-        sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr);
+        sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr, sourceSettingsEncode);
     }
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     std::vector<scai::IndexType> uniqueShotNos;
+    std::vector<scai::IndexType> uniqueShotNosEncode;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
-    IndexType numshots = uniqueShotNos.size();
+    Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
+    IndexType numshots = 0;
+    if (useSourceEncode == 0) {
+        numshots = uniqueShotNos.size();
+    } else {
+        numshots = uniqueShotNosEncode.size();
+    }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
     sources.writeShotIndIncr(config, shotIndIncr, uniqueShotNos);
+    sources.writeSourceEncode(config, sourceSettingsEncode, uniqueShotNosEncode, uniqueShotNos);
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();
@@ -355,25 +365,27 @@ int main(int argc, const char *argv[])
             } else {
                 shotIndTrue = uniqueShotInds[shotInd];
             }
-            shotNumber = uniqueShotNos[shotIndTrue];
-            
-            if (useStreamConfig) {
-                HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
-                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndTrue));
-                modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
-                modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
-                solver->prepareForModelling(*modelPerShot, DT);
-            }       
             
             /* Update Source */
             std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;
-            Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
-
+            if (useSourceEncode == 0) {
+                shotNumber = uniqueShotNos[shotIndTrue];
+                Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettings, shotNumber);
+            } else {
+                shotNumber = uniqueShotNosEncode[shotIndTrue];
+                Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettingsEncode, shotNumber);
+            }                    
             sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
 
             if (!useStreamConfig) {
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
             } else {
+                HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
+                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndTrue));
+                modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
+                modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
+                solver->prepareForModelling(*modelPerShot, DT);
+                
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
             }
 
@@ -393,6 +405,8 @@ int main(int argc, const char *argv[])
 
             if (config.get<IndexType>("useReceiversPerShot") != 0) {
                 receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+                if (useSourceEncode != 0) 
+                    receivers.writeReceiverMark(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
             }
 
             if (randInd == 1 && decomposition != 0) {
