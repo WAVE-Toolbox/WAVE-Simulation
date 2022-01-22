@@ -328,13 +328,13 @@ void KITGPI::Acquisition::Receivers<ValueType>::acqMat2settings(scai::lama::Dens
     }
 }
 
-/*! \brief Decode the supershot to individual shots
+/*! \brief Decode the supershot to individual shots (encodeType = 0) or encode individual shots to the supershot (encodeType = 1)
  *
  \param config Configuration
  \param numshots numshots is the number of shots not encoded
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode)
+void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType)
 {
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     if (useSourceEncode != 0) {
@@ -375,7 +375,6 @@ void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configurat
             }
         }  
         IndexType numrecTypes = receiverTypes.size();   
-        scai::lama::DenseMatrix<ValueType> data;
         scai::lama::DenseMatrix<ValueType> dataSingle;
         scai::lama::DenseVector<ValueType> tempRow;
         IndexType numrecSingle;
@@ -385,33 +384,56 @@ void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configurat
         
         scai::IndexType numshotsIncr = shotIndIncr.size();
         scai::lama::SparseVector<ValueType> receiverMarkRow(numrecs+1, 0);
-        for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-            if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
-                receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
-                sourceNo = receiverMarkRow[0];
-                receiverMarkRow[0] = 0;
-                numrecSingle = receiverMarkRow.sum();
-                for (scai::IndexType i = 0; i < numrecTypes; i++) {
-                    data = this->getSeismogramHandler().getSeismogram(static_cast<SeismogramType>(receiverTypes[i]-1)).getData();
-                    dataSingle.allocate(numrecSingle, data.getNumColumns());
+        for (scai::IndexType i = 0; i < numrecTypes; i++) {
+            scai::lama::DenseMatrix<ValueType> &data = this->getSeismogramHandler().getSeismogram(static_cast<SeismogramType>(receiverTypes[i]-1)).getData();
+            for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
+                    receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
+                    sourceNo = receiverMarkRow[0];
+                    receiverMarkRow[0] = 0;
+                    numrecSingle = receiverMarkRow.sum();
                     count = 0;
                     countEncode = 0;
-                    for (scai::IndexType irec = 0; irec < numrecs; irec++) {
-                        if (receiverMarkVector[irec+1] != 0 && receiverSettings[irec].getType() == receiverTypes[i]) {
-                            if (receiverMarkRow[irec+1] != 0) {
-                                data.getRow(tempRow, countEncode); 
-                                dataSingle.setRow(tempRow, count, scai::common::BinaryOp::COPY);
-                                count++;
+                    dataSingle.allocate(numrecSingle, data.getNumColumns());
+                    if (encodeType == 1) {
+                        if (this->getSeismogramHandler().getIsSeismic())
+                            filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                        else
+                            filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
+                        
+                        IO::readMatrix(dataSingle, filenameTmp, seismoFormat);                        
+                        if (sourceSettingsEncode[shotInd].sourceNo < 0)
+                            dataSingle *= -1;
+                        for (scai::IndexType irec = 0; irec < numrecs; irec++) {
+                            if (receiverMarkVector[irec+1] != 0 && receiverSettings[irec].getType() == receiverTypes[i]) {
+                                if (receiverMarkRow[irec+1] != 0) {
+                                    dataSingle.getRow(tempRow, count); 
+                                    data.setRow(tempRow, countEncode, scai::common::BinaryOp::ADD);
+                                    count++;
+                                }
+                                countEncode++;
                             }
-                            countEncode++;
-                        }
-                    }  
-                    if (this->getSeismogramHandler().getIsSeismic())
-                        filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
-                    else
-                        filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
-                    
-                    IO::writeMatrix(dataSingle, filenameTmp, seismoFormat);
+                        }  
+                    } else {
+                        for (scai::IndexType irec = 0; irec < numrecs; irec++) {
+                            if (receiverMarkVector[irec+1] != 0 && receiverSettings[irec].getType() == receiverTypes[i]) {
+                                if (receiverMarkRow[irec+1] != 0) {
+                                    data.getRow(tempRow, countEncode); 
+                                    dataSingle.setRow(tempRow, count, scai::common::BinaryOp::COPY);
+                                    count++;
+                                }
+                                countEncode++;
+                            }
+                        }  
+                        if (sourceSettingsEncode[shotInd].sourceNo < 0)
+                            dataSingle *= -1;
+                        if (this->getSeismogramHandler().getIsSeismic())
+                            filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                        else
+                            filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
+                        
+                        IO::writeMatrix(dataSingle, filenameTmp, seismoFormat);
+                    }
                 }
             }
         }            

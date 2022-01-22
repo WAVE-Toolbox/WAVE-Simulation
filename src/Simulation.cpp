@@ -250,7 +250,7 @@ int main(int argc, const char *argv[])
     std::vector<IndexType> uniqueShotNos;
     std::vector<IndexType> uniqueShotNosEncode;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
-    IndexType numshots = 0;
+    IndexType numshots = 1;
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
@@ -417,9 +417,9 @@ int main(int argc, const char *argv[])
             } else {
                 HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
             }
-            wavefields->resetWavefields();
-
+            
             start_t = common::Walltime::get();
+            wavefields->resetWavefields();
 
             double start_t2 = 0.0, end_t2 = 0.0;
 
@@ -519,7 +519,7 @@ int main(int argc, const char *argv[])
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
             } else {
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-                receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode);
+                receivers.encode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode, 0);
             }                
         }
                    
