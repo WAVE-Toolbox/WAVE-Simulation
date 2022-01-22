@@ -35,12 +35,14 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
 
     /* Generate Signals */
     std::vector<scai::IndexType> readrows;
+    std::vector<scai::IndexType> sourceNos;
     for (unsigned long i = 0; i < allSettings.size(); i++) {
         readrows.push_back(allSettings[i].row);
+        sourceNos.push_back(allSettings[i].sourceNo);
     }
 
     generateSignals(config, ctx, readrows);
-    copySignalsToSeismogramHandler();
+    copySignalsToSeismogramHandler(sourceNos);
 }
 
 /*! \brief Init with a signal matrix
@@ -80,7 +82,8 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     signals.setDT(DT);
     signalMatrix.redistribute(signals.getData().getRowDistributionPtr(), signals.getData().getColDistributionPtr());
     signals.getData() = signalMatrix;
-    copySignalsToSeismogramHandler();
+    std::vector<scai::IndexType> sourceNos(signals.getData().getNumRows(), 1);
+    copySignalsToSeismogramHandler(sourceNos);
 }
 
 /*! \brief Generation of the source signal for a single shot
@@ -343,9 +346,10 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(s
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
+void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler(std::vector<scai::IndexType> sourceNos)
 {
     IndexType tempIndexType;
+    IndexType signNo;
     lama::DenseVector<ValueType> temp;
     SeismogramHandler<ValueType> &seismograms = this->getSeismogramHandler();
     IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
@@ -355,6 +359,8 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler()
         tempIndexType = this->getSeismogramTypes().getValue(i) - 1;
 
         signals.getData().getRow(temp, i);
+        signNo = (sourceNos[i] > 0) ? 1 : -1;   
+        temp *= signNo;
 
         seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
 
@@ -390,7 +396,28 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::setsourcesignal(lama::DenseMatrix<ValueType> setsourcesignal)
 {
     signals.getData() = setsourcesignal;
-    copySignalsToSeismogramHandler();
+    std::vector<scai::IndexType> sourceNos(signals.getData().getNumRows(), 1);
+    copySignalsToSeismogramHandler(sourceNos);
+}
+
+/*! \brief get sourceSettingsEncode
+ *
+ */
+template <typename ValueType>
+std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> KITGPI::Acquisition::Sources<ValueType>::getSourceSettingsEncode()
+{
+    SCAI_ASSERT_ERROR(sourceSettingsEncode.size() > 0, "sourceSettingsEncode.size() = 0"); // check whether sourceSettingsEncode has been applied successfully.
+    return (sourceSettingsEncode);
+}
+
+/*! \brief get source signal
+ *
+ */
+template <typename ValueType>
+std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getShotIndIncr()
+{
+    SCAI_ASSERT_ERROR(shotIndIncr.size() > 0, "shotIndIncr.size() = 0"); // check whether shotIndIncr has been applied successfully.
+    return (shotIndIncr);
 }
 
 /*! \brief Allocation of the source signals matrix
@@ -424,7 +451,7 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  \param shotIncr shot increments in meters
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr, std::vector<sourceSettings<ValueType>> &sourceSettingsEncode)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, ValueType shotIncr)
 {
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
     if (config.get<bool>("initSourcesFromSU"))
@@ -479,16 +506,24 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
         sourceSettingsEncode = allSettings;
         scai::IndexType numshotsIncr = shotIndIncr.size();
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
-        if (useSourceEncode == 1) {
-            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd * numShotDomains / numshotsIncr;
-            }
-        } else if (useSourceEncode == 2) {
+        if (useSourceEncode == 1) { // randomly
             std::srand((int)time(0));
-            scai::IndexType randomShotInd;                
-            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {    
-                randomShotInd = std::rand() % numShotDomains;
-                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + randomShotInd;
+            IndexType signNo;
+            for (IndexType shotInd = 0; shotInd < numShotDomains; shotInd++) {
+                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd % numShotDomains;
+                signNo = std::rand() % 2;
+                signNo = (signNo > 0) ? 1 : -1;                
+                sourceSettingsEncode[shotInd].sourceNo *= signNo;
+            } // to ensure the sourceNo increase
+            for (IndexType shotInd = numShotDomains; shotInd < numshotsIncr; shotInd++) {  
+                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + std::rand() % numShotDomains;
+                signNo = std::rand() % 2;
+                signNo = (signNo > 0) ? 1 : -1;                
+                sourceSettingsEncode[shotInd].sourceNo *= signNo;
+            }
+        } else if (useSourceEncode == 2) { // sequentially
+            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd % numShotDomains;
             }
         }
     }
@@ -501,7 +536,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
  \param uniqueShotNos shot numbers
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<IndexType> uniqueShotNos)
+void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos)
 {
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
     if (shotIncr > config.get<ValueType>("DH")) {
@@ -533,22 +568,25 @@ void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Co
  \param uniqueShotNos original shot numbers
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, std::vector<IndexType> uniqueShotNosEncode, std::vector<IndexType> uniqueShotNos)
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(Configuration::Configuration const &config, std::string filename)
 {
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     if (useSourceEncode != 0) {
+        std::vector<IndexType> uniqueShotNosEncode;
+        Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
-        IndexType numshots = uniqueShotNos.size(); // the number of all shots
-        SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == uniqueShotNos.size(), "sourceSettingsEncode.size() != uniqueShotNos.size()"); // check whether sourceSettingsEncode has been applied successfully.
-        std::string filename = config.get<std::string>("SourceFilename") + ".encode.txt";
+        IndexType numshotsIncr = shotIndIncr.size(); // the number of all shots
+        SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndIncr.size(), "sourceSettingsEncode.size() != shotIndIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
+        filename += ".encode.txt";
         std::ofstream outputFile; 
         outputFile.open(filename);
-        outputFile << "# Shot number used in source encode (numShotDomains = " << numShotDomains << ", numshots = " << numshots << ")\n"; 
-        outputFile << "# Shot number | shot number (original)\n"; 
+        outputFile << "# Shot indices used in source encode (useSourceEncode = " << useSourceEncode << ", numShotDomains = " << numShotDomains << ", numshots = " << numshotsIncr << ")\n"; 
+        outputFile << "# Shot number | shot index (original)\n"; 
         for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
             outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
-            for (int shotInd = 0; shotInd < numshots; shotInd++) { 
-                outputFile << std::setw(5) << uniqueShotNos[shotInd];
+            for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+                if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
+                    outputFile << std::setw(5) << shotIndIncr[shotInd];
             }
             outputFile << "\n";
         }

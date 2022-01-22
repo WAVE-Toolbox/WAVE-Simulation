@@ -174,7 +174,7 @@ int main(int argc, const char *argv[])
     if (numShotDomains > 1)
         HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot Domains): \n " << memTotal * numShotDomains << " MB  ");
 
-    HOST_PRINT(commAll, "\n\n ===========================================================\n\n")
+    HOST_PRINT(commAll, "\n\n ===========================================================\n")
 
     /* --------------------------------------- */
     /* Call partitioner                        */
@@ -209,7 +209,7 @@ int main(int argc, const char *argv[])
     start_t = common::Walltime::get();
     derivatives->init(dist, ctx, modelCoordinates, commShot);
     end_t = common::Walltime::get();
-    HOST_PRINT(commAll, "\n", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
+    HOST_PRINT(commAll, "", "Finished initializing matrices in " << end_t - start_t << " sec.\n\n");
 
     /* --------------------------------------- */
     /* Wavefields                              */
@@ -236,31 +236,31 @@ int main(int argc, const char *argv[])
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsEncode; 
     std::vector<Acquisition::coordinate3D> cutCoordinates;
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
-    std::vector<IndexType> shotIndIncr;   
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIndIncr, shotIncr, sourceSettingsEncode);
+        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIncr);
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
     } else {
-        sources.getAcquisitionSettings(config, sourceSettings, shotIndIncr, shotIncr, sourceSettingsEncode);
+        sources.getAcquisitionSettings(config, sourceSettings, shotIncr);
     }
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
-    std::vector<scai::IndexType> uniqueShotNos;
-    std::vector<scai::IndexType> uniqueShotNosEncode;
+    std::vector<IndexType> uniqueShotNos;
+    std::vector<IndexType> uniqueShotNosEncode;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
-    Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
     IndexType numshots = 0;
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
+        sourceSettingsEncode = sources.getSourceSettingsEncode();
+        Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         numshots = uniqueShotNosEncode.size();
     }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
-    sources.writeShotIndIncr(config, shotIndIncr, uniqueShotNos);
-    sources.writeSourceEncode(config, sourceSettingsEncode, uniqueShotNosEncode, uniqueShotNos);
+    sources.writeShotIndIncr(config, uniqueShotNos);
+    sources.writeSourceEncode(config, config.get<std::string>("SourceFilename"));
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();
@@ -300,10 +300,6 @@ int main(int argc, const char *argv[])
     }
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
-
-    double end_tInit = common::Walltime::get();
-    double tInit = end_tInit - globalStart_t;
-    HOST_PRINT(commAll, "", "Finished initializing! in " << tInit << " sec.\n\n");
     
     /* --------------------------------------- */
     /* Hilbert handler                         */
@@ -324,7 +320,7 @@ int main(int argc, const char *argv[])
     Wavefields::Wavefields<ValueType>::WavefieldPtr wavefieldsTemp = Wavefields::Factory<ValueType>::Create(dimension, equationType);
     
     /* --------------------------------------- */
-    /* Loop over shots                         */
+    /* Preparation                             */
     /* --------------------------------------- */
     if (!useStreamConfig) {            
         model->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
@@ -332,12 +328,12 @@ int main(int argc, const char *argv[])
     }
     
     IndexType maxcount = 1;    
-    std::vector<scai::IndexType> shotHistory(numshots, 0);
-    std::vector<scai::IndexType> uniqueShotInds; 
+    std::vector<IndexType> shotHistory(numshots, 0);
+    std::vector<IndexType> uniqueShotInds; 
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
     if (config.getAndCatch("useRandomSource", 0) != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
-        std::vector<scai::IndexType> tempShotInds(numShotDomains, 0); 
+        std::vector<IndexType> tempShotInds(numShotDomains, 0); 
         uniqueShotInds = tempShotInds;
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
@@ -349,6 +345,13 @@ int main(int argc, const char *argv[])
     if (decomposition != 0) {
         numRand = 2;
     }
+    
+    double tInit = common::Walltime::get();
+    HOST_PRINT(commAll, "\nFinished all initialization in " << tInit - globalStart_t << " sec.\n");
+        
+    /* --------------------------------------- */
+    /* Loop over shots                         */
+    /* --------------------------------------- */
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
         if (config.getAndCatch("useRandomSource", 0) != 0) {  
             start_t = common::Walltime::get();
@@ -404,7 +407,7 @@ int main(int argc, const char *argv[])
             }
 
             if (config.get<IndexType>("useReceiversPerShot") != 0) {
-                receivers.init(config, modelCoordinates, ctx, dist, shotNumber);
+                receivers.init(config, modelCoordinates, ctx, dist, shotNumber, sourceSettingsEncode);
                 if (useSourceEncode != 0) 
                     receivers.writeReceiverMark(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
             }
@@ -516,6 +519,7 @@ int main(int argc, const char *argv[])
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
             } else {
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
+                receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode);
             }                
         }
                    

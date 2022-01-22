@@ -41,11 +41,13 @@ namespace KITGPI
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType> rowinds);
 
-            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, std::vector<IndexType> &shotIndIncr, ValueType shotIncr, std::vector<sourceSettings<ValueType>> &sourceSettingsEncode);
-            void writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> shotIndIncr, std::vector<scai::IndexType> uniqueShotNos);
-            void writeSourceEncode(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, std::vector<IndexType> uniqueShotNosEncode, std::vector<IndexType> uniqueShotNos);
+            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, ValueType shotIncr);
+            void writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
+            void writeSourceEncode(Configuration::Configuration const &config, std::string filename);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
+            std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettingsEncode();
+            std::vector<IndexType> getShotIndIncr();
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
@@ -62,6 +64,9 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> wavelet_amp;         //!< Amplitude of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_tshift;      //!< Time shift of synthetic wavelet
 
+            std::vector<sourceSettings<ValueType>> sourceSettingsEncode;
+            std::vector<IndexType> shotIndIncr;   
+    
             bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
             bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used
 
@@ -70,7 +75,7 @@ namespace KITGPI
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
             void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<sourceSettings<ValueType>> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);
 
-            void copySignalsToSeismogramHandler();
+            void copySignalsToSeismogramHandler(std::vector<scai::IndexType> sourceNos);
 
             void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
             void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);

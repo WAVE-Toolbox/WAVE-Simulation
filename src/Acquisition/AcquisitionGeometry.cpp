@@ -85,9 +85,7 @@ IndexType KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getNumParameter()
     return numParameter;
 }
 
-
-/*! \brief Get reference to the #SeismogramHandler
- *
+/*! \brief Get reference to the SeismogramHandler
  *
  */
 template <typename ValueType>
@@ -96,6 +94,9 @@ KITGPI::Acquisition::SeismogramHandler<ValueType> const &KITGPI::Acquisition::Ac
     return (seismograms);
 }
 
+/*! \brief Get reference to the SeismogramHandler
+ *
+ */
 template <typename ValueType>
 KITGPI::Acquisition::SeismogramHandler<ValueType> &KITGPI::Acquisition::AcquisitionGeometry<ValueType>::getSeismogramHandler()
 {

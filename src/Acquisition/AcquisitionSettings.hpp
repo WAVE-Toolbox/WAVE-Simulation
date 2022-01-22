@@ -170,7 +170,7 @@ namespace KITGPI
             uniqueShotNo.clear();
             uniqueShotNo.push_back(std::abs(sourceSettings[0].sourceNo));
             for (unsigned i = 0; i < sourceSettings.size(); i++) {
-                if (std::find(uniqueShotNo.begin(), uniqueShotNo.end(), sourceSettings[i].sourceNo) != uniqueShotNo.end()) {
+                if (std::find(uniqueShotNo.begin(), uniqueShotNo.end(), std::abs(sourceSettings[i].sourceNo)) != uniqueShotNo.end()) {
                     // shotNo already included
                 } else { // only the positive shotnr can be used
                     uniqueShotNo.push_back(std::abs(sourceSettings[i].sourceNo));
@@ -441,9 +441,9 @@ namespace KITGPI
                 std::string randomSourceFilename = logFilename.substr(0, logFilename.length()-4) + ".randomSource" + logFilename.substr(logFilename.length()-4, 4);
                 if (stage == 1 && iteration == 1) {
                     outputFile.open(randomSourceFilename);
-                    outputFile << "# ShotNumber records during inversion\n"; 
+                    outputFile << "# Shot index records during inversion\n"; 
                     outputFile << "# random source type = " << useRandomSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
-                    outputFile << "# Stage | Iteration | shotNumbers\n"; 
+                    outputFile << "# Stage | Iteration | shot index\n"; 
                 } else {                    
                     outputFile.open(randomSourceFilename, std::ios_base::app);
                     outputFile << std::scientific;
