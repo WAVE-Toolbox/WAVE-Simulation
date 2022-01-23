@@ -75,7 +75,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         Acquisition::Sources<ValueType> sources;
         ValueType shotIncr = 0; 
         std::vector<IndexType> shotIndIncr;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIncr);// to get cutCoordinates
+        sources.getAcquisitionSettings(configBig, shotIncr);// to get cutCoordinates
+        sourceSettingsBig = sources.getSourceSettings();
         std::vector<Acquisition::coordinate3D> cutCoordinates;
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates, shotIndTrue);
@@ -106,12 +107,14 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
         Acquisition::Sources<ValueType> sources;
         ValueType shotIncr = 0; 
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIncr); // to get numshots
+        sources.getAcquisitionSettings(configBig, shotIncr); // to get numshots
+        sourceSettingsBig = sources.getSourceSettings();
         std::vector<scai::IndexType> uniqueShotNos;
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         IndexType numshots = uniqueShotNos.size();
         shotIncr = config.getAndCatch("shotIncr", 0.0);
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIncr); // to get shotIndIncr
+        sources.getAcquisitionSettings(configBig, shotIncr); // to get shotIndIncr
+        sourceSettingsBig = sources.getSourceSettings();
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         
         Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
@@ -135,12 +138,13 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
             std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;  
             Acquisition::Sources<ValueType> sources;
             ValueType shotIncr = 0; 
-            sources.getAcquisitionSettings(config, sourceSettings, shotIncr); // to get numshots
+            sources.getAcquisitionSettings(config, shotIncr); // to get numshots
+            sourceSettings = sources.getSourceSettings();
             std::vector<scai::IndexType> uniqueShotNos;
             Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
             IndexType numshots = uniqueShotNos.size();
             shotIncr = config.getAndCatch("shotIncr", 0.0);
-            sources.getAcquisitionSettings(config, sourceSettings, shotIncr); // to get shotIndIncr
+            sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
             std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
             getAcquisitionSettings(config, allSettings, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
         }
@@ -342,12 +346,13 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;  
         Acquisition::Sources<ValueType> sources;
         ValueType shotIncr = 0; 
-        sources.getAcquisitionSettings(config, sourceSettings, shotIncr); // to get numshots
+        sources.getAcquisitionSettings(config, shotIncr); // to get numshots
+        sourceSettings = sources.getSourceSettings();
         std::vector<scai::IndexType> uniqueShotNos;
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
         IndexType numshots = uniqueShotNos.size();
         shotIncr = config.getAndCatch("shotIncr", 0.0);
-        sources.getAcquisitionSettings(config, sourceSettings, shotIncr); // to get shotIndIncr
+        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
         std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
         
         std::vector<receiverSettings> receiverSettings;

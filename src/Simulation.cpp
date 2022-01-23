@@ -238,11 +238,13 @@ int main(int argc, const char *argv[])
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
-        sources.getAcquisitionSettings(configBig, sourceSettingsBig, shotIncr);
+        sources.getAcquisitionSettings(configBig, shotIncr);
+        sourceSettingsBig = sources.getSourceSettings(); 
         Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
     } else {
-        sources.getAcquisitionSettings(config, sourceSettings, shotIncr);
+        sources.getAcquisitionSettings(config, shotIncr);
+        sourceSettings = sources.getSourceSettings(); 
     }
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
@@ -254,6 +256,7 @@ int main(int argc, const char *argv[])
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
+        sources.calcSourceSettingsEncode(commAll, config);
         sourceSettingsEncode = sources.getSourceSettingsEncode();
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         numshots = uniqueShotNosEncode.size();
@@ -329,17 +332,11 @@ int main(int argc, const char *argv[])
     
     IndexType maxcount = 1;    
     std::vector<IndexType> shotHistory(numshots, 0);
-    std::vector<IndexType> uniqueShotInds; 
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
     if (config.getAndCatch("useRandomSource", 0) != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
-        std::vector<IndexType> tempShotInds(numShotDomains, 0); 
-        uniqueShotInds = tempShotInds;
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
-        for (IndexType i = 0; i < numshots; i++) {
-            uniqueShotInds.push_back(i);
-        }
     }
     IndexType numRand = numshots / numShotDomains;  
     if (decomposition != 0) {
@@ -353,21 +350,13 @@ int main(int argc, const char *argv[])
     /* Loop over shots                         */
     /* --------------------------------------- */
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
-        if (config.getAndCatch("useRandomSource", 0) != 0) {  
-            start_t = common::Walltime::get();
-            Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshots, maxcount, config.getAndCatch("useRandomSource", 0));
-            end_t = common::Walltime::get();
-            HOST_PRINT(commAll, "Finished initializing a random shot sequence: " << randInd + 1 << " of " << numRand << " (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
-        }
+        sources.calcUniqueShotInds(commAll, config, shotHistory, maxcount);
+        std::vector<IndexType> uniqueShotInds = sources.getUniqueShotInds();
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
         for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
             SCAI_REGION("WAVE-Simulation.shotLoop")
-            if (config.getAndCatch("useRandomSource", 0) == 0) {  
-                shotIndTrue = shotInd;
-            } else {
-                shotIndTrue = uniqueShotInds[shotInd];
-            }
+            shotIndTrue = uniqueShotInds[shotInd];
             
             /* Update Source */
             std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsShot;

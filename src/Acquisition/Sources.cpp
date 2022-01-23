@@ -400,6 +400,16 @@ void KITGPI::Acquisition::Sources<ValueType>::setsourcesignal(lama::DenseMatrix<
     copySignalsToSeismogramHandler(sourceNos);
 }
 
+/*! \brief get sourceSettings
+ *
+ */
+template <typename ValueType>
+std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> KITGPI::Acquisition::Sources<ValueType>::getSourceSettings()
+{
+    SCAI_ASSERT_ERROR(sourceSettingsShotIncr.size() > 0, "sourceSettingsShotIncr.size() = 0"); // check whether sourceSettings has been applied successfully.
+    return (sourceSettingsShotIncr);
+}
+
 /*! \brief get sourceSettingsEncode
  *
  */
@@ -410,7 +420,7 @@ std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> KITGPI::Acquisition:
     return (sourceSettingsEncode);
 }
 
-/*! \brief get source signal
+/*! \brief get shotIndIncr
  *
  */
 template <typename ValueType>
@@ -418,6 +428,16 @@ std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getShotIndIncr()
 {
     SCAI_ASSERT_ERROR(shotIndIncr.size() > 0, "shotIndIncr.size() = 0"); // check whether shotIndIncr has been applied successfully.
     return (shotIndIncr);
+}
+
+/*! \brief get uniqueShotInds
+ *
+ */
+template <typename ValueType>
+std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getUniqueShotInds()
+{
+    SCAI_ASSERT_ERROR(uniqueShotInds.size() > 0, "uniqueShotInds.size() = 0"); // check whether uniqueShotInds has been applied successfully.
+    return (uniqueShotInds);
 }
 
 /*! \brief Allocation of the source signals matrix
@@ -451,60 +471,74 @@ void KITGPI::Acquisition::Sources<ValueType>::allocateSeismogram(IndexType NT, s
  \param shotIncr shot increments in meters
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, ValueType shotIncr)
+void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, ValueType shotIncr)
 {
-    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
+    std::vector<Acquisition::sourceSettings<ValueType>> allSettings; 
     if (config.get<bool>("initSourcesFromSU"))
-        su.readAllSettingsFromSU(sourceSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
+        su.readAllSettingsFromSU(allSettings, config.get<std::string>("SourceFilename"), config.get<ValueType>("DH"));
     else
-        readAllSettings(sourceSettings, config.get<std::string>("SourceFilename") + ".txt");
-    IndexType numshots = sourceSettings.size();
+        readAllSettings(allSettings, config.get<std::string>("SourceFilename") + ".txt");
+    IndexType numshots = allSettings.size();
     shotIndIncr.clear();
     if (numshots > 1 && shotIncr > config.get<ValueType>("DH")) {
         std::vector<IndexType> sourceLength; 
-        if (abs(sourceSettings[0].sourceCoords.x-sourceSettings[1].sourceCoords.x) > abs(sourceSettings[0].sourceCoords.y-sourceSettings[1].sourceCoords.y)) {
+        if (abs(allSettings[0].sourceCoords.x-allSettings[1].sourceCoords.x) > abs(allSettings[0].sourceCoords.y-allSettings[1].sourceCoords.y)) {
             for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
-                sourceLength.push_back(sourceSettings[shotInd].sourceCoords.x);
+                sourceLength.push_back(allSettings[shotInd].sourceCoords.x);
             }
-        } else if (abs(sourceSettings[0].sourceCoords.x-sourceSettings[1].sourceCoords.x) < abs(sourceSettings[0].sourceCoords.y-sourceSettings[1].sourceCoords.y)) {
+        } else if (abs(allSettings[0].sourceCoords.x-allSettings[1].sourceCoords.x) < abs(allSettings[0].sourceCoords.y-allSettings[1].sourceCoords.y)) {
             for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
-                sourceLength.push_back(sourceSettings[shotInd].sourceCoords.y);
+                sourceLength.push_back(allSettings[shotInd].sourceCoords.y);
             }
         }
         IndexType numshotsIncr = 0;
         IndexType shotIncrInd = sourceLength[0];
-        allSettings.clear();
-        allSettings.push_back(sourceSettings[0]);
+        sourceSettingsShotIncr.clear();
+        sourceSettingsShotIncr.push_back(allSettings[0]);
         shotIndIncr.push_back(0);
         IndexType shotIncrStep = floor(shotIncr / config.get<ValueType>("DH"));
         for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
             if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
                 if (shotIndIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
-                    allSettings.push_back(sourceSettings[shotInd]);
+                    sourceSettingsShotIncr.push_back(allSettings[shotInd]);
                     shotIndIncr.push_back(shotInd);
                     numshotsIncr++; // to avoid repeat
                 } else if (shotIndIncr[numshotsIncr] != shotInd+1 && abs(shotIncrInd - sourceLength[shotInd]) >= abs(shotIncrInd - sourceLength[shotInd+1])) {
-                    allSettings.push_back(sourceSettings[shotInd+1]);
+                    sourceSettingsShotIncr.push_back(allSettings[shotInd+1]);
                     shotIndIncr.push_back(shotInd+1);
                     numshotsIncr++; // to avoid repeat
                 }
                 shotIncrInd += shotIncrStep;
                 shotInd--; // to avoid that some locations are skipped
             } else if (shotIndIncr[numshotsIncr] != shotInd+1 && shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
-                allSettings.push_back(sourceSettings[shotInd+1]);
+                sourceSettingsShotIncr.push_back(allSettings[shotInd+1]);
                 shotIndIncr.push_back(shotInd+1);
             }
         } 
     } else {
-        allSettings = sourceSettings;
+        sourceSettingsShotIncr = allSettings;
         for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
             shotIndIncr.push_back(shotInd);
         }
     }
+}
+
+/*! \brief Gets the Acquisition Matrix of the encoded source
+ *
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
+ *
+ \param config Configuration
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config)
+{    
+    IndexType numshotsIncr = shotIndIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
+    SCAI_ASSERT_ERROR(useSourceEncode != 0 && useRandomSource != 0, "useSourceEncode and useRandomSource are not compatible!");
     if (useSourceEncode != 0) {
-        sourceSettingsEncode = allSettings;
-        scai::IndexType numshotsIncr = shotIndIncr.size();
+        double start_t = common::Walltime::get();
+        sourceSettingsEncode = sourceSettingsShotIncr;
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
         if (useSourceEncode == 1) { // randomly
             std::srand((int)time(0));
@@ -525,6 +559,37 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                 sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd % numShotDomains;
             }
+        }
+        double end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "Finished initializing a encoded shot sequence (numShotDomains: " << numShotDomains << ") in " << end_t - start_t << " sec.\n");
+    }
+}
+
+/*! \brief Gets the shot indices
+ *
+ * Uses configuration to determine if sources are initialized by txt or SU and then get the Acquisition Matrix
+ *
+ \param config Configuration
+ \param allSettings sourceSettings
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount)
+{    
+    IndexType numshotsIncr = shotIndIncr.size();
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
+    SCAI_ASSERT_ERROR(useSourceEncode != 0 && useRandomSource != 0, "useSourceEncode and useRandomSource are not compatible!");
+    if (useRandomSource != 0) {
+        double start_t = common::Walltime::get();
+        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
+        std::vector<IndexType> tempShotInds(numShotDomains, 0); 
+        uniqueShotInds = tempShotInds;
+        Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshotsIncr, maxcount, useRandomSource);        
+        double end_t = common::Walltime::get();
+        HOST_PRINT(commAll, "Finished initializing a random shot sequence (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
+    } else {
+        for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+            uniqueShotInds.push_back(shotInd);
         }
     }
 }

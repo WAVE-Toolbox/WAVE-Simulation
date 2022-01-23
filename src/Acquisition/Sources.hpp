@@ -3,6 +3,7 @@
 #include <scai/dmemo.hpp>
 #include <scai/lama.hpp>
 #include <vector>
+#include <scai/common/Walltime.hpp>
 
 #include "AcquisitionGeometry.hpp"
 #include "AcquisitionSettings.hpp"
@@ -41,13 +42,17 @@ namespace KITGPI
 
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType> rowinds);
 
-            void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<sourceSettings<ValueType>> &allSettings, ValueType shotIncr);
+            void getAcquisitionSettings(Configuration::Configuration const &config, ValueType shotIncr);
+            void calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config);
+            void calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount);
             void writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
             void writeSourceEncode(Configuration::Configuration const &config, std::string filename);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
+            std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettings();
             std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettingsEncode();
             std::vector<IndexType> getShotIndIncr();
+            std::vector<IndexType> getUniqueShotInds();
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
@@ -64,8 +69,10 @@ namespace KITGPI
             scai::lama::DenseVector<ValueType> wavelet_amp;         //!< Amplitude of synthetic wavelet
             scai::lama::DenseVector<ValueType> wavelet_tshift;      //!< Time shift of synthetic wavelet
 
-            std::vector<sourceSettings<ValueType>> sourceSettingsEncode;
-            std::vector<IndexType> shotIndIncr;   
+            std::vector<sourceSettings<ValueType>> sourceSettingsShotIncr; // sourceSettings of selected shots
+            std::vector<sourceSettings<ValueType>> sourceSettingsEncode; // sourceSettings of the encoded shots
+            std::vector<IndexType> shotIndIncr;   // shot indices selected by shot increment
+            std::vector<IndexType> uniqueShotInds;  // shot indices of random shots
     
             bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
             bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used
