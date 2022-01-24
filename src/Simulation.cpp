@@ -259,7 +259,7 @@ int main(int argc, const char *argv[])
         sources.calcSourceSettingsEncode(commAll, config);
         sourceSettingsEncode = sources.getSourceSettingsEncode();
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
-        numshots = uniqueShotNosEncode.size();
+        numshots = numShotDomains;
     }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
     sources.writeShotIndIncr(config, uniqueShotNos);
@@ -397,8 +397,6 @@ int main(int argc, const char *argv[])
 
             if (config.get<IndexType>("useReceiversPerShot") != 0) {
                 receivers.init(config, modelCoordinates, ctx, dist, shotNumber, sourceSettingsEncode);
-                if (useSourceEncode != 0) 
-                    receivers.writeReceiverMark(config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
             }
 
             if (randInd == 1 && decomposition != 0) {
@@ -508,7 +506,8 @@ int main(int argc, const char *argv[])
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
             } else {
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-                receivers.encode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode, 0);
+                receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode);
+                receivers.writeReceiverMark(useSourceEncode, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
             }                
         }
                    

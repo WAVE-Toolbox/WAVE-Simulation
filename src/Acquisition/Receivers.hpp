@@ -46,8 +46,9 @@ namespace KITGPI
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings);
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber);
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr, std::vector<sourceSettings<ValueType>> sourceSettingsEncode);
-            void writeReceiverMark(std::string filename);
-            void encode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType);
+            void writeReceiverMark(scai::IndexType useSourceEncode, std::string filename);
+            void encode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType = 1);
+            void decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode);
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
