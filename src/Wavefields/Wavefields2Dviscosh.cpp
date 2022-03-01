@@ -368,7 +368,7 @@ void KITGPI::Wavefields::FD2Dviscosh<ValueType>::timesAssign(scai::lama::DenseVe
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscosh<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD2Dviscosh<ValueType>::applyTransform(scai::lama::Matrix<ValueType> const &lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VZ = lhs * rhs.getRefVZ();
     Sxz = lhs * rhs.getRefSxz();

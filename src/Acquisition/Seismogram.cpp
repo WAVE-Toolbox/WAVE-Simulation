@@ -25,8 +25,8 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     frequencyAGC = rhs.frequencyAGC;
     inverseAGC = rhs.inverseAGC;
     isSeismic = rhs.isSeismic;
-    offset = rhs.offset;
-    refTrace = rhs.refTrace;
+    offsets = rhs.offsets;
+    refTraces = rhs.refTraces;
     filenameBase = rhs.filenameBase;
 }
 //! \brief swap function
@@ -51,8 +51,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     data.swap(rhs.data);
     resampleMat.swap(rhs.resampleMat);
     inverseAGC.swap(rhs.inverseAGC);
-    offset.swap(rhs.offset);
-    refTrace.swap(rhs.refTrace);
+    offsets.swap(rhs.offsets);
+    refTraces.swap(rhs.refTraces);
 }
 
 //! \brief Setter method for the context ptr
@@ -98,8 +98,8 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
             seismoFormat = 1;
             dataResample = inverseAGC * resampleMat;
             filenameTmp += ".inverseAGC";
-        } else if (refTrace.maxNorm() != 0) {
-            IO::writeVector(refTrace, filenameTmp + ".refTrace", seismoFormat);
+        } else if (refTraces.maxNorm() != 0) {
+            IO::writeMatrix(refTraces, filenameTmp + ".refTraces", seismoFormat);
         }
         
         switch (seismoFormat) {
@@ -611,40 +611,42 @@ bool KITGPI::Acquisition::Seismogram<ValueType>::getIsSeismic() const
     return isSeismic;
 }
 
-//! \brief Setter method to set offset
+//! \brief Setter method to set offsets
 /*!
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setOffset(scai::lama::DenseVector<ValueType> setOffset)
+void KITGPI::Acquisition::Seismogram<ValueType>::setOffsets(std::vector<scai::lama::DenseVector<ValueType>> setOffsets)
 {
-    offset = setOffset;
+    offsets = setOffsets;
 }
 
 //! \brief Getter method to get offset
 /*!
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getOffset() const
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getOffset(int shotInd) const
 {
-    return offset;
+    SCAI_ASSERT_ERROR(offsets.size() != 0, "offsets is empty!")
+    return offsets[shotInd];
 }
 
-//! \brief Setter method to set offset
+//! \brief Getter method to get refTraces
 /*!
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setRefTrace(scai::lama::DenseVector<ValueType> setRefTrace)
+scai::lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getRefTraces()
 {
-    refTrace = setRefTrace;
+    return refTraces;
 }
 
-//! \brief Getter method to get offset
+//! \brief Getter method to get refTraces
 /*!
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Seismogram<ValueType>::getRefTrace() const
+scai::lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getRefTraces() const
 {
-    return refTrace;
+    SCAI_ASSERT_ERROR(refTraces.getNumRows() != 0, "refTraces is empty!")
+    return refTraces;
 }
 
 //! \brief Getter method to get filenameBase which must be assigned when calling write()
@@ -731,6 +733,54 @@ lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::
 {
     // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (data);
+}
+
+//! \brief Getter method for reference to seismogram data
+/*!
+ *
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
+std::vector<scai::lama::DenseMatrix<ValueType>> &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode()
+{
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    return (dataDecode);
+}
+
+//! \brief Getter method for reference to seismogram data
+/*!
+ *
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
+std::vector<scai::lama::DenseMatrix<ValueType>> const &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode() const
+{
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    return (dataDecode);
+}
+
+//! \brief Getter method for const reference to seismogram data
+/*!
+ *
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode(int shotInd) const
+{
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    return (dataDecode[shotInd]);
 }
 
 //! \brief Replicate the seismogram data on all processes

@@ -406,7 +406,7 @@ void KITGPI::Wavefields::FD3Delastic<ValueType>::timesAssign(scai::lama::DenseVe
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD3Delastic<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD3Delastic<ValueType>::applyTransform(scai::lama::Matrix<ValueType> const &lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX = lhs * rhs.getRefVX();
     VY = lhs * rhs.getRefVY();

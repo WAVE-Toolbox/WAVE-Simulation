@@ -43,6 +43,7 @@ int main(int argc, const char *argv[])
     double start_t, end_t;             /* For timing */
     double globalStart_t, globalEnd_t; /* For timing */
     globalStart_t = common::Walltime::get();
+    IndexType seedtime = (int)time(0)/10;
 
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
@@ -172,7 +173,7 @@ int main(int argc, const char *argv[])
     HOST_PRINT(commAll, " -  Boundary Condition Vectors \t" << memSolver << " MB\n");
     HOST_PRINT(commAll, "\n Memory Usage (total / per partition): \n " << memTotal << " / " << memTotal / dist->getNumPartitions() << " MB ");
     if (numShotDomains > 1)
-        HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot Domains): \n " << memTotal * numShotDomains << " MB  ");
+        HOST_PRINT(commAll, "\n Total Memory Usage (" << numShotDomains << " shot domains): \n " << memTotal * numShotDomains << " MB  ");
 
     HOST_PRINT(commAll, "\n\n ===========================================================\n")
 
@@ -256,14 +257,14 @@ int main(int argc, const char *argv[])
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
-        sources.calcSourceSettingsEncode(commAll, config);
+        sources.calcSourceSettingsEncode(config, seedtime);
         sourceSettingsEncode = sources.getSourceSettingsEncode();
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         numshots = numShotDomains;
     }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
-    sources.writeShotIndIncr(config, uniqueShotNos);
-    sources.writeSourceEncode(config, config.get<std::string>("SourceFilename"));
+    sources.writeShotIndIncr(commAll, config, uniqueShotNos);
+    sources.writeSourceEncode(commAll, config, config.get<std::string>("SourceFilename"));
     IndexType numCuts = 1;
     if (useStreamConfig) {
         numCuts = cutCoordinates.size();
@@ -350,7 +351,7 @@ int main(int argc, const char *argv[])
     /* Loop over shots                         */
     /* --------------------------------------- */
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
-        sources.calcUniqueShotInds(commAll, config, shotHistory, maxcount);
+        sources.calcUniqueShotInds(commAll, config, shotHistory, maxcount, seedtime);
         std::vector<IndexType> uniqueShotInds = sources.getUniqueShotInds();
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
@@ -372,7 +373,7 @@ int main(int argc, const char *argv[])
             if (!useStreamConfig) {
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
             } else {
-                HOST_PRINT(commShot, "Switch to model shot: " << shotIndTrue + 1 << " of " << numshots << "\n");
+                HOST_PRINT(commShot, "Shot number " << shotNumber << " (" << "domain " << commInterShot->getRank() << ", index " << shotIndTrue + 1 << " of " << numshots << "): Switch to model subset\n");
                 model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndTrue));
                 modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
                 modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
@@ -506,7 +507,7 @@ int main(int argc, const char *argv[])
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
             } else {
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
-                receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode);
+                receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode, 1);
                 receivers.writeReceiverMark(useSourceEncode, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
             }                
         }

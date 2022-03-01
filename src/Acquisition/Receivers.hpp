@@ -47,8 +47,8 @@ namespace KITGPI
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber);
             void getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr, std::vector<sourceSettings<ValueType>> sourceSettingsEncode);
             void writeReceiverMark(scai::IndexType useSourceEncode, std::string filename);
-            void encode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType = 1);
-            void decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode);
+            void encode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType = 0);
+            void decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType = 0);
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
@@ -57,6 +57,7 @@ namespace KITGPI
             void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<receiverSettings> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);
             suHandler<ValueType> su;
             scai::lama::SparseVector<ValueType> receiverMarkVector;
+            typedef scai::common::Complex<scai::RealType<ValueType>> ComplexValueType;
         };
     }
 }

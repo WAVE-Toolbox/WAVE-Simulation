@@ -13,7 +13,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Co
     this->setParameterisation(config.getAndCatch("parameterisation", 0));
     this->setEffectiveParameterisation(config.getAndCatch("effectiveParameterisation", 0));
     this->setInversionType(config.getAndCatch("inversionType", 1));
-    this->setGradientType(config.getAndCatch("gradientType", 0));
+    this->setGradientKernel(config.getAndCatch("gradientKernel", 0));
     this->setDecomposition(config.getAndCatch("decomposition", 0));
     calcElectricConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));

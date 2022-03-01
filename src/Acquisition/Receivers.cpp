@@ -260,12 +260,12 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
     std::string filenameTmp = config.get<std::string>("ReceiverFilename") + ".mark";
     scai::lama::CSRSparseMatrix<ValueType> receiverMarkMatrix;
     scai::IndexType numrecs = receiverSettings.size();
-    receiverMarkMatrix.allocate(numshots, numrecs+1);        
+    receiverMarkMatrix.allocate(numshots, numrecs+1);  
     IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
     
     scai::IndexType numshotsIncr = shotIndIncr.size();
-    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
-    if (useSourceEncode == 0) {// normal shots
+    // config is configBig when useStreamConfig != 0, so we introduce sourceSettingsEncode.size() == 0 to ensure that useSourceEncode != 0 defined in configBig does not affect useStreamConfig != 0 defined in stream config.
+    if (sourceSettingsEncode.size() == 0) {// normal shots
         for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
             receiverMarkMatrix.getRow(receiverMarkVector, shotIndIncr[shotInd]);
             if (receiverMarkVector[0] == shotNumber) {
@@ -334,7 +334,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::acqMat2settings(scai::lama::Dens
     }
 }
 
-/*! \brief Decode the supershot to individual shots (encodeType = 0) or encode individual shots to the supershot (encodeType = 1)
+/*! \brief Decode the supershot to individual shots (encodeType = 2 or 3) or encode individual shots to the supershot (encodeType = 0 or 1)
  *
  \param config Configuration
  \param numshots numshots is the number of shots not encoded
@@ -381,24 +381,48 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                 count++;
             }
         }  
-        IndexType numrecTypes = receiverTypes.size();   
-        scai::lama::DenseMatrix<ValueType> dataSingle;
+        IndexType numrecTypes = receiverTypes.size();  
         scai::lama::DenseVector<ValueType> tempRow;
         IndexType seismoFormat = config.get<scai::IndexType>("SeismogramFormat");
         
-        scai::IndexType numshotsIncr = shotIndIncr.size();
-        scai::lama::SparseVector<ValueType> receiverMarkRow(numrecs+1, 0);
+        IndexType numshotsIncr = shotIndIncr.size();
+        scai::lama::SparseVector<ValueType> receiverMarkRow(numrecs+1, 0);        
+        IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
+        Filter::Filter<ValueType> freqFilter;
+        if (gradientDomain != 0) {
+            IndexType tStepEnd = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+            freqFilter.init(config.get<ValueType>("DT"), tStepEnd);
+        }
+        
         for (scai::IndexType i = 0; i < numrecTypes; i++) {
+            scai::lama::DenseMatrix<ValueType> dataSingle;
             scai::lama::DenseMatrix<ValueType> &data = this->getSeismogramHandler().getSeismogram(static_cast<SeismogramType>(receiverTypes[i]-1)).getData();
+            std::vector<scai::lama::DenseMatrix<ValueType>> &dataDecode = this->getSeismogramHandler().getSeismogram(static_cast<SeismogramType>(receiverTypes[i]-1)).getDataDecode();
+            IndexType countDecode = 0;
+            if (encodeType == 0 || encodeType == 1) { // encode 2->1
+                data.scale(0);
+            } else {
+                dataDecode.clear();
+                for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                    if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
+                        scai::lama::DenseMatrix<ValueType> temp;
+                        dataDecode.push_back(temp);
+                    }
+                }
+            }
             if (numshots == numrecs) { // common offset data
                 dataSingle.allocate(numrecs, data.getNumColumns());
-                if (encodeType == 1) { // decode 1->2, similar with encode in multi offset data
-                    if (this->getSeismogramHandler().getIsSeismic())
-                        filenameTmp = filename + ".shot_" + std::to_string(shotNumber) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
-                    else
-                        filenameTmp = filename + ".shot_" + std::to_string(shotNumber)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
-                    
-                    IO::readMatrix(dataSingle, filenameTmp, seismoFormat);   
+                if (encodeType == 0 || encodeType == 1) { // decode 1->2, similar with encode in multi offset data
+                    if (encodeType == 1) {
+                        if (this->getSeismogramHandler().getIsSeismic())
+                            filenameTmp = filename + ".shot_" + std::to_string(shotNumber) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                        else
+                            filenameTmp = filename + ".shot_" + std::to_string(shotNumber)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
+                        
+                        IO::readMatrix(dataSingle, filenameTmp, seismoFormat);   
+                    } else {
+                        dataSingle = dataDecode[0];
+                    }
                     for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                         if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber && receiverMarkVector[shotIndIncr[shotInd]+1] != 0 && receiverSettings[shotIndIncr[shotInd]].getType() == receiverTypes[i]) {
                             receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
@@ -406,10 +430,14 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                                 dataSingle.getRow(tempRow, shotIndIncr[shotInd]);                      
                                 if (sourceSettingsEncode[shotInd].sourceNo < 0)
                                     tempRow *= -1;
-                                data.setRow(tempRow, shotInd, scai::common::BinaryOp::COPY);
+                                if (gradientDomain != 0) {
+                                    freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
+                                    freqFilter.apply(tempRow);
+                                }
+                                data.setRow(tempRow, shotInd, scai::common::BinaryOp::ADD);
                             }
                         }
-                    } 
+                    }
                 } // encode common offset data 2->1 is not necessary in FWI             
             } else { // multi offset data
                 for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
@@ -421,15 +449,23 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                         count = 0;
                         IndexType countEncode = 0;
                         dataSingle.allocate(numrecSingle, data.getNumColumns());
-                        if (encodeType == 1) { // encode 2->1
-                            if (this->getSeismogramHandler().getIsSeismic())
-                                filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
-                            else
-                                filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
-                            
-                            IO::readMatrix(dataSingle, filenameTmp, seismoFormat);                        
+                        if (encodeType == 0 || encodeType == 1) { // encode 2->1
+                            if (encodeType == 1) {
+                                if (this->getSeismogramHandler().getIsSeismic())
+                                    filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                                else
+                                    filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
+                                
+                                IO::readMatrix(dataSingle, filenameTmp, seismoFormat);  
+                            } else {
+                                dataSingle = dataDecode[countDecode];
+                            }
                             if (sourceSettingsEncode[shotInd].sourceNo < 0)
                                 dataSingle *= -1;
+                            if (gradientDomain != 0) {
+                                freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
+                                freqFilter.apply(dataSingle);
+                            }
                             for (scai::IndexType irec = 0; irec < numrecs; irec++) {
                                 if (receiverMarkVector[irec+1] != 0 && receiverSettings[irec].getType() == receiverTypes[i]) {
                                     if (receiverMarkRow[irec+1] != 0) {
@@ -440,7 +476,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                                     countEncode++;
                                 }
                             }  
-                        } else { // decode 1->2
+                        } else if (encodeType == 2 || encodeType == 3) { // decode 1->2
                             for (scai::IndexType irec = 0; irec < numrecs; irec++) {
                                 if (receiverMarkVector[irec+1] != 0 && receiverSettings[irec].getType() == receiverTypes[i]) {
                                     if (receiverMarkRow[irec+1] != 0) {
@@ -453,13 +489,21 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                             }  
                             if (sourceSettingsEncode[shotInd].sourceNo < 0)
                                 dataSingle *= -1;
-                            if (this->getSeismogramHandler().getIsSeismic())
-                                filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
-                            else
-                                filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
-                            
-                            IO::writeMatrix(dataSingle, filenameTmp, seismoFormat);
+                            if (gradientDomain != 0) {
+                                freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
+                                freqFilter.apply(dataSingle);
+                            }
+                            dataDecode[countDecode] = dataSingle;
+                            if (encodeType == 3) {
+                                if (this->getSeismogramHandler().getIsSeismic())
+                                    filenameTmp = filename + ".shot_" + std::to_string(sourceNo) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                                else
+                                    filenameTmp = filename + ".shot_" + std::to_string(sourceNo)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
+                                
+                                IO::writeMatrix(dataSingle, filenameTmp, seismoFormat);
+                            }
                         }
+                        countDecode++;
                     }
                 }
             }  
@@ -467,15 +511,16 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
     }
 }
 
-/*! \brief Decode the supershot to individual shots (encodeType = 0)
+/*! \brief Decode the supershot to individual shots (encodeType = 0 or 1)
  *
  \param config Configuration
  \param numshots numshots is the number of shots not encoded
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode)
+void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configuration const &config, std::string const &filename, scai::IndexType shotNumber, std::vector<sourceSettings<ValueType>> sourceSettingsEncode, scai::IndexType encodeType)
 {
-    encode(config, filename, shotNumber, sourceSettingsEncode, 0);
+    encodeType += 2; // 2 or 3
+    encode(config, filename, shotNumber, sourceSettingsEncode, encodeType);
 }
 
 template class KITGPI::Acquisition::Receivers<double>;

@@ -69,6 +69,11 @@ namespace KITGPI
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
+            std::vector<scai::lama::DenseMatrix<ValueType>> &getDataDecode();
+            std::vector<scai::lama::DenseMatrix<ValueType>> const &getDataDecode() const;
+            scai::lama::DenseMatrix<ValueType> const &getDataDecode(int shotInd) const;
+            scai::lama::DenseMatrix<ValueType> &getRefTraces();
+            scai::lama::DenseMatrix<ValueType> const &getRefTraces() const;
             scai::lama::DenseVector<scai::IndexType> const &get1DCoordinates() const;
             SeismogramType getTraceType() const;
             SeismogramTypeEM getTraceTypeEM() const;
@@ -87,10 +92,8 @@ namespace KITGPI
             void setFrequencyAGC(ValueType setFrequencyAGC);
             void setIsSeismic(bool setIsSeismic);
             bool getIsSeismic() const;
-            void setOffset(scai::lama::DenseVector<ValueType> setOffset);
-            scai::lama::DenseVector<ValueType> getOffset() const;
-            void setRefTrace(scai::lama::DenseVector<ValueType> setRefTrace);
-            scai::lama::DenseVector<ValueType> getRefTrace() const;
+            void setOffsets(std::vector<scai::lama::DenseVector<ValueType>> setOffsets);
+            scai::lama::DenseVector<ValueType> getOffset(int shotInd) const;
             std::string getFilename() const;
 
             /* Overloading Operators */
@@ -119,8 +122,9 @@ namespace KITGPI
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
             scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
-            scai::lama::DenseVector<ValueType> offset;
-            scai::lama::DenseVector<ValueType> refTrace;
+            std::vector<scai::lama::DenseMatrix<ValueType>> dataDecode;
+            scai::lama::DenseMatrix<ValueType> refTraces;
+            std::vector<scai::lama::DenseVector<ValueType>> offsets;
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;

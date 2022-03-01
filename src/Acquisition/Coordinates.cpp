@@ -42,9 +42,9 @@ KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configur
 
 template <typename ValueType>
 void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, scai::IndexType DHInversion) {    
-    NX = config.get<IndexType>("NX") / DHInversion;
-    NY = config.get<IndexType>("NY") / DHInversion;
-    NZ = config.get<IndexType>("NZ") / DHInversion;
+    NX = ceil(config.get<ValueType>("NX") / DHInversion);
+    NY = ceil(config.get<ValueType>("NY") / DHInversion);
+    NZ = ceil(config.get<ValueType>("NZ") / DHInversion);
     DH = config.get<ValueType>("DH") * DHInversion;
     x0 = config.getAndCatch("x0", 0.0);
     y0 = config.getAndCatch("y0", 0.0);

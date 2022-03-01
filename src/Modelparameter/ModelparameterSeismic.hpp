@@ -235,7 +235,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::parameterisation;
             using Modelparameter<ValueType>::effectiveParameterisation;
             using Modelparameter<ValueType>::inversionType;
-            using Modelparameter<ValueType>::gradientType;
+            using Modelparameter<ValueType>::gradientKernel;
             using Modelparameter<ValueType>::decomposition;
             using Modelparameter<ValueType>::fileFormat;      //!< 1=mtx 2=lmf
 

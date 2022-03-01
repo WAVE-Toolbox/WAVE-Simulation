@@ -14,6 +14,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
     filter.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
     df = 1 / (filterLength * dt);
     fNyquist = 1 / (2 * dt);
+    NT = nt;
 }
 
 /*! \brief Calculate the frequency range corresponding to the output of fft.
@@ -107,8 +108,8 @@ void KITGPI::Filter::Filter<ValueType>::calcButterPoly(scai::IndexType order, sc
     poly = scai::lama::real(fPoly);
 }
 
-/*! \brief Calculate the transfer function of a Butterworth filter.
- \param transFcnFmly Specifies which transfer function type should be used (currently only "butterworth" is possible)
+/*! \brief Calculate the transfer function of a filter.
+ \param transFcnFmly Specifies which transfer function type should be used.
  \param filterType Type of filter: "lp" = low pass, "hp" = high pass
  \param fc1 Lower corner frequency in Hz
  \param fc2 Upper corner frequency in Hz
@@ -120,6 +121,8 @@ void KITGPI::Filter::Filter<ValueType>::calc(std::string transFcnFmly, std::stri
     std::transform(transFcnFmly.begin(), transFcnFmly.end(), transFcnFmly.begin(), ::tolower);
     if (transFcnFmly == "butterworth") {
         calcButterworthFilt(filterType, order, fc1, fc2);
+    } else if (transFcnFmly == "ideal") {
+        calcIdealFilt(filterType, order, fc1);
     } else {
         COMMON_THROWEXCEPTION("Invalid transfer function family.");
     }
@@ -214,6 +217,62 @@ void KITGPI::Filter::Filter<ValueType>::calcButterworthBp(scai::lama::DenseVecto
     transFcnTmp *= transFcnHp;
 }
 
+/*! \brief Calculate the transfer function of an ideal filter.
+ \param filterType Type of filter: "lp" = low pass, "hp" = high pass
+ \param fc1 Lower corner frequency in Hz
+ \param fc2 Upper corner frequency in Hz
+ \param order Filter order
+ */
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::calcIdealFilt(std::string filterType, scai::IndexType order, ValueType fc)
+{
+    SCAI_ASSERT_ERROR(fc > 0, "Lower corner frequency of filter has to be greater than zero.")
+    std::transform(filterType.begin(), filterType.end(), filterType.begin(), ::tolower);
+
+    if (filterType == "bp") {
+        calcIdealBp(filter, order, fc);
+    } else {
+        COMMON_THROWEXCEPTION("Invalid filter type.");
+    }
+}
+
+/*! \brief Calculate the transfer function of an ideal band-pass filter (one frequency).
+ \param transFcnTmp Vector where the transfer function gets stored
+ \param freqVec Frequency vector
+ \param fc Corner frequency in Hz
+ \param order Filter order
+ */
+template <typename ValueType>
+void KITGPI::Filter::Filter<ValueType>::calcIdealBp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::IndexType order, ValueType fc)
+{
+    IndexType fc1Ind = ceil(fc / df);
+    if (order == 0) { // FFT
+        scai::IndexType len = 2 * fNyquist / df;
+        IndexType fc2Ind = len - fc1Ind;
+        // transFcnTmp (filter) has been initialized to 1+0i
+        transFcnTmp.setValue(fc1Ind, ComplexValueType(0.0, 0.0));
+        transFcnTmp.setValue(fc2Ind, ComplexValueType(0.0, 0.0));
+        transFcnTmp = ComplexValueType(1.0, 0.0) - transFcnTmp;
+    } else { // DFT
+        scai::dmemo::DistributionPtr distNT = std::make_shared<scai::dmemo::NoDistribution>(NT);
+        scai::dmemo::DistributionPtr dist1 = std::make_shared<scai::dmemo::NoDistribution>(1);
+        L.allocate(distNT, dist1);
+        Linv.allocate(dist1, distNT);
+        ValueType dt = 1 / (2 * fNyquist);
+        ComplexValueType j(0.0, 1.0); 
+        scai::lama::DenseVector<ValueType> t = scai::lama::linearDenseVector<ValueType>(NT, 0.0, dt);
+        scai::lama::DenseVector<ComplexValueType> temp;
+        temp = scai::lama::cast<ComplexValueType>(t);
+        temp *= -j * 2.0 * M_PI * fc1Ind * df;
+        temp.unaryOp(temp, common::UnaryOp::EXP);
+        L.setColumn(temp, 0, common::BinaryOp::COPY);
+        temp = scai::lama::cast<ComplexValueType>(t);
+        temp *= j * 2.0 * M_PI * fc1Ind * df;
+        temp.unaryOp(temp, common::UnaryOp::EXP);
+        Linv.setRow(temp, 0, common::BinaryOp::COPY);
+    }
+}
+
 /*! \brief Application of stored filter on the desired signal.
  \param signal Signal that should be filtered
  */
@@ -224,17 +283,26 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseVector<ValueType>
     SCAI_ASSERT_ERROR(signal.size() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseVector<ComplexValueType> fSignal;
-
     fSignal = scai::lama::cast<ComplexValueType>(signal);
-    fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
-    scai::lama::fft<ComplexValueType>(fSignal);
 
-    fSignal *= filter;
-    fSignal /= len; // proper fft normalization
+    if (L.getNumColumns() == 0) {
+        fSignal.resize(std::make_shared<scai::dmemo::NoDistribution>(len));
+        scai::lama::fft<ComplexValueType>(fSignal);
 
-    scai::lama::ifft<ComplexValueType>(fSignal);
-    fSignal.resize(signal.getDistributionPtr());
+        fSignal *= filter;
+        fSignal /= len; // proper fft normalization
 
+        scai::lama::ifft<ComplexValueType>(fSignal);
+        fSignal.resize(signal.getDistributionPtr());
+    } else {
+        scai::lama::DenseVector<ComplexValueType> temp;
+        scai::lama::DenseMatrix<ComplexValueType> Ltemp;
+        Ltemp = transpose(L);
+        temp = Ltemp * fSignal;
+        Ltemp = transpose(Linv);
+        fSignal = Ltemp * temp;
+        fSignal *= (1.0 / ValueType(NT)); // proper fft normalization
+    }
     signal = scai::lama::real(fSignal);
 }
 
@@ -248,19 +316,29 @@ void KITGPI::Filter::Filter<ValueType>::apply(scai::lama::DenseMatrix<ValueType>
     SCAI_ASSERT_ERROR(signal.getNumColumns() + zeroPadding == len, "\nFilter is designed for different input length\n\n");
 
     scai::lama::DenseMatrix<ComplexValueType> fSignal;
-
     fSignal = scai::lama::cast<ComplexValueType>(signal);
-    fSignal.resize(signal.getRowDistributionPtr(), std::make_shared<scai::dmemo::NoDistribution>(len));
+    
+    if (L.getNumColumns() == 0) {
+        fSignal.resize(signal.getRowDistributionPtr(), std::make_shared<scai::dmemo::NoDistribution>(len));
 
-    scai::lama::fft<ComplexValueType>(fSignal, 1);
+        scai::lama::fft<ComplexValueType>(fSignal, 1);
 
-    fSignal.scaleColumns(filter);
+        fSignal.scaleColumns(filter);
 
-    fSignal *= (1.0 / ValueType(len)); // proper fft normalization
+        fSignal *= (1.0 / ValueType(len)); // proper fft normalization
 
-    scai::lama::ifft<ComplexValueType>(fSignal, 1);
-    fSignal.resize(signal.getRowDistributionPtr(), signal.getColDistributionPtr());
+        scai::lama::ifft<ComplexValueType>(fSignal, 1);
+        fSignal.resize(signal.getRowDistributionPtr(), signal.getColDistributionPtr());
+    } else {
+        scai::lama::DenseMatrix<ComplexValueType> temp;
+        temp = fSignal * L;
+        temp *= (2.0 / ValueType(len)); // proper dft normalization for single frequency
+        fSignal = temp * Linv;
+    }
     signal = scai::lama::real(fSignal);
+    if (L.getNumColumns() != 0) {
+        signal *= 1.0 / signal.maxNorm(); // scale to maximum amplitude
+    }
 }
 
 template class KITGPI::Filter::Filter<double>;

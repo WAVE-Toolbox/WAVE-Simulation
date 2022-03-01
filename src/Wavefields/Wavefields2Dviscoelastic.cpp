@@ -421,7 +421,7 @@ void KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::timesAssign(scai::lama::De
  \param rhs Abstract wavefield which is added.
  */
 template <typename ValueType>
-void KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::applyTransform(scai::lama::CSRSparseMatrix<ValueType> lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
+void KITGPI::Wavefields::FD2Dviscoelastic<ValueType>::applyTransform(scai::lama::Matrix<ValueType> const &lhs, KITGPI::Wavefields::Wavefields<ValueType> &rhs)
 {
     VX = lhs * rhs.getRefVX();
     VY = lhs * rhs.getRefVY();

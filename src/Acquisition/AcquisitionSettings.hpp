@@ -7,6 +7,7 @@
 #include <scai/lama.hpp>
 #include <algorithm>
 #include "../Common/HostPrint.hpp"
+#include <numeric>
 
 namespace KITGPI
 {
@@ -178,6 +179,26 @@ namespace KITGPI
             }
         }
 
+        /*! \brief compute vector of unique fc
+        *
+        \param uniqueFC vector with all frequencies, each included only once
+        \param sourceSettings vector of sourceSettings structs
+        */
+        template <typename ValueType>
+        inline void calcuniqueFC(std::vector<ValueType> &uniqueFC, std::vector<sourceSettings<ValueType>> sourceSettings)
+        {
+            uniqueFC.clear();
+            uniqueFC.push_back(sourceSettings[0].fc);
+            for (unsigned i = 0; i < sourceSettings.size(); i++) {
+                if (std::find(uniqueFC.begin(), uniqueFC.end(), sourceSettings[i].fc) != uniqueFC.end()) {
+                    // FC already included
+                } else { 
+                    uniqueFC.push_back(sourceSettings[i].fc);
+                }
+            }    
+            sort(uniqueFC.begin(), uniqueFC.end());
+        }
+        
         /*! \brief compute vector of unique shot numbers
         *
         \param uniqueShotNo vector with all shot numbers, each included only once
@@ -381,14 +402,15 @@ namespace KITGPI
         \param useRandomSource useRandomSource
         */
         template <typename ValueType>
-        void getRandomShotInds(std::vector<scai::IndexType> &uniqueShotInds, std::vector<scai::IndexType> &shotHistory, scai::IndexType numshots, scai::IndexType maxcount, scai::IndexType useRandomSource)
+        void getRandomShotInds(std::vector<scai::IndexType> &uniqueShotInds, std::vector<scai::IndexType> &shotHistory, scai::IndexType numshots, scai::IndexType maxcount, scai::IndexType useRandomSource, scai::IndexType &seedtime)
         {  
             scai::IndexType numShotDomains = uniqueShotInds.size();
-            scai::IndexType randomShotInd;
+            scai::IndexType randomShotInd = 0;
               
             if (useRandomSource == 1) {
                 std::vector<scai::IndexType> randomShotIndHistory(numShotDomains, 0);
-                std::srand((int)time(0));
+                std::srand(seedtime);
+                seedtime++;
                 for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
                     bool repeat = false;
                     randomShotInd = std::rand() % numshots;
@@ -406,17 +428,13 @@ namespace KITGPI
                         shotHistory[randomShotInd]++;
                     }
                 }
-            } else if (useRandomSource == 2) {
-                scai::IndexType startShotInd = 0;
-                if (shotHistory[0] != shotHistory[numshots-1]) {
-                    for (scai::IndexType shotInd = 0; shotInd < numshots-1; shotInd++) { 
-                        if (shotHistory[shotInd] != shotHistory[shotInd+1]) {
-                            startShotInd = shotInd + 1;
-                        }
-                    }
-                }
-                for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) {                                     
-                    randomShotInd = startShotInd + shotDomainInd;
+            } else if (useRandomSource == 2) { 
+                scai::IndexType sum = accumulate(shotHistory.begin(), shotHistory.end(), 0);
+                scai::IndexType step = numshots / numShotDomains;
+                sum /= numShotDomains; // iteration
+                for (scai::IndexType shotDomainInd = 0; shotDomainInd < numShotDomains; shotDomainInd++) { 
+                    randomShotInd = sum + shotDomainInd * step;
+                    randomShotInd = randomShotInd % numshots;
                     uniqueShotInds[shotDomainInd] = randomShotInd;
                     shotHistory[randomShotInd]++;
                 }
@@ -439,11 +457,11 @@ namespace KITGPI
             if (useRandomSource != 0 && myRank == MASTERGPI) {
                 std::ofstream outputFile; 
                 std::string randomSourceFilename = logFilename.substr(0, logFilename.length()-4) + ".randomSource" + logFilename.substr(logFilename.length()-4, 4);
-                if (stage == 1 && iteration == 1) {
+                if (stage == 1 && iteration == 0) {
                     outputFile.open(randomSourceFilename);
-                    outputFile << "# Shot index records during inversion\n"; 
+                    outputFile << "# Shot number records during inversion\n"; 
                     outputFile << "# random source type = " << useRandomSource << " (0=all sequential shot, 1=numShotDomains random shot, 2=numShotDomains sequential shot)\n"; 
-                    outputFile << "# Stage | Iteration | shot index\n"; 
+                    outputFile << "# Stage | Iteration | shot number\n"; 
                 } else {                    
                     outputFile.open(randomSourceFilename, std::ios_base::app);
                     outputFile << std::scientific;

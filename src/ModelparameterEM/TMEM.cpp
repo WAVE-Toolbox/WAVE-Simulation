@@ -65,7 +65,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Con
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
-    if (config.getAndCatch("gradientType", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
         Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
     }
@@ -267,7 +267,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
-    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
         this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
     } else {
         this->initModelparameter(reflectivity, ctx, dist, 0.0);
@@ -314,7 +314,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::write(std::string filename, scai::
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
     }
-    if (this->getGradientType() != 0 && this->getDecomposition() == 0) {
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
         IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };

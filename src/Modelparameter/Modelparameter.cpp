@@ -71,18 +71,18 @@ void KITGPI::Modelparameter::Modelparameter<ValueType>::setInversionType(scai::I
     inversionType = setInversionType;
 }
 
-/*! \brief Getter method for gradientType */
+/*! \brief Getter method for gradientKernel */
 template <typename ValueType>
-IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getGradientType() const
+IndexType KITGPI::Modelparameter::Modelparameter<ValueType>::getGradientKernel() const
 {
-    return (gradientType);
+    return (gradientKernel);
 }
 
-/*! \brief Set method for gradientType */
+/*! \brief Set method for gradientKernel */
 template <typename ValueType>
-void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientType(scai::IndexType const setGradientType)
+void KITGPI::Modelparameter::Modelparameter<ValueType>::setGradientKernel(scai::IndexType const setGradientKernel)
 {
-    gradientType = setGradientType;
+    gradientKernel = setGradientKernel;
 }
 
 /*! \brief Getter method for decomposition */

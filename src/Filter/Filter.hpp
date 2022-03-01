@@ -38,8 +38,11 @@ namespace KITGPI
           private:
             scai::IndexType zeroPadding;
             scai::lama::DenseVector<ComplexValueType> filter;
+            scai::lama::DenseMatrix<ComplexValueType> L;
+            scai::lama::DenseMatrix<ComplexValueType> Linv;
             ValueType df;
             ValueType fNyquist;
+            scai::IndexType NT;
 
             scai::IndexType calcZeroPadding(scai::IndexType nt);
             void calcFrequencyVector(scai::lama::DenseVector<ValueType> &frequencyVector) const;
@@ -51,6 +54,8 @@ namespace KITGPI
             void calcButterworthHp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
             void calcButterworthLp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc);
             void calcButterworthBp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::lama::DenseVector<ValueType> &freqVec, scai::IndexType order, ValueType fc1, ValueType fc2);
+            void calcIdealFilt(std::string filterType, scai::IndexType order, ValueType fc);
+            void calcIdealBp(scai::lama::DenseVector<ComplexValueType> &transFcnTmp, scai::IndexType order, ValueType fc);
         };
     }
 }

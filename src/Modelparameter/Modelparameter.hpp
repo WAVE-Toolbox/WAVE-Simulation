@@ -91,8 +91,8 @@ namespace KITGPI
             void setEffectiveParameterisation(bool const setEffectiveParameterisation);
             scai::IndexType getInversionType() const;
             void setInversionType(scai::IndexType const setInversionType);
-            scai::IndexType getGradientType() const;
-            void setGradientType(scai::IndexType const setGradientType);
+            scai::IndexType getGradientKernel() const;
+            void setGradientKernel(scai::IndexType const setGradientKernel);
             scai::IndexType getDecomposition() const;
             void setDecomposition(scai::IndexType const setDecomposition);
             ValueType getVmin();
@@ -286,7 +286,7 @@ namespace KITGPI
             scai::IndexType parameterisation = 0;
             bool effectiveParameterisation = 0;
             scai::IndexType inversionType = 0;
-            scai::IndexType gradientType = 0;
+            scai::IndexType gradientKernel = 0;
             scai::IndexType decomposition = 0;
             scai::IndexType fileFormat;      //!< 1=mtx 2=lmf
             std::string equationType;

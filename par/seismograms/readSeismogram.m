@@ -17,7 +17,7 @@ if fileFormat==1
     HEADER = fgets(fileID);
     SIZE = fgets(fileID);
     SIZE=str2num(SIZE);
-    Seismogram=fscanf(fileID,'%e',[ SIZE(1) SIZE(2)]);
+    Seismogram=fscanf(fileID,'%e',[SIZE(1) SIZE(2)]);
 end
 
 %lmf

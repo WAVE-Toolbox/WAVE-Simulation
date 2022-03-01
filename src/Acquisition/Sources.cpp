@@ -203,6 +203,11 @@ void KITGPI::Acquisition::Sources<ValueType>::generateSyntheticSignal(IndexType 
         SourceSignal::Berlage<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
         break;
         
+    case 9:
+        /* Sin */
+        SourceSignal::Sin<ValueType>(signalVector, NT, DT, wavelet_fc.getLocalValues()[SourceLocal], wavelet_amp.getLocalValues()[SourceLocal], wavelet_tshift.getLocalValues()[SourceLocal]);
+        break;
+        
     default:
         COMMON_THROWEXCEPTION("Unknown wavelet shape ")
         break;
@@ -410,6 +415,15 @@ std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> KITGPI::Acquisition:
     return (sourceSettingsShotIncr);
 }
 
+/*! \brief set sourceSettings
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::setSourceSettings(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> setSourceSettings)
+{
+    sourceSettingsShotIncr = setSourceSettings;
+}
+
 /*! \brief get sourceSettingsEncode
  *
  */
@@ -438,6 +452,16 @@ std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getUniqueShotInd
 {
     SCAI_ASSERT_ERROR(uniqueShotInds.size() > 0, "uniqueShotInds.size() = 0"); // check whether uniqueShotInds has been applied successfully.
     return (uniqueShotInds);
+}
+
+/*! \brief get sinFC
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Sources<ValueType>::getSinFC(int shotIndEncode)
+{
+    // sinFC[shotIndEncode].size() can be 0 or > 0.
+    return (sinFC[shotIndEncode]);
 }
 
 /*! \brief Allocation of the source signals matrix
@@ -496,7 +520,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
         sourceSettingsShotIncr.clear();
         sourceSettingsShotIncr.push_back(allSettings[0]);
         shotIndIncr.push_back(0);
-        IndexType shotIncrStep = floor(shotIncr / config.get<ValueType>("DH"));
+        IndexType shotIncrStep = round(shotIncr / config.get<ValueType>("DH"));
         for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
             if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
                 if (shotIndIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
@@ -530,40 +554,93 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
  \param config Configuration
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config)
+void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1, ValueType fc2)
 {    
     IndexType numshotsIncr = shotIndIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
     IndexType useStreamConfig = config.getAndCatch("useStreamConfig", 0);
+    IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
+    IndexType useSourceSignalTaper = config.getAndCatch("useSourceSignalTaper", 0);
     SCAI_ASSERT_ERROR(useSourceEncode * useRandomSource == 0, "useSourceEncode and useRandomSource are not compatible!");
     SCAI_ASSERT_ERROR(useSourceEncode * useStreamConfig == 0, "useSourceEncode and useStreamConfig are not compatible!");
+    SCAI_ASSERT_ERROR(useSourceEncode * useSourceSignalTaper == 0, "useSourceEncode and useSourceSignalTaper are not compatible!");
+    ValueType df;
+    IndexType fcInd;
+    lama::DenseVector<ValueType> fc12;
+    IndexType nfc12 = 1;
+    if (gradientDomain != 0 && fc2 > 0) {
+        IndexType NT = static_cast<IndexType>((config.get<ValueType>("T") / config.get<ValueType>("DT")) + 0.5);
+        IndexType nFFT = Common::calcNextPowTwo<ValueType>(NT);
+        df = 1 / (nFFT * config.get<ValueType>("DT"));
+        IndexType fc1Ind = ceil(fc1 / df);
+        IndexType fc2Ind = ceil(fc2 / df);
+        if (fc1Ind == 0)
+            fc1Ind = 2; // ensure steady-state wavefields.
+        if (fc1Ind % 2 == 1)
+            fc1Ind += 1; // ensure steady-state wavefields.
+        nfc12 = (fc2Ind-fc1Ind+1)/2;
+        fc12 = lama::linearDenseVector<ValueType>(nfc12, fc1Ind*df, 2*df);
+    }
     if (useSourceEncode != 0) {
-        double start_t = common::Walltime::get();
         sourceSettingsEncode = sourceSettingsShotIncr;
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
+        if (gradientDomain != 0) {
+            SCAI_ASSERT_ERROR(nfc12 >= ceil(ValueType(numshotsIncr) / numShotDomains), "The number of frequency is less than ceil(ValueType(numshotsIncr) / numShotDomains)!");
+        }
+        std::srand(seedtime);
+        seedtime++;
+        std::vector<scai::IndexType> shotHistory(numShotDomains, 0);
         if (useSourceEncode == 1) { // randomly
-            std::srand((int)time(0));
             IndexType signNo;
-            for (IndexType shotInd = 0; shotInd < numShotDomains; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd % numShotDomains;
+            IndexType sourceInd;
+            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                if (shotInd < numShotDomains) {// to ensure the sourceNo increase
+                    sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd;
+                    shotHistory[shotInd]++;
+                } else {
+                    sourceInd = std::rand() % numShotDomains;
+                    while (shotHistory[sourceInd] >= ceil(ValueType(numshotsIncr) / numShotDomains)) {
+                        sourceInd = std::rand() % numShotDomains;
+                    }
+                    shotHistory[sourceInd]++;
+                    sourceSettingsEncode[shotInd].sourceNo = 10001 + sourceInd;
+                }
                 signNo = std::rand() % 2;
                 signNo = (signNo > 0) ? 1 : -1;                
                 sourceSettingsEncode[shotInd].sourceNo *= signNo;
-            } // to ensure the sourceNo increase
-            for (IndexType shotInd = numShotDomains; shotInd < numshotsIncr; shotInd++) {  
-                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + std::rand() % numShotDomains;
-                signNo = std::rand() % 2;
-                signNo = (signNo > 0) ? 1 : -1;                
-                sourceSettingsEncode[shotInd].sourceNo *= signNo;
-            }
+            } 
         } else if (useSourceEncode == 2) { // sequentially
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 1e4 + 1 + shotInd % numShotDomains;
+                sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd % numShotDomains;
             }
         }
-        double end_t = common::Walltime::get();
-        HOST_PRINT(commAll, "Finished initializing a encoded shot sequence (numShotDomains: " << numShotDomains << ") in " << end_t - start_t << " sec.\n");
+        if (gradientDomain != 0) { // the frequency is selected randomly.
+            std::vector<IndexType> uniqueShotNosEncode;
+            Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
+            sinFC.clear();
+            IndexType NF = ceil(ValueType(numshotsIncr) / numShotDomains);
+            scai::lama::DenseVector<ValueType> uniqueFC(NF, 0);
+            for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
+                std::vector<scai::IndexType> fc12History(nfc12, 0);
+                IndexType jf = 0;
+                for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+                    if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode]) {
+                        sourceSettingsEncode[shotInd].waveletType = 1; // synthetic signal
+                        sourceSettingsEncode[shotInd].waveletShape = 9; // sin(t)
+                        fcInd = std::rand() % nfc12;
+                        while (fc12History[fcInd] > 0) {
+                            fcInd = std::rand() % nfc12;
+                        }
+                        fc12History[fcInd]++;
+                        sourceSettingsEncode[shotInd].fc = fc12[fcInd]; // specific frequency
+                        uniqueFC[jf] = fc12[fcInd];
+                        jf++;
+                    }
+                }
+                sinFC.push_back(uniqueFC);
+            }
+        }
     }
 }
 
@@ -575,7 +652,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dme
  \param allSettings sourceSettings
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount)
+void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount, scai::IndexType &seedtime)
 {    
     IndexType numshotsIncr = shotIndIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
@@ -586,7 +663,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::Co
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
         std::vector<IndexType> tempShotInds(numShotDomains, 0); 
         uniqueShotInds = tempShotInds;
-        Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshotsIncr, maxcount, useRandomSource);        
+        Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshotsIncr, maxcount, useRandomSource, seedtime);        
         double end_t = common::Walltime::get();
         HOST_PRINT(commAll, "Finished initializing a random shot sequence (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
     } else if (useSourceEncode != 0) {
@@ -601,14 +678,13 @@ void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::Co
     }
 }
 
-/*! \brief Write the shot indices and shot numbers
+/*! \brief Write the shot indices (original) and shot numbers
  *
  \param config Configuration
- \param shotIndIncr shot indices
  \param uniqueShotNos shot numbers
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos)
+void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos)
 {
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
     if (shotIncr > config.get<ValueType>("DH")) {
@@ -632,15 +708,13 @@ void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(Configuration::Co
     }
 }
 
-/*! \brief Write the shot indices and shot numbers
+/*! \brief Write the shot indices (selected) and encoded shot numbers
  *
  \param config Configuration
- \param sourceSettingsEncode shot indices selected
- \param uniqueShotNosEncode new shot numbers
- \param uniqueShotNos original shot numbers
+ \param filename filename
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(Configuration::Configuration const &config, std::string filename)
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::string filename)
 {
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     if (useSourceEncode != 0) {
@@ -653,12 +727,16 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(Configuration::C
         std::ofstream outputFile; 
         outputFile.open(filename);
         outputFile << "# Shot indices used in source encode (useSourceEncode = " << useSourceEncode << ", numShotDomains = " << numShotDomains << ", numshots = " << numshotsIncr << ")\n"; 
-        outputFile << "# Shot number | shot index (original)\n"; 
+        outputFile << "# Shot number | shot index (selected) | frequency (Hz)\n"; 
         for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
             outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
             for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
                 if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
-                    outputFile << std::setw(5) << shotIndIncr[shotInd];
+                    outputFile << std::setw(5) << shotInd+1;
+            }
+            for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+                if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
+                    outputFile << std::setw(14) << sourceSettingsEncode[shotInd].fc;
             }
             outputFile << "\n";
         }

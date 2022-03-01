@@ -102,9 +102,9 @@ namespace KITGPI
         template <typename ValueType>
         dmemo::DistributionPtr gridPartitionInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
         {
-            IndexType NXinversion = std::ceil(config.get<IndexType>("NX") / config.get<IndexType>("DHInversion"));
-            IndexType NYinversion = std::ceil(config.get<IndexType>("NY") / config.get<IndexType>("DHInversion"));
-            IndexType NZinversion = std::ceil(config.get<IndexType>("NZ") / config.get<IndexType>("DHInversion"));
+            IndexType NXinversion = ceil(config.get<ValueType>("NX") / config.get<IndexType>("DHInversion"));
+            IndexType NYinversion = ceil(config.get<ValueType>("NY") / config.get<IndexType>("DHInversion"));
+            IndexType NZinversion = ceil(config.get<ValueType>("NZ") / config.get<IndexType>("DHInversion"));
             common::Grid3D grid(NYinversion, NZinversion, NXinversion);
             // distribute the grid onto available processors
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
