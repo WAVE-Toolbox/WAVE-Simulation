@@ -78,10 +78,9 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
  \param cutCoordinate cut coordinate 
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::SH<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
+void KITGPI::Modelparameter::SH<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
     auto distBig = velocityS.getDistributionPtr();
-    auto dist = modelPerShot.getDensity().getDistributionPtr();
 
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
     

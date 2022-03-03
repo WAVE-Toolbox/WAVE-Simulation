@@ -46,7 +46,7 @@ namespace KITGPI
             void calcSourceSettingsEncode(Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1 = 0, ValueType fc2 = 0);
             void calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount, scai::IndexType &seedtime);
             void writeShotIndIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
-            void writeSourceEncode(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::string filename);
+            void writeSourceEncode(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
             void setSourceSettings(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> setSourceSettings);

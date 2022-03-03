@@ -86,9 +86,14 @@ namespace KITGPI
         \param commShot communicator of a shot domain
         */
         template <typename ValueType>
-        dmemo::DistributionPtr gridPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
+        dmemo::DistributionPtr gridPartition(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, ValueType NXPerShot = 0)
         {
-            common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), config.get<IndexType>("NX"));
+            IndexType NX;
+            if (NXPerShot < config.get<IndexType>("NX"))
+                NX = config.get<IndexType>("NX");
+            else
+                NX = NXPerShot;
+            common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), NX);
             // distribute the grid onto available processors
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
         }
@@ -100,9 +105,13 @@ namespace KITGPI
         \param DHInversion scaling factor of DH used in inversion
         */
         template <typename ValueType>
-        dmemo::DistributionPtr gridPartitionInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot)
+        dmemo::DistributionPtr gridPartitionInversion(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commShot, ValueType NXPerShot = 0)
         {
-            IndexType NXinversion = ceil(config.get<ValueType>("NX") / config.get<IndexType>("DHInversion"));
+            IndexType NXinversion;
+            if (NXPerShot < config.get<ValueType>("NX"))
+                NXinversion = ceil(config.get<ValueType>("NX") / config.get<IndexType>("DHInversion"));
+            else
+                NXinversion = ceil(NXPerShot / config.get<IndexType>("DHInversion"));
             IndexType NYinversion = ceil(config.get<ValueType>("NY") / config.get<IndexType>("DHInversion"));
             IndexType NZinversion = ceil(config.get<ValueType>("NZ") / config.get<IndexType>("DHInversion"));
             common::Grid3D grid(NYinversion, NZinversion, NXinversion);

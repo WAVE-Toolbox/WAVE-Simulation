@@ -86,11 +86,13 @@ int main(int argc, const char *argv[])
         // each processor reads line of settings file that matches its node name and node rank
         common::Settings::readSettingsFile(settingsFilename.c_str(), commAll->getNodeName(), commAll->getNodeRank());
     }
-
+        
     /* --------------------------------------- */
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
-    Acquisition::Coordinates<ValueType> modelCoordinates(config);
+    Acquisition::Receivers<ValueType> receivers; 
+    ValueType NXPerShot = receivers.getModelPerShotSize(config);
+    Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
     Acquisition::Coordinates<ValueType> modelCoordinatesBig;
 
     if (config.get<bool>("useVariableGrid")) {
@@ -122,6 +124,9 @@ int main(int argc, const char *argv[])
     dmemo::DistributionPtr dist = nullptr;
     dmemo::DistributionPtr distBig = nullptr;
     IndexType configPartitioning = config.get<IndexType>("partitioning");
+    if (useStreamConfig) {
+        SCAI_ASSERT_ERROR(configPartitioning == 1, "partitioning != 1 when useStreamConfig"); 
+    }
     switch (configPartitioning) {
     case 0:
     case 2:
@@ -131,7 +136,7 @@ int main(int argc, const char *argv[])
         break;
     case 1:
         SCAI_ASSERT(!config.get<bool>("useVariableGrid"), "Grid distribution is not available for the variable grid");
-        dist = Partitioning::gridPartition<ValueType>(config, commShot);
+        dist = Partitioning::gridPartition<ValueType>(config, commShot, NXPerShot);
         if (useStreamConfig) {
             modelCoordinatesBig.init(configBig);
             distBig = Partitioning::gridPartition<ValueType>(configBig, commShot);
@@ -227,33 +232,28 @@ int main(int argc, const char *argv[])
     start_t = common::Walltime::get();
     
     Acquisition::Sources<ValueType> sources;
-    Acquisition::Receivers<ValueType> receivers; 
     
-    if (config.get<IndexType>("useReceiversPerShot") == 0) {
-        receivers.init(config, modelCoordinates, ctx, dist);
-    }
-
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsEncode; 
     std::vector<Acquisition::coordinate3D> cutCoordinates;
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
+    sources.getAcquisitionSettings(config, shotIncr);
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
-        sources.getAcquisitionSettings(configBig, shotIncr);
         sourceSettingsBig = sources.getSourceSettings(); 
-        Acquisition::getCutCoord(cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
+        Acquisition::getCutCoord(config, cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
+        sources.setSourceSettings(sourceSettings); // for useSourceEncode
     } else {
-        sources.getAcquisitionSettings(config, shotIncr);
         sourceSettings = sources.getSourceSettings(); 
     }
     CheckParameter::checkSources(sourceSettings, modelCoordinates, commAll);
     // calculate vector with unique shot numbers and get number of shots
-    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     std::vector<IndexType> uniqueShotNos;
     std::vector<IndexType> uniqueShotNosEncode;
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
     IndexType numshots = 1;
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
@@ -264,12 +264,11 @@ int main(int argc, const char *argv[])
     }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
     sources.writeShotIndIncr(commAll, config, uniqueShotNos);
-    sources.writeSourceEncode(commAll, config, config.get<std::string>("SourceFilename"));
-    IndexType numCuts = 1;
-    if (useStreamConfig) {
-        numCuts = cutCoordinates.size();
-        SCAI_ASSERT_ERROR(numshots == numCuts, "numshots != numCuts"); // check whether model pershot has been applied successfully.
-        Acquisition::writeCutCoordToFile(config.get<std::string>("cutCoordinatesFilename"), cutCoordinates, uniqueShotNos);        
+    sources.writeSourceEncode(commAll, config); 
+    Acquisition::writeCutCoordToFile(commAll, config, cutCoordinates, uniqueShotNos, NXPerShot);    
+    
+    if (config.get<IndexType>("useReceiversPerShot") == 0) {
+        receivers.init(config, modelCoordinates, ctx, dist);
     }
     
     end_t = common::Walltime::get();
@@ -285,7 +284,6 @@ int main(int argc, const char *argv[])
         model->init(config, ctx, dist, modelCoordinates);
     } else { 
         model->init(configBig, ctx, distBig, modelCoordinatesBig);   
-        modelPerShot->init(config, ctx, dist, modelCoordinates);  
     }
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing model in " << end_t - start_t << " sec.\n\n");
@@ -299,8 +297,6 @@ int main(int argc, const char *argv[])
     IndexType tStepEnd = Common::time2index(config.get<ValueType>("T"), DT);
     if (!useStreamConfig) {
         solver->initForwardSolver(config, *derivatives, *wavefields, *model, modelCoordinates, ctx, DT);
-    } else {
-        solver->initForwardSolver(config, *derivatives, *wavefields, *modelPerShot, modelCoordinates, ctx, DT);
     }
     end_t = common::Walltime::get();
     HOST_PRINT(commAll, "", "Finished initializing forward solver in " << end_t - start_t << " sec.\n\n");
@@ -312,7 +308,7 @@ int main(int argc, const char *argv[])
     Hilbert::HilbertFFT<ValueType> hilbertHandlerTime;
     IndexType decomposition = config.getAndCatch("decomposeWavefieldType", 0);
     if (decomposition != 0) {
-        IndexType kernelSize = Common::calcNextPowTwo<ValueType>(tStepEnd);  
+        IndexType kernelSize = Common::calcNextPowTwo<ValueType>(tStepEnd - 1);  
         hilbertHandlerTime.setCoefficientLength(kernelSize);
         hilbertHandlerTime.calcHilbertCoefficient(); 
         snapType = decomposition + 3;
@@ -374,9 +370,14 @@ int main(int argc, const char *argv[])
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
             } else {
                 HOST_PRINT(commShot, "Shot number " << shotNumber << " (" << "domain " << commInterShot->getRank() << ", index " << shotIndTrue + 1 << " of " << numshots << "): Switch to model subset\n");
-                model->getModelPerShot(*modelPerShot, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndTrue));
+                IndexType shotIndPerShot = shotIndTrue;
+                if (useSourceEncode == 3) {
+                    Acquisition::getuniqueShotInd(shotIndPerShot, sourceSettingsEncode, shotNumber);
+                }
+                model->getModelPerShot(*modelPerShot, dist, modelCoordinates, modelCoordinatesBig, cutCoordinates.at(shotIndPerShot));
                 modelPerShot->prepareForModelling(modelCoordinates, ctx, dist, commShot); 
                 modelPerShot->write((config.get<std::string>("ModelFilename") + ".shot_" + std::to_string(shotNumber)), config.get<IndexType>("FileFormat"));
+                solver->initForwardSolver(config, *derivatives, *wavefields, *modelPerShot, modelCoordinates, ctx, DT);
                 solver->prepareForModelling(*modelPerShot, DT);
                 
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *modelPerShot, modelCoordinates, shotNumber);
@@ -508,7 +509,7 @@ int main(int argc, const char *argv[])
             } else {
                 receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".shot_" + std::to_string(shotNumber), modelCoordinates);
                 receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode, 1);
-                receivers.writeReceiverMark(useSourceEncode, config.get<std::string>("ReceiverFilename") + ".shot_" + std::to_string(shotNumber));
+                receivers.writeReceiverMark(config, shotNumber);
             }                
         }
                    

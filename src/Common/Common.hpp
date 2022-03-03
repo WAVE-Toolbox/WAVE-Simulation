@@ -275,7 +275,7 @@ namespace KITGPI
             lama::DenseVector<ValueType> dataTrace;
             Hilbert::HilbertFFT<ValueType> hilbertHandler;
 //             Hilbert::HilbertFIR<ValueType> hilbertHandler;
-            IndexType kernelSize = Common::calcNextPowTwo<ValueType>(data.getNumColumns());  
+            IndexType kernelSize = Common::calcNextPowTwo<ValueType>(data.getNumColumns() - 1);  
             hilbertHandler.setCoefficientLength(kernelSize);
             hilbertHandler.calcHilbertCoefficient();
             hilbertHandler.hilbert(dataImag);

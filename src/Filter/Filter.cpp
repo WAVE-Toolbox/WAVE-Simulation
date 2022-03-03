@@ -9,7 +9,7 @@ void KITGPI::Filter::Filter<ValueType>::init(ValueType dt, scai::IndexType nt)
 {
     SCAI_ASSERT_ERROR(dt != 0.0, "Can't initialize filter with dt = 0.0")
     SCAI_ASSERT_ERROR(nt != 0, "Can't initialize filter with nt = 0")
-    zeroPadding = Common::calcNextPowTwo<ValueType>(nt) - nt;
+    zeroPadding = Common::calcNextPowTwo<ValueType>(nt - 1) - nt;
     scai::IndexType filterLength = zeroPadding + nt;
     filter.buildComplex(scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 1.0), scai::lama::fill<scai::lama::DenseVector<ValueType>>(filterLength, 0.0));
     df = 1 / (filterLength * dt);

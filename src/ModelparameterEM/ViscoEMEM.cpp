@@ -96,14 +96,16 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
  \param cutCoordinate cut coordinate 
  */
 template <typename ValueType>
-void KITGPI::Modelparameter::ViscoEMEM<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
+void KITGPI::Modelparameter::ViscoEMEM<ValueType>::getModelPerShot(KITGPI::Modelparameter::Modelparameter<ValueType> &modelPerShot, scai::dmemo::DistributionPtr dist, Acquisition::Coordinates<ValueType> const &modelCoordinates, Acquisition::Coordinates<ValueType> const &modelCoordinatesBig, Acquisition::coordinate3D const cutCoordinate)
 {
     auto distBig = dielectricPermittivity.getDistributionPtr();
-    auto dist = modelPerShot.getDielectricPermittivity().getDistributionPtr();
 
     scai::lama::CSRSparseMatrix<ValueType> shrinkMatrix = this->getShrinkMatrix(dist, distBig, modelCoordinates, modelCoordinatesBig, cutCoordinate);
 
     lama::DenseVector<ValueType> temp;
+    
+    temp = shrinkMatrix * magneticPermeability;
+    modelPerShot.setMagneticPermeability(temp);
     
     temp = shrinkMatrix * dielectricPermittivity;
     modelPerShot.setDielectricPermittivity(temp);

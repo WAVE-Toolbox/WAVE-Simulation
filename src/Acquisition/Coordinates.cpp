@@ -12,37 +12,28 @@ using namespace scai;
 /* Mapping */
 /* ------- */
 
-/*! \brief constructor for variable grid
+/*! \brief constructor for variable grid (to reduce inversion memory)
  *
  \param config Configuration class
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config)
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config, IndexType DHInversion, ValueType NXPerShot)
 {
-    init(config);
+    init(config, DHInversion, NXPerShot);
 }
 
-template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config) {
-    scai::IndexType DHInversion = 1;
-    init(config, DHInversion);
-}
-
-/*! \brief constructor for variable grid (to reduce inversion memery)
+/*! \brief initialization for variable grid
  *
  \param config Configuration class
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(Configuration::Configuration const &config, scai::IndexType DHInversion)
-{
-    init(config, DHInversion);
-}
-
-template <typename ValueType>
-void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, scai::IndexType DHInversion) {    
-    NX = ceil(config.get<ValueType>("NX") / DHInversion);
+void KITGPI::Acquisition::Coordinates<ValueType>::init(Configuration::Configuration const &config, IndexType DHInversion, ValueType NXPerShot) {    
+    if (NXPerShot < config.get<ValueType>("NX"))
+        NX = ceil(config.get<ValueType>("NX") / DHInversion);
+    else
+        NX = ceil(NXPerShot / DHInversion);
     NY = ceil(config.get<ValueType>("NY") / DHInversion);
     NZ = ceil(config.get<ValueType>("NZ") / DHInversion);
     DH = config.get<ValueType>("DH") * DHInversion;
@@ -125,7 +116,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
 {
     dhFactor = dhFactors;
     interface = interfaces;
-    SCAI_ASSERT_ERROR(dhFactor.size() > 0, "vector of fifferent grid spacings: dhFactor is emty");
+    SCAI_ASSERT_ERROR(dhFactor.size() > 0, "vector of different grid spacings: dhFactor is emty");
     SCAI_ASSERT_ERROR(interface.size() == dhFactor.size() - 1, "number of interfaces doesn't match to the number of different grid spacings");
 
     SCAI_ASSERT_ERROR(NX > 0, "NX<=0");
@@ -264,7 +255,7 @@ void KITGPI::Acquisition::Coordinates<ValueType>::init(std::vector<IndexType> &d
  *
  */
 template <typename ValueType>
-KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(scai::IndexType nx, scai::IndexType ny, scai::IndexType nz, ValueType dh) : NX(nx), NY(ny), NZ(nz), DH(dh)
+KITGPI::Acquisition::Coordinates<ValueType>::Coordinates(IndexType nx, IndexType ny, IndexType nz, ValueType dh) : NX(nx), NY(ny), NZ(nz), DH(dh)
 {
     VariableGrid = false;
     init();
@@ -348,7 +339,7 @@ ValueType KITGPI::Acquisition::Coordinates<ValueType>::getZ0() const
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX() const
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX() const
 {
     return (NX);
 }
@@ -358,7 +349,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNX() const
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY() const
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY() const
 {
     return (NY);
 }
@@ -368,7 +359,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNY() const
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
 {
     return (NZ);
 }
@@ -378,7 +369,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNZ() const
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() const
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() const
 {
     return (nGridpoints);
 }
@@ -388,7 +379,7 @@ scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints() co
  *
  */
 template <typename ValueType>
-scai::IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints(IndexType layer) const
+IndexType KITGPI::Acquisition::Coordinates<ValueType>::getNGridpoints(IndexType layer) const
 {
     return (nGridpointsPerLayer[layer]);
 }
