@@ -43,10 +43,11 @@ namespace KITGPI
             void generateSignals(Configuration::Configuration const &config, scai::hmemo::ContextPtr ctx, std::vector<scai::IndexType> rowinds);
 
             void getAcquisitionSettings(Configuration::Configuration const &config, ValueType shotIncr);
-            void calcSourceSettingsEncode(Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1 = 0, ValueType fc2 = 0);
+            void calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1 = 0, ValueType fc2 = 0);
             void calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount, scai::IndexType &seedtime);
             void writeShotIndIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
-            void writeSourceEncode(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
+            void writeSourceEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
+            void writeSourceFC(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
             void setsourcesignal(scai::lama::DenseMatrix<ValueType> setsourcesignal);
             void setSourceSettings(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> setSourceSettings);
@@ -54,7 +55,7 @@ namespace KITGPI
             std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettingsEncode();
             std::vector<IndexType> getShotIndIncr();
             std::vector<IndexType> getUniqueShotInds();
-            scai::lama::DenseVector<ValueType> getSinFC(int shotIndEncode);
+            scai::lama::DenseVector<ValueType> getSourceFC(int shotInd);
 
             using AcquisitionGeometry<ValueType>::isSeismic;
             
@@ -75,7 +76,7 @@ namespace KITGPI
             std::vector<sourceSettings<ValueType>> sourceSettingsEncode; // sourceSettings of the encoded shots
             std::vector<IndexType> shotIndIncr;   // shot indices selected by shot increment
             std::vector<IndexType> uniqueShotInds;  // shot indices of random shots
-            std::vector<scai::lama::DenseVector<ValueType>> sinFC;
+            std::vector<scai::lama::DenseVector<ValueType>> sourceFC;
     
             bool wavelet_type_flag_2 = false; // flag if wavelet type 2 is used
             bool wavelet_type_flag_3 = false; // flag if wavelet type 3 is used

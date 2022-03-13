@@ -454,14 +454,14 @@ std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getUniqueShotInd
     return (uniqueShotInds);
 }
 
-/*! \brief get sinFC
+/*! \brief get sourceFC
  *
  */
 template <typename ValueType>
-scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Sources<ValueType>::getSinFC(int shotIndEncode)
+scai::lama::DenseVector<ValueType> KITGPI::Acquisition::Sources<ValueType>::getSourceFC(int shotInd)
 {
-    // sinFC[shotIndEncode].size() can be 0 or > 0.
-    return (sinFC[shotIndEncode]);
+    // sourceFC[shotInd].size() can be 0 or > 0.
+    return (sourceFC[shotInd]);
 }
 
 /*! \brief Allocation of the source signals matrix
@@ -563,7 +563,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
  \param config Configuration
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1, ValueType fc2)
+void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1, ValueType fc2)
 {    
     IndexType numshotsIncr = shotIndIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
@@ -573,9 +573,9 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configura
     IndexType useSourceSignalTaper = config.getAndCatch("useSourceSignalTaper", 0);
     SCAI_ASSERT_ERROR(useSourceEncode * useRandomSource == 0, "useSourceEncode and useRandomSource are not compatible!");
     SCAI_ASSERT_ERROR(useSourceEncode * useSourceSignalTaper == 0, "useSourceEncode and useSourceSignalTaper are not compatible!");
-    if (useStreamConfig != 0) {
-        SCAI_ASSERT_ERROR(useSourceEncode == 3, "useSourceEncode must be 3 when useStreamConfig != 0!");
-    }
+    if (useStreamConfig != 0)
+        SCAI_ASSERT_ERROR(useSourceEncode == 0 || useSourceEncode == 3, "useSourceEncode must be 0 or 3 when useStreamConfig != 0!");
+        
     ValueType df;
     IndexType fcInd;
     lama::DenseVector<ValueType> fc12;
@@ -589,20 +589,35 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configura
         df = 1 / (nFFT * config.get<ValueType>("DT"));
         IndexType fc1Ind = ceil(fc1 / df);
         IndexType fc2Ind = ceil(fc2 / df);
-        if (fc1Ind == 0)
-            fc1Ind = 2; // ensure steady-state wavefields.
-        if (fc1Ind % 2 == 1)
-            fc1Ind += 1; // ensure steady-state wavefields.
-        nfc12 = ceil(ValueType(fc2Ind-fc1Ind+1)/2);
-        fc12 = lama::linearDenseVector<ValueType>(nfc12, fc1Ind*df, 2*df);
+        if (useSourceEncode == 0) {
+            fc1Ind = ceil((ValueType)fc1Ind / 2); // to cover all effective frequencies
+            fc2Ind *= 2; // to cover all effective frequencies
+            if (fc1Ind == 0)
+                fc1Ind = 1;
+            nfc12 = ceil(ValueType(fc2Ind-fc1Ind+1));
+            fc12 = lama::linearDenseVector<ValueType>(nfc12, fc1Ind*df, df);
+            
+            sourceFC.clear();
+            for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+                sourceFC.push_back(fc12);                
+            }
+        } else {
+            if (fc1Ind == 0)
+                fc1Ind = 2; // ensure steady-state wavefields.
+            if (fc1Ind % 2 == 1)
+                fc1Ind += 1; // ensure steady-state wavefields.
+            nfc12 = ceil(ValueType(fc2Ind-fc1Ind+1)/2);
+            fc12 = lama::linearDenseVector<ValueType>(nfc12, fc1Ind*df, 2*df);
+        }
     }
     if (useSourceEncode != 0) {
         sourceSettingsEncode = sourceSettingsShotIncr;
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
-        IndexType numShotPerShot = ceil(ValueType(numshotsIncr) / numShotDomains); 
+        Common::checkNumShotDomains(numShotDomains, commAll);
+        IndexType numShotPerSuperShot = ceil(ValueType(numshotsIncr) / numShotDomains); 
         
         if (gradientDomain != 0) {
-            SCAI_ASSERT_ERROR(nfc12 >= numShotPerShot, "The number of frequency is less than numShotPerShot!");
+            SCAI_ASSERT_ERROR(nfc12 >= numShotPerSuperShot, "The number of frequency is less than numShotPerSuperShot!");
         }
         std::srand(seedtime);
         seedtime++;
@@ -616,7 +631,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configura
                     shotHistory[shotInd]++;
                 } else {
                     sourceInd = std::rand() % numShotDomains;
-                    while (shotHistory[sourceInd] >= numShotPerShot) {
+                    while (shotHistory[sourceInd] >= numShotPerSuperShot) {
                         sourceInd = std::rand() % numShotDomains;
                     }
                     shotHistory[sourceInd]++;
@@ -632,14 +647,14 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configura
             }
         } else if (useSourceEncode == 3) { // sequentially to cover local area
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd / numShotPerShot;
+                sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd / numShotPerSuperShot;
             }
         }
         if (gradientDomain != 0) { // the frequency is selected randomly.
             std::vector<IndexType> uniqueShotNosEncode;
             Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
-            sinFC.clear();
-            scai::lama::DenseVector<ValueType> uniqueFC(numShotPerShot, 0);
+            sourceFC.clear();
+            scai::lama::DenseVector<ValueType> uniqueFC(numShotPerSuperShot, 0);
             for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
                 std::vector<scai::IndexType> fc12History(nfc12, 0);
                 IndexType jf = 0;
@@ -657,7 +672,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(Configura
                         jf++;
                     }
                 }
-                sinFC.push_back(uniqueFC);
+                sourceFC.push_back(uniqueFC);
             }
         }
     }
@@ -680,6 +695,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::Co
     if (useRandomSource != 0) {
         double start_t = common::Walltime::get();
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
+        Common::checkNumShotDomains(numShotDomains, commAll);
         std::vector<IndexType> tempShotInds(numShotDomains, 0); 
         uniqueShotInds = tempShotInds;
         Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshotsIncr, maxcount, useRandomSource, seedtime);        
@@ -735,14 +751,15 @@ void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(scai::dmemo::Comm
  \param filename filename
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, IndexType stage, IndexType iteration)
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage, IndexType iteration)
 {
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
-    int myRank = comm->getRank();  
+    int myRank = commAll->getRank();  
     if (myRank == MASTERGPI && useSourceEncode != 0) {
         std::vector<IndexType> uniqueShotNosEncode;
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
+        Common::checkNumShotDomains(numShotDomains, commAll);
         IndexType numshotsIncr = shotIndIncr.size(); // the number of all shots
         SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndIncr.size(), "sourceSettingsEncode.size() != shotIndIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
         std::string filename;
@@ -760,18 +777,68 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(scai::dmemo::Com
         std::ofstream outputFile; 
         outputFile.open(filename);
         outputFile << "# Shot indices used in source encode (useSourceEncode = " << useSourceEncode << ", numShotDomains = " << numShotDomains << ", numshots = " << numshotsIncr << ")\n"; 
-        outputFile << "# Shot number | shot index (selected) | frequency (Hz)\n"; 
+        outputFile << "# Shot number | shot index (selected)\n"; 
         for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
             outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
             for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
                 if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
                     outputFile << std::setw(5) << shotInd+1;
             }
-            for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
-                if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
-                    outputFile << std::setw(14) << sourceSettingsEncode[shotInd].fc;
+            outputFile << "\n";
+        }
+    }
+}
+
+/*! \brief Write the sourceFC
+ *
+ \param config Configuration
+ \param filename filename
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Sources<ValueType>::writeSourceFC(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage, IndexType iteration)
+{
+    IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    int myRank = commAll->getRank();  
+    if (myRank == MASTERGPI && gradientDomain != 0) {
+        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
+        Common::checkNumShotDomains(numShotDomains, commAll);
+        IndexType NF = sourceFC[0].size(); // the number of all shots
+        std::string filename;
+        bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
+        if (useStreamConfig) {
+            Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+            filename = configBig.get<std::string>("SourceFilename");
+        } else {
+            filename = config.get<std::string>("SourceFilename");
+        }
+        if (stage != 0)
+            filename += ".stage_" + std::to_string(stage) + ".It_" + std::to_string(iteration);
+            
+        filename += ".sourceFC.txt";
+        std::ofstream outputFile; 
+        outputFile.open(filename);
+        outputFile << "# Shot frequency used in the frequency domain gradient (gradientDomain = " << gradientDomain << ", useSourceEncode = " << useSourceEncode << ", numShotDomains = " << numShotDomains << ", NF = " << NF << ")\n"; 
+        outputFile << "# Shot number | frequency (Hz)\n"; 
+        if (useSourceEncode == 0) {
+            outputFile << std::setw(13) << sourceSettingsShotIncr[0].sourceNo;
+            for (int jf = 0; jf < NF; jf++) { 
+                outputFile << std::setw(14) << sourceFC[0].getValue(jf);
             }
             outputFile << "\n";
+        } else {
+            IndexType numshotsIncr = shotIndIncr.size(); // the number of all shots
+            std::vector<IndexType> uniqueShotNosEncode;
+            Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
+            SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndIncr.size(), "sourceSettingsEncode.size() != shotIndIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
+            for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
+                outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
+                for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
+                    if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == uniqueShotNosEncode[shotIndEncode])
+                        outputFile << std::setw(14) << sourceSettingsEncode[shotInd].fc;
+                }
+                outputFile << "\n";
+            }
         }
     }
 }

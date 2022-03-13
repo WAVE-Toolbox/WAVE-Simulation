@@ -550,54 +550,62 @@ void KITGPI::Acquisition::Receivers<ValueType>::decode(Configuration::Configurat
  \param config Configuration
  */
 template <typename ValueType>
-ValueType KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(Configuration::Configuration const &config)
+void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, ValueType &NXPerShot, scai::IndexType &numShotPerSuperShot)
 {
-    ValueType NX = config.get<ValueType>("NX");
-    bool useStreamConfig = config.getAndCatch("useStreamConfig", false);
-    if (useStreamConfig) {   
-        Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
-        std::vector<sourceSettings<ValueType>> sourceSettingsBig;  
-        Acquisition::Sources<ValueType> sources;
-        
-        std::vector<sourceSettings<ValueType>> sourceSettingsEncode; 
-        std::vector<receiverSettings> receiverSettings; 
-        
-        ValueType shotIncr = 0;        
-        sources.getAcquisitionSettings(config, shotIncr); // to get numshots
-        sourceSettingsBig = sources.getSourceSettings(); 
-        IndexType numshots = sourceSettingsBig.size();
-        shotIncr = config.getAndCatch("shotIncr", 0.0);        
-        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
-        sourceSettingsBig = sources.getSourceSettings(); 
-        std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
-        IndexType shotNumber;
-        IndexType Xsrc;
-        IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
-        if (useSourceEncode == 0) {
-            shotNumber = std::abs(sourceSettingsBig[0].sourceNo);
-            Xsrc = sourceSettingsBig[0].sourceCoords.x;
-        } else {
-            IndexType seedtime = 0;
-            sources.calcSourceSettingsEncode(config, seedtime);
-            sourceSettingsEncode = sources.getSourceSettingsEncode();
-            shotNumber = std::abs(sourceSettingsEncode[0].sourceNo);
-            Xsrc = sourceSettingsEncode[0].sourceCoords.x;
-        }
-        getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
-        
-        IndexType maxXrec = receiverSettings[0].receiverCoords.x;
-        for (unsigned i = 0; i < receiverSettings.size(); i++) {             
-            if (maxXrec < receiverSettings[i].receiverCoords.x)
-                maxXrec = receiverSettings[i].receiverCoords.x;
-        }
-        
-        if (maxXrec < Xsrc)
-            maxXrec = Xsrc;
-        IndexType BoundaryWidth = config.get<IndexType>("BoundaryWidth");
-        if (NX < maxXrec + BoundaryWidth)
-            NX = maxXrec + BoundaryWidth;
+    NXPerShot = config.get<ValueType>("NX");
+    numShotPerSuperShot = 0;
+    Acquisition::Sources<ValueType> sources;
+
+    std::vector<sourceSettings<ValueType>> sourceSettingsBig;  
+    
+    std::vector<sourceSettings<ValueType>> sourceSettingsEncode; 
+    std::vector<receiverSettings> receiverSettings; 
+    
+    ValueType shotIncr = 0;        
+    sources.getAcquisitionSettings(config, shotIncr); // to get numshots
+    sourceSettingsBig = sources.getSourceSettings(); 
+    IndexType numshots = sourceSettingsBig.size();
+    shotIncr = config.getAndCatch("shotIncr", 0.0);        
+    sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
+    sourceSettingsBig = sources.getSourceSettings(); 
+    std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
+    IndexType shotNumber;
+    IndexType Xsrc;
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    IndexType seedtime = 0;
+    sources.calcSourceSettingsEncode(commAll, config, seedtime);
+    if (useSourceEncode == 0) {
+        shotNumber = std::abs(sourceSettingsBig[0].sourceNo);
+        Xsrc = sourceSettingsBig[0].sourceCoords.x;
+    } else {
+        sourceSettingsEncode = sources.getSourceSettingsEncode();
+        shotNumber = std::abs(sourceSettingsEncode[0].sourceNo);
+        Xsrc = sourceSettingsEncode[0].sourceCoords.x;
     }
-    return NX;
+    getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
+    
+    IndexType maxXrec = receiverSettings[0].receiverCoords.x;
+    for (unsigned i = 0; i < receiverSettings.size(); i++) {             
+        if (maxXrec < receiverSettings[i].receiverCoords.x)
+            maxXrec = receiverSettings[i].receiverCoords.x;
+    }
+    
+    if (maxXrec < Xsrc)
+        maxXrec = Xsrc;
+    
+    IndexType BoundaryWidth = config.get<IndexType>("BoundaryWidth");
+    bool useStreamConfig = config.getAndCatch("useStreamConfig", false);
+    IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
+    
+    if (useStreamConfig && NXPerShot < maxXrec + BoundaryWidth + 1) {
+        NXPerShot = maxXrec + BoundaryWidth + 1;
+        HOST_PRINT(commAll, "NXPerShot = " << NXPerShot << "\n");
+    }
+    
+    if (gradientDomain != 0) {
+        numShotPerSuperShot = sources.getSourceFC(0).size();
+        HOST_PRINT(commAll, "numShotPerSuperShot = " << numShotPerSuperShot << "\n");
+    }
 }
 
 template class KITGPI::Acquisition::Receivers<double>;

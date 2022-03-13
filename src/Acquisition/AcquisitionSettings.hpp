@@ -358,7 +358,7 @@ namespace KITGPI
             IndexType sourceCoordsX = 0;
             IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
             IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
-            IndexType numShotPerShot = ceil(ValueType(numshotsIncr) / numShotDomains); 
+            IndexType numShotPerSuperShot = ceil(ValueType(numshotsIncr) / numShotDomains); 
                 
             IndexType minX = sourceSettingsBig[0].sourceCoords.x;
             for (int i = 0; i < numshotsIncr; i++) {               
@@ -369,7 +369,7 @@ namespace KITGPI
                 if (sourceSettingsBig[i].sourceNo >= 0) {
                     if (useSourceEncode == 0) {
                         sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
-                    } else if (useSourceEncode == 3 && i % numShotPerShot == 0) {
+                    } else if (useSourceEncode == 3 && i % numShotPerSuperShot == 0) {
                         sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
                     }
                 } // if sourceSettingsBig[i].sourceNo < 0, the previous sourceCoordsX will be used.

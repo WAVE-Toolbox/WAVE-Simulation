@@ -43,7 +43,7 @@ int main(int argc, const char *argv[])
     double start_t, end_t;             /* For timing */
     double globalStart_t, globalEnd_t; /* For timing */
     globalStart_t = common::Walltime::get();
-    IndexType seedtime = (int)time(0)/10;
+    IndexType seedtime = (int)time(0);
 
     if (argc != 2) {
         std::cout << "\n\nNo configuration file given!\n\n"
@@ -91,7 +91,9 @@ int main(int argc, const char *argv[])
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
     Acquisition::Receivers<ValueType> receivers; 
-    ValueType NXPerShot = receivers.getModelPerShotSize(config);
+    ValueType NXPerShot;
+    IndexType numShotPerSuperShot;
+    receivers.getModelPerShotSize(commAll, config, NXPerShot, numShotPerSuperShot);
     Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
     Acquisition::Coordinates<ValueType> modelCoordinatesBig;
 
@@ -254,16 +256,17 @@ int main(int argc, const char *argv[])
     Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
     IndexType numshots = 1;
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    sources.calcSourceSettingsEncode(commAll, config, seedtime);
     if (useSourceEncode == 0) {
         numshots = uniqueShotNos.size();
     } else {
-        sources.calcSourceSettingsEncode(config, seedtime);
         sourceSettingsEncode = sources.getSourceSettingsEncode();
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         numshots = numShotDomains;
     }
     SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
     sources.writeShotIndIncr(commAll, config, uniqueShotNos);
+    sources.writeSourceFC(commAll, config); 
     sources.writeSourceEncode(commAll, config); 
     Acquisition::writeCutCoordToFile(commAll, config, cutCoordinates, uniqueShotNos, NXPerShot);    
     
@@ -402,9 +405,9 @@ int main(int argc, const char *argv[])
             }
 
             if (randInd == 1 && decomposition != 0) {
-                HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << " Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                HOST_PRINT(commShot, "Start time stepping for shot number " << shotNumber << " (" << "domain " << shotDomain << ", index " << shotIndTrue + 1 << " of " << numshots << ") Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
             } else {
-                HOST_PRINT(commShot, "Start time stepping for shot " << shotIndTrue + 1 << " (shot no: " << shotNumber << "), shotDomain = " << shotDomain << "\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
+                HOST_PRINT(commShot, "Start time stepping for shot number " << shotNumber << " (" << "domain " << shotDomain << ", index " << shotIndTrue + 1 << " of " << numshots << ")\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
             }
             
             start_t = common::Walltime::get();
@@ -492,7 +495,7 @@ int main(int argc, const char *argv[])
             }
             solver->resetCPML();
             end_t = common::Walltime::get();
-            HOST_PRINT(commShot, "Finished time stepping for shot no: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
+            HOST_PRINT(commShot, "Finished time stepping for shot number: " << shotNumber << " in " << end_t - start_t << " sec.\n", "");
             
             // check wavefield and seismogram for NaNs or infinite values
             SCAI_ASSERT_ERROR(commShot->all(wavefields->isFinite(dist)) && commShot->all(receivers.getSeismogramHandler().isFinite()),"Infinite or NaN value in seismogram or/and velocity wavefield!") // if all processors return isfinite=true, everything is finite
