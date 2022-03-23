@@ -447,11 +447,68 @@ bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
     bool isfinite=true;
     for (auto &i : seismo) {
         isfinite = i.isFinite();
-            if (isfinite==false){
-                break;
-            }
+        if (isfinite==false){
+            break;
+        }
     }
     return(isfinite);
+}
+
+/*! \brief Getter method for the shotInd
+*
+*
+\return The shotInd
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType setShotInd)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0) {
+            i.getShotInd() = setShotInd;
+            break;
+        }
+    }
+}
+
+/*! \brief Function for summing the common offset profile data of all shot domains
+ *
+ \param commInterShot inter shot communication pointer
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot)
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0) {
+            i.sumShotDomain(commInterShot);
+            break;
+        }
+    }
+}
+
+/*! \brief Function for allocating dataCOP
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::allocateDataCOP(IndexType numshots, IndexType tStepEnd)
+{
+    for (auto &i : seismo) {
+        i.getDataCOP().allocate(numshots, tStepEnd);
+    }
+}
+
+/*! \brief Function for assigning dataCOP to data
+ *
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::assignDataCOP()
+{
+    for (auto &i : seismo) {
+        if (i.getNumTracesGlobal() > 0) {
+            i.getData() = i.getDataCOP();
+            i.getDataCOP().scale(0); // reset is needed for iteration update
+            break;
+        }
+    }
 }
 
 template class KITGPI::Acquisition::SeismogramHandler<double>;

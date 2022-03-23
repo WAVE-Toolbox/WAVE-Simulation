@@ -25,8 +25,8 @@
 #include "CheckParameter/CheckParameter.hpp"
 #include "Common/HostPrint.hpp"
 #include "Common/Common.hpp"
-#include "Partitioning/Partitioning.hpp"
 #include <scai/lama/io/PartitionIO.hpp>
+#include "Partitioning/Partitioning.hpp"
 
 using namespace scai;
 using namespace KITGPI;
@@ -91,8 +91,8 @@ int main(int argc, const char *argv[])
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
     Acquisition::Receivers<ValueType> receivers; 
-    ValueType NXPerShot;
-    IndexType numShotPerSuperShot;
+    ValueType NXPerShot = config.get<IndexType>("NX");;
+    IndexType numShotPerSuperShot = 1;
     receivers.getModelPerShotSize(commAll, config, NXPerShot, numShotPerSuperShot);
     Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
     Acquisition::Coordinates<ValueType> modelCoordinatesBig;
@@ -349,6 +349,12 @@ int main(int argc, const char *argv[])
     /* --------------------------------------- */
     /* Loop over shots                         */
     /* --------------------------------------- */
+    if (uniqueShotNos.size() == sourceSettings.size() && uniqueShotNos.size() > 1) {
+        if (config.getAndCatch("writeSource", false))
+            sources.getSeismogramHandler().allocateDataCOP(numshots, tStepEnd);
+        if (receivers.getNumTracesGlobal() == 1)
+            receivers.getSeismogramHandler().allocateDataCOP(numshots, tStepEnd);
+    }
     for (IndexType randInd = 0; randInd < numRand; randInd++) { 
         sources.calcUniqueShotInds(commAll, config, shotHistory, maxcount, seedtime);
         std::vector<IndexType> uniqueShotInds = sources.getUniqueShotInds();
@@ -368,6 +374,7 @@ int main(int argc, const char *argv[])
                 Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettingsEncode, shotNumber);
             }                    
             sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
+            sources.getSeismogramHandler().setShotInd(shotIndTrue);
 
             if (!useStreamConfig) {
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
@@ -391,8 +398,7 @@ int main(int argc, const char *argv[])
                 hilbertHandlerTime.hilbert(sourcesignalHilbert);
                 sources.setsourcesignal(sourcesignalHilbert);
             }
-            bool writeSource = config.getAndCatch("writeSource", false);
-            if (writeSource) {
+            if (config.getAndCatch("writeSource", false)) {
                 if (randInd == 1 && decomposition != 0) {
                     sources.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("writeSourceFilename") + ".shot_" + std::to_string(shotNumber) + ".Hilbert", modelCoordinates);
                 } else {
@@ -403,6 +409,7 @@ int main(int argc, const char *argv[])
             if (config.get<IndexType>("useReceiversPerShot") != 0) {
                 receivers.init(config, modelCoordinates, ctx, dist, shotNumber, sourceSettingsEncode);
             }
+            receivers.getSeismogramHandler().setShotInd(shotIndTrue);
 
             if (randInd == 1 && decomposition != 0) {
                 HOST_PRINT(commShot, "Start time stepping for shot number " << shotNumber << " (" << "domain " << shotDomain << ", index " << shotIndTrue + 1 << " of " << numshots << ") Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");
@@ -514,6 +521,34 @@ int main(int argc, const char *argv[])
                 receivers.decode(config, config.get<std::string>("SeismogramFilename"), shotNumber, sourceSettingsEncode, 1);
                 receivers.writeReceiverMark(config, shotNumber);
             }                
+        }
+        if (uniqueShotNos.size() == sourceSettings.size() && uniqueShotNos.size() > 1) {
+            if (config.getAndCatch("writeSource", false)) {  
+                sources.getSeismogramHandler().sumShotDomain(commInterShot);
+                if (commInterShot->getRank() == 0) {
+                    sources.getSeismogramHandler().assignDataCOP();
+                    if (randInd == 1 && decomposition != 0) {
+                        sources.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("writeSourceFilename") + ".Hilbert", modelCoordinates);
+                    } else {
+                        sources.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("writeSourceFilename"), modelCoordinates);
+                    }
+                }
+                start_t = common::Walltime::get();
+                HOST_PRINT(commAll, "Finished sources sumShotDomain in " << start_t - end_t << " sec.\n", "");
+            }        
+            if (receivers.getNumTracesGlobal() == 1) {
+                receivers.getSeismogramHandler().sumShotDomain(commInterShot);
+                if (commInterShot->getRank() == 0) {
+                    receivers.getSeismogramHandler().assignDataCOP();
+                    if (randInd == 1 && decomposition != 0) { 
+                        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename") + ".Hilbert", modelCoordinates);
+                    } else {
+                        receivers.getSeismogramHandler().write(config.get<IndexType>("SeismogramFormat"), config.get<std::string>("SeismogramFilename"), modelCoordinates);
+                    }    
+                }
+                start_t = common::Walltime::get();
+                HOST_PRINT(commAll, "Finished receivers sumShotDomain in " << start_t - end_t << " sec.\n", "");
+            }
         }
                    
         if (config.getAndCatch("useRandomSource", 0) == 0 && decomposition == 0) 

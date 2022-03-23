@@ -54,6 +54,11 @@ namespace KITGPI
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramType type) const;
             scai::IndexType getNumSamples(SeismogramTypeEM type) const;
+            void setShotInd(IndexType setShotInd);
+            void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot);
+            void allocateDataCOP(IndexType numshots, IndexType tStepEnd);
+            void assignDataCOP();
+            
             KITGPI::Acquisition::SeismogramHandler<ValueType> operator*=(scai::lama::DenseVector<ValueType> const &rhs);
             bool isFinite();
 

@@ -35,14 +35,14 @@ void KITGPI::Acquisition::Sources<ValueType>::init(std::vector<sourceSettings<Va
 
     /* Generate Signals */
     std::vector<scai::IndexType> readrows;
-    std::vector<scai::IndexType> sourceNos;
+    std::vector<scai::IndexType> waveletAmp;
     for (unsigned long i = 0; i < allSettings.size(); i++) {
         readrows.push_back(allSettings[i].row);
-        sourceNos.push_back(allSettings[i].sourceNo);
+        waveletAmp.push_back(allSettings[i].amp);
     }
 
     generateSignals(config, ctx, readrows);
-    copySignalsToSeismogramHandler(sourceNos);
+    copySignalsToSeismogramHandler(waveletAmp);
 }
 
 /*! \brief Init with a signal matrix
@@ -82,8 +82,8 @@ void KITGPI::Acquisition::Sources<ValueType>::init(scai::lama::DenseMatrix<Value
     signals.setDT(DT);
     signalMatrix.redistribute(signals.getData().getRowDistributionPtr(), signals.getData().getColDistributionPtr());
     signals.getData() = signalMatrix;
-    std::vector<scai::IndexType> sourceNos(signals.getData().getNumRows(), 1);
-    copySignalsToSeismogramHandler(sourceNos);
+    std::vector<scai::IndexType> waveletAmp(signals.getData().getNumRows(), 1);
+    copySignalsToSeismogramHandler(waveletAmp);
 }
 
 /*! \brief Generation of the source signal for a single shot
@@ -351,10 +351,10 @@ void KITGPI::Acquisition::Sources<ValueType>::initOptionalAcquisitionParameter(s
 }
 
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler(std::vector<scai::IndexType> sourceNos)
+void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler(std::vector<scai::IndexType> waveletAmp)
 {
     IndexType tempIndexType;
-    IndexType signNo;
+    IndexType signAmp;
     lama::DenseVector<ValueType> temp;
     SeismogramHandler<ValueType> &seismograms = this->getSeismogramHandler();
     IndexType count[NUM_ELEMENTS_SEISMOGRAMTYPE] = {0, 0, 0, 0};
@@ -364,8 +364,10 @@ void KITGPI::Acquisition::Sources<ValueType>::copySignalsToSeismogramHandler(std
         tempIndexType = this->getSeismogramTypes().getValue(i) - 1;
 
         signals.getData().getRow(temp, i);
-        signNo = (sourceNos[i] > 0) ? 1 : -1;   
-        temp *= signNo;
+        if (wavelet_type[i] != 1) { // amp has been assigned for wavelet_type = 1
+            signAmp = (waveletAmp[i] > 0) ? 1 : -1;   
+            temp *= signAmp;
+        }
 
         seismograms.getSeismogram(static_cast<SeismogramType>(tempIndexType)).getData().setRow(temp, count[tempIndexType], scai::common::BinaryOp::COPY);
 
@@ -401,8 +403,8 @@ template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::setsourcesignal(lama::DenseMatrix<ValueType> setsourcesignal)
 {
     signals.getData() = setsourcesignal;
-    std::vector<scai::IndexType> sourceNos(signals.getData().getNumRows(), 1);
-    copySignalsToSeismogramHandler(sourceNos);
+    std::vector<scai::IndexType> waveletAmp(signals.getData().getNumRows(), 1);
+    copySignalsToSeismogramHandler(waveletAmp);
 }
 
 /*! \brief get sourceSettings
@@ -623,11 +625,10 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dme
         seedtime++;
         std::vector<scai::IndexType> shotHistory(numShotDomains, 0);
         if (useSourceEncode == 1) { // randomly
-            IndexType signNo;
             IndexType sourceInd;
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                 if (shotInd < numShotDomains) {// to ensure the sourceNo increase
-                    sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd;
+                    sourceSettingsEncode[shotInd].sourceNo = numShotDomains * 1e4 + 1 + shotInd;
                     shotHistory[shotInd]++;
                 } else {
                     sourceInd = std::rand() % numShotDomains;
@@ -635,19 +636,21 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dme
                         sourceInd = std::rand() % numShotDomains;
                     }
                     shotHistory[sourceInd]++;
-                    sourceSettingsEncode[shotInd].sourceNo = 10001 + sourceInd;
+                    sourceSettingsEncode[shotInd].sourceNo = numShotDomains * 1e4 + 1 + sourceInd;
                 }
-                signNo = std::rand() % 2;
-                signNo = (signNo > 0) ? 1 : -1;                
-                sourceSettingsEncode[shotInd].sourceNo *= signNo;
+            } 
+            for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                IndexType signAmp = std::rand() % 2;
+                signAmp = (signAmp > 0) ? 1 : -1;                
+                sourceSettingsEncode[shotInd].amp *= signAmp;
             } 
         } else if (useSourceEncode == 2) { // sequentially to cover global area
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd % numShotDomains;
+                sourceSettingsEncode[shotInd].sourceNo = numShotDomains * 1e4 + 1 + shotInd % numShotDomains;
             }
         } else if (useSourceEncode == 3) { // sequentially to cover local area
             for (IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                sourceSettingsEncode[shotInd].sourceNo = 10001 + shotInd / numShotPerSuperShot;
+                sourceSettingsEncode[shotInd].sourceNo = numShotDomains * 1e4 + 1 + shotInd / numShotPerSuperShot;
             }
         }
         if (gradientDomain != 0) { // the frequency is selected randomly.

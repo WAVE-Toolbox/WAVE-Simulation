@@ -18,7 +18,7 @@ KITGPI::Acquisition::Seismogram<ValueType>::Seismogram(const Seismogram &rhs)
     seismoType = rhs.seismoType;
     seismoTypeEM = rhs.seismoTypeEM;
     coordinates1D = rhs.coordinates1D;
-    sourceIndex = rhs.sourceIndex;
+    sourceCoordinate1D = rhs.sourceCoordinate1D;
     data = rhs.data;
     resampleMat = rhs.resampleMat;
     outputInstantaneous = rhs.outputInstantaneous;
@@ -43,7 +43,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::swap(KITGPI::Acquisition::Seism
     std::swap(seismoType, rhs.seismoType);
     std::swap(seismoTypeEM, rhs.seismoTypeEM);
     std::swap(coordinates1D, rhs.coordinates1D);
-    std::swap(sourceIndex, rhs.sourceIndex);
+    std::swap(sourceCoordinate1D, rhs.sourceCoordinate1D);
     std::swap(outputInstantaneous, rhs.outputInstantaneous);
     std::swap(frequencyAGC, rhs.frequencyAGC);
     std::swap(isSeismic, rhs.isSeismic);
@@ -81,7 +81,14 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setContextPtr(scai::hmemo::Cont
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates)
 {
-    if (data.getNumValues() > 0) {
+    bool writedata = true;
+    if (data.getNumValues() > 0 && data.getNumRows() == 1 && dataCOP.getNumRows() > 1) {
+        scai::lama::DenseVector<ValueType> tempRow;
+        data.getRow(tempRow, 0);
+        dataCOP.setRow(tempRow, shotInd, scai::common::BinaryOp::COPY);
+        writedata = false;
+    }
+    if (data.getNumValues() > 0 && writedata) {
         scai::lama::DenseMatrix<ValueType> dataResample;
         dataResample = data * resampleMat;
         
@@ -104,7 +111,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
         
         switch (seismoFormat) {
         case 4:
-            SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
+            SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceCoordinate1D, modelCoordinates);
             break;
         default:
             IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
@@ -123,7 +130,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
             
             switch (seismoFormat) {
             case 4:
-                SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceIndex, modelCoordinates);
+                SUIO::writeSU(filenameTmp, dataResample, coordinates1D, outputDT, sourceCoordinate1D, modelCoordinates);
                 break;
             default:
                 IO::writeMatrix(dataResample, filenameTmp, seismoFormat);
@@ -144,11 +151,17 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
 {
-    std::string filenameTmp;
+    bool readSingleTrace = false;
+    std::string filenameTmp = filename;
+    if (data.getNumRows() == 1 && dataCOP.getNumRows() > 1) {
+        readSingleTrace = true;
+        IndexType pos = filename.find(".shot");
+        filenameTmp = filename.substr(0, pos);
+    }
     if (isSeismic)
-        filenameTmp = filename + "." + SeismogramTypeString[getTraceType()];
+        filenameTmp = filenameTmp + "." + SeismogramTypeString[getTraceType()];
     else
-        filenameTmp = filename + "." + SeismogramTypeStringEM[getTraceTypeEM()];
+        filenameTmp = filenameTmp + "." + SeismogramTypeStringEM[getTraceTypeEM()];
     scai::IndexType seismoFormat = seismogramFormat;
     scai::lama::DenseMatrix<ValueType> dataTemp(data);
     if (seismogramFormat == 5) {
@@ -156,14 +169,25 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
         filenameTmp += ".inverseAGC";
         useAGC = true;
     }
-    
-    switch (seismoFormat) {
-    case 4:
-        SUIO::readDataSU(filenameTmp, dataTemp, this->getNumSamples(), this->getNumTracesGlobal());
-        break;
-    default:
-        IO::readMatrix(dataTemp, filenameTmp, seismoFormat);
-        break;
+    if (!readSingleTrace) {
+        switch (seismoFormat) {
+        case 4:
+            SUIO::readDataSU(filenameTmp, dataTemp, this->getNumSamples(), this->getNumTracesGlobal());
+            break;
+        default:
+            IO::readMatrix(dataTemp, filenameTmp, seismoFormat);
+            break;
+        }
+    } else {
+        switch (seismoFormat) {
+        case 4:
+            SUIO::readDataSU(filenameTmp, dataTemp, this->getNumSamples(), 1);
+            break;
+        default:
+            hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(filenameTmp, shotInd, seismoFormat);
+            dataTemp.setLocalRow(localsignal, 0, scai::common::BinaryOp::COPY);
+            break;
+        }
     }
     if (seismogramFormat == 5) {
         inverseAGC = dataTemp;
@@ -513,10 +537,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::setDT(ValueType newDT)
  \param sourceCoord Source Index
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceIdx)
+void KITGPI::Acquisition::Seismogram<ValueType>::setSourceCoordinate(IndexType sourceCoord)
 {
-    SCAI_ASSERT_DEBUG(sourceIdx >= 0, "sourceCoord is not valid");
-    sourceIndex = sourceIdx;
+    SCAI_ASSERT_DEBUG(sourceCoord >= 0, "sourceCoord is not valid");
+    sourceCoordinate1D = sourceCoord;
 }
 
 //! \brief Setter method for the #SeismogramType
@@ -745,6 +769,22 @@ lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::
  *
  */
 template <typename ValueType>
+lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDataCOP()
+{
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    return (dataCOP);
+}
+
+//! \brief Getter method for reference to seismogram data
+/*!
+ *
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
 std::vector<scai::lama::DenseMatrix<ValueType>> &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode()
 {
     // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
@@ -834,7 +874,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::allocate(scai::hmemo::ContextPt
 template <typename ValueType>
 void KITGPI::Acquisition::Seismogram<ValueType>::resetData()
 {
-    data.scale(0.0);
+    data.scale(0);
 }
 
 //! \brief Reset of the seismogram
@@ -847,7 +887,7 @@ void KITGPI::Acquisition::Seismogram<ValueType>::resetSeismogram()
 {
     data.clear();
     coordinates1D = lama::DenseVector<scai::IndexType>();
-    sourceIndex = 0;
+    sourceCoordinate1D = 0;
     DT = 0.0;
 }
 
@@ -924,7 +964,39 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getNumTracesGlobal() const
 template <typename ValueType>
 IndexType KITGPI::Acquisition::Seismogram<ValueType>::getSourceCoordinate() const
 {
-    return (sourceIndex);
+    return (sourceCoordinate1D);
+}
+
+/*! \brief Getter method for the shotInd
+*
+*
+\return The source Index
+ */
+template <typename ValueType>
+IndexType &KITGPI::Acquisition::Seismogram<ValueType>::getShotInd()
+{
+    return (shotInd);
+}
+
+/*! \brief Function for summing the common offset profile data of all shot domains
+ *
+ \param commInterShot inter shot communication pointer
+ */
+template <typename ValueType>
+void KITGPI::Acquisition::Seismogram<ValueType>::sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot)
+{
+    /*reduction between shot domains.
+    each shot domain may have a different distribution of dataCOP. Therefore it is necessary that only one process per shot domain communicates all data.
+    */
+    scai::lama::DenseVector<ValueType> tempCol;
+    
+    if (dataCOP.getNumValues() > 0) {
+        for (IndexType i = 0; i < getNumSamples(); i++) {
+            dataCOP.getColumn(tempCol, i);
+            commInterShot->sumArray(tempCol.getLocalValues());
+            dataCOP.setColumn(tempCol, i, scai::common::BinaryOp::COPY);
+        }
+    }
 }
 
 /*! \brief Overloading *= Operation

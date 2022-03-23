@@ -8,7 +8,6 @@
 #include "HostPrint.hpp"
 #include "Receivers.hpp"
 
-
 using namespace KITGPI;
 using namespace scai;
 

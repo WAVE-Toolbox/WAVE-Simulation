@@ -69,6 +69,7 @@ namespace KITGPI
             ValueType getDT() const;
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
+            scai::lama::DenseMatrix<ValueType> &getDataCOP();
             std::vector<scai::lama::DenseMatrix<ValueType>> &getDataDecode();
             std::vector<scai::lama::DenseMatrix<ValueType>> const &getDataDecode() const;
             scai::lama::DenseMatrix<ValueType> const &getDataDecode(int shotInd) const;
@@ -78,11 +79,13 @@ namespace KITGPI
             SeismogramType getTraceType() const;
             SeismogramTypeEM getTraceTypeEM() const;
             scai::IndexType getSourceCoordinate() const;
+            scai::IndexType &getShotInd();
+            void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot);
 
             /* Setter functions */
             void setDT(ValueType newDT);
             void setContextPtr(scai::hmemo::ContextPtr ctx);
-            void setSourceCoordinate(scai::IndexType sourceIdx);
+            void setSourceCoordinate(scai::IndexType sourceCoord);
             void setTraceType(SeismogramType trace);
             void setTraceTypeEM(SeismogramTypeEM trace);
             void setCoordinates(scai::lama::DenseVector<scai::IndexType> const &indeces);
@@ -116,15 +119,17 @@ namespace KITGPI
             SeismogramType seismoType;                              //!< Type of trace as #SeismogramType
             SeismogramTypeEM seismoTypeEM;                                    //!< Type of trace as #SeismogramTypeEM
             scai::lama::DenseVector<scai::IndexType> coordinates1D; //!< model indeces of the Coordinates of the traces
-            scai::IndexType sourceIndex;                            //!< model Index of source point (in case a single source is used)
+            scai::IndexType sourceCoordinate1D;                            //!< model Index of source point (in case a single source is used)
             std::string filenameBase;
 
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
             scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
-            std::vector<scai::lama::DenseMatrix<ValueType>> dataDecode;
+            scai::lama::DenseMatrix<ValueType> dataCOP; // common offset profile data
+            std::vector<scai::lama::DenseMatrix<ValueType>> dataDecode; // decoded data
             scai::lama::DenseMatrix<ValueType> refTraces;
             std::vector<scai::lama::DenseVector<ValueType>> offsets;
+            IndexType shotInd = 0;
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;

@@ -86,7 +86,7 @@ namespace KITGPI
             void checkRequiredNumParameter(scai::IndexType numParameterCheck) override;
             void acqMat2settings(scai::lama::DenseMatrix<ValueType> &acqMat, std::vector<sourceSettings<ValueType>> &allSettings, scai::dmemo::DistributionPtr dist_wavefield);
 
-            void copySignalsToSeismogramHandler(std::vector<scai::IndexType> sourceNos);
+            void copySignalsToSeismogramHandler(std::vector<scai::IndexType> waveletAmp);
 
             void allocateSeismogram(scai::IndexType NT, scai::dmemo::DistributionPtr dist_traces, scai::hmemo::ContextPtr ctx);
             void generateSyntheticSignal(scai::IndexType SourceLocal, scai::IndexType NT, ValueType DT);

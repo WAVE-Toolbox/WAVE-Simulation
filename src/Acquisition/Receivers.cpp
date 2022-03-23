@@ -261,9 +261,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
     }
     scai::lama::CSRSparseMatrix<ValueType> receiverMarkMatrix;
     scai::IndexType numrecs = receiverSettings.size();
-    receiverMarkMatrix.allocate(numshots, numrecs+1);  
+    receiverMarkMatrix.allocate(numshots, numrecs+1); 
     IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
-    
+        
     scai::IndexType numshotsIncr = shotIndIncr.size();
     // config is configBig when useStreamConfig != 0, so we introduce sourceSettingsEncode.size() == 0 to ensure that useSourceEncode != 0 defined in configBig does not affect useStreamConfig != 0 defined in stream config.
     if (sourceSettingsEncode.size() == 0) {// normal shots
@@ -274,7 +274,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
             } else if (shotIndIncr[shotInd] == numshots - 1) {
                 SCAI_ASSERT(receiverMarkVector[0] == shotNumber, "receiverMarkVector[0] != shotNumber");
             }
-        }     
+        }  
     } else {// in case of supershot
         scai::lama::SparseVector<ValueType> receiverMarkRow(numrecs+1, 0);
         receiverMarkVector = receiverMarkRow;
@@ -283,7 +283,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
                 receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
                 receiverMarkVector += receiverMarkRow;
             }
-        }            
+        }       
     }  
     receiverMarkVector.unaryOp(receiverMarkVector, common::UnaryOp::SIGN);
     receiverMarkVector[0] = shotNumber;
@@ -432,7 +432,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
             }
             if (numshots == numrecs) { // common offset data
                 dataSingle.allocate(numrecs, data.getNumColumns());
-                if (encodeType == 0 || encodeType == 1) { // decode 1->2, similar with encode in multi offset data
+                if (encodeType == 0 || encodeType == 1) { // encode 1->2, similar with encode in multi offset data
                     if (encodeType == 1) {
                         if (this->getSeismogramHandler().getIsSeismic())
                             filenameTmp = filename + ".shot_" + std::to_string(shotNumber) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
@@ -441,14 +441,14 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                         
                         IO::readMatrix(dataSingle, filenameTmp, seismoFormat);   
                     } else {
-                        dataSingle = dataDecode[0];
+                        dataSingle = dataDecode[countDecode];
                     }
                     for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                         if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber && receiverMarkVector[shotIndIncr[shotInd]+1] != 0 && receiverSettings[shotIndIncr[shotInd]].getType() == receiverTypes[i]) {
                             receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
                             if (receiverMarkRow[shotIndIncr[shotInd]+1] != 0) {
                                 dataSingle.getRow(tempRow, shotIndIncr[shotInd]);                      
-                                if (sourceSettingsEncode[shotInd].sourceNo < 0)
+                                if (sourceSettingsEncode[shotInd].amp < 0)
                                     tempRow *= -1;
                                 if (gradientDomain != 0) {
                                     freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
@@ -458,7 +458,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                             }
                         }
                     }
-                } // encode common offset data 2->1 is not necessary in FWI             
+                } // decode 2->1 is not necessary in FWI             
             } else { // multi offset data
                 for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                     if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
@@ -480,7 +480,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                             } else {
                                 dataSingle = dataDecode[countDecode];
                             }
-                            if (sourceSettingsEncode[shotInd].sourceNo < 0)
+                            if (sourceSettingsEncode[shotInd].amp < 0)
                                 dataSingle *= -1;
                             if (gradientDomain != 0) {
                                 freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
@@ -507,7 +507,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                                     countEncode++;
                                 }
                             }  
-                            if (sourceSettingsEncode[shotInd].sourceNo < 0)
+                            if (sourceSettingsEncode[shotInd].amp < 0)
                                 dataSingle *= -1;
                             if (gradientDomain != 0) {
                                 freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
@@ -606,6 +606,18 @@ void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo:
         numShotPerSuperShot = sources.getSourceFC(0).size();
         HOST_PRINT(commAll, "numShotPerSuperShot = " << numShotPerSuperShot << "\n");
     }
+    
+    // to get numTracesGlobal for checking COP data
+    Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
+    IndexType shotDomain = config.get<IndexType>("NumShotDomains"); 
+    dmemo::CommunicatorPtr commShot = commAll->split(shotDomain);
+    common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), NXPerShot);
+    dmemo::DistributionPtr dist = std::make_shared<dmemo::GridDistribution>(grid, commShot);
+    
+    CheckParameter::checkReceivers(receiverSettings, modelCoordinates, dist->getCommunicatorPtr()); 
+
+    hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
+    init(receiverSettings, config, modelCoordinates, ctx, dist);
 }
 
 template class KITGPI::Acquisition::Receivers<double>;
