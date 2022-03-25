@@ -38,7 +38,7 @@ namespace KITGPI
 
             void swap(KITGPI::Acquisition::Seismogram<ValueType> &rhs);
             void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates);
-            void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
+            void read(scai::IndexType const seismogramFormat, std::string const &filename, bool readOriginal = 0);
             //void read(scai::IndexType const SeismogramFormat, std::string const &filename, scai::dmemo::DistributionPtr distTraces, scai::dmemo::DistributionPtr distSamples);
 
             void allocate(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr distSeismogram, scai::IndexType NT);
@@ -80,6 +80,7 @@ namespace KITGPI
             SeismogramTypeEM getTraceTypeEM() const;
             scai::IndexType getSourceCoordinate() const;
             scai::IndexType &getShotInd();
+            scai::IndexType &getShotInd0();
             void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot);
 
             /* Setter functions */
@@ -130,6 +131,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> refTraces;
             std::vector<scai::lama::DenseVector<ValueType>> offsets;
             IndexType shotInd = 0;
+            IndexType shotInd0 = 0;
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;

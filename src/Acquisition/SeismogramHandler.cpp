@@ -27,14 +27,14 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::write(scai::IndexType co
  *
  \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename base filename of the seismograms
- \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ \param readOriginal Boolean: 0 = read data saved during the inversion progress (default), such as the simulated data; 1 = read data from the original file, such as the field data. 0 and 1 are equal if shotIncr = 0.
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType const seismogramFormat, std::string const &filename, bool copyDist)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::read(IndexType const seismogramFormat, std::string const &filename, bool readOriginal)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0)
-            i.read(seismogramFormat, filename, copyDist);
+            i.read(seismogramFormat, filename, readOriginal);
     }
 }
 
@@ -460,11 +460,12 @@ bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
 \return The shotInd
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType setShotInd)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType setShotIndTrue, IndexType setShotInd0)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0) {
-            i.getShotInd() = setShotInd;
+            i.getShotInd() = setShotIndTrue;
+            i.getShotInd0() = setShotInd0;
             break;
         }
     }

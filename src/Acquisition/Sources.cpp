@@ -694,18 +694,17 @@ void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::Co
     IndexType numshotsIncr = shotIndIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
+    IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
+    Common::checkNumShotDomains(numShotDomains, commAll);
     SCAI_ASSERT_ERROR(useSourceEncode * useRandomSource == 0, "useSourceEncode and useRandomSource are not compatible!");
     if (useRandomSource != 0) {
         double start_t = common::Walltime::get();
-        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
-        Common::checkNumShotDomains(numShotDomains, commAll);
         std::vector<IndexType> tempShotInds(numShotDomains, 0); 
         uniqueShotInds = tempShotInds;
         Acquisition::getRandomShotInds<ValueType>(uniqueShotInds, shotHistory, numshotsIncr, maxcount, useRandomSource, seedtime);        
         double end_t = common::Walltime::get();
         HOST_PRINT(commAll, "Finished initializing a random shot sequence (maxcount: " << maxcount << ") in " << end_t - start_t << " sec.\n");
     } else if (useSourceEncode != 0) {
-        IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of super shots
         for (IndexType shotInd = 0; shotInd < numShotDomains; shotInd++) {
             uniqueShotInds.push_back(shotInd);
         }

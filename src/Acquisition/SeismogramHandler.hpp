@@ -25,7 +25,7 @@ namespace KITGPI
             //! \brief Default destructor
             ~SeismogramHandler(){};
 
-            void read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist = 0);
+            void read(scai::IndexType const seismogramFormat, std::string const &filename, bool readOriginal = 0);
             void write(scai::IndexType const seismogramFormat, std::string const &filename, Coordinates<ValueType> const &modelCoordinates);
             void normalize(scai::IndexType normalizeTraces);
             void integrate();
@@ -54,7 +54,7 @@ namespace KITGPI
             scai::IndexType getNumTracesTotal() const;
             scai::IndexType getNumSamples(SeismogramType type) const;
             scai::IndexType getNumSamples(SeismogramTypeEM type) const;
-            void setShotInd(IndexType setShotInd);
+            void setShotInd(IndexType setShotIndTrue, IndexType setShotInd0);
             void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot);
             void allocateDataCOP(IndexType numshots, IndexType tStepEnd);
             void assignDataCOP();

@@ -235,11 +235,16 @@ int main(int argc, const char *argv[])
     
     Acquisition::Sources<ValueType> sources;
     
-    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings; 
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings;
+    std::vector<Acquisition::sourceSettings<ValueType>> sourceSettings0; 
     std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsEncode; 
     std::vector<Acquisition::coordinate3D> cutCoordinates;
-    ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
+    ValueType shotIncr = 0;
     sources.getAcquisitionSettings(config, shotIncr);
+    sourceSettings0 = sources.getSourceSettings();
+    shotIncr = config.getAndCatch("shotIncr", 0.0);
+    if (shotIncr != 0)
+        sources.getAcquisitionSettings(config, shotIncr);
     if (useStreamConfig) {
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
         sourceSettingsBig = sources.getSourceSettings(); 
@@ -360,6 +365,7 @@ int main(int argc, const char *argv[])
         std::vector<IndexType> uniqueShotInds = sources.getUniqueShotInds();
         IndexType shotNumber;
         IndexType shotIndTrue = 0;
+        IndexType shotInd0 = 0;
         for (IndexType shotInd = shotDist->lb(); shotInd < shotDist->ub(); shotInd++) {
             SCAI_REGION("WAVE-Simulation.shotLoop")
             shotIndTrue = uniqueShotInds[shotInd];
@@ -374,7 +380,10 @@ int main(int argc, const char *argv[])
                 Acquisition::createSettingsForShot(sourceSettingsShot, sourceSettingsEncode, shotNumber);
             }                    
             sources.init(sourceSettingsShot, config, modelCoordinates, ctx, dist);
-            sources.getSeismogramHandler().setShotInd(shotIndTrue);
+            if (uniqueShotNos.size() == sourceSettings.size() && uniqueShotNos.size() > 1 && config.getAndCatch("writeSource", false)) {
+                Acquisition::getuniqueShotInd(shotInd0, sourceSettings0, shotNumber);
+                sources.getSeismogramHandler().setShotInd(shotIndTrue, shotInd0);
+            }
 
             if (!useStreamConfig) {
                 CheckParameter::checkNumericalArtefactsAndInstabilities<ValueType>(config, sourceSettingsShot, *model, modelCoordinates, shotNumber);
@@ -409,7 +418,9 @@ int main(int argc, const char *argv[])
             if (config.get<IndexType>("useReceiversPerShot") != 0) {
                 receivers.init(config, modelCoordinates, ctx, dist, shotNumber, sourceSettingsEncode);
             }
-            receivers.getSeismogramHandler().setShotInd(shotIndTrue);
+            if (uniqueShotNos.size() == sourceSettings.size() && uniqueShotNos.size() > 1 && receivers.getNumTracesGlobal() == 1) {
+                receivers.getSeismogramHandler().setShotInd(shotIndTrue, shotInd0);
+            }
 
             if (randInd == 1 && decomposition != 0) {
                 HOST_PRINT(commShot, "Start time stepping for shot number " << shotNumber << " (" << "domain " << shotDomain << ", index " << shotIndTrue + 1 << " of " << numshots << ") Hilbert\n", "\nTotal Number of time steps: " << tStepEnd << "\n");

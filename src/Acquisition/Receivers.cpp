@@ -117,6 +117,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         std::vector<Acquisition::coordinate3D> cutCoordinates;
         Acquisition::getCutCoord(config, cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
         Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates.at(shotIndPerShot));
+        std::cout<< "shotNumber " << shotNumber << ", shotIndPerShot " << shotIndPerShot << ", cutCoordinates.at(shotIndPerShot) " << cutCoordinates.at(shotIndPerShot).x <<std::endl;
     } else {
         if (config.get<scai::IndexType>("useReceiversPerShot") == 1) {
             getAcquisitionSettings(config, allSettings, shotNumber);

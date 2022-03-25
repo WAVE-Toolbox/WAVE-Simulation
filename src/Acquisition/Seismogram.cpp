@@ -146,10 +146,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::write(scai::IndexType const sei
  * This method reads the seismogram data from disk. \n
 \param seismogramFormat =1 MTX: MatrixMaker format, =4 SU: SeismicUnix format
  \param filename Filename to read seismogram
- \param copyDist Boolean: 0 = read data undistributed (default), data is replicated on each process // 1 = read data with existing distribution of data
+ \param readOriginal Boolean: 0 = read data saved during the inversion progress (default), such as the simulated data; 1 = read data from the original file, such as the field data. 0 and 1 are equal if shotIncr = 0.
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool copyDist)
+void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seismogramFormat, std::string const &filename, bool readOriginal)
 {
     bool readSingleTrace = false;
     std::string filenameTmp = filename;
@@ -184,7 +184,10 @@ void KITGPI::Acquisition::Seismogram<ValueType>::read(scai::IndexType const seis
             SUIO::readDataSU(filenameTmp, dataTemp, this->getNumSamples(), 1);
             break;
         default:
-            hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(filenameTmp, shotInd, seismoFormat);
+            IndexType shotIndTemp = shotInd0;
+            if (!readOriginal) // such as receiversLast used in lineSearch for stepLength.
+                shotIndTemp = shotInd;
+            hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(filenameTmp, shotIndTemp, seismoFormat);
             dataTemp.setLocalRow(localsignal, 0, scai::common::BinaryOp::COPY);
             break;
         }
@@ -970,12 +973,23 @@ IndexType KITGPI::Acquisition::Seismogram<ValueType>::getSourceCoordinate() cons
 /*! \brief Getter method for the shotInd
 *
 *
-\return The source Index
+\return The shot Index in the selected shots
  */
 template <typename ValueType>
 IndexType &KITGPI::Acquisition::Seismogram<ValueType>::getShotInd()
 {
     return (shotInd);
+}
+
+/*! \brief Getter method for the shotInd0
+*
+*
+\return The hot Index in all shots
+ */
+template <typename ValueType>
+IndexType &KITGPI::Acquisition::Seismogram<ValueType>::getShotInd0()
+{
+    return (shotInd0);
 }
 
 /*! \brief Function for summing the common offset profile data of all shot domains
