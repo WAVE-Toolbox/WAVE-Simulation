@@ -460,12 +460,12 @@ bool KITGPI::Acquisition::SeismogramHandler<ValueType>::isFinite()
 \return The shotInd
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType setShotIndTrue, IndexType setShotInd0)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType setShotIndTrue, IndexType setShotIndIncr)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0) {
             i.getShotInd() = setShotIndTrue;
-            i.getShotInd0() = setShotInd0;
+            i.getShotIndIncr() = setShotIndIncr;
             break;
         }
     }
@@ -476,11 +476,11 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::setShotInd(IndexType set
  \param commInterShot inter shot communication pointer
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot, bool sumAGC)
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0) {
-            i.sumShotDomain(commInterShot);
+            i.sumShotDomain(commInterShot, sumAGC);
             break;
         }
     }
@@ -490,10 +490,11 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::sumShotDomain(scai::dmem
  *
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::allocateDataCOP(IndexType numshots, IndexType tStepEnd)
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::allocateCOP(IndexType numshots, IndexType tStepEnd)
 {
     for (auto &i : seismo) {
         i.getDataCOP().allocate(numshots, tStepEnd);
+        i.getInverseAGCCOP().allocate(numshots, tStepEnd);
     }
 }
 
@@ -501,12 +502,14 @@ void KITGPI::Acquisition::SeismogramHandler<ValueType>::allocateDataCOP(IndexTyp
  *
  */
 template <typename ValueType>
-void KITGPI::Acquisition::SeismogramHandler<ValueType>::assignDataCOP()
+void KITGPI::Acquisition::SeismogramHandler<ValueType>::assignCOP()
 {
     for (auto &i : seismo) {
         if (i.getNumTracesGlobal() > 0) {
             i.getData() = i.getDataCOP();
+            i.getInverseAGC() = i.getInverseAGCCOP();
             i.getDataCOP().scale(0); // reset is needed for iteration update
+            i.getInverseAGCCOP().scale(0);
             break;
         }
     }

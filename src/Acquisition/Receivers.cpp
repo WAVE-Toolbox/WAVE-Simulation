@@ -95,7 +95,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         IndexType numshots = uniqueShotNos.size();
         shotIncr = config.getAndCatch("shotIncr", 0.0);
-        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
+        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndsIncr
         sourceSettingsBig = sources.getSourceSettings();
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         
@@ -104,8 +104,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         if (configBig.get<scai::IndexType>("useReceiversPerShot") == 1) {
             getAcquisitionSettings(config, allSettingsBig, shotNumber);
         } else if (configBig.get<scai::IndexType>("useReceiversPerShot") == 2) {
-            std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
-            getAcquisitionSettings(config, allSettingsBig, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
+            std::vector<IndexType> shotIndsIncr = sources.getShotIndsIncr();
+            getAcquisitionSettings(config, allSettingsBig, shotNumber, numshots, shotIndsIncr, sourceSettingsEncode);
         }
         
         IndexType shotIndPerShot = 0;
@@ -130,9 +130,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
             Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
             IndexType numshots = uniqueShotNos.size();
             shotIncr = config.getAndCatch("shotIncr", 0.0);
-            sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
-            std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
-            getAcquisitionSettings(config, allSettings, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
+            sources.getAcquisitionSettings(config, shotIncr); // to get shotIndsIncr
+            std::vector<IndexType> shotIndsIncr = sources.getShotIndsIncr();
+            getAcquisitionSettings(config, allSettings, shotNumber, numshots, shotIndsIncr, sourceSettingsEncode);
         }
     }
     
@@ -243,11 +243,11 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
  \param config Configuration
  \param allSettings receiverSettings
  \param numshots numshots is the number of shots not encoded
- \param shotIndIncr selected shot indices, shotIndIncr.size() <= numshots
+ \param shotIndsIncr selected shot indices, shotIndsIncr.size() <= numshots
  \param sourceSettingsEncode sourceSettings for encoded receivers
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndIncr, std::vector<sourceSettings<ValueType>> sourceSettingsEncode)
+void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configuration::Configuration const &config, std::vector<receiverSettings> &allSettings, scai::IndexType shotNumber, scai::IndexType numshots, std::vector<IndexType> shotIndsIncr, std::vector<sourceSettings<ValueType>> sourceSettingsEncode)
 {
     std::vector<receiverSettings> receiverSettings;
     getAcquisitionSettings(config, receiverSettings);
@@ -264,14 +264,14 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
     receiverMarkMatrix.allocate(numshots, numrecs+1); 
     IO::readMatrix<ValueType>(receiverMarkMatrix, filenameTmp, 1); // .mtx file
         
-    scai::IndexType numshotsIncr = shotIndIncr.size();
+    scai::IndexType numshotsIncr = shotIndsIncr.size();
     // config is configBig when useStreamConfig != 0, so we introduce sourceSettingsEncode.size() == 0 to ensure that useSourceEncode != 0 defined in configBig does not affect useStreamConfig != 0 defined in stream config.
     if (sourceSettingsEncode.size() == 0) {// normal shots
         for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-            receiverMarkMatrix.getRow(receiverMarkVector, shotIndIncr[shotInd]);
+            receiverMarkMatrix.getRow(receiverMarkVector, shotIndsIncr[shotInd]);
             if (receiverMarkVector[0] == shotNumber) {
                 break;
-            } else if (shotIndIncr[shotInd] == numshots - 1) {
+            } else if (shotIndsIncr[shotInd] == numshots - 1) {
                 SCAI_ASSERT(receiverMarkVector[0] == shotNumber, "receiverMarkVector[0] != shotNumber");
             }
         }  
@@ -280,7 +280,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getAcquisitionSettings(Configura
         receiverMarkVector = receiverMarkRow;
         for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
             if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
-                receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
+                receiverMarkMatrix.getRow(receiverMarkRow, shotIndsIncr[shotInd]); 
                 receiverMarkVector += receiverMarkRow;
             }
         }       
@@ -367,8 +367,8 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettings);
         IndexType numshots = uniqueShotNos.size();
         shotIncr = config.getAndCatch("shotIncr", 0.0);
-        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
-        std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
+        sources.getAcquisitionSettings(config, shotIncr); // to get shotIndsIncr
+        std::vector<IndexType> shotIndsIncr = sources.getShotIndsIncr();
         
         std::vector<receiverSettings> receiverSettings;
         getAcquisitionSettings(config, receiverSettings);
@@ -387,6 +387,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
         
         std::vector<IndexType> receiverTypes;
         IndexType count = 0;
+        IndexType countEncode = 0;
         for (scai::IndexType irec = 0; irec < numrecs; irec++) {
             if (receiverMarkVector[irec+1] != 0) { // to count receiverTypes (0,1,2,3)
                 if (count == 0) {
@@ -405,7 +406,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
         scai::lama::DenseVector<ValueType> tempRow;
         IndexType seismoFormat = config.get<scai::IndexType>("SeismogramFormat");
         
-        IndexType numshotsIncr = shotIndIncr.size();
+        IndexType numshotsIncr = shotIndsIncr.size();
         scai::lama::SparseVector<ValueType> receiverMarkRow(numrecs+1, 0);        
         IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
         Filter::Filter<ValueType> freqFilter;
@@ -431,43 +432,67 @@ void KITGPI::Acquisition::Receivers<ValueType>::encode(Configuration::Configurat
                 }
             }
             if (numshots == numrecs) { // common offset data
-                dataSingle.allocate(numrecs, data.getNumColumns());
-                if (encodeType == 0 || encodeType == 1) { // encode 1->2, similar with encode in multi offset data
+                dataSingle.allocate(1, data.getNumColumns());
+                countEncode = 0;
+                if (encodeType == 0 || encodeType == 1) { // encode 1->2->1, similar with encode in multi offset data
                     if (encodeType == 1) {
                         if (this->getSeismogramHandler().getIsSeismic())
-                            filenameTmp = filename + ".shot_" + std::to_string(shotNumber) + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
+                            filenameTmp = filename + "." + SeismogramTypeString[static_cast<SeismogramType>(receiverTypes[i]-1)];
                         else
-                            filenameTmp = filename + ".shot_" + std::to_string(shotNumber)  + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
-                        
-                        IO::readMatrix(dataSingle, filenameTmp, seismoFormat);   
-                    } else {
-                        dataSingle = dataDecode[countDecode];
+                            filenameTmp = filename + "." + SeismogramTypeStringEM[static_cast<SeismogramTypeEM>(receiverTypes[i]-1)];
                     }
                     for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
-                        if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber && receiverMarkVector[shotIndIncr[shotInd]+1] != 0 && receiverSettings[shotIndIncr[shotInd]].getType() == receiverTypes[i]) {
-                            receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
-                            if (receiverMarkRow[shotIndIncr[shotInd]+1] != 0) {
-                                dataSingle.getRow(tempRow, shotIndIncr[shotInd]);                      
+                        if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber && receiverMarkVector[shotIndsIncr[shotInd]+1] != 0 && receiverSettings[shotIndsIncr[shotInd]].getType() == receiverTypes[i]) {
+                            if (encodeType == 1) {
+                                hmemo::HArray<ValueType> localsignal = IO::readMatrix<ValueType>(filenameTmp, shotIndsIncr[shotInd], seismoFormat);
+                                dataSingle.setLocalRow(localsignal, 0, scai::common::BinaryOp::COPY);
+                            } else {
+                                dataSingle = dataDecode[countDecode];
+                            }
+                            receiverMarkMatrix.getRow(receiverMarkRow, shotIndsIncr[shotInd]); 
+                            if (receiverMarkRow[shotIndsIncr[shotInd]+1] != 0) {
+                                dataSingle.getRow(tempRow, 0);                      
                                 if (sourceSettingsEncode[shotInd].amp < 0)
                                     tempRow *= -1;
                                 if (gradientDomain != 0) {
                                     freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
                                     freqFilter.apply(tempRow);
                                 }
-                                data.setRow(tempRow, shotInd, scai::common::BinaryOp::ADD);
+                                data.setRow(tempRow, countEncode, scai::common::BinaryOp::ADD);
                             }
+                            countEncode++;
+                            countDecode++;
                         }
                     }
-                } // decode 2->1 is not necessary in FWI             
+                } else if (encodeType == 2 || encodeType == 3) { // decode 1->2->1, similar with decode in multi offset data
+                    for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
+                        if (receiverMarkVector[shotIndsIncr[shotInd]+1] != 0 && receiverSettings[shotIndsIncr[shotInd]].getType() == receiverTypes[i]) {
+                            receiverMarkMatrix.getRow(receiverMarkRow, shotIndsIncr[shotInd]); 
+                            if (receiverMarkRow[shotIndsIncr[shotInd]+1] != 0) {
+                                data.getRow(tempRow, countEncode); 
+                                if (sourceSettingsEncode[shotInd].amp < 0)
+                                    tempRow *= -1;
+                                if (gradientDomain != 0) {
+                                    freqFilter.calc("ideal", "bp", 1, sourceSettingsEncode[shotInd].fc);
+                                    freqFilter.apply(tempRow);
+                                }
+                                dataSingle.setRow(tempRow, 0, scai::common::BinaryOp::COPY);
+                            }
+                            dataDecode[countDecode] = dataSingle;
+                            countEncode++;
+                            countDecode++;
+                        }
+                    }  
+                }
             } else { // multi offset data
                 for (scai::IndexType shotInd = 0; shotInd < numshotsIncr; shotInd++) {
                     if (std::abs(sourceSettingsEncode[shotInd].sourceNo) == shotNumber) {
-                        receiverMarkMatrix.getRow(receiverMarkRow, shotIndIncr[shotInd]); 
+                        receiverMarkMatrix.getRow(receiverMarkRow, shotIndsIncr[shotInd]); 
                         IndexType sourceNo = receiverMarkRow[0];
                         receiverMarkRow[0] = 0;
                         IndexType numrecSingle = receiverMarkRow.sum();
                         count = 0;
-                        IndexType countEncode = 0;
+                        countEncode = 0;
                         dataSingle.allocate(numrecSingle, data.getNumColumns());
                         if (encodeType == 0 || encodeType == 1) { // encode 2->1
                             if (encodeType == 1) {
@@ -553,7 +578,7 @@ template <typename ValueType>
 void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, ValueType &NXPerShot, scai::IndexType &numShotPerSuperShot)
 {
     NXPerShot = config.get<ValueType>("NX");
-    numShotPerSuperShot = 0;
+    numShotPerSuperShot = 1;
     Acquisition::Sources<ValueType> sources;
 
     std::vector<sourceSettings<ValueType>> sourceSettingsBig;  
@@ -566,9 +591,9 @@ void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo:
     sourceSettingsBig = sources.getSourceSettings(); 
     IndexType numshots = sourceSettingsBig.size();
     shotIncr = config.getAndCatch("shotIncr", 0.0);        
-    sources.getAcquisitionSettings(config, shotIncr); // to get shotIndIncr
+    sources.getAcquisitionSettings(config, shotIncr); // to get shotIndsIncr
     sourceSettingsBig = sources.getSourceSettings(); 
-    std::vector<IndexType> shotIndIncr = sources.getShotIndIncr();
+    std::vector<IndexType> shotIndsIncr = sources.getShotIndsIncr();
     IndexType shotNumber;
     IndexType Xsrc;
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
@@ -582,7 +607,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo:
         shotNumber = std::abs(sourceSettingsEncode[0].sourceNo);
         Xsrc = sourceSettingsEncode[0].sourceCoords.x;
     }
-    getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndIncr, sourceSettingsEncode);
+    getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndsIncr, sourceSettingsEncode);
     
     IndexType maxXrec = receiverSettings[0].receiverCoords.x;
     for (unsigned i = 0; i < receiverSettings.size(); i++) {             
@@ -595,15 +620,17 @@ void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo:
     
     IndexType BoundaryWidth = config.get<IndexType>("BoundaryWidth");
     bool useStreamConfig = config.getAndCatch("useStreamConfig", false);
-    IndexType gradientDomain = config.getAndCatch("gradientDomain", 0);
     
     if (useStreamConfig && NXPerShot < maxXrec + BoundaryWidth + 1) {
         NXPerShot = maxXrec + BoundaryWidth + 1;
         HOST_PRINT(commAll, "NXPerShot = " << NXPerShot << "\n");
     }
     
-    if (gradientDomain != 0) {
-        numShotPerSuperShot = sources.getSourceFC(0).size();
+    if (useSourceEncode != 0) {
+        IndexType numShotDomains = config.get<IndexType>("NumShotDomains");
+        Common::checkNumShotDomains(numShotDomains, commAll);
+        IndexType numshotsIncr = shotIndsIncr.size();
+        numShotPerSuperShot = ceil(ValueType(numshotsIncr) / numShotDomains);
         HOST_PRINT(commAll, "numShotPerSuperShot = " << numShotPerSuperShot << "\n");
     }
     

@@ -45,7 +45,7 @@ namespace KITGPI
             void getAcquisitionSettings(Configuration::Configuration const &config, ValueType shotIncr);
             void calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1 = 0, ValueType fc2 = 0);
             void calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount, scai::IndexType &seedtime);
-            void writeShotIndIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
+            void writeShotIndsIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos);
             void writeSourceEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
             void writeSourceFC(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, IndexType stage = 0, IndexType iteration = 0);
             scai::lama::DenseMatrix<ValueType> getsourcesignal();
@@ -53,7 +53,7 @@ namespace KITGPI
             void setSourceSettings(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> setSourceSettings);
             std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettings();
             std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> getSourceSettingsEncode();
-            std::vector<IndexType> getShotIndIncr();
+            std::vector<IndexType> getShotIndsIncr();
             std::vector<IndexType> getUniqueShotInds();
             scai::lama::DenseVector<ValueType> getSourceFC(int shotInd);
 
@@ -74,7 +74,7 @@ namespace KITGPI
 
             std::vector<sourceSettings<ValueType>> sourceSettingsShotIncr; // sourceSettings of selected shots
             std::vector<sourceSettings<ValueType>> sourceSettingsEncode; // sourceSettings of the encoded shots
-            std::vector<IndexType> shotIndIncr;   // shot indices selected by shot increment
+            std::vector<IndexType> shotIndsIncr;   // shot indices selected by shot increment
             std::vector<IndexType> uniqueShotInds;  // shot indices of random shots
             std::vector<scai::lama::DenseVector<ValueType>> sourceFC;
     

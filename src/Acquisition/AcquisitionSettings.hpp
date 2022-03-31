@@ -393,7 +393,9 @@ namespace KITGPI
             int myRank = comm->getRank(); 
             bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
             if (useStreamConfig && myRank == MASTERGPI) {
-                std::ofstream outputFile(config.get<std::string>("cutCoordinatesFilename"));
+                std::string filename = config.get<std::string>("SourceFilename");
+                filename += ".cut.txt";
+                std::ofstream outputFile(filename);
                 outputFile << "# Coordinate for cutting model per shot (the first row is the size of modelPerShot)\n";
                 outputFile << "# ShotNumber | index_x | index_y | index_z\n";  
                 outputFile << std::setw(12) << NXPerShot*config.get<IndexType>("NY")*config.get<IndexType>("NZ") << std::setw(10) << NXPerShot << std::setw(10) << config.get<IndexType>("NY") << std::setw(10) << config.get<IndexType>("NZ") << "\n";

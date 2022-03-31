@@ -52,6 +52,7 @@ namespace KITGPI
             void normalizeTrace(scai::IndexType normalizeTraces);
             scai::lama::DenseMatrix<ValueType> getAGCSum();
             void calcInverseAGC();
+            scai::lama::DenseMatrix<ValueType> &getInverseAGC();
             scai::lama::DenseMatrix<ValueType> const &getInverseAGC() const;
             void setInverseAGC(scai::lama::DenseMatrix<ValueType> setInverseAGC);
             scai::lama::DenseVector<ValueType> getTraceL2norm();
@@ -70,6 +71,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> &getData();
             scai::lama::DenseMatrix<ValueType> const &getData() const;
             scai::lama::DenseMatrix<ValueType> &getDataCOP();
+            scai::lama::DenseMatrix<ValueType> &getInverseAGCCOP();
             std::vector<scai::lama::DenseMatrix<ValueType>> &getDataDecode();
             std::vector<scai::lama::DenseMatrix<ValueType>> const &getDataDecode() const;
             scai::lama::DenseMatrix<ValueType> const &getDataDecode(int shotInd) const;
@@ -80,8 +82,8 @@ namespace KITGPI
             SeismogramTypeEM getTraceTypeEM() const;
             scai::IndexType getSourceCoordinate() const;
             scai::IndexType &getShotInd();
-            scai::IndexType &getShotInd0();
-            void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot);
+            scai::IndexType &getShotIndIncr();
+            void sumShotDomain(scai::dmemo::CommunicatorPtr commInterShot, bool sumAGC);
 
             /* Setter functions */
             void setDT(ValueType newDT);
@@ -125,13 +127,14 @@ namespace KITGPI
 
             /* raw data */
             scai::lama::DenseMatrix<ValueType> data; //!< Raw seismogram data
-            scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
             scai::lama::DenseMatrix<ValueType> dataCOP; // common offset profile data
+            scai::lama::DenseMatrix<ValueType> inverseAGC; //!< inverse of AGC
+            scai::lama::DenseMatrix<ValueType> inverseAGCCOP; //!< inverse of AGC
             std::vector<scai::lama::DenseMatrix<ValueType>> dataDecode; // decoded data
             scai::lama::DenseMatrix<ValueType> refTraces;
             std::vector<scai::lama::DenseVector<ValueType>> offsets;
             IndexType shotInd = 0;
-            IndexType shotInd0 = 0;
+            IndexType shotIndIncr = 0;
 
             /* resampling */
             scai::lama::CSRSparseMatrix<ValueType> resampleMat;

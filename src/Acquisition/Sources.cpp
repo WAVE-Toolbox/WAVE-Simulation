@@ -436,14 +436,14 @@ std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> KITGPI::Acquisition:
     return (sourceSettingsEncode);
 }
 
-/*! \brief get shotIndIncr
+/*! \brief get shotIndsIncr
  *
  */
 template <typename ValueType>
-std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getShotIndIncr()
+std::vector<IndexType> KITGPI::Acquisition::Sources<ValueType>::getShotIndsIncr()
 {
-    SCAI_ASSERT_ERROR(shotIndIncr.size() > 0, "shotIndIncr.size() = 0"); // check whether shotIndIncr has been applied successfully.
-    return (shotIndIncr);
+    SCAI_ASSERT_ERROR(shotIndsIncr.size() > 0, "shotIndsIncr.size() = 0"); // check whether shotIndsIncr has been applied successfully.
+    return (shotIndsIncr);
 }
 
 /*! \brief get uniqueShotInds
@@ -514,7 +514,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
         readAllSettings(allSettings, filenameTmp + ".txt");
     
     IndexType numshots = allSettings.size();
-    shotIndIncr.clear();
+    shotIndsIncr.clear();
     if (numshots > 1 && shotIncr > config.get<ValueType>("DH")) {
         std::vector<IndexType> sourceLength; 
         if (abs(allSettings[0].sourceCoords.x-allSettings[1].sourceCoords.x) > abs(allSettings[0].sourceCoords.y-allSettings[1].sourceCoords.y)) {
@@ -530,30 +530,30 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
         IndexType shotIncrInd = sourceLength[0];
         sourceSettingsShotIncr.clear();
         sourceSettingsShotIncr.push_back(allSettings[0]);
-        shotIndIncr.push_back(0);
+        shotIndsIncr.push_back(0);
         IndexType shotIncrStep = round(shotIncr / config.get<ValueType>("DH"));
         for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
             if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
-                if (shotIndIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
+                if (shotIndsIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
                     sourceSettingsShotIncr.push_back(allSettings[shotInd]);
-                    shotIndIncr.push_back(shotInd);
+                    shotIndsIncr.push_back(shotInd);
                     numshotsIncr++; // to avoid repeat
-                } else if (shotIndIncr[numshotsIncr] != shotInd+1 && abs(shotIncrInd - sourceLength[shotInd]) >= abs(shotIncrInd - sourceLength[shotInd+1])) {
+                } else if (shotIndsIncr[numshotsIncr] != shotInd+1 && abs(shotIncrInd - sourceLength[shotInd]) >= abs(shotIncrInd - sourceLength[shotInd+1])) {
                     sourceSettingsShotIncr.push_back(allSettings[shotInd+1]);
-                    shotIndIncr.push_back(shotInd+1);
+                    shotIndsIncr.push_back(shotInd+1);
                     numshotsIncr++; // to avoid repeat
                 }
                 shotIncrInd += shotIncrStep;
                 shotInd--; // to avoid that some locations are skipped
-            } else if (shotIndIncr[numshotsIncr] != shotInd+1 && shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
+            } else if (shotIndsIncr[numshotsIncr] != shotInd+1 && shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
                 sourceSettingsShotIncr.push_back(allSettings[shotInd+1]);
-                shotIndIncr.push_back(shotInd+1);
+                shotIndsIncr.push_back(shotInd+1);
             }
         } 
     } else {
         sourceSettingsShotIncr = allSettings;
         for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {
-            shotIndIncr.push_back(shotInd);
+            shotIndsIncr.push_back(shotInd);
         }
     }
 }
@@ -567,7 +567,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, scai::IndexType &seedtime, ValueType fc1, ValueType fc2)
 {    
-    IndexType numshotsIncr = shotIndIncr.size();
+    IndexType numshotsIncr = shotIndsIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
     IndexType useStreamConfig = config.getAndCatch("useStreamConfig", 0);
@@ -691,7 +691,7 @@ void KITGPI::Acquisition::Sources<ValueType>::calcSourceSettingsEncode(scai::dme
 template <typename ValueType>
 void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::CommunicatorPtr commAll, Configuration::Configuration const &config, std::vector<IndexType> &shotHistory, IndexType maxcount, scai::IndexType &seedtime)
 {    
-    IndexType numshotsIncr = shotIndIncr.size();
+    IndexType numshotsIncr = shotIndsIncr.size();
     IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
     IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
     IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of selected shots
@@ -721,12 +721,12 @@ void KITGPI::Acquisition::Sources<ValueType>::calcUniqueShotInds(scai::dmemo::Co
  \param uniqueShotNos shot numbers
  */
 template <typename ValueType>
-void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos)
+void KITGPI::Acquisition::Sources<ValueType>::writeShotIndsIncr(scai::dmemo::CommunicatorPtr comm, Configuration::Configuration const &config, std::vector<IndexType> uniqueShotNos)
 {
     ValueType shotIncr = config.getAndCatch("shotIncr", 0.0);
     int myRank = comm->getRank();  
     if (myRank == MASTERGPI && shotIncr > config.get<ValueType>("DH")) {
-        SCAI_ASSERT_ERROR(shotIndIncr.size() == uniqueShotNos.size(), "shotIndIncr.size() != uniqueShotNos.size()"); // check whether shotIncr has been applied successfully.
+        SCAI_ASSERT_ERROR(shotIndsIncr.size() == uniqueShotNos.size(), "shotIndsIncr.size() != uniqueShotNos.size()"); // check whether shotIncr has been applied successfully.
         std::string filename;
         bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
         if (useStreamConfig) {
@@ -736,13 +736,13 @@ void KITGPI::Acquisition::Sources<ValueType>::writeShotIndIncr(scai::dmemo::Comm
             filename = config.get<std::string>("SourceFilename") + ".shotIncr.txt";
         }
         
-        IndexType numshotsIncr = shotIndIncr.size();
+        IndexType numshotsIncr = shotIndsIncr.size();
         std::ofstream outputFile; 
         outputFile.open(filename);
         outputFile << "# Shot indices (shotIncr = " << shotIncr << " m, numshots = " << numshotsIncr << ")\n"; 
         outputFile << "# Shot index | shot number\n"; 
         for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
-            outputFile << std::setw(12) << shotIndIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
+            outputFile << std::setw(12) << shotIndsIncr[shotInd]+1 << std::setw(12) << uniqueShotNos[shotInd] << "\n";
         }
     }
 }
@@ -762,8 +762,8 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceEncode(scai::dmemo::Com
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
         Common::checkNumShotDomains(numShotDomains, commAll);
-        IndexType numshotsIncr = shotIndIncr.size(); // the number of all shots
-        SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndIncr.size(), "sourceSettingsEncode.size() != shotIndIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
+        IndexType numshotsIncr = shotIndsIncr.size(); // the number of all shots
+        SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndsIncr.size(), "sourceSettingsEncode.size() != shotIndsIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
         std::string filename;
         bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
         if (useStreamConfig) {
@@ -829,10 +829,10 @@ void KITGPI::Acquisition::Sources<ValueType>::writeSourceFC(scai::dmemo::Communi
             }
             outputFile << "\n";
         } else {
-            IndexType numshotsIncr = shotIndIncr.size(); // the number of all shots
+            IndexType numshotsIncr = shotIndsIncr.size(); // the number of all shots
             std::vector<IndexType> uniqueShotNosEncode;
             Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
-            SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndIncr.size(), "sourceSettingsEncode.size() != shotIndIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
+            SCAI_ASSERT_ERROR(sourceSettingsEncode.size() == shotIndsIncr.size(), "sourceSettingsEncode.size() != shotIndsIncr.size()"); // check whether sourceSettingsEncode has been applied successfully.
             for (int shotIndEncode = 0; shotIndEncode < numShotDomains; shotIndEncode++) { 
                 outputFile << std::setw(13) << uniqueShotNosEncode[shotIndEncode];
                 for (int shotInd = 0; shotInd < numshotsIncr; shotInd++) { 
