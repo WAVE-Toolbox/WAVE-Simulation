@@ -40,7 +40,7 @@ namespace KITGPI
         \param commShot communicator of a shot domain
         */
         // template <typename ValueType>        
-        IndexType getShotDomain(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll)
+        inline IndexType getShotDomain(Configuration::Configuration const &config, scai::dmemo::CommunicatorPtr commAll)
         {
             /* Definition of shot domains */
             IndexType shotDomainDefinition = config.get<int>("ShotDomainDefinition");

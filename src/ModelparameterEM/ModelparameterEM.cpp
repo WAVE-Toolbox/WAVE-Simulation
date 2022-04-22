@@ -121,8 +121,8 @@ ValueType const KITGPI::Modelparameter::ModelparameterEM<ValueType>::getRelative
 template <typename ValueType>
 void KITGPI::Modelparameter::ModelparameterEM<ValueType>::writeRockMatrixParameter(std::string filename, scai::IndexType fileFormat)
 {
-    IO::writeVector(electricConductivityWater, filename + ".sigmaEMw", fileFormat);
-    IO::writeVector(relativeDieletricPeimittivityRockMatrix, filename + ".epsilonEMrma", fileFormat);
+    IO::writeVector(electricConductivityWater, filename + ".sigmaw", fileFormat);
+    IO::writeVector(relativeDieletricPeimittivityRockMatrix, filename + ".epsilonrma", fileFormat);
 };
 
 /*! \brief calculate electricConductivityWater and relativeDielectricPermittivityRockMatrix from porosity and saturation */

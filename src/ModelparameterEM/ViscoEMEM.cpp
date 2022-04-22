@@ -53,14 +53,14 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
     mask.unaryOp(mask, common::UnaryOp::SIGN);
     mask.unaryOp(mask, common::UnaryOp::ABS);
     
-    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, config.get<ValueType>("lowerSigmaEMTh"), config.get<ValueType>("lowerSigmaEMTh"), 1);
-    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, config.get<ValueType>("upperSigmaEMTh"), config.get<ValueType>("upperSigmaEMTh"), 2);
-    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, config.get<ValueType>("lowerEpsilonEMrTh"), config.get<ValueType>("lowerEpsilonEMrTh"), 1);
-    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, config.get<ValueType>("upperEpsilonEMrTh"), config.get<ValueType>("upperEpsilonEMrTh"), 2);
-    Common::searchAndReplace<ValueType>(tauElectricConductivity, config.get<ValueType>("lowerTauSigmaEMrTh"), config.get<ValueType>("lowerTauSigmaEMrTh"), 1);
-    Common::searchAndReplace<ValueType>(tauElectricConductivity, config.get<ValueType>("upperTauSigmaEMrTh"), config.get<ValueType>("upperTauSigmaEMrTh"), 2);
-    Common::searchAndReplace<ValueType>(tauDielectricPermittivity, config.get<ValueType>("lowerTauEpsilonEMTh"), config.get<ValueType>("lowerTauEpsilonEMTh"), 1);
-    Common::searchAndReplace<ValueType>(tauDielectricPermittivity, config.get<ValueType>("upperTauEpsilonEMTh"), config.get<ValueType>("upperTauEpsilonEMTh"), 2);
+    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, config.get<ValueType>("lowerSigmaTh"), config.get<ValueType>("lowerSigmaTh"), 1);
+    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, config.get<ValueType>("upperSigmaTh"), config.get<ValueType>("upperSigmaTh"), 2);
+    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, config.get<ValueType>("lowerEpsilonrTh"), config.get<ValueType>("lowerEpsilonrTh"), 1);
+    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, config.get<ValueType>("upperEpsilonrTh"), config.get<ValueType>("upperEpsilonrTh"), 2);
+    Common::searchAndReplace<ValueType>(tauElectricConductivity, config.get<ValueType>("lowerTauSigmarTh"), config.get<ValueType>("lowerTauSigmarTh"), 1);
+    Common::searchAndReplace<ValueType>(tauElectricConductivity, config.get<ValueType>("upperTauSigmarTh"), config.get<ValueType>("upperTauSigmarTh"), 2);
+    Common::searchAndReplace<ValueType>(tauDielectricPermittivity, config.get<ValueType>("lowerTauEpsilonTh"), config.get<ValueType>("lowerTauEpsilonTh"), 1);
+    Common::searchAndReplace<ValueType>(tauDielectricPermittivity, config.get<ValueType>("upperTauEpsilonTh"), config.get<ValueType>("upperTauEpsilonTh"), 2);
     
     dirtyFlagAveraging = true;      // If EM-parameters will be changed, averaging needs to be redone
     dirtyFlagVelocivityEM = true;   // the velocity vector is now dirty
@@ -173,7 +173,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(Configuration::Configura
         HOST_PRINT(dist->getCommunicatorPtr(), "", "Finished with reading of the model parameter!\n\n");
 
     } else {
-        init(ctx, dist, config.get<ValueType>("muEMr"), config.get<ValueType>("sigmaEM"), config.get<ValueType>("epsilonEMr"), config.get<ValueType>("tauSigmaEMr"), config.get<ValueType>("tauEpsilonEM"), numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
+        init(ctx, dist, config.get<ValueType>("mur"), config.get<ValueType>("sigma"), config.get<ValueType>("epsilonr"), config.get<ValueType>("tauSigmar"), config.get<ValueType>("tauEpsilon"), numRelaxationMechanisms_in, relaxationFrequency_in, config.get<ValueType>("CenterFrequencyCPML"));
     }
 }
 
@@ -260,11 +260,11 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
     scai::lama::DenseVector<ValueType> dielectricPermittivityRealEffective;
     scai::lama::DenseVector<ValueType> electricConductivityRealEffective;
     
-    this->initModelparameter(magneticPermeability, ctx, dist, filename + ".muEMr", fileFormat);
-    this->initModelparameter(electricConductivityRealEffective, ctx, dist, filename + ".sigmaEM", fileFormat);
-    this->initModelparameter(dielectricPermittivityRealEffective, ctx, dist, filename + ".epsilonEMr", fileFormat);
-    this->initModelparameter(tauElectricConductivity, ctx, dist, filename + ".tauSigmaEMr", fileFormat);
-    this->initModelparameter(tauDielectricPermittivity, ctx, dist, filename + ".tauEpsilonEM", fileFormat);
+    this->initModelparameter(magneticPermeability, ctx, dist, filename + ".mur", fileFormat);
+    this->initModelparameter(electricConductivityRealEffective, ctx, dist, filename + ".sigma", fileFormat);
+    this->initModelparameter(dielectricPermittivityRealEffective, ctx, dist, filename + ".epsilonr", fileFormat);
+    this->initModelparameter(tauElectricConductivity, ctx, dist, filename + ".tauSigmar", fileFormat);
+    this->initModelparameter(tauDielectricPermittivity, ctx, dist, filename + ".tauEpsilon", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
         this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
@@ -322,11 +322,11 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::write(std::string filename, s
     tauElectricConductivitytemp /= relaxationTime_ref;  // calculate the relative tauElectricConductivity
     dielectricPermittivityRealEffective /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
     
-    IO::writeVector(magneticPermeabilitytemp, filename + ".muEMr", fileFormat);
-    IO::writeVector(electricConductivityRealEffective, filename + ".sigmaEM", fileFormat);
-    IO::writeVector(dielectricPermittivityRealEffective, filename + ".epsilonEMr", fileFormat);
-    IO::writeVector(tauElectricConductivitytemp, filename + ".tauSigmaEMr", fileFormat);
-    IO::writeVector(tauDielectricPermittivity, filename + ".tauEpsilonEM", fileFormat);
+    IO::writeVector(magneticPermeabilitytemp, filename + ".mur", fileFormat);
+    IO::writeVector(electricConductivityRealEffective, filename + ".sigma", fileFormat);
+    IO::writeVector(dielectricPermittivityRealEffective, filename + ".epsilonr", fileFormat);
+    IO::writeVector(tauElectricConductivitytemp, filename + ".tauSigmar", fileFormat);
+    IO::writeVector(tauDielectricPermittivity, filename + ".tauEpsilon", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);

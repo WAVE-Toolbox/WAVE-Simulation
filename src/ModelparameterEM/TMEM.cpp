@@ -50,10 +50,10 @@ void KITGPI::Modelparameter::TMEM<ValueType>::applyThresholds(Configuration::Con
     mask.unaryOp(mask, common::UnaryOp::SIGN);
     mask.unaryOp(mask, common::UnaryOp::ABS);
     
-    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("lowerSigmaEMTh"), config.get<ValueType>("lowerSigmaEMTh"), 1);
-    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("upperSigmaEMTh"), config.get<ValueType>("upperSigmaEMTh"), 2);    
-    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("lowerEpsilonEMrTh"), config.get<ValueType>("lowerEpsilonEMrTh"), 1);
-    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("upperEpsilonEMrTh"), config.get<ValueType>("upperEpsilonEMrTh"), 2);
+    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("lowerSigmaTh"), config.get<ValueType>("lowerSigmaTh"), 1);
+    Common::searchAndReplace<ValueType>(electricConductivity, config.get<ValueType>("upperSigmaTh"), config.get<ValueType>("upperSigmaTh"), 2);    
+    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("lowerEpsilonrTh"), config.get<ValueType>("lowerEpsilonrTh"), 1);
+    Common::searchAndReplace<ValueType>(dielectricPermittivity, config.get<ValueType>("upperEpsilonrTh"), config.get<ValueType>("upperEpsilonrTh"), 2);
        
     dirtyFlagVelocivityEM = true;   // If EM-parameters will be changed, velocityEM needs to be redone
     dirtyFlagAveraging = true;      // If EM-parameters will be changed, averaging needs to be redone
@@ -159,7 +159,7 @@ void KITGPI::Modelparameter::TMEM<ValueType>::init(Configuration::Configuration 
         HOST_PRINT(dist->getCommunicatorPtr(), "", "initialising model on discontineous grid finished\n")
 
     } else {
-        init(ctx, dist, config.get<ValueType>("muEMr"), config.get<ValueType>("sigmaEM"), config.get<ValueType>("epsilonEMr"));
+        init(ctx, dist, config.get<ValueType>("mur"), config.get<ValueType>("sigma"), config.get<ValueType>("epsilonr"));
     }
 }
 
@@ -259,9 +259,9 @@ KITGPI::Modelparameter::TMEM<ValueType>::TMEM(scai::hmemo::ContextPtr ctx, scai:
 template <typename ValueType>
 void KITGPI::Modelparameter::TMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, scai::dmemo::DistributionPtr dist, std::string filename, IndexType fileFormat)
 {
-    this->initModelparameter(magneticPermeability, ctx, dist, filename + ".muEMr", fileFormat);
-    this->initModelparameter(electricConductivity, ctx, dist, filename + ".sigmaEM", fileFormat);
-    this->initModelparameter(dielectricPermittivity, ctx, dist, filename + ".epsilonEMr", fileFormat);
+    this->initModelparameter(magneticPermeability, ctx, dist, filename + ".mur", fileFormat);
+    this->initModelparameter(electricConductivity, ctx, dist, filename + ".sigma", fileFormat);
+    this->initModelparameter(dielectricPermittivity, ctx, dist, filename + ".epsilonr", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         this->initModelparameter(porosity, ctx, dist, filename + ".porosity", fileFormat);
         this->initModelparameter(saturation, ctx, dist, filename + ".saturation", fileFormat);
@@ -309,9 +309,9 @@ void KITGPI::Modelparameter::TMEM<ValueType>::write(std::string filename, scai::
     magneticPermeabilitytemp /= MagneticPermeabilityVacuum;  // calculate the relative magneticPermeability
     dielectricPermittivitytemp /= DielectricPermittivityVacuum;  // calculate the relative dielectricPermittivity
     
-    IO::writeVector(magneticPermeabilitytemp, filename + ".muEMr", fileFormat);
-    IO::writeVector(electricConductivity, filename + ".sigmaEM", fileFormat);
-    IO::writeVector(dielectricPermittivitytemp, filename + ".epsilonEMr", fileFormat);
+    IO::writeVector(magneticPermeabilitytemp, filename + ".mur", fileFormat);
+    IO::writeVector(electricConductivity, filename + ".sigma", fileFormat);
+    IO::writeVector(dielectricPermittivitytemp, filename + ".epsilonr", fileFormat);
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
