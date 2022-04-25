@@ -264,7 +264,11 @@ int main(int argc, const char *argv[])
         Acquisition::calcuniqueShotNo(uniqueShotNosEncode, sourceSettingsEncode);
         numshots = numShotDomains;
     }
-    SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots < numShotDomains");
+    SCAI_ASSERT_ERROR(numshots >= numShotDomains, "numshots = " + std::to_string(numshots) + ", numShotDomains = " + std::to_string(numShotDomains));
+    IndexType useRandomSource = config.getAndCatch("useRandomSource", 0);
+    if (useSourceEncode == 0 && useRandomSource == 0) {
+        SCAI_ASSERT_ERROR(numshots % numShotDomains == 0, "numshots = " + std::to_string(numshots) + ", numShotDomains = " + std::to_string(numShotDomains));
+    }    
     sources.writeShotIndsIncr(commAll, config, uniqueShotNos);
     sources.writeSourceFC(commAll, config); 
     sources.writeSourceEncode(commAll, config); 
@@ -333,7 +337,7 @@ int main(int argc, const char *argv[])
     IndexType maxcount = 1;    
     std::vector<IndexType> shotHistory(numshots, 0);
     std::shared_ptr<const dmemo::BlockDistribution> shotDist;
-    if (config.getAndCatch("useRandomSource", 0) != 0) {  
+    if (useRandomSource != 0) {  
         shotDist = dmemo::blockDistribution(numShotDomains, commInterShot);
     } else {
         shotDist = dmemo::blockDistribution(numshots, commInterShot);
@@ -558,7 +562,7 @@ int main(int argc, const char *argv[])
             }
         }
                    
-        if (config.getAndCatch("useRandomSource", 0) == 0 && decomposition == 0) 
+        if (useRandomSource == 0 && decomposition == 0) 
             break;
     }
     globalEnd_t = common::Walltime::get();

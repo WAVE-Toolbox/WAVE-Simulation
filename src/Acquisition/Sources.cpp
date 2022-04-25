@@ -531,7 +531,7 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
         sourceSettingsShotIncr.clear();
         sourceSettingsShotIncr.push_back(allSettings[0]);
         shotIndsIncr.push_back(0);
-        IndexType shotIncrStep = round(shotIncr / config.get<ValueType>("DH"));
+        IndexType shotIncrStep;
         for (IndexType shotInd = 0; shotInd < numshots-1; shotInd++) {
             if (shotIncrInd >= sourceLength[shotInd] && shotIncrInd <= sourceLength[shotInd+1]) {
                 if (shotIndsIncr[numshotsIncr] != shotInd && abs(shotIncrInd - sourceLength[shotInd]) < abs(shotIncrInd - sourceLength[shotInd+1])) {
@@ -543,13 +543,14 @@ void KITGPI::Acquisition::Sources<ValueType>::getAcquisitionSettings(Configurati
                     shotIndsIncr.push_back(shotInd+1);
                     numshotsIncr++; // to avoid repeat
                 }
-                shotIncrInd += shotIncrStep;
+                shotIncrStep = round(shotIncr * (numshotsIncr + 1) / config.get<ValueType>("DH"));
+                shotIncrInd = sourceLength[0] + shotIncrStep;
                 shotInd--; // to avoid that some locations are skipped
-            } else if (shotIndsIncr[numshotsIncr] != shotInd+1 && shotInd == numshots - 2 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
+            } else if (shotInd == numshots - 2 && shotIndsIncr[numshotsIncr] != shotInd+1 && abs(sourceLength[shotInd+1] - sourceLength[shotInd]) > abs(shotIncrInd - sourceLength[shotInd+1])) {
                 sourceSettingsShotIncr.push_back(allSettings[shotInd+1]);
                 shotIndsIncr.push_back(shotInd+1);
             }
-        } 
+        }
     } else {
         sourceSettingsShotIncr = allSettings;
         for (IndexType shotInd = 0; shotInd < numshots; shotInd++) {

@@ -353,7 +353,6 @@ namespace KITGPI
             ValueType x0Big = modelCoordinatesBig.getX0();
             ValueType DH = modelCoordinates.getDH();
             ValueType DHBig = modelCoordinatesBig.getDH();
-            SCAI_ASSERT(x0 == x0Big, "x0 != x0Big");
             SCAI_ASSERT(DH == DHBig, "DH != DHBig");
             IndexType sourceCoordsX = 0;
             IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
@@ -365,11 +364,11 @@ namespace KITGPI
                 if (minX > sourceSettingsBig[i].sourceCoords.x)
                     minX = sourceSettingsBig[i].sourceCoords.x;
             }
+            IndexType x0residual = round((x0 - x0Big) / DH);
+            minX -= x0residual;
             for (int i = 0; i < numshotsIncr; i++) {    
                 if (sourceSettingsBig[i].sourceNo >= 0) {
-                    if (useSourceEncode == 0) {
-                        sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
-                    } else if (useSourceEncode == 3 && i % numShotPerSuperShot == 0) {
+                    if (useSourceEncode == 0 || (useSourceEncode == 3 && i % numShotPerSuperShot == 0)) {
                         sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
                     }
                 } // if sourceSettingsBig[i].sourceNo < 0, the previous sourceCoordsX will be used.
