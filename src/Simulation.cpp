@@ -91,7 +91,7 @@ int main(int argc, const char *argv[])
     /* coordinate mapping (3D<->1D)            */
     /* --------------------------------------- */
     Acquisition::Receivers<ValueType> receivers; 
-    ValueType NXPerShot = config.get<IndexType>("NX");;
+    ValueType NXPerShot = config.get<IndexType>("NX");
     IndexType numShotPerSuperShot = 1;
     receivers.getModelPerShotSize(commAll, config, NXPerShot, numShotPerSuperShot);
     Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
@@ -244,7 +244,7 @@ int main(int argc, const char *argv[])
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;
         sourceSettingsBig = sources.getSourceSettings(); 
         Acquisition::getCutCoord(config, cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
-        Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates);
+        Acquisition::getSettingsPerShot(sourceSettings, sourceSettingsBig, cutCoordinates, modelCoordinates, config.get<IndexType>("BoundaryWidth"));
         sources.setSourceSettings(sourceSettings); // for useSourceEncode
     } else {
         sourceSettings = sources.getSourceSettings(); 

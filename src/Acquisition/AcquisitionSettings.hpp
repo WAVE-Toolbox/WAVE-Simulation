@@ -133,14 +133,24 @@ namespace KITGPI
         \param cutCoordinates coordinates to extract corresponding model pershot        
         */
         template <typename ValueType>
-        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &settings, std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> const allSettings, std::vector<KITGPI::Acquisition::coordinate3D> const cutCoordinates)
+        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> &settings, std::vector<KITGPI::Acquisition::sourceSettings<ValueType>> const allSettings, std::vector<KITGPI::Acquisition::coordinate3D> const cutCoordinates, Acquisition::Coordinates<ValueType> modelCoordinates, IndexType BoundaryWidth)
         {
             settings.clear();
             settings = allSettings;
             for (unsigned i = 0; i < allSettings.size(); i++) {
                 settings[i].sourceCoords.x -= cutCoordinates[i].x;
+                SCAI_ASSERT_ERROR(settings[i].sourceCoords.x >= BoundaryWidth, "settings[" << i << "].sourceCoords.x = " << settings[i].sourceCoords.x);
+                SCAI_ASSERT_ERROR(settings[i].sourceCoords.x < modelCoordinates.getNX() - BoundaryWidth, "settings[" << i << "].sourceCoords.x = " << settings[i].sourceCoords.x);
+                
                 settings[i].sourceCoords.y -= cutCoordinates[i].y;
-                settings[i].sourceCoords.z -= cutCoordinates[i].z;
+                SCAI_ASSERT_ERROR(settings[i].sourceCoords.y >= BoundaryWidth, "settings[" << i << "].sourceCoords.y = " << settings[i].sourceCoords.y);
+                SCAI_ASSERT_ERROR(settings[i].sourceCoords.y < modelCoordinates.getNY() - BoundaryWidth, "settings[" << i << "].sourceCoords.y = " << settings[i].sourceCoords.y);
+                
+                settings[i].sourceCoords.z -= cutCoordinates[i].z;                
+                if (modelCoordinates.getNZ() > BoundaryWidth * 2) {
+                    SCAI_ASSERT_ERROR(settings[i].sourceCoords.z >= BoundaryWidth, "settings[" << i << "].sourceCoords.z = " << settings[i].sourceCoords.z);
+                    SCAI_ASSERT_ERROR(settings[i].sourceCoords.z < modelCoordinates.getNZ() - BoundaryWidth, "settings[" << i << "].sourceCoords.z = " << settings[i].sourceCoords.z);
+                }
             }
         }
         
@@ -151,14 +161,24 @@ namespace KITGPI
         \param cutCoordinates coordinates to extract corresponding model pershot        
         */
         template <typename ValueType>
-        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::receiverSettings> &settings, std::vector<KITGPI::Acquisition::receiverSettings> const allSettings, KITGPI::Acquisition::coordinate3D const cutCoordinate)
+        inline void getSettingsPerShot(std::vector<KITGPI::Acquisition::receiverSettings> &settings, std::vector<KITGPI::Acquisition::receiverSettings> const allSettings, KITGPI::Acquisition::coordinate3D const cutCoordinate, Acquisition::Coordinates<ValueType> modelCoordinates, IndexType BoundaryWidth)
         {
             settings.clear();
             settings = allSettings;
             for (unsigned i = 0; i < allSettings.size(); i++) {
                 settings[i].receiverCoords.x -= cutCoordinate.x;
+                SCAI_ASSERT_ERROR(settings[i].receiverCoords.x >= BoundaryWidth, "settings[" << i << "].receiverCoords.x = " << settings[i].receiverCoords.x);
+                SCAI_ASSERT_ERROR(settings[i].receiverCoords.x < modelCoordinates.getNX() - BoundaryWidth, "settings[" << i << "].receiverCoords.x = " << settings[i].receiverCoords.x);
+                
                 settings[i].receiverCoords.y -= cutCoordinate.y;
-                settings[i].receiverCoords.z -= cutCoordinate.z;
+                SCAI_ASSERT_ERROR(settings[i].receiverCoords.y >= BoundaryWidth, "settings[" << i << "].receiverCoords.y = " << settings[i].receiverCoords.y);
+                SCAI_ASSERT_ERROR(settings[i].receiverCoords.y < modelCoordinates.getNY() - BoundaryWidth, "settings[" << i << "].receiverCoords.y = " << settings[i].receiverCoords.y);
+                
+                settings[i].receiverCoords.z -= cutCoordinate.z;              
+                if (modelCoordinates.getNZ() > BoundaryWidth * 2) {
+                    SCAI_ASSERT_ERROR(settings[i].receiverCoords.z >= BoundaryWidth, "settings[" << i << "].receiverCoords.z = " << settings[i].receiverCoords.z);
+                    SCAI_ASSERT_ERROR(settings[i].receiverCoords.z < modelCoordinates.getNZ() - BoundaryWidth, "settings[" << i << "].receiverCoords.z = " << settings[i].receiverCoords.z);
+                }
             }
         }
 
@@ -354,7 +374,7 @@ namespace KITGPI
             ValueType DH = modelCoordinates.getDH();
             ValueType DHBig = modelCoordinatesBig.getDH();
             SCAI_ASSERT(DH == DHBig, "DH != DHBig");
-            IndexType sourceCoordsX = 0;
+            IndexType sourceCoordX = 0;
             IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
             IndexType numShotDomains = config.get<IndexType>("NumShotDomains"); // the number of supershot
             IndexType numShotPerSuperShot = ceil(ValueType(numshotsIncr) / numShotDomains); 
@@ -369,11 +389,11 @@ namespace KITGPI
             for (int i = 0; i < numshotsIncr; i++) {    
                 if (sourceSettingsBig[i].sourceNo >= 0) {
                     if (useSourceEncode == 0 || (useSourceEncode == 3 && i % numShotPerSuperShot == 0)) {
-                        sourceCoordsX = sourceSettingsBig[i].sourceCoords.x;
+                        sourceCoordX = sourceSettingsBig[i].sourceCoords.x;
                     }
-                } // if sourceSettingsBig[i].sourceNo < 0, the previous sourceCoordsX will be used.
-                SCAI_ASSERT(sourceCoordsX != 0, "sourceCoordsX cannot be 0 when sourceSettingsBig[i].sourceNo < 0");
-                coordinate.x = sourceCoordsX - minX;
+                } // if sourceSettingsBig[i].sourceNo < 0, the previous sourceCoordX will be used.
+                SCAI_ASSERT(sourceCoordX != 0, "sourceCoordX cannot be 0 when sourceSettingsBig[i].sourceNo < 0");
+                coordinate.x = (sourceCoordX - minX > 0) ? sourceCoordX - minX : 0;
                 coordinate.y = 0;
                 coordinate.z = 0;
                 cutCoordinates.push_back(coordinate);

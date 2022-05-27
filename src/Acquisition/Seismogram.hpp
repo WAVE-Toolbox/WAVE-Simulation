@@ -74,6 +74,7 @@ namespace KITGPI
             scai::lama::DenseMatrix<ValueType> &getInverseAGCCOP();
             std::vector<scai::lama::DenseMatrix<ValueType>> &getDataDecode();
             std::vector<scai::lama::DenseMatrix<ValueType>> const &getDataDecode() const;
+            scai::lama::DenseMatrix<ValueType> &getDataDecode(int shotInd);
             scai::lama::DenseMatrix<ValueType> const &getDataDecode(int shotInd) const;
             scai::lama::DenseMatrix<ValueType> &getRefTraces();
             scai::lama::DenseMatrix<ValueType> const &getRefTraces() const;

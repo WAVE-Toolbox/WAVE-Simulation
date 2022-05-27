@@ -86,6 +86,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
     bool useStreamConfig = config.getAndCatch<bool>("useStreamConfig", false);
     if (useStreamConfig) {
         Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
         std::vector<Acquisition::sourceSettings<ValueType>> sourceSettingsBig;  
         Acquisition::Sources<ValueType> sources;
         ValueType shotIncr = 0; 
@@ -99,7 +100,6 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         sourceSettingsBig = sources.getSourceSettings();
         Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
         
-        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig);
         std::vector<receiverSettings> allSettingsBig;
         if (configBig.get<scai::IndexType>("useReceiversPerShot") == 1) {
             getAcquisitionSettings(config, allSettingsBig, shotNumber);
@@ -116,7 +116,7 @@ void KITGPI::Acquisition::Receivers<ValueType>::init(Configuration::Configuratio
         }
         std::vector<Acquisition::coordinate3D> cutCoordinates;
         Acquisition::getCutCoord(config, cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
-        Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates.at(shotIndPerShot));
+        Acquisition::getSettingsPerShot<ValueType>(allSettings, allSettingsBig, cutCoordinates.at(shotIndPerShot), modelCoordinates, config.get<IndexType>("BoundaryWidth"));
     } else {
         if (config.get<scai::IndexType>("useReceiversPerShot") == 1) {
             getAcquisitionSettings(config, allSettings, shotNumber);
@@ -579,72 +579,117 @@ void KITGPI::Acquisition::Receivers<ValueType>::getModelPerShotSize(scai::dmemo:
 {
     NXPerShot = config.get<ValueType>("NX");
     numShotPerSuperShot = 1;
-    Acquisition::Sources<ValueType> sources;
-
-    std::vector<sourceSettings<ValueType>> sourceSettingsBig;  
     
-    std::vector<sourceSettings<ValueType>> sourceSettingsEncode; 
+    double start_t, end_t;             /* For timing */
+    start_t = common::Walltime::get();
+    HOST_PRINT(commAll, "Start calculating the size of modelPerShot\n");
+    
+    bool useStreamConfig = config.getAndCatch("useStreamConfig", false);
+    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    Acquisition::Sources<ValueType> sources;
+    std::vector<sourceSettings<ValueType>> sourceSettingsBig; 
+    Acquisition::Coordinates<ValueType> modelCoordinates(config);     
     std::vector<receiverSettings> receiverSettings; 
     
     ValueType shotIncr = 0;        
     sources.getAcquisitionSettings(config, shotIncr); // to get numshots
     sourceSettingsBig = sources.getSourceSettings(); 
-    IndexType numshots = sourceSettingsBig.size();
-    shotIncr = config.getAndCatch("shotIncr", 0.0);        
+    std::vector<scai::IndexType> uniqueShotNos;
+    Acquisition::calcuniqueShotNo(uniqueShotNos, sourceSettingsBig);
+    IndexType numshots = uniqueShotNos.size();
+    shotIncr = config.getAndCatch("shotIncr", 0.0);
     sources.getAcquisitionSettings(config, shotIncr); // to get shotIndsIncr
-    sourceSettingsBig = sources.getSourceSettings(); 
+    sourceSettingsBig = sources.getSourceSettings();
     std::vector<IndexType> shotIndsIncr = sources.getShotIndsIncr();
-    IndexType shotNumber;
-    IndexType Xsrc;
-    IndexType useSourceEncode = config.getAndCatch("useSourceEncode", 0);
+    
     IndexType seedtime = 0;
     sources.calcSourceSettingsEncode(commAll, config, seedtime);
-    if (useSourceEncode == 0) {
-        shotNumber = std::abs(sourceSettingsBig[0].sourceNo);
-        Xsrc = sourceSettingsBig[0].sourceCoords.x;
-    } else {
-        sourceSettingsEncode = sources.getSourceSettingsEncode();
-        shotNumber = std::abs(sourceSettingsEncode[0].sourceNo);
-        Xsrc = sourceSettingsEncode[0].sourceCoords.x;
+    std::vector<sourceSettings<ValueType>> sourceSettingsEncode; 
+    std::vector<Acquisition::coordinate3D> cutCoordinates;
+    IndexType shotNumber;
+    IndexType minXsrc = sourceSettingsBig[0].sourceCoords.x;
+    IndexType maxXsrc = sourceSettingsBig[0].sourceCoords.x;
+    IndexType minXrec = sourceSettingsBig[0].sourceCoords.x;
+    IndexType maxXrec = sourceSettingsBig[0].sourceCoords.x;
+    if (useStreamConfig) {
+        Configuration::Configuration configBig(config.get<std::string>("streamConfigFilename"));
+        Acquisition::Coordinates<ValueType> modelCoordinatesBig(configBig); 
+        Acquisition::getCutCoord(config, cutCoordinates, sourceSettingsBig, modelCoordinates, modelCoordinatesBig);
+        minXsrc -= cutCoordinates.at(0).x;
+        maxXsrc -= cutCoordinates.at(0).x;
+        minXrec -= cutCoordinates.at(0).x;
+        maxXrec -= cutCoordinates.at(0).x;
     }
-    getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndsIncr, sourceSettingsEncode);
-    
-    IndexType maxXrec = receiverSettings[0].receiverCoords.x;
-    for (unsigned i = 0; i < receiverSettings.size(); i++) {             
-        if (maxXrec < receiverSettings[i].receiverCoords.x)
-            maxXrec = receiverSettings[i].receiverCoords.x;
+    IndexType shotSkip = 1;
+    if (sourceSettingsBig.size()/10 > 1)   // we select 10 shots to determinate the modelPerShot size.
+        shotSkip = sourceSettingsBig.size()/10;
+    for (unsigned shotInd = 0; shotInd < sourceSettingsBig.size(); shotInd += shotSkip) {  
+        if (useSourceEncode == 0) {
+            shotNumber = std::abs(sourceSettingsBig[shotInd].sourceNo);
+            if (useStreamConfig)
+                sourceSettingsBig[shotInd].sourceCoords.x -= cutCoordinates.at(shotInd).x;
+            if (minXsrc > sourceSettingsBig[shotInd].sourceCoords.x)
+                minXsrc = sourceSettingsBig[shotInd].sourceCoords.x;
+            if (maxXsrc < sourceSettingsBig[shotInd].sourceCoords.x)
+                maxXsrc = sourceSettingsBig[shotInd].sourceCoords.x;
+        } else {
+            sourceSettingsEncode = sources.getSourceSettingsEncode();
+            shotNumber = std::abs(sourceSettingsEncode[shotInd].sourceNo);
+            if (useStreamConfig)
+                sourceSettingsEncode[shotInd].sourceCoords.x -= cutCoordinates.at(shotInd).x;
+            if (minXsrc > sourceSettingsEncode[shotInd].sourceCoords.x)
+                minXsrc = sourceSettingsEncode[shotInd].sourceCoords.x;
+            if (maxXsrc < sourceSettingsEncode[shotInd].sourceCoords.x)
+                maxXsrc = sourceSettingsEncode[shotInd].sourceCoords.x;
+        }
+        
+        getAcquisitionSettings(config, receiverSettings, shotNumber, numshots, shotIndsIncr, sourceSettingsEncode);
+        
+        for (unsigned i = 0; i < receiverSettings.size(); i++) {  
+            if (useStreamConfig)
+                receiverSettings[i].receiverCoords.x -= cutCoordinates.at(shotInd).x;
+            if (minXrec > receiverSettings[i].receiverCoords.x)
+                minXrec = receiverSettings[i].receiverCoords.x;
+            if (maxXrec < receiverSettings[i].receiverCoords.x)
+                maxXrec = receiverSettings[i].receiverCoords.x;
+        }
     }
+        
+    if (maxXrec < maxXsrc)
+        maxXrec = maxXsrc;
+    if (minXrec > minXsrc)
+        minXrec = minXsrc;
     
-    if (maxXrec < Xsrc)
-        maxXrec = Xsrc;
-    
-    IndexType BoundaryWidth = config.get<IndexType>("BoundaryWidth");
-    bool useStreamConfig = config.getAndCatch("useStreamConfig", false);
-    
-    if (useStreamConfig && NXPerShot < maxXrec + BoundaryWidth + 1) {
+    IndexType BoundaryWidth = config.get<IndexType>("BoundaryWidth");    
+    SCAI_ASSERT_ERROR(minXrec >= BoundaryWidth, "The minimum source or receiver x index is " << minXrec);
+    if (NXPerShot < maxXrec + BoundaryWidth + 1) {
         NXPerShot = maxXrec + BoundaryWidth + 1;
         HOST_PRINT(commAll, "NXPerShot = " << NXPerShot << "\n");
     }
-    
+
+    IndexType numShotDomains = config.get<IndexType>("NumShotDomains");
+    Common::checkNumShotDomains(numShotDomains, commAll);
     if (useSourceEncode != 0) {
-        IndexType numShotDomains = config.get<IndexType>("NumShotDomains");
-        Common::checkNumShotDomains(numShotDomains, commAll);
         IndexType numshotsIncr = shotIndsIncr.size();
         numShotPerSuperShot = ceil(ValueType(numshotsIncr) / numShotDomains);
         HOST_PRINT(commAll, "numShotPerSuperShot = " << numShotPerSuperShot << "\n");
     }
     
     // to get numTracesGlobal for checking COP data
-    Acquisition::Coordinates<ValueType> modelCoordinates(config, 1, NXPerShot);
-    IndexType shotDomain = config.get<IndexType>("NumShotDomains"); 
+    Acquisition::Coordinates<ValueType> modelCoordinates2; 
+    modelCoordinates2.init(config, 1, NXPerShot);
+    IndexType shotDomain = numShotDomains; 
     dmemo::CommunicatorPtr commShot = commAll->split(shotDomain);
     common::Grid3D grid(config.get<IndexType>("NY"), config.get<IndexType>("NZ"), NXPerShot);
     dmemo::DistributionPtr dist = std::make_shared<dmemo::GridDistribution>(grid, commShot);
     
-    CheckParameter::checkReceivers(receiverSettings, modelCoordinates, dist->getCommunicatorPtr()); 
+    CheckParameter::checkReceivers(receiverSettings, modelCoordinates2, dist->getCommunicatorPtr()); 
 
     hmemo::ContextPtr ctx = hmemo::Context::getContextPtr();
-    init(receiverSettings, config, modelCoordinates, ctx, dist);
+    init(receiverSettings, config, modelCoordinates2, ctx, dist);
+    
+    end_t = common::Walltime::get();
+    HOST_PRINT(commAll, "Finish calculating the size of modelPerShot in: " << end_t - start_t << " sec.\n");
 }
 
 template class KITGPI::Acquisition::Receivers<double>;

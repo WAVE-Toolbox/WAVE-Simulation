@@ -385,7 +385,6 @@ namespace KITGPI
                         phaseShift = 0;
                     }
                 }
-//                 std::cout<< "phaseShift " << i << " = " << phaseShift <<std::endl;
                 dataRedsidual.setRow(dataResTraceMin, i, common::BinaryOp::COPY); 
             }
         }
@@ -446,7 +445,6 @@ namespace KITGPI
             typedef float element;
             int N = vecter1D.size();
             element signal_1D[N] = {0};
-//             signal_1D = lama::cast<element>(vecter1D);
             for (int i = 0; i < N; i++) {
                 signal_1D[i] = vecter1D[i];
             }
@@ -455,7 +453,6 @@ namespace KITGPI
 
             medianfilter(signal_1D, result, N, spatialLength*2-1);
             
-//             vecter1D = lama::cast<ValueType>(result);
             for (int i = 0; i < N; i++) {
                 vecter1D[i] = *(result + i);
             }

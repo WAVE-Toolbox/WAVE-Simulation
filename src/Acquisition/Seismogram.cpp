@@ -852,12 +852,27 @@ std::vector<scai::lama::DenseMatrix<ValueType>> const &KITGPI::Acquisition::Seis
  *
  */
 template <typename ValueType>
-scai::lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode(int shotInd) const
+scai::lama::DenseMatrix<ValueType> &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode(int shotInd)
 {
     // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
     return (dataDecode[shotInd]);
 }
 
+//! \brief Getter method for const reference to seismogram data
+/*!
+ *
+ * This method returns the DenseMatrix which is used to store the actual seismogram data.
+ *
+ * THIS METHOD IS CALLED DURING TIME STEPPING
+ * DO NOT WASTE RUNTIME HERE
+ *
+ */
+template <typename ValueType>
+scai::lama::DenseMatrix<ValueType> const &KITGPI::Acquisition::Seismogram<ValueType>::getDataDecode(int shotInd) const
+{
+    // SCAI_ASSERT_DEBUG(data.getNumRows() * data.getNumColumns() == numTracesGlobal * numSamples, "Size mismatch ");
+    return (dataDecode[shotInd]);
+}
 //! \brief Replicate the seismogram data on all processes
 /*!
  * Creates a copy of the seismogram data on all processe
@@ -1033,20 +1048,34 @@ void KITGPI::Acquisition::Seismogram<ValueType>::sumShotDomain(scai::dmemo::Comm
     /*reduction between shot domains.
     each shot domain may have a different distribution of dataCOP. Therefore it is necessary that only one process per shot domain communicates all data.
     */
-    scai::lama::DenseVector<ValueType> tempCol;
+    IndexType NT = getNumSamples();
+    IndexType NR = dataCOP.getNumRows();
+    scai::lama::DenseVector<ValueType> temp(NR*NT, 0);
     
     if (dataCOP.getNumValues() > 0) {
-        for (IndexType i = 0; i < getNumSamples(); i++) {
-            dataCOP.getColumn(tempCol, i);
-            commInterShot->sumArray(tempCol.getLocalValues());
-            dataCOP.setColumn(tempCol, i, scai::common::BinaryOp::COPY);
+        for (IndexType i = 0; i < NR; i++) {
+            for (IndexType j = 0; j < NT; j++) {
+                temp[i*NT+j] = dataCOP.getValue(i, j);
+            }
+        }
+        commInterShot->sumArray(temp.getLocalValues());
+        for (IndexType i = 0; i < NR; i++) {
+            for (IndexType j = 0; j < NT; j++) {
+                dataCOP.setValue(i, j, temp[i*NT+j]);
+            }
         }
     }
     if (sumAGC && inverseAGCCOP.getNumValues() > 0) {
-        for (IndexType i = 0; i < getNumSamples(); i++) {
-            inverseAGCCOP.getColumn(tempCol, i);
-            commInterShot->sumArray(tempCol.getLocalValues());
-            inverseAGCCOP.setColumn(tempCol, i, scai::common::BinaryOp::COPY);
+        for (IndexType i = 0; i < NR; i++) {
+            for (IndexType j = 0; j < NT; j++) {
+                temp[i*NT+j] = inverseAGCCOP.getValue(i, j);
+            }
+        }
+        commInterShot->sumArray(temp.getLocalValues());
+        for (IndexType i = 0; i < NR; i++) {
+            for (IndexType j = 0; j < NT; j++) {
+                inverseAGCCOP.setValue(i, j, temp[i*NT+j]);
+            }
         }
     }
 }
