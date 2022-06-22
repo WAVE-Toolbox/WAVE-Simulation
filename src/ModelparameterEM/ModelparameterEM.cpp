@@ -388,8 +388,12 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     electricConductivityRealEffective = dielectricPermittivity * b_temp;   
     electricConductivityRealEffective += electricConductivity;
     
-    // real effective electric conductivity should be larger than zero
-    Common::searchAndReplace<ValueType>(electricConductivityRealEffective, 0, 0, 1); 
+    if (electricConductivityRealEffective.min() < 0) {
+        auto comm = electricConductivityRealEffective.getDistributionPtr()->getCommunicatorPtr();
+        HOST_PRINT(comm, "electricConductivityRealEffective smaller than 0 will be replaced by 0\n");
+        // real effective electric conductivity should be larger than zero
+        Common::searchAndReplace<ValueType>(electricConductivityRealEffective, 0, 0, 1); 
+    }  
     
     return (electricConductivityRealEffective);
 }
@@ -415,8 +419,12 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     a_temp = electricConductivity * tauElectricConductivity;
     dielectricPermittivityRealEffective += a_temp;
     
-    // real effective dielectric permittivity should be larger than the dielectric permittivity of vacuum
-    Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    if (dielectricPermittivityRealEffective.min() < DielectricPermittivityVacuum) {
+        auto comm = dielectricPermittivityRealEffective.getDistributionPtr()->getCommunicatorPtr();
+        HOST_PRINT(comm, "dielectricPermittivityRealEffective smaller than DielectricPermittivityVacuum will be replaced by DielectricPermittivityVacuum\n");
+        // real effective dielectric permittivity should be larger than the dielectric permittivity of vacuum
+        Common::searchAndReplace<ValueType>(dielectricPermittivityRealEffective, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    }  
     
     return (dielectricPermittivityRealEffective);
 }
@@ -448,8 +456,12 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
     b_temp *= dielectricPermittivityStatic;
     electricConductivityStatic = electricConductivityRealEffective - b_temp;
     
-    // static electric conductivity should be larger than zero
-    Common::searchAndReplace<ValueType>(electricConductivityStatic, 0, 0, 1); 
+    if (electricConductivityStatic.min() < 0) {
+        auto comm = electricConductivityStatic.getDistributionPtr()->getCommunicatorPtr();
+        HOST_PRINT(comm, "electricConductivityStatic smaller than 0 will be replaced by 0\n");
+        // static electric conductivity should be larger than zero
+        Common::searchAndReplace<ValueType>(electricConductivityStatic, 0, 0, 1); 
+    }  
     
     return (electricConductivityStatic);
 }
@@ -492,8 +504,13 @@ scai::lama::DenseVector<ValueType> const KITGPI::Modelparameter::ModelparameterE
         dielectricPermittivityStatic = dielectricPermittivityRealEffective - b_temp;
         dielectricPermittivityStatic /= a_temp;
     }
-    // static dielectric permittivity should be larger than the dielectric permittivity of vacuum
-    Common::searchAndReplace<ValueType>(dielectricPermittivityStatic, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    
+    if (dielectricPermittivityStatic.min() < DielectricPermittivityVacuum) {
+        auto comm = dielectricPermittivityStatic.getDistributionPtr()->getCommunicatorPtr();
+        HOST_PRINT(comm, "dielectricPermittivityStatic smaller than DielectricPermittivityVacuum will be replaced by DielectricPermittivityVacuum\n");
+        // static dielectric permittivity should be larger than the dielectric permittivity of vacuum
+        Common::searchAndReplace<ValueType>(dielectricPermittivityStatic, DielectricPermittivityVacuum, DielectricPermittivityVacuum, 1); 
+    }    
     
     return (dielectricPermittivityStatic);
 }
@@ -911,7 +928,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<Va
 
 /* override the functions that only used by seismic wave */
 
-/*! \brief calculate BiotCoefficient beta based on Gaussmann equation
+/*! \brief calculate BiotCoefficient beta based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBiotCoefficient()
@@ -920,7 +937,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (BiotCoefficient);    
 }
 
-/*! \brief get BiotCoefficient beta based on Gaussmann equation
+/*! \brief get BiotCoefficient beta based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBiotCoefficient() const
@@ -929,7 +946,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (BiotCoefficient);
 }
 
-/*! \brief calculate BulkModulus Kf based on Gaussmann equation
+/*! \brief calculate BulkModulus Kf based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusKf()
@@ -938,7 +955,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusKf); 
 }
 
-/*! \brief get BulkModulus Kf based on Gaussmann equation
+/*! \brief get BulkModulus Kf based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusKf() const
@@ -947,7 +964,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusKf);
 }
 
-/*! \brief calculate BulkModulus M based on Gaussmann equation
+/*! \brief calculate BulkModulus M based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusM()
@@ -956,7 +973,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusM);
 }
 
-/*! \brief get BulkModulus M based on Gaussmann equation
+/*! \brief get BulkModulus M based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterEM<ValueType>::getBulkModulusM() const

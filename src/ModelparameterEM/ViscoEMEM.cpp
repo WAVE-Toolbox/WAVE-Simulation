@@ -72,11 +72,16 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::applyThresholds(Configuration
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
     electricConductivityRealEffective *= mask;
     tauElectricConductivity *= mask;
     tauDielectricPermittivity *= mask;
     porosity *= mask;
     saturation *= mask;
+    reflectivity *= mask;
     
     tauElectricConductivity *= relaxationTime_ref;  // calculate the real tauElectricConductivity
     dielectricPermittivityRealEffective -= 1;
@@ -124,6 +129,17 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::getModelPerShot(KITGPI::Model
     
     temp = shrinkMatrix * saturation;
     modelPerShot.setSaturation(temp);
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp);
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * relativeDieletricPeimittivityRockMatrix;
+        modelPerShot.setRelativeDieletricPeimittivityRockMatrix(temp);
+        
+        temp = shrinkMatrix * electricConductivityWater;
+        modelPerShot.setElectricConductivityWater(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -229,6 +245,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
     this->initModelparameter(tauDielectricPermittivity, ctx, dist, tauDielectricPermittivity_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -272,6 +289,11 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::init(scai::hmemo::ContextPtr 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
             
     magneticPermeability *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
     ValueType relaxationTime_ref = 1.0 / (2.0 * M_PI * centerFrequencyCPML);
@@ -296,6 +318,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType>::ViscoEMEM(const ViscoEMEM &rhs)
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     tauElectricConductivity = rhs.tauElectricConductivity;
     tauDielectricPermittivity = rhs.tauDielectricPermittivity;
@@ -330,6 +353,9 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::write(std::string filename, s
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -496,6 +522,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     dielectricPermittivity *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -530,6 +557,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     dielectricPermittivity += rhs.dielectricPermittivity;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -564,6 +592,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     dielectricPermittivity -= rhs.dielectricPermittivity;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -586,6 +615,7 @@ KITGPI::Modelparameter::ViscoEMEM<ValueType> &KITGPI::Modelparameter::ViscoEMEM<
     dielectricPermittivity = rhs.dielectricPermittivity;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     electricConductivityWater = rhs.electricConductivityWater;
     relativeDieletricPeimittivityRockMatrix = rhs.relativeDieletricPeimittivityRockMatrix;
@@ -615,6 +645,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::assign(KITGPI::Modelparameter
     dielectricPermittivity = rhs.getDielectricPermittivity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
     electricConductivityWater = rhs.getElectricConductivityWater();
     relativeDieletricPeimittivityRockMatrix = rhs.getRelativeDieletricPeimittivityRockMatrix();
@@ -641,6 +672,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::minusAssign(KITGPI::Modelpara
     dielectricPermittivity -= rhs.getDielectricPermittivity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -661,6 +693,7 @@ void KITGPI::Modelparameter::ViscoEMEM<ValueType>::plusAssign(KITGPI::Modelparam
     dielectricPermittivity += rhs.getDielectricPermittivity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;

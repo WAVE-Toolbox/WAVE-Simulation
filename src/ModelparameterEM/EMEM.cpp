@@ -65,9 +65,14 @@ void KITGPI::Modelparameter::EMEM<ValueType>::applyThresholds(Configuration::Con
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
     electricConductivity *= mask;
     porosity *= mask;
     saturation *= mask;
+    reflectivity *= mask;
     
     dielectricPermittivity -= 1;
     dielectricPermittivity *= mask;
@@ -103,7 +108,18 @@ void KITGPI::Modelparameter::EMEM<ValueType>::getModelPerShot(KITGPI::Modelparam
     modelPerShot.setPorosity(temp);
     
     temp = shrinkMatrix * saturation;
-    modelPerShot.setSaturation(temp);
+    modelPerShot.setSaturation(temp); 
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp); 
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * relativeDieletricPeimittivityRockMatrix;
+        modelPerShot.setRelativeDieletricPeimittivityRockMatrix(temp);
+        
+        temp = shrinkMatrix * electricConductivityWater;
+        modelPerShot.setElectricConductivityWater(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -221,6 +237,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
     this->initModelparameter(dielectricPermittivity, ctx, dist, dielectricPermittivity_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -260,6 +277,11 @@ void KITGPI::Modelparameter::EMEM<ValueType>::init(scai::hmemo::ContextPtr ctx, 
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
     
     magneticPermeability *= MagneticPermeabilityVacuum;  // calculate the real magneticPermeability
     dielectricPermittivity *= DielectricPermittivityVacuum;  // calculate the real dielectricPermittivity
@@ -278,6 +300,7 @@ KITGPI::Modelparameter::EMEM<ValueType>::EMEM(const EMEM &rhs)
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -300,6 +323,9 @@ void KITGPI::Modelparameter::EMEM<ValueType>::write(std::string filename, scai::
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -447,6 +473,7 @@ KITGPI::Modelparameter::EMEM<ValueType> &KITGPI::Modelparameter::EMEM<ValueType>
     dielectricPermittivity *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
 
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -477,6 +504,7 @@ KITGPI::Modelparameter::EMEM<ValueType> &KITGPI::Modelparameter::EMEM<ValueType>
     dielectricPermittivity += rhs.dielectricPermittivity;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
 
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -507,6 +535,7 @@ KITGPI::Modelparameter::EMEM<ValueType> &KITGPI::Modelparameter::EMEM<ValueType>
     dielectricPermittivity -= rhs.dielectricPermittivity;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
 
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -525,6 +554,7 @@ KITGPI::Modelparameter::EMEM<ValueType> &KITGPI::Modelparameter::EMEM<ValueType>
     dielectricPermittivity = rhs.dielectricPermittivity;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     electricConductivityWater = rhs.electricConductivityWater;
     relativeDieletricPeimittivityRockMatrix = rhs.relativeDieletricPeimittivityRockMatrix;
@@ -546,6 +576,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::assign(KITGPI::Modelparameter::Mod
     dielectricPermittivity = rhs.getDielectricPermittivity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
     electricConductivityWater = rhs.getElectricConductivityWater();
     relativeDieletricPeimittivityRockMatrix = rhs.getRelativeDieletricPeimittivityRockMatrix();
@@ -566,6 +597,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::minusAssign(KITGPI::Modelparameter
     dielectricPermittivity -= rhs.getDielectricPermittivity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;
@@ -583,6 +615,7 @@ void KITGPI::Modelparameter::EMEM<ValueType>::plusAssign(KITGPI::Modelparameter:
     dielectricPermittivity += rhs.getDielectricPermittivity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagAveraging = true;
     dirtyFlagVelocivityEM = true;

@@ -120,6 +120,8 @@ namespace KITGPI
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityP;
+            using Modelparameter<ValueType>::bulkModulusRockMatrix; 
+            using Modelparameter<ValueType>::densityRockMatrix; 
             using Modelparameter<ValueType>::porosity; 
             using Modelparameter<ValueType>::saturation; 
             using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity.

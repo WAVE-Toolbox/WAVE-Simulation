@@ -40,7 +40,7 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setNumRelaxationM
     numRelaxationMechanisms = setNumRelaxationMechanisms;
 }
 
-/*! \brief calculate BiotCoefficient beta based on Gaussmann equation
+/*! \brief calculate BiotCoefficient beta based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBiotCoefficient()
@@ -52,7 +52,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (BiotCoefficient);    
 }
 
-/*! \brief get BiotCoefficient beta based on Gaussmann equation
+/*! \brief get BiotCoefficient beta based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBiotCoefficient() const
@@ -60,7 +60,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (BiotCoefficient);
 }
 
-/*! \brief calculate BulkModulus Kf based on Gaussmann equation
+/*! \brief calculate BulkModulus Kf based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBulkModulusKf()
@@ -78,7 +78,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusKf); 
 }
 
-/*! \brief get BulkModulus Kf based on Gaussmann equation
+/*! \brief get BulkModulus Kf based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBulkModulusKf() const
@@ -86,7 +86,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusKf);
 }
 
-/*! \brief calculate BulkModulus M based on Gaussmann equation
+/*! \brief calculate BulkModulus M based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBulkModulusM()
@@ -111,7 +111,7 @@ scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::Modelparameter
     return (bulkModulusM);
 }
 
-/*! \brief get BulkModulus M based on Gaussmann equation
+/*! \brief get BulkModulus M based on Gassmann equation
  */
 template <typename ValueType>
 scai::lama::DenseVector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getBulkModulusM() const
@@ -207,7 +207,7 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::setDensity(scai::
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getPWaveModulus()
 {
-    // If the modulus is dirty, than recalculate
+    // If the modulus is dirty, then recalculate
     if (dirtyFlagPWaveModulus) {
         HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "", "P-Wave modulus will be calculated from density and P-Wave velocity\n");
         calcModulusFromVelocity(velocityP, density, pWaveModulus);
@@ -234,7 +234,7 @@ template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getSWaveModulus()
 {
 
-    // If the modulus is dirty, than recalculate
+    // If the modulus is dirty, then recalculate
     if (dirtyFlagSWaveModulus) {
         HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "", "S-Wave modulus will be calculated from density and S-Wave velocity\n");
         calcModulusFromVelocity(velocityS, density, sWaveModulus);
@@ -436,7 +436,7 @@ void KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::calcAveragedSWave
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getInverseDensityAverageX()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -448,7 +448,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getInverseDensityAverageY()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -460,7 +460,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getInverseDensityAverageZ()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -472,7 +472,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getSWaveModulusAverageXY()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -484,7 +484,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getSWaveModulusAverageXZ()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -496,7 +496,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getSWaveModulusAverageYZ()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -508,7 +508,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getTauSAverageXY()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -520,7 +520,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getTauSAverageXZ()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }
@@ -532,7 +532,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeism
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::ModelparameterSeismic<ValueType>::getTauSAverageYZ()
 {
-    // If Averaging is outdated or has to be calculated for the first time, than recalculate averaging
+    // If Averaging is outdated or has to be calculated for the first time, then recalculate averaging
     if (dirtyFlagAveraging == true) {
         calculateAveraging();
     }

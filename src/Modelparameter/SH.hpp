@@ -116,8 +116,8 @@ namespace KITGPI
             using Modelparameter<ValueType>::density;
             using Modelparameter<ValueType>::inverseDensity;
             using Modelparameter<ValueType>::velocityS;
-            using Modelparameter<ValueType>::shearModulusRockMatrix;   //!< Vector storing S-wave modulus.
-            using Modelparameter<ValueType>::densityRockMatrix;        //!< Vector storing Density.
+            using Modelparameter<ValueType>::shearModulusRockMatrix; 
+            using Modelparameter<ValueType>::densityRockMatrix; 
             using Modelparameter<ValueType>::porosity; 
             using Modelparameter<ValueType>::saturation;
             using Modelparameter<ValueType>::reflectivity; //!< Vector storing reflectivity. 

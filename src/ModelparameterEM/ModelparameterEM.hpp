@@ -337,7 +337,6 @@ namespace KITGPI
             using Modelparameter<ValueType>::tauDielectricPermittivityAverageZ; //!< Vector storing averaged modulus in z-direction.
          
             using Modelparameter<ValueType>::relaxationTime;     // relaxation time of electric displacement
-
         };
     }
 }

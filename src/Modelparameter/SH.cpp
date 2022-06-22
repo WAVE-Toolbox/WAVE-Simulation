@@ -36,6 +36,10 @@ void KITGPI::Modelparameter::SH<ValueType>::prepareForModelling(Acquisition::Coo
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();
+    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {           
+        this->getBiotCoefficient();
+    }
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -65,10 +69,16 @@ void KITGPI::Modelparameter::SH<ValueType>::applyThresholds(Configuration::Confi
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
+    
     velocityS *= maskS;
     density *= maskS;
     porosity *= maskS;
     saturation *= maskS;
+    reflectivity *= maskS;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -96,7 +106,18 @@ void KITGPI::Modelparameter::SH<ValueType>::getModelPerShot(KITGPI::Modelparamet
     modelPerShot.setPorosity(temp);
     
     temp = shrinkMatrix * saturation;
-    modelPerShot.setSaturation(temp);
+    modelPerShot.setSaturation(temp); 
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp); 
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {        
+        temp = shrinkMatrix * shearModulusRockMatrix;
+        modelPerShot.setShearModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * densityRockMatrix;
+        modelPerShot.setDensityRockMatrix(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -167,6 +188,7 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
     this->initModelparameter(density, ctx, dist, rho_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -204,6 +226,11 @@ void KITGPI::Modelparameter::SH<ValueType>::init(scai::hmemo::ContextPtr ctx, sc
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -220,6 +247,7 @@ KITGPI::Modelparameter::SH<ValueType>::SH(const SH &rhs)
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -234,6 +262,9 @@ void KITGPI::Modelparameter::SH<ValueType>::write(std::string filename, scai::In
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -281,7 +312,6 @@ void KITGPI::Modelparameter::SH<ValueType>::calcRockMatrixParameter(Configuratio
     temp1 = 1 / temp1;
     rho_ma *= temp1;
         
-    rho_ma = scai::lama::cast<ValueType>(rho_ma);
     Common::replaceInvalid<ValueType>(rho_ma, 0.0);
     
     // calculate mu_ma
@@ -289,14 +319,10 @@ void KITGPI::Modelparameter::SH<ValueType>::calcRockMatrixParameter(Configuratio
     temp1 = 1 / temp1;
     mu_ma = mu_sat * temp1;
                   
-    mu_ma = scai::lama::cast<ValueType>(mu_ma);
     Common::replaceInvalid<ValueType>(mu_ma, 0.0);
     
     this->setDensityRockMatrix(rho_ma);
     this->setShearModulusRockMatrix(mu_ma);
-    
-    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
-    this->getBiotCoefficient();
 }
 
 /*! \brief transform porosity and saturation to Seismic parameters */
@@ -325,8 +351,7 @@ void KITGPI::Modelparameter::SH<ValueType>::calcWaveModulusFromPetrophysics()
     temp2 = 1 - porosity;
     densitytemp = temp2 * this->getDensityRockMatrix();
     densitytemp += temp1;    
-    
-    densitytemp = scai::lama::cast<ValueType>(densitytemp);    
+       
     Common::replaceInvalid<ValueType>(densitytemp, 0.0);
     
     // calculate vs
@@ -335,7 +360,6 @@ void KITGPI::Modelparameter::SH<ValueType>::calcWaveModulusFromPetrophysics()
     velocityStemp = mu_sat / densitytemp;
     velocityStemp = scai::lama::sqrt(velocityStemp);
     
-    velocityStemp = scai::lama::cast<ValueType>(velocityStemp);
     Common::replaceInvalid<ValueType>(velocityStemp, 0.0);
     
     this->setDensity(densitytemp);
@@ -357,11 +381,10 @@ void KITGPI::Modelparameter::SH<ValueType>::calcPetrophysicsFromWaveModulus()
     porositytemp = mu_sat / mu_ma;
     porositytemp = 1 - porositytemp;
     porositytemp *= CriticalPorosity;
-    
-    porositytemp = scai::lama::cast<ValueType>(porositytemp); 
+     
     Common::replaceInvalid<ValueType>(porositytemp, 0.0);
     
-    this->setPorosity(porositytemp);
+    this->setPorosity(porositytemp);  
 }
 
 //! \brief Initialization of the Averaging matrices
@@ -416,6 +439,10 @@ void KITGPI::Modelparameter::SH<ValueType>::calcReflectivity(Acquisition::Coordi
 {
     scai::lama::DenseVector<ValueType> impedance;
     scai::lama::DenseVector<ValueType> impedanceAverageY;
+    IndexType spatialFDorder = derivatives.getSpatialFDorder();
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
     auto dist = density.getDistributionPtr();
     auto ctx = density.getContextPtr();
     auto const &Dyf = derivatives.getDyf();
@@ -428,6 +455,10 @@ void KITGPI::Modelparameter::SH<ValueType>::calcReflectivity(Acquisition::Coordi
     reflectivity = Dyf * impedance;
     reflectivity *= -modelCoordinates.getDH() / DT;
     reflectivity /= impedanceAverageY;
+    for (IndexType i=0; i < spatialFDorder * NX * NZ / 2; i++) {
+        reflectivity[i] = 0.0;
+        reflectivity[NX*NY*NZ-i-1] = 0.0;
+    }
 }
 
 /*! \brief Get equationType (sh)
@@ -600,6 +631,7 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
     velocityS *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
@@ -630,6 +662,7 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
     velocityS += rhs.velocityS;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
@@ -660,6 +693,7 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
     velocityS -= rhs.velocityS;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
@@ -678,6 +712,7 @@ KITGPI::Modelparameter::SH<ValueType> &KITGPI::Modelparameter::SH<ValueType>::op
     density = rhs.density;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     shearModulusRockMatrix = rhs.shearModulusRockMatrix;
     densityRockMatrix = rhs.densityRockMatrix;
@@ -699,6 +734,7 @@ void KITGPI::Modelparameter::SH<ValueType>::assign(KITGPI::Modelparameter::Model
     density = rhs.getDensity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
     shearModulusRockMatrix = rhs.getShearModulusRockMatrix();
     densityRockMatrix = rhs.getDensityRockMatrix();
@@ -719,6 +755,7 @@ void KITGPI::Modelparameter::SH<ValueType>::minusAssign(KITGPI::Modelparameter::
     density -= rhs.getDensity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
@@ -736,10 +773,12 @@ void KITGPI::Modelparameter::SH<ValueType>::plusAssign(KITGPI::Modelparameter::M
     density += rhs.getDensity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagSWaveModulus = true;
     dirtyFlagAveraging = true;
 }
+
 template class KITGPI::Modelparameter::SH<float>;
 template class KITGPI::Modelparameter::SH<double>;

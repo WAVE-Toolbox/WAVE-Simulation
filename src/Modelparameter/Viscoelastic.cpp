@@ -34,6 +34,12 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::prepareForModelling(Acquis
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();
+    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->getBiotCoefficient();
+        this->getBulkModulusM();
+        this->getBulkModulusKf();
+    }
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -74,11 +80,17 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::applyThresholds(Configurat
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
+    
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
     porosity *= maskS;
     saturation *= maskS;
+    reflectivity *= maskS;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -115,7 +127,21 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::getModelPerShot(KITGPI::Mo
     modelPerShot.setPorosity(temp);
     
     temp = shrinkMatrix * saturation;
-    modelPerShot.setSaturation(temp);
+    modelPerShot.setSaturation(temp); 
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp); 
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * bulkModulusRockMatrix;
+        modelPerShot.setBulkModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * shearModulusRockMatrix;
+        modelPerShot.setShearModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * densityRockMatrix;
+        modelPerShot.setDensityRockMatrix(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -213,6 +239,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
     this->initModelparameter(tauP, ctx, dist, tauP_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -255,6 +282,11 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::init(scai::hmemo::ContextP
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -281,6 +313,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType>::Viscoelastic(const Viscoelastic
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -298,6 +331,9 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::write(std::string filename
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -359,7 +395,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcRockMatrixParameter(Co
     temp1 = 1 / temp1;
     rho_ma *= temp1;
      
-    rho_ma = scai::lama::cast<ValueType>(rho_ma);
     Common::replaceInvalid<ValueType>(rho_ma, 0.0);
     
     // calculate mu_ma
@@ -367,7 +402,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcRockMatrixParameter(Co
     temp1 = 1 / temp1;
     mu_ma = mu_sat * temp1;
      
-    mu_ma = scai::lama::cast<ValueType>(mu_ma);
     Common::replaceInvalid<ValueType>(mu_ma, 0.0);
     
     // calculate K_ma
@@ -388,18 +422,12 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcRockMatrixParameter(Co
     K_ma -= b;
     K_ma /= a;
     K_ma /= 2;
-    
-    K_ma = scai::lama::cast<ValueType>(K_ma);    
+      
     Common::replaceInvalid<ValueType>(K_ma, 0.0);
     
     this->setDensityRockMatrix(rho_ma);
     this->setShearModulusRockMatrix(mu_ma);
     this->setBulkModulusRockMatrix(K_ma);
-    
-    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
-    this->getBiotCoefficient();
-    this->getBulkModulusKf();
-    this->getBulkModulusM();
 }
 
 /*! \brief transform porosity and saturation to Seismic parameters */
@@ -433,8 +461,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcWaveModulusFromPetroph
     temp2 = 1 - porosity;
     densitytemp = temp2 * this->getDensityRockMatrix();
     densitytemp += temp1;
-    
-    densitytemp = scai::lama::cast<ValueType>(densitytemp);    
+     
     Common::replaceInvalid<ValueType>(densitytemp, 0.0);
   
     // calculate vs
@@ -443,7 +470,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcWaveModulusFromPetroph
     velocityStemp = mu_sat / densitytemp;
     velocityStemp = scai::lama::sqrt(velocityStemp);
      
-    velocityStemp = scai::lama::cast<ValueType>(velocityStemp);
     Common::replaceInvalid<ValueType>(velocityStemp, 0.0);
         
     // calculate vp
@@ -458,7 +484,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcWaveModulusFromPetroph
     velocityPtemp /= densitytemp;
     velocityPtemp = scai::lama::sqrt(velocityPtemp);  
     
-    velocityPtemp = scai::lama::cast<ValueType>(velocityPtemp);
     Common::replaceInvalid<ValueType>(velocityPtemp, 0.0);  
     
     this->setDensity(densitytemp);
@@ -482,7 +507,6 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcPetrophysicsFromWaveMo
     porositytemp = 1 - porositytemp;
     porositytemp *= CriticalPorosity;
     
-    porositytemp = scai::lama::cast<ValueType>(porositytemp); 
     Common::replaceInvalid<ValueType>(porositytemp, 0.0);
     
     this->setPorosity(porositytemp);
@@ -578,18 +602,26 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcReflectivity(Acquisiti
 {
     scai::lama::DenseVector<ValueType> impedance;
     scai::lama::DenseVector<ValueType> impedanceAverageY;
+    IndexType spatialFDorder = derivatives.getSpatialFDorder();
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
     auto dist = density.getDistributionPtr();
     auto ctx = density.getContextPtr();
     auto const &Dyf = derivatives.getDyf();
     this->calcAverageMatrixY(modelCoordinates, dist);
     averageMatrixY.setContextPtr(ctx);
-    impedance = density * velocityP;
+    impedance = density * velocityS;
     this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
     averageMatrixY.purge();
     impedanceAverageY *= 2;
     reflectivity = Dyf * impedance;
     reflectivity *= -modelCoordinates.getDH() / DT;
     reflectivity /= impedanceAverageY;
+    for (IndexType i=0; i < spatialFDorder * NX * NZ / 2; i++) {
+        reflectivity[i] = 0.0;
+        reflectivity[NX*NY*NZ-i-1] = 0.0;
+    }
 }
 
 /*! \brief Get equationType (viscoelastic)
@@ -617,7 +649,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getPWaveModulus()
 {
-    // If the modulus is dirty, than recalculate
+    // If the modulus is dirty, then recalculate
     if (dirtyFlagPWaveModulus) {
         // The input vp is defined at the reference frequency, so the P-wave modulus must be scaled to the relaxed value where frequency equals zero, see eq.12 in Bohlen, 2002 or eq.2 in Fabien-Ouellet, et al., 2017.
         HOST_PRINT(velocityP.getDistributionPtr()->getCommunicatorPtr(), "P-Wave modulus will be calculated from density, velocityP, tauP, centerFrequencyCPML and relaxationFrequency \n");
@@ -658,7 +690,7 @@ scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueT
 template <typename ValueType>
 scai::lama::Vector<ValueType> const &KITGPI::Modelparameter::Viscoelastic<ValueType>::getSWaveModulus()
 {
-    // If the modulus is dirty, than recalculate
+    // If the modulus is dirty, then recalculate
     if (dirtyFlagSWaveModulus) {
         // The input vs is defined at the reference frequency, so the S-wave modulus must be scaled to the relaxed value where frequency equals zero, see eq.12 in Bohlen, 2002 or eq.2 in Fabien-Ouellet, et al., 2017.
         HOST_PRINT(velocityS.getDistributionPtr()->getCommunicatorPtr(), "S-Wave modulus will be calculated from density, velocityS, tauS, centerFrequencyCPML and relaxationFrequency \n");
@@ -728,6 +760,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     velocityS *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -762,6 +795,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     velocityS += rhs.velocityS;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -797,6 +831,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     velocityS -= rhs.velocityS;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -824,6 +859,7 @@ KITGPI::Modelparameter::Viscoelastic<ValueType> &KITGPI::Modelparameter::Viscoel
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     bulkModulusRockMatrix = rhs.bulkModulusRockMatrix;
     shearModulusRockMatrix = rhs.shearModulusRockMatrix;
@@ -850,6 +886,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::assign(KITGPI::Modelparame
     tauP = rhs.getTauP();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
     relaxationFrequency = rhs.getRelaxationFrequency();
     numRelaxationMechanisms = rhs.getNumRelaxationMechanisms(); 
@@ -880,6 +917,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::minusAssign(KITGPI::Modelp
     tauP -= rhs.getTauP();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -901,6 +939,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::plusAssign(KITGPI::Modelpa
     tauP += rhs.getTauP();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;

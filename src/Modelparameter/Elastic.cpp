@@ -35,6 +35,12 @@ void KITGPI::Modelparameter::Elastic<ValueType>::prepareForModelling(Acquisition
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();
+    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->getBiotCoefficient();
+        this->getBulkModulusM();
+        this->getBulkModulusKf();
+    }
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -75,11 +81,17 @@ void KITGPI::Modelparameter::Elastic<ValueType>::applyThresholds(Configuration::
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("lowerSaturationTh", 0.0), config.getAndCatch("lowerSaturationTh", 0.0), 1);
         Common::searchAndReplace<ValueType>(saturation, config.getAndCatch("upperSaturationTh", 1.0), config.getAndCatch("upperSaturationTh", 1.0), 2);
     }
+    if (config.getAndCatch("gradientKernel", 0) > 1 && config.getAndCatch("decomposition", 0) == 0) {
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("lowerReflectivityTh", -1.0), config.getAndCatch("lowerReflectivityTh", -1.0), 1);
+        Common::searchAndReplace<ValueType>(reflectivity, config.getAndCatch("upperReflectivityTh", 1.0), config.getAndCatch("upperReflectivityTh", 1.0), 2);
+    }
+    
     velocityP *= maskP;
     density *= maskP;
     velocityS *= maskS;
     porosity *= maskS;
     saturation *= maskS;
+    reflectivity *= maskS;
 }
 
 /*! \brief If stream configuration is used, get a pershot model from the big model
@@ -110,7 +122,21 @@ void KITGPI::Modelparameter::Elastic<ValueType>::getModelPerShot(KITGPI::Modelpa
     modelPerShot.setPorosity(temp);
     
     temp = shrinkMatrix * saturation;
-    modelPerShot.setSaturation(temp);
+    modelPerShot.setSaturation(temp);  
+    
+    temp = shrinkMatrix * reflectivity;
+    modelPerShot.setReflectivity(temp);    
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * bulkModulusRockMatrix;
+        modelPerShot.setBulkModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * shearModulusRockMatrix;
+        modelPerShot.setShearModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * densityRockMatrix;
+        modelPerShot.setDensityRockMatrix(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class
@@ -227,6 +253,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
     this->initModelparameter(density, ctx, dist, rho_const);
     this->initModelparameter(porosity, ctx, dist, 0.0);
     this->initModelparameter(saturation, ctx, dist, 0.0);
+    this->initModelparameter(reflectivity, ctx, dist, 0.0);
 }
 
 /*! \brief Constructor that is reading models from external files
@@ -266,6 +293,11 @@ void KITGPI::Modelparameter::Elastic<ValueType>::init(scai::hmemo::ContextPtr ct
         this->initModelparameter(porosity, ctx, dist, 0.0);
         this->initModelparameter(saturation, ctx, dist, 0.0);
     }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        this->initModelparameter(reflectivity, ctx, dist, filename + ".reflectivity", fileFormat);
+    } else {
+        this->initModelparameter(reflectivity, ctx, dist, 0.0);
+    }
 }
 
 //! \brief Copy constructor
@@ -285,6 +317,7 @@ KITGPI::Modelparameter::Elastic<ValueType>::Elastic(const Elastic &rhs)
     
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
 }
 
 /*! \brief Write model to an external file
@@ -301,6 +334,9 @@ void KITGPI::Modelparameter::Elastic<ValueType>::write(std::string filename, sca
     if (this->getInversionType() == 3 || this->getParameterisation() == 1 || this->getParameterisation() == 2) {
         IO::writeVector(porosity, filename + ".porosity", fileFormat);
         IO::writeVector(saturation, filename + ".saturation", fileFormat);
+    }
+    if (this->getGradientKernel() != 0 && this->getDecomposition() == 0) {
+        IO::writeVector(reflectivity, filename + ".reflectivity", fileFormat);
     }
 };
 
@@ -400,11 +436,6 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calcRockMatrixParameter(Configu
     this->setDensityRockMatrix(rho_ma);
     this->setShearModulusRockMatrix(mu_ma);
     this->setBulkModulusRockMatrix(K_ma);
-    
-    // initialisation of necessary parameters for gradientCalculation in which a const model is used.
-    this->getBiotCoefficient();
-    this->getBulkModulusKf();
-    this->getBulkModulusM();
 }
 
 /*! \brief transform porosity and saturation to Seismic parameters */
@@ -490,8 +521,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calcPetrophysicsFromWaveModulus
     porositytemp = mu_sat / mu_ma;
     porositytemp = 1 - porositytemp;
     porositytemp *= CriticalPorosity;
-    
-//     porositytemp = scai::lama::cast<ValueType>(porositytemp); 
+     
     Common::replaceInvalid<ValueType>(porositytemp, 0.0);
     
     this->setPorosity(porositytemp);
@@ -564,18 +594,26 @@ void KITGPI::Modelparameter::Elastic<ValueType>::calcReflectivity(Acquisition::C
 {
     scai::lama::DenseVector<ValueType> impedance;
     scai::lama::DenseVector<ValueType> impedanceAverageY;
+    IndexType spatialFDorder = derivatives.getSpatialFDorder();
+    IndexType NX = modelCoordinates.getNX();
+    IndexType NY = modelCoordinates.getNY();
+    IndexType NZ = modelCoordinates.getNZ();
     auto dist = density.getDistributionPtr();
     auto ctx = density.getContextPtr();
     auto const &Dyf = derivatives.getDyf();
     this->calcAverageMatrixY(modelCoordinates, dist);
     averageMatrixY.setContextPtr(ctx);
-    impedance = density * velocityP;
+    impedance = density * velocityS;
     this->calcAveragedParameter(impedance, impedanceAverageY, averageMatrixY);
     averageMatrixY.purge();
     impedanceAverageY *= 2;
     reflectivity = Dyf * impedance;
     reflectivity *= -modelCoordinates.getDH() / DT;
     reflectivity /= impedanceAverageY;
+    for (IndexType i=0; i < spatialFDorder * NX * NZ / 2; i++) {
+        reflectivity[i] = 0.0;
+        reflectivity[NX*NY*NZ-i-1] = 0.0;
+    }
 }
 
 /*! \brief Get equationType (elastic)
@@ -720,6 +758,7 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     velocityS *= rhs;
     porosity *= rhs;
     saturation *= rhs;
+    reflectivity *= rhs;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -752,6 +791,7 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     velocityS += rhs.velocityS;
     porosity += rhs.porosity;
     saturation += rhs.saturation;
+    reflectivity += rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -784,6 +824,7 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     velocityS -= rhs.velocityS;
     porosity -= rhs.porosity;
     saturation -= rhs.saturation;
+    reflectivity -= rhs.reflectivity;
 
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -804,11 +845,11 @@ KITGPI::Modelparameter::Elastic<ValueType> &KITGPI::Modelparameter::Elastic<Valu
     density = rhs.density;
     porosity = rhs.porosity;
     saturation = rhs.saturation;
+    reflectivity = rhs.reflectivity;
     
     bulkModulusRockMatrix = rhs.bulkModulusRockMatrix;
     shearModulusRockMatrix = rhs.shearModulusRockMatrix;
     densityRockMatrix = rhs.densityRockMatrix;
-    std::cout << "operator=\n" << std::endl;
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -829,11 +870,11 @@ void KITGPI::Modelparameter::Elastic<ValueType>::assign(KITGPI::Modelparameter::
     density = rhs.getDensity();
     porosity = rhs.getPorosity();
     saturation = rhs.getSaturation();
+    reflectivity = rhs.getReflectivity();
     
     bulkModulusRockMatrix = rhs.getBulkModulusRockMatrix();
     shearModulusRockMatrix = rhs.getShearModulusRockMatrix();
     densityRockMatrix = rhs.getDensityRockMatrix();
-//     std::cout << "assign\n" << std::endl;
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -853,6 +894,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::minusAssign(KITGPI::Modelparame
     density -= rhs.getDensity();
     porosity -= rhs.getPorosity();
     saturation -= rhs.getSaturation();
+    reflectivity -= rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;
@@ -872,6 +914,7 @@ void KITGPI::Modelparameter::Elastic<ValueType>::plusAssign(KITGPI::Modelparamet
     density += rhs.getDensity();
     porosity += rhs.getPorosity();
     saturation += rhs.getSaturation();
+    reflectivity += rhs.getReflectivity();
     
     dirtyFlagInverseDensity = true;
     dirtyFlagPWaveModulus = true;

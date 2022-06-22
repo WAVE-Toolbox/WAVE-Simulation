@@ -35,6 +35,11 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::prepareForModelling(Acquisitio
     initializeMatrices(dist, ctx, modelCoordinates, comm);
     calculateAveraging();
     purgeMatrices();
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        this->getBiotCoefficient();
+        this->getBulkModulusM();
+        this->getBulkModulusKf();
+    }
     HOST_PRINT(comm, "", "Model ready!\n\n");
 }
 
@@ -104,7 +109,15 @@ void KITGPI::Modelparameter::Acoustic<ValueType>::getModelPerShot(KITGPI::Modelp
     modelPerShot.setSaturation(temp);
     
     temp = shrinkMatrix * reflectivity;
-    modelPerShot.setReflectivity(temp);
+    modelPerShot.setReflectivity(temp); 
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * bulkModulusRockMatrix;
+        modelPerShot.setBulkModulusRockMatrix(temp);
+        
+        temp = shrinkMatrix * densityRockMatrix;
+        modelPerShot.setDensityRockMatrix(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class

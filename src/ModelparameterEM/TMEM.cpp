@@ -112,6 +112,14 @@ void KITGPI::Modelparameter::TMEM<ValueType>::getModelPerShot(KITGPI::Modelparam
     
     temp = shrinkMatrix * reflectivity;
     modelPerShot.setReflectivity(temp);
+    
+    if (this->getParameterisation() == 1 || this->getParameterisation() == 2) {
+        temp = shrinkMatrix * relativeDieletricPeimittivityRockMatrix;
+        modelPerShot.setRelativeDieletricPeimittivityRockMatrix(temp);
+        
+        temp = shrinkMatrix * electricConductivityWater;
+        modelPerShot.setElectricConductivityWater(temp);
+    }
 }
 
 /*! \brief Constructor that is using the Configuration class

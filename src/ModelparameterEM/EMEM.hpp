@@ -105,6 +105,7 @@ namespace KITGPI
             using Modelparameter<ValueType>::dielectricPermittivity;
             using Modelparameter<ValueType>::porosity; //!< Vector storing porosity.
             using Modelparameter<ValueType>::saturation; //!< Vector storing saturation.
+            using Modelparameter<ValueType>::reflectivity;
             using Modelparameter<ValueType>::electricConductivityWater;        //!< Vector storing electricConductivityWater.
             using Modelparameter<ValueType>::relativeDieletricPeimittivityRockMatrix;   //!< Vector storing relativeDieletricPeimittivityRockMatrix.
 
