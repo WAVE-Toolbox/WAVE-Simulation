@@ -15,6 +15,7 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::prepareForInversion(Co
     this->setInversionType(config.getAndCatch("inversionType", 1));
     this->setGradientKernel(config.getAndCatch("gradientKernel", 0));
     this->setDecomposition(config.getAndCatch("decomposition", 0));
+    exchangeStrategy = config.getAndCatch("exchangeStrategy", 0);
     calcElectricConductivityReference(config.get<ValueType>("CenterFrequencyCPML"));
     setArchieFactors(config.get<ValueType>("aArchie"), config.get<ValueType>("mArchie"), config.get<ValueType>("nArchie"));
     HOST_PRINT(comm, "", "Model ready!\n\n");
@@ -134,8 +135,13 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcRockMatrixParamete
     scai::lama::DenseVector<ValueType> electricConductivityWatertemp;
     scai::lama::DenseVector<ValueType> relativeDielectricPermittivityRockMatrixtemp;  
     
-    electricConductivityWatertemp = this->getElectricConductivity();  
-    relativeDielectricPermittivityRockMatrixtemp = this->getDielectricPermittivity();      
+    if (equationType.compare("viscotmem") == 0 || equationType.compare("viscoemem") == 0) {
+        electricConductivityWatertemp = this->getElectricConductivityRealEffective();  
+        relativeDielectricPermittivityRockMatrixtemp = this->getDielectricPermittivityRealEffective(); 
+    } else {
+        electricConductivityWatertemp = this->getElectricConductivity();  
+        relativeDielectricPermittivityRockMatrixtemp = this->getDielectricPermittivity(); 
+    }
     relativeDielectricPermittivityRockMatrixtemp /= DielectricPermittivityVacuum;    
     relativeDielectricPermittivityRockMatrixtemp = scai::lama::sqrt(relativeDielectricPermittivityRockMatrixtemp); 
     
@@ -216,6 +222,13 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcWaveModulusFromPet
     
     dielectricPermittivitytemp *= DielectricPermittivityVacuum;    
     
+    if (equationType.compare("viscotmem") == 0 || equationType.compare("viscoemem") == 0) {
+        IndexType calculateType = 2;
+        temp1 = this->getDielectricPermittivityStatic(dielectricPermittivitytemp, electricConductivitytemp, calculateType);
+        temp2 = this->getElectricConductivityStatic(dielectricPermittivitytemp, electricConductivitytemp, calculateType);
+        dielectricPermittivitytemp = temp1;
+        electricConductivitytemp = temp2;
+    }
     this->setElectricConductivity(electricConductivitytemp);
     this->setDielectricPermittivity(dielectricPermittivitytemp);
 }
@@ -227,26 +240,51 @@ void KITGPI::Modelparameter::ModelparameterEM<ValueType>::calcPetrophysicsFromWa
     scai::lama::DenseVector<ValueType> temp1;
     scai::lama::DenseVector<ValueType> temp2;
     scai::lama::DenseVector<ValueType> porositytemp;
+    scai::lama::DenseVector<ValueType> saturationtemp;
     scai::lama::DenseVector<ValueType> dielectricPermittivitytemp;  
     scai::lama::DenseVector<ValueType> relativeDieletricPeimittivityRockMatrix;  
     
     relativeDieletricPeimittivityRockMatrix = this->getRelativeDieletricPeimittivityRockMatrix();  
-    dielectricPermittivitytemp = this->getDielectricPermittivity();   
+    if (equationType.compare("viscotmem") == 0 || equationType.compare("viscoemem") == 0) {
+        dielectricPermittivitytemp = this->getDielectricPermittivityRealEffective(); 
+    } else {
+        dielectricPermittivitytemp = this->getDielectricPermittivity(); 
+    }  
     dielectricPermittivitytemp /= DielectricPermittivityVacuum;
-    porositytemp = this->getPorosity();   
         
-    // Based on complex refractive index model (CRIM)        
-    temp1 = 1 - porositytemp;     
-    temp2 = scai::lama::sqrt(relativeDieletricPeimittivityRockMatrix);
-    temp2 *= temp1;
-    temp1 = scai::lama::sqrt(dielectricPermittivitytemp);
-    temp1 -= temp2;
-    temp1 /= porositytemp;
-    temp1 -= sqrt(RelativeDielectricPermittivityVacuum);
-    temp1 /= (sqrt(RelativeDielectricPermittivityWater) - sqrt(RelativeDielectricPermittivityVacuum));
-    Common::replaceInvalid<ValueType>(temp1, 0); // in case of air
-    
-    this->setSaturation(temp1);      
+    // Based on complex refractive index model (CRIM)  
+    if (exchangeStrategy != 2 || (exchangeStrategy == 2 && exchangeStrategyCount % 2 == 0)) {
+        // calculate saturation
+        porositytemp = this->getPorosity();   
+        temp1 = 1 - porositytemp;     
+        temp2 = scai::lama::sqrt(relativeDieletricPeimittivityRockMatrix);
+        temp2 *= temp1;
+        temp1 = scai::lama::sqrt(dielectricPermittivitytemp);
+        temp1 -= temp2;
+        temp1 /= porositytemp;
+        temp1 -= sqrt(RelativeDielectricPermittivityVacuum);
+        temp1 /= (sqrt(RelativeDielectricPermittivityWater) - sqrt(RelativeDielectricPermittivityVacuum));
+        Common::replaceInvalid<ValueType>(temp1, 0); // in case of air
+        
+        this->setSaturation(temp1); 
+    }
+    if (exchangeStrategy == 2 && exchangeStrategyCount % 2 == 1) {
+        // calculate porosity
+        saturationtemp = this->getSaturation();   
+        temp1 = 1 - saturationtemp;     
+        temp1 *= sqrt(RelativeDielectricPermittivityVacuum);
+        temp2 = saturationtemp * sqrt(RelativeDielectricPermittivityWater);
+        temp2 += temp1;
+        temp1 = scai::lama::sqrt(relativeDieletricPeimittivityRockMatrix);
+        temp2 -= temp1;
+        saturationtemp = scai::lama::sqrt(dielectricPermittivitytemp);
+        temp1 = saturationtemp - temp1;
+        temp1 /= temp2;
+        Common::replaceInvalid<ValueType>(temp1, 0); // in case of air
+        
+        this->setPorosity(temp1);  
+    }
+    exchangeStrategyCount++;
 }
 
 /*! \brief Calculate a modulus from velocity

@@ -377,8 +377,8 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcRockMatrixParameter(Co
     ValueType tempValue;
     
     rho_sat = this->getDensity();  
-    mu_sat = this->getSWaveModulus();  
-    K_sat = this->getPWaveModulus();  
+    this->calcModulusFromVelocity(velocityS, density, mu_sat);
+    this->calcModulusFromVelocity(velocityP, density, K_sat);
     K_sat -= 4 / 3 * mu_sat;
     
     // Based on Gassmann equation 
@@ -499,7 +499,7 @@ void KITGPI::Modelparameter::Viscoelastic<ValueType>::calcPetrophysicsFromWaveMo
     scai::lama::DenseVector<ValueType> mu_ma;
     scai::lama::DenseVector<ValueType> porositytemp;
     
-    mu_sat = this->getSWaveModulus();  
+    this->calcModulusFromVelocity(velocityS, density, mu_sat);
     mu_ma = this->getShearModulusRockMatrix();  
 
     // Based on Gassmann equation

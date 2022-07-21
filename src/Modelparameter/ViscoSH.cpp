@@ -321,8 +321,8 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::calcRockMatrixParameter(Configu
     scai::lama::DenseVector<ValueType> temp1;
     scai::lama::DenseVector<ValueType> temp2;
     
-    rho_sat = this->getDensity();  
-    mu_sat = this->getSWaveModulus();  
+    rho_sat = this->getDensity();   
+    this->calcModulusFromVelocity(velocityS, density, mu_sat);
     
     // Based on Gassmann equation 
     beta = this->getBiotCoefficient();
@@ -400,7 +400,7 @@ void KITGPI::Modelparameter::ViscoSH<ValueType>::calcPetrophysicsFromWaveModulus
     scai::lama::DenseVector<ValueType> mu_ma;
     scai::lama::DenseVector<ValueType> porositytemp;
     
-    mu_sat = this->getSWaveModulus();  
+    this->calcModulusFromVelocity(velocityS, density, mu_sat);
     mu_ma = this->getShearModulusRockMatrix();  
 
     // Based on Gassmann equation

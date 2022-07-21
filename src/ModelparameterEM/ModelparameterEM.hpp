@@ -239,6 +239,8 @@ namespace KITGPI
             using Modelparameter<ValueType>::gradientKernel;
             using Modelparameter<ValueType>::decomposition;
             using Modelparameter<ValueType>::fileFormat;      //!< 1=mtx 2=lmf
+            IndexType exchangeStrategy = 0;
+            IndexType exchangeStrategyCount = 0;
 
             using Modelparameter<ValueType>::equationType;
             using Modelparameter<ValueType>::numRelaxationMechanisms; //!< Number of relaxation mechanisms
