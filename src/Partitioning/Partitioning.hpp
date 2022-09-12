@@ -109,11 +109,11 @@ namespace KITGPI
         {
             IndexType NXinversion;
             if (NXPerShot < config.get<ValueType>("NX"))
-                NXinversion = ceil(config.get<ValueType>("NX") / config.get<IndexType>("DHInversion"));
+                NXinversion = ceil(config.get<ValueType>("NX") / config.getAndCatch("DHInversion", 1));
             else
-                NXinversion = ceil(NXPerShot / config.get<IndexType>("DHInversion"));
-            IndexType NYinversion = ceil(config.get<ValueType>("NY") / config.get<IndexType>("DHInversion"));
-            IndexType NZinversion = ceil(config.get<ValueType>("NZ") / config.get<IndexType>("DHInversion"));
+                NXinversion = ceil(NXPerShot / config.getAndCatch("DHInversion", 1));
+            IndexType NYinversion = ceil(config.get<ValueType>("NY") / config.getAndCatch("DHInversion", 1));
+            IndexType NZinversion = ceil(config.get<ValueType>("NZ") / config.getAndCatch("DHInversion", 1));
             common::Grid3D grid(NYinversion, NZinversion, NXinversion);
             // distribute the grid onto available processors
             return (std::make_shared<dmemo::GridDistribution>(grid, commShot));
